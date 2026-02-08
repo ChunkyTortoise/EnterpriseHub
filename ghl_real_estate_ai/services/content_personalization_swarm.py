@@ -16,21 +16,22 @@ Increases engagement rates by 40-65% through hyper-personalized content.
 Date: January 17, 2026
 Status: Advanced Agent-Driven Content Personalization System
 """
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import logging
-import json
-from collections import defaultdict
-import hashlib
-import random
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import asyncio
+import hashlib
+import json
+import logging
+import random
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
@@ -144,7 +145,7 @@ class PersonalizerAgent:
         content_type: ContentType,
         channel: ContentChannel,
         lead_data: Dict[str, Any],
-        swarm_analysis: Any
+        swarm_analysis: Any,
     ) -> PersonalizationRecommendation:
         """Personalize content based on agent specialty."""
         raise NotImplementedError
@@ -162,13 +163,13 @@ class BehavioralAdapterAgent(PersonalizerAgent):
         content_type: ContentType,
         channel: ContentChannel,
         lead_data: Dict[str, Any],
-        swarm_analysis: Any
+        swarm_analysis: Any,
     ) -> PersonalizationRecommendation:
         """Adapt content based on behavioral analysis."""
         try:
             # Extract behavioral insights
-            behavioral_profile = lead_data.get('behavioral_profile', {})
-            interaction_patterns = lead_data.get('interaction_history', [])
+            behavioral_profile = lead_data.get("behavioral_profile", {})
+            interaction_patterns = lead_data.get("interaction_history", [])
 
             # Analyze behavior with Claude
             prompt = f"""
@@ -179,12 +180,12 @@ class BehavioralAdapterAgent(PersonalizerAgent):
             Channel: {channel.value}
 
             Behavioral Insights:
-            - Interaction Patterns: {interaction_patterns[-5:] if interaction_patterns else 'None'}
-            - Engagement Preferences: {behavioral_profile.get('preferences', {})}
-            - Activity Level: {behavioral_profile.get('activity_level', 'unknown')}
-            - Response Patterns: {behavioral_profile.get('response_patterns', {})}
+            - Interaction Patterns: {interaction_patterns[-5:] if interaction_patterns else "None"}
+            - Engagement Preferences: {behavioral_profile.get("preferences", {})}
+            - Activity Level: {behavioral_profile.get("activity_level", "unknown")}
+            - Response Patterns: {behavioral_profile.get("response_patterns", {})}
 
-            Intelligence from Swarm: {swarm_analysis.consensus.primary_finding if swarm_analysis else 'Not available'}
+            Intelligence from Swarm: {swarm_analysis.consensus.primary_finding if swarm_analysis else "Not available"}
 
             Requirements:
             1. Adapt language style to match their engagement preferences
@@ -196,20 +197,15 @@ class BehavioralAdapterAgent(PersonalizerAgent):
             Generate 2-3 behavioral adaptations of the content:
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=800, temperature=0.7
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=800, temperature=0.7)
 
             # Parse response into variants
             content_variants = await self._parse_content_variants(
-                response.content if response.content else base_content,
-                "behavioral_adaptation"
+                response.content if response.content else base_content, "behavioral_adaptation"
             )
 
             # Calculate expected engagement lift
-            engagement_lift = self._calculate_behavioral_engagement_lift(
-                behavioral_profile, swarm_analysis
-            )
+            engagement_lift = self._calculate_behavioral_engagement_lift(behavioral_profile, swarm_analysis)
 
             return PersonalizationRecommendation(
                 agent_type=self.agent_type,
@@ -220,9 +216,9 @@ class BehavioralAdapterAgent(PersonalizerAgent):
                 expected_engagement_lift=engagement_lift,
                 channel_optimized=channel,
                 metadata={
-                    'behavioral_factors': ['interaction_patterns', 'engagement_preferences', 'response_speed'],
-                    'adaptation_method': 'claude_behavioral_analysis'
-                }
+                    "behavioral_factors": ["interaction_patterns", "engagement_preferences", "response_speed"],
+                    "adaptation_method": "claude_behavioral_analysis",
+                },
             )
 
         except Exception as e:
@@ -234,58 +230,62 @@ class BehavioralAdapterAgent(PersonalizerAgent):
         try:
             # Simple parsing - in production this would be more sophisticated
             variants = []
-            lines = content.split('\n')
+            lines = content.split("\n")
             current_variant = ""
 
             for line in lines:
                 line = line.strip()
-                if line and not line.startswith('Requirements') and not line.startswith('Generate'):
+                if line and not line.startswith("Requirements") and not line.startswith("Generate"):
                     current_variant += line + " "
                     if len(current_variant) > 50:  # Reasonable variant length
                         variant_id = hashlib.md5(current_variant.encode()).hexdigest()[:8]
-                        variants.append(ContentVariant(
-                            variant_id=f"{variant_type}_{variant_id}",
-                            content=current_variant.strip(),
-                            personalization_factors=[PersonalizationDimension.BEHAVIORAL],
-                            target_audience={'type': variant_type}
-                        ))
+                        variants.append(
+                            ContentVariant(
+                                variant_id=f"{variant_type}_{variant_id}",
+                                content=current_variant.strip(),
+                                personalization_factors=[PersonalizationDimension.BEHAVIORAL],
+                                target_audience={"type": variant_type},
+                            )
+                        )
                         current_variant = ""
                         if len(variants) >= 3:  # Limit to 3 variants
                             break
 
             # Ensure at least one variant
             if not variants:
-                variants.append(ContentVariant(
-                    variant_id=f"{variant_type}_fallback",
-                    content=content[:200] if content else "Personalized content",
-                    personalization_factors=[PersonalizationDimension.BEHAVIORAL],
-                    target_audience={'type': 'fallback'}
-                ))
+                variants.append(
+                    ContentVariant(
+                        variant_id=f"{variant_type}_fallback",
+                        content=content[:200] if content else "Personalized content",
+                        personalization_factors=[PersonalizationDimension.BEHAVIORAL],
+                        target_audience={"type": "fallback"},
+                    )
+                )
 
             return variants
 
         except Exception as e:
             logger.error(f"Error parsing content variants: {e}")
-            return [ContentVariant(
-                variant_id="error_fallback",
-                content=content[:200] if content else "Default content",
-                personalization_factors=[],
-                target_audience={}
-            )]
+            return [
+                ContentVariant(
+                    variant_id="error_fallback",
+                    content=content[:200] if content else "Default content",
+                    personalization_factors=[],
+                    target_audience={},
+                )
+            ]
 
-    def _calculate_behavioral_engagement_lift(
-        self, behavioral_profile: Dict[str, Any], swarm_analysis: Any
-    ) -> float:
+    def _calculate_behavioral_engagement_lift(self, behavioral_profile: Dict[str, Any], swarm_analysis: Any) -> float:
         """Calculate expected engagement lift from behavioral adaptation."""
         try:
             base_lift = 15.0  # Base 15% lift from behavioral adaptation
 
             # Adjust based on behavioral data quality
-            if behavioral_profile.get('interaction_history'):
+            if behavioral_profile.get("interaction_history"):
                 base_lift += 10.0  # Additional 10% for rich behavioral data
 
             # Adjust based on swarm analysis confidence
-            if swarm_analysis and hasattr(swarm_analysis, 'consensus_score'):
+            if swarm_analysis and hasattr(swarm_analysis, "consensus_score"):
                 confidence_boost = swarm_analysis.consensus_score * 20.0
                 base_lift += confidence_boost
 
@@ -300,17 +300,16 @@ class BehavioralAdapterAgent(PersonalizerAgent):
         """Create fallback recommendation when personalization fails."""
         return PersonalizationRecommendation(
             agent_type=self.agent_type,
-            content_variants=[ContentVariant(
-                variant_id="fallback",
-                content=base_content,
-                personalization_factors=[],
-                target_audience={}
-            )],
+            content_variants=[
+                ContentVariant(
+                    variant_id="fallback", content=base_content, personalization_factors=[], target_audience={}
+                )
+            ],
             confidence=0.3,
             personalization_reasoning="Fallback due to personalization error",
             target_dimensions=[],
             expected_engagement_lift=0.0,
-            channel_optimized=channel
+            channel_optimized=channel,
         )
 
 
@@ -326,11 +325,11 @@ class DemographicTargeterAgent(PersonalizerAgent):
         content_type: ContentType,
         channel: ContentChannel,
         lead_data: Dict[str, Any],
-        swarm_analysis: Any
+        swarm_analysis: Any,
     ) -> PersonalizationRecommendation:
         """Personalize content based on demographics."""
         try:
-            demographics = lead_data.get('demographics', {})
+            demographics = lead_data.get("demographics", {})
 
             prompt = f"""
             Personalize this real estate content for specific demographic characteristics.
@@ -340,11 +339,11 @@ class DemographicTargeterAgent(PersonalizerAgent):
             Channel: {channel.value}
 
             Demographic Profile:
-            - Age Range: {demographics.get('age_range', 'unknown')}
-            - Income Level: {demographics.get('income_level', 'unknown')}
-            - Family Status: {demographics.get('family_status', 'unknown')}
-            - Location Type: {demographics.get('location_preference', 'unknown')}
-            - Lifestyle: {demographics.get('lifestyle', 'unknown')}
+            - Age Range: {demographics.get("age_range", "unknown")}
+            - Income Level: {demographics.get("income_level", "unknown")}
+            - Family Status: {demographics.get("family_status", "unknown")}
+            - Location Type: {demographics.get("location_preference", "unknown")}
+            - Lifestyle: {demographics.get("lifestyle", "unknown")}
 
             Requirements:
             1. Use language appropriate for age group and education level
@@ -356,13 +355,10 @@ class DemographicTargeterAgent(PersonalizerAgent):
             Generate 2-3 demographic-targeted versions:
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=700, temperature=0.6
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=700, temperature=0.6)
 
             content_variants = await self._parse_demographic_variants(
-                response.content if response.content else base_content,
-                demographics
+                response.content if response.content else base_content, demographics
             )
 
             engagement_lift = self._calculate_demographic_lift(demographics)
@@ -375,57 +371,56 @@ class DemographicTargeterAgent(PersonalizerAgent):
                 target_dimensions=[PersonalizationDimension.DEMOGRAPHIC],
                 expected_engagement_lift=engagement_lift,
                 channel_optimized=channel,
-                metadata={'demographic_factors': list(demographics.keys())}
+                metadata={"demographic_factors": list(demographics.keys())},
             )
 
         except Exception as e:
             logger.error(f"Error in demographic targeter: {e}")
             return self._create_fallback_recommendation(base_content, channel)
 
-    async def _parse_demographic_variants(
-        self, content: str, demographics: Dict[str, Any]
-    ) -> List[ContentVariant]:
+    async def _parse_demographic_variants(self, content: str, demographics: Dict[str, Any]) -> List[ContentVariant]:
         """Parse content into demographic-targeted variants."""
         try:
-            age_range = demographics.get('age_range', 'general')
-            family_status = demographics.get('family_status', 'general')
+            age_range = demographics.get("age_range", "general")
+            family_status = demographics.get("family_status", "general")
 
             # Create variants based on demographic segments
             variants = []
-            content_parts = content.split('\n\n') if content else [content]
+            content_parts = content.split("\n\n") if content else [content]
 
             for i, part in enumerate(content_parts[:3]):  # Max 3 variants
                 if part.strip():
                     variant_id = f"demo_{age_range}_{family_status}_{i}"
-                    variants.append(ContentVariant(
-                        variant_id=variant_id,
-                        content=part.strip(),
-                        personalization_factors=[PersonalizationDimension.DEMOGRAPHIC],
-                        target_audience=demographics
-                    ))
+                    variants.append(
+                        ContentVariant(
+                            variant_id=variant_id,
+                            content=part.strip(),
+                            personalization_factors=[PersonalizationDimension.DEMOGRAPHIC],
+                            target_audience=demographics,
+                        )
+                    )
 
-            return variants or [ContentVariant(
-                variant_id="demo_fallback",
-                content=content,
-                personalization_factors=[PersonalizationDimension.DEMOGRAPHIC],
-                target_audience=demographics
-            )]
+            return variants or [
+                ContentVariant(
+                    variant_id="demo_fallback",
+                    content=content,
+                    personalization_factors=[PersonalizationDimension.DEMOGRAPHIC],
+                    target_audience=demographics,
+                )
+            ]
 
         except Exception as e:
             logger.error(f"Error parsing demographic variants: {e}")
-            return [ContentVariant(
-                variant_id="demo_error",
-                content=content,
-                personalization_factors=[],
-                target_audience={}
-            )]
+            return [
+                ContentVariant(variant_id="demo_error", content=content, personalization_factors=[], target_audience={})
+            ]
 
     def _calculate_demographic_lift(self, demographics: Dict[str, Any]) -> float:
         """Calculate expected lift from demographic targeting."""
         base_lift = 20.0  # Base 20% for demographic targeting
 
         # Bonus for rich demographic data
-        data_completeness = len([v for v in demographics.values() if v and v != 'unknown']) / 5.0
+        data_completeness = len([v for v in demographics.values() if v and v != "unknown"]) / 5.0
         completeness_bonus = data_completeness * 15.0
 
         return min(base_lift + completeness_bonus, 45.0)
@@ -443,13 +438,13 @@ class SentimentOptimizerAgent(PersonalizerAgent):
         content_type: ContentType,
         channel: ContentChannel,
         lead_data: Dict[str, Any],
-        swarm_analysis: Any
+        swarm_analysis: Any,
     ) -> PersonalizationRecommendation:
         """Optimize content sentiment and tone."""
         try:
             # Analyze current lead sentiment and preferences
-            sentiment_profile = lead_data.get('sentiment_profile', {})
-            communication_style = lead_data.get('communication_style', {})
+            sentiment_profile = lead_data.get("sentiment_profile", {})
+            communication_style = lead_data.get("communication_style", {})
 
             prompt = f"""
             Optimize the tone and sentiment of this real estate content.
@@ -459,10 +454,10 @@ class SentimentOptimizerAgent(PersonalizerAgent):
             Channel: {channel.value}
 
             Lead Sentiment Profile:
-            - Current Mood: {sentiment_profile.get('current_mood', 'neutral')}
-            - Communication Style: {communication_style.get('preferred_style', 'professional')}
-            - Urgency Perception: {sentiment_profile.get('urgency_level', 'medium')}
-            - Confidence Level: {sentiment_profile.get('confidence', 'moderate')}
+            - Current Mood: {sentiment_profile.get("current_mood", "neutral")}
+            - Communication Style: {communication_style.get("preferred_style", "professional")}
+            - Urgency Perception: {sentiment_profile.get("urgency_level", "medium")}
+            - Confidence Level: {sentiment_profile.get("confidence", "moderate")}
 
             Requirements:
             1. Match the appropriate tone for their current mood
@@ -474,13 +469,10 @@ class SentimentOptimizerAgent(PersonalizerAgent):
             Generate 3 sentiment-optimized versions:
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=700, temperature=0.5
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=700, temperature=0.5)
 
             content_variants = await self._parse_sentiment_variants(
-                response.content if response.content else base_content,
-                sentiment_profile
+                response.content if response.content else base_content, sentiment_profile
             )
 
             return PersonalizationRecommendation(
@@ -491,40 +483,42 @@ class SentimentOptimizerAgent(PersonalizerAgent):
                 target_dimensions=[PersonalizationDimension.SENTIMENT],
                 expected_engagement_lift=25.0,
                 channel_optimized=channel,
-                metadata={'sentiment_factors': ['mood', 'style', 'urgency', 'confidence']}
+                metadata={"sentiment_factors": ["mood", "style", "urgency", "confidence"]},
             )
 
         except Exception as e:
             logger.error(f"Error in sentiment optimizer: {e}")
             return self._create_fallback_recommendation(base_content, channel)
 
-    async def _parse_sentiment_variants(
-        self, content: str, sentiment_profile: Dict[str, Any]
-    ) -> List[ContentVariant]:
+    async def _parse_sentiment_variants(self, content: str, sentiment_profile: Dict[str, Any]) -> List[ContentVariant]:
         """Parse content into sentiment-optimized variants."""
         try:
-            mood = sentiment_profile.get('current_mood', 'neutral')
-            style = sentiment_profile.get('preferred_style', 'professional')
+            mood = sentiment_profile.get("current_mood", "neutral")
+            style = sentiment_profile.get("preferred_style", "professional")
 
             variants = []
-            content_sections = content.split('\n\n') if content else [content]
+            content_sections = content.split("\n\n") if content else [content]
 
             for i, section in enumerate(content_sections[:3]):
                 if section.strip():
                     variant_id = f"sentiment_{mood}_{style}_{i}"
-                    variants.append(ContentVariant(
-                        variant_id=variant_id,
-                        content=section.strip(),
-                        personalization_factors=[PersonalizationDimension.SENTIMENT],
-                        target_audience={'mood': mood, 'style': style}
-                    ))
+                    variants.append(
+                        ContentVariant(
+                            variant_id=variant_id,
+                            content=section.strip(),
+                            personalization_factors=[PersonalizationDimension.SENTIMENT],
+                            target_audience={"mood": mood, "style": style},
+                        )
+                    )
 
-            return variants or [ContentVariant(
-                variant_id="sentiment_fallback",
-                content=content,
-                personalization_factors=[PersonalizationDimension.SENTIMENT],
-                target_audience=sentiment_profile
-            )]
+            return variants or [
+                ContentVariant(
+                    variant_id="sentiment_fallback",
+                    content=content,
+                    personalization_factors=[PersonalizationDimension.SENTIMENT],
+                    target_audience=sentiment_profile,
+                )
+            ]
 
         except Exception as e:
             logger.error(f"Error parsing sentiment variants: {e}")
@@ -543,7 +537,7 @@ class ABTestManagerAgent(PersonalizerAgent):
         content_type: ContentType,
         channel: ContentChannel,
         lead_data: Dict[str, Any],
-        swarm_analysis: Any
+        swarm_analysis: Any,
     ) -> PersonalizationRecommendation:
         """Create A/B test variants for content."""
         try:
@@ -566,13 +560,10 @@ class ABTestManagerAgent(PersonalizerAgent):
             Generate 3 A/B test variants:
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=700, temperature=0.8
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=700, temperature=0.8)
 
             content_variants = await self._create_ab_test_variants(
-                response.content if response.content else base_content,
-                base_content
+                response.content if response.content else base_content, base_content
             )
 
             return PersonalizationRecommendation(
@@ -583,42 +574,44 @@ class ABTestManagerAgent(PersonalizerAgent):
                 target_dimensions=[PersonalizationDimension.CONTEXTUAL],
                 expected_engagement_lift=35.0,  # Higher lift potential from testing
                 channel_optimized=channel,
-                metadata={'ab_test_strategy': 'multi_variant_optimization'}
+                metadata={"ab_test_strategy": "multi_variant_optimization"},
             )
 
         except Exception as e:
             logger.error(f"Error in A/B test manager: {e}")
             return self._create_fallback_recommendation(base_content, channel)
 
-    async def _create_ab_test_variants(
-        self, content: str, base_content: str
-    ) -> List[ContentVariant]:
+    async def _create_ab_test_variants(self, content: str, base_content: str) -> List[ContentVariant]:
         """Create A/B test variants."""
         try:
             variants = []
 
             # Control variant (original)
-            variants.append(ContentVariant(
-                variant_id="control",
-                content=base_content,
-                personalization_factors=[],
-                target_audience={'test_group': 'control'},
-                metadata={'ab_test_role': 'control'}
-            ))
+            variants.append(
+                ContentVariant(
+                    variant_id="control",
+                    content=base_content,
+                    personalization_factors=[],
+                    target_audience={"test_group": "control"},
+                    metadata={"ab_test_role": "control"},
+                )
+            )
 
             # Test variants
-            content_parts = content.split('\n\n') if content else []
-            test_labels = ['variant_a', 'variant_b', 'variant_c']
+            content_parts = content.split("\n\n") if content else []
+            test_labels = ["variant_a", "variant_b", "variant_c"]
 
             for i, part in enumerate(content_parts[:3]):
                 if part.strip():
-                    variants.append(ContentVariant(
-                        variant_id=test_labels[i] if i < len(test_labels) else f"variant_{i}",
-                        content=part.strip(),
-                        personalization_factors=[PersonalizationDimension.CONTEXTUAL],
-                        target_audience={'test_group': test_labels[i] if i < len(test_labels) else f"test_{i}"},
-                        metadata={'ab_test_role': 'test'}
-                    ))
+                    variants.append(
+                        ContentVariant(
+                            variant_id=test_labels[i] if i < len(test_labels) else f"variant_{i}",
+                            content=part.strip(),
+                            personalization_factors=[PersonalizationDimension.CONTEXTUAL],
+                            target_audience={"test_group": test_labels[i] if i < len(test_labels) else f"test_{i}"},
+                            metadata={"ab_test_role": "test"},
+                        )
+                    )
 
             return variants
 
@@ -653,7 +646,7 @@ class ContentPersonalizationSwarm:
 
         # Performance tracking
         self.agent_performance: Dict[PersonalizerAgentType, Dict[str, float]] = {
-            agent_type: {'success_rate': 0.8, 'avg_engagement_lift': 0.2, 'total_personalizations': 0}
+            agent_type: {"success_rate": 0.8, "avg_engagement_lift": 0.2, "total_personalizations": 0}
             for agent_type in PersonalizerAgentType
         }
 
@@ -665,7 +658,7 @@ class ContentPersonalizationSwarm:
         base_content: str,
         content_type: ContentType,
         channel: ContentChannel,
-        lead_data: Optional[Dict[str, Any]] = None
+        lead_data: Optional[Dict[str, Any]] = None,
     ) -> PersonalizedContent:
         """
         Create personalized content using multi-agent collaboration.
@@ -681,7 +674,9 @@ class ContentPersonalizationSwarm:
             PersonalizedContent with agent consensus and optimal variant
         """
         try:
-            logger.info(f"🎨 Starting content personalization for lead {lead_id} ({content_type.value} on {channel.value})")
+            logger.info(
+                f"🎨 Starting content personalization for lead {lead_id} ({content_type.value} on {channel.value})"
+            )
 
             # Get comprehensive lead intelligence if not provided
             if not lead_data:
@@ -694,17 +689,19 @@ class ContentPersonalizationSwarm:
             personalization_tasks = []
 
             # Always run behavioral and demographic agents
-            personalization_tasks.extend([
-                self.behavioral_adapter.personalize_content(
-                    base_content, content_type, channel, lead_data, swarm_analysis
-                ),
-                self.demographic_targeter.personalize_content(
-                    base_content, content_type, channel, lead_data, swarm_analysis
-                ),
-            ])
+            personalization_tasks.extend(
+                [
+                    self.behavioral_adapter.personalize_content(
+                        base_content, content_type, channel, lead_data, swarm_analysis
+                    ),
+                    self.demographic_targeter.personalize_content(
+                        base_content, content_type, channel, lead_data, swarm_analysis
+                    ),
+                ]
+            )
 
             # Conditionally run additional agents based on data availability
-            if lead_data.get('sentiment_profile'):
+            if lead_data.get("sentiment_profile"):
                 personalization_tasks.append(
                     self.sentiment_optimizer.personalize_content(
                         base_content, content_type, channel, lead_data, swarm_analysis
@@ -724,15 +721,14 @@ class ContentPersonalizationSwarm:
 
             # Filter valid recommendations
             valid_recommendations = [
-                rec for rec in recommendations
+                rec
+                for rec in recommendations
                 if isinstance(rec, PersonalizationRecommendation) and rec.confidence >= 0.5
             ]
 
             if not valid_recommendations:
                 logger.warning(f"⚠️ No valid personalization recommendations for lead {lead_id}")
-                return self._create_fallback_personalized_content(
-                    lead_id, base_content, content_type, channel
-                )
+                return self._create_fallback_personalized_content(lead_id, base_content, content_type, channel)
 
             # Build consensus from recommendations
             personalized_content = await self._build_personalization_consensus(
@@ -752,9 +748,7 @@ class ContentPersonalizationSwarm:
 
         except Exception as e:
             logger.error(f"❌ Error in content personalization for lead {lead_id}: {e}")
-            return self._create_fallback_personalized_content(
-                lead_id, base_content, content_type, channel
-            )
+            return self._create_fallback_personalized_content(lead_id, base_content, content_type, channel)
 
     async def _build_personalization_consensus(
         self,
@@ -763,7 +757,7 @@ class ContentPersonalizationSwarm:
         content_type: ContentType,
         channel: ContentChannel,
         recommendations: List[PersonalizationRecommendation],
-        swarm_analysis: Any
+        swarm_analysis: Any,
     ) -> PersonalizedContent:
         """Build consensus from personalization recommendations."""
         try:
@@ -771,9 +765,7 @@ class ContentPersonalizationSwarm:
             all_variants = []
             for rec in recommendations:
                 for variant in rec.content_variants:
-                    variant_score = await self._score_variant(
-                        variant, rec, swarm_analysis
-                    )
+                    variant_score = await self._score_variant(variant, rec, swarm_analysis)
                     all_variants.append((variant, variant_score, rec))
 
             # Sort by score and select best variant
@@ -781,9 +773,7 @@ class ContentPersonalizationSwarm:
             best_variant, best_score, best_rec = all_variants[0] if all_variants else (None, 0.0, None)
 
             if not best_variant:
-                return self._create_fallback_personalized_content(
-                    lead_id, base_content, content_type, channel
-                )
+                return self._create_fallback_personalized_content(lead_id, base_content, content_type, channel)
 
             # Calculate consensus metrics
             consensus_confidence = sum(rec.confidence for rec in recommendations) / len(recommendations)
@@ -802,7 +792,7 @@ class ContentPersonalizationSwarm:
             ab_test_group = None
             ab_recs = [rec for rec in recommendations if rec.agent_type == PersonalizerAgentType.AB_TEST_MANAGER]
             if ab_recs and best_rec in ab_recs:
-                ab_test_group = best_variant.target_audience.get('test_group')
+                ab_test_group = best_variant.target_audience.get("test_group")
 
             return PersonalizedContent(
                 lead_id=lead_id,
@@ -813,22 +803,20 @@ class ContentPersonalizationSwarm:
                 consensus_confidence=consensus_confidence,
                 participating_agents=[rec.agent_type for rec in recommendations],
                 variant_id=best_variant.variant_id,
-                expected_performance={'engagement_lift': expected_engagement},
+                expected_performance={"engagement_lift": expected_engagement},
                 delivery_timing=delivery_timing,
                 personalization_factors=list(all_factors),
                 ab_test_group=ab_test_group,
                 metadata={
-                    'total_variants_considered': len(all_variants),
-                    'consensus_method': 'weighted_scoring',
-                    'swarm_influence': swarm_analysis.consensus_score if swarm_analysis else 0.0
-                }
+                    "total_variants_considered": len(all_variants),
+                    "consensus_method": "weighted_scoring",
+                    "swarm_influence": swarm_analysis.consensus_score if swarm_analysis else 0.0,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error building personalization consensus: {e}")
-            return self._create_fallback_personalized_content(
-                lead_id, base_content, content_type, channel
-            )
+            return self._create_fallback_personalized_content(lead_id, base_content, content_type, channel)
 
     async def _score_variant(
         self, variant: ContentVariant, recommendation: PersonalizationRecommendation, swarm_analysis: Any
@@ -845,12 +833,12 @@ class ContentPersonalizationSwarm:
 
             # Bonus for swarm analysis alignment
             swarm_bonus = 0
-            if swarm_analysis and hasattr(swarm_analysis, 'consensus_score'):
+            if swarm_analysis and hasattr(swarm_analysis, "consensus_score"):
                 swarm_bonus = swarm_analysis.consensus_score * 10
 
             # Historical performance bonus
             agent_performance = self.agent_performance.get(recommendation.agent_type, {})
-            performance_bonus = agent_performance.get('avg_engagement_lift', 0.2) * 20
+            performance_bonus = agent_performance.get("avg_engagement_lift", 0.2) * 20
 
             total_score = base_score + personalization_bonus + engagement_bonus + swarm_bonus + performance_bonus
 
@@ -869,33 +857,18 @@ class ContentPersonalizationSwarm:
             logger.error(f"Error getting lead data for personalization: {e}")
             # Return fallback data if database fails
             return {
-                'lead_profile': {
-                    'name': 'Unknown Lead',
-                    'email': '',
-                    'company': '',
-                    'preferences': {},
-                    'tags': []
-                },
-                'behavioral_data': {},
-                'intelligence_data': {},
-                'scores': {
-                    'overall': 0,
-                    'behavior': 0,
-                    'intent': 0,
-                    'engagement': 0
-                },
-                'recent_communications': [],
-                'source': 'unknown',
-                'status': 'new',
-                'temperature': 'cold'
+                "lead_profile": {"name": "Unknown Lead", "email": "", "company": "", "preferences": {}, "tags": []},
+                "behavioral_data": {},
+                "intelligence_data": {},
+                "scores": {"overall": 0, "behavior": 0, "intent": 0, "engagement": 0},
+                "recent_communications": [],
+                "source": "unknown",
+                "status": "new",
+                "temperature": "cold",
             }
 
     def _create_fallback_personalized_content(
-        self,
-        lead_id: str,
-        base_content: str,
-        content_type: ContentType,
-        channel: ContentChannel
+        self, lead_id: str, base_content: str, content_type: ContentType, channel: ContentChannel
     ) -> PersonalizedContent:
         """Create fallback personalized content when consensus fails."""
         return PersonalizedContent(
@@ -907,10 +880,10 @@ class ContentPersonalizationSwarm:
             consensus_confidence=0.3,
             participating_agents=[],
             variant_id="fallback",
-            expected_performance={'engagement_lift': 0.0},
+            expected_performance={"engagement_lift": 0.0},
             delivery_timing=datetime.now() + timedelta(hours=1),
             personalization_factors=[],
-            metadata={'is_fallback': True}
+            metadata={"is_fallback": True},
         )
 
     async def _update_personalization_performance(
@@ -923,26 +896,28 @@ class ContentPersonalizationSwarm:
                 current_performance = self.agent_performance[agent_type]
 
                 # Update running statistics
-                total = current_performance['total_personalizations']
-                avg_lift = current_performance['avg_engagement_lift']
+                total = current_performance["total_personalizations"]
+                avg_lift = current_performance["avg_engagement_lift"]
 
                 new_total = total + 1
                 new_avg_lift = (avg_lift * total + rec.expected_engagement_lift / 100) / new_total
 
-                self.agent_performance[agent_type].update({
-                    'avg_engagement_lift': new_avg_lift,
-                    'total_personalizations': new_total,
-                    'last_used': datetime.now().isoformat()
-                })
+                self.agent_performance[agent_type].update(
+                    {
+                        "avg_engagement_lift": new_avg_lift,
+                        "total_personalizations": new_total,
+                        "last_used": datetime.now().isoformat(),
+                    }
+                )
 
             # Store personalized content for future analysis
             content_key = f"personalized_content:{content.lead_id}:{content.variant_id}"
             content_data = {
-                'content': content.final_content,
-                'personalization_score': content.personalization_score,
-                'agents_used': [agent.value for agent in content.participating_agents],
-                'timestamp': content.created_at.isoformat(),
-                'expected_performance': content.expected_performance
+                "content": content.final_content,
+                "personalization_score": content.personalization_score,
+                "agents_used": [agent.value for agent in content.participating_agents],
+                "timestamp": content.created_at.isoformat(),
+                "expected_performance": content.expected_performance,
             }
 
             await self.cache.set(content_key, content_data, ttl=86400 * 7)  # 7 days
@@ -953,13 +928,11 @@ class ContentPersonalizationSwarm:
     def get_personalization_stats(self) -> Dict[str, Any]:
         """Get comprehensive personalization statistics."""
         total_personalizations = sum(
-            agent_perf['total_personalizations']
-            for agent_perf in self.agent_performance.values()
+            agent_perf["total_personalizations"] for agent_perf in self.agent_performance.values()
         )
 
         avg_effectiveness = sum(
-            agent_perf['avg_engagement_lift']
-            for agent_perf in self.agent_performance.values()
+            agent_perf["avg_engagement_lift"] for agent_perf in self.agent_performance.values()
         ) / len(self.agent_performance)
 
         return {
@@ -968,13 +941,12 @@ class ContentPersonalizationSwarm:
             "consensus_threshold": self.consensus_threshold,
             "ab_test_traffic_split": self.ab_test_traffic_split,
             "agent_performance": {
-                agent_type.value: performance
-                for agent_type, performance in self.agent_performance.items()
+                agent_type.value: performance for agent_type, performance in self.agent_performance.items()
             },
             "overall_effectiveness": avg_effectiveness,
             "supported_content_types": [ct.value for ct in ContentType],
             "supported_channels": [ch.value for ch in ContentChannel],
-            "personalization_dimensions": [pd.value for pd in PersonalizationDimension]
+            "personalization_dimensions": [pd.value for pd in PersonalizationDimension],
         }
 
     async def create_content_campaign(
@@ -983,39 +955,35 @@ class ContentPersonalizationSwarm:
         base_content: str,
         content_type: ContentType,
         target_leads: List[str],
-        channel: ContentChannel
+        channel: ContentChannel,
     ) -> Dict[str, Any]:
         """Create a personalized content campaign for multiple leads."""
         try:
             logger.info(f"🎯 Creating personalized campaign '{campaign_name}' for {len(target_leads)} leads")
 
             campaign_results = {
-                'campaign_name': campaign_name,
-                'total_leads': len(target_leads),
-                'personalized_content': [],
-                'campaign_stats': {
-                    'avg_personalization_score': 0.0,
-                    'total_variants_created': 0,
-                    'agents_utilized': set()
-                }
+                "campaign_name": campaign_name,
+                "total_leads": len(target_leads),
+                "personalized_content": [],
+                "campaign_stats": {
+                    "avg_personalization_score": 0.0,
+                    "total_variants_created": 0,
+                    "agents_utilized": set(),
+                },
             }
 
             # Personalize content for each lead
             personalization_tasks = [
-                self.personalize_content(lead_id, base_content, content_type, channel)
-                for lead_id in target_leads
+                self.personalize_content(lead_id, base_content, content_type, channel) for lead_id in target_leads
             ]
 
             # Execute all personalizations concurrently
             personalized_contents = await asyncio.gather(*personalization_tasks, return_exceptions=True)
 
             # Process results
-            valid_contents = [
-                content for content in personalized_contents
-                if isinstance(content, PersonalizedContent)
-            ]
+            valid_contents = [content for content in personalized_contents if isinstance(content, PersonalizedContent)]
 
-            campaign_results['personalized_content'] = valid_contents
+            campaign_results["personalized_content"] = valid_contents
 
             # Calculate campaign statistics
             if valid_contents:
@@ -1025,11 +993,13 @@ class ContentPersonalizationSwarm:
                 for content in valid_contents:
                     all_agents.update(content.participating_agents)
 
-                campaign_results['campaign_stats'].update({
-                    'avg_personalization_score': avg_score,
-                    'total_variants_created': total_variants,
-                    'agents_utilized': [agent.value for agent in all_agents]
-                })
+                campaign_results["campaign_stats"].update(
+                    {
+                        "avg_personalization_score": avg_score,
+                        "total_variants_created": total_variants,
+                        "agents_utilized": [agent.value for agent in all_agents],
+                    }
+                )
 
             logger.info(f"✅ Campaign '{campaign_name}' created: {len(valid_contents)} personalized contents")
 
@@ -1038,10 +1008,10 @@ class ContentPersonalizationSwarm:
         except Exception as e:
             logger.error(f"❌ Error creating content campaign: {e}")
             return {
-                'campaign_name': campaign_name,
-                'error': str(e),
-                'total_leads': len(target_leads),
-                'personalized_content': []
+                "campaign_name": campaign_name,
+                "error": str(e),
+                "total_leads": len(target_leads),
+                "personalized_content": [],
             }
 
 

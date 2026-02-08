@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import List, Optional, Dict, Any, Protocol, runtime_checkable
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 from src.core.exceptions import RetrievalError
 
@@ -103,10 +103,10 @@ class MockLLMProvider:
     def _extract_query_from_prompt(self, prompt: str) -> str:
         """Extract query from HyDE prompt."""
         # Simple extraction - look for "Query:" line
-        lines = prompt.split('\n')
+        lines = prompt.split("\n")
         for line in lines:
-            if line.strip().startswith('Query:'):
-                return line.strip().replace('Query:', '').strip()
+            if line.strip().startswith("Query:"):
+                return line.strip().replace("Query:", "").strip()
         return "machine learning"  # Default fallback
 
     def _generate_mock_document(self, query: str, max_length: int) -> str:
@@ -115,15 +115,11 @@ class MockLLMProvider:
 
         # Domain-specific mock responses
         mock_responses = {
-            'machine learning': """Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It involves algorithms that can identify patterns in data and make predictions or decisions. Common techniques include supervised learning, unsupervised learning, and reinforcement learning. Popular algorithms include linear regression, decision trees, neural networks, and support vector machines. Machine learning applications span many fields including image recognition, natural language processing, recommendation systems, and predictive analytics.""",
-
-            'neural networks': """Neural networks are computational models inspired by biological neural networks in animal brains. They consist of interconnected nodes or neurons organized in layers, including input layers, hidden layers, and output layers. Each connection has an associated weight that adjusts during training through backpropagation. Deep neural networks with multiple hidden layers enable deep learning, which has achieved remarkable success in tasks like image classification, speech recognition, and natural language understanding. Common architectures include feedforward networks, convolutional neural networks (CNNs), and recurrent neural networks (RNNs).""",
-
-            'data science': """Data science is an interdisciplinary field that combines statistics, mathematics, computer science, and domain expertise to extract insights from structured and unstructured data. Data scientists collect, clean, and analyze large datasets to identify patterns, trends, and relationships. The process typically involves data collection, exploration, preprocessing, modeling, and visualization. Key tools include Python, R, SQL, Jupyter notebooks, and machine learning libraries. Data science applications include business intelligence, predictive modeling, customer analytics, and research across various industries.""",
-
-            'python programming': """Python is a high-level, interpreted programming language known for its simplicity and readability. Created by Guido van Rossum in 1991, Python emphasizes code readability with its use of indentation and clear syntax. It supports multiple programming paradigms including procedural, object-oriented, and functional programming. Python has extensive libraries for web development, data analysis, machine learning, and scientific computing. Popular frameworks include Django and Flask for web development, NumPy and Pandas for data analysis, and TensorFlow and PyTorch for machine learning.""",
-
-            'artificial intelligence': """Artificial Intelligence (AI) refers to the simulation of human intelligence in machines designed to think and learn like humans. AI systems can perform tasks that typically require human intelligence such as visual perception, speech recognition, decision-making, and language translation. The field encompasses machine learning, natural language processing, computer vision, robotics, and expert systems. AI applications range from virtual assistants and chatbots to autonomous vehicles and medical diagnosis systems. Current AI research focuses on developing more robust, explainable, and ethical AI systems."""
+            "machine learning": """Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It involves algorithms that can identify patterns in data and make predictions or decisions. Common techniques include supervised learning, unsupervised learning, and reinforcement learning. Popular algorithms include linear regression, decision trees, neural networks, and support vector machines. Machine learning applications span many fields including image recognition, natural language processing, recommendation systems, and predictive analytics.""",
+            "neural networks": """Neural networks are computational models inspired by biological neural networks in animal brains. They consist of interconnected nodes or neurons organized in layers, including input layers, hidden layers, and output layers. Each connection has an associated weight that adjusts during training through backpropagation. Deep neural networks with multiple hidden layers enable deep learning, which has achieved remarkable success in tasks like image classification, speech recognition, and natural language understanding. Common architectures include feedforward networks, convolutional neural networks (CNNs), and recurrent neural networks (RNNs).""",
+            "data science": """Data science is an interdisciplinary field that combines statistics, mathematics, computer science, and domain expertise to extract insights from structured and unstructured data. Data scientists collect, clean, and analyze large datasets to identify patterns, trends, and relationships. The process typically involves data collection, exploration, preprocessing, modeling, and visualization. Key tools include Python, R, SQL, Jupyter notebooks, and machine learning libraries. Data science applications include business intelligence, predictive modeling, customer analytics, and research across various industries.""",
+            "python programming": """Python is a high-level, interpreted programming language known for its simplicity and readability. Created by Guido van Rossum in 1991, Python emphasizes code readability with its use of indentation and clear syntax. It supports multiple programming paradigms including procedural, object-oriented, and functional programming. Python has extensive libraries for web development, data analysis, machine learning, and scientific computing. Popular frameworks include Django and Flask for web development, NumPy and Pandas for data analysis, and TensorFlow and PyTorch for machine learning.""",
+            "artificial intelligence": """Artificial Intelligence (AI) refers to the simulation of human intelligence in machines designed to think and learn like humans. AI systems can perform tasks that typically require human intelligence such as visual perception, speech recognition, decision-making, and language translation. The field encompasses machine learning, natural language processing, computer vision, robotics, and expert systems. AI applications range from virtual assistants and chatbots to autonomous vehicles and medical diagnosis systems. Current AI research focuses on developing more robust, explainable, and ethical AI systems.""",
         }
 
         # Find best matching response
@@ -139,11 +135,11 @@ class MockLLMProvider:
 
         # Truncate to max length if needed
         if len(best_match) > max_length:
-            sentences = best_match.split('. ')
+            sentences = best_match.split(". ")
             truncated = ""
             for sentence in sentences:
-                if len(truncated + sentence + '. ') <= max_length:
-                    truncated += sentence + '. '
+                if len(truncated + sentence + ". ") <= max_length:
+                    truncated += sentence + ". "
                 else:
                     break
             best_match = truncated.strip()
@@ -191,7 +187,7 @@ class HyDEGenerator:
         if not self.config.use_caching:
             return False
 
-        timestamp = cache_entry.get('timestamp', 0)
+        timestamp = cache_entry.get("timestamp", 0)
         return (time.time() - timestamp) < self.config.cache_ttl
 
     async def generate_hypothetical_documents(self, query: str) -> List[str]:
@@ -214,7 +210,7 @@ class HyDEGenerator:
         # Check cache first
         cache_key = self._get_cache_key(query)
         if cache_key in self._cache and self._is_cache_valid(self._cache[cache_key]):
-            return self._cache[cache_key]['documents']
+            return self._cache[cache_key]["documents"]
 
         try:
             documents = []
@@ -225,13 +221,11 @@ class HyDEGenerator:
                 prompt = self.config.prompt_template.format(query=query)
 
                 if i > 0:
-                    prompt += f"\n\nPlease provide a different perspective or additional details (variation {i+1}):"
+                    prompt += f"\n\nPlease provide a different perspective or additional details (variation {i + 1}):"
 
                 # Generate hypothetical document
                 hypothetical_doc = await self.llm_provider.generate(
-                    prompt=prompt,
-                    max_length=self.config.max_length,
-                    temperature=self.config.temperature
+                    prompt=prompt, max_length=self.config.max_length, temperature=self.config.temperature
                 )
 
                 if hypothetical_doc and hypothetical_doc.strip():
@@ -239,10 +233,7 @@ class HyDEGenerator:
 
             # Cache results
             if self.config.use_caching and documents:
-                self._cache[cache_key] = {
-                    'documents': documents,
-                    'timestamp': time.time()
-                }
+                self._cache[cache_key] = {"documents": documents, "timestamp": time.time()}
 
             return documents
 
@@ -274,14 +265,16 @@ class HyDEGenerator:
             for doc in hypotheticals:
                 # Extract key terms from hypothetical document
                 # Simple approach: use first sentence + key nouns
-                first_sentence = doc.split('.')[0] if '.' in doc else doc[:100]
+                first_sentence = doc.split(".")[0] if "." in doc else doc[:100]
                 words = first_sentence.lower().split()
 
                 # Add meaningful words (simple filter)
                 for word in words:
-                    if (len(word) > 3 and
-                        word.isalpha() and
-                        word not in {'this', 'that', 'with', 'from', 'they', 'have', 'been', 'will', 'would'}):
+                    if (
+                        len(word) > 3
+                        and word.isalpha()
+                        and word not in {"this", "that", "with", "from", "they", "have", "been", "will", "would"}
+                    ):
                         enhanced_terms.add(word)
 
             # Combine terms, keeping original query prominent
@@ -291,7 +284,7 @@ class HyDEGenerator:
             # Limit additional terms
             additional_terms = list(additional_terms)[:5]
 
-            enhanced_query = ' '.join(original_terms + additional_terms)
+            enhanced_query = " ".join(original_terms + additional_terms)
             return enhanced_query
 
         except Exception as e:
@@ -308,19 +301,19 @@ class HyDEGenerator:
             Dictionary with statistics
         """
         cache_stats = {
-            'total_entries': len(self._cache),
-            'valid_entries': sum(1 for entry in self._cache.values() if self._is_cache_valid(entry))
+            "total_entries": len(self._cache),
+            "valid_entries": sum(1 for entry in self._cache.values() if self._is_cache_valid(entry)),
         }
 
         return {
-            'config': {
-                'num_hypotheticals': self.config.num_hypotheticals,
-                'max_length': self.config.max_length,
-                'temperature': self.config.temperature,
-                'model': self.config.model,
-                'use_caching': self.config.use_caching,
-                'cache_ttl': self.config.cache_ttl
+            "config": {
+                "num_hypotheticals": self.config.num_hypotheticals,
+                "max_length": self.config.max_length,
+                "temperature": self.config.temperature,
+                "model": self.config.model,
+                "use_caching": self.config.use_caching,
+                "cache_ttl": self.config.cache_ttl,
             },
-            'cache': cache_stats,
-            'provider': type(self.llm_provider).__name__
+            "cache": cache_stats,
+            "provider": type(self.llm_provider).__name__,
         }

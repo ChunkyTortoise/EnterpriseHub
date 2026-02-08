@@ -29,12 +29,8 @@ class BulkImportRequest(BaseModel):
     """Request model for bulk lead import."""
 
     leads: List[Dict[str, Any]] = Field(..., description="List of leads to import")
-    tags: Optional[List[str]] = Field(
-        default=None, description="Tags to apply to all leads"
-    )
-    campaign_id: Optional[str] = Field(
-        default=None, description="Campaign to associate leads with"
-    )
+    tags: Optional[List[str]] = Field(default=None, description="Tags to apply to all leads")
+    campaign_id: Optional[str] = Field(default=None, description="Campaign to associate leads with")
 
 
 class BulkSMSRequest(BaseModel):
@@ -42,9 +38,7 @@ class BulkSMSRequest(BaseModel):
 
     contact_ids: List[str] = Field(..., description="List of contact IDs to message")
     message: str = Field(..., max_length=160, description="SMS message (max 160 chars)")
-    schedule_at: Optional[str] = Field(
-        default=None, description="ISO timestamp to schedule send"
-    )
+    schedule_at: Optional[str] = Field(default=None, description="ISO timestamp to schedule send")
 
 
 class BulkTagRequest(BaseModel):
@@ -52,20 +46,14 @@ class BulkTagRequest(BaseModel):
 
     contact_ids: List[str] = Field(..., description="List of contact IDs")
     tags_to_add: Optional[List[str]] = Field(default=None, description="Tags to add")
-    tags_to_remove: Optional[List[str]] = Field(
-        default=None, description="Tags to remove"
-    )
+    tags_to_remove: Optional[List[str]] = Field(default=None, description="Tags to remove")
 
 
 class BulkExportRequest(BaseModel):
     """Request model for bulk export."""
 
-    filters: Optional[Dict[str, Any]] = Field(
-        default=None, description="Filters to apply"
-    )
-    fields: Optional[List[str]] = Field(
-        default=None, description="Fields to include in export"
-    )
+    filters: Optional[Dict[str, Any]] = Field(default=None, description="Filters to apply")
+    fields: Optional[List[str]] = Field(default=None, description="Fields to include in export")
 
 
 class OperationStatus(BaseModel):
@@ -83,9 +71,7 @@ class OperationStatus(BaseModel):
 
 # Bulk Import Endpoints
 @router.post("/import", status_code=202)
-async def bulk_import_leads(
-    location_id: str, request: BulkImportRequest, background_tasks: BackgroundTasks
-):
+async def bulk_import_leads(location_id: str, request: BulkImportRequest, background_tasks: BackgroundTasks):
     """
     Import multiple leads in bulk.
 
@@ -99,9 +85,7 @@ async def bulk_import_leads(
             leads=request.leads, tags=request.tags, campaign_id=request.campaign_id
         )
 
-        logger.info(
-            f"Started bulk import operation {operation_id} with {len(request.leads)} leads"
-        )
+        logger.info(f"Started bulk import operation {operation_id} with {len(request.leads)} leads")
 
         return {
             "operation_id": operation_id,
@@ -119,9 +103,7 @@ async def bulk_import_leads(
 async def bulk_import_csv(
     location_id: str,
     file: UploadFile = File(...),
-    tags: Optional[str] = Query(
-        default=None, description="Comma-separated tags to apply"
-    ),
+    tags: Optional[str] = Query(default=None, description="Comma-separated tags to apply"),
     background_tasks: BackgroundTasks = None,
 ):
     """
@@ -147,9 +129,7 @@ async def bulk_import_csv(
         bulk_ops = BulkOperationsManager(location_id)
         operation_id = await bulk_ops.import_leads(leads=leads, tags=tags_list)
 
-        logger.info(
-            f"Started CSV import operation {operation_id} with {len(leads)} leads"
-        )
+        logger.info(f"Started CSV import operation {operation_id} with {len(leads)} leads")
 
         return {
             "operation_id": operation_id,
@@ -175,9 +155,7 @@ async def bulk_export_leads(location_id: str, request: BulkExportRequest):
     try:
         bulk_ops = BulkOperationsManager(location_id)
 
-        leads = await bulk_ops.export_leads(
-            filters=request.filters, fields=request.fields
-        )
+        leads = await bulk_ops.export_leads(filters=request.filters, fields=request.fields)
 
         # Create JSON response
         json_data = json.dumps(leads, indent=2)
@@ -205,14 +183,10 @@ async def bulk_export_csv(location_id: str, request: BulkExportRequest):
     try:
         bulk_ops = BulkOperationsManager(location_id)
 
-        leads = await bulk_ops.export_leads(
-            filters=request.filters, fields=request.fields
-        )
+        leads = await bulk_ops.export_leads(filters=request.filters, fields=request.fields)
 
         if not leads:
-            raise HTTPException(
-                status_code=404, detail="No leads found matching criteria"
-            )
+            raise HTTPException(status_code=404, detail="No leads found matching criteria")
 
         # Create CSV
         output = io.StringIO()
@@ -239,9 +213,7 @@ async def bulk_export_csv(location_id: str, request: BulkExportRequest):
 
 # Bulk SMS Campaign Endpoints
 @router.post("/sms/campaign", status_code=202)
-async def create_bulk_sms_campaign(
-    location_id: str, request: BulkSMSRequest, background_tasks: BackgroundTasks
-):
+async def create_bulk_sms_campaign(location_id: str, request: BulkSMSRequest, background_tasks: BackgroundTasks):
     """
     Send SMS to multiple contacts.
 
@@ -263,9 +235,7 @@ async def create_bulk_sms_campaign(
             schedule_at=request.schedule_at,
         )
 
-        logger.info(
-            f"Started bulk SMS campaign {operation_id} for {len(request.contact_ids)} contacts"
-        )
+        logger.info(f"Started bulk SMS campaign {operation_id} for {len(request.contact_ids)} contacts")
 
         return {
             "operation_id": operation_id,
@@ -279,16 +249,12 @@ async def create_bulk_sms_campaign(
         raise
     except Exception as e:
         logger.error(f"Error creating SMS campaign: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create SMS campaign: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create SMS campaign: {str(e)}")
 
 
 # Bulk Tagging Endpoints
 @router.post("/tags/apply", status_code=202)
-async def bulk_apply_tags(
-    location_id: str, request: BulkTagRequest, background_tasks: BackgroundTasks
-):
+async def bulk_apply_tags(location_id: str, request: BulkTagRequest, background_tasks: BackgroundTasks):
     """
     Apply or remove tags from multiple contacts.
 
@@ -309,9 +275,7 @@ async def bulk_apply_tags(
             tags_to_remove=request.tags_to_remove,
         )
 
-        logger.info(
-            f"Started bulk tag operation {operation_id} for {len(request.contact_ids)} contacts"
-        )
+        logger.info(f"Started bulk tag operation {operation_id} for {len(request.contact_ids)} contacts")
 
         return {
             "operation_id": operation_id,
@@ -372,9 +336,7 @@ async def list_operations(
 
     except Exception as e:
         logger.error(f"Error listing operations: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to list operations: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list operations: {str(e)}")
 
 
 # Health check

@@ -28,18 +28,14 @@ class GHLRateLimiter:
         """Wait if rate limit would be exceeded"""
         now = time.time()
         # Remove old requests outside the time window
-        self.requests = [
-            req_time for req_time in self.requests if now - req_time < self.time_window
-        ]
+        self.requests = [req_time for req_time in self.requests if now - req_time < self.time_window]
 
         if len(self.requests) >= self.max_requests:
             # Calculate wait time
             oldest_request = min(self.requests)
             wait_time = self.time_window - (now - oldest_request)
             if wait_time > 0:
-                logger.warning(
-                    f"Rate limit reached. Waiting {wait_time:.2f} seconds..."
-                )
+                logger.warning(f"Rate limit reached. Waiting {wait_time:.2f} seconds...")
                 time.sleep(wait_time)
                 self.requests = []
 
@@ -192,14 +188,10 @@ class GHLAPIClient:
     def _ensure_token_valid(self):
         """Ensure access token is valid, refresh if needed"""
         if not self.access_token:
-            raise ValueError(
-                "No access token available. Call exchange_code_for_token() first."
-            )
+            raise ValueError("No access token available. Call exchange_code_for_token() first.")
 
         # Refresh if token expires in less than 5 minutes
-        if self.token_expires_at and datetime.now() > self.token_expires_at - timedelta(
-            minutes=5
-        ):
+        if self.token_expires_at and datetime.now() > self.token_expires_at - timedelta(minutes=5):
             logger.info("Token expiring soon, refreshing...")
             self.refresh_access_token()
 
@@ -241,9 +233,7 @@ class GHLAPIClient:
     # CONTACTS API
     # ============================================================================
 
-    def get_contacts(
-        self, limit: int = 100, skip: int = 0, query: str = None
-    ) -> Dict[str, Any]:
+    def get_contacts(self, limit: int = 100, skip: int = 0, query: str = None) -> Dict[str, Any]:
         """
         Get contacts from GHL
 
@@ -277,9 +267,7 @@ class GHLAPIClient:
         """
         return self._make_request("POST", "/contacts/", json=contact_data)
 
-    def update_contact(
-        self, contact_id: str, contact_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def update_contact(self, contact_id: str, contact_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update existing contact"""
         return self._make_request("PUT", f"/contacts/{contact_id}", json=contact_data)
 
@@ -289,23 +277,17 @@ class GHLAPIClient:
 
     def add_contact_tag(self, contact_id: str, tag: str) -> Dict[str, Any]:
         """Add tag to contact"""
-        return self._make_request(
-            "POST", f"/contacts/{contact_id}/tags", json={"tags": [tag]}
-        )
+        return self._make_request("POST", f"/contacts/{contact_id}/tags", json={"tags": [tag]})
 
     def remove_contact_tag(self, contact_id: str, tag: str) -> Dict[str, Any]:
         """Remove tag from contact"""
-        return self._make_request(
-            "DELETE", f"/contacts/{contact_id}/tags", json={"tags": [tag]}
-        )
+        return self._make_request("DELETE", f"/contacts/{contact_id}/tags", json={"tags": [tag]})
 
     # ============================================================================
     # OPPORTUNITIES (PIPELINES) API
     # ============================================================================
 
-    def get_opportunities(
-        self, pipeline_id: str = None, limit: int = 100, skip: int = 0
-    ) -> Dict[str, Any]:
+    def get_opportunities(self, pipeline_id: str = None, limit: int = 100, skip: int = 0) -> Dict[str, Any]:
         """Get opportunities (deals)"""
         params = {"limit": limit, "skip": skip}
         if pipeline_id:
@@ -321,13 +303,9 @@ class GHLAPIClient:
         """Create new opportunity"""
         return self._make_request("POST", "/opportunities/", json=opportunity_data)
 
-    def update_opportunity(
-        self, opportunity_id: str, opportunity_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def update_opportunity(self, opportunity_id: str, opportunity_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update opportunity"""
-        return self._make_request(
-            "PUT", f"/opportunities/{opportunity_id}", json=opportunity_data
-        )
+        return self._make_request("PUT", f"/opportunities/{opportunity_id}", json=opportunity_data)
 
     def delete_opportunity(self, opportunity_id: str) -> Dict[str, Any]:
         """Delete opportunity"""
@@ -348,13 +326,9 @@ class GHLAPIClient:
     def get_messages(self, conversation_id: str, limit: int = 20) -> Dict[str, Any]:
         """Get messages in a conversation"""
         params = {"limit": limit}
-        return self._make_request(
-            "GET", f"/conversations/{conversation_id}/messages", params=params
-        )
+        return self._make_request("GET", f"/conversations/{conversation_id}/messages", params=params)
 
-    def send_sms(
-        self, contact_id: str, message: str, from_number: str = None
-    ) -> Dict[str, Any]:
+    def send_sms(self, contact_id: str, message: str, from_number: str = None) -> Dict[str, Any]:
         """
         Send SMS message to contact
 
@@ -372,9 +346,7 @@ class GHLAPIClient:
 
         return self._make_request("POST", "/conversations/messages", json=data)
 
-    def send_email(
-        self, contact_id: str, subject: str, body: str, from_email: str = None
-    ) -> Dict[str, Any]:
+    def send_email(self, contact_id: str, subject: str, body: str, from_email: str = None) -> Dict[str, Any]:
         """
         Send email to contact
 
@@ -430,13 +402,9 @@ class GHLAPIClient:
         """
         return self._make_request("POST", "/appointments/", json=appointment_data)
 
-    def update_appointment(
-        self, appointment_id: str, appointment_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def update_appointment(self, appointment_id: str, appointment_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update appointment"""
-        return self._make_request(
-            "PUT", f"/appointments/{appointment_id}", json=appointment_data
-        )
+        return self._make_request("PUT", f"/appointments/{appointment_id}", json=appointment_data)
 
     def delete_appointment(self, appointment_id: str) -> Dict[str, Any]:
         """Delete appointment"""
@@ -482,9 +450,7 @@ if __name__ == "__main__":
     print("✅ Client initialized")
     print(f"   Base URL: {client.BASE_URL}")
     print(f"   Has token: {bool(client.access_token)}")
-    print(
-        f"   Rate limit: {client.rate_limiter.max_requests} req/{client.rate_limiter.time_window}s"
-    )
+    print(f"   Rate limit: {client.rate_limiter.max_requests} req/{client.rate_limiter.time_window}s")
 
     print("\n📋 Available Methods:")
     print("\n   Contacts:")

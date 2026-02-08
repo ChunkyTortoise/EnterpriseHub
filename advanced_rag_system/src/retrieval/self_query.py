@@ -418,9 +418,7 @@ class QueryAnalyzer:
         else:
             return QueryIntent.SEARCH
 
-    def _calculate_confidence(
-        self, entities: List[Entity], temporal_refs: List[TemporalRef]
-    ) -> float:
+    def _calculate_confidence(self, entities: List[Entity], temporal_refs: List[TemporalRef]) -> float:
         """Calculate overall confidence score."""
         if not entities and not temporal_refs:
             return 0.3  # Low confidence for pure semantic queries
@@ -516,9 +514,7 @@ class FilterTranslator:
             return self._condition_to_dict(conditions[0])
 
         # Multiple conditions - use $and
-        return {
-            "$and": [self._condition_to_dict(c) for c in conditions]
-        }
+        return {"$and": [self._condition_to_dict(c) for c in conditions]}
 
     def _condition_to_dict(self, condition: FilterCondition) -> Dict[str, Any]:
         """Convert condition to ChromaDB filter dict."""
@@ -798,25 +794,19 @@ class SelfQueryRetriever:
                 top_k=top_k,
                 filters=plan.filter.raw_filter if plan.filter else None,
             )
-            results = await self._search_with_embedding(
-                query, search_options, query_embedding
-            )
+            results = await self._search_with_embedding(query, search_options, query_embedding)
 
             # Check if fallback needed
             if self.fallback.should_fallback(analysis, results):
                 fallback_used = True
                 # Fall back to semantic search
                 search_options = SearchOptions(top_k=top_k)
-                results = await self._search_with_embedding(
-                    query, search_options, query_embedding
-                )
+                results = await self._search_with_embedding(query, search_options, query_embedding)
 
         elif plan.strategy == ExecutionStrategy.SEARCH_FIRST:
             # Semantic search first
             search_options = SearchOptions(top_k=top_k)
-            results = await self._search_with_embedding(
-                query, search_options, query_embedding
-            )
+            results = await self._search_with_embedding(query, search_options, query_embedding)
 
         else:
             # Default: semantic search with optional filters
@@ -824,9 +814,7 @@ class SelfQueryRetriever:
                 top_k=top_k,
                 filters=plan.filter.raw_filter if plan.filter else None,
             )
-            results = await self._search_with_embedding(
-                query, search_options, query_embedding
-            )
+            results = await self._search_with_embedding(query, search_options, query_embedding)
 
         execution_time = (time.time() - start_time) * 1000
 

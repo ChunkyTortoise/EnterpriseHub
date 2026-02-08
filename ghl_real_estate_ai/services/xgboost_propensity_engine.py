@@ -37,8 +37,10 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class LifeEventType(Enum):
     """Detectable life events that drive seller/buyer propensity."""
+
     PROBATE = "probate"
     JOB_RELOCATION = "job_relocation"
     DIVORCE = "divorce"
@@ -65,6 +67,7 @@ LIFE_EVENT_CONVERSION_RATES: Dict[LifeEventType, float] = {
 @dataclass
 class LifeEventSignal:
     """Single life-event detection with confidence."""
+
     event_type: LifeEventType
     detected: bool
     confidence: float  # 0-1
@@ -75,6 +78,7 @@ class LifeEventSignal:
 @dataclass
 class PropensityScore:
     """Complete propensity assessment for a lead."""
+
     contact_id: str
     conversion_probability: float  # 0-1 overall
     confidence: float  # model confidence 0-1
@@ -90,6 +94,7 @@ class PropensityScore:
 @dataclass
 class FeatureExplanation:
     """SHAP-style explanation for a single feature."""
+
     feature_name: str
     display_name: str
     category: str  # life_event, conversation, behavioral
@@ -102,6 +107,7 @@ class FeatureExplanation:
 @dataclass
 class PropensityExplanation:
     """Complete SHAP explanation for a propensity score."""
+
     contact_id: str
     conversion_probability: float
     base_value: float
@@ -116,6 +122,7 @@ class PropensityExplanation:
 @dataclass
 class TrainingMetrics:
     """Metrics from a model training run."""
+
     accuracy: float
     precision: float
     recall: float
@@ -362,6 +369,7 @@ FEATURE_DISPLAY: Dict[str, Dict[str, str]] = {
 # Engine
 # ---------------------------------------------------------------------------
 
+
 class XGBoostPropensityEngine:
     """
     Scores leads using XGBoost over a combined feature space of:
@@ -423,9 +431,7 @@ class XGBoostPropensityEngine:
 
         # Build feature vector
         life_events = await self._detect_life_events(address)
-        features = self._build_feature_vector(
-            life_events, conversation_context or {}, behavioral_signals or {}
-        )
+        features = self._build_feature_vector(life_events, conversation_context or {}, behavioral_signals or {})
 
         if self._is_trained and self._model is not None:
             probability = self._predict_with_model(features)
@@ -434,9 +440,7 @@ class XGBoostPropensityEngine:
             probability = self._heuristic_score(life_events, features)
             importance = self._heuristic_importance(life_events)
 
-        confidence = self._calculate_confidence(
-            life_events, conversation_context or {}, behavioral_signals or {}
-        )
+        confidence = self._calculate_confidence(life_events, conversation_context or {}, behavioral_signals or {})
 
         primary = self._identify_primary_event(life_events)
         temperature = self._classify_temperature(probability)
@@ -473,25 +477,27 @@ class XGBoostPropensityEngine:
         """
         try:
             import xgboost as xgb
+            from sklearn.metrics import (
+                accuracy_score,
+                f1_score,
+                precision_score,
+                recall_score,
+                roc_auc_score,
+            )
             from sklearn.model_selection import train_test_split
             from sklearn.preprocessing import StandardScaler
-            from sklearn.metrics import (
-                accuracy_score, precision_score, recall_score,
-                f1_score, roc_auc_score,
-            )
         except ImportError as exc:
-            raise RuntimeError(
-                "XGBoost and scikit-learn required for training"
-            ) from exc
+            raise RuntimeError("XGBoost and scikit-learn required for training") from exc
 
-        X = np.array([
-            [row.get(f, 0.0) for f in self._feature_names]
-            for row in training_data
-        ])
+        X = np.array([[row.get(f, 0.0) for f in self._feature_names] for row in training_data])
         y = np.array(labels)
 
         X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=validation_split, random_state=42, stratify=y,
+            X,
+            y,
+            test_size=validation_split,
+            random_state=42,
+            stratify=y,
         )
 
         self._scaler = StandardScaler()
@@ -500,7 +506,8 @@ class XGBoostPropensityEngine:
 
         self._model = xgb.XGBClassifier(**self.DEFAULT_PARAMS)
         self._model.fit(
-            X_train_scaled, y_train,
+            X_train_scaled,
+            y_train,
             eval_set=[(X_val_scaled, y_val)],
             verbose=False,
         )
@@ -509,10 +516,12 @@ class XGBoostPropensityEngine:
         y_pred = self._model.predict(X_val_scaled)
         y_prob = self._model.predict_proba(X_val_scaled)[:, 1]
 
-        importances = dict(zip(
-            self._feature_names,
-            [round(float(v), 4) for v in self._model.feature_importances_],
-        ))
+        importances = dict(
+            zip(
+                self._feature_names,
+                [round(float(v), 4) for v in self._model.feature_importances_],
+            )
+        )
 
         metrics = TrainingMetrics(
             accuracy=round(float(accuracy_score(y_val, y_pred)), 4),
@@ -527,7 +536,9 @@ class XGBoostPropensityEngine:
 
         logger.info(
             "Propensity model trained: accuracy=%.4f auc=%.4f on %d samples",
-            metrics.accuracy, metrics.auc_roc, len(X),
+            metrics.accuracy,
+            metrics.auc_roc,
+            len(X),
         )
         return metrics
 
@@ -551,16 +562,12 @@ class XGBoostPropensityEngine:
         start = time.time()
 
         life_events = await self._detect_life_events(address)
-        features = self._build_feature_vector(
-            life_events, conversation_context or {}, behavioral_signals or {}
-        )
+        features = self._build_feature_vector(life_events, conversation_context or {}, behavioral_signals or {})
 
         if self._is_trained and self._model is not None:
             shap_values, base_value, probability = self._shap_with_model(features)
         else:
-            shap_values, base_value, probability = self._shap_heuristic(
-                life_events, features
-            )
+            shap_values, base_value, probability = self._shap_heuristic(life_events, features)
 
         # Build per-feature explanations
         explanations: List[FeatureExplanation] = []
@@ -569,15 +576,17 @@ class XGBoostPropensityEngine:
             sv = shap_values[i]
             fv = float(features[i])
             biz = meta.get("positive" if sv > 0 else "negative", fname)
-            explanations.append(FeatureExplanation(
-                feature_name=fname,
-                display_name=meta.get("display", fname),
-                category=meta.get("category", "other"),
-                shap_value=round(sv, 4),
-                feature_value=round(fv, 4),
-                business_explanation=biz,
-                actionable_insight=meta.get("insight", ""),
-            ))
+            explanations.append(
+                FeatureExplanation(
+                    feature_name=fname,
+                    display_name=meta.get("display", fname),
+                    category=meta.get("category", "other"),
+                    shap_value=round(sv, 4),
+                    feature_value=round(fv, 4),
+                    business_explanation=biz,
+                    actionable_insight=meta.get("insight", ""),
+                )
+            )
 
         # Sort by absolute impact for key drivers
         sorted_exp = sorted(explanations, key=lambda e: abs(e.shap_value), reverse=True)
@@ -591,17 +600,9 @@ class XGBoostPropensityEngine:
             for e in sorted_exp[:5]
         ]
 
-        risk_factors = [
-            e.business_explanation
-            for e in sorted_exp
-            if e.shap_value < -0.01
-        ][:3]
+        risk_factors = [e.business_explanation for e in sorted_exp if e.shap_value < -0.01][:3]
 
-        opportunities = [
-            e.actionable_insight
-            for e in sorted_exp
-            if e.shap_value > 0.01 and e.actionable_insight
-        ][:3]
+        opportunities = [e.actionable_insight for e in sorted_exp if e.shap_value > 0.01 and e.actionable_insight][:3]
 
         # Waterfall chart data (Recharts-compatible)
         waterfall_data = self._build_waterfall(base_value, probability, sorted_exp[:10])
@@ -620,9 +621,7 @@ class XGBoostPropensityEngine:
             explanation_time_ms=elapsed_ms,
         )
 
-    def _shap_with_model(
-        self, features: np.ndarray
-    ) -> tuple:
+    def _shap_with_model(self, features: np.ndarray) -> tuple:
         """Compute SHAP values using TreeExplainer on the trained model."""
         try:
             import shap as shap_lib
@@ -656,16 +655,44 @@ class XGBoostPropensityEngine:
         base_value = 0.15  # population baseline conversion rate
 
         # Weight vectors for each feature group
-        life_weights = np.array([
-            0.12, 0.08, 0.09, 0.07, 0.10, 0.04, 0.05, 0.03,
-            0.04, 0.06, 0.02, 0.02,
-        ])
-        conv_weights = np.array([
-            0.03, 0.04, 0.05, 0.06, 0.05, 0.06, 0.05, 0.03, 0.04,
-        ])
-        behav_weights = np.array([
-            0.06, -0.04, 0.05, 0.08, 0.03,
-        ])
+        life_weights = np.array(
+            [
+                0.12,
+                0.08,
+                0.09,
+                0.07,
+                0.10,
+                0.04,
+                0.05,
+                0.03,
+                0.04,
+                0.06,
+                0.02,
+                0.02,
+            ]
+        )
+        conv_weights = np.array(
+            [
+                0.03,
+                0.04,
+                0.05,
+                0.06,
+                0.05,
+                0.06,
+                0.05,
+                0.03,
+                0.04,
+            ]
+        )
+        behav_weights = np.array(
+            [
+                0.06,
+                -0.04,
+                0.05,
+                0.08,
+                0.03,
+            ]
+        )
 
         all_weights = np.concatenate([life_weights, conv_weights, behav_weights])
 
@@ -691,28 +718,30 @@ class XGBoostPropensityEngine:
         running = base
         for feat in top_features:
             sv = feat.shap_value
-            entries.append({
-                "name": feat.display_name,
-                "value": round(sv, 4),
-                "start": round(running, 4),
-                "end": round(running + sv, 4),
-                "type": "positive" if sv > 0 else "negative",
-            })
+            entries.append(
+                {
+                    "name": feat.display_name,
+                    "value": round(sv, 4),
+                    "start": round(running, 4),
+                    "end": round(running + sv, 4),
+                    "type": "positive" if sv > 0 else "negative",
+                }
+            )
             running += sv
-        entries.append({
-            "name": "Prediction",
-            "value": round(prediction, 4),
-            "type": "total",
-        })
+        entries.append(
+            {
+                "name": "Prediction",
+                "value": round(prediction, 4),
+                "type": "total",
+            }
+        )
         return {"entries": entries, "base_value": round(base, 4), "prediction": round(prediction, 4)}
 
     # ------------------------------------------------------------------
     # Life-event detection
     # ------------------------------------------------------------------
 
-    async def _detect_life_events(
-        self, address: Optional[str]
-    ) -> List[LifeEventSignal]:
+    async def _detect_life_events(self, address: Optional[str]) -> List[LifeEventSignal]:
         """Detect life events from ATTOM data and conversation signals."""
         events: List[LifeEventSignal] = []
         if not address:
@@ -720,6 +749,7 @@ class XGBoostPropensityEngine:
 
         try:
             from ghl_real_estate_ai.services.attom_client import get_attom_client
+
             attom = get_attom_client()
             dna = await attom.get_property_dna(address)
             triggers = await attom.get_life_event_triggers(address)
@@ -729,53 +759,66 @@ class XGBoostPropensityEngine:
 
         # Probate
         if triggers.get("probate"):
-            events.append(LifeEventSignal(
-                event_type=LifeEventType.PROBATE,
-                detected=True, confidence=0.90,
-                source="attom",
-                details={"is_deceased": True},
-            ))
+            events.append(
+                LifeEventSignal(
+                    event_type=LifeEventType.PROBATE,
+                    detected=True,
+                    confidence=0.90,
+                    source="attom",
+                    details={"is_deceased": True},
+                )
+            )
 
         # Tax delinquency
         if triggers.get("tax_delinquent"):
-            events.append(LifeEventSignal(
-                event_type=LifeEventType.TAX_DELINQUENCY,
-                detected=True, confidence=0.85,
-                source="attom",
-                details={"delinquent": True},
-            ))
+            events.append(
+                LifeEventSignal(
+                    event_type=LifeEventType.TAX_DELINQUENCY,
+                    detected=True,
+                    confidence=0.85,
+                    source="attom",
+                    details={"delinquent": True},
+                )
+            )
 
         # Liens → pre-foreclosure proxy
         liens = triggers.get("liens", 0)
         if liens >= 2:
-            events.append(LifeEventSignal(
-                event_type=LifeEventType.PRE_FORECLOSURE,
-                detected=True,
-                confidence=min(0.60 + liens * 0.10, 0.95),
-                source="attom",
-                details={"liens_count": liens},
-            ))
+            events.append(
+                LifeEventSignal(
+                    event_type=LifeEventType.PRE_FORECLOSURE,
+                    detected=True,
+                    confidence=min(0.60 + liens * 0.10, 0.95),
+                    source="attom",
+                    details={"liens_count": liens},
+                )
+            )
 
         # Long ownership (>10 years)
         summary = dna.get("summary", {})
         years = summary.get("years_owned", 0)
         if years >= 10:
-            events.append(LifeEventSignal(
-                event_type=LifeEventType.LONG_OWNERSHIP,
-                detected=True,
-                confidence=min(0.40 + (years - 10) * 0.05, 0.85),
-                source="attom",
-                details={"years_owned": years},
-            ))
+            events.append(
+                LifeEventSignal(
+                    event_type=LifeEventType.LONG_OWNERSHIP,
+                    detected=True,
+                    confidence=min(0.40 + (years - 10) * 0.05, 0.85),
+                    source="attom",
+                    details={"years_owned": years},
+                )
+            )
 
         # Absentee owner
         if summary.get("absentee_owner"):
-            events.append(LifeEventSignal(
-                event_type=LifeEventType.ABSENTEE_OWNER,
-                detected=True, confidence=0.80,
-                source="attom",
-                details={"absentee": True},
-            ))
+            events.append(
+                LifeEventSignal(
+                    event_type=LifeEventType.ABSENTEE_OWNER,
+                    detected=True,
+                    confidence=0.80,
+                    source="attom",
+                    details={"absentee": True},
+                )
+            )
 
         return events
 
@@ -854,10 +897,12 @@ class XGBoostPropensityEngine:
     def _get_feature_importance(self) -> Dict[str, float]:
         if self._model is None:
             return {}
-        return dict(zip(
-            self._feature_names,
-            [round(float(v), 4) for v in self._model.feature_importances_],
-        ))
+        return dict(
+            zip(
+                self._feature_names,
+                [round(float(v), 4) for v in self._model.feature_importances_],
+            )
+        )
 
     def _heuristic_score(
         self,
@@ -885,17 +930,13 @@ class XGBoostPropensityEngine:
         probability = min(event_score * 0.50 + conv_score + behav_score, 1.0)
         return max(probability, 0.05)
 
-    def _heuristic_importance(
-        self, life_events: List[LifeEventSignal]
-    ) -> Dict[str, float]:
+    def _heuristic_importance(self, life_events: List[LifeEventSignal]) -> Dict[str, float]:
         """Feature importance approximation without a trained model."""
         importance: Dict[str, float] = {}
         for evt in life_events:
             if evt.detected:
                 key = f"{evt.event_type.value}_detected"
-                importance[key] = round(
-                    LIFE_EVENT_CONVERSION_RATES.get(evt.event_type, 0.3) * evt.confidence, 4
-                )
+                importance[key] = round(LIFE_EVENT_CONVERSION_RATES.get(evt.event_type, 0.3) * evt.confidence, 4)
         importance["composite_score"] = 0.15
         importance["qualification_completeness"] = 0.10
         importance["engagement_score"] = 0.08
@@ -952,9 +993,7 @@ class XGBoostPropensityEngine:
         return "cold"
 
     @staticmethod
-    def _recommend_approach(
-        primary: Optional[LifeEventType], temperature: str
-    ) -> str:
+    def _recommend_approach(primary: Optional[LifeEventType], temperature: str) -> str:
         if primary == LifeEventType.PROBATE:
             return "Empathetic outreach; estate timeline; cash-offer positioning"
         if primary == LifeEventType.DIVORCE:
@@ -972,17 +1011,13 @@ class XGBoostPropensityEngine:
         return "Long-term drip campaign; market awareness; seasonal check-ins"
 
     @staticmethod
-    def _predict_timeline(
-        probability: float, events: List[LifeEventSignal]
-    ) -> str:
+    def _predict_timeline(probability: float, events: List[LifeEventSignal]) -> str:
         urgent_events = {
             LifeEventType.PROBATE,
             LifeEventType.PRE_FORECLOSURE,
             LifeEventType.TAX_DELINQUENCY,
         }
-        has_urgent = any(
-            e.event_type in urgent_events and e.detected for e in events
-        )
+        has_urgent = any(e.event_type in urgent_events and e.detected for e in events)
         if has_urgent or probability >= 0.80:
             return "immediate"
         if probability >= 0.60:

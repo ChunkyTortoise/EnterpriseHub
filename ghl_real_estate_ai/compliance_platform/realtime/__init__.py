@@ -16,37 +16,13 @@ Key Components:
 - ComplianceMetrics: Real-time compliance metrics snapshot
 """
 
-from ghl_real_estate_ai.compliance_platform.realtime.websocket_server import (
-    AlertType,
-    ComplianceAlert as WebSocketComplianceAlert,
-    ConnectionManager,
-    create_websocket_router,
-)
-
 from ghl_real_estate_ai.compliance_platform.realtime.event_publisher import (
-    ComplianceEventType,
     ComplianceEvent,
+    ComplianceEventBus,
     ComplianceEventPublisher,
     ComplianceEventSubscriber,
-    ComplianceEventBus,
+    ComplianceEventType,
 )
-
-from ghl_real_estate_ai.compliance_platform.realtime.notification_service import (
-    NotificationChannel,
-    NotificationPriority,
-    DeliveryStatus,
-    NotificationRecipient,
-    ComplianceNotification,
-    DeliveryResult,
-    NotificationProvider,
-    EmailNotificationProvider,
-    SlackNotificationProvider,
-    WebhookNotificationProvider,
-    NotificationService,
-    get_notification_service,
-    reset_notification_service,
-)
-
 from ghl_real_estate_ai.compliance_platform.realtime.monitoring_manager import (
     AlertSeverity,
     AlertStatus,
@@ -57,6 +33,29 @@ from ghl_real_estate_ai.compliance_platform.realtime.monitoring_manager import (
     RealTimeMonitoringManager,
     ThresholdOperator,
     create_monitoring_manager,
+)
+from ghl_real_estate_ai.compliance_platform.realtime.notification_service import (
+    ComplianceNotification,
+    DeliveryResult,
+    DeliveryStatus,
+    EmailNotificationProvider,
+    NotificationChannel,
+    NotificationPriority,
+    NotificationProvider,
+    NotificationRecipient,
+    NotificationService,
+    SlackNotificationProvider,
+    WebhookNotificationProvider,
+    get_notification_service,
+    reset_notification_service,
+)
+from ghl_real_estate_ai.compliance_platform.realtime.websocket_server import (
+    AlertType,
+    ConnectionManager,
+    create_websocket_router,
+)
+from ghl_real_estate_ai.compliance_platform.realtime.websocket_server import (
+    ComplianceAlert as WebSocketComplianceAlert,
 )
 
 __all__ = [

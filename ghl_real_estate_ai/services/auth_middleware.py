@@ -4,29 +4,37 @@ Authentication middleware for FastAPI and Streamlit integration.
 Provides authentication decorators, session management, and permission checking.
 """
 
-import streamlit as st
-from typing import Optional, Callable, Any
 from functools import wraps
-from fastapi import HTTPException, Depends, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Any, Callable, Optional
 
-from .auth_service import get_auth_service, User, UserRole
+import streamlit as st
+from fastapi import Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+from .auth_service import User, UserRole, get_auth_service
 
 logger = get_logger(__name__)
 
 # FastAPI Security
 security = HTTPBearer()
 
+
 class AuthenticationError(Exception):
     """Custom authentication error."""
+
     pass
+
 
 class PermissionError(Exception):
     """Custom permission error."""
+
     pass
 
+
 # FastAPI Dependencies
+
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
     """FastAPI dependency to get current authenticated user."""
@@ -37,7 +45,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         if not payload:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-        user = await auth_service.get_user_by_id(payload['user_id'])
+        user = await auth_service.get_user_by_id(payload["user_id"])
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
@@ -47,11 +55,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         logger.error(f"Authentication error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
+
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """FastAPI dependency requiring admin role."""
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
 
 async def get_agent_user(current_user: User = Depends(get_current_user)) -> User:
     """FastAPI dependency requiring agent role or higher."""
@@ -59,8 +69,10 @@ async def get_agent_user(current_user: User = Depends(get_current_user)) -> User
         raise HTTPException(status_code=403, detail="Agent access required")
     return current_user
 
+
 def require_permission(resource: str, action: str):
     """Decorator requiring specific permission."""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -76,34 +88,38 @@ def require_permission(resource: str, action: str):
 
             auth_service = get_auth_service()
             if not auth_service.check_permission(current_user.role, resource, action):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Permission denied: {resource}:{action}"
-                )
+                raise HTTPException(status_code=403, detail=f"Permission denied: {resource}:{action}")
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 # Streamlit Authentication
 
+
 def check_streamlit_auth() -> Optional[User]:
     """Check Streamlit session for authenticated user."""
-    if 'authenticated_user' in st.session_state:
+    if "authenticated_user" in st.session_state:
         return st.session_state.authenticated_user
     return None
+
 
 def set_streamlit_auth(user: User):
     """Set authenticated user in Streamlit session."""
     st.session_state.authenticated_user = user
     st.session_state.auth_token = get_auth_service().create_token(user)
 
+
 def clear_streamlit_auth():
     """Clear authentication from Streamlit session."""
-    if 'authenticated_user' in st.session_state:
+    if "authenticated_user" in st.session_state:
         del st.session_state.authenticated_user
-    if 'auth_token' in st.session_state:
+    if "auth_token" in st.session_state:
         del st.session_state.auth_token
+
 
 def require_streamlit_auth() -> User:
     """
@@ -115,6 +131,7 @@ def require_streamlit_auth() -> User:
         st.error("🔒 Authentication required")
         st.stop()
     return user
+
 
 def require_streamlit_permission(resource: str, action: str) -> User:
     """
@@ -129,6 +146,7 @@ def require_streamlit_permission(resource: str, action: str) -> User:
         st.stop()
 
     return user
+
 
 def require_streamlit_role(required_role: UserRole) -> User:
     """
@@ -148,36 +166,35 @@ def require_streamlit_role(required_role: UserRole) -> User:
 
     return user
 
+
 # Utility functions
+
 
 def get_user_permissions(user: User) -> dict:
     """Get all permissions for a user."""
     auth_service = get_auth_service()
 
-    resources = ['dashboard', 'leads', 'properties', 'conversations', 'commission', 'performance']
-    actions = ['read', 'write', 'delete']
+    resources = ["dashboard", "leads", "properties", "conversations", "commission", "performance"]
+    actions = ["read", "write", "delete"]
 
     permissions = {}
     for resource in resources:
         permissions[resource] = {}
         for action in actions:
-            permissions[resource][action] = auth_service.check_permission(
-                user.role, resource, action
-            )
+            permissions[resource][action] = auth_service.check_permission(user.role, resource, action)
 
     return permissions
 
+
 def format_user_role(role: UserRole) -> str:
     """Format user role for display."""
-    role_colors = {
-        UserRole.ADMIN: "🔴",
-        UserRole.AGENT: "🟡",
-        UserRole.VIEWER: "🟢"
-    }
+    role_colors = {UserRole.ADMIN: "🔴", UserRole.AGENT: "🟡", UserRole.VIEWER: "🟢"}
 
     return f"{role_colors.get(role, '⚪')} {role.value.title()}"
 
+
 # Session management
+
 
 class SessionManager:
     """Manage user sessions and tokens."""
@@ -189,10 +206,10 @@ class SessionManager:
         token = auth_service.create_token(user)
 
         return {
-            'user': user,
-            'token': token,
-            'permissions': get_user_permissions(user),
-            'created_at': st.session_state.get('session_start_time'),
+            "user": user,
+            "token": token,
+            "permissions": get_user_permissions(user),
+            "created_at": st.session_state.get("session_start_time"),
         }
 
     @staticmethod
@@ -201,7 +218,7 @@ class SessionManager:
         auth_service = get_auth_service()
         new_token = auth_service.create_token(user)
 
-        if 'auth_token' in st.session_state:
+        if "auth_token" in st.session_state:
             st.session_state.auth_token = new_token
 
         return new_token
@@ -209,7 +226,7 @@ class SessionManager:
     @staticmethod
     def is_session_valid() -> bool:
         """Check if current session is valid."""
-        if 'auth_token' not in st.session_state:
+        if "auth_token" not in st.session_state:
             return False
 
         auth_service = get_auth_service()

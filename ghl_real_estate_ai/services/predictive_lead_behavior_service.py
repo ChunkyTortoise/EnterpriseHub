@@ -17,17 +17,18 @@ Architecture Integration:
 - Cache: L1/L2 with tenant isolation
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone, timedelta
-from enum import Enum
 import asyncio
-import numpy as np
-from collections import deque
 import uuid
+from collections import deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service, TenantScopedCache
+from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
@@ -36,17 +37,21 @@ logger = get_logger(__name__)
 # Enums and Data Classes
 # ============================================================================
 
+
 class BehaviorPredictionType(Enum):
     """Types of behavioral predictions."""
-    NEXT_ACTION = "next_action"           # What will lead do next
-    ENGAGEMENT_PATTERN = "engagement"     # Future engagement likelihood
-    RESPONSE_TIMING = "response_timing"   # When lead will respond
-    CHURN_RISK = "churn_risk"            # Likelihood of going cold
-    CONVERSION_TIMELINE = "conversion"    # Expected conversion timeframe
-    OBJECTION_LIKELIHOOD = "objection"    # Probability of raising objections
+
+    NEXT_ACTION = "next_action"  # What will lead do next
+    ENGAGEMENT_PATTERN = "engagement"  # Future engagement likelihood
+    RESPONSE_TIMING = "response_timing"  # When lead will respond
+    CHURN_RISK = "churn_risk"  # Likelihood of going cold
+    CONVERSION_TIMELINE = "conversion"  # Expected conversion timeframe
+    OBJECTION_LIKELIHOOD = "objection"  # Probability of raising objections
+
 
 class BehaviorCategory(Enum):
     """Lead behavioral categories."""
+
     HIGHLY_ENGAGED = "highly_engaged"
     MODERATELY_ENGAGED = "moderately_engaged"
     LOW_ENGAGEMENT = "low_engagement"
@@ -54,59 +59,65 @@ class BehaviorCategory(Enum):
     CHURNING = "churning"
     CONVERTING = "converting"
 
+
 @dataclass
 class BehavioralTrend:
     """Behavioral trend analysis over time."""
-    trend_type: str                          # engagement, response_rate, etc.
-    direction: str                           # increasing, decreasing, stable
-    velocity: float                          # Rate of change
-    confidence: float                        # Trend confidence (0-1)
-    data_points: int                         # Number of observations
-    time_window_hours: int                   # Analysis window
+
+    trend_type: str  # engagement, response_rate, etc.
+    direction: str  # increasing, decreasing, stable
+    velocity: float  # Rate of change
+    confidence: float  # Trend confidence (0-1)
+    data_points: int  # Number of observations
+    time_window_hours: int  # Analysis window
     detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 @dataclass
 class NextActionPrediction:
     """Prediction of lead's next likely action."""
-    action: str                              # respond, request_info, schedule, ghost, etc.
-    probability: float                       # 0-1
-    expected_timing_hours: Optional[float]   # Expected time to action
-    confidence: float                        # Prediction confidence
-    triggers: List[str]                      # What would trigger this action
+
+    action: str  # respond, request_info, schedule, ghost, etc.
+    probability: float  # 0-1
+    expected_timing_hours: Optional[float]  # Expected time to action
+    confidence: float  # Prediction confidence
+    triggers: List[str]  # What would trigger this action
     prevention_strategy: Optional[str] = None  # If action is negative
+
 
 @dataclass
 class BehavioralPrediction:
     """Comprehensive behavioral prediction result."""
+
     lead_id: str
     location_id: str
 
     # Primary Predictions
     behavior_category: BehaviorCategory
-    category_confidence: float               # 0-1
-    next_actions: List[NextActionPrediction] # Top 3 predicted actions
+    category_confidence: float  # 0-1
+    next_actions: List[NextActionPrediction]  # Top 3 predicted actions
 
     # Engagement Metrics
-    engagement_score_7d: float               # 7-day engagement score (0-100)
+    engagement_score_7d: float  # 7-day engagement score (0-100)
     engagement_trend: BehavioralTrend
-    response_probability_24h: float          # Probability of response in 24h
+    response_probability_24h: float  # Probability of response in 24h
     expected_response_time_hours: Optional[float]
 
     # Risk Assessment
-    churn_risk_score: float                  # 0-100 (100 = high risk)
+    churn_risk_score: float  # 0-100 (100 = high risk)
     churn_risk_factors: List[str]
-    conversion_readiness_score: float        # 0-100
+    conversion_readiness_score: float  # 0-100
     estimated_conversion_days: Optional[int]
 
     # Behavioral Patterns
     communication_preferences: Dict[str, float]  # channel: preference score
     optimal_contact_windows: List[Dict[str, Any]]  # Time windows for contact
     objection_patterns: List[str]
-    decision_velocity: str                   # fast, moderate, slow
+    decision_velocity: str  # fast, moderate, slow
 
     # Learning Feedback
     prediction_accuracy_recent: Optional[float]  # How accurate have predictions been
-    feedback_count: int = 0                  # Number of feedback events
+    feedback_count: int = 0  # Number of feedback events
     model_version: str = "v1.0"
 
     # Metadata
@@ -115,22 +126,26 @@ class BehavioralPrediction:
     feature_count: int = 0
     expires_at: Optional[datetime] = None
 
+
 @dataclass
 class BehavioralFeedback:
     """Learning feedback for prediction improvement."""
+
     lead_id: str
     location_id: str
     prediction_id: str
     predicted_action: str
     actual_action: str
-    prediction_accuracy: float               # How close was prediction
-    feedback_type: str                       # correct, incorrect, partial
+    prediction_accuracy: float  # How close was prediction
+    feedback_type: str  # correct, incorrect, partial
     feedback_timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     context: Dict[str, Any] = field(default_factory=dict)
+
 
 # ============================================================================
 # Main Service Class
 # ============================================================================
+
 
 class PredictiveLeadBehaviorService:
     """
@@ -152,7 +167,7 @@ class PredictiveLeadBehaviorService:
         # Behavioral pattern tracking
         self._behavioral_history: Dict[str, deque] = {}  # lead_id -> recent behaviors
         self._feedback_queue: deque = deque(maxlen=1000)
-        self._accuracy_tracker: Dict[str, float] = {}   # prediction_id -> accuracy
+        self._accuracy_tracker: Dict[str, float] = {}  # prediction_id -> accuracy
 
         # Performance metrics
         self._prediction_count = 0
@@ -166,7 +181,7 @@ class PredictiveLeadBehaviorService:
         lead_id: str,
         location_id: str,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
-        force_refresh: bool = False
+        force_refresh: bool = False,
     ) -> BehavioralPrediction:
         """
         Generate comprehensive behavioral prediction for a lead.
@@ -191,14 +206,10 @@ class PredictiveLeadBehaviorService:
                     return cached
 
             # Gather behavioral features
-            features = await self._extract_behavioral_features(
-                lead_id, location_id, conversation_history
-            )
+            features = await self._extract_behavioral_features(lead_id, location_id, conversation_history)
 
             # Generate predictions
-            prediction = await self._generate_prediction(
-                lead_id, location_id, features
-            )
+            prediction = await self._generate_prediction(lead_id, location_id, features)
 
             # Calculate latency
             latency_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
@@ -214,8 +225,7 @@ class PredictiveLeadBehaviorService:
             self._update_performance_metrics(latency_ms)
 
             logger.info(
-                f"Behavioral prediction generated: {lead_id} "
-                f"({prediction.behavior_category.value}, {latency_ms:.1f}ms)"
+                f"Behavioral prediction generated: {lead_id} ({prediction.behavior_category.value}, {latency_ms:.1f}ms)"
             )
 
             return prediction
@@ -228,10 +238,7 @@ class PredictiveLeadBehaviorService:
             return await self._create_fallback_prediction(lead_id, location_id, latency_ms)
 
     async def _extract_behavioral_features(
-        self,
-        lead_id: str,
-        location_id: str,
-        conversation_history: Optional[List[Dict[str, Any]]]
+        self, lead_id: str, location_id: str, conversation_history: Optional[List[Dict[str, Any]]]
     ) -> Dict[str, Any]:
         """
         Extract comprehensive behavioral features.
@@ -244,6 +251,7 @@ class PredictiveLeadBehaviorService:
             try:
                 # Import here to avoid circular imports
                 from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+
                 ml_engine = get_ml_analytics_engine()
                 base_features = await ml_engine.extract_features(lead_id, location_id)
             except ImportError:
@@ -255,6 +263,7 @@ class PredictiveLeadBehaviorService:
             enhanced_score = None
             try:
                 from ghl_real_estate_ai.services.enhanced_lead_scoring import get_enhanced_lead_scoring
+
                 lead_scoring = get_enhanced_lead_scoring()
                 enhanced_score = await lead_scoring.score_lead(lead_id, location_id)
             except ImportError:
@@ -268,27 +277,20 @@ class PredictiveLeadBehaviorService:
                 "response_velocity_score": await self._calculate_response_velocity(
                     lead_id, location_id, conversation_history
                 ),
-                "engagement_consistency": await self._calculate_engagement_consistency(
-                    lead_id, location_id
-                ),
-                "communication_pattern_score": await self._analyze_communication_patterns(
-                    lead_id, location_id
-                ),
-
+                "engagement_consistency": await self._calculate_engagement_consistency(lead_id, location_id),
+                "communication_pattern_score": await self._analyze_communication_patterns(lead_id, location_id),
                 # Interaction features
                 "message_depth_score": self._calculate_message_depth(conversation_history),
                 "question_ratio": self._calculate_question_ratio(conversation_history),
                 "objection_frequency": self._calculate_objection_frequency(conversation_history),
-
                 # Integration features
                 "base_ml_confidence": base_features.get("confidence", 0.5),
                 "enhanced_overall_score": enhanced_score.overall_score if enhanced_score else 50.0,
                 "source_quality": enhanced_score.source_quality_score if enhanced_score else 50.0,
-
                 # Fallback features for basic operation
                 "conversation_length": len(conversation_history) if conversation_history else 0,
                 "has_conversation_data": bool(conversation_history),
-                "feature_completeness": 1.0 if enhanced_score else 0.5
+                "feature_completeness": 1.0 if enhanced_score else 0.5,
             }
 
             # Merge all features
@@ -302,14 +304,11 @@ class PredictiveLeadBehaviorService:
             return {
                 "error": True,
                 "conversation_length": len(conversation_history) if conversation_history else 0,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     async def _calculate_response_velocity(
-        self,
-        lead_id: str,
-        location_id: str,
-        conversation_history: Optional[List[Dict[str, Any]]]
+        self, lead_id: str, location_id: str, conversation_history: Optional[List[Dict[str, Any]]]
     ) -> float:
         """Calculate response velocity score (0-100)."""
         try:
@@ -319,7 +318,7 @@ class PredictiveLeadBehaviorService:
             # Calculate average response times
             response_times = []
             for i, msg in enumerate(conversation_history[1:], 1):
-                prev_time = conversation_history[i-1].get("timestamp")
+                prev_time = conversation_history[i - 1].get("timestamp")
                 curr_time = msg.get("timestamp")
 
                 if prev_time and curr_time and msg.get("direction") == "inbound":
@@ -417,9 +416,19 @@ class PredictiveLeadBehaviorService:
                 return 0.0
 
             objection_keywords = [
-                "but", "however", "not sure", "concerned", "worry", "worried",
-                "expensive", "too much", "can't afford", "think about it",
-                "need time", "not ready", "not interested"
+                "but",
+                "however",
+                "not sure",
+                "concerned",
+                "worry",
+                "worried",
+                "expensive",
+                "too much",
+                "can't afford",
+                "think about it",
+                "need time",
+                "not ready",
+                "not interested",
             ]
 
             objection_count = 0
@@ -439,10 +448,7 @@ class PredictiveLeadBehaviorService:
     # Additional prediction methods will be implemented in subsequent iterations...
 
     async def _generate_prediction(
-        self,
-        lead_id: str,
-        location_id: str,
-        features: Dict[str, Any]
+        self, lead_id: str, location_id: str, features: Dict[str, Any]
     ) -> BehavioralPrediction:
         """Generate behavioral prediction from features."""
         try:
@@ -484,7 +490,7 @@ class PredictiveLeadBehaviorService:
                 objection_patterns=features.get("objection_patterns", []),
                 decision_velocity=self._classify_decision_velocity(features),
                 feature_count=len(features),
-                expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
+                expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
             )
 
             return prediction
@@ -528,35 +534,33 @@ class PredictiveLeadBehaviorService:
                 actions = [
                     NextActionPrediction("respond_quickly", 0.85, 2.0, 0.9, ["follow-up message"], None),
                     NextActionPrediction("ask_question", 0.70, 4.0, 0.8, ["more information needed"], None),
-                    NextActionPrediction("schedule_call", 0.60, 6.0, 0.7, ["ready to talk"], None)
+                    NextActionPrediction("schedule_call", 0.60, 6.0, 0.7, ["ready to talk"], None),
                 ]
             elif category == BehaviorCategory.MODERATELY_ENGAGED:
                 actions = [
                     NextActionPrediction("respond", 0.65, 8.0, 0.7, ["standard follow-up"], None),
                     NextActionPrediction("read_message", 0.80, 4.0, 0.8, ["message delivered"], None),
-                    NextActionPrediction("delay_response", 0.40, 24.0, 0.6, ["busy schedule"], None)
+                    NextActionPrediction("delay_response", 0.40, 24.0, 0.6, ["busy schedule"], None),
                 ]
             elif category == BehaviorCategory.CHURNING:
                 actions = [
                     NextActionPrediction("no_response", 0.75, None, 0.8, ["losing interest"], "re-engagement campaign"),
                     NextActionPrediction("opt_out", 0.30, 48.0, 0.7, ["frustration"], "value proposition"),
-                    NextActionPrediction("ghost", 0.85, None, 0.9, ["moved on"], "new value offer")
+                    NextActionPrediction("ghost", 0.85, None, 0.9, ["moved on"], "new value offer"),
                 ]
             else:
                 # Default actions for other categories
                 actions = [
                     NextActionPrediction("respond", 0.50, 12.0, 0.6, ["standard engagement"], None),
                     NextActionPrediction("delay", 0.40, 24.0, 0.5, ["typical delay"], None),
-                    NextActionPrediction("no_action", 0.30, None, 0.4, ["low engagement"], "re-engagement")
+                    NextActionPrediction("no_action", 0.30, None, 0.4, ["low engagement"], "re-engagement"),
                 ]
 
             return actions[:3]  # Return top 3 actions
 
         except Exception as e:
             logger.warning(f"Next action prediction failed: {e}")
-            return [
-                NextActionPrediction("unknown", 0.50, None, 0.3, ["insufficient data"], None)
-            ]
+            return [NextActionPrediction("unknown", 0.50, None, 0.3, ["insufficient data"], None)]
 
     # Additional helper methods for prediction generation...
 
@@ -568,7 +572,7 @@ class PredictiveLeadBehaviorService:
             consistency_score = features.get("engagement_consistency", 50.0)
 
             # Weighted average
-            engagement_score = (base_score * 0.5 + velocity_score * 0.3 + consistency_score * 0.2)
+            engagement_score = base_score * 0.5 + velocity_score * 0.3 + consistency_score * 0.2
             return min(100.0, max(0.0, engagement_score))
 
         except Exception as e:
@@ -597,7 +601,7 @@ class PredictiveLeadBehaviorService:
                 velocity=velocity,
                 confidence=0.7,
                 data_points=10,
-                time_window_hours=168  # 7 days
+                time_window_hours=168,  # 7 days
             )
 
         except Exception as e:
@@ -609,7 +613,7 @@ class PredictiveLeadBehaviorService:
     async def _cache_prediction(
         self,
         prediction: BehavioralPrediction,
-        ttl_seconds: int = 900  # 15 minutes default
+        ttl_seconds: int = 900,  # 15 minutes default
     ) -> None:
         """Cache behavioral prediction with tenant isolation."""
         try:
@@ -632,11 +636,7 @@ class PredictiveLeadBehaviorService:
         except Exception as e:
             logger.error(f"Failed to cache prediction for {prediction.lead_id}: {e}")
 
-    async def _get_cached_prediction(
-        self,
-        lead_id: str,
-        location_id: str
-    ) -> Optional[BehavioralPrediction]:
+    async def _get_cached_prediction(self, lead_id: str, location_id: str) -> Optional[BehavioralPrediction]:
         """Retrieve cached prediction with expiry check."""
         try:
             cache_key = f"behavior:prediction:{location_id}:{lead_id}"
@@ -679,10 +679,7 @@ class PredictiveLeadBehaviorService:
     # Additional utility methods...
 
     async def _create_fallback_prediction(
-        self,
-        lead_id: str,
-        location_id: str,
-        latency_ms: float
+        self, lead_id: str, location_id: str, latency_ms: float
     ) -> BehavioralPrediction:
         """Create fallback prediction when analysis fails."""
         return BehavioralPrediction(
@@ -690,9 +687,7 @@ class PredictiveLeadBehaviorService:
             location_id=location_id,
             behavior_category=BehaviorCategory.MODERATELY_ENGAGED,
             category_confidence=0.3,
-            next_actions=[
-                NextActionPrediction("unknown", 0.5, None, 0.3, ["insufficient data"], None)
-            ],
+            next_actions=[NextActionPrediction("unknown", 0.5, None, 0.3, ["insufficient data"], None)],
             engagement_score_7d=50.0,
             engagement_trend=BehavioralTrend("engagement", "stable", 0.0, 0.3, 1, 24),
             response_probability_24h=0.5,
@@ -707,7 +702,7 @@ class PredictiveLeadBehaviorService:
             decision_velocity="unknown",
             prediction_latency_ms=latency_ms,
             feature_count=1,
-            model_version="v1.0-fallback"
+            model_version="v1.0-fallback",
         )
 
     # More helper methods to be implemented...
@@ -727,10 +722,7 @@ class PredictiveLeadBehaviorService:
         if trend.direction == "decreasing":
             risk_factors.append("declining trend")
 
-        return {
-            "score": min(100.0, max(0.0, churn_score)),
-            "factors": risk_factors
-        }
+        return {"score": min(100.0, max(0.0, churn_score)), "factors": risk_factors}
 
     def _calculate_conversion_readiness(self, features: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate conversion readiness score."""
@@ -747,39 +739,19 @@ class PredictiveLeadBehaviorService:
         else:
             estimated_days = 60
 
-        return {
-            "score": engagement_score,
-            "estimated_days": estimated_days
-        }
+        return {"score": engagement_score, "estimated_days": estimated_days}
 
     def _analyze_communication_preferences(self, features: Dict[str, Any]) -> Dict[str, float]:
         """Analyze communication channel preferences."""
         # Default preferences - would be learned from historical data
-        return {
-            "sms": 0.7,
-            "email": 0.5,
-            "call": 0.3,
-            "in_person": 0.2
-        }
+        return {"sms": 0.7, "email": 0.5, "call": 0.3, "in_person": 0.2}
 
     def _calculate_optimal_contact_windows(self, lead_id: str, location_id: str) -> List[Dict[str, Any]]:
         """Calculate optimal contact time windows."""
         # Default business hours - would be learned from response patterns
         return [
-            {
-                "start": "09:00",
-                "end": "12:00",
-                "timezone": "America/Chicago",
-                "confidence": 0.8,
-                "day_type": "weekday"
-            },
-            {
-                "start": "14:00",
-                "end": "17:00",
-                "timezone": "America/Chicago",
-                "confidence": 0.7,
-                "day_type": "weekday"
-            }
+            {"start": "09:00", "end": "12:00", "timezone": "America/Chicago", "confidence": 0.8, "day_type": "weekday"},
+            {"start": "14:00", "end": "17:00", "timezone": "America/Chicago", "confidence": 0.7, "day_type": "weekday"},
         ]
 
     def _calculate_response_probability(self, features: Dict[str, Any]) -> float:
@@ -828,7 +800,7 @@ class PredictiveLeadBehaviorService:
                 churn_risk_score=prediction.churn_risk_score,
                 engagement_score=prediction.engagement_score_7d,
                 next_actions=[asdict(action) for action in prediction.next_actions],
-                prediction_latency_ms=prediction.prediction_latency_ms
+                prediction_latency_ms=prediction.prediction_latency_ms,
             )
         except Exception as e:
             logger.error(f"Failed to publish prediction event: {e}")
@@ -844,11 +816,13 @@ class PredictiveLeadBehaviorService:
             # Exponential moving average with alpha=0.1
             self._avg_latency_ms = 0.1 * latency_ms + 0.9 * self._avg_latency_ms
 
+
 # ============================================================================
 # Singleton Accessor (Following established pattern)
 # ============================================================================
 
 _service_instance: Optional[PredictiveLeadBehaviorService] = None
+
 
 def get_predictive_behavior_service() -> PredictiveLeadBehaviorService:
     """Get singleton instance of predictive behavior service."""

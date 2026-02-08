@@ -15,20 +15,21 @@ Features:
 Author: Jorge's Real Estate AI Platform - Phase 2.4 Implementation
 """
 
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone, timedelta
-from enum import Enum
 import asyncio
-import re
-import json
 import hashlib
+import json
+import re
 import statistics
 from collections import defaultdict, deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Core service imports
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+
 try:
     from bots.shared.ml_analytics_engine import get_ml_analytics_engine
 except ImportError:
@@ -46,6 +47,7 @@ PREFERENCE_HISTORY_SIZE = 20  # Keep last 20 preference updates
 
 class PreferenceSource(Enum):
     """Sources of preference learning data."""
+
     CONVERSATION = "conversation"
     PROPERTY_VIEW = "property_view"
     PROPERTY_LIKE = "property_like"
@@ -59,6 +61,7 @@ class PreferenceSource(Enum):
 
 class PreferenceType(Enum):
     """Types of preference data structures."""
+
     NUMERIC_RANGE = "numeric_range"
     CATEGORICAL = "categorical"
     BOOLEAN = "boolean"
@@ -68,6 +71,7 @@ class PreferenceType(Enum):
 
 class PreferenceCategory(Enum):
     """Preference importance categories."""
+
     ESSENTIAL = "essential"  # Must-have requirements
     IMPORTANT = "important"  # Strong preferences
     NICE_TO_HAVE = "nice_to_have"  # Mild preferences
@@ -78,6 +82,7 @@ class PreferenceCategory(Enum):
 @dataclass
 class PreferenceSignal:
     """Individual preference signal from any source."""
+
     preference_name: str
     value: Any
     confidence: float  # 0.0-1.0
@@ -90,6 +95,7 @@ class PreferenceSignal:
 @dataclass
 class LearnedPreference:
     """Consolidated preference with learning metadata."""
+
     name: str
     preference_type: PreferenceType
     current_value: Any
@@ -105,6 +111,7 @@ class LearnedPreference:
 @dataclass
 class PreferenceProfile:
     """Comprehensive client preference profile."""
+
     client_id: str
     location_id: str
 
@@ -143,6 +150,7 @@ class PreferenceProfile:
 @dataclass
 class PreferenceMatchScore:
     """Preference-based property match scoring."""
+
     property_id: str
     client_id: str
     overall_match_score: float  # 0.0-100.0
@@ -196,48 +204,44 @@ class ClientPreferenceLearningEngine:
 
         # Performance metrics
         self.metrics = {
-            'learning_events': 0,
-            'avg_learning_latency_ms': 0.0,
-            'accuracy_rate': 0.95,  # Will be updated with feedback
-            'signal_processing_throughput': 0.0,
-            'cache_hit_rate': 0.0
+            "learning_events": 0,
+            "avg_learning_latency_ms": 0.0,
+            "accuracy_rate": 0.95,  # Will be updated with feedback
+            "signal_processing_throughput": 0.0,
+            "cache_hit_rate": 0.0,
         }
 
         # Preference extraction patterns
         self.budget_patterns = [
-            r'\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',  # $500,000 or 500000
-            r'(\d+)k',  # 500k
-            r'budget.*?(\d{1,3}(?:,\d{3})*)',  # budget of 500,000
-            r'afford.*?(\d{1,3}(?:,\d{3})*)'  # can afford 500,000
+            r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)",  # $500,000 or 500000
+            r"(\d+)k",  # 500k
+            r"budget.*?(\d{1,3}(?:,\d{3})*)",  # budget of 500,000
+            r"afford.*?(\d{1,3}(?:,\d{3})*)",  # can afford 500,000
         ]
 
-        self.bedroom_patterns = [
-            r'(\d+)[\s-]*(bed|bedroom|br)',
-            r'(bed|bedroom|br).*?(\d+)',
-            r'(\d+)\s*bed'
-        ]
+        self.bedroom_patterns = [r"(\d+)[\s-]*(bed|bedroom|br)", r"(bed|bedroom|br).*?(\d+)", r"(\d+)\s*bed"]
 
         self.bathroom_patterns = [
-            r'(\d+(?:\.\d)?)\s*(bath|bathroom|ba)',
-            r'(bath|bathroom|ba).*?(\d+(?:\.\d)?)',
-            r'(\d+(?:\.\d)?)\s*bath'
+            r"(\d+(?:\.\d)?)\s*(bath|bathroom|ba)",
+            r"(bath|bathroom|ba).*?(\d+(?:\.\d)?)",
+            r"(\d+(?:\.\d)?)\s*bath",
         ]
 
         # Location keywords for Austin area
         self.location_keywords = {
-            'downtown': 0.9,
-            'central': 0.8,
-            'south austin': 0.9,
-            'north austin': 0.9,
-            'east austin': 0.9,
-            'west austin': 0.9,
-            'suburb': 0.7,
-            'urban': 0.8,
-            'quiet': 0.6,
-            'walkable': 0.7,
-            'close to work': 0.8,
-            'good schools': 0.8,
-            'safe neighborhood': 0.9
+            "downtown": 0.9,
+            "central": 0.8,
+            "south austin": 0.9,
+            "north austin": 0.9,
+            "east austin": 0.9,
+            "west austin": 0.9,
+            "suburb": 0.7,
+            "urban": 0.8,
+            "quiet": 0.6,
+            "walkable": 0.7,
+            "close to work": 0.8,
+            "good schools": 0.8,
+            "safe neighborhood": 0.9,
         }
 
         logger.info("ClientPreferenceLearningEngine initialized")
@@ -248,6 +252,7 @@ class ClientPreferenceLearningEngine:
         if self._behavior_service is None:
             try:
                 from ghl_real_estate_ai.services.predictive_lead_behavior_service import get_predictive_behavior_service
+
                 self._behavior_service = get_predictive_behavior_service()
             except ImportError:
                 logger.warning("Could not import behavior service")
@@ -259,7 +264,10 @@ class ClientPreferenceLearningEngine:
         """Lazy load property matcher to avoid circular dependency."""
         if self._property_matcher is None:
             try:
-                from ghl_real_estate_ai.services.advanced_property_matching_engine import get_advanced_property_matching_engine
+                from ghl_real_estate_ai.services.advanced_property_matching_engine import (
+                    get_advanced_property_matching_engine,
+                )
+
                 self._property_matcher = get_advanced_property_matching_engine()
             except ImportError:
                 logger.warning("Could not import property matcher")
@@ -271,7 +279,10 @@ class ClientPreferenceLearningEngine:
         """Lazy load conversation intelligence to avoid circular dependency."""
         if self._conversation_intelligence is None:
             try:
-                from ghl_real_estate_ai.services.conversation_intelligence_service import get_conversation_intelligence_service
+                from ghl_real_estate_ai.services.conversation_intelligence_service import (
+                    get_conversation_intelligence_service,
+                )
+
                 self._conversation_intelligence = get_conversation_intelligence_service()
             except ImportError:
                 logger.warning("Could not import conversation intelligence")
@@ -283,7 +294,7 @@ class ClientPreferenceLearningEngine:
         client_id: str,
         location_id: str,
         conversation_data: List[Dict[str, Any]],
-        conversation_analysis: Optional[Dict[str, Any]] = None
+        conversation_analysis: Optional[Dict[str, Any]] = None,
     ) -> PreferenceProfile:
         """
         Extract preferences from conversation data and analysis.
@@ -307,10 +318,13 @@ class ClientPreferenceLearningEngine:
             signals = []
 
             # Combine all conversation text
-            conversation_text = " ".join([
-                msg.get('content', '') for msg in conversation_data
-                if msg.get('direction') == 'inbound'  # Only lead messages
-            ])
+            conversation_text = " ".join(
+                [
+                    msg.get("content", "")
+                    for msg in conversation_data
+                    if msg.get("direction") == "inbound"  # Only lead messages
+                ]
+            )
 
             # Extract budget preferences
             budget_signals = self._extract_budget_signals(conversation_text, PreferenceSource.CONVERSATION)
@@ -340,22 +354,17 @@ class ClientPreferenceLearningEngine:
                 signals.extend(analysis_signals)
 
             # Process all signals
-            updated_profile = await self._process_preference_signals(
-                profile, signals, client_id, location_id
-            )
+            updated_profile = await self._process_preference_signals(profile, signals, client_id, location_id)
 
             # Update metrics
             latency_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             self._update_learning_metrics(latency_ms, len(signals))
 
             # Publish learning event
-            await self._publish_learning_event(
-                client_id, location_id, "conversation", len(signals), latency_ms
-            )
+            await self._publish_learning_event(client_id, location_id, "conversation", len(signals), latency_ms)
 
             logger.info(
-                f"Learned {len(signals)} preference signals from conversation for {client_id} "
-                f"({latency_ms:.1f}ms)"
+                f"Learned {len(signals)} preference signals from conversation for {client_id} ({latency_ms:.1f}ms)"
             )
 
             return updated_profile
@@ -371,7 +380,7 @@ class ClientPreferenceLearningEngine:
         location_id: str,
         property_data: Dict[str, Any],
         interaction_type: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> PreferenceProfile:
         """
         Learn preferences from property interaction (view, like, save, share, reject).
@@ -394,11 +403,11 @@ class ClientPreferenceLearningEngine:
 
             # Map interaction type to preference source and confidence
             interaction_mapping = {
-                'view': (PreferenceSource.PROPERTY_VIEW, 0.4),
-                'like': (PreferenceSource.PROPERTY_LIKE, 0.8),
-                'save': (PreferenceSource.PROPERTY_SAVE, 0.85),
-                'share': (PreferenceSource.PROPERTY_SHARE, 0.9),
-                'reject': (PreferenceSource.PROPERTY_REJECT, 0.7)
+                "view": (PreferenceSource.PROPERTY_VIEW, 0.4),
+                "like": (PreferenceSource.PROPERTY_LIKE, 0.8),
+                "save": (PreferenceSource.PROPERTY_SAVE, 0.85),
+                "share": (PreferenceSource.PROPERTY_SHARE, 0.9),
+                "reject": (PreferenceSource.PROPERTY_REJECT, 0.7),
             }
 
             if interaction_type not in interaction_mapping:
@@ -409,21 +418,19 @@ class ClientPreferenceLearningEngine:
 
             # Extract preference signals from property data
             signals = self._extract_property_preference_signals(
-                property_data, source, base_confidence, interaction_type == 'reject'
+                property_data, source, base_confidence, interaction_type == "reject"
             )
 
             # Add metadata signals if available
             if metadata:
-                time_spent = metadata.get('time_spent_seconds', 0)
+                time_spent = metadata.get("time_spent_seconds", 0)
                 if time_spent > 120:  # 2+ minutes indicates strong interest
                     # Boost confidence for longer views
                     for signal in signals:
                         signal.confidence = min(signal.confidence * 1.2, 1.0)
 
             # Process signals
-            updated_profile = await self._process_preference_signals(
-                profile, signals, client_id, location_id
-            )
+            updated_profile = await self._process_preference_signals(profile, signals, client_id, location_id)
 
             # Update metrics
             latency_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
@@ -449,7 +456,7 @@ class ClientPreferenceLearningEngine:
         self,
         client_id: str,
         location_id: str,
-        behavioral_prediction: Any  # BehavioralPrediction from Phase 2.1
+        behavioral_prediction: Any,  # BehavioralPrediction from Phase 2.1
     ) -> PreferenceProfile:
         """
         Learn preferences from behavioral prediction patterns.
@@ -474,54 +481,52 @@ class ClientPreferenceLearningEngine:
             signals = []
 
             # Extract timeline urgency from decision velocity
-            decision_velocity = getattr(behavioral_prediction, 'decision_velocity', 'moderate')
-            if decision_velocity == 'fast':
+            decision_velocity = getattr(behavioral_prediction, "decision_velocity", "moderate")
+            if decision_velocity == "fast":
                 urgency_signal = PreferenceSignal(
-                    preference_name='urgency_level',
+                    preference_name="urgency_level",
                     value=0.8,  # High urgency
                     confidence=0.7,
                     source=PreferenceSource.BEHAVIORAL_PATTERN,
                     importance_weight=0.6,
-                    context={'decision_velocity': decision_velocity}
+                    context={"decision_velocity": decision_velocity},
                 )
                 signals.append(urgency_signal)
 
             # Extract communication preferences
-            comm_prefs = getattr(behavioral_prediction, 'communication_preferences', {})
+            comm_prefs = getattr(behavioral_prediction, "communication_preferences", {})
             if comm_prefs:
                 for channel, preference in comm_prefs.items():
                     if preference > 0.6:  # Strong preference threshold
                         signal = PreferenceSignal(
-                            preference_name=f'communication_{channel}',
+                            preference_name=f"communication_{channel}",
                             value=preference,
                             confidence=0.6,
                             source=PreferenceSource.BEHAVIORAL_PATTERN,
                             importance_weight=0.4,
-                            context={'behavioral_source': 'communication_preferences'}
+                            context={"behavioral_source": "communication_preferences"},
                         )
                         signals.append(signal)
 
             # Extract optimal contact windows for timeline preferences
-            contact_windows = getattr(behavioral_prediction, 'optimal_contact_windows', [])
+            contact_windows = getattr(behavioral_prediction, "optimal_contact_windows", [])
             if contact_windows:
                 # Infer schedule preferences from contact windows
-                weekend_windows = [w for w in contact_windows if w.get('day_type') == 'weekend']
+                weekend_windows = [w for w in contact_windows if w.get("day_type") == "weekend"]
                 if weekend_windows:
                     signal = PreferenceSignal(
-                        preference_name='weekend_availability',
+                        preference_name="weekend_availability",
                         value=True,
                         confidence=0.5,
                         source=PreferenceSource.BEHAVIORAL_PATTERN,
                         importance_weight=0.3,
-                        context={'contact_windows': len(weekend_windows)}
+                        context={"contact_windows": len(weekend_windows)},
                     )
                     signals.append(signal)
 
             # Process signals if any were extracted
             if signals:
-                updated_profile = await self._process_preference_signals(
-                    profile, signals, client_id, location_id
-                )
+                updated_profile = await self._process_preference_signals(profile, signals, client_id, location_id)
             else:
                 updated_profile = profile
 
@@ -530,14 +535,9 @@ class ClientPreferenceLearningEngine:
             self._update_learning_metrics(latency_ms, len(signals))
 
             if signals:
-                await self._publish_learning_event(
-                    client_id, location_id, "behavioral", len(signals), latency_ms
-                )
+                await self._publish_learning_event(client_id, location_id, "behavioral", len(signals), latency_ms)
 
-            logger.info(
-                f"Learned {len(signals)} behavioral preference signals for {client_id} "
-                f"({latency_ms:.1f}ms)"
-            )
+            logger.info(f"Learned {len(signals)} behavioral preference signals for {client_id} ({latency_ms:.1f}ms)")
 
             return updated_profile
 
@@ -546,10 +546,7 @@ class ClientPreferenceLearningEngine:
             return await self.get_preference_profile(client_id, location_id)
 
     async def get_preference_profile(
-        self,
-        client_id: str,
-        location_id: str,
-        force_refresh: bool = False
+        self, client_id: str, location_id: str, force_refresh: bool = False
     ) -> PreferenceProfile:
         """
         Retrieve comprehensive preference profile for client.
@@ -570,10 +567,7 @@ class ClientPreferenceLearningEngine:
                     return cached_profile
 
             # Create new or load existing profile
-            profile = PreferenceProfile(
-                client_id=client_id,
-                location_id=location_id
-            )
+            profile = PreferenceProfile(client_id=client_id, location_id=location_id)
 
             # Calculate profile completeness
             profile.profile_completeness = self._calculate_profile_completeness(profile)
@@ -589,10 +583,7 @@ class ClientPreferenceLearningEngine:
             return PreferenceProfile(client_id=client_id, location_id=location_id)
 
     async def predict_preference_match(
-        self,
-        client_id: str,
-        location_id: str,
-        property_data: Dict[str, Any]
+        self, client_id: str, location_id: str, property_data: Dict[str, Any]
     ) -> PreferenceMatchScore:
         """
         Predict how well a property matches client preferences.
@@ -624,45 +615,45 @@ class ClientPreferenceLearningEngine:
 
             # Check budget match
             budget_match = self._check_budget_match(profile, property_data)
-            if budget_match['is_essential']:
+            if budget_match["is_essential"]:
                 essential_total += 1
-                if budget_match['matches']:
+                if budget_match["matches"]:
                     essential_matches += 1
                     match_strengths.append("Budget aligns with preferences")
                 else:
                     match_concerns.append("Property outside budget range")
-            preference_alignment['budget'] = budget_match['score']
+            preference_alignment["budget"] = budget_match["score"]
 
             # Check size match (bedrooms/bathrooms)
             size_match = self._check_size_match(profile, property_data)
-            if size_match['is_essential']:
+            if size_match["is_essential"]:
                 essential_total += 1
-                if size_match['matches']:
+                if size_match["matches"]:
                     essential_matches += 1
                     match_strengths.append("Size meets requirements")
                 else:
                     match_concerns.append("Size doesn't match needs")
-            preference_alignment['size'] = size_match['score']
+            preference_alignment["size"] = size_match["score"]
 
             # Check location match
             location_match = self._check_location_match(profile, property_data)
-            if location_match['is_important']:
+            if location_match["is_important"]:
                 important_total += 1
-                if location_match['matches']:
+                if location_match["matches"]:
                     important_matches += 1
                     match_strengths.append("Great location alignment")
                 else:
                     match_concerns.append("Location not preferred")
-            preference_alignment['location'] = location_match['score']
+            preference_alignment["location"] = location_match["score"]
 
             # Check feature match
             features_match = self._check_features_match(profile, property_data)
-            if features_match['important_features'] > 0:
-                important_total += features_match['important_features']
-                important_matches += features_match['matched_features']
-                if features_match['matched_features'] > 0:
+            if features_match["important_features"] > 0:
+                important_total += features_match["important_features"]
+                important_matches += features_match["matched_features"]
+                if features_match["matched_features"] > 0:
                     match_strengths.append(f"Has {features_match['matched_features']} desired features")
-            preference_alignment['features'] = features_match['score']
+            preference_alignment["features"] = features_match["score"]
 
             # Check for dealbreakers
             dealbreakers_violated = self._check_dealbreakers(profile, property_data)
@@ -684,7 +675,7 @@ class ClientPreferenceLearningEngine:
             latency_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             match_score = PreferenceMatchScore(
-                property_id=property_data.get('id', 'unknown'),
+                property_id=property_data.get("id", "unknown"),
                 client_id=client_id,
                 overall_match_score=overall_score,
                 confidence=confidence,
@@ -693,20 +684,17 @@ class ClientPreferenceLearningEngine:
                 important_matches=important_matches,
                 important_total=important_total,
                 dealbreakers_violated=dealbreakers_violated,
-                budget_match=budget_match['matches'],
-                location_match=location_match['matches'],
-                size_match=size_match['matches'],
-                features_match=features_match['matched_features'] > 0,
+                budget_match=budget_match["matches"],
+                location_match=location_match["matches"],
+                size_match=size_match["matches"],
+                features_match=features_match["matched_features"] > 0,
                 match_strengths=match_strengths,
                 match_concerns=match_concerns,
                 preference_alignment=preference_alignment,
-                calculation_time_ms=latency_ms
+                calculation_time_ms=latency_ms,
             )
 
-            logger.info(
-                f"Predicted preference match for {client_id}: {overall_score:.1f}/100 "
-                f"({latency_ms:.1f}ms)"
-            )
+            logger.info(f"Predicted preference match for {client_id}: {overall_score:.1f}/100 ({latency_ms:.1f}ms)")
 
             return match_score
 
@@ -714,7 +702,7 @@ class ClientPreferenceLearningEngine:
             logger.error(f"Preference matching failed for {client_id}: {e}", exc_info=True)
             # Return neutral score on error
             return PreferenceMatchScore(
-                property_id=property_data.get('id', 'unknown'),
+                property_id=property_data.get("id", "unknown"),
                 client_id=client_id,
                 overall_match_score=50.0,
                 confidence=0.3,
@@ -729,7 +717,7 @@ class ClientPreferenceLearningEngine:
                 features_match=True,
                 match_strengths=["Analysis unavailable"],
                 match_concerns=["Could not analyze preferences"],
-                preference_alignment={}
+                preference_alignment={},
             )
 
     # Helper methods for preference extraction
@@ -742,19 +730,19 @@ class ClientPreferenceLearningEngine:
             matches = re.finditer(pattern, text_lower)
             for match in matches:
                 try:
-                    amount_str = match.group(1).replace(',', '').replace('k', '000')
+                    amount_str = match.group(1).replace(",", "").replace("k", "000")
                     amount = float(amount_str)
 
                     # Determine if this is min or max based on context
-                    context_before = text_lower[max(0, match.start()-20):match.start()]
-                    context_after = text_lower[match.end():match.end()+20]
+                    context_before = text_lower[max(0, match.start() - 20) : match.start()]
+                    context_after = text_lower[match.end() : match.end() + 20]
 
-                    if any(word in context_before + context_after for word in ['up to', 'max', 'under']):
-                        preference_name = 'budget_max'
-                    elif any(word in context_before + context_after for word in ['at least', 'min', 'above']):
-                        preference_name = 'budget_min'
+                    if any(word in context_before + context_after for word in ["up to", "max", "under"]):
+                        preference_name = "budget_max"
+                    elif any(word in context_before + context_after for word in ["at least", "min", "above"]):
+                        preference_name = "budget_min"
                     else:
-                        preference_name = 'budget_max'  # Default to max
+                        preference_name = "budget_max"  # Default to max
 
                     signal = PreferenceSignal(
                         preference_name=preference_name,
@@ -762,7 +750,10 @@ class ClientPreferenceLearningEngine:
                         confidence=0.8,
                         source=source,
                         importance_weight=0.9,  # Budget is very important
-                        context={'matched_text': match.group(0), 'full_context': text[max(0, match.start()-10):match.end()+10]}
+                        context={
+                            "matched_text": match.group(0),
+                            "full_context": text[max(0, match.start() - 10) : match.end() + 10],
+                        },
                     )
                     signals.append(signal)
                 except (ValueError, IndexError):
@@ -789,12 +780,12 @@ class ClientPreferenceLearningEngine:
 
                     if number:
                         signal = PreferenceSignal(
-                            preference_name='bedrooms_min',  # Default to minimum requirement
+                            preference_name="bedrooms_min",  # Default to minimum requirement
                             value=number,
                             confidence=0.7,
                             source=source,
                             importance_weight=0.8,
-                            context={'matched_text': match.group(0)}
+                            context={"matched_text": match.group(0)},
                         )
                         signals.append(signal)
                 except (ValueError, IndexError):
@@ -807,18 +798,18 @@ class ClientPreferenceLearningEngine:
                 try:
                     number = None
                     for group in match.groups():
-                        if group and re.match(r'\d+(?:\.\d)?', group):
+                        if group and re.match(r"\d+(?:\.\d)?", group):
                             number = float(group)
                             break
 
                     if number:
                         signal = PreferenceSignal(
-                            preference_name='bathrooms_min',
+                            preference_name="bathrooms_min",
                             value=number,
                             confidence=0.7,
                             source=source,
                             importance_weight=0.7,
-                            context={'matched_text': match.group(0)}
+                            context={"matched_text": match.group(0)},
                         )
                         signals.append(signal)
                 except (ValueError, IndexError):
@@ -834,12 +825,12 @@ class ClientPreferenceLearningEngine:
         for location, base_confidence in self.location_keywords.items():
             if location in text_lower:
                 signal = PreferenceSignal(
-                    preference_name=f'location_{location.replace(" ", "_")}',
+                    preference_name=f"location_{location.replace(' ', '_')}",
                     value=True,
                     confidence=base_confidence,
                     source=source,
                     importance_weight=0.8,
-                    context={'location_keyword': location}
+                    context={"location_keyword": location},
                 )
                 signals.append(signal)
 
@@ -851,25 +842,25 @@ class ClientPreferenceLearningEngine:
         text_lower = text.lower()
 
         urgency_indicators = {
-            'asap': 0.9,
-            'urgent': 0.9,
-            'immediately': 0.9,
-            'soon': 0.7,
-            'quickly': 0.6,
-            'no rush': 0.1,
-            'flexible': 0.3,
-            'whenever': 0.2
+            "asap": 0.9,
+            "urgent": 0.9,
+            "immediately": 0.9,
+            "soon": 0.7,
+            "quickly": 0.6,
+            "no rush": 0.1,
+            "flexible": 0.3,
+            "whenever": 0.2,
         }
 
         for indicator, urgency_level in urgency_indicators.items():
             if indicator in text_lower:
                 signal = PreferenceSignal(
-                    preference_name='urgency_level',
+                    preference_name="urgency_level",
                     value=urgency_level,
                     confidence=0.6,
                     source=source,
                     importance_weight=0.5,
-                    context={'urgency_indicator': indicator}
+                    context={"urgency_indicator": indicator},
                 )
                 signals.append(signal)
 
@@ -881,149 +872,143 @@ class ClientPreferenceLearningEngine:
         text_lower = text.lower()
 
         features_keywords = {
-            'pool': ['pool', 'swimming'],
-            'garage': ['garage', 'parking'],
-            'fireplace': ['fireplace', 'fire place'],
-            'garden': ['garden', 'yard', 'outdoor space'],
-            'modern': ['modern', 'updated', 'renovated'],
-            'balcony': ['balcony', 'deck', 'patio'],
-            'basement': ['basement', 'cellar'],
-            'walk_in_closet': ['walk-in closet', 'walk in closet', 'large closet']
+            "pool": ["pool", "swimming"],
+            "garage": ["garage", "parking"],
+            "fireplace": ["fireplace", "fire place"],
+            "garden": ["garden", "yard", "outdoor space"],
+            "modern": ["modern", "updated", "renovated"],
+            "balcony": ["balcony", "deck", "patio"],
+            "basement": ["basement", "cellar"],
+            "walk_in_closet": ["walk-in closet", "walk in closet", "large closet"],
         }
 
         for feature, keywords in features_keywords.items():
             for keyword in keywords:
                 if keyword in text_lower:
                     signal = PreferenceSignal(
-                        preference_name=f'feature_{feature}',
+                        preference_name=f"feature_{feature}",
                         value=True,
                         confidence=0.6,
                         source=source,
                         importance_weight=0.4,
-                        context={'feature_keyword': keyword}
+                        context={"feature_keyword": keyword},
                     )
                     signals.append(signal)
                     break  # Only add one signal per feature
 
         return signals
 
-    def _extract_signals_from_analysis(self, analysis: Dict[str, Any], source: PreferenceSource) -> List[PreferenceSignal]:
+    def _extract_signals_from_analysis(
+        self, analysis: Dict[str, Any], source: PreferenceSource
+    ) -> List[PreferenceSignal]:
         """Extract preference signals from conversation analysis."""
         signals = []
 
         # Extract signals from sentiment analysis
-        sentiment_data = analysis.get('sentiment_timeline', {})
+        sentiment_data = analysis.get("sentiment_timeline", {})
         if sentiment_data:
-            overall_sentiment = sentiment_data.get('overall_sentiment', 0.0)
+            overall_sentiment = sentiment_data.get("overall_sentiment", 0.0)
             if overall_sentiment > 0.5:
                 signal = PreferenceSignal(
-                    preference_name='engagement_level',
-                    value='high',
+                    preference_name="engagement_level",
+                    value="high",
                     confidence=0.5,
                     source=source,
                     importance_weight=0.3,
-                    context={'sentiment_score': overall_sentiment}
+                    context={"sentiment_score": overall_sentiment},
                 )
                 signals.append(signal)
 
         return signals
 
     def _extract_property_preference_signals(
-        self,
-        property_data: Dict[str, Any],
-        source: PreferenceSource,
-        base_confidence: float,
-        is_negative: bool = False
+        self, property_data: Dict[str, Any], source: PreferenceSource, base_confidence: float, is_negative: bool = False
     ) -> List[PreferenceSignal]:
         """Extract preference signals from property interaction data."""
         signals = []
         confidence_multiplier = -1 if is_negative else 1
 
         # Budget signal
-        price = property_data.get('price')
+        price = property_data.get("price")
         if price:
             signal = PreferenceSignal(
-                preference_name='budget_reference',
+                preference_name="budget_reference",
                 value=price,
                 confidence=base_confidence,
                 source=source,
                 importance_weight=0.8,
-                context={'property_price': price, 'is_negative': is_negative}
+                context={"property_price": price, "is_negative": is_negative},
             )
             signals.append(signal)
 
         # Size signals
-        bedrooms = property_data.get('bedrooms')
+        bedrooms = property_data.get("bedrooms")
         if bedrooms:
             signal = PreferenceSignal(
-                preference_name='bedrooms_preference',
+                preference_name="bedrooms_preference",
                 value=bedrooms,
                 confidence=base_confidence,
                 source=source,
                 importance_weight=0.7,
-                context={'property_bedrooms': bedrooms, 'is_negative': is_negative}
+                context={"property_bedrooms": bedrooms, "is_negative": is_negative},
             )
             signals.append(signal)
 
-        bathrooms = property_data.get('bathrooms')
+        bathrooms = property_data.get("bathrooms")
         if bathrooms:
             signal = PreferenceSignal(
-                preference_name='bathrooms_preference',
+                preference_name="bathrooms_preference",
                 value=bathrooms,
                 confidence=base_confidence,
                 source=source,
                 importance_weight=0.6,
-                context={'property_bathrooms': bathrooms, 'is_negative': is_negative}
+                context={"property_bathrooms": bathrooms, "is_negative": is_negative},
             )
             signals.append(signal)
 
         # Location signal
-        location = property_data.get('area') or property_data.get('neighborhood')
+        location = property_data.get("area") or property_data.get("neighborhood")
         if location:
             signal = PreferenceSignal(
-                preference_name=f'location_{location.lower().replace(" ", "_")}',
+                preference_name=f"location_{location.lower().replace(' ', '_')}",
                 value=not is_negative,  # True if positive interaction, False if negative
                 confidence=base_confidence,
                 source=source,
                 importance_weight=0.8,
-                context={'property_location': location, 'is_negative': is_negative}
+                context={"property_location": location, "is_negative": is_negative},
             )
             signals.append(signal)
 
         # Property type signal
-        property_type = property_data.get('property_type')
+        property_type = property_data.get("property_type")
         if property_type:
             signal = PreferenceSignal(
-                preference_name=f'property_type_{property_type.lower().replace(" ", "_")}',
+                preference_name=f"property_type_{property_type.lower().replace(' ', '_')}",
                 value=not is_negative,
                 confidence=base_confidence,
                 source=source,
                 importance_weight=0.6,
-                context={'property_type': property_type, 'is_negative': is_negative}
+                context={"property_type": property_type, "is_negative": is_negative},
             )
             signals.append(signal)
 
         # Feature signals
-        features = property_data.get('features', [])
+        features = property_data.get("features", [])
         for feature in features:
             signal = PreferenceSignal(
-                preference_name=f'feature_{feature.lower().replace(" ", "_")}',
+                preference_name=f"feature_{feature.lower().replace(' ', '_')}",
                 value=not is_negative,
                 confidence=base_confidence * 0.8,  # Lower confidence for features
                 source=source,
                 importance_weight=0.4,
-                context={'property_feature': feature, 'is_negative': is_negative}
+                context={"property_feature": feature, "is_negative": is_negative},
             )
             signals.append(signal)
 
         return signals
 
     async def _process_preference_signals(
-        self,
-        profile: PreferenceProfile,
-        signals: List[PreferenceSignal],
-        client_id: str,
-        location_id: str
+        self, profile: PreferenceProfile, signals: List[PreferenceSignal], client_id: str, location_id: str
     ) -> PreferenceProfile:
         """Process and consolidate preference signals into profile."""
         try:
@@ -1036,8 +1021,7 @@ class ClientPreferenceLearningEngine:
                     if existing.preference_type == PreferenceType.NUMERIC_RANGE:
                         # Weighted average for numeric values
                         existing.current_value = self._consolidate_numeric_preference(
-                            existing.current_value, existing.confidence,
-                            signal.value, signal.confidence
+                            existing.current_value, existing.confidence, signal.value, signal.confidence
                         )
                     else:
                         # Take most confident value for categorical/boolean
@@ -1045,9 +1029,7 @@ class ClientPreferenceLearningEngine:
                             existing.current_value = signal.value
 
                     # Update confidence and metadata
-                    existing.confidence = min(
-                        (existing.confidence + signal.confidence * 0.1), 1.0
-                    )
+                    existing.confidence = min((existing.confidence + signal.confidence * 0.1), 1.0)
                     existing.signal_count += 1
                     existing.last_updated = datetime.now(timezone.utc)
 
@@ -1074,7 +1056,7 @@ class ClientPreferenceLearningEngine:
                         category=category,
                         signal_count=1,
                         last_updated=datetime.now(timezone.utc),
-                        value_history=[(signal.value, signal.timestamp)]
+                        value_history=[(signal.value, signal.timestamp)],
                     )
                     profile.learned_preferences[signal.preference_name] = learned_pref
 
@@ -1097,26 +1079,20 @@ class ClientPreferenceLearningEngine:
             return profile
 
     def _consolidate_numeric_preference(
-        self,
-        existing_value: float,
-        existing_confidence: float,
-        new_value: float,
-        new_confidence: float
+        self, existing_value: float, existing_confidence: float, new_value: float, new_confidence: float
     ) -> float:
         """Consolidate numeric preferences using weighted average."""
         total_weight = existing_confidence + new_confidence
-        weighted_value = (
-            existing_value * existing_confidence + new_value * new_confidence
-        ) / total_weight
+        weighted_value = (existing_value * existing_confidence + new_value * new_confidence) / total_weight
         return weighted_value
 
     def _infer_preference_type(self, name: str, value: Any) -> PreferenceType:
         """Infer preference type from name and value."""
-        if 'budget' in name or 'price' in name or name.endswith('_min') or name.endswith('_max'):
+        if "budget" in name or "price" in name or name.endswith("_min") or name.endswith("_max"):
             return PreferenceType.NUMERIC_RANGE
-        elif 'location' in name:
+        elif "location" in name:
             return PreferenceType.LOCATION
-        elif 'timeline' in name or 'urgency' in name:
+        elif "timeline" in name or "urgency" in name:
             return PreferenceType.TIMELINE
         elif isinstance(value, bool):
             return PreferenceType.BOOLEAN
@@ -1134,9 +1110,7 @@ class ClientPreferenceLearningEngine:
         else:
             return PreferenceCategory.EMERGING
 
-    def _detect_preference_drift(
-        self, value_history: List[Tuple[Any, datetime]]
-    ) -> Tuple[bool, float]:
+    def _detect_preference_drift(self, value_history: List[Tuple[Any, datetime]]) -> Tuple[bool, float]:
         """Detect preference drift from value history."""
         if len(value_history) < DRIFT_DETECTION_WINDOW:
             return False, 0.0
@@ -1166,28 +1140,28 @@ class ClientPreferenceLearningEngine:
         name = signal.preference_name
         value = signal.value
 
-        if name == 'budget_min':
+        if name == "budget_min":
             profile.budget_min = value
-        elif name == 'budget_max':
+        elif name == "budget_max":
             profile.budget_max = value
-        elif name == 'bedrooms_min':
+        elif name == "bedrooms_min":
             profile.bedrooms_min = value
-        elif name == 'bedrooms_max':
+        elif name == "bedrooms_max":
             profile.bedrooms_max = value
-        elif name == 'bathrooms_min':
+        elif name == "bathrooms_min":
             profile.bathrooms_min = value
-        elif name == 'bathrooms_max':
+        elif name == "bathrooms_max":
             profile.bathrooms_max = value
-        elif name.startswith('location_'):
-            location_name = name.replace('location_', '').replace('_', ' ')
+        elif name.startswith("location_"):
+            location_name = name.replace("location_", "").replace("_", " ")
             profile.location_preferences[location_name] = signal.confidence
-        elif name.startswith('property_type_'):
-            prop_type = name.replace('property_type_', '').replace('_', ' ')
+        elif name.startswith("property_type_"):
+            prop_type = name.replace("property_type_", "").replace("_", " ")
             profile.property_type_preferences[prop_type] = signal.confidence
-        elif name.startswith('feature_'):
-            feature_name = name.replace('feature_', '')
+        elif name.startswith("feature_"):
+            feature_name = name.replace("feature_", "")
             profile.feature_preferences[feature_name] = value
-        elif name == 'urgency_level':
+        elif name == "urgency_level":
             profile.urgency_level = value
 
     def _calculate_profile_completeness(self, profile: PreferenceProfile) -> float:
@@ -1232,7 +1206,7 @@ class ClientPreferenceLearningEngine:
     # Matching helper methods (simplified implementations)
     def _check_budget_match(self, profile: PreferenceProfile, property_data: Dict) -> Dict:
         """Check if property matches budget preferences."""
-        property_price = property_data.get('price', 0)
+        property_price = property_data.get("price", 0)
 
         matches = True
         is_essential = False
@@ -1249,7 +1223,7 @@ class ClientPreferenceLearningEngine:
         if profile.budget_min or profile.budget_max:
             is_essential = True
 
-        return {'matches': matches, 'is_essential': is_essential, 'score': score}
+        return {"matches": matches, "is_essential": is_essential, "score": score}
 
     def _check_size_match(self, profile: PreferenceProfile, property_data: Dict) -> Dict:
         """Check if property matches size preferences."""
@@ -1258,7 +1232,7 @@ class ClientPreferenceLearningEngine:
         score = 1.0
 
         # Check bedrooms
-        property_bedrooms = property_data.get('bedrooms', 0)
+        property_bedrooms = property_data.get("bedrooms", 0)
         if profile.bedrooms_min and property_bedrooms < profile.bedrooms_min:
             matches = False
             score *= 0.5
@@ -1267,7 +1241,7 @@ class ClientPreferenceLearningEngine:
             score *= 0.5
 
         # Check bathrooms
-        property_bathrooms = property_data.get('bathrooms', 0)
+        property_bathrooms = property_data.get("bathrooms", 0)
         if profile.bathrooms_min and property_bathrooms < profile.bathrooms_min:
             matches = False
             score *= 0.5
@@ -1279,7 +1253,7 @@ class ClientPreferenceLearningEngine:
         if any([profile.bedrooms_min, profile.bedrooms_max, profile.bathrooms_min, profile.bathrooms_max]):
             is_essential = True
 
-        return {'matches': matches, 'is_essential': is_essential, 'score': score}
+        return {"matches": matches, "is_essential": is_essential, "score": score}
 
     def _check_location_match(self, profile: PreferenceProfile, property_data: Dict) -> Dict:
         """Check if property matches location preferences."""
@@ -1287,7 +1261,7 @@ class ClientPreferenceLearningEngine:
         is_important = False
         score = 0.0
 
-        property_location = property_data.get('area', '').lower()
+        property_location = property_data.get("area", "").lower()
 
         if profile.location_preferences:
             is_important = True
@@ -1297,7 +1271,7 @@ class ClientPreferenceLearningEngine:
                     score = confidence
                     break
 
-        return {'matches': matches, 'is_important': is_important, 'score': score}
+        return {"matches": matches, "is_important": is_important, "score": score}
 
     def _check_features_match(self, profile: PreferenceProfile, property_data: Dict) -> Dict:
         """Check if property matches feature preferences."""
@@ -1305,23 +1279,19 @@ class ClientPreferenceLearningEngine:
         matched_features = 0
         score = 0.0
 
-        property_features = [f.lower() for f in property_data.get('features', [])]
+        property_features = [f.lower() for f in property_data.get("features", [])]
 
         for feature, desired in profile.feature_preferences.items():
             if desired:  # Only count desired features
                 important_features += 1
-                feature_variants = [feature, feature.replace('_', ' '), feature.replace('_', '')]
+                feature_variants = [feature, feature.replace("_", " "), feature.replace("_", "")]
                 if any(variant in property_features for variant in feature_variants):
                     matched_features += 1
 
         if important_features > 0:
             score = matched_features / important_features
 
-        return {
-            'important_features': important_features,
-            'matched_features': matched_features,
-            'score': score
-        }
+        return {"important_features": important_features, "matched_features": matched_features, "score": score}
 
     def _check_dealbreakers(self, profile: PreferenceProfile, property_data: Dict) -> int:
         """Check for dealbreaker violations."""
@@ -1360,13 +1330,13 @@ class ClientPreferenceLearningEngine:
 
             # Serialize profile for caching (simplified)
             cacheable_data = {
-                'client_id': profile.client_id,
-                'location_id': profile.location_id,
-                'budget_min': profile.budget_min,
-                'budget_max': profile.budget_max,
-                'total_signals': profile.total_signals_processed,
-                'completeness': profile.profile_completeness,
-                'updated_at': profile.updated_at.isoformat()
+                "client_id": profile.client_id,
+                "location_id": profile.location_id,
+                "budget_min": profile.budget_min,
+                "budget_max": profile.budget_max,
+                "total_signals": profile.total_signals_processed,
+                "completeness": profile.profile_completeness,
+                "updated_at": profile.updated_at.isoformat(),
             }
 
             await self.cache.set(cache_key, cacheable_data, ttl=CACHE_TTL_PROFILES, location_id=location_id)
@@ -1383,30 +1353,32 @@ class ClientPreferenceLearningEngine:
                 location_id=location_id,
                 learning_source=source,
                 signals_processed=signal_count,
-                learning_latency_ms=latency_ms
+                learning_latency_ms=latency_ms,
             )
         except Exception as e:
             logger.error(f"Event publishing failed: {e}")
 
     def _update_learning_metrics(self, latency_ms: float, signal_count: int):
         """Update learning performance metrics."""
-        self.metrics['learning_events'] += 1
+        self.metrics["learning_events"] += 1
 
         # Update average latency
-        total_latency = (self.metrics['avg_learning_latency_ms'] * (self.metrics['learning_events'] - 1) + latency_ms)
-        self.metrics['avg_learning_latency_ms'] = total_latency / self.metrics['learning_events']
+        total_latency = self.metrics["avg_learning_latency_ms"] * (self.metrics["learning_events"] - 1) + latency_ms
+        self.metrics["avg_learning_latency_ms"] = total_latency / self.metrics["learning_events"]
 
         # Update throughput
         if latency_ms > 0:
             throughput = signal_count / (latency_ms / 1000.0)  # signals per second
-            self.metrics['signal_processing_throughput'] = throughput
+            self.metrics["signal_processing_throughput"] = throughput
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get current performance metrics."""
         return {
             **self.metrics,
-            'target_learning_time_ms': TARGET_LEARNING_TIME_MS,
-            'performance_status': 'good' if self.metrics['avg_learning_latency_ms'] < TARGET_LEARNING_TIME_MS else 'degraded'
+            "target_learning_time_ms": TARGET_LEARNING_TIME_MS,
+            "performance_status": "good"
+            if self.metrics["avg_learning_latency_ms"] < TARGET_LEARNING_TIME_MS
+            else "degraded",
         }
 
 
@@ -1435,22 +1407,18 @@ async def health_check() -> Dict[str, Any]:
         metrics = engine.get_metrics()
 
         return {
-            'service': 'ClientPreferenceLearningEngine',
-            'status': 'healthy',
-            'version': '2.4.0',
-            'metrics': metrics,
-            'dependencies': {
-                'cache_service': 'connected',
-                'event_publisher': 'connected',
-                'ml_analytics_engine': 'connected',
-                'predictive_behavior_service': 'lazy_loaded',
-                'advanced_property_matcher': 'lazy_loaded',
-                'conversation_intelligence': 'lazy_loaded'
-            }
+            "service": "ClientPreferenceLearningEngine",
+            "status": "healthy",
+            "version": "2.4.0",
+            "metrics": metrics,
+            "dependencies": {
+                "cache_service": "connected",
+                "event_publisher": "connected",
+                "ml_analytics_engine": "connected",
+                "predictive_behavior_service": "lazy_loaded",
+                "advanced_property_matcher": "lazy_loaded",
+                "conversation_intelligence": "lazy_loaded",
+            },
         }
     except Exception as e:
-        return {
-            'service': 'ClientPreferenceLearningEngine',
-            'status': 'unhealthy',
-            'error': str(e)
-        }
+        return {"service": "ClientPreferenceLearningEngine", "status": "unhealthy", "error": str(e)}

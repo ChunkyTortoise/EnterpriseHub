@@ -96,9 +96,7 @@ class ABTestManager:
 
         return "a" if hash_val < (split * 100) else "b"
 
-    def record_result(
-        self, experiment_id: str, variant: str, result_data: Dict[str, Any]
-    ):
+    def record_result(self, experiment_id: str, variant: str, result_data: Dict[str, Any]):
         """
         Record a result for an experiment variant.
 
@@ -118,9 +116,7 @@ class ABTestManager:
             return
 
         result_data["recorded_at"] = datetime.now().isoformat()
-        self.experiments["active"][experiment_id]["variants"][variant][
-            "results"
-        ].append(result_data)
+        self.experiments["active"][experiment_id]["variants"][variant]["results"].append(result_data)
         self._save_experiments()
 
     def analyze_experiment(self, experiment_id: str) -> Dict[str, Any]:
@@ -153,10 +149,7 @@ class ABTestManager:
         winner = None
         confidence = 0.0
 
-        if (
-            len(results_a) >= exp["min_sample_size"]
-            and len(results_b) >= exp["min_sample_size"]
-        ):
+        if len(results_a) >= exp["min_sample_size"] and len(results_b) >= exp["min_sample_size"]:
             # Simple comparison (in production, use proper statistical test)
             if stats_a["mean"] > stats_b["mean"] * 1.05:  # 5% improvement threshold
                 winner = "a"
@@ -281,9 +274,7 @@ class PerformanceAnalyzer:
         timing_analysis = self._analyze_timing(conversations)
 
         # Identify optimization opportunities
-        opportunities = self._identify_opportunities(
-            conversations, question_analysis, flow_analysis
-        )
+        opportunities = self._identify_opportunities(conversations, question_analysis, flow_analysis)
 
         return {
             "total_conversations": len(conversations),
@@ -338,9 +329,7 @@ class PerformanceAnalyzer:
                 }
 
         # Rank by effectiveness
-        sorted_questions = sorted(
-            results.items(), key=lambda x: x[1]["avg_lead_score"], reverse=True
-        )
+        sorted_questions = sorted(results.items(), key=lambda x: x[1]["avg_lead_score"], reverse=True)
 
         for rank, (q_type, data) in enumerate(sorted_questions, 1):
             results[q_type]["effectiveness_rank"] = rank
@@ -359,9 +348,7 @@ class PerformanceAnalyzer:
             return "timeline"
         elif any(word in msg_lower for word in ["bedroom", "bathroom", "size"]):
             return "property_requirements"
-        elif any(
-            word in msg_lower for word in ["financing", "mortgage", "pre-approved"]
-        ):
+        elif any(word in msg_lower for word in ["financing", "mortgage", "pre-approved"]):
             return "financing"
         elif any(word in msg_lower for word in ["motivation", "why", "reason"]):
             return "motivation"
@@ -441,7 +428,7 @@ class PerformanceAnalyzer:
                 {
                     "type": "quick_qualification",
                     "priority": "high",
-                    "recommendation": f"{quick_win_rate*100:.0f}% of hot leads qualify quickly - replicate this pattern",
+                    "recommendation": f"{quick_win_rate * 100:.0f}% of hot leads qualify quickly - replicate this pattern",
                     "expected_impact": "+20% efficiency",
                 }
             )
@@ -459,9 +446,7 @@ class PerformanceAnalyzer:
         report.append("=" * 60)
         report.append("PERFORMANCE ANALYSIS REPORT")
         report.append("=" * 60)
-        report.append(
-            f"\nTotal Conversations Analyzed: {analysis['total_conversations']}"
-        )
+        report.append(f"\nTotal Conversations Analyzed: {analysis['total_conversations']}")
 
         report.append("\n## Question Effectiveness")
         report.append("-" * 60)

@@ -248,9 +248,7 @@ class WorkflowBuilderService:
             workflows = [w for w in workflows if w.enabled]
         return sorted(workflows, key=lambda w: w.created_at, reverse=True)
 
-    def execute_workflow(
-        self, workflow_id: str, context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def execute_workflow(self, workflow_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a workflow with given context"""
         workflow = self.workflows.get(workflow_id)
         if not workflow or not workflow.enabled:
@@ -261,9 +259,7 @@ class WorkflowBuilderService:
 
         try:
             # Execute actions in sequence
-            current_action_id = (
-                workflow.actions[0].action_id if workflow.actions else None
-            )
+            current_action_id = workflow.actions[0].action_id if workflow.actions else None
 
             while current_action_id:
                 action = next(
@@ -275,9 +271,7 @@ class WorkflowBuilderService:
 
                 # Check conditions
                 if action.conditions:
-                    condition_met = self._evaluate_conditions(
-                        action.conditions, context
-                    )
+                    condition_met = self._evaluate_conditions(action.conditions, context)
                     if not condition_met:
                         current_action_id = action.next_action_id
                         continue
@@ -302,9 +296,7 @@ class WorkflowBuilderService:
         except Exception as e:
             return {"success": False, "workflow_id": workflow_id, "error": str(e)}
 
-    def _evaluate_conditions(
-        self, conditions: List[WorkflowCondition], context: Dict
-    ) -> bool:
+    def _evaluate_conditions(self, conditions: List[WorkflowCondition], context: Dict) -> bool:
         """Evaluate if conditions are met"""
         for condition in conditions:
             field_value = context.get(condition.field)
@@ -394,9 +386,7 @@ class WorkflowBuilderService:
             },
         ]
 
-    def create_from_template(
-        self, template_id: str, customizations: Dict = None
-    ) -> Optional[Workflow]:
+    def create_from_template(self, template_id: str, customizations: Dict = None) -> Optional[Workflow]:
         """Create a workflow from a template"""
         templates = {
             "new_lead_response": self._template_new_lead_response,
@@ -412,9 +402,7 @@ class WorkflowBuilderService:
 
     def _template_new_lead_response(self, customizations: Dict) -> Workflow:
         """Template: New Lead Auto-Response"""
-        trigger = WorkflowTrigger(
-            trigger_type=TriggerType.LEAD_CREATED.value, conditions={}
-        )
+        trigger = WorkflowTrigger(trigger_type=TriggerType.LEAD_CREATED.value, conditions={})
 
         actions = [
             WorkflowAction(
@@ -450,17 +438,13 @@ class WorkflowBuilderService:
 
     def _template_reengagement(self, customizations: Dict) -> Workflow:
         """Template: Re-engagement Sequence"""
-        trigger = WorkflowTrigger(
-            trigger_type=TriggerType.NO_RESPONSE.value, conditions={"days": 30}
-        )
+        trigger = WorkflowTrigger(trigger_type=TriggerType.NO_RESPONSE.value, conditions={"days": 30})
 
         actions = [
             WorkflowAction(
                 action_id="action_1",
                 action_type=ActionType.SEND_SMS.value,
-                config={
-                    "message": "Hi {name}, checking in! Still interested in finding your dream property?"
-                },
+                config={"message": "Hi {name}, checking in! Still interested in finding your dream property?"},
                 conditions=[],
                 delay_seconds=0,
             ),
@@ -497,9 +481,7 @@ class WorkflowBuilderService:
 
     def _template_hot_lead(self, customizations: Dict) -> Workflow:
         """Template: Hot Lead Fast Track"""
-        trigger = WorkflowTrigger(
-            trigger_type=TriggerType.SCORE_THRESHOLD.value, conditions={"score": 80}
-        )
+        trigger = WorkflowTrigger(trigger_type=TriggerType.SCORE_THRESHOLD.value, conditions={"score": 80})
 
         actions = [
             WorkflowAction(
@@ -512,9 +494,7 @@ class WorkflowBuilderService:
             WorkflowAction(
                 action_id="action_2",
                 action_type=ActionType.SEND_SMS.value,
-                config={
-                    "message": "Great news! I have some perfect properties for you. Can we schedule a call today?"
-                },
+                config={"message": "Great news! I have some perfect properties for you. Can we schedule a call today?"},
                 conditions=[],
                 delay_seconds=300,  # 5 minutes
             ),
@@ -539,9 +519,7 @@ def demo_workflow_builder():
     print("🏗️  Smart Workflow Builder Demo\n")
 
     # Create a simple workflow
-    trigger = WorkflowTrigger(
-        trigger_type=TriggerType.LEAD_CREATED.value, conditions={}
-    )
+    trigger = WorkflowTrigger(trigger_type=TriggerType.LEAD_CREATED.value, conditions={})
 
     actions = [
         WorkflowAction(

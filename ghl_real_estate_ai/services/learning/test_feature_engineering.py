@@ -8,9 +8,9 @@ feature extractors to ensure proper ML feature generation.
 
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any, Dict
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -26,24 +26,21 @@ async def test_feature_engineering_pipeline():
 
     try:
         # Import components
+        from learning.feature_engineering.feature_extractors import (
+            BehaviorFeatureExtractor,
+            PropertyFeatureExtractor,
+            SessionFeatureExtractor,
+            TimeFeatureExtractor,
+        )
+        from learning.feature_engineering.standard_feature_engineer import StandardFeatureEngineer
+        from learning.interfaces import EventType, FeatureType
         from learning.tracking.behavior_tracker import InMemoryBehaviorTracker
         from learning.tracking.event_collector import EventCollector
-        from learning.feature_engineering.standard_feature_engineer import StandardFeatureEngineer
-        from learning.feature_engineering.feature_extractors import (
-            PropertyFeatureExtractor,
-            BehaviorFeatureExtractor,
-            SessionFeatureExtractor,
-            TimeFeatureExtractor
-        )
-        from learning.interfaces import EventType, FeatureType
 
         print("✅ Successfully imported feature engineering components")
 
         # Create behavior tracker and collector
-        tracker = InMemoryBehaviorTracker({
-            "max_memory_events": 1000,
-            "flush_interval_seconds": 300
-        })
+        tracker = InMemoryBehaviorTracker({"max_memory_events": 1000, "flush_interval_seconds": 300})
 
         collector = EventCollector(tracker)
 
@@ -54,8 +51,8 @@ async def test_feature_engineering_pipeline():
                 "lookback_days": 30,
                 "min_events_threshold": 5,
                 "normalize_features": True,
-                "cache_ttl_minutes": 15
-            }
+                "cache_ttl_minutes": 15,
+            },
         )
 
         print("✅ Created feature engineering pipeline components")
@@ -80,55 +77,43 @@ async def test_feature_engineering_pipeline():
                 session_id=session_id,
                 device_type="web",
                 view_duration_seconds=view_duration,
-                page_source="search_results"
+                page_source="search_results",
             )
 
             # Add property details manually to the event data after creation
-            event = await tracker.get_events(
-                entity_id=lead_id,
-                entity_type="lead",
-                limit=1
-            )
+            event = await tracker.get_events(entity_id=lead_id, entity_type="lead", limit=1)
             if event:
                 latest_event = event[0]
                 if latest_event.event_id == event_id:
-                    latest_event.event_data.update({
-                        "property_type": "Single Family" if i % 2 == 0 else "Condo",
-                        "price": 500000 + (i * 100000),
-                        "location": f"District_{i % 3}",
-                        "square_feet": 1500 + (i * 200),
-                        "bedrooms": 2 + (i % 3),
-                        "features": ["garage", "pool"] if i % 2 == 0 else ["balcony", "gym"]
-                    })
+                    latest_event.event_data.update(
+                        {
+                            "property_type": "Single Family" if i % 2 == 0 else "Condo",
+                            "price": 500000 + (i * 100000),
+                            "location": f"District_{i % 3}",
+                            "square_feet": 1500 + (i * 200),
+                            "bedrooms": 2 + (i % 3),
+                            "features": ["garage", "pool"] if i % 2 == 0 else ["balcony", "gym"],
+                        }
+                    )
 
             event_ids.append(event_id)
 
             # Like/dislike patterns
             if i % 3 != 0:  # Like 2/3 of properties
                 swipe_event_id = await collector.track_property_swipe(
-                    lead_id=lead_id,
-                    property_id=prop_id,
-                    swipe_direction="right",
-                    session_id=session_id
+                    lead_id=lead_id, property_id=prop_id, swipe_direction="right", session_id=session_id
                 )
                 event_ids.append(swipe_event_id)
 
             # Save some properties
             if i % 2 == 0:
                 save_event_id = await collector.track_property_save(
-                    lead_id=lead_id,
-                    property_id=prop_id,
-                    save_type="favorite",
-                    session_id=session_id
+                    lead_id=lead_id, property_id=prop_id, save_type="favorite", session_id=session_id
                 )
                 event_ids.append(save_event_id)
 
         # Search and filtering behavior
-        search_queries = [
-            "3 bedroom house downtown",
-            "condo with pool",
-            "family home garage"
-        ]
+        search_queries = ["3 bedroom house downtown", "condo with pool", "family home garage"]
 
         for i, query in enumerate(search_queries):
             search_event_id = await collector.track_search_query(
@@ -137,10 +122,10 @@ async def test_feature_engineering_pipeline():
                 search_filters={
                     "min_price": 400000 + (i * 50000),
                     "max_price": 700000 + (i * 100000),
-                    "property_type": "Single Family" if i % 2 == 0 else "Condo"
+                    "property_type": "Single Family" if i % 2 == 0 else "Condo",
                 },
                 results_count=20 - (i * 3),
-                session_id=session_id
+                session_id=session_id,
             )
             event_ids.append(search_event_id)
 
@@ -151,7 +136,7 @@ async def test_feature_engineering_pipeline():
                 filter_value=str(3 + i),
                 previous_results_count=20 - (i * 3),
                 new_results_count=15 - (i * 2),
-                session_id=session_id
+                session_id=session_id,
             )
             event_ids.append(filter_event_id)
 
@@ -165,7 +150,7 @@ async def test_feature_engineering_pipeline():
             requested_time=datetime.now() + timedelta(days=2),
             booking_type="tour",
             urgency="high",
-            session_id=session_id
+            session_id=session_id,
         )
         event_ids.append(booking_event_id)
 
@@ -176,7 +161,7 @@ async def test_feature_engineering_pipeline():
             property_id=properties[1],
             completed=True,
             completion_rating=9,
-            feedback="Excellent tour experience!"
+            feedback="Excellent tour experience!",
         )
         event_ids.append(completion_event_id)
 
@@ -186,17 +171,10 @@ async def test_feature_engineering_pipeline():
         print("\n🔬 Testing Lead Feature Extraction...")
 
         # Get events for the lead
-        lead_events = await tracker.get_events(
-            entity_id=lead_id,
-            entity_type="lead",
-            limit=1000
-        )
+        lead_events = await tracker.get_events(entity_id=lead_id, entity_type="lead", limit=1000)
 
         lead_features = await feature_engineer.extract_features(
-            entity_id=lead_id,
-            entity_type="lead",
-            events=lead_events,
-            context={"feature_set": "comprehensive"}
+            entity_id=lead_id, entity_type="lead", events=lead_events, context={"feature_set": "comprehensive"}
         )
 
         print(f"✅ Extracted {len(lead_features.numerical_features)} numerical features")
@@ -222,28 +200,17 @@ async def test_feature_engineering_pipeline():
         # Test 2: Batch feature extraction
         print("\n⚡ Testing Batch Feature Extraction...")
 
-        entities = [
-            (lead_id, "lead"),
-            (properties[0], "property"),
-            (properties[1], "property"),
-            (agent_id, "agent")
-        ]
+        entities = [(lead_id, "lead"), (properties[0], "property"), (properties[1], "property"), (agent_id, "agent")]
 
         # Prepare events by entity for batch processing
         events_by_entity = {}
         for entity_id, entity_type in entities:
             entity_key = f"{entity_type}_{entity_id}"
-            entity_events = await tracker.get_events(
-                entity_id=entity_id,
-                entity_type=entity_type,
-                limit=1000
-            )
+            entity_events = await tracker.get_events(entity_id=entity_id, entity_type=entity_type, limit=1000)
             events_by_entity[entity_key] = entity_events
 
         batch_features = await feature_engineer.batch_extract_features(
-            entities=entities,
-            events_by_entity=events_by_entity,
-            context={"batch_processing": True}
+            entities=entities, events_by_entity=events_by_entity, context={"batch_processing": True}
         )
 
         print(f"✅ Batch extracted features for {len(batch_features)} entities")
@@ -258,11 +225,7 @@ async def test_feature_engineering_pipeline():
         print("\n🔧 Testing Specialized Feature Extractors...")
 
         # Get events for detailed testing
-        lead_events = await tracker.get_events(
-            entity_id=lead_id,
-            entity_type="lead",
-            limit=1000
-        )
+        lead_events = await tracker.get_events(entity_id=lead_id, entity_type="lead", limit=1000)
 
         # Property features
         property_extractor = PropertyFeatureExtractor()
@@ -297,10 +260,7 @@ async def test_feature_engineering_pipeline():
 
         # Test with normalization enabled
         normalized_features = await feature_engineer.extract_features(
-            entity_id=lead_id,
-            entity_type="lead",
-            events=lead_events,
-            context={"normalize": True}
+            entity_id=lead_id, entity_type="lead", events=lead_events, context={"normalize": True}
         )
 
         # Check that numerical features are normalized (between 0 and 1 for min-max)
@@ -315,9 +275,7 @@ async def test_feature_engineering_pipeline():
 
         # Extract same features again (should use cache)
         cached_features = await feature_engineer.extract_features(
-            entity_id=lead_id,
-            entity_type="lead",
-            events=lead_events
+            entity_id=lead_id, entity_type="lead", events=lead_events
         )
 
         # Verify caching worked
@@ -339,9 +297,7 @@ async def test_feature_engineering_pipeline():
 
         # Test with non-existent entity (empty events list)
         minimal_features = await feature_engineer.extract_features(
-            entity_id="nonexistent_lead",
-            entity_type="lead",
-            events=[]
+            entity_id="nonexistent_lead", entity_type="lead", events=[]
         )
 
         print(f"✅ Minimal features returned for non-existent entity")
@@ -372,6 +328,7 @@ async def test_feature_engineering_pipeline():
     except Exception as e:
         print(f"❌ Feature engineering test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -381,17 +338,20 @@ async def test_advanced_feature_scenarios():
     print("\n🚀 Testing Advanced Feature Scenarios...\n")
 
     try:
+        from learning.feature_engineering.standard_feature_engineer import StandardFeatureEngineer
         from learning.tracking.behavior_tracker import InMemoryBehaviorTracker
         from learning.tracking.event_collector import EventCollector
-        from learning.feature_engineering.standard_feature_engineer import StandardFeatureEngineer
 
         # Test scenario 1: High-engagement user
         tracker = InMemoryBehaviorTracker()
         collector = EventCollector(tracker)
-        engineer = StandardFeatureEngineer(tracker, {
-            "lookback_days": 7,  # Shorter window
-            "min_events_threshold": 3
-        })
+        engineer = StandardFeatureEngineer(
+            tracker,
+            {
+                "lookback_days": 7,  # Shorter window
+                "min_events_threshold": 3,
+            },
+        )
 
         lead_id = "power_user_123"
         session_id = "power_session"
@@ -404,16 +364,13 @@ async def test_advanced_feature_scenarios():
                 property_id=f"prop_{i}",
                 session_id=session_id,
                 device_type="mobile",
-                view_duration_seconds=120 + (i * 5)  # Long view times
+                view_duration_seconds=120 + (i * 5),  # Long view times
             )
 
             # High save rate
             if i % 2 == 0:
                 await collector.track_property_save(
-                    lead_id=lead_id,
-                    property_id=f"prop_{i}",
-                    save_type="favorite",
-                    session_id=session_id
+                    lead_id=lead_id, property_id=f"prop_{i}", save_type="favorite", session_id=session_id
                 )
 
             # Multiple booking requests
@@ -425,18 +382,16 @@ async def test_advanced_feature_scenarios():
                     requested_time=datetime.now() + timedelta(days=1),
                     booking_type="private_tour",
                     urgency="high",
-                    session_id=session_id
+                    session_id=session_id,
                 )
 
         # Get events for power user
-        power_user_events = await tracker.get_events(
-            entity_id=lead_id,
-            entity_type="lead",
-            limit=1000
-        )
+        power_user_events = await tracker.get_events(entity_id=lead_id, entity_type="lead", limit=1000)
 
         power_user_features = await engineer.extract_features(lead_id, "lead", power_user_events)
-        print(f"✅ Power user engagement score: {power_user_features.numerical_features.get('engagement_score', 0):.1f}")
+        print(
+            f"✅ Power user engagement score: {power_user_features.numerical_features.get('engagement_score', 0):.1f}"
+        )
 
         # Test scenario 2: Feature engineering with missing data
         print("\n🔍 Testing sparse data scenario...")
@@ -447,15 +402,11 @@ async def test_advanced_feature_scenarios():
             property_id="single_prop",
             session_id="single_session",
             device_type="web",
-            view_duration_seconds=45
+            view_duration_seconds=45,
         )
 
         # Get events for sparse lead
-        sparse_events = await tracker.get_events(
-            entity_id=sparse_lead,
-            entity_type="lead",
-            limit=1000
-        )
+        sparse_events = await tracker.get_events(entity_id=sparse_lead, entity_type="lead", limit=1000)
 
         sparse_features = await engineer.extract_features(sparse_lead, "lead", sparse_events)
         print("✅ Successfully handled sparse data scenario")
@@ -473,15 +424,11 @@ async def test_advanced_feature_scenarios():
                     property_id=f"prop_{i}_{j}",
                     session_id=session,
                     device_type="web",
-                    view_duration_seconds=30 + (j * 10)
+                    view_duration_seconds=30 + (j * 10),
                 )
 
         # Get events for multi-session lead
-        multi_session_events = await tracker.get_events(
-            entity_id=multi_session_lead,
-            entity_type="lead",
-            limit=1000
-        )
+        multi_session_events = await tracker.get_events(entity_id=multi_session_lead, entity_type="lead", limit=1000)
 
         multi_features = await engineer.extract_features(multi_session_lead, "lead", multi_session_events)
         sessions_count = multi_features.numerical_features.get("unique_sessions", 0)
@@ -503,12 +450,12 @@ async def main():
     # Test core pipeline
     core_ok = await test_feature_engineering_pipeline()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
     # Test advanced scenarios
     advanced_ok = await test_advanced_feature_scenarios()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
     if core_ok and advanced_ok:
         print("\n🎉 ALL FEATURE ENGINEERING TESTS PASSED!")

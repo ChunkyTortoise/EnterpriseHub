@@ -20,54 +20,52 @@ Expected Results:
 
 import asyncio
 import time
-from typing import AsyncGenerator, Dict, List, Optional, Any, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from contextlib import asynccontextmanager
 from enum import Enum
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
 
 import sqlalchemy
-from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    AsyncSession,
-    async_sessionmaker,
-    AsyncEngine
-)
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import QueuePool, NullPool
-from sqlalchemy import text, event
+from sqlalchemy import event, text
 from sqlalchemy.events import PoolEvents
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool, QueuePool
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class ConnectionPoolType(Enum):
     """Database connection pool types for different use cases."""
-    PRODUCTION = "production"      # High-performance production workload
-    DEVELOPMENT = "development"    # Local development with debugging
-    TESTING = "testing"           # Unit/integration testing
-    BATCH_PROCESSING = "batch"    # Large batch operations
-    ANALYTICS = "analytics"       # Read-heavy analytics workloads
+
+    PRODUCTION = "production"  # High-performance production workload
+    DEVELOPMENT = "development"  # Local development with debugging
+    TESTING = "testing"  # Unit/integration testing
+    BATCH_PROCESSING = "batch"  # Large batch operations
+    ANALYTICS = "analytics"  # Read-heavy analytics workloads
 
 
 @dataclass
 class PoolConfiguration:
     """Configuration for database connection pools."""
-    pool_size: int = 20           # Base number of connections to maintain
-    max_overflow: int = 10        # Additional connections during peaks
-    pool_timeout: int = 30        # Seconds to wait for connection
-    pool_recycle: int = 3600      # Seconds before recycling connection
-    pool_pre_ping: bool = True    # Test connections before use
-    echo: bool = False            # Log SQL statements
-    echo_pool: bool = False       # Log pool events
+
+    pool_size: int = 20  # Base number of connections to maintain
+    max_overflow: int = 10  # Additional connections during peaks
+    pool_timeout: int = 30  # Seconds to wait for connection
+    pool_recycle: int = 3600  # Seconds before recycling connection
+    pool_pre_ping: bool = True  # Test connections before use
+    echo: bool = False  # Log SQL statements
+    echo_pool: bool = False  # Log pool events
 
 
 @dataclass
 class PoolMetrics:
     """Connection pool performance metrics."""
+
     pool_name: str
     current_connections: int = 0
     connections_in_use: int = 0
@@ -105,7 +103,7 @@ class DatabaseConnectionService:
                 pool_recycle=3600,
                 pool_pre_ping=True,
                 echo=False,
-                echo_pool=False
+                echo_pool=False,
             ),
             ConnectionPoolType.DEVELOPMENT: PoolConfiguration(
                 pool_size=5,
@@ -114,7 +112,7 @@ class DatabaseConnectionService:
                 pool_recycle=1800,
                 pool_pre_ping=True,
                 echo=True,  # Enable SQL logging for dev
-                echo_pool=True
+                echo_pool=True,
             ),
             ConnectionPoolType.TESTING: PoolConfiguration(
                 pool_size=2,
@@ -123,7 +121,7 @@ class DatabaseConnectionService:
                 pool_recycle=300,
                 pool_pre_ping=False,
                 echo=False,
-                echo_pool=False
+                echo_pool=False,
             ),
             ConnectionPoolType.BATCH_PROCESSING: PoolConfiguration(
                 pool_size=30,
@@ -132,7 +130,7 @@ class DatabaseConnectionService:
                 pool_recycle=1800,
                 pool_pre_ping=True,
                 echo=False,
-                echo_pool=False
+                echo_pool=False,
             ),
             ConnectionPoolType.ANALYTICS: PoolConfiguration(
                 pool_size=15,
@@ -141,8 +139,8 @@ class DatabaseConnectionService:
                 pool_recycle=7200,  # Longer recycle for read-only
                 pool_pre_ping=True,
                 echo=False,
-                echo_pool=False
-            )
+                echo_pool=False,
+            ),
         }
 
     async def create_optimized_engine(
@@ -150,7 +148,7 @@ class DatabaseConnectionService:
         database_url: str,
         pool_type: ConnectionPoolType = ConnectionPoolType.PRODUCTION,
         engine_name: str = "default",
-        custom_config: Optional[PoolConfiguration] = None
+        custom_config: Optional[PoolConfiguration] = None,
     ) -> AsyncEngine:
         """
         Create an optimized async database engine with intelligent pooling.
@@ -183,7 +181,6 @@ class DatabaseConnectionService:
             echo=config.echo,
             echo_pool=config.echo_pool,
             future=True,
-
             # Connection pool settings
             poolclass=QueuePool if not database_url.startswith("sqlite") else NullPool,
             pool_size=config.pool_size,
@@ -191,16 +188,17 @@ class DatabaseConnectionService:
             pool_timeout=config.pool_timeout,
             pool_recycle=config.pool_recycle,
             pool_pre_ping=config.pool_pre_ping,
-
             # Additional optimization settings
             pool_reset_on_return="commit",  # Reset on return for safety
             connect_args={
                 "server_settings": {
                     "application_name": f"EnterpriseHub-{engine_name}",
                     "statement_timeout": "30000",  # 30 second query timeout
-                    "idle_in_transaction_session_timeout": "60000"  # 1 minute idle timeout
+                    "idle_in_transaction_session_timeout": "60000",  # 1 minute idle timeout
                 }
-            } if database_url.startswith("postgresql") else {}
+            }
+            if database_url.startswith("postgresql")
+            else {},
         )
 
         # Set up pool event monitoring
@@ -210,20 +208,12 @@ class DatabaseConnectionService:
         self.engines[engine_name] = engine
 
         session_factory = async_sessionmaker(
-            bind=engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autoflush=False,
-            autocommit=False
+            bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False, autocommit=False
         )
         self.session_factories[engine_name] = session_factory
 
         # Initialize metrics
-        self.pool_metrics[engine_name] = PoolMetrics(
-            pool_name=engine_name,
-            current_connections=0,
-            peak_connections=0
-        )
+        self.pool_metrics[engine_name] = PoolMetrics(pool_name=engine_name, current_connections=0, peak_connections=0)
         self.connection_checkout_times[engine_name] = []
 
         logger.info(
@@ -242,8 +232,7 @@ class DatabaseConnectionService:
             if engine_name in self.pool_metrics:
                 self.pool_metrics[engine_name].current_connections += 1
                 self.pool_metrics[engine_name].peak_connections = max(
-                    self.pool_metrics[engine_name].peak_connections,
-                    self.pool_metrics[engine_name].current_connections
+                    self.pool_metrics[engine_name].peak_connections, self.pool_metrics[engine_name].current_connections
                 )
                 self.pool_metrics[engine_name].last_updated = datetime.utcnow()
 
@@ -258,7 +247,7 @@ class DatabaseConnectionService:
         @event.listens_for(engine.sync_engine.pool, "checkin")
         def on_checkin(dbapi_connection, connection_record):
             """Track connection checkins and calculate checkout time."""
-            if hasattr(connection_record, 'checkout_time'):
+            if hasattr(connection_record, "checkout_time"):
                 checkout_time = (time.time() - connection_record.checkout_time) * 1000
 
                 if engine_name in self.connection_checkout_times:
@@ -272,8 +261,7 @@ class DatabaseConnectionService:
                     if engine_name in self.pool_metrics:
                         self.pool_metrics[engine_name].avg_checkout_time_ms = sum(times) / len(times)
                         self.pool_metrics[engine_name].connections_in_use = max(
-                            0,
-                            self.pool_metrics[engine_name].connections_in_use - 1
+                            0, self.pool_metrics[engine_name].connections_in_use - 1
                         )
 
         @event.listens_for(engine.sync_engine.pool, "invalidate")
@@ -285,10 +273,7 @@ class DatabaseConnectionService:
 
     @asynccontextmanager
     async def get_session(
-        self,
-        engine_name: str = "default",
-        autocommit: bool = False,
-        read_only: bool = False
+        self, engine_name: str = "default", autocommit: bool = False, read_only: bool = False
     ) -> AsyncGenerator[AsyncSession, None]:
         """
         Get a database session with automatic management.
@@ -337,7 +322,7 @@ class DatabaseConnectionService:
         params: Optional[Dict[str, Any]] = None,
         engine_name: str = "default",
         max_retries: int = 3,
-        retry_delay: float = 0.1
+        retry_delay: float = 0.1,
     ) -> Any:
         """
         Execute a query with automatic retry on connection failures.
@@ -375,18 +360,12 @@ class DatabaseConnectionService:
                     await asyncio.sleep(retry_delay)
                     retry_delay *= 2  # Exponential backoff
                 else:
-                    logger.error(
-                        f"Query failed after {max_retries + 1} attempts "
-                        f"for engine '{engine_name}': {e}"
-                    )
+                    logger.error(f"Query failed after {max_retries + 1} attempts for engine '{engine_name}': {e}")
 
         raise last_exception
 
     async def optimize_pool_size(
-        self,
-        engine_name: str,
-        target_utilization: float = 0.8,
-        adjustment_factor: float = 0.1
+        self, engine_name: str, target_utilization: float = 0.8, adjustment_factor: float = 0.1
     ) -> Dict[str, Any]:
         """
         Dynamically optimize pool size based on usage patterns.
@@ -434,9 +413,9 @@ class DatabaseConnectionService:
                 "peak_connections": metrics.peak_connections,
                 "avg_checkout_time_ms": metrics.avg_checkout_time_ms,
                 "connection_failures": metrics.connection_failures,
-                "pool_hits": metrics.pool_hits
+                "pool_hits": metrics.pool_hits,
             },
-            "performance_rating": self._calculate_performance_rating(metrics, utilization)
+            "performance_rating": self._calculate_performance_rating(metrics, utilization),
         }
 
     def _calculate_performance_rating(self, metrics: PoolMetrics, utilization: float) -> str:
@@ -509,12 +488,14 @@ class DatabaseConnectionService:
                 "engine_name": engine_name,
                 "pool_size": self.engines[engine_name].pool.size() if engine_name in self.engines else 0,
                 "connections_in_use": metrics.connections_in_use,
-                "connections_available": max(0, self.engines[engine_name].pool.size() - metrics.connections_in_use) if engine_name in self.engines else 0,
+                "connections_available": max(0, self.engines[engine_name].pool.size() - metrics.connections_in_use)
+                if engine_name in self.engines
+                else 0,
                 "peak_connections": metrics.peak_connections,
                 "avg_checkout_time_ms": metrics.avg_checkout_time_ms,
                 "pool_hits": metrics.pool_hits,
                 "connection_failures": metrics.connection_failures,
-                "last_updated": metrics.last_updated.isoformat()
+                "last_updated": metrics.last_updated.isoformat(),
             }
         else:
             # Return metrics for all engines
@@ -526,14 +507,10 @@ class DatabaseConnectionService:
                 "engines": all_metrics,
                 "summary": {
                     "total_engines": len(self.engines),
-                    "total_connections": sum(
-                        engine.pool.size() for engine in self.engines.values()
-                    ),
-                    "total_in_use": sum(
-                        metrics.connections_in_use for metrics in self.pool_metrics.values()
-                    ),
-                    "avg_performance_rating": self._calculate_average_performance_rating()
-                }
+                    "total_connections": sum(engine.pool.size() for engine in self.engines.values()),
+                    "total_in_use": sum(metrics.connections_in_use for metrics in self.pool_metrics.values()),
+                    "avg_performance_rating": self._calculate_average_performance_rating(),
+                },
             }
 
     def _calculate_average_performance_rating(self) -> str:
@@ -605,9 +582,9 @@ class DatabaseConnectionService:
                     "checked_in": pool.checkedin(),
                     "checked_out": pool.checkedout(),
                     "overflow": pool.overflow(),
-                    "invalid": pool.invalid()
+                    "invalid": pool.invalid(),
                 },
-                "test_timestamp": datetime.utcnow().isoformat()
+                "test_timestamp": datetime.utcnow().isoformat(),
             }
 
             # Add performance assessment
@@ -618,7 +595,7 @@ class DatabaseConnectionService:
                     "utilization": utilization,
                     "avg_checkout_time_ms": metrics.avg_checkout_time_ms,
                     "failure_rate": metrics.connection_failures / max(1, metrics.pool_hits),
-                    "rating": self._calculate_performance_rating(metrics, utilization)
+                    "rating": self._calculate_performance_rating(metrics, utilization),
                 }
 
             return health_data
@@ -629,7 +606,7 @@ class DatabaseConnectionService:
                 "engine_name": engine_name,
                 "connection_test": "failed",
                 "error": str(e),
-                "test_timestamp": datetime.utcnow().isoformat()
+                "test_timestamp": datetime.utcnow().isoformat(),
             }
 
     async def close_all_engines(self):

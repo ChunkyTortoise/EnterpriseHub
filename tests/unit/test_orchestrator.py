@@ -5,26 +5,26 @@ AgentRegistry, and Orchestrator classes.
 """
 
 from typing import Any, Dict
+
 import pytest
 
 from utils.orchestrator import (
     Agent,
+    AgentExecutionError,
+    AgentRegistry,
     AgentResult,
     AgentStatus,
-    AgentRegistry,
     Orchestrator,
     PersonaB,
     RetryConfig,
     ValidationError,
     ValidationRule,
     Workflow,
+    WorkflowExecutionError,
     WorkflowResult,
     WorkflowStage,
     WorkflowStatus,
-    AgentExecutionError,
-    WorkflowExecutionError,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -232,9 +232,7 @@ class TestAgentRegistry:
         assert len(agents) == 1
         assert agents[0].agent_id == "tech_bot"
 
-    def test_validate_workflow_success(
-        self, registry_with_agents: AgentRegistry, sample_workflow: Workflow
-    ) -> None:
+    def test_validate_workflow_success(self, registry_with_agents: AgentRegistry, sample_workflow: Workflow) -> None:
         """Test workflow validation with all agents registered."""
         result = registry_with_agents.validate_workflow(sample_workflow)
         assert result is True
@@ -252,9 +250,7 @@ class TestAgentRegistry:
         with pytest.raises(ValueError, match="unregistered agent"):
             registry_with_agents.validate_workflow(workflow)
 
-    def test_validate_workflow_missing_dependency(
-        self, registry_with_agents: AgentRegistry
-    ) -> None:
+    def test_validate_workflow_missing_dependency(self, registry_with_agents: AgentRegistry) -> None:
         """Test workflow validation fails with missing stage dependency."""
         workflow = Workflow(
             workflow_id="bad_workflow",
@@ -426,9 +422,7 @@ class TestOrchestrator:
 class TestWorkflowExecution:
     """Tests for workflow execution through Orchestrator."""
 
-    def test_execute_workflow_success(
-        self, registry_with_agents: AgentRegistry, sample_workflow: Workflow
-    ) -> None:
+    def test_execute_workflow_success(self, registry_with_agents: AgentRegistry, sample_workflow: Workflow) -> None:
         """Test successful workflow execution."""
         orchestrator = Orchestrator(registry=registry_with_agents)
 

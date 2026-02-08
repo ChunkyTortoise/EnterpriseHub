@@ -18,55 +18,53 @@ Integrates with:
 """
 
 import asyncio
+import logging
 import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import JSONResponse
-import logging
+
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimitMiddleware
 
 # Internal imports
 from ghl_real_estate_ai.api.schemas.ml_scoring import (
-    LeadScoringRequest,
-    LeadScoringResponse,
+    BatchProcessingEvent,
     BatchScoringRequest,
     BatchScoringResponse,
-    LeadScoreHistoryResponse,
-    MLModelStatus,
+    ConfidenceLevel,
     ErrorResponse,
     HealthCheckResponse,
-    LeadScoredEvent,
-    BatchProcessingEvent,
-    ModelStatusEvent,
-    ConfidenceLevel,
     LeadClassification,
+    LeadScoredEvent,
+    LeadScoreHistoryResponse,
+    LeadScoringRequest,
+    LeadScoringResponse,
+    MLFeatureExplanation,
+    MLModelStatus,
+    ModelStatusEvent,
     ScoreSource,
-    MLFeatureExplanation
 )
-from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
-from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimitMiddleware
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service, TenantScopedCache
+from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
 from ghl_real_estate_ai.services.cache_service_optimized import get_optimized_cache_service
-from ghl_real_estate_ai.services.performance_optimizer import get_performance_optimizer
 from ghl_real_estate_ai.services.database_optimizer import get_ml_scoring_optimizer
+from ghl_real_estate_ai.services.performance_optimizer import get_performance_optimizer
 
 # ML Analytics Engine Integration
 try:
+    from bots.shared.feature_engineering import FeatureEngineeringPipeline, LeadFeatures, get_feature_engineer
     from bots.shared.ml_analytics_engine import (
-        get_ml_analytics_engine,
         MLAnalyticsEngine,
         MLPredictionRequest,
         MLPredictionResult,
-        ModelType
+        ModelType,
+        get_ml_analytics_engine,
     )
-    from bots.shared.feature_engineering import (
-        get_feature_engineer,
-        LeadFeatures,
-        FeatureEngineeringPipeline
-    )
+
     ML_ENGINE_AVAILABLE = True
 except ImportError:
     ML_ENGINE_AVAILABLE = False
@@ -100,10 +98,7 @@ class MLScoringService:
         self.jorge_commission_rate = 0.06  # Jorge's 6% commission rate
 
     async def score_lead(
-        self,
-        request: LeadScoringRequest,
-        user_id: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        self, request: LeadScoringRequest, user_id: Optional[str] = None, tenant_id: Optional[str] = None
     ) -> LeadScoringResponse:
         """
         Score a single lead using ML Analytics Engine.
@@ -134,7 +129,7 @@ class MLScoringService:
                 request=request,
                 ml_result=ml_result,
                 processing_time_ms=(time.time() - start_time) * 1000,
-                cache_hit=False
+                cache_hit=False,
             )
 
             # Cache the result
@@ -155,16 +150,11 @@ class MLScoringService:
 
             # Return fallback response
             return await self._build_error_response(
-                request=request,
-                error=str(e),
-                processing_time_ms=(time.time() - start_time) * 1000
+                request=request, error=str(e), processing_time_ms=(time.time() - start_time) * 1000
             )
 
     async def batch_score_leads(
-        self,
-        request: BatchScoringRequest,
-        user_id: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        self, request: BatchScoringRequest, user_id: Optional[str] = None, tenant_id: Optional[str] = None
     ) -> BatchScoringResponse:
         """
         OPTIMIZED: Score multiple leads in batch with 90%+ improvement.
@@ -191,61 +181,65 @@ class MLScoringService:
                 for lead_request in request.leads:
                     try:
                         ml_request = await self._convert_to_ml_request(lead_request)
-                        ml_requests.append({
-                            'lead_request': lead_request,
-                            'ml_request': ml_request,
-                            'user_id': user_id,
-                            'tenant_id': tenant_id
-                        })
+                        ml_requests.append(
+                            {
+                                "lead_request": lead_request,
+                                "ml_request": ml_request,
+                                "user_id": user_id,
+                                "tenant_id": tenant_id,
+                            }
+                        )
                     except Exception as e:
-                        errors.append({
-                            "lead_id": lead_request.lead_id,
-                            "error": f"Request conversion failed: {str(e)}"
-                        })
+                        errors.append(
+                            {"lead_id": lead_request.lead_id, "error": f"Request conversion failed: {str(e)}"}
+                        )
 
                 if ml_requests:
                     # Use the optimized ML scoring with parallel processing
                     batch_results = await ml_scoring_optimizer.optimize_batch_scoring(
                         ml_engine,
-                        [req['ml_request'] for req in ml_requests],
-                        batch_size=20  # Process in chunks of 20
+                        [req["ml_request"] for req in ml_requests],
+                        batch_size=20,  # Process in chunks of 20
                     )
 
                     # Process results and build responses
                     for i, (ml_request_data, ml_result) in enumerate(zip(ml_requests, batch_results)):
                         try:
                             if isinstance(ml_result, Exception):
-                                errors.append({
-                                    "lead_id": ml_request_data['lead_request'].lead_id,
-                                    "error": str(ml_result)
-                                })
+                                errors.append(
+                                    {"lead_id": ml_request_data["lead_request"].lead_id, "error": str(ml_result)}
+                                )
                                 continue
 
                             # Build optimized response using cached processing
                             response = await self._build_scoring_response_optimized(
-                                request=ml_request_data['lead_request'],
+                                request=ml_request_data["lead_request"],
                                 ml_result=ml_result,
                                 processing_time_ms=(time.time() - start_time) * 1000,
                                 cache_hit=False,
-                                batch_processing=True
+                                batch_processing=True,
                             )
                             results.append(response)
 
                             # Send progress update every 10 leads
                             if (i + 1) % 10 == 0:
                                 await self._send_batch_progress_update(
-                                    batch_id, len(request.leads), i + 1, ml_request_data['lead_request'].lead_id
+                                    batch_id, len(request.leads), i + 1, ml_request_data["lead_request"].lead_id
                                 )
 
                         except Exception as e:
-                            errors.append({
-                                "lead_id": ml_request_data['lead_request'].lead_id,
-                                "error": f"Response building failed: {str(e)}"
-                            })
+                            errors.append(
+                                {
+                                    "lead_id": ml_request_data["lead_request"].lead_id,
+                                    "error": f"Response building failed: {str(e)}",
+                                }
+                            )
 
                 batch_time = (time.time() - start_time) * 1000
-                logger.info(f"✅ Optimized batch scoring completed: {len(results)} leads in {batch_time:.2f}ms "
-                           f"({batch_time/max(len(results), 1):.1f}ms per lead)")
+                logger.info(
+                    f"✅ Optimized batch scoring completed: {len(results)} leads in {batch_time:.2f}ms "
+                    f"({batch_time / max(len(results), 1):.1f}ms per lead)"
+                )
 
             except Exception as e:
                 logger.error(f"Optimized batch scoring failed: {e}")
@@ -254,21 +248,13 @@ class MLScoringService:
 
         elif request.parallel_processing:
             # Standard parallel processing for small batches (< 5 leads)
-            tasks = [
-                self.score_lead(lead_request, user_id, tenant_id)
-                for lead_request in request.leads
-            ]
+            tasks = [self.score_lead(lead_request, user_id, tenant_id) for lead_request in request.leads]
 
-            completed_results = await self._process_with_progress_updates(
-                tasks, batch_id, len(request.leads)
-            )
+            completed_results = await self._process_with_progress_updates(tasks, batch_id, len(request.leads))
 
             for i, result in enumerate(completed_results):
                 if isinstance(result, Exception):
-                    errors.append({
-                        "lead_id": request.leads[i].lead_id,
-                        "error": str(result)
-                    })
+                    errors.append({"lead_id": request.leads[i].lead_id, "error": str(result)})
                 else:
                     results.append(result)
 
@@ -279,31 +265,20 @@ class MLScoringService:
                     result = await self.score_lead(lead_request, user_id, tenant_id)
                     results.append(result)
 
-                    await self._send_batch_progress_update(
-                        batch_id, len(request.leads), i + 1, lead_request.lead_id
-                    )
+                    await self._send_batch_progress_update(batch_id, len(request.leads), i + 1, lead_request.lead_id)
 
                 except Exception as e:
-                    errors.append({
-                        "lead_id": lead_request.lead_id,
-                        "error": str(e)
-                    })
+                    errors.append({"lead_id": lead_request.lead_id, "error": str(e)})
 
         # Calculate batch summary
         return await self._build_batch_response(
-            batch_id=batch_id,
-            results=results,
-            errors=errors,
-            processing_time_ms=(time.time() - start_time) * 1000
+            batch_id=batch_id, results=results, errors=errors, processing_time_ms=(time.time() - start_time) * 1000
         )
 
     async def _convert_to_ml_request(self, request: LeadScoringRequest) -> Dict[str, Any]:
         """Convert API request to ML Analytics Engine format"""
         if not ML_ENGINE_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="ML Analytics Engine is not available"
-            )
+            raise HTTPException(status_code=503, detail="ML Analytics Engine is not available")
 
         # Extract features using Feature Engineering pipeline
         lead_context = {
@@ -328,7 +303,7 @@ class MLScoringService:
             "timeline_urgency": request.timeline_urgency,
             "previous_interactions": request.previous_interactions,
             "referral_source": request.referral_source,
-            "custom_fields": request.custom_fields or {}
+            "custom_fields": request.custom_fields or {},
         }
 
         return {
@@ -337,16 +312,13 @@ class MLScoringService:
             "lead_context": lead_context,
             "model_type": ModelType.XGBOOST_CLASSIFIER,
             "include_explanations": request.include_explanations,
-            "timeout_ms": request.timeout_ms
+            "timeout_ms": request.timeout_ms,
         }
 
     async def _get_ml_prediction(self, ml_request: Dict[str, Any]) -> Dict[str, Any]:
         """Get prediction from ML Analytics Engine"""
         if not ml_engine:
-            raise HTTPException(
-                status_code=503,
-                detail="ML Analytics Engine not available"
-            )
+            raise HTTPException(status_code=503, detail="ML Analytics Engine not available")
 
         try:
             # Create ML request object
@@ -354,7 +326,7 @@ class MLScoringService:
                 lead_id=ml_request["lead_id"],
                 lead_context=ml_request["lead_context"],
                 model_type=ml_request["model_type"],
-                include_explanations=ml_request["include_explanations"]
+                include_explanations=ml_request["include_explanations"],
             )
 
             # Get prediction from ML engine
@@ -367,22 +339,15 @@ class MLScoringService:
                 "feature_explanations": result.feature_explanations,
                 "shap_values": result.shap_values,
                 "inference_time_ms": result.inference_time_ms,
-                "source": ScoreSource.ML_ONLY if result.confidence_score >= 0.85 else ScoreSource.ML_CLAUDE_HYBRID
+                "source": ScoreSource.ML_ONLY if result.confidence_score >= 0.85 else ScoreSource.ML_CLAUDE_HYBRID,
             }
 
         except Exception as e:
             logger.error(f"ML prediction error: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"ML prediction failed: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"ML prediction failed: {str(e)}")
 
     async def _build_scoring_response(
-        self,
-        request: LeadScoringRequest,
-        ml_result: Dict[str, Any],
-        processing_time_ms: float,
-        cache_hit: bool
+        self, request: LeadScoringRequest, ml_result: Dict[str, Any], processing_time_ms: float, cache_hit: bool
     ) -> LeadScoringResponse:
         """Build comprehensive scoring response"""
 
@@ -410,7 +375,7 @@ class MLScoringService:
                         feature_value=feature_data["feature_value"],
                         importance_score=feature_data["importance_score"],
                         impact_direction=feature_data["impact_direction"],
-                        human_explanation=feature_data["human_explanation"]
+                        human_explanation=feature_data["human_explanation"],
                     )
                 )
 
@@ -436,7 +401,7 @@ class MLScoringService:
             processing_time_ms=processing_time_ms,
             ml_inference_time_ms=ml_result.get("inference_time_ms"),
             cache_hit=cache_hit,
-            expires_at=datetime.utcnow() + timedelta(seconds=self.cache_ttl)
+            expires_at=datetime.utcnow() + timedelta(seconds=self.cache_ttl),
         )
 
     def _determine_confidence_level(self, confidence: float) -> ConfidenceLevel:
@@ -455,25 +420,21 @@ class MLScoringService:
         try:
             # Simple extraction logic for common formats
             import re
-            numbers = re.findall(r'[\d,]+', budget_range.replace('$', '').replace('k', '000').replace('K', '000'))
+
+            numbers = re.findall(r"[\d,]+", budget_range.replace("$", "").replace("k", "000").replace("K", "000"))
             if len(numbers) >= 2:
-                low = float(numbers[0].replace(',', ''))
-                high = float(numbers[1].replace(',', ''))
+                low = float(numbers[0].replace(",", ""))
+                high = float(numbers[1].replace(",", ""))
                 return (low + high) / 2
             elif len(numbers) == 1:
-                return float(numbers[0].replace(',', ''))
+                return float(numbers[0].replace(",", ""))
         except:
             pass
         return None
 
     def _estimate_close_days(self, classification: str) -> int:
         """Estimate days to close based on classification"""
-        estimates = {
-            "hot": 30,
-            "warm": 60,
-            "cold": 90,
-            "unqualified": 120
-        }
+        estimates = {"hot": 30, "warm": 60, "cold": 90, "unqualified": 120}
         return estimates.get(classification.lower(), 75)
 
     def _generate_analysis_summary(self, request: LeadScoringRequest, ml_result: Dict[str, Any]) -> str:
@@ -528,29 +489,37 @@ class MLScoringService:
         classification = ml_result["classification"]
 
         if classification == "hot":
-            recommendations.extend([
-                "Schedule immediate property viewing",
-                "Prepare pre-approval assistance",
-                "Fast-track to closing specialist"
-            ])
+            recommendations.extend(
+                [
+                    "Schedule immediate property viewing",
+                    "Prepare pre-approval assistance",
+                    "Fast-track to closing specialist",
+                ]
+            )
         elif classification == "warm":
-            recommendations.extend([
-                "Follow up within 24 hours",
-                "Send targeted property recommendations",
-                "Provide market insights and comparisons"
-            ])
+            recommendations.extend(
+                [
+                    "Follow up within 24 hours",
+                    "Send targeted property recommendations",
+                    "Provide market insights and comparisons",
+                ]
+            )
         elif classification == "cold":
-            recommendations.extend([
-                "Add to nurturing email sequence",
-                "Provide educational content about the market",
-                "Schedule follow-up in 2-3 weeks"
-            ])
+            recommendations.extend(
+                [
+                    "Add to nurturing email sequence",
+                    "Provide educational content about the market",
+                    "Schedule follow-up in 2-3 weeks",
+                ]
+            )
         else:
-            recommendations.extend([
-                "Qualify further before investing time",
-                "Provide general market information",
-                "Monitor for increased engagement"
-            ])
+            recommendations.extend(
+                [
+                    "Qualify further before investing time",
+                    "Provide general market information",
+                    "Monitor for increased engagement",
+                ]
+            )
 
         return recommendations
 
@@ -570,11 +539,7 @@ class MLScoringService:
     async def _cache_score(self, cache_key: str, response: LeadScoringResponse):
         """Cache scoring result"""
         try:
-            await cache_service.set(
-                cache_key,
-                response.dict(),
-                ttl=self.cache_ttl
-            )
+            await cache_service.set(cache_key, response.dict(), ttl=self.cache_ttl)
         except Exception as e:
             logger.warning(f"Cache storage error: {str(e)}")
 
@@ -582,6 +547,7 @@ class MLScoringService:
         """Generate cache key for request"""
         # Create hash of request parameters that affect scoring
         import hashlib
+
         content = f"{request.lead_id}:{request.message_content}:{request.source}:{user_id}:{tenant_id}"
         return f"ml_score:{hashlib.md5(content.encode()).hexdigest()}"
 
@@ -594,22 +560,15 @@ class MLScoringService:
                 ml_score=response.ml_score,
                 classification=response.classification,
                 score_source=response.score_source,
-                processing_time_ms=response.processing_time_ms
+                processing_time_ms=response.processing_time_ms,
             )
 
-            await websocket_manager.broadcast_message({
-                "type": "lead_scored",
-                "data": event.dict()
-            })
+            await websocket_manager.broadcast_message({"type": "lead_scored", "data": event.dict()})
         except Exception as e:
             logger.warning(f"WebSocket event error: {str(e)}")
 
     async def _send_batch_progress_update(
-        self,
-        batch_id: str,
-        total_leads: int,
-        processed_leads: int,
-        current_lead: str
+        self, batch_id: str, total_leads: int, processed_leads: int, current_lead: str
     ):
         """Send batch processing progress update"""
         try:
@@ -618,22 +577,14 @@ class MLScoringService:
                 total_leads=total_leads,
                 processed_leads=processed_leads,
                 current_lead=current_lead,
-                estimated_completion_ms=None
+                estimated_completion_ms=None,
             )
 
-            await websocket_manager.broadcast_message({
-                "type": "batch_processing",
-                "data": event.dict()
-            })
+            await websocket_manager.broadcast_message({"type": "batch_processing", "data": event.dict()})
         except Exception as e:
             logger.warning(f"WebSocket batch event error: {str(e)}")
 
-    async def _process_with_progress_updates(
-        self,
-        tasks: List,
-        batch_id: str,
-        total_leads: int
-    ) -> List:
+    async def _process_with_progress_updates(self, tasks: List, batch_id: str, total_leads: int) -> List:
         """Process tasks with progress updates"""
         results = []
         completed = 0
@@ -646,18 +597,12 @@ class MLScoringService:
                 results.append(e)
 
             completed += 1
-            await self._send_batch_progress_update(
-                batch_id, total_leads, completed, f"lead_{completed}"
-            )
+            await self._send_batch_progress_update(batch_id, total_leads, completed, f"lead_{completed}")
 
         return results
 
     async def _build_batch_response(
-        self,
-        batch_id: str,
-        results: List[LeadScoringResponse],
-        errors: List[Dict[str, str]],
-        processing_time_ms: float
+        self, batch_id: str, results: List[LeadScoringResponse], errors: List[Dict[str, str]], processing_time_ms: float
     ) -> BatchScoringResponse:
         """Build comprehensive batch response"""
 
@@ -670,6 +615,7 @@ class MLScoringService:
 
         # Score distribution
         from collections import Counter
+
         classifications = [r.classification for r in results]
         score_distribution = dict(Counter(classifications))
 
@@ -689,7 +635,7 @@ class MLScoringService:
             score_distribution=score_distribution,
             total_processing_time_ms=processing_time_ms,
             throughput_scores_per_second=throughput,
-            cache_hit_rate=cache_hit_rate
+            cache_hit_rate=cache_hit_rate,
         )
 
     async def _build_scoring_response_optimized(
@@ -698,7 +644,7 @@ class MLScoringService:
         ml_result: Dict[str, Any],
         processing_time_ms: float,
         cache_hit: bool,
-        batch_processing: bool = False
+        batch_processing: bool = False,
     ) -> LeadScoringResponse:
         """
         OPTIMIZED: Build scoring response with performance optimizations.
@@ -712,8 +658,7 @@ class MLScoringService:
             # For batch processing, optimize the response payload
             response_dict = response.dict()
             optimized_dict = performance_optimizer.optimize_api_response(
-                response_dict,
-                required_fields=['lead_id', 'ml_score', 'classification', 'conversion_probability']
+                response_dict, required_fields=["lead_id", "ml_score", "classification", "conversion_probability"]
             )
 
             # Create optimized response
@@ -727,7 +672,7 @@ class MLScoringService:
         user_id: Optional[str],
         tenant_id: Optional[str],
         batch_id: str,
-        start_time: float
+        start_time: float,
     ) -> BatchScoringResponse:
         """
         Fallback to standard parallel processing when optimized batch fails.
@@ -737,36 +682,22 @@ class MLScoringService:
         results = []
         errors = []
 
-        tasks = [
-            self.score_lead(lead_request, user_id, tenant_id)
-            for lead_request in request.leads
-        ]
+        tasks = [self.score_lead(lead_request, user_id, tenant_id) for lead_request in request.leads]
 
-        completed_results = await self._process_with_progress_updates(
-            tasks, batch_id, len(request.leads)
-        )
+        completed_results = await self._process_with_progress_updates(tasks, batch_id, len(request.leads))
 
         for i, result in enumerate(completed_results):
             if isinstance(result, Exception):
-                errors.append({
-                    "lead_id": request.leads[i].lead_id,
-                    "error": str(result)
-                })
+                errors.append({"lead_id": request.leads[i].lead_id, "error": str(result)})
             else:
                 results.append(result)
 
         return await self._build_batch_response(
-            batch_id=batch_id,
-            results=results,
-            errors=errors,
-            processing_time_ms=(time.time() - start_time) * 1000
+            batch_id=batch_id, results=results, errors=errors, processing_time_ms=(time.time() - start_time) * 1000
         )
 
     async def score_lead_optimized(
-        self,
-        request: LeadScoringRequest,
-        user_id: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        self, request: LeadScoringRequest, user_id: Optional[str] = None, tenant_id: Optional[str] = None
     ) -> LeadScoringResponse:
         """
         OPTIMIZED: Score individual lead using performance optimizations.
@@ -803,7 +734,7 @@ class MLScoringService:
                     request=request,
                     ml_result=ml_result,
                     processing_time_ms=(time.time() - start_time) * 1000,
-                    cache_hit=False
+                    cache_hit=False,
                 )
 
                 # Cache using optimized service with fast serialization
@@ -814,8 +745,10 @@ class MLScoringService:
 
                 performance_optimizer.track_cache_operation(hit=False)
 
-                logger.info(f"✅ Lead {request.lead_id} scored: {response.ml_score}% "
-                           f"({response.classification}) in {response.processing_time_ms:.1f}ms")
+                logger.info(
+                    f"✅ Lead {request.lead_id} scored: {response.ml_score}% "
+                    f"({response.classification}) in {response.processing_time_ms:.1f}ms"
+                )
 
                 return response
 
@@ -828,10 +761,7 @@ class MLScoringService:
         OPTIMIZED: Get ML prediction using database and caching optimizations.
         """
         if not ml_engine:
-            raise HTTPException(
-                status_code=503,
-                detail="ML Analytics Engine not available"
-            )
+            raise HTTPException(status_code=503, detail="ML Analytics Engine not available")
 
         try:
             # Use performance optimizer for batch request processing if applicable
@@ -839,7 +769,7 @@ class MLScoringService:
                 lead_id=ml_request["lead_id"],
                 lead_context=ml_request["lead_context"],
                 model_type=ml_request["model_type"],
-                include_explanations=ml_request["include_explanations"]
+                include_explanations=ml_request["include_explanations"],
             )
 
             # Track the ML prediction performance
@@ -858,7 +788,7 @@ class MLScoringService:
                 "feature_explanations": result.feature_explanations,
                 "shap_values": result.shap_values,
                 "inference_time_ms": inference_time,
-                "source": ScoreSource.ML_ONLY if result.confidence_score >= 0.85 else ScoreSource.ML_CLAUDE_HYBRID
+                "source": ScoreSource.ML_ONLY if result.confidence_score >= 0.85 else ScoreSource.ML_CLAUDE_HYBRID,
             }
 
         except Exception as e:
@@ -866,10 +796,7 @@ class MLScoringService:
             raise HTTPException(status_code=500, detail=f"ML prediction failed: {str(e)}")
 
     async def _build_error_response(
-        self,
-        request: LeadScoringRequest,
-        error: str,
-        processing_time_ms: float
+        self, request: LeadScoringRequest, error: str, processing_time_ms: float
     ) -> LeadScoringResponse:
         """Build error response with fallback values"""
         return LeadScoringResponse(
@@ -885,7 +812,7 @@ class MLScoringService:
             recommendations=["Review lead manually", "Check system status"],
             processing_time_ms=processing_time_ms,
             cache_hit=False,
-            warnings=[f"ML scoring error: {error}"]
+            warnings=[f"ML scoring error: {error}"],
         )
 
 
@@ -905,13 +832,11 @@ scoring_service = MLScoringService()
         401: {"description": "Authentication required"},
         429: {"description": "Rate limit exceeded"},
         500: {"description": "Internal server error"},
-        503: {"description": "ML service unavailable"}
-    }
+        503: {"description": "ML service unavailable"},
+    },
 )
 async def score_lead(
-    request: LeadScoringRequest,
-    background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user)
+    request: LeadScoringRequest, background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)
 ):
     """
     Score a single lead using the ML Analytics Engine.
@@ -922,9 +847,7 @@ async def score_lead(
     """
     try:
         result = await scoring_service.score_lead(
-            request=request,
-            user_id=current_user.get("user_id"),
-            tenant_id=current_user.get("tenant_id")
+            request=request, user_id=current_user.get("user_id"), tenant_id=current_user.get("tenant_id")
         )
 
         return result
@@ -934,8 +857,7 @@ async def score_lead(
     except Exception as e:
         logger.error(f"Unexpected error in score_lead: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during lead scoring"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error during lead scoring"
         )
 
 
@@ -950,13 +872,11 @@ async def score_lead(
         401: {"description": "Authentication required"},
         429: {"description": "Rate limit exceeded"},
         500: {"description": "Internal server error"},
-        503: {"description": "ML service unavailable"}
-    }
+        503: {"description": "ML service unavailable"},
+    },
 )
 async def score_lead_optimized(
-    request: LeadScoringRequest,
-    background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user)
+    request: LeadScoringRequest, background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)
 ):
     """
     🚀 OPTIMIZED: Score a single lead using performance-optimized ML Analytics Engine.
@@ -973,9 +893,7 @@ async def score_lead_optimized(
     """
     try:
         result = await scoring_service.score_lead_optimized(
-            request=request,
-            user_id=current_user.get("user_id"),
-            tenant_id=current_user.get("tenant_id")
+            request=request, user_id=current_user.get("user_id"), tenant_id=current_user.get("tenant_id")
         )
 
         return result
@@ -986,7 +904,7 @@ async def score_lead_optimized(
         logger.error(f"Unexpected error in optimized score_lead: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during optimized lead scoring"
+            detail="Internal server error during optimized lead scoring",
         )
 
 
@@ -1000,13 +918,11 @@ async def score_lead_optimized(
         400: {"description": "Invalid request data or too many leads"},
         401: {"description": "Authentication required"},
         429: {"description": "Rate limit exceeded"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 async def batch_score_leads(
-    request: BatchScoringRequest,
-    background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user)
+    request: BatchScoringRequest, background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)
 ):
     """
     Score multiple leads in batch.
@@ -1016,16 +932,11 @@ async def batch_score_leads(
     **Progress**: WebSocket events for real-time updates
     """
     if len(request.leads) > 100:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 100 leads allowed per batch"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum 100 leads allowed per batch")
 
     try:
         result = await scoring_service.batch_score_leads(
-            request=request,
-            user_id=current_user.get("user_id"),
-            tenant_id=current_user.get("tenant_id")
+            request=request, user_id=current_user.get("user_id"), tenant_id=current_user.get("tenant_id")
         )
 
         return result
@@ -1035,8 +946,7 @@ async def batch_score_leads(
     except Exception as e:
         logger.error(f"Unexpected error in batch_score_leads: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during batch scoring"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error during batch scoring"
         )
 
 
@@ -1044,12 +954,9 @@ async def batch_score_leads(
     "/score/{lead_id}",
     response_model=LeadScoringResponse,
     summary="Get existing lead score",
-    description="Retrieve the most recent score for a specific lead"
+    description="Retrieve the most recent score for a specific lead",
 )
-async def get_lead_score(
-    lead_id: str,
-    current_user: dict = Depends(get_current_user)
-):
+async def get_lead_score(lead_id: str, current_user: dict = Depends(get_current_user)):
     """
     Retrieve the most recent score for a specific lead.
 
@@ -1063,19 +970,13 @@ async def get_lead_score(
         if cached_result:
             return cached_result
 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No score found for lead {lead_id}"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No score found for lead {lead_id}")
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error retrieving lead score: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
 @router.get(
@@ -1083,7 +984,7 @@ async def get_lead_score(
     response_model=HealthCheckResponse,
     summary="ML service health check",
     description="Check the health status of ML scoring services",
-    include_in_schema=True
+    include_in_schema=True,
 )
 async def health_check():
     """
@@ -1101,6 +1002,7 @@ async def health_check():
         # Check ML model status - test actual ML engine instead of import status
         try:
             from bots.shared.ml_analytics_engine import get_ml_analytics_engine
+
             test_ml_engine = get_ml_analytics_engine()
             ml_status = "available" if test_ml_engine else "unavailable"
         except Exception:
@@ -1119,11 +1021,11 @@ async def health_check():
         database_status = "available"  # Implement actual check
 
         # Overall status
-        overall_status = "healthy" if all([
-            ml_status == "available",
-            cache_status == "available",
-            database_status == "available"
-        ]) else "degraded"
+        overall_status = (
+            "healthy"
+            if all([ml_status == "available", cache_status == "available", database_status == "available"])
+            else "degraded"
+        )
 
         response_time = (time.time() - start_time) * 1000
 
@@ -1136,15 +1038,12 @@ async def health_check():
             requests_per_minute=0,  # Implement actual metrics
             error_rate_percent=0.0,  # Implement actual metrics
             uptime_seconds=0,  # Implement actual uptime tracking
-            version="1.0.0"
+            version="1.0.0",
         )
 
     except Exception as e:
         logger.error(f"Health check error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Health check failed"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Health check failed")
 
 
 @router.get(
@@ -1152,7 +1051,7 @@ async def health_check():
     response_model=MLModelStatus,
     summary="ML model status",
     description="Get detailed status of the ML model",
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 async def get_model_status():
     """
@@ -1168,7 +1067,7 @@ async def get_model_status():
                 is_available=False,
                 average_inference_time_ms=0.0,
                 predictions_today=0,
-                cache_hit_rate=0.0
+                cache_hit_rate=0.0,
             )
 
         # Get model metrics from ML engine
@@ -1185,22 +1084,19 @@ async def get_model_status():
             f1_score=model_info.get("f1_score"),
             average_inference_time_ms=model_info.get("avg_inference_time_ms", 0.0),
             predictions_today=model_info.get("predictions_today", 0),
-            cache_hit_rate=model_info.get("cache_hit_rate", 0.0)
+            cache_hit_rate=model_info.get("cache_hit_rate", 0.0),
         )
 
     except Exception as e:
         logger.error(f"Error getting model status: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve model status"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve model status")
 
 
 @router.get(
     "/performance/report",
     summary="Performance optimization report",
     description="Get comprehensive performance optimization metrics and impact analysis",
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 async def get_performance_report():
     """
@@ -1227,10 +1123,10 @@ async def get_performance_report():
         # Combine all reports
         combined_report = {
             "ml_scoring_performance": {
-                "api_response_times": performance_report.get('base_metrics', {}),
-                "optimization_impact": performance_report.get('optimization_impact', {}),
-                "performance_targets": performance_report.get('performance_targets', {}),
-                "critical_improvements": performance_report.get('critical_improvements', {})
+                "api_response_times": performance_report.get("base_metrics", {}),
+                "optimization_impact": performance_report.get("optimization_impact", {}),
+                "performance_targets": performance_report.get("performance_targets", {}),
+                "critical_improvements": performance_report.get("critical_improvements", {}),
             },
             "ml_batch_optimization": ml_optimizer_report,
             "cache_optimization": cache_report,
@@ -1243,11 +1139,11 @@ async def get_performance_report():
                     "Parallel ML batch scoring",
                     "Optimized cache with parallel fallback",
                     "Response payload optimization",
-                    "Performance monitoring and alerting"
-                ]
+                    "Performance monitoring and alerting",
+                ],
             },
-            "recommendations": performance_report.get('recommended_next_steps', []),
-            "timestamp": datetime.utcnow().isoformat()
+            "recommendations": performance_report.get("recommended_next_steps", []),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         return combined_report
@@ -1255,8 +1151,7 @@ async def get_performance_report():
     except Exception as e:
         logger.error(f"Error generating performance report: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate performance report"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate performance report"
         )
 
 
@@ -1284,11 +1179,7 @@ async def websocket_live_scores(websocket: WebSocket, token: str = None):
         logger.info(f"ML scoring WebSocket connected: {connection_id}")
 
         # Subscribe to ML events
-        await websocket_manager.subscribe_to_events(connection_id, [
-            "lead_scored",
-            "batch_processing",
-            "model_status"
-        ])
+        await websocket_manager.subscribe_to_events(connection_id, ["lead_scored", "batch_processing", "model_status"])
 
         # Keep connection alive
         while True:
@@ -1308,7 +1199,7 @@ async def websocket_live_scores(websocket: WebSocket, token: str = None):
         await websocket.close(code=1011, reason="Internal server error")
 
     finally:
-        if 'connection_id' in locals():
+        if "connection_id" in locals():
             await websocket_manager.disconnect(connection_id)
             logger.info(f"ML scoring WebSocket disconnected: {connection_id}")
 

@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class TriggerType(str, Enum):
     HEDGING = "hedging"
     LATENCY_ANOMALY = "latency_anomaly"
@@ -57,6 +58,7 @@ class DriftDirection(str, Enum):
 # Data models
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class BehavioralTrigger:
     type: TriggerType
@@ -69,6 +71,7 @@ class BehavioralTrigger:
 @dataclass
 class BehavioralAnalysis:
     """Aggregate result of behavioral analysis on a single message."""
+
     triggers: List[BehavioralTrigger]
     composite_score: float  # 0.0 (cold) – 1.0 (hot)
     drift_direction: str  # DriftDirection value
@@ -165,6 +168,7 @@ PRICE_SENSITIVITY_PATTERNS: List[tuple] = [
 # Detector
 # ---------------------------------------------------------------------------
 
+
 class BehavioralTriggerDetector:
     """
     Stateless message-level behavioral analysis.
@@ -207,7 +211,9 @@ class BehavioralTriggerDetector:
 
         # --- 1. Hedging ---
         hedging_score, hedging_triggers = self._detect_patterns(
-            message, HEDGING_PATTERNS, TriggerType.HEDGING,
+            message,
+            HEDGING_PATTERNS,
+            TriggerType.HEDGING,
             "Lead is hedging — showing internal flexibility.",
             "Use Labeling to surface the underlying concern.",
         )
@@ -215,7 +221,9 @@ class BehavioralTriggerDetector:
 
         # --- 2. Commitment ---
         commitment_score, commit_triggers = self._detect_patterns(
-            message, COMMITMENT_PATTERNS, TriggerType.COMMITMENT_SIGNAL,
+            message,
+            COMMITMENT_PATTERNS,
+            TriggerType.COMMITMENT_SIGNAL,
             "Commitment signal detected.",
             "Reinforce commitment and move toward close.",
         )
@@ -223,7 +231,9 @@ class BehavioralTriggerDetector:
 
         # --- 3. Urgency ---
         urgency_score, urgency_triggers = self._detect_patterns(
-            message, URGENCY_PATTERNS, TriggerType.URGENCY_SHIFT,
+            message,
+            URGENCY_PATTERNS,
+            TriggerType.URGENCY_SHIFT,
             "Urgency signal detected.",
             "Capitalize on urgency — present next steps immediately.",
         )
@@ -231,7 +241,9 @@ class BehavioralTriggerDetector:
 
         # --- 4. Objections ---
         _, objection_triggers = self._detect_patterns(
-            message, OBJECTION_PATTERNS, TriggerType.OBJECTION,
+            message,
+            OBJECTION_PATTERNS,
+            TriggerType.OBJECTION,
             "Objection raised.",
             "Acknowledge concern with Tactical Empathy, then reframe.",
         )
@@ -239,7 +251,9 @@ class BehavioralTriggerDetector:
 
         # --- 5. Stalls ---
         _, stall_triggers = self._detect_patterns(
-            message, STALL_PATTERNS, TriggerType.STALL,
+            message,
+            STALL_PATTERNS,
+            TriggerType.STALL,
             "Stall detected — lead delaying decision.",
             "Use Direct Challenge or take-away close.",
         )
@@ -247,7 +261,9 @@ class BehavioralTriggerDetector:
 
         # --- 6. Price sensitivity ---
         _, price_triggers = self._detect_patterns(
-            message, PRICE_SENSITIVITY_PATTERNS, TriggerType.PRICE_SENSITIVITY,
+            message,
+            PRICE_SENSITIVITY_PATTERNS,
+            TriggerType.PRICE_SENSITIVITY,
             "Price sensitivity detected.",
             "Anchor with market data before discussing price.",
         )
@@ -256,41 +272,56 @@ class BehavioralTriggerDetector:
         # --- 7. Latency analysis ---
         latency_factor = self._analyze_latency(response_latency_ms)
         if response_latency_ms is not None and latency_factor >= 0.7:
-            triggers.append(BehavioralTrigger(
-                type=TriggerType.LATENCY_ANOMALY,
-                confidence=latency_factor,
-                description="Slow response indicates internal deliberation.",
-                recommended_action="High latency suggests flexibility — probe gently.",
-                raw_signal={"latency_ms": response_latency_ms},
-            ))
+            triggers.append(
+                BehavioralTrigger(
+                    type=TriggerType.LATENCY_ANOMALY,
+                    confidence=latency_factor,
+                    description="Slow response indicates internal deliberation.",
+                    recommended_action="High latency suggests flexibility — probe gently.",
+                    raw_signal={"latency_ms": response_latency_ms},
+                )
+            )
 
         # --- 8. Engagement drop (conversation history) ---
         engagement_drop = self._detect_engagement_drop(
-            message, conversation_history or [],
+            message,
+            conversation_history or [],
         )
         if engagement_drop > 0.5:
-            triggers.append(BehavioralTrigger(
-                type=TriggerType.ENGAGEMENT_DROP,
-                confidence=engagement_drop,
-                description="Message length dropped significantly.",
-                recommended_action="Re-engage with an open-ended Calibrated Question.",
-                raw_signal={"drop_factor": engagement_drop},
-            ))
+            triggers.append(
+                BehavioralTrigger(
+                    type=TriggerType.ENGAGEMENT_DROP,
+                    confidence=engagement_drop,
+                    description="Message length dropped significantly.",
+                    recommended_action="Re-engage with an open-ended Calibrated Question.",
+                    raw_signal={"drop_factor": engagement_drop},
+                )
+            )
 
         # --- Composite scoring ---
         composite = self._compute_composite(
-            hedging_score, commitment_score, urgency_score, latency_factor, message,
+            hedging_score,
+            commitment_score,
+            urgency_score,
+            latency_factor,
+            message,
         )
 
         # --- Drift direction ---
         drift = self._compute_drift(
-            hedging_score, commitment_score, urgency_score, conversation_history or [],
+            hedging_score,
+            commitment_score,
+            urgency_score,
+            conversation_history or [],
         )
 
         # --- Technique recommendation ---
         technique = self._recommend_technique(
-            hedging_score, commitment_score, urgency_score,
-            bool(stall_triggers), bool(objection_triggers),
+            hedging_score,
+            commitment_score,
+            urgency_score,
+            bool(stall_triggers),
+            bool(objection_triggers),
         )
 
         return BehavioralAnalysis(
@@ -325,13 +356,15 @@ class BehavioralTriggerDetector:
             if re.search(regex, message, re.IGNORECASE):
                 hit_count += 1
                 total_confidence += base_conf
-                triggers.append(BehavioralTrigger(
-                    type=trigger_type,
-                    confidence=base_conf,
-                    description=description,
-                    recommended_action=action,
-                    raw_signal={"pattern": regex},
-                ))
+                triggers.append(
+                    BehavioralTrigger(
+                        type=trigger_type,
+                        confidence=base_conf,
+                        description=description,
+                        recommended_action=action,
+                        raw_signal={"pattern": regex},
+                    )
+                )
 
         # Normalize score: diminishing returns on multiple hits
         if hit_count == 0:

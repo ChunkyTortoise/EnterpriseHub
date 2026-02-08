@@ -28,9 +28,7 @@ class GHLConversationBridge:
         self.ghl_client = ghl_client
         self.tenant_id = tenant_id
 
-    def send_sms(
-        self, contact_id: str, message: str, from_number: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def send_sms(self, contact_id: str, message: str, from_number: Optional[str] = None) -> Dict[str, Any]:
         """
         Send SMS via GHL
 
@@ -55,9 +53,7 @@ class GHLConversationBridge:
             logger.error(f"Failed to send SMS: {str(e)}")
             return {"success": False, "error": str(e), "contact_id": contact_id}
 
-    def send_email(
-        self, contact_id: str, subject: str, body: str, from_email: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def send_email(self, contact_id: str, subject: str, body: str, from_email: Optional[str] = None) -> Dict[str, Any]:
         """Send email via GHL"""
         try:
             result = self.ghl_client.send_email(contact_id, subject, body, from_email)
@@ -72,9 +68,7 @@ class GHLConversationBridge:
             logger.error(f"Failed to send email: {str(e)}")
             return {"success": False, "error": str(e), "contact_id": contact_id}
 
-    def get_conversation_history(
-        self, contact_id: str, limit: int = 20
-    ) -> List[Dict[str, Any]]:
+    def get_conversation_history(self, contact_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Get message history for contact"""
         try:
             conversations = self.ghl_client.get_conversations(contact_id=contact_id)

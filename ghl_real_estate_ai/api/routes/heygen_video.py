@@ -7,13 +7,14 @@ engagement analytics for HeyGen avatar videos.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.heygen_video_service import (
     get_heygen_service,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,7 @@ router = APIRouter(
 # Request / Response Models
 # ---------------------------------------------------------------------------
 
+
 class CreateVideoRequest(BaseModel):
     lead_id: str = Field(..., description="Lead identifier")
     lead_name: str = Field(..., description="Lead's first name")
@@ -35,9 +37,7 @@ class CreateVideoRequest(BaseModel):
         description="Lead psychographics (temperature, interests, persona)",
     )
     template: str = Field("buyer_welcome", description="Video template name")
-    variables: Optional[Dict[str, str]] = Field(
-        None, description="Additional template variables"
-    )
+    variables: Optional[Dict[str, str]] = Field(None, description="Additional template variables")
     avatar_style: str = Field("professional", description="Avatar style")
 
 
@@ -58,6 +58,7 @@ class VideoResultResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/create", response_model=VideoResultResponse)
 async def create_personalized_video(request: CreateVideoRequest):

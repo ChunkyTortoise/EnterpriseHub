@@ -7,13 +7,14 @@ hedging/commitment scoring, and Voss technique recommendations.
 
 import logging
 from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.behavioral_trigger_detector import (
     get_behavioral_detector,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,15 +28,14 @@ router = APIRouter(
 # Request / Response Models
 # ---------------------------------------------------------------------------
 
+
 class AnalyzeMessageRequest(BaseModel):
     message: str = Field(..., description="Message text to analyze")
     contact_id: str = Field(..., description="Contact identifier")
     conversation_history: Optional[List[Dict[str, Any]]] = Field(
         None, description="Prior conversation turns for context"
     )
-    response_latency_ms: Optional[float] = Field(
-        None, description="Response latency in milliseconds"
-    )
+    response_latency_ms: Optional[float] = Field(None, description="Response latency in milliseconds")
 
 
 class TriggerResponse(BaseModel):
@@ -64,6 +64,7 @@ class BatchAnalyzeRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post("/analyze", response_model=BehavioralAnalysisResponse)
 async def analyze_message(request: AnalyzeMessageRequest):
@@ -113,15 +114,17 @@ async def analyze_messages_batch(request: BatchAnalyzeRequest):
                 conversation_history=msg.conversation_history,
                 response_latency_ms=msg.response_latency_ms,
             )
-            results.append({
-                "contact_id": msg.contact_id,
-                "composite_score": result.composite_score,
-                "drift_direction": result.drift_direction,
-                "hedging_score": result.hedging_score,
-                "commitment_score": result.commitment_score,
-                "recommended_technique": result.recommended_technique,
-                "trigger_count": len(result.triggers),
-            })
+            results.append(
+                {
+                    "contact_id": msg.contact_id,
+                    "composite_score": result.composite_score,
+                    "drift_direction": result.drift_direction,
+                    "hedging_score": result.hedging_score,
+                    "commitment_score": result.commitment_score,
+                    "recommended_technique": result.recommended_technique,
+                    "trigger_count": len(result.triggers),
+                }
+            )
         return {"results": results, "total": len(results)}
     except Exception as e:
         logger.error("Batch behavioral analysis failed: %s", e)

@@ -90,9 +90,7 @@ class TeamManager:
         """List all agents in the location."""
         return [a for a in self.agents.values() if a["status"] == status]
 
-    def assign_lead(
-        self, contact_id: str, criteria: Dict[str, Any] = None
-    ) -> Optional[str]:
+    def assign_lead(self, contact_id: str, criteria: Dict[str, Any] = None) -> Optional[str]:
         """
         Assign a lead to an agent using Round Robin or criteria matching.
         """
@@ -102,15 +100,11 @@ class TeamManager:
 
         active_agents = self.list_agents()
         if not active_agents:
-            logger.warning(
-                f"No active agents available for assignment in {self.location_id}"
-            )
+            logger.warning(f"No active agents available for assignment in {self.location_id}")
             return None
 
         # Round Robin Logic
-        self.assignments["last_index"] = (self.assignments["last_index"] + 1) % len(
-            active_agents
-        )
+        self.assignments["last_index"] = (self.assignments["last_index"] + 1) % len(active_agents)
         selected_agent = active_agents[self.assignments["last_index"]]
 
         agent_id = selected_agent["id"]
@@ -122,14 +116,10 @@ class TeamManager:
         self._save_assignments()
         self._save_agents()
 
-        logger.info(
-            f"Assigned lead {contact_id} to agent {selected_agent['name']} ({agent_id})"
-        )
+        logger.info(f"Assigned lead {contact_id} to agent {selected_agent['name']} ({agent_id})")
         return agent_id
 
-    def update_agent_performance(
-        self, agent_id: str, conversion: bool = False, rating: float = None
-    ):
+    def update_agent_performance(self, agent_id: str, conversion: bool = False, rating: float = None):
         """Update agent performance metrics."""
         if agent_id not in self.agents:
             return
@@ -142,9 +132,7 @@ class TeamManager:
             # Weighted average for rating
             current_rating = metrics.get("rating", 5.0)
             total_leads = metrics.get("total_leads", 1)
-            metrics["rating"] = round(
-                (current_rating * (total_leads - 1) + rating) / total_leads, 2
-            )
+            metrics["rating"] = round((current_rating * (total_leads - 1) + rating) / total_leads, 2)
 
         self._save_agents()
 

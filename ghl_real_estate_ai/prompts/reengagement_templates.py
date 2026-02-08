@@ -18,30 +18,27 @@ REENGAGEMENT_TEMPLATES = {
     "24h": {
         "buyer": "Hey {name}! Just checking in - is buying a home still a priority for you, or have you put it on hold?",
         "seller": "Hey {name}! Just checking in - is selling still a priority for you, or have you put it on hold?",
-        "general": "Hey {name}! Still interested in {action}, or should we move on?"
+        "general": "Hey {name}! Still interested in {action}, or should we move on?",
     },
     "48h": {
         "buyer": "Hey {name}, are you actually still looking to buy, or should we close your file?",
         "seller": "Hey {name}, are you actually still looking to sell, or should we close your file?",
-        "general": "Hey {name}, still looking to {action} or should we close your file?"
+        "general": "Hey {name}, still looking to {action} or should we close your file?",
     },
     "72h": {
         "buyer": "Last chance {name} - still interested in buying, or should we move on?",
         "seller": "Last chance {name} - still interested in selling, or should we move on?",
-        "general": "Last chance {name} - still interested, or are we done here?"
-    }
+        "general": "Last chance {name} - still interested, or are we done here?",
+    },
 }
 
 # ==============================================================================
 # HELPER FUNCTIONS
 # ==============================================================================
 
+
 def get_reengagement_message(
-    trigger_level: str,
-    contact_name: str,
-    action: str = None,
-    is_buyer: bool = None,
-    is_seller: bool = None
+    trigger_level: str, contact_name: str, action: str = None, is_buyer: bool = None, is_seller: bool = None
 ) -> str:
     """
     Get re-engagement message for specific trigger level.
@@ -87,9 +84,7 @@ def get_reengagement_message(
 
     # Validate SMS compliance
     if len(message) > 160:
-        raise ValueError(
-            f"Message exceeds SMS limit: {len(message)} chars\nMessage: {message}"
-        )
+        raise ValueError(f"Message exceeds SMS limit: {len(message)} chars\nMessage: {message}")
 
     return message
 
@@ -129,20 +124,20 @@ TEMPLATE_METADATA = {
         "urgency": "low",
         "tone": "curious, checking in",
         "goal": "Re-engage without pressure",
-        "expected_response_rate": "30-40%"
+        "expected_response_rate": "30-40%",
     },
     "48h": {
         "urgency": "medium",
         "tone": "direct, slightly challenging",
         "goal": "Create urgency by mentioning file closure",
-        "expected_response_rate": "20-30%"
+        "expected_response_rate": "20-30%",
     },
     "72h": {
         "urgency": "high",
         "tone": "final, direct, no-nonsense",
         "goal": "Last attempt - qualify out or re-engage",
-        "expected_response_rate": "10-20%"
-    }
+        "expected_response_rate": "10-20%",
+    },
 }
 
 

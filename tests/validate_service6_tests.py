@@ -11,15 +11,16 @@ Usage:
     python tests/validate_service6_tests.py --detailed
 """
 
+import argparse
 import ast
 import sys
-import argparse
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
+
 class TestValidator:
     """Validates Service 6 test suite completeness."""
-    
+
     def __init__(self):
         self.validation_results = {
             "total_tests": 0,
@@ -28,28 +29,28 @@ class TestValidator:
             "integration_tests": 0,
             "error_handling_tests": 0,
             "missing_scenarios": [],
-            "recommendations": []
+            "recommendations": [],
         }
-    
+
     def analyze_test_file(self, test_file_path: Path) -> Dict:
         """Analyze a test file for completeness."""
-        
+
         if not test_file_path.exists():
             return {"error": f"Test file not found: {test_file_path}"}
-        
+
         try:
-            with open(test_file_path, 'r') as f:
+            with open(test_file_path, "r") as f:
                 content = f.read()
                 tree = ast.parse(content)
-            
+
             return self._extract_test_info(tree, content)
-            
+
         except Exception as e:
             return {"error": f"Failed to parse {test_file_path}: {e}"}
-    
+
     def _extract_test_info(self, tree: ast.AST, content: str) -> Dict:
         """Extract test information from AST."""
-        
+
         test_info = {
             "test_functions": [],
             "test_classes": [],
@@ -58,61 +59,70 @@ class TestValidator:
             "error_tests": 0,
             "integration_tests": 0,
             "todo_method_tests": 0,
-            "fixtures": []
+            "fixtures": [],
         }
-        
+
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 func_name = node.name
-                
+
                 # Count test functions
                 if func_name.startswith("test_"):
                     test_info["test_functions"].append(func_name)
-                    
+
                     # Check for async tests
                     if isinstance(node, ast.AsyncFunctionDef):
                         test_info["async_tests"] += 1
-                    
+
                     # Check for performance tests
-                    if any(keyword in func_name.lower() for keyword in 
-                           ["performance", "benchmark", "latency", "speed", "time"]):
+                    if any(
+                        keyword in func_name.lower()
+                        for keyword in ["performance", "benchmark", "latency", "speed", "time"]
+                    ):
                         test_info["performance_tests"] += 1
-                    
+
                     # Check for error handling tests
-                    if any(keyword in func_name.lower() for keyword in 
-                           ["error", "failure", "exception", "fallback", "recovery"]):
+                    if any(
+                        keyword in func_name.lower()
+                        for keyword in ["error", "failure", "exception", "fallback", "recovery"]
+                    ):
                         test_info["error_tests"] += 1
-                    
+
                     # Check for integration tests
-                    if any(keyword in func_name.lower() for keyword in 
-                           ["integration", "workflow", "end_to_end", "complete"]):
+                    if any(
+                        keyword in func_name.lower()
+                        for keyword in ["integration", "workflow", "end_to_end", "complete"]
+                    ):
                         test_info["integration_tests"] += 1
-                    
+
                     # Check for TODO method tests
-                    if any(keyword in func_name.lower() for keyword in 
-                           ["alert", "notify", "priority", "response", "content", "todo"]):
+                    if any(
+                        keyword in func_name.lower()
+                        for keyword in ["alert", "notify", "priority", "response", "content", "todo"]
+                    ):
                         test_info["todo_method_tests"] += 1
-                
+
                 # Count fixtures
-                if any(decorator.id == "fixture" for decorator in node.decorator_list 
-                       if isinstance(decorator, ast.Name)):
+                if any(
+                    decorator.id == "fixture" for decorator in node.decorator_list if isinstance(decorator, ast.Name)
+                ):
                     test_info["fixtures"].append(func_name)
-            
+
             elif isinstance(node, ast.ClassDef):
                 if node.name.startswith("Test"):
                     test_info["test_classes"].append(node.name)
-        
+
         return test_info
-    
+
     def validate_service6_ai_integration_tests(self) -> Dict:
         """Validate Service 6 AI Integration test coverage."""
-        
+
         test_file = Path("tests/services/test_service6_ai_integration.py")
         analysis = self.analyze_test_file(test_file)
-        
+
         if "error" in analysis:
             return analysis
-        
+
         # Expected test scenarios for Service 6 AI Integration
         required_scenarios = {
             "comprehensive_lead_analysis": False,
@@ -123,13 +133,13 @@ class TestValidator:
             "cache_integration": False,
             "memory_integration": False,
             "configuration_validation": False,
-            "orchestrator_operations": False
+            "orchestrator_operations": False,
         }
-        
+
         # Check which scenarios are covered
         for test_func in analysis["test_functions"]:
             test_lower = test_func.lower()
-            
+
             if "comprehensive" in test_lower and "analysis" in test_lower:
                 required_scenarios["comprehensive_lead_analysis"] = True
             if "realtime" in test_lower and "scoring" in test_lower:
@@ -148,9 +158,9 @@ class TestValidator:
                 required_scenarios["configuration_validation"] = True
             if "orchestrator" in test_lower:
                 required_scenarios["orchestrator_operations"] = True
-        
+
         missing_scenarios = [scenario for scenario, covered in required_scenarios.items() if not covered]
-        
+
         return {
             "file": str(test_file),
             "total_tests": len(analysis["test_functions"]),
@@ -162,27 +172,27 @@ class TestValidator:
             "scenario_coverage": len(required_scenarios) - len(missing_scenarios),
             "total_scenarios": len(required_scenarios),
             "missing_scenarios": missing_scenarios,
-            "coverage_percentage": ((len(required_scenarios) - len(missing_scenarios)) / len(required_scenarios)) * 100
+            "coverage_percentage": ((len(required_scenarios) - len(missing_scenarios)) / len(required_scenarios)) * 100,
         }
-    
+
     def validate_behavioral_network_tests(self) -> Dict:
         """Validate Real-time Behavioral Network test coverage."""
-        
-        test_file = Path("tests/services/test_realtime_behavioral_network.py") 
+
+        test_file = Path("tests/services/test_realtime_behavioral_network.py")
         analysis = self.analyze_test_file(test_file)
-        
+
         if "error" in analysis:
             return analysis
-        
+
         # Expected TODO method tests (the 5 critical methods)
         todo_methods = {
             "send_immediate_alert": False,
-            "notify_agent": False, 
+            "notify_agent": False,
             "set_priority_flag": False,
             "send_automated_response": False,
-            "deliver_personalized_content": False
+            "deliver_personalized_content": False,
         }
-        
+
         # Expected additional test scenarios
         additional_scenarios = {
             "signal_processing": False,
@@ -191,13 +201,13 @@ class TestValidator:
             "trigger_generation": False,
             "error_recovery": False,
             "performance_metrics": False,
-            "integration_workflow": False
+            "integration_workflow": False,
         }
-        
+
         # Check TODO method coverage
         for test_func in analysis["test_functions"]:
             test_lower = test_func.lower()
-            
+
             # Check TODO methods
             if "send_immediate_alert" in test_lower or "immediate_alert" in test_lower:
                 todo_methods["send_immediate_alert"] = True
@@ -209,7 +219,7 @@ class TestValidator:
                 todo_methods["send_automated_response"] = True
             if "personalized_content" in test_lower or "deliver_personalized" in test_lower:
                 todo_methods["deliver_personalized_content"] = True
-            
+
             # Check additional scenarios
             if "signal" in test_lower and ("processing" in test_lower or "detector" in test_lower):
                 additional_scenarios["signal_processing"] = True
@@ -225,36 +235,37 @@ class TestValidator:
                 additional_scenarios["performance_metrics"] = True
             if "workflow" in test_lower or "integration" in test_lower:
                 additional_scenarios["integration_workflow"] = True
-        
+
         missing_todo_methods = [method for method, covered in todo_methods.items() if not covered]
         missing_scenarios = [scenario for scenario, covered in additional_scenarios.items() if not covered]
-        
+
         total_scenarios = len(todo_methods) + len(additional_scenarios)
-        covered_scenarios = (len(todo_methods) - len(missing_todo_methods) + 
-                           len(additional_scenarios) - len(missing_scenarios))
-        
+        covered_scenarios = (
+            len(todo_methods) - len(missing_todo_methods) + len(additional_scenarios) - len(missing_scenarios)
+        )
+
         return {
             "file": str(test_file),
             "total_tests": len(analysis["test_functions"]),
-            "async_tests": analysis["async_tests"], 
+            "async_tests": analysis["async_tests"],
             "todo_methods_tested": len(todo_methods) - len(missing_todo_methods),
             "total_todo_methods": len(todo_methods),
             "missing_todo_methods": missing_todo_methods,
             "additional_scenarios_covered": len(additional_scenarios) - len(missing_scenarios),
             "total_additional_scenarios": len(additional_scenarios),
             "missing_scenarios": missing_scenarios,
-            "coverage_percentage": (covered_scenarios / total_scenarios) * 100
+            "coverage_percentage": (covered_scenarios / total_scenarios) * 100,
         }
-    
+
     def validate_integration_tests(self) -> Dict:
         """Validate end-to-end integration test coverage."""
-        
+
         test_file = Path("tests/integration/test_service6_end_to_end.py")
         analysis = self.analyze_test_file(test_file)
-        
+
         if "error" in analysis:
             return analysis
-        
+
         # Expected integration test scenarios
         integration_scenarios = {
             "high_intent_fast_track": False,
@@ -262,13 +273,13 @@ class TestValidator:
             "behavioral_trigger_workflow": False,
             "error_recovery_fallback": False,
             "concurrent_processing": False,
-            "system_health_monitoring": False
+            "system_health_monitoring": False,
         }
-        
+
         # Check integration scenario coverage
         for test_func in analysis["test_functions"]:
             test_lower = test_func.lower()
-            
+
             if "high_intent" in test_lower and "fast_track" in test_lower:
                 integration_scenarios["high_intent_fast_track"] = True
             if "realtime" in test_lower and ("scoring" in test_lower or "pipeline" in test_lower):
@@ -281,9 +292,9 @@ class TestValidator:
                 integration_scenarios["concurrent_processing"] = True
             if "health" in test_lower or "monitoring" in test_lower:
                 integration_scenarios["system_health_monitoring"] = True
-        
+
         missing_scenarios = [scenario for scenario, covered in integration_scenarios.items() if not covered]
-        
+
         return {
             "file": str(test_file),
             "total_tests": len(analysis["test_functions"]),
@@ -291,111 +302,114 @@ class TestValidator:
             "scenario_coverage": len(integration_scenarios) - len(missing_scenarios),
             "total_scenarios": len(integration_scenarios),
             "missing_scenarios": missing_scenarios,
-            "coverage_percentage": ((len(integration_scenarios) - len(missing_scenarios)) / len(integration_scenarios)) * 100
+            "coverage_percentage": ((len(integration_scenarios) - len(missing_scenarios)) / len(integration_scenarios))
+            * 100,
         }
-    
+
     def generate_recommendations(self, validation_results: Dict) -> List[str]:
         """Generate recommendations based on validation results."""
-        
+
         recommendations = []
-        
+
         # Check overall test coverage
         for test_type, results in validation_results.items():
             if isinstance(results, dict) and "coverage_percentage" in results:
                 coverage = results["coverage_percentage"]
-                
+
                 if coverage < 70:
-                    recommendations.append(f"🔴 {test_type}: Coverage is {coverage:.1f}% - Add more tests to reach 80%+")
+                    recommendations.append(
+                        f"🔴 {test_type}: Coverage is {coverage:.1f}% - Add more tests to reach 80%+"
+                    )
                 elif coverage < 85:
-                    recommendations.append(f"🟡 {test_type}: Coverage is {coverage:.1f}% - Good, consider adding edge cases")
+                    recommendations.append(
+                        f"🟡 {test_type}: Coverage is {coverage:.1f}% - Good, consider adding edge cases"
+                    )
                 else:
                     recommendations.append(f"🟢 {test_type}: Coverage is {coverage:.1f}% - Excellent!")
-        
+
         # Check for missing TODO method tests
         behavioral_results = validation_results.get("behavioral_network", {})
         if behavioral_results.get("missing_todo_methods"):
             methods = ", ".join(behavioral_results["missing_todo_methods"])
             recommendations.append(f"🔴 Missing TODO method tests: {methods}")
-        
+
         # Check for performance tests
         total_perf_tests = sum(
-            results.get("performance_tests", 0) 
-            for results in validation_results.values() 
-            if isinstance(results, dict)
+            results.get("performance_tests", 0) for results in validation_results.values() if isinstance(results, dict)
         )
         if total_perf_tests < 3:
             recommendations.append("🟡 Add more performance benchmark tests (<200ms targets)")
-        
+
         # Check for error handling
         total_error_tests = sum(
-            results.get("error_tests", 0)
-            for results in validation_results.values()
-            if isinstance(results, dict)
+            results.get("error_tests", 0) for results in validation_results.values() if isinstance(results, dict)
         )
         if total_error_tests < 5:
             recommendations.append("🟡 Add more error handling and fallback tests")
-        
+
         return recommendations
-    
+
     def run_validation(self, detailed: bool = False) -> Dict:
         """Run complete validation of Service 6 test suite."""
-        
+
         print("🔍 Validating Service 6 Test Suite")
         print("=" * 50)
-        
+
         validation_results = {}
-        
+
         # Validate AI Integration tests
         print("\n📋 Validating Service 6 AI Integration Tests...")
         ai_integration_results = self.validate_service6_ai_integration_tests()
         validation_results["ai_integration"] = ai_integration_results
-        
+
         if "error" not in ai_integration_results:
             print(f"   Tests: {ai_integration_results['total_tests']}")
             print(f"   Coverage: {ai_integration_results['coverage_percentage']:.1f}%")
             if ai_integration_results["missing_scenarios"]:
                 print(f"   Missing: {', '.join(ai_integration_results['missing_scenarios'])}")
-        
-        # Validate Behavioral Network tests  
+
+        # Validate Behavioral Network tests
         print("\n📋 Validating Real-time Behavioral Network Tests...")
         behavioral_results = self.validate_behavioral_network_tests()
         validation_results["behavioral_network"] = behavioral_results
-        
+
         if "error" not in behavioral_results:
             print(f"   Tests: {behavioral_results['total_tests']}")
-            print(f"   TODO Methods: {behavioral_results['todo_methods_tested']}/{behavioral_results['total_todo_methods']}")
+            print(
+                f"   TODO Methods: {behavioral_results['todo_methods_tested']}/{behavioral_results['total_todo_methods']}"
+            )
             print(f"   Coverage: {behavioral_results['coverage_percentage']:.1f}%")
             if behavioral_results["missing_todo_methods"]:
                 print(f"   Missing TODO: {', '.join(behavioral_results['missing_todo_methods'])}")
-        
+
         # Validate Integration tests
         print("\n📋 Validating End-to-End Integration Tests...")
         integration_results = self.validate_integration_tests()
         validation_results["integration"] = integration_results
-        
+
         if "error" not in integration_results:
             print(f"   Tests: {integration_results['total_tests']}")
             print(f"   Coverage: {integration_results['coverage_percentage']:.1f}%")
             if integration_results["missing_scenarios"]:
                 print(f"   Missing: {', '.join(integration_results['missing_scenarios'])}")
-        
+
         # Generate recommendations
         recommendations = self.generate_recommendations(validation_results)
         validation_results["recommendations"] = recommendations
-        
+
         return validation_results
-    
+
     def print_detailed_results(self, validation_results: Dict):
         """Print detailed validation results."""
-        
-        print(f"\n{'='*60}")
+
+        print(f"\n{'=' * 60}")
         print("📊 DETAILED VALIDATION RESULTS")
-        print(f"{'='*60}")
-        
+        print(f"{'=' * 60}")
+
         for test_type, results in validation_results.items():
             if test_type == "recommendations":
                 continue
-                
+
             if isinstance(results, dict) and "error" not in results:
                 print(f"\n🧪 {test_type.replace('_', ' ').title()}:")
                 print(f"   • File: {results.get('file', 'N/A')}")
@@ -404,43 +418,43 @@ class TestValidator:
                 print(f"   • Performance Tests: {results.get('performance_tests', 0)}")
                 print(f"   • Error Tests: {results.get('error_tests', 0)}")
                 print(f"   • Coverage: {results.get('coverage_percentage', 0):.1f}%")
-                
+
                 if "todo_methods_tested" in results:
                     print(f"   • TODO Methods: {results['todo_methods_tested']}/{results['total_todo_methods']}")
-                
+
                 if results.get("missing_scenarios"):
                     print(f"   • Missing Scenarios: {', '.join(results['missing_scenarios'])}")
-    
+
     def print_summary(self, validation_results: Dict):
         """Print validation summary."""
-        
-        print(f"\n{'='*60}")
+
+        print(f"\n{'=' * 60}")
         print("🎯 VALIDATION SUMMARY")
-        print(f"{'='*60}")
-        
+        print(f"{'=' * 60}")
+
         # Calculate totals
         total_tests = sum(
             results.get("total_tests", 0)
             for results in validation_results.values()
             if isinstance(results, dict) and "error" not in results
         )
-        
+
         avg_coverage = sum(
             results.get("coverage_percentage", 0)
             for results in validation_results.values()
             if isinstance(results, dict) and "coverage_percentage" in results
         ) / max(1, len([r for r in validation_results.values() if isinstance(r, dict) and "coverage_percentage" in r]))
-        
+
         print(f"📈 Total Tests: {total_tests}")
         print(f"📊 Average Coverage: {avg_coverage:.1f}%")
-        
+
         # Print recommendations
         recommendations = validation_results.get("recommendations", [])
         if recommendations:
             print(f"\n💡 RECOMMENDATIONS:")
             for rec in recommendations:
                 print(f"   {rec}")
-        
+
         # Overall assessment
         print(f"\n🎯 OVERALL ASSESSMENT:")
         if avg_coverage >= 85:
@@ -450,30 +464,32 @@ class TestValidator:
         else:
             print("   🔴 NEEDS WORK - Significant test gaps identified")
 
+
 def main():
     """Main validation function."""
-    
+
     parser = argparse.ArgumentParser(description="Validate Service 6 test suite")
     parser.add_argument("--detailed", action="store_true", help="Show detailed results")
-    
+
     args = parser.parse_args()
-    
+
     validator = TestValidator()
     validation_results = validator.run_validation(detailed=args.detailed)
-    
+
     if args.detailed:
         validator.print_detailed_results(validation_results)
-    
+
     validator.print_summary(validation_results)
-    
+
     # Exit with appropriate code
     avg_coverage = sum(
         results.get("coverage_percentage", 0)
         for results in validation_results.values()
         if isinstance(results, dict) and "coverage_percentage" in results
     ) / max(1, len([r for r in validation_results.values() if isinstance(r, dict) and "coverage_percentage" in r]))
-    
+
     sys.exit(0 if avg_coverage >= 75 else 1)
+
 
 if __name__ == "__main__":
     main()

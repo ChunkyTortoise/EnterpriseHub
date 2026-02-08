@@ -5,9 +5,10 @@ and gracefully falls back to mock data on failure or missing address.
 """
 
 import sys
-import pytest
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
 from ghl_real_estate_ai.services.mls_client import MLSClient
@@ -36,31 +37,40 @@ def _make_seller_engine(mls_client=None):
     source modules so the engine can be constructed cheaply.
     """
     conversation_manager = AsyncMock()
-    conversation_manager.get_context = AsyncMock(return_value={
-        "seller_preferences": {},
-        "contact_name": "Test Seller",
-        "conversation_history": [],
-        "days_since_first_contact": 10,
-    })
-    conversation_manager.extract_seller_data = AsyncMock(return_value={
-        "property_address": "123 Main St, Rancho Cucamonga, CA",
-        "questions_answered": 2,
-        "price_expectation": "650000",
-        "response_quality": 0.8,
-    })
+    conversation_manager.get_context = AsyncMock(
+        return_value={
+            "seller_preferences": {},
+            "contact_name": "Test Seller",
+            "conversation_history": [],
+            "days_since_first_contact": 10,
+        }
+    )
+    conversation_manager.extract_seller_data = AsyncMock(
+        return_value={
+            "property_address": "123 Main St, Rancho Cucamonga, CA",
+            "questions_answered": 2,
+            "price_expectation": "650000",
+            "response_quality": 0.8,
+        }
+    )
     conversation_manager.update_context = AsyncMock()
 
     ghl_client = AsyncMock()
 
     # Patch at source modules (these are lazy-imported inside __init__)
-    with patch("ghl_real_estate_ai.services.analytics_service.AnalyticsService"), \
-         patch("ghl_real_estate_ai.core.governance_engine.GovernanceEngine") as mock_gov_cls, \
-         patch("ghl_real_estate_ai.core.recovery_engine.RecoveryEngine") as mock_rec_cls, \
-         patch("ghl_real_estate_ai.services.predictive_lead_scorer_v2.PredictiveLeadScorerV2") as mock_scorer_cls, \
-         patch("ghl_real_estate_ai.services.dynamic_pricing_optimizer.DynamicPricingOptimizer") as mock_pricing_cls, \
-         patch("ghl_real_estate_ai.services.psychographic_segmentation_engine.PsychographicSegmentationEngine") as mock_psycho_cls, \
-         patch("ghl_real_estate_ai.services.seller_psychology_analyzer.get_seller_psychology_analyzer") as mock_get_psych:
-
+    with (
+        patch("ghl_real_estate_ai.services.analytics_service.AnalyticsService"),
+        patch("ghl_real_estate_ai.core.governance_engine.GovernanceEngine") as mock_gov_cls,
+        patch("ghl_real_estate_ai.core.recovery_engine.RecoveryEngine") as mock_rec_cls,
+        patch("ghl_real_estate_ai.services.predictive_lead_scorer_v2.PredictiveLeadScorerV2") as mock_scorer_cls,
+        patch("ghl_real_estate_ai.services.dynamic_pricing_optimizer.DynamicPricingOptimizer") as mock_pricing_cls,
+        patch(
+            "ghl_real_estate_ai.services.psychographic_segmentation_engine.PsychographicSegmentationEngine"
+        ) as mock_psycho_cls,
+        patch(
+            "ghl_real_estate_ai.services.seller_psychology_analyzer.get_seller_psychology_analyzer"
+        ) as mock_get_psych,
+    ):
         # Governance: enforce returns message unchanged
         mock_gov_cls.return_value.enforce = MagicMock(side_effect=lambda msg: msg)
 
@@ -84,9 +94,11 @@ def _make_seller_engine(mls_client=None):
         mock_pricing_cls.return_value.calculate_lead_price = AsyncMock(return_value=pricing_result)
 
         # Psychographic engine
-        mock_psycho_cls.return_value.detect_persona = AsyncMock(return_value={
-            "primary_persona": "unknown",
-        })
+        mock_psycho_cls.return_value.detect_persona = AsyncMock(
+            return_value={
+                "primary_persona": "unknown",
+            }
+        )
         mock_psycho_cls.return_value.get_system_prompt_override = MagicMock(return_value="")
 
         # Psychology analyzer
@@ -200,12 +212,14 @@ class TestSellerEngineMlsIntegration:
         engine = _make_seller_engine(mls_client=mls_client)
 
         # Override extract to return no address
-        engine.conversation_manager.extract_seller_data = AsyncMock(return_value={
-            "questions_answered": 1,
-            "price_expectation": "500000",
-            "response_quality": 0.7,
-            # No property_address key
-        })
+        engine.conversation_manager.extract_seller_data = AsyncMock(
+            return_value={
+                "questions_answered": 1,
+                "price_expectation": "500000",
+                "response_quality": 0.7,
+                # No property_address key
+            }
+        )
 
         with patch.dict(sys.modules, {"ghl_real_estate_ai.agents.lead_intelligence_swarm": _mock_swarm_module()}):
             result = await engine.process_seller_response(

@@ -2,20 +2,21 @@
 Test suite for Automated Marketing Engine - AI-powered marketing campaign generator
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.automated_marketing_engine import (
     AutomatedMarketingEngine,
     CampaignBrief,
-    GeneratedContent,
     CampaignPerformance,
+    CampaignPriority,
     CampaignType,
     ContentFormat,
-    CampaignPriority,
-    get_automated_marketing_engine
+    GeneratedContent,
+    get_automated_marketing_engine,
 )
 
 
@@ -35,7 +36,7 @@ def sample_listing_data():
         "bathrooms": 3,
         "sqft": 2100,
         "neighborhood": "etiwanda",
-        "property_type": "single_family"
+        "property_type": "single_family",
     }
 
 
@@ -47,7 +48,7 @@ def sample_market_data():
         "price_trend": "increasing",
         "inventory_months": 2.1,
         "days_on_market": 22,
-        "market_conditions": "balanced"
+        "market_conditions": "balanced",
     }
 
 
@@ -58,10 +59,10 @@ class TestAutomatedMarketingEngine:
     async def test_engine_initialization(self, marketing_engine):
         """Test marketing engine initializes correctly"""
         assert marketing_engine is not None
-        assert hasattr(marketing_engine, 'llm_client')
-        assert hasattr(marketing_engine, 'rc_assistant')
-        assert hasattr(marketing_engine, 'campaign_templates')
-        assert hasattr(marketing_engine, 'content_frameworks')
+        assert hasattr(marketing_engine, "llm_client")
+        assert hasattr(marketing_engine, "rc_assistant")
+        assert hasattr(marketing_engine, "campaign_templates")
+        assert hasattr(marketing_engine, "content_frameworks")
 
     async def test_jorge_brand_voice_loading(self, marketing_engine):
         """Test Jorge's brand voice configuration"""
@@ -100,10 +101,7 @@ class TestAutomatedMarketingEngine:
 
     async def test_create_listing_campaign(self, marketing_engine, sample_listing_data):
         """Test creation of new listing campaign"""
-        campaign = await marketing_engine.create_campaign_from_trigger(
-            "new_listing",
-            sample_listing_data
-        )
+        campaign = await marketing_engine.create_campaign_from_trigger("new_listing", sample_listing_data)
 
         assert isinstance(campaign, CampaignBrief)
         assert campaign.campaign_type == CampaignType.LISTING_PROMOTION
@@ -114,10 +112,7 @@ class TestAutomatedMarketingEngine:
 
     async def test_create_market_update_campaign(self, marketing_engine, sample_market_data):
         """Test creation of market update campaign"""
-        campaign = await marketing_engine.create_campaign_from_trigger(
-            "market_milestone",
-            sample_market_data
-        )
+        campaign = await marketing_engine.create_campaign_from_trigger("market_milestone", sample_market_data)
 
         assert isinstance(campaign, CampaignBrief)
         assert campaign.campaign_type == CampaignType.MARKET_UPDATE
@@ -130,13 +125,10 @@ class TestAutomatedMarketingEngine:
         seasonal_data = {
             "season": "spring",
             "opportunities": ["New inventory", "Family relocations"],
-            "urgency_factors": ["Competition increases"]
+            "urgency_factors": ["Competition increases"],
         }
 
-        campaign = await marketing_engine.create_campaign_from_trigger(
-            "seasonal_opportunity",
-            seasonal_data
-        )
+        campaign = await marketing_engine.create_campaign_from_trigger("seasonal_opportunity", seasonal_data)
 
         assert isinstance(campaign, CampaignBrief)
         assert campaign.campaign_type == CampaignType.SEASONAL
@@ -149,13 +141,10 @@ class TestAutomatedMarketingEngine:
             "client_name": "John & Jane Smith",
             "property_address": "123 Oak St, Etiwanda",
             "sale_price": 750000,
-            "days_to_close": 18
+            "days_to_close": 18,
         }
 
-        campaign = await marketing_engine.create_campaign_from_trigger(
-            "successful_closing",
-            closing_data
-        )
+        campaign = await marketing_engine.create_campaign_from_trigger("successful_closing", closing_data)
 
         assert isinstance(campaign, CampaignBrief)
         assert campaign.campaign_type == CampaignType.SUCCESS_STORY
@@ -164,16 +153,9 @@ class TestAutomatedMarketingEngine:
 
     async def test_create_lead_magnet_campaign(self, marketing_engine):
         """Test creation of lead magnet campaign"""
-        magnet_data = {
-            "type": "buyer_guide",
-            "title": "First-Time Buyer Guide to RC",
-            "target": "first_time_buyers"
-        }
+        magnet_data = {"type": "buyer_guide", "title": "First-Time Buyer Guide to RC", "target": "first_time_buyers"}
 
-        campaign = await marketing_engine.create_campaign_from_trigger(
-            "lead_magnet_request",
-            magnet_data
-        )
+        campaign = await marketing_engine.create_campaign_from_trigger("lead_magnet_request", magnet_data)
 
         assert isinstance(campaign, CampaignBrief)
         assert campaign.campaign_type == CampaignType.LEAD_MAGNET
@@ -183,10 +165,7 @@ class TestAutomatedMarketingEngine:
     async def test_generate_campaign_content(self, marketing_engine, sample_listing_data):
         """Test content generation for campaigns"""
         # Create campaign
-        campaign = await marketing_engine.create_campaign_from_trigger(
-            "new_listing",
-            sample_listing_data
-        )
+        campaign = await marketing_engine.create_campaign_from_trigger("new_listing", sample_listing_data)
 
         # Mock AI response
         ai_response = {
@@ -195,11 +174,12 @@ class TestAutomatedMarketingEngine:
             "hashtags": ["#RanchoCucamonga", "#Etiwanda", "#RealEstate", "#JorgeRealEstate"],
             "call_to_action": "Schedule your private showing today!",
             "image_description": "Professional exterior photo of the home",
-            "design_elements": ["Jorge's branding", "Property highlights"]
+            "design_elements": ["Jorge's branding", "Property highlights"],
         }
 
         import json as _json
-        with patch.object(marketing_engine.llm_client, 'agenerate') as mock_agenerate:
+
+        with patch.object(marketing_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(content=_json.dumps(ai_response))
 
             content = await marketing_engine.generate_campaign_content(campaign.campaign_id)
@@ -216,13 +196,14 @@ class TestAutomatedMarketingEngine:
             objective="educate market",
             content_formats=[ContentFormat.FACEBOOK_POST],
             priority=CampaignPriority.MEDIUM,
-            deadline=datetime.now() + timedelta(days=2)
+            deadline=datetime.now() + timedelta(days=2),
         )
 
-        with patch.object(marketing_engine, '_generate_single_content_piece') as mock_generate:
+        with patch.object(marketing_engine, "_generate_single_content_piece") as mock_generate:
+
             def make_variant_content(*args, **kwargs):
                 # The fourth positional arg is variant letter, or pick from kwargs
-                variant_letter = args[2] if len(args) > 2 else kwargs.get('variant', 'A')
+                variant_letter = args[2] if len(args) > 2 else kwargs.get("variant", "A")
                 return GeneratedContent(
                     content_id=f"test-content-{variant_letter}",
                     campaign_id="test-123",
@@ -231,8 +212,9 @@ class TestAutomatedMarketingEngine:
                     body="Test body content",
                     hashtags=["#test"],
                     call_to_action="Contact Jorge",
-                    variant=variant_letter
+                    variant=variant_letter,
                 )
+
             mock_generate.side_effect = make_variant_content
 
             variants = await marketing_engine._generate_content_variants(
@@ -254,17 +236,17 @@ class TestAutomatedMarketingEngine:
             priority=CampaignPriority.MEDIUM,
             deadline=datetime.now() + timedelta(days=3),
             target_demographics=["tech_workers"],
-            market_data={"appreciation": 8.2}
+            market_data={"appreciation": 8.2},
         )
 
         variant_approach = {
             "focus": "data_driven",
             "emotion": "trust",
             "structure": "evidence_based",
-            "cta_style": "consultative"
+            "cta_style": "consultative",
         }
 
-        with patch.object(marketing_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(marketing_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"title": "Data Shows Strong IE Market Growth", "body": "Recent analysis reveals 8.2% appreciation in the Inland Empire tech corridor.", "hashtags": ["#InlandEmpire", "#TechWorkers"], "call_to_action": "Get your personalized market analysis", "image_description": "Market data visualization"}'
             )
@@ -280,7 +262,7 @@ class TestAutomatedMarketingEngine:
 
     async def test_seasonal_campaigns_creation(self, marketing_engine):
         """Test automated seasonal campaign creation"""
-        with patch('datetime.datetime') as mock_datetime:
+        with patch("datetime.datetime") as mock_datetime:
             # Mock spring season (March)
             mock_datetime.now.return_value = datetime(2024, 3, 15)
 
@@ -310,13 +292,10 @@ class TestAutomatedMarketingEngine:
             "appointments_scheduled": 8,
             "cost_per_lead": 35.50,
             "roi_percentage": 240.0,
-            "engagement_rate": 0.05
+            "engagement_rate": 0.05,
         }
 
-        performance = await marketing_engine.track_campaign_performance(
-            "test-campaign-123",
-            performance_data
-        )
+        performance = await marketing_engine.track_campaign_performance("test-campaign-123", performance_data)
 
         assert isinstance(performance, CampaignPerformance)
         assert performance.campaign_id == "test-campaign-123"
@@ -332,14 +311,11 @@ class TestAutomatedMarketingEngine:
             "leads_generated": 10,
             "variants": [
                 {"variant": "A", "conversion_rate": 0.04, "clicks": 120},
-                {"variant": "B", "conversion_rate": 0.06, "clicks": 130}
-            ]
+                {"variant": "B", "conversion_rate": 0.06, "clicks": 130},
+            ],
         }
 
-        performance = await marketing_engine.track_campaign_performance(
-            "test-ab-campaign",
-            performance_data
-        )
+        performance = await marketing_engine.track_campaign_performance("test-ab-campaign", performance_data)
 
         assert performance.winning_variant == "B"
         assert performance.confidence_level > 0.5
@@ -356,12 +332,11 @@ class TestAutomatedMarketingEngine:
     async def test_content_parsing_error_handling(self, marketing_engine):
         """Test error handling in content parsing"""
         # Test with invalid JSON response
-        with patch.object(marketing_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(marketing_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(content="Invalid JSON content")
 
             parsed = await marketing_engine._parse_generated_content(
-                "Invalid JSON content",
-                ContentFormat.FACEBOOK_POST
+                "Invalid JSON content", ContentFormat.FACEBOOK_POST
             )
 
             # Should return fallback content
@@ -379,20 +354,17 @@ class TestAutomatedMarketingEngine:
             objective="test objective",
             content_formats=[ContentFormat.EMAIL_HTML],
             priority=CampaignPriority.MEDIUM,
-            deadline=datetime.now() + timedelta(days=1)
+            deadline=datetime.now() + timedelta(days=1),
         )
 
-        with patch.object(marketing_engine.cache, 'set') as mock_set:
+        with patch.object(marketing_engine.cache, "set") as mock_set:
             await marketing_engine._cache_campaign_brief(campaign)
             mock_set.assert_called_once()
 
     async def test_error_handling_invalid_trigger(self, marketing_engine):
         """Test error handling for invalid trigger types"""
         with pytest.raises(ValueError):
-            await marketing_engine.create_campaign_from_trigger(
-                "invalid_trigger_type",
-                {}
-            )
+            await marketing_engine.create_campaign_from_trigger("invalid_trigger_type", {})
 
     async def test_singleton_pattern(self):
         """Test singleton pattern implementation"""
@@ -415,7 +387,7 @@ class TestCampaignBrief:
             objective="engagement",
             content_formats=[ContentFormat.FACEBOOK_POST],
             priority=CampaignPriority.MEDIUM,
-            deadline=datetime.now() + timedelta(days=1)
+            deadline=datetime.now() + timedelta(days=1),
         )
 
         assert brief.campaign_id == "test-123"
@@ -437,7 +409,7 @@ class TestCampaignBrief:
             priority=CampaignPriority.HIGH,
             deadline=deadline,
             tone="educational",
-            target_neighborhoods=["etiwanda", "alta_loma"]
+            target_neighborhoods=["etiwanda", "alta_loma"],
         )
 
         assert brief.tone == "educational"
@@ -459,7 +431,7 @@ class TestGeneratedContent:
             title="Test Title",
             body="Test body content",
             hashtags=["#test", "#content"],
-            call_to_action="Contact us"
+            call_to_action="Contact us",
         )
 
         assert content.content_id == "content-123"
@@ -480,7 +452,7 @@ class TestGeneratedContent:
             call_to_action="Click here",
             engagement_score=0.85,
             conversion_rate=0.12,
-            click_through_rate=0.08
+            click_through_rate=0.08,
         )
 
         assert content.engagement_score == 0.85
@@ -499,15 +471,12 @@ class TestMarketingEngineIntegration:
         engine = get_automated_marketing_engine()
 
         # Create campaign
-        campaign = await engine.create_campaign_from_trigger(
-            "new_listing",
-            sample_listing_data
-        )
+        campaign = await engine.create_campaign_from_trigger("new_listing", sample_listing_data)
 
         assert campaign.campaign_id
 
         # Generate content
-        with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"title": "Test Title", "body": "Test body", "hashtags": ["#test"], "call_to_action": "Contact Jorge"}'
             )
@@ -517,8 +486,7 @@ class TestMarketingEngineIntegration:
 
         # Track performance
         performance = await engine.track_campaign_performance(
-            campaign.campaign_id,
-            {"impressions": 1000, "clicks": 50, "leads_generated": 3}
+            campaign.campaign_id, {"impressions": 1000, "clicks": 50, "leads_generated": 3}
         )
 
         assert performance.campaign_id == campaign.campaign_id
@@ -529,7 +497,7 @@ class TestMarketingEngineIntegration:
         engine = get_automated_marketing_engine()
 
         # Test multiple seasons
-        with patch('datetime.datetime') as mock_datetime:
+        with patch("datetime.datetime") as mock_datetime:
             # Spring
             mock_datetime.now.return_value = datetime(2024, 4, 1)
             spring_campaigns = await engine.create_seasonal_campaigns()
@@ -554,15 +522,15 @@ class TestMarketingEngineIntegration:
                 ContentFormat.FACEBOOK_POST,
                 ContentFormat.INSTAGRAM_POST,
                 ContentFormat.LINKEDIN_POST,
-                ContentFormat.EMAIL_HTML
+                ContentFormat.EMAIL_HTML,
             ],
             priority=CampaignPriority.MEDIUM,
-            deadline=datetime.now() + timedelta(days=1)
+            deadline=datetime.now() + timedelta(days=1),
         )
 
         engine.active_campaigns[campaign.campaign_id] = campaign
 
-        with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"title": "Multi-Format Test", "body": "Test content", "hashtags": ["#test"], "call_to_action": "Learn more"}'
             )

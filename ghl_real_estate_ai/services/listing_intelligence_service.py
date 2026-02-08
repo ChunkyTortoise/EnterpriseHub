@@ -12,34 +12,40 @@ Provides comprehensive listing analysis and optimization capabilities:
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 logger = get_logger(__name__)
 
+
 class ListingStatus(Enum):
     """Listing status types."""
+
     ACTIVE = "active"
     PENDING = "pending"
     SOLD = "sold"
     WITHDRAWN = "withdrawn"
     EXPIRED = "expired"
 
+
 class MarketCondition(Enum):
     """Market condition indicators."""
+
     BUYERS_MARKET = "buyers_market"
     SELLERS_MARKET = "sellers_market"
     BALANCED = "balanced"
 
+
 @dataclass
 class ListingData:
     """Comprehensive listing data structure."""
+
     listing_id: str
     address: str
     price: float
@@ -69,9 +75,11 @@ class ListingData:
         if self.nearby_attractions is None:
             self.nearby_attractions = []
 
+
 @dataclass
 class MarketComparison:
     """Comparative Market Analysis (CMA) results."""
+
     subject_property: ListingData
     comparable_properties: List[ListingData]
     suggested_price_range: Tuple[float, float]
@@ -82,9 +90,11 @@ class MarketComparison:
     days_on_market_estimate: int
     analysis_date: datetime
 
+
 @dataclass
 class ListingPerformance:
     """Listing performance analytics."""
+
     listing_id: str
     views_count: int
     inquiries_count: int
@@ -96,6 +106,7 @@ class ListingPerformance:
     performance_ranking: str  # "excellent", "good", "average", "poor"
     optimization_suggestions: List[str]
     last_updated: datetime
+
 
 class ListingIntelligenceService:
     """
@@ -116,7 +127,7 @@ class ListingIntelligenceService:
             return
 
         try:
-            if hasattr(self.claude_assistant, 'initialize'):
+            if hasattr(self.claude_assistant, "initialize"):
                 await self.claude_assistant.initialize()
 
             logger.info("Listing Intelligence Service initialized successfully")
@@ -127,10 +138,7 @@ class ListingIntelligenceService:
             raise
 
     async def generate_listing_description(
-        self,
-        listing_data: ListingData,
-        target_audience: str = "general",
-        tone: str = "professional"
+        self, listing_data: ListingData, target_audience: str = "general", tone: str = "professional"
     ) -> Dict[str, Any]:
         """
         Generate AI-powered listing description optimized for engagement and SEO.
@@ -165,8 +173,8 @@ class ListingIntelligenceService:
         - Year Built: {listing_data.year_built}
         - Property Type: {listing_data.property_type}
         - Neighborhood: {listing_data.neighborhood}
-        - Amenities: {', '.join(listing_data.amenities) if listing_data.amenities else 'Standard features'}
-        - School Districts: {', '.join(listing_data.school_districts) if listing_data.school_districts else 'Local schools'}
+        - Amenities: {", ".join(listing_data.amenities) if listing_data.amenities else "Standard features"}
+        - School Districts: {", ".join(listing_data.school_districts) if listing_data.school_districts else "Local schools"}
 
         Target Audience: {target_audience}
         Tone: {tone}
@@ -192,7 +200,7 @@ class ListingIntelligenceService:
             ai_response = await self.claude_assistant.chat_with_claude(
                 message=description_prompt,
                 conversation_id=f"listing_desc_{listing_data.listing_id}",
-                system_prompt="You are an expert real estate copywriter specializing in high-converting listing descriptions."
+                system_prompt="You are an expert real estate copywriter specializing in high-converting listing descriptions.",
             )
 
             # Parse the AI response (in production, would implement proper JSON parsing)
@@ -204,19 +212,19 @@ class ListingIntelligenceService:
                     f"{listing_data.bathrooms} full bathrooms",
                     f"{listing_data.square_feet:,} sq ft of living space",
                     f"Built in {listing_data.year_built}",
-                    "Move-in ready condition"
+                    "Move-in ready condition",
                 ],
                 "seo_keywords": [
                     listing_data.neighborhood.lower(),
                     listing_data.property_type.lower(),
                     f"{listing_data.bedrooms}br",
                     "real estate",
-                    "for sale"
+                    "for sale",
                 ],
                 "call_to_action": "Schedule your private showing today - this won't last long!",
                 "generated_at": datetime.now().isoformat(),
                 "target_audience": target_audience,
-                "tone": tone
+                "tone": tone,
             }
 
             # Cache the result
@@ -229,10 +237,7 @@ class ListingIntelligenceService:
             return self._get_fallback_description(listing_data)
 
     async def perform_market_analysis(
-        self,
-        listing_data: ListingData,
-        comparable_radius_miles: float = 1.0,
-        max_comparables: int = 6
+        self, listing_data: ListingData, comparable_radius_miles: float = 1.0, max_comparables: int = 6
     ) -> MarketComparison:
         """
         Perform comprehensive Comparative Market Analysis (CMA).
@@ -258,9 +263,7 @@ class ListingIntelligenceService:
         # In production, this would query real MLS data
         # For demo, generate realistic comparable properties
         comparable_properties = self._generate_comparable_properties(
-            listing_data,
-            comparable_radius_miles,
-            max_comparables
+            listing_data, comparable_radius_miles, max_comparables
         )
 
         # Analyze market conditions using AI
@@ -291,7 +294,7 @@ class ListingIntelligenceService:
             ai_analysis = await self.claude_assistant.chat_with_claude(
                 message=market_analysis_prompt,
                 conversation_id=f"cma_{listing_data.listing_id}",
-                system_prompt="You are an expert real estate appraiser with deep market analysis expertise."
+                system_prompt="You are an expert real estate appraiser with deep market analysis expertise.",
             )
 
             # Create market comparison result
@@ -304,7 +307,7 @@ class ListingIntelligenceService:
                 pricing_strategy="Competitive pricing recommended - price at market value",
                 market_condition=MarketCondition.BALANCED,
                 days_on_market_estimate=28,
-                analysis_date=datetime.now()
+                analysis_date=datetime.now(),
             )
 
             # Cache the result
@@ -317,7 +320,7 @@ class ListingIntelligenceService:
                 "pricing_strategy": market_comparison.pricing_strategy,
                 "market_condition": market_comparison.market_condition.value,
                 "days_on_market_estimate": market_comparison.days_on_market_estimate,
-                "analysis_date": market_comparison.analysis_date.isoformat()
+                "analysis_date": market_comparison.analysis_date.isoformat(),
             }
 
             await self.cache.set(cache_key, json.dumps(result_dict, default=str), ttl=1800)  # Cache for 30 minutes
@@ -329,11 +332,7 @@ class ListingIntelligenceService:
             return self._get_fallback_market_analysis(listing_data, comparable_properties)
 
     async def track_listing_performance(
-        self,
-        listing_id: str,
-        views_count: int = 0,
-        inquiries_count: int = 0,
-        showings_data: Dict[str, int] = None
+        self, listing_id: str, views_count: int = 0, inquiries_count: int = 0, showings_data: Dict[str, int] = None
     ) -> ListingPerformance:
         """
         Track and analyze listing performance with optimization recommendations.
@@ -353,9 +352,7 @@ class ListingIntelligenceService:
             showings_data = {"scheduled": 0, "completed": 0}
 
         # Calculate engagement metrics
-        engagement_score = self._calculate_engagement_score(
-            views_count, inquiries_count, showings_data
-        )
+        engagement_score = self._calculate_engagement_score(views_count, inquiries_count, showings_data)
 
         performance_ranking = self._get_performance_ranking(engagement_score)
 
@@ -366,8 +363,8 @@ class ListingIntelligenceService:
         Performance Metrics:
         - Views: {views_count}
         - Inquiries: {inquiries_count}
-        - Showings Scheduled: {showings_data['scheduled']}
-        - Showings Completed: {showings_data['completed']}
+        - Showings Scheduled: {showings_data["scheduled"]}
+        - Showings Completed: {showings_data["completed"]}
         - Engagement Score: {engagement_score:.2f}/10
         - Performance Ranking: {performance_ranking}
 
@@ -383,7 +380,7 @@ class ListingIntelligenceService:
             ai_suggestions = await self.claude_assistant.chat_with_claude(
                 message=optimization_prompt,
                 conversation_id=f"listing_optimization_{listing_id}",
-                system_prompt="You are a real estate marketing expert specializing in listing optimization."
+                system_prompt="You are a real estate marketing expert specializing in listing optimization.",
             )
 
             optimization_suggestions = [
@@ -391,7 +388,7 @@ class ListingIntelligenceService:
                 "Add virtual tour or 3D walkthrough",
                 "Optimize listing description with trending keywords",
                 "Consider strategic price adjustment based on market feedback",
-                "Increase social media and online marketing presence"
+                "Increase social media and online marketing presence",
             ]
 
         except Exception as e:
@@ -400,7 +397,7 @@ class ListingIntelligenceService:
                 "Review and update listing photos",
                 "Enhance property description",
                 "Consider price evaluation",
-                "Increase marketing efforts"
+                "Increase marketing efforts",
             ]
 
         return ListingPerformance(
@@ -414,14 +411,11 @@ class ListingIntelligenceService:
             engagement_score=engagement_score,
             performance_ranking=performance_ranking,
             optimization_suggestions=optimization_suggestions,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     async def generate_pricing_strategy(
-        self,
-        listing_data: ListingData,
-        market_analysis: MarketComparison,
-        target_timeline_days: int = 30
+        self, listing_data: ListingData, market_analysis: MarketComparison, target_timeline_days: int = 30
     ) -> Dict[str, Any]:
         """
         Generate AI-powered pricing strategy based on market conditions and goals.
@@ -458,7 +452,7 @@ class ListingIntelligenceService:
             ai_strategy = await self.claude_assistant.chat_with_claude(
                 message=pricing_prompt,
                 conversation_id=f"pricing_strategy_{listing_data.listing_id}",
-                system_prompt="You are an expert real estate pricing strategist with deep market knowledge."
+                system_prompt="You are an expert real estate pricing strategist with deep market knowledge.",
             )
 
             return {
@@ -467,12 +461,12 @@ class ListingIntelligenceService:
                 "adjustment_schedule": [
                     {"day": 14, "action": "Review market feedback"},
                     {"day": 21, "action": "Consider 2-3% price reduction if limited activity"},
-                    {"day": 35, "action": "Major strategy review and adjustment"}
+                    {"day": 35, "action": "Major strategy review and adjustment"},
                 ],
                 "market_positioning": "Position as premium value in neighborhood",
                 "success_probability": 0.82,
                 "strategy_analysis": ai_strategy,
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -480,10 +474,7 @@ class ListingIntelligenceService:
             return self._get_fallback_pricing_strategy(listing_data, market_analysis)
 
     def _generate_comparable_properties(
-        self,
-        subject: ListingData,
-        radius_miles: float,
-        max_count: int
+        self, subject: ListingData, radius_miles: float, max_count: int
     ) -> List[ListingData]:
         """Generate realistic comparable properties for demo purposes."""
         comparables = []
@@ -491,10 +482,10 @@ class ListingIntelligenceService:
         for i in range(min(max_count, 6)):
             # Vary properties within realistic ranges
             price_variation = 1.0 + ((i - 3) * 0.05)  # ±15% price variation
-            sqft_variation = 1.0 + ((i - 3) * 0.03)   # ±9% sqft variation
+            sqft_variation = 1.0 + ((i - 3) * 0.03)  # ±9% sqft variation
 
             comparable = ListingData(
-                listing_id=f"COMP_{subject.listing_id}_{i+1}",
+                listing_id=f"COMP_{subject.listing_id}_{i + 1}",
                 address=f"{1000 + i * 100} {subject.neighborhood} Way",
                 price=subject.price * price_variation,
                 bedrooms=subject.bedrooms + (1 if i % 3 == 0 else 0),
@@ -506,8 +497,8 @@ class ListingIntelligenceService:
                 neighborhood=subject.neighborhood,
                 listing_date=datetime.now() - timedelta(days=30 + i * 15),
                 status=ListingStatus.SOLD if i < 3 else ListingStatus.ACTIVE,
-                agent_id=f"agent_{i+1}",
-                amenities=subject.amenities
+                agent_id=f"agent_{i + 1}",
+                amenities=subject.amenities,
             )
             comparables.append(comparable)
 
@@ -523,12 +514,7 @@ class ListingIntelligenceService:
             )
         return "\n".join(formatted)
 
-    def _calculate_engagement_score(
-        self,
-        views: int,
-        inquiries: int,
-        showings: Dict[str, int]
-    ) -> float:
+    def _calculate_engagement_score(self, views: int, inquiries: int, showings: Dict[str, int]) -> float:
         """Calculate engagement score based on activity metrics."""
         # Weighted scoring algorithm
         view_score = min(views / 100, 3.0)  # Max 3 points for views
@@ -553,6 +539,7 @@ class ListingIntelligenceService:
         """Calculate days on market (would query actual data in production)."""
         # For demo, return a reasonable range
         import hashlib
+
         hash_value = int(hashlib.md5(listing_id.encode()).hexdigest()[:8], 16)
         return 5 + (hash_value % 45)  # 5-50 days
 
@@ -561,25 +548,23 @@ class ListingIntelligenceService:
         return {
             "headline": f"Beautiful {listing_data.bedrooms}BR Home in {listing_data.neighborhood}",
             "description": f"This {listing_data.property_type.lower()} features {listing_data.bedrooms} bedrooms, "
-                          f"{listing_data.bathrooms} bathrooms, and {listing_data.square_feet:,} square feet of comfortable living space. "
-                          f"Built in {listing_data.year_built}, this property offers modern amenities and is located in the desirable "
-                          f"{listing_data.neighborhood} neighborhood. Don't miss this opportunity!",
+            f"{listing_data.bathrooms} bathrooms, and {listing_data.square_feet:,} square feet of comfortable living space. "
+            f"Built in {listing_data.year_built}, this property offers modern amenities and is located in the desirable "
+            f"{listing_data.neighborhood} neighborhood. Don't miss this opportunity!",
             "key_features": [
                 f"{listing_data.bedrooms} bedrooms",
                 f"{listing_data.bathrooms} bathrooms",
                 f"{listing_data.square_feet:,} sq ft",
-                f"Built in {listing_data.year_built}"
+                f"Built in {listing_data.year_built}",
             ],
             "seo_keywords": [listing_data.neighborhood.lower(), "real estate", "for sale"],
             "call_to_action": "Contact us today to schedule a showing!",
             "generated_at": datetime.now().isoformat(),
-            "fallback": True
+            "fallback": True,
         }
 
     def _get_fallback_market_analysis(
-        self,
-        listing_data: ListingData,
-        comparables: List[ListingData]
+        self, listing_data: ListingData, comparables: List[ListingData]
     ) -> MarketComparison:
         """Provide fallback market analysis when AI analysis fails."""
         return MarketComparison(
@@ -591,13 +576,11 @@ class ListingIntelligenceService:
             pricing_strategy="Standard market pricing recommended",
             market_condition=MarketCondition.BALANCED,
             days_on_market_estimate=30,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
 
     def _get_fallback_pricing_strategy(
-        self,
-        listing_data: ListingData,
-        market_analysis: MarketComparison
+        self, listing_data: ListingData, market_analysis: MarketComparison
     ) -> Dict[str, Any]:
         """Provide fallback pricing strategy when AI generation fails."""
         return {
@@ -608,7 +591,7 @@ class ListingIntelligenceService:
             "success_probability": 0.75,
             "strategy_analysis": "Standard pricing strategy based on market comparables",
             "generated_at": datetime.now().isoformat(),
-            "fallback": True
+            "fallback": True,
         }
 
     async def _ensure_initialized(self):
@@ -616,8 +599,10 @@ class ListingIntelligenceService:
         if not self._initialized:
             await self.initialize()
 
+
 # Global service instance
 _listing_intelligence_service = None
+
 
 def get_listing_intelligence_service() -> ListingIntelligenceService:
     """Get the global listing intelligence service instance."""

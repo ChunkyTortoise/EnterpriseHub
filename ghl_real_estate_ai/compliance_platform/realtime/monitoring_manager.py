@@ -34,16 +34,18 @@ logger = get_logger(__name__)
 
 class ThresholdOperator(str, Enum):
     """Comparison operators for threshold evaluation."""
-    LT = "lt"      # Less than
-    GT = "gt"      # Greater than
-    EQ = "eq"      # Equal to
-    LTE = "lte"    # Less than or equal
-    GTE = "gte"    # Greater than or equal
-    NEQ = "neq"    # Not equal
+
+    LT = "lt"  # Less than
+    GT = "gt"  # Greater than
+    EQ = "eq"  # Equal to
+    LTE = "lte"  # Less than or equal
+    GTE = "gte"  # Greater than or equal
+    NEQ = "neq"  # Not equal
 
 
 class AlertSeverity(str, Enum):
     """Alert severity levels."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -53,6 +55,7 @@ class AlertSeverity(str, Enum):
 
 class AlertStatus(str, Enum):
     """Alert status tracking."""
+
     ACTIVE = "active"
     ACKNOWLEDGED = "acknowledged"
     RESOLVED = "resolved"
@@ -65,19 +68,15 @@ class MonitoringThreshold(BaseModel):
 
     Defines when to trigger an alert based on metric values.
     """
+
     metric: str = Field(..., description="Metric name, e.g., 'compliance_score', 'violation_count'")
     operator: ThresholdOperator = Field(..., description="Comparison operator")
     value: float = Field(..., description="Threshold value to compare against")
     severity: AlertSeverity = Field(default=AlertSeverity.MEDIUM, description="Alert severity if triggered")
     notification_channels: List[str] = Field(
-        default_factory=lambda: ["websocket", "email"],
-        description="Channels to notify: websocket, email, slack, sms"
+        default_factory=lambda: ["websocket", "email"], description="Channels to notify: websocket, email, slack, sms"
     )
-    cooldown_minutes: int = Field(
-        default=60,
-        ge=0,
-        description="Minimum minutes between re-triggering the same alert"
-    )
+    cooldown_minutes: int = Field(default=60, ge=0, description="Minimum minutes between re-triggering the same alert")
     description: Optional[str] = Field(default=None, description="Human-readable description")
 
     def evaluate(self, actual_value: float) -> bool:
@@ -99,23 +98,14 @@ class MonitoringRule(BaseModel):
 
     Rules can target specific models or apply globally.
     """
+
     id: str = Field(default_factory=lambda: f"rule_{uuid4().hex[:12]}")
     name: str = Field(..., description="Rule name for identification")
     description: str = Field(..., description="Detailed description of what this rule monitors")
     enabled: bool = Field(default=True, description="Whether the rule is active")
-    model_ids: List[str] = Field(
-        default_factory=list,
-        description="Target model IDs. Empty list means all models."
-    )
-    thresholds: List[MonitoringThreshold] = Field(
-        default_factory=list,
-        description="Thresholds that trigger alerts"
-    )
-    check_interval_seconds: int = Field(
-        default=300,
-        ge=10,
-        description="How often to check this rule (seconds)"
-    )
+    model_ids: List[str] = Field(default_factory=list, description="Target model IDs. Empty list means all models.")
+    thresholds: List[MonitoringThreshold] = Field(default_factory=list, description="Thresholds that trigger alerts")
+    check_interval_seconds: int = Field(default=300, ge=10, description="How often to check this rule (seconds)")
     last_triggered: Optional[datetime] = Field(default=None, description="Last time this rule triggered")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: str = Field(default="system")
@@ -128,6 +118,7 @@ class ComplianceMetrics(BaseModel):
 
     Provides current state and trend information.
     """
+
     model_id: str
     model_name: str
     compliance_score: float = Field(ge=0, le=100)
@@ -137,14 +128,8 @@ class ComplianceMetrics(BaseModel):
     high_violations: int = Field(default=0, ge=0)
     pending_remediations: int = Field(ge=0)
     last_assessment: datetime
-    score_trend: str = Field(
-        default="stable",
-        description="Score trend: improving, stable, declining"
-    )
-    score_change_24h: float = Field(
-        default=0.0,
-        description="Score change in last 24 hours"
-    )
+    score_trend: str = Field(default="stable", description="Score trend: improving, stable, declining")
+    score_change_24h: float = Field(default=0.0, description="Score change in last 24 hours")
     regulation_scores: Dict[str, float] = Field(default_factory=dict)
     category_scores: Dict[str, float] = Field(default_factory=dict)
     certifications_expiring_30d: int = Field(default=0)
@@ -156,6 +141,7 @@ class ComplianceAlert(BaseModel):
     """
     Alert generated from monitoring threshold breach.
     """
+
     alert_id: str = Field(default_factory=lambda: f"alert_{uuid4().hex[:12]}")
     rule_id: str
     rule_name: str
@@ -272,7 +258,7 @@ class RealTimeMonitoringManager:
                 "check_interval": check_interval,
                 "websocket_enabled": enable_websocket,
                 "notifications_enabled": enable_notifications,
-            }
+            },
         )
 
     # =========================================================================
@@ -294,11 +280,7 @@ class RealTimeMonitoringManager:
 
         try:
             # Initialize Redis connection
-            self._redis = redis.from_url(
-                self.redis_url,
-                encoding="utf-8",
-                decode_responses=True
-            )
+            self._redis = redis.from_url(self.redis_url, encoding="utf-8", decode_responses=True)
             await self._redis.ping()
             logger.info("Redis connection established")
 
@@ -550,11 +532,7 @@ class RealTimeMonitoringManager:
             # Persist to Redis
             if self._redis:
                 cache_key = f"{self.CACHE_METRICS}:{model_id}"
-                await self._redis.setex(
-                    cache_key,
-                    self.metrics_ttl,
-                    metrics.model_dump_json()
-                )
+                await self._redis.setex(cache_key, self.metrics_ttl, metrics.model_dump_json())
 
             logger.debug(f"Metrics collected for model: {model_id}")
             return metrics
@@ -624,11 +602,7 @@ class RealTimeMonitoringManager:
 
         return alerts
 
-    async def evaluate_rule(
-        self,
-        rule: MonitoringRule,
-        metrics: ComplianceMetrics
-    ) -> Optional[ComplianceAlert]:
+    async def evaluate_rule(self, rule: MonitoringRule, metrics: ComplianceMetrics) -> Optional[ComplianceAlert]:
         """
         Evaluate a single rule against metrics.
 
@@ -740,7 +714,7 @@ class RealTimeMonitoringManager:
                 "risk_level": metrics.risk_level,
                 "compliance_score": metrics.compliance_score,
                 "violation_count": metrics.violation_count,
-            }
+            },
         )
 
     # =========================================================================
@@ -766,7 +740,7 @@ class RealTimeMonitoringManager:
         # Add to history
         self._alert_history.append(alert)
         if len(self._alert_history) > self.alert_history_limit:
-            self._alert_history = self._alert_history[-self.alert_history_limit:]
+            self._alert_history = self._alert_history[-self.alert_history_limit :]
 
         logger.warning(
             f"Alert triggered: {alert.title}",
@@ -777,22 +751,16 @@ class RealTimeMonitoringManager:
                 "severity": alert.severity.value,
                 "metric_value": alert.metric_value,
                 "threshold_value": alert.threshold_value,
-            }
+            },
         )
 
         # Publish to Redis
         if self._redis:
             try:
-                await self._redis.publish(
-                    self.CHANNEL_ALERTS,
-                    alert.model_dump_json()
-                )
+                await self._redis.publish(self.CHANNEL_ALERTS, alert.model_dump_json())
 
                 # Store in alerts history in Redis
-                await self._redis.lpush(
-                    self.CACHE_ALERTS,
-                    alert.model_dump_json()
-                )
+                await self._redis.lpush(self.CACHE_ALERTS, alert.model_dump_json())
                 await self._redis.ltrim(self.CACHE_ALERTS, 0, self.alert_history_limit - 1)
 
             except Exception as e:
@@ -801,20 +769,19 @@ class RealTimeMonitoringManager:
         # Broadcast via WebSocket
         if self.enable_websocket and self._websocket_broadcast:
             try:
-                await self._websocket_broadcast({
-                    "type": "compliance_alert",
-                    "data": alert.model_dump(),
-                })
+                await self._websocket_broadcast(
+                    {
+                        "type": "compliance_alert",
+                        "data": alert.model_dump(),
+                    }
+                )
             except Exception as e:
                 logger.error(f"Failed to broadcast alert via WebSocket: {e}")
 
         # Send external notifications
         if self.enable_notifications and self._notification_callback:
             try:
-                await self._notification_callback(
-                    alert,
-                    threshold.notification_channels
-                )
+                await self._notification_callback(alert, threshold.notification_channels)
             except Exception as e:
                 logger.error(f"Failed to send notification: {e}")
 
@@ -913,10 +880,7 @@ class RealTimeMonitoringManager:
 
     def get_active_alerts(self, model_id: Optional[str] = None) -> List[ComplianceAlert]:
         """Get all active (non-resolved) alerts."""
-        alerts = [
-            a for a in self._alert_history
-            if a.status in (AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED)
-        ]
+        alerts = [a for a in self._alert_history if a.status in (AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED)]
 
         if model_id:
             alerts = [a for a in alerts if a.model_id == model_id]
@@ -967,10 +931,7 @@ class RealTimeMonitoringManager:
         severity = event.get("severity", "medium")
         violation_id = event.get("violation_id")
 
-        logger.info(
-            f"Violation detected: {violation_id} (severity: {severity})",
-            extra={"model_id": model_id}
-        )
+        logger.info(f"Violation detected: {violation_id} (severity: {severity})", extra={"model_id": model_id})
 
         # For critical violations, trigger immediate alert
         if severity == "critical":
@@ -1000,9 +961,7 @@ class RealTimeMonitoringManager:
         new_score = event.get("new_score", 0)
         change = new_score - old_score
 
-        logger.info(
-            f"Score changed for model {model_id}: {old_score:.1f} -> {new_score:.1f} ({change:+.1f})"
-        )
+        logger.info(f"Score changed for model {model_id}: {old_score:.1f} -> {new_score:.1f} ({change:+.1f})")
 
         # Refresh metrics for significant changes
         if abs(change) >= 5:
@@ -1055,10 +1014,7 @@ class RealTimeMonitoringManager:
 
         while self._running:
             try:
-                message = await self._pubsub.get_message(
-                    ignore_subscribe_messages=True,
-                    timeout=1.0
-                )
+                message = await self._pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
 
                 if message and message["type"] == "message":
                     channel = message["channel"]
@@ -1086,7 +1042,8 @@ class RealTimeMonitoringManager:
                 # Clean up old cooldowns
                 now = datetime.now(timezone.utc)
                 expired_keys = [
-                    key for key, timestamp in self._cooldowns.items()
+                    key
+                    for key, timestamp in self._cooldowns.items()
                     if (now - timestamp).total_seconds() > 86400  # 24 hours
                 ]
                 for key in expired_keys:
@@ -1124,13 +1081,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.CRITICAL,
                         notification_channels=["websocket", "email", "slack"],
                         cooldown_minutes=30,
-                        description="Compliance score critically low"
+                        description="Compliance score critically low",
                     )
                 ],
                 check_interval_seconds=60,
                 tags=["compliance", "critical"],
             ),
-
             # High: Score drops more than 10% in 24h
             MonitoringRule(
                 id="default_score_drop",
@@ -1144,13 +1100,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.HIGH,
                         notification_channels=["websocket", "email"],
                         cooldown_minutes=120,
-                        description="Score dropped significantly"
+                        description="Score dropped significantly",
                     )
                 ],
                 check_interval_seconds=300,
                 tags=["compliance", "trend"],
             ),
-
             # High: Any critical violation
             MonitoringRule(
                 id="default_critical_violation",
@@ -1164,13 +1119,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.CRITICAL,
                         notification_channels=["websocket", "email", "slack", "sms"],
                         cooldown_minutes=15,
-                        description="Critical violation requires immediate attention"
+                        description="Critical violation requires immediate attention",
                     )
                 ],
                 check_interval_seconds=60,
                 tags=["violations", "critical"],
             ),
-
             # Medium: Multiple violations
             MonitoringRule(
                 id="default_multiple_violations",
@@ -1184,13 +1138,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.MEDIUM,
                         notification_channels=["websocket", "email"],
                         cooldown_minutes=240,
-                        description="Multiple violations need review"
+                        description="Multiple violations need review",
                     )
                 ],
                 check_interval_seconds=300,
                 tags=["violations"],
             ),
-
             # Low: Warning score threshold
             MonitoringRule(
                 id="default_warning_score",
@@ -1204,13 +1157,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.LOW,
                         notification_channels=["websocket"],
                         cooldown_minutes=360,
-                        description="Compliance score in warning zone"
+                        description="Compliance score in warning zone",
                     )
                 ],
                 check_interval_seconds=600,
                 tags=["compliance", "warning"],
             ),
-
             # Medium: Stale assessment
             MonitoringRule(
                 id="default_stale_assessment",
@@ -1224,13 +1176,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.MEDIUM,
                         notification_channels=["websocket", "email"],
                         cooldown_minutes=1440,  # 24 hours
-                        description="Assessment needs refresh"
+                        description="Assessment needs refresh",
                     )
                 ],
                 check_interval_seconds=3600,
                 tags=["assessment", "freshness"],
             ),
-
             # High: Pending remediations
             MonitoringRule(
                 id="default_pending_remediations",
@@ -1244,13 +1195,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.HIGH,
                         notification_channels=["websocket", "email"],
                         cooldown_minutes=480,
-                        description="Multiple remediations pending"
+                        description="Multiple remediations pending",
                     )
                 ],
                 check_interval_seconds=600,
                 tags=["remediation"],
             ),
-
             # Low: Certification expiring
             MonitoringRule(
                 id="default_cert_expiring",
@@ -1264,13 +1214,12 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.LOW,
                         notification_channels=["websocket", "email"],
                         cooldown_minutes=2880,  # 48 hours
-                        description="Certification renewal needed"
+                        description="Certification renewal needed",
                     )
                 ],
                 check_interval_seconds=86400,  # Daily
                 tags=["certification"],
             ),
-
             # High: High risk level
             MonitoringRule(
                 id="default_high_risk",
@@ -1284,7 +1233,7 @@ class RealTimeMonitoringManager:
                         severity=AlertSeverity.HIGH,
                         notification_channels=["websocket", "email", "slack"],
                         cooldown_minutes=720,
-                        description="High risk level requires review"
+                        description="High risk level requires review",
                     )
                 ],
                 check_interval_seconds=600,
@@ -1357,9 +1306,7 @@ class RealTimeMonitoringManager:
             },
             "risk_distribution": risk_distribution,
             "alert_severity": alert_severity,
-            "recent_alerts": [
-                a.model_dump() for a in self.get_alert_history(hours=1)[:5]
-            ],
+            "recent_alerts": [a.model_dump() for a in self.get_alert_history(hours=1)[:5]],
             "monitoring_stats": self.get_monitoring_stats(),
             "generated_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -1371,9 +1318,7 @@ class RealTimeMonitoringManager:
 
 
 def create_monitoring_manager(
-    redis_url: str = "redis://localhost:6379",
-    load_defaults: bool = True,
-    **kwargs
+    redis_url: str = "redis://localhost:6379", load_defaults: bool = True, **kwargs
 ) -> RealTimeMonitoringManager:
     """
     Factory function to create and configure a monitoring manager.

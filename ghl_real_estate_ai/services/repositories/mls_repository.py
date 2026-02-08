@@ -6,15 +6,21 @@ Supports various MLS providers with standardized query interface.
 """
 
 import asyncio
-import aiohttp
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 
+import aiohttp
+
 from .interfaces import (
-    IPropertyRepository, PropertyQuery, RepositoryResult, RepositoryMetadata,
-    RepositoryError, QueryOperator, SortOrder
+    IPropertyRepository,
+    PropertyQuery,
+    QueryOperator,
+    RepositoryError,
+    RepositoryMetadata,
+    RepositoryResult,
+    SortOrder,
 )
 
 
@@ -81,11 +87,7 @@ class MLSAPIRepository(IPropertyRepository):
             return True
 
         except Exception as e:
-            raise RepositoryError(
-                f"Failed to connect to MLS API: {e}",
-                repository_type="mls_api",
-                original_error=e
-            )
+            raise RepositoryError(f"Failed to connect to MLS API: {e}", repository_type="mls_api", original_error=e)
 
     async def disconnect(self):
         """Close HTTP session and clear cache"""
@@ -104,7 +106,7 @@ class MLSAPIRepository(IPropertyRepository):
             "provider": self.provider,
             "authenticated": self._auth_token is not None,
             "cache_entries": len(self._response_cache),
-            "issues": []
+            "issues": [],
         }
 
         try:
@@ -145,19 +147,14 @@ class MLSAPIRepository(IPropertyRepository):
             cached_result = self._get_cached_response(cache_key)
 
             if cached_result and query.use_cache:
-                return self._create_repository_result(
-                    cached_result, start_time, cache_hit=True
-                )
+                return self._create_repository_result(cached_result, start_time, cache_hit=True)
 
             # Make API request
             endpoint = self._get_search_endpoint()
             raw_data = await self._make_api_request(endpoint, api_params)
 
             if not raw_data:
-                return RepositoryResult(
-                    success=False,
-                    errors=["No data returned from MLS API"]
-                )
+                return RepositoryResult(success=False, errors=["No data returned from MLS API"])
 
             # Process and normalize response
             processed_data = await self._process_api_response(raw_data)
@@ -166,15 +163,10 @@ class MLSAPIRepository(IPropertyRepository):
             if query.use_cache:
                 self._cache_response(cache_key, processed_data)
 
-            return self._create_repository_result(
-                processed_data, start_time, cache_hit=False
-            )
+            return self._create_repository_result(processed_data, start_time, cache_hit=False)
 
         except Exception as e:
-            return RepositoryResult(
-                success=False,
-                errors=[f"MLS API query failed: {str(e)}"]
-            )
+            return RepositoryResult(success=False, errors=[f"MLS API query failed: {str(e)}"])
 
     async def get_property_by_id(self, property_id: str) -> Optional[Dict[str, Any]]:
         """Get specific property by MLS ID"""
@@ -211,16 +203,25 @@ class MLSAPIRepository(IPropertyRepository):
     def get_supported_filters(self) -> List[str]:
         """Get supported filter fields for this MLS provider"""
         base_filters = [
-            "ListPrice", "BedroomsTotal", "BathroomsTotalDecimal", "LivingArea",
-            "PropertyType", "City", "PostalCode", "StateOrProvince",
-            "ListingKey", "MLSAreaMajor", "YearBuilt", "DaysOnMarket"
+            "ListPrice",
+            "BedroomsTotal",
+            "BathroomsTotalDecimal",
+            "LivingArea",
+            "PropertyType",
+            "City",
+            "PostalCode",
+            "StateOrProvince",
+            "ListingKey",
+            "MLSAreaMajor",
+            "YearBuilt",
+            "DaysOnMarket",
         ]
 
         # Provider-specific additional filters
         provider_filters = {
             "trestle": ["WaterViewYN", "PoolPrivateYN", "GarageYN"],
             "bridge": ["HasPool", "HasGarage", "HasFireplace"],
-            "sparkapi": ["Pool", "Garage", "Fireplace"]
+            "sparkapi": ["Pool", "Garage", "Fireplace"],
         }
 
         return base_filters + provider_filters.get(self.provider, [])
@@ -234,7 +235,7 @@ class MLSAPIRepository(IPropertyRepository):
             "rate_limit": self.rate_limit,
             "cache_entries": len(self._response_cache),
             "authenticated": self._auth_token is not None,
-            "token_expires_at": self._token_expires_at.isoformat() if self._token_expires_at else None
+            "token_expires_at": self._token_expires_at.isoformat() if self._token_expires_at else None,
         }
 
     # Private methods
@@ -256,10 +257,7 @@ class MLSAPIRepository(IPropertyRepository):
 
     async def _get_auth_data(self) -> Dict[str, Any]:
         """Get authentication data for API"""
-        auth_data = {
-            "api_key": self.api_key,
-            "grant_type": "client_credentials"
-        }
+        auth_data = {"api_key": self.api_key, "grant_type": "client_credentials"}
 
         if self.api_secret:
             auth_data["api_secret"] = self.api_secret
@@ -286,10 +284,7 @@ class MLSAPIRepository(IPropertyRepository):
         auth_endpoint = f"{self.api_base_url}/login"
 
         # Trestle-specific authentication
-        headers = {
-            "Authorization": f"Basic {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Basic {self.api_key}", "Content-Type": "application/json"}
 
         async with self._rate_limiter:
             async with self._session.post(auth_endpoint, headers=headers, json=auth_data) as response:
@@ -318,10 +313,7 @@ class MLSAPIRepository(IPropertyRepository):
     async def _make_api_request(self, endpoint: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Make authenticated API request with retry logic"""
         url = f"{self.api_base_url}{endpoint}"
-        headers = {
-            "Authorization": f"Bearer {self._auth_token}",
-            "Accept": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self._auth_token}", "Accept": "application/json"}
 
         for attempt in range(self.retry_attempts):
             try:
@@ -346,7 +338,7 @@ class MLSAPIRepository(IPropertyRepository):
             except asyncio.TimeoutError:
                 if attempt == self.retry_attempts - 1:
                     raise RepositoryError("API request timeout")
-                await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                await asyncio.sleep(2**attempt)  # Exponential backoff
 
         return None
 
@@ -396,7 +388,7 @@ class MLSAPIRepository(IPropertyRepository):
             "bedrooms": "BedroomsTotal",
             "bathrooms": "BathroomsTotalDecimal",
             "sqft": "LivingArea",
-            "days_on_market": "DaysOnMarket"
+            "days_on_market": "DaysOnMarket",
         }
 
         if query.sort_by in sort_mapping:
@@ -414,11 +406,7 @@ class MLSAPIRepository(IPropertyRepository):
 
     async def _process_api_response(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process and normalize MLS API response"""
-        processed = {
-            "properties": [],
-            "total_count": 0,
-            "metadata": {}
-        }
+        processed = {"properties": [], "total_count": 0, "metadata": {}}
 
         # Extract properties from response
         if "value" in raw_data:  # OData format
@@ -459,7 +447,7 @@ class MLSAPIRepository(IPropertyRepository):
             "status": mls_prop.get("StandardStatus"),
             "amenities": self._extract_amenities(mls_prop),
             "_source": "mls_api",
-            "_raw_data": mls_prop
+            "_raw_data": mls_prop,
         }
 
         return normalized
@@ -489,7 +477,7 @@ class MLSAPIRepository(IPropertyRepository):
             "WaterViewYN": "water_view",
             "HasPool": "pool",
             "HasGarage": "garage",
-            "HasFireplace": "fireplace"
+            "HasFireplace": "fireplace",
         }
 
         for field, amenity in amenity_mappings.items():
@@ -500,12 +488,7 @@ class MLSAPIRepository(IPropertyRepository):
 
     def _get_search_endpoint(self) -> str:
         """Get the search endpoint for this provider"""
-        endpoints = {
-            "trestle": "/properties",
-            "bridge": "/listings",
-            "sparkapi": "/listings",
-            "generic": "/properties"
-        }
+        endpoints = {"trestle": "/properties", "bridge": "/listings", "sparkapi": "/listings", "generic": "/properties"}
         return endpoints.get(self.provider, "/properties")
 
     def _get_property_endpoint(self, property_id: str) -> str:
@@ -514,7 +497,7 @@ class MLSAPIRepository(IPropertyRepository):
             "trestle": f"/properties/{property_id}",
             "bridge": f"/listings/{property_id}",
             "sparkapi": f"/listings/{property_id}",
-            "generic": f"/properties/{property_id}"
+            "generic": f"/properties/{property_id}",
         }
         return endpoints.get(self.provider, f"/properties/{property_id}")
 
@@ -537,12 +520,11 @@ class MLSAPIRepository(IPropertyRepository):
 
         # Clean old cache entries
         cutoff = datetime.now() - timedelta(seconds=self.cache_ttl * 2)
-        self._response_cache = {
-            k: v for k, v in self._response_cache.items()
-            if v[1] > cutoff
-        }
+        self._response_cache = {k: v for k, v in self._response_cache.items() if v[1] > cutoff}
 
-    def _create_repository_result(self, processed_data: Dict[str, Any], start_time: datetime, cache_hit: bool) -> RepositoryResult:
+    def _create_repository_result(
+        self, processed_data: Dict[str, Any], start_time: datetime, cache_hit: bool
+    ) -> RepositoryResult:
         """Create RepositoryResult from processed data"""
         execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
@@ -551,12 +533,12 @@ class MLSAPIRepository(IPropertyRepository):
             query_time_ms=execution_time,
             cache_hit=cache_hit,
             total_scanned=processed_data.get("total_count"),
-            api_calls_made=0 if cache_hit else 1
+            api_calls_made=0 if cache_hit else 1,
         )
 
         return RepositoryResult(
             data=processed_data.get("properties", []),
             total_count=processed_data.get("total_count", 0),
             metadata=metadata,
-            execution_time_ms=execution_time
+            execution_time_ms=execution_time,
         )

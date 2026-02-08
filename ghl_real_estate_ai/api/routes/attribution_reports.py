@@ -14,18 +14,15 @@ Key Features:
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.services.attribution_analytics import (
-    AttributionAnalytics, ReportPeriod, AttributionModel
-)
-from ghl_real_estate_ai.services.lead_source_tracker import (
-    LeadSourceTracker, LeadSource, SourceQuality
-)
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics, AttributionModel, ReportPeriod
+from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker, SourceQuality
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/attribution", tags=["attribution"])
@@ -38,6 +35,7 @@ lead_source_tracker = LeadSourceTracker()
 # Pydantic models for API responses
 class SourcePerformanceResponse(BaseModel):
     """Source performance metrics response."""
+
     source: str
     total_leads: int
     qualified_leads: int
@@ -55,6 +53,7 @@ class SourcePerformanceResponse(BaseModel):
 
 class AlertResponse(BaseModel):
     """Performance alert response."""
+
     alert_type: str
     source: str
     severity: str
@@ -70,6 +69,7 @@ class AlertResponse(BaseModel):
 
 class WeeklySummaryResponse(BaseModel):
     """Weekly performance summary response."""
+
     period: Dict[str, str]
     totals: Dict[str, Any]
     top_sources: List[Dict[str, Any]]
@@ -79,6 +79,7 @@ class WeeklySummaryResponse(BaseModel):
 
 class AttributionReportResponse(BaseModel):
     """Complete attribution report response."""
+
     period_start: datetime
     period_end: datetime
     generated_at: datetime
@@ -94,6 +95,7 @@ class AttributionReportResponse(BaseModel):
 
 class TrendDataResponse(BaseModel):
     """Trend data response."""
+
     monthly_performance: List[Dict[str, Any]]
     growth_rates: Dict[str, float]
 
@@ -105,7 +107,7 @@ async def get_source_performance(
     source: Optional[str] = Query(None, description="Specific source to filter"),
     min_leads: int = Query(5, description="Minimum leads to include source"),
     sort_by: str = Query("roi", description="Sort by: roi, leads, revenue, conversion_rate"),
-    order: str = Query("desc", description="Sort order: asc, desc")
+    order: str = Query("desc", description="Sort order: asc, desc"),
 ):
     """
     Get source performance metrics for the specified period.
@@ -128,50 +130,45 @@ async def get_source_performance(
             # Single source performance
             try:
                 lead_source = LeadSource(source)
-                performance = await lead_source_tracker.get_source_performance(
-                    lead_source, parsed_start, parsed_end
-                )
+                performance = await lead_source_tracker.get_source_performance(lead_source, parsed_start, parsed_end)
                 performances = [performance] if performance else []
             except ValueError:
                 raise HTTPException(status_code=400, detail=f"Invalid source: {source}")
         else:
             # All sources performance
-            performances = await lead_source_tracker.get_all_source_performance(
-                parsed_start, parsed_end, min_leads
-            )
+            performances = await lead_source_tracker.get_all_source_performance(parsed_start, parsed_end, min_leads)
 
         # Convert to response format
         response_data = []
         for perf in performances:
-            response_data.append(SourcePerformanceResponse(
-                source=perf.source.value,
-                total_leads=perf.total_leads,
-                qualified_leads=perf.qualified_leads,
-                hot_leads=perf.hot_leads,
-                conversion_rate=perf.conversion_rate,
-                qualification_rate=perf.qualification_rate,
-                total_revenue=perf.total_revenue,
-                avg_deal_size=perf.avg_deal_size,
-                cost_per_lead=perf.cost_per_lead,
-                cost_per_qualified_lead=perf.cost_per_qualified_lead,
-                roi=perf.roi,
-                avg_lead_score=perf.avg_lead_score,
-                avg_budget=perf.avg_budget
-            ))
+            response_data.append(
+                SourcePerformanceResponse(
+                    source=perf.source.value,
+                    total_leads=perf.total_leads,
+                    qualified_leads=perf.qualified_leads,
+                    hot_leads=perf.hot_leads,
+                    conversion_rate=perf.conversion_rate,
+                    qualification_rate=perf.qualification_rate,
+                    total_revenue=perf.total_revenue,
+                    avg_deal_size=perf.avg_deal_size,
+                    cost_per_lead=perf.cost_per_lead,
+                    cost_per_qualified_lead=perf.cost_per_qualified_lead,
+                    roi=perf.roi,
+                    avg_lead_score=perf.avg_lead_score,
+                    avg_budget=perf.avg_budget,
+                )
+            )
 
         # Sort results
         sort_key_map = {
             "roi": lambda x: x.roi,
             "leads": lambda x: x.total_leads,
             "revenue": lambda x: x.total_revenue,
-            "conversion_rate": lambda x: x.conversion_rate
+            "conversion_rate": lambda x: x.conversion_rate,
         }
 
         if sort_by in sort_key_map:
-            response_data.sort(
-                key=sort_key_map[sort_by],
-                reverse=(order == "desc")
-            )
+            response_data.sort(key=sort_key_map[sort_by], reverse=(order == "desc"))
 
         logger.info(f"Retrieved performance data for {len(response_data)} sources")
         return response_data
@@ -188,7 +185,7 @@ async def generate_attribution_report(
     attribution_model: str = Query("last_touch", description="Attribution model"),
     include_forecasts: bool = Query(True, description="Include channel forecasts"),
     include_cohorts: bool = Query(True, description="Include cohort analysis"),
-    background_tasks: BackgroundTasks = None
+    background_tasks: BackgroundTasks = None,
 ):
     """
     Generate comprehensive attribution analysis report.
@@ -218,45 +215,49 @@ async def generate_attribution_report(
             end_date=parsed_end,
             attribution_model=model,
             include_forecasts=include_forecasts,
-            include_cohorts=include_cohorts
+            include_cohorts=include_cohorts,
         )
 
         # Convert to response format
         source_performances = []
         if report.source_performance:
             for perf in report.source_performance:
-                source_performances.append(SourcePerformanceResponse(
-                    source=perf.source.value,
-                    total_leads=perf.total_leads,
-                    qualified_leads=perf.qualified_leads,
-                    hot_leads=perf.hot_leads,
-                    conversion_rate=perf.conversion_rate,
-                    qualification_rate=perf.qualification_rate,
-                    total_revenue=perf.total_revenue,
-                    avg_deal_size=perf.avg_deal_size,
-                    cost_per_lead=perf.cost_per_lead,
-                    cost_per_qualified_lead=perf.cost_per_qualified_lead,
-                    roi=perf.roi,
-                    avg_lead_score=perf.avg_lead_score,
-                    avg_budget=perf.avg_budget
-                ))
+                source_performances.append(
+                    SourcePerformanceResponse(
+                        source=perf.source.value,
+                        total_leads=perf.total_leads,
+                        qualified_leads=perf.qualified_leads,
+                        hot_leads=perf.hot_leads,
+                        conversion_rate=perf.conversion_rate,
+                        qualification_rate=perf.qualification_rate,
+                        total_revenue=perf.total_revenue,
+                        avg_deal_size=perf.avg_deal_size,
+                        cost_per_lead=perf.cost_per_lead,
+                        cost_per_qualified_lead=perf.cost_per_qualified_lead,
+                        roi=perf.roi,
+                        avg_lead_score=perf.avg_lead_score,
+                        avg_budget=perf.avg_budget,
+                    )
+                )
 
         alerts = []
         if report.active_alerts:
             for alert in report.active_alerts:
-                alerts.append(AlertResponse(
-                    alert_type=alert.alert_type.value,
-                    source=alert.source.value,
-                    severity=alert.severity,
-                    title=alert.title,
-                    description=alert.description,
-                    current_value=alert.current_value,
-                    previous_value=alert.previous_value,
-                    change_percentage=alert.change_percentage,
-                    recommendations=alert.recommendations,
-                    created_at=alert.created_at,
-                    expires_at=alert.expires_at
-                ))
+                alerts.append(
+                    AlertResponse(
+                        alert_type=alert.alert_type.value,
+                        source=alert.source.value,
+                        severity=alert.severity,
+                        title=alert.title,
+                        description=alert.description,
+                        current_value=alert.current_value,
+                        previous_value=alert.previous_value,
+                        change_percentage=alert.change_percentage,
+                        recommendations=alert.recommendations,
+                        created_at=alert.created_at,
+                        expires_at=alert.expires_at,
+                    )
+                )
 
         response = AttributionReportResponse(
             period_start=report.period_start,
@@ -269,7 +270,7 @@ async def generate_attribution_report(
             overall_roi=report.overall_roi,
             source_performance=source_performances,
             active_alerts=alerts,
-            optimization_recommendations=report.optimization_recommendations or []
+            optimization_recommendations=report.optimization_recommendations or [],
         )
 
         logger.info(f"Generated attribution report with {len(source_performances)} sources")
@@ -281,9 +282,7 @@ async def generate_attribution_report(
 
 
 @router.get("/weekly-summary", response_model=WeeklySummaryResponse)
-async def get_weekly_summary(
-    location_id: Optional[str] = Query(None, description="Location ID filter")
-):
+async def get_weekly_summary(location_id: Optional[str] = Query(None, description="Location ID filter")):
     """
     Get weekly performance summary for Jorge's dashboard.
 
@@ -338,7 +337,7 @@ async def get_monthly_trends():
 async def get_active_alerts(
     severity: Optional[str] = Query(None, description="Filter by severity: low, medium, high, critical"),
     source: Optional[str] = Query(None, description="Filter by source"),
-    limit: int = Query(20, description="Maximum alerts to return")
+    limit: int = Query(20, description="Maximum alerts to return"),
 ):
     """
     Get active performance alerts for Jorge's monitoring dashboard.
@@ -351,9 +350,7 @@ async def get_active_alerts(
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=30)
 
-        performances = await lead_source_tracker.get_all_source_performance(
-            start_date, end_date, min_leads=1
-        )
+        performances = await lead_source_tracker.get_all_source_performance(start_date, end_date, min_leads=1)
 
         # Generate alerts
         alerts = await attribution_analytics._generate_performance_alerts(performances)
@@ -376,19 +373,21 @@ async def get_active_alerts(
         # Convert to response format
         response_data = []
         for alert in alerts:
-            response_data.append(AlertResponse(
-                alert_type=alert.alert_type.value,
-                source=alert.source.value,
-                severity=alert.severity,
-                title=alert.title,
-                description=alert.description,
-                current_value=alert.current_value,
-                previous_value=alert.previous_value,
-                change_percentage=alert.change_percentage,
-                recommendations=alert.recommendations,
-                created_at=alert.created_at,
-                expires_at=alert.expires_at
-            ))
+            response_data.append(
+                AlertResponse(
+                    alert_type=alert.alert_type.value,
+                    source=alert.source.value,
+                    severity=alert.severity,
+                    title=alert.title,
+                    description=alert.description,
+                    current_value=alert.current_value,
+                    previous_value=alert.previous_value,
+                    change_percentage=alert.change_percentage,
+                    recommendations=alert.recommendations,
+                    created_at=alert.created_at,
+                    expires_at=alert.expires_at,
+                )
+            )
 
         logger.info(f"Retrieved {len(response_data)} active alerts")
         return response_data
@@ -430,11 +429,13 @@ async def get_available_sources():
     try:
         sources = []
         for source in LeadSource:
-            sources.append({
-                "value": source.value,
-                "display_name": source.value.replace("_", " ").title(),
-                "category": _get_source_category(source)
-            })
+            sources.append(
+                {
+                    "value": source.value,
+                    "display_name": source.value.replace("_", " ").title(),
+                    "category": _get_source_category(source),
+                }
+            )
 
         return {
             "sources": sources,
@@ -445,8 +446,8 @@ async def get_available_sources():
                 "Direct",
                 "Traditional",
                 "Events",
-                "Other"
-            ]
+                "Other",
+            ],
         }
 
     except Exception as e:
@@ -455,11 +456,7 @@ async def get_available_sources():
 
 
 @router.post("/track-event")
-async def track_attribution_event(
-    source: str,
-    event_type: str,
-    metadata: Optional[Dict[str, Any]] = None
-):
+async def track_attribution_event(source: str, event_type: str, metadata: Optional[Dict[str, Any]] = None):
     """
     Track attribution event for external system integration.
 
@@ -474,15 +471,13 @@ async def track_attribution_event(
             raise HTTPException(status_code=400, detail=f"Invalid source: {source}")
 
         # Track the event
-        await lead_source_tracker.track_source_performance(
-            lead_source, event_type, metadata
-        )
+        await lead_source_tracker.track_source_performance(lead_source, event_type, metadata)
 
         logger.info(f"Tracked {event_type} event for {source}")
         return {
             "success": True,
             "message": f"Event {event_type} tracked for {source}",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except HTTPException:
@@ -496,7 +491,7 @@ async def track_attribution_event(
 async def export_performance_csv(
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
-    sources: Optional[str] = Query(None, description="Comma-separated source list")
+    sources: Optional[str] = Query(None, description="Comma-separated source list"),
 ):
     """
     Export performance data as CSV for Jorge's external analysis.
@@ -525,9 +520,7 @@ async def export_performance_csv(
                     pass  # Skip invalid sources
 
         # Get performance data
-        performances = await lead_source_tracker.get_all_source_performance(
-            parsed_start, parsed_end, min_leads=1
-        )
+        performances = await lead_source_tracker.get_all_source_performance(parsed_start, parsed_end, min_leads=1)
 
         # Filter by sources if specified
         if source_filter:
@@ -555,7 +548,7 @@ async def export_performance_csv(
         return {
             "content": csv_content,
             "filename": f"attribution_report_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv",
-            "content_type": "text/csv"
+            "content_type": "text/csv",
         }
 
     except Exception as e:
@@ -566,36 +559,33 @@ async def export_performance_csv(
 def _get_source_category(source: LeadSource) -> str:
     """Get category for a lead source."""
     digital_marketing = [
-        LeadSource.FACEBOOK_ORGANIC, LeadSource.FACEBOOK_ADS,
-        LeadSource.GOOGLE_ORGANIC, LeadSource.GOOGLE_ADS,
-        LeadSource.INSTAGRAM_ORGANIC, LeadSource.INSTAGRAM_ADS,
-        LeadSource.YOUTUBE, LeadSource.TIKTOK, LeadSource.LINKEDIN
+        LeadSource.FACEBOOK_ORGANIC,
+        LeadSource.FACEBOOK_ADS,
+        LeadSource.GOOGLE_ORGANIC,
+        LeadSource.GOOGLE_ADS,
+        LeadSource.INSTAGRAM_ORGANIC,
+        LeadSource.INSTAGRAM_ADS,
+        LeadSource.YOUTUBE,
+        LeadSource.TIKTOK,
+        LeadSource.LINKEDIN,
     ]
 
     real_estate_platforms = [
-        LeadSource.ZILLOW, LeadSource.REALTOR_COM, LeadSource.TRULIA,
-        LeadSource.REDFIN, LeadSource.HOMES_COM, LeadSource.MLS
+        LeadSource.ZILLOW,
+        LeadSource.REALTOR_COM,
+        LeadSource.TRULIA,
+        LeadSource.REDFIN,
+        LeadSource.HOMES_COM,
+        LeadSource.MLS,
     ]
 
-    referrals = [
-        LeadSource.AGENT_REFERRAL, LeadSource.CLIENT_REFERRAL,
-        LeadSource.VENDOR_REFERRAL
-    ]
+    referrals = [LeadSource.AGENT_REFERRAL, LeadSource.CLIENT_REFERRAL, LeadSource.VENDOR_REFERRAL]
 
-    direct = [
-        LeadSource.DIRECT, LeadSource.WEBSITE, LeadSource.PHONE_CALL,
-        LeadSource.EMAIL, LeadSource.TEXT_MESSAGE
-    ]
+    direct = [LeadSource.DIRECT, LeadSource.WEBSITE, LeadSource.PHONE_CALL, LeadSource.EMAIL, LeadSource.TEXT_MESSAGE]
 
-    traditional = [
-        LeadSource.PRINT_AD, LeadSource.RADIO, LeadSource.TV,
-        LeadSource.BILLBOARD, LeadSource.DIRECT_MAIL
-    ]
+    traditional = [LeadSource.PRINT_AD, LeadSource.RADIO, LeadSource.TV, LeadSource.BILLBOARD, LeadSource.DIRECT_MAIL]
 
-    events = [
-        LeadSource.OPEN_HOUSE, LeadSource.NETWORKING_EVENT,
-        LeadSource.TRADE_SHOW
-    ]
+    events = [LeadSource.OPEN_HOUSE, LeadSource.NETWORKING_EVENT, LeadSource.TRADE_SHOW]
 
     if source in digital_marketing:
         return "Digital Marketing"

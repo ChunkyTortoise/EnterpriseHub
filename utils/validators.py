@@ -102,8 +102,7 @@ class SchemaValidator:
         passed = len(errors) == 0
 
         logger.info(
-            f"Validation: passed={passed}, confidence={confidence:.2f}, "
-            f"errors={len(errors)}, warnings={len(warnings)}"
+            f"Validation: passed={passed}, confidence={confidence:.2f}, errors={len(errors)}, warnings={len(warnings)}"
         )
 
         return ValidationResult(
@@ -156,21 +155,14 @@ class SchemaValidator:
             # Special handling for pandas DataFrames
             if expected_type == pd.DataFrame:
                 if not isinstance(value, pd.DataFrame):
-                    errors.append(
-                        f"Field '{field_name}' expected DataFrame, got {type(value).__name__}"
-                    )
+                    errors.append(f"Field '{field_name}' expected DataFrame, got {type(value).__name__}")
             # Standard type checking
             elif not isinstance(value, expected_type):
-                errors.append(
-                    f"Field '{field_name}' expected {expected_type.__name__}, "
-                    f"got {type(value).__name__}"
-                )
+                errors.append(f"Field '{field_name}' expected {expected_type.__name__}, got {type(value).__name__}")
 
         return errors
 
-    def check_ranges(
-        self, data: Dict[str, Any], ranges: Dict[str, Tuple[float, float]]
-    ) -> List[str]:
+    def check_ranges(self, data: Dict[str, Any], ranges: Dict[str, Tuple[float, float]]) -> List[str]:
         """
         Check numeric values are within expected ranges.
 
@@ -195,8 +187,7 @@ class SchemaValidator:
                 numeric_value = float(value)
                 if not (min_val <= numeric_value <= max_val):
                     warnings.append(
-                        f"Field '{field_name}' value {numeric_value:.2f} outside "
-                        f"expected range [{min_val}, {max_val}]"
+                        f"Field '{field_name}' value {numeric_value:.2f} outside expected range [{min_val}, {max_val}]"
                     )
             except (ValueError, TypeError):
                 warnings.append(f"Field '{field_name}' cannot be validated as numeric")
@@ -256,10 +247,7 @@ class ConfidenceScorer:
         # Aggregate: average of all scores
         quality_score = sum(scores) / len(scores)
 
-        logger.info(
-            f"Data quality score: {quality_score:.3f} "
-            f"(completeness={completeness:.2f}, rows={len(df)})"
-        )
+        logger.info(f"Data quality score: {quality_score:.3f} (completeness={completeness:.2f}, rows={len(df)})")
 
         return quality_score
 
@@ -285,10 +273,7 @@ class ConfidenceScorer:
         present_count = sum(1 for field in all_fields if field in data and data[field] is not None)
         completeness = present_count / len(all_fields)
 
-        logger.info(
-            f"Completeness score: {completeness:.3f} "
-            f"({present_count}/{len(all_fields)} fields present)"
-        )
+        logger.info(f"Completeness score: {completeness:.3f} ({present_count}/{len(all_fields)} fields present)")
 
         return completeness
 
@@ -404,9 +389,7 @@ class ContradictionDetector:
         contradicts = relative_diff > tolerance
 
         if contradicts:
-            logger.warning(
-                f"Numeric contradiction: {val1:.2f} vs {val2:.2f} (diff={relative_diff:.1%})"
-            )
+            logger.warning(f"Numeric contradiction: {val1:.2f} vs {val2:.2f} (diff={relative_diff:.1%})")
 
         return contradicts
 
@@ -427,9 +410,7 @@ class ContradictionDetector:
         is_sent2_bearish = any(term in sent2 for term in self.bearish_terms)
 
         # Contradiction if one is bullish and other is bearish
-        contradicts = (is_sent1_bullish and is_sent2_bearish) or (
-            is_sent1_bearish and is_sent2_bullish
-        )
+        contradicts = (is_sent1_bullish and is_sent2_bearish) or (is_sent1_bearish and is_sent2_bullish)
 
         if contradicts:
             logger.warning(f"Sentiment contradiction: '{sent1}' vs '{sent2}'")
@@ -478,8 +459,7 @@ class ContradictionDetector:
                             conflict_type="TECHNICAL_SENTIMENT_MISMATCH",
                             agents=["tech_bot", "sentiment_bot"],
                             description=(
-                                f"Technical indicator ({tech_signal}) contradicts "
-                                f"news sentiment ({sent_verdict})"
+                                f"Technical indicator ({tech_signal}) contradicts news sentiment ({sent_verdict})"
                             ),
                             severity="WARNING",
                             details={
@@ -526,10 +506,7 @@ class ContradictionDetector:
                     Conflict(
                         conflict_type="QUALITY_CONFIDENCE_MISMATCH",
                         agents=["data_bot", "synthesis_bot"],
-                        description=(
-                            f"Low data quality ({quality:.2f}) but high "
-                            f"confidence ({confidence:.2f})"
-                        ),
+                        description=(f"Low data quality ({quality:.2f}) but high confidence ({confidence:.2f})"),
                         severity="WARNING",
                         details={"quality": quality, "confidence": confidence},
                     )

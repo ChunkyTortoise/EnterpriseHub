@@ -4,12 +4,13 @@ Tests for Jorge Handoff Service Circular Prevention.
 Validates circular handoff detection, rate limiting, and conflict resolution.
 """
 
-import pytest
 import time
 
+import pytest
+
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
-    JorgeHandoffService,
     HandoffDecision,
+    JorgeHandoffService,
 )
 
 
@@ -191,7 +192,7 @@ class TestJorgeHandoffCircularPrevention:
         result1 = await handoff_service.execute_handoff(decision1, contact_id)
         assert result1 is not None
         assert len(result1) > 0
-        
+
         handoff_service._release_handoff_lock(contact_id)
 
         decision2 = HandoffDecision(

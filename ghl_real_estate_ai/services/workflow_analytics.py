@@ -12,24 +12,28 @@ Advanced analytics on workflow, trigger, and automation performance with:
 import json
 import logging
 import statistics
-from collections import defaultdict, Counter
-from dataclasses import dataclass, field, asdict
+from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+
 class MetricType(Enum):
     """Types of metrics for analysis"""
+
     EXECUTION = "execution"
     ENGAGEMENT = "engagement"
     CONVERSION = "conversion"
     REVENUE = "revenue"
     PERFORMANCE = "performance"
 
+
 class SegmentType(Enum):
     """Segmentation types for analysis"""
+
     LEAD_SOURCE = "lead_source"
     LEAD_SCORE = "lead_score"
     PROPERTY_TYPE = "property_type"
@@ -60,6 +64,7 @@ class WorkflowMetrics:
     step_completion_rates: Dict[str, float] = field(default_factory=dict)
     segment_performance: Dict[str, Dict] = field(default_factory=dict)
 
+
 @dataclass
 class ChannelMetrics:
     """Enhanced metrics for a communication channel"""
@@ -79,6 +84,7 @@ class ChannelMetrics:
     response_time_minutes: List[float] = field(default_factory=list)
     conversion_attribution: float = 0.0
 
+
 @dataclass
 class PerformanceInsight:
     """Performance insight or recommendation"""
@@ -91,6 +97,7 @@ class PerformanceInsight:
     expected_improvement: str
     data_supporting: Dict[str, Any] = field(default_factory=dict)
     confidence_score: float = 0.0
+
 
 @dataclass
 class CohortAnalysis:
@@ -141,7 +148,7 @@ class WorkflowAnalyticsService:
         converted: bool = False,
         revenue: float = 0,
         lead_data: Optional[Dict[str, Any]] = None,
-        execution_context: Optional[Dict[str, Any]] = None
+        execution_context: Optional[Dict[str, Any]] = None,
     ):
         """Track a workflow execution with enhanced data"""
 
@@ -154,7 +161,7 @@ class WorkflowAnalyticsService:
             "converted": converted,
             "revenue": revenue,
             "lead_data": lead_data or {},
-            "execution_context": execution_context or {}
+            "execution_context": execution_context or {},
         }
 
         self.workflow_executions[workflow_id].append(execution)
@@ -175,7 +182,7 @@ class WorkflowAnalyticsService:
         success: bool,
         execution_time_seconds: float,
         lead_id: str,
-        engagement_data: Optional[Dict[str, Any]] = None
+        engagement_data: Optional[Dict[str, Any]] = None,
     ):
         """Track individual step execution"""
 
@@ -190,7 +197,7 @@ class WorkflowAnalyticsService:
                 "failed_executions": 0,
                 "total_execution_time": 0,
                 "engagement_events": [],
-                "drop_off_count": 0
+                "drop_off_count": 0,
             }
 
         step_metrics = self.step_analytics[workflow_id][step_id]
@@ -210,17 +217,12 @@ class WorkflowAnalyticsService:
             "step_name": step_name,
             "success": success,
             "execution_time_seconds": execution_time_seconds,
-            "engagement_data": engagement_data or {}
+            "engagement_data": engagement_data or {},
         }
 
         self.lead_journey_data[lead_id].append(journey_step)
 
-    def _update_segment_analytics(
-        self,
-        workflow_id: str,
-        lead_data: Dict[str, Any],
-        execution: Dict[str, Any]
-    ):
+    def _update_segment_analytics(self, workflow_id: str, lead_data: Dict[str, Any], execution: Dict[str, Any]):
         """Update analytics by lead segments"""
 
         segments = self._identify_lead_segments(lead_data)
@@ -235,7 +237,7 @@ class WorkflowAnalyticsService:
                     "conversions": 0,
                     "revenue": 0.0,
                     "avg_completion_time": 0.0,
-                    "completion_times": []
+                    "completion_times": [],
                 }
 
             segment_data = self.segment_analytics[segment_key]
@@ -303,12 +305,7 @@ class WorkflowAnalyticsService:
 
         return segments
 
-    def _update_revenue_attribution(
-        self,
-        workflow_id: str,
-        revenue: float,
-        execution: Dict[str, Any]
-    ):
+    def _update_revenue_attribution(self, workflow_id: str, revenue: float, execution: Dict[str, Any]):
         """Update revenue attribution data"""
 
         if workflow_id not in self.revenue_attribution:
@@ -316,17 +313,19 @@ class WorkflowAnalyticsService:
                 "total_revenue": 0.0,
                 "revenue_events": [],
                 "avg_revenue_per_conversion": 0.0,
-                "conversion_count": 0
+                "conversion_count": 0,
             }
 
         attribution_data = self.revenue_attribution[workflow_id]
         attribution_data["total_revenue"] += revenue
         attribution_data["conversion_count"] += 1
-        attribution_data["revenue_events"].append({
-            "timestamp": execution["timestamp"],
-            "revenue": revenue,
-            "completion_time": execution["completion_time_minutes"]
-        })
+        attribution_data["revenue_events"].append(
+            {
+                "timestamp": execution["timestamp"],
+                "revenue": revenue,
+                "completion_time": execution["completion_time_minutes"],
+            }
+        )
 
         # Calculate average revenue per conversion
         attribution_data["avg_revenue_per_conversion"] = (
@@ -373,14 +372,10 @@ class WorkflowAnalyticsService:
 
         # Filter by date range
         cutoff = datetime.utcnow() - timedelta(days=days)
-        recent_executions = [
-            e for e in executions if datetime.fromisoformat(e["timestamp"]) > cutoff
-        ]
+        recent_executions = [e for e in executions if datetime.fromisoformat(e["timestamp"]) > cutoff]
 
         if not recent_executions:
-            return WorkflowMetrics(
-                workflow_id=workflow_id, workflow_name="Unknown", time_period_days=days
-            )
+            return WorkflowMetrics(workflow_id=workflow_id, workflow_name="Unknown", time_period_days=days)
 
         total = len(recent_executions)
         successful = len([e for e in recent_executions if e["success"]])
@@ -437,27 +432,13 @@ class WorkflowAnalyticsService:
 
             performance[channel] = {
                 "messages_sent": sent,
-                "delivery_rate": (
-                    f"{(metrics.delivered / sent * 100):.1f}%" if sent > 0 else "0%"
-                ),
-                "open_rate": (
-                    f"{(metrics.opened / sent * 100):.1f}%" if sent > 0 else "0%"
-                ),
-                "click_rate": (
-                    f"{(metrics.clicked / sent * 100):.1f}%" if sent > 0 else "0%"
-                ),
-                "response_rate": (
-                    f"{(metrics.responded / sent * 100):.1f}%" if sent > 0 else "0%"
-                ),
-                "unsubscribe_rate": (
-                    f"{(metrics.unsubscribed / sent * 100):.2f}%" if sent > 0 else "0%"
-                ),
+                "delivery_rate": (f"{(metrics.delivered / sent * 100):.1f}%" if sent > 0 else "0%"),
+                "open_rate": (f"{(metrics.opened / sent * 100):.1f}%" if sent > 0 else "0%"),
+                "click_rate": (f"{(metrics.clicked / sent * 100):.1f}%" if sent > 0 else "0%"),
+                "response_rate": (f"{(metrics.responded / sent * 100):.1f}%" if sent > 0 else "0%"),
+                "unsubscribe_rate": (f"{(metrics.unsubscribed / sent * 100):.2f}%" if sent > 0 else "0%"),
                 "cost": f"${metrics.cost:.2f}",
-                "cost_per_response": (
-                    f"${(metrics.cost / metrics.responded):.2f}"
-                    if metrics.responded > 0
-                    else "N/A"
-                ),
+                "cost_per_response": (f"${(metrics.cost / metrics.responded):.2f}" if metrics.responded > 0 else "N/A"),
             }
 
         return performance
@@ -502,9 +483,7 @@ class WorkflowAnalyticsService:
         }
 
     async def generate_performance_insights(
-        self,
-        workflow_id: Optional[str] = None,
-        force_refresh: bool = False
+        self, workflow_id: Optional[str] = None, force_refresh: bool = False
     ) -> List[PerformanceInsight]:
         """Generate intelligent performance insights and recommendations"""
 
@@ -548,43 +527,49 @@ class WorkflowAnalyticsService:
         # Low conversion rate insight
         conversion_rate = metrics.conversion_count / metrics.total_executions
         if conversion_rate < 0.1:  # Less than 10%
-            insights.append(PerformanceInsight(
-                insight_type="performance",
-                title="Low Conversion Rate Detected",
-                description=f"Workflow '{metrics.workflow_name}' has a {conversion_rate:.1%} conversion rate",
-                impact_level="high",
-                recommendation="Review workflow messaging, timing, and targeting criteria",
-                expected_improvement="Potential 2-3x increase in conversions",
-                data_supporting={"current_rate": conversion_rate, "executions": metrics.total_executions},
-                confidence_score=0.9
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="performance",
+                    title="Low Conversion Rate Detected",
+                    description=f"Workflow '{metrics.workflow_name}' has a {conversion_rate:.1%} conversion rate",
+                    impact_level="high",
+                    recommendation="Review workflow messaging, timing, and targeting criteria",
+                    expected_improvement="Potential 2-3x increase in conversions",
+                    data_supporting={"current_rate": conversion_rate, "executions": metrics.total_executions},
+                    confidence_score=0.9,
+                )
+            )
 
         # High completion time insight
         if metrics.avg_completion_time_minutes > 60:  # More than 1 hour
-            insights.append(PerformanceInsight(
-                insight_type="efficiency",
-                title="Long Workflow Duration",
-                description=f"Average completion time is {metrics.avg_completion_time_minutes:.1f} minutes",
-                impact_level="medium",
-                recommendation="Consider reducing delays or splitting into shorter sequences",
-                expected_improvement="15-25% faster lead progression",
-                data_supporting={"avg_time": metrics.avg_completion_time_minutes},
-                confidence_score=0.8
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="efficiency",
+                    title="Long Workflow Duration",
+                    description=f"Average completion time is {metrics.avg_completion_time_minutes:.1f} minutes",
+                    impact_level="medium",
+                    recommendation="Consider reducing delays or splitting into shorter sequences",
+                    expected_improvement="15-25% faster lead progression",
+                    data_supporting={"avg_time": metrics.avg_completion_time_minutes},
+                    confidence_score=0.8,
+                )
+            )
 
         # High failure rate insight
         failure_rate = metrics.failed_executions / metrics.total_executions
         if failure_rate > 0.2:  # More than 20% failures
-            insights.append(PerformanceInsight(
-                insight_type="reliability",
-                title="High Failure Rate",
-                description=f"Workflow fails {failure_rate:.1%} of the time",
-                impact_level="high",
-                recommendation="Review error logs and add retry mechanisms for failed steps",
-                expected_improvement="Reduce failures by 50-70%",
-                data_supporting={"failure_rate": failure_rate, "failed_count": metrics.failed_executions},
-                confidence_score=0.95
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="reliability",
+                    title="High Failure Rate",
+                    description=f"Workflow fails {failure_rate:.1%} of the time",
+                    impact_level="high",
+                    recommendation="Review error logs and add retry mechanisms for failed steps",
+                    expected_improvement="Reduce failures by 50-70%",
+                    data_supporting={"failure_rate": failure_rate, "failed_count": metrics.failed_executions},
+                    confidence_score=0.95,
+                )
+            )
 
         return insights
 
@@ -605,20 +590,22 @@ class WorkflowAnalyticsService:
 
             failure_rate = step_data["failed_executions"] / step_data["total_executions"]
             if failure_rate > 0.3:  # More than 30% failure
-                insights.append(PerformanceInsight(
-                    insight_type="bottleneck",
-                    title=f"Step Bottleneck: {step_data['step_name']}",
-                    description=f"Step '{step_data['step_name']}' fails {failure_rate:.1%} of the time",
-                    impact_level="high",
-                    recommendation="Review step configuration and add error handling",
-                    expected_improvement="Improve overall workflow success rate by 10-20%",
-                    data_supporting={
-                        "step_id": step_id,
-                        "failure_rate": failure_rate,
-                        "executions": step_data["total_executions"]
-                    },
-                    confidence_score=0.85
-                ))
+                insights.append(
+                    PerformanceInsight(
+                        insight_type="bottleneck",
+                        title=f"Step Bottleneck: {step_data['step_name']}",
+                        description=f"Step '{step_data['step_name']}' fails {failure_rate:.1%} of the time",
+                        impact_level="high",
+                        recommendation="Review step configuration and add error handling",
+                        expected_improvement="Improve overall workflow success rate by 10-20%",
+                        data_supporting={
+                            "step_id": step_id,
+                            "failure_rate": failure_rate,
+                            "executions": step_data["total_executions"],
+                        },
+                        confidence_score=0.85,
+                    )
+                )
 
         return insights
 
@@ -637,12 +624,14 @@ class WorkflowAnalyticsService:
             conversion_rate = segment_data["conversions"] / segment_data["total_executions"]
             revenue_per_lead = segment_data["revenue"] / segment_data["total_executions"]
 
-            segment_performances.append({
-                "segment": segment_key,
-                "conversion_rate": conversion_rate,
-                "revenue_per_lead": revenue_per_lead,
-                "total_executions": segment_data["total_executions"]
-            })
+            segment_performances.append(
+                {
+                    "segment": segment_key,
+                    "conversion_rate": conversion_rate,
+                    "revenue_per_lead": revenue_per_lead,
+                    "total_executions": segment_data["total_executions"],
+                }
+            )
 
         if len(segment_performances) < 2:
             return insights
@@ -655,19 +644,18 @@ class WorkflowAnalyticsService:
 
         # Significant performance gap
         if best_segment["conversion_rate"] > worst_segment["conversion_rate"] * 2:
-            insights.append(PerformanceInsight(
-                insight_type="segmentation",
-                title="High-Performing Segment Identified",
-                description=f"Segment '{best_segment['segment']}' converts {best_segment['conversion_rate']:.1%} vs {worst_segment['conversion_rate']:.1%}",
-                impact_level="high",
-                recommendation=f"Focus more resources on '{best_segment['segment']}' segment characteristics",
-                expected_improvement="20-40% increase in overall conversion rates",
-                data_supporting={
-                    "best_segment": best_segment,
-                    "worst_segment": worst_segment
-                },
-                confidence_score=0.8
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="segmentation",
+                    title="High-Performing Segment Identified",
+                    description=f"Segment '{best_segment['segment']}' converts {best_segment['conversion_rate']:.1%} vs {worst_segment['conversion_rate']:.1%}",
+                    impact_level="high",
+                    recommendation=f"Focus more resources on '{best_segment['segment']}' segment characteristics",
+                    expected_improvement="20-40% increase in overall conversion rates",
+                    data_supporting={"best_segment": best_segment, "worst_segment": worst_segment},
+                    confidence_score=0.8,
+                )
+            )
 
         return insights
 
@@ -681,13 +669,15 @@ class WorkflowAnalyticsService:
         for workflow_id in self.workflow_executions.keys():
             metrics = self.get_workflow_metrics(workflow_id)
             if metrics.total_executions > 0:
-                workflow_performances.append({
-                    "workflow_id": workflow_id,
-                    "workflow_name": metrics.workflow_name,
-                    "conversion_rate": metrics.conversion_count / metrics.total_executions,
-                    "revenue_per_execution": metrics.revenue_generated / metrics.total_executions,
-                    "success_rate": metrics.successful_executions / metrics.total_executions
-                })
+                workflow_performances.append(
+                    {
+                        "workflow_id": workflow_id,
+                        "workflow_name": metrics.workflow_name,
+                        "conversion_rate": metrics.conversion_count / metrics.total_executions,
+                        "revenue_per_execution": metrics.revenue_generated / metrics.total_executions,
+                        "success_rate": metrics.successful_executions / metrics.total_executions,
+                    }
+                )
 
         if len(workflow_performances) < 2:
             return insights
@@ -697,19 +687,18 @@ class WorkflowAnalyticsService:
         underperformers = [w for w in workflow_performances if w["conversion_rate"] < avg_conversion * 0.5]
 
         for workflow in underperformers:
-            insights.append(PerformanceInsight(
-                insight_type="optimization",
-                title=f"Underperforming Workflow: {workflow['workflow_name']}",
-                description=f"Conversion rate {workflow['conversion_rate']:.1%} is below average {avg_conversion:.1%}",
-                impact_level="medium",
-                recommendation="Review workflow design, messaging, and targeting",
-                expected_improvement="Align performance with top-performing workflows",
-                data_supporting={
-                    "workflow_performance": workflow,
-                    "average_conversion": avg_conversion
-                },
-                confidence_score=0.7
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="optimization",
+                    title=f"Underperforming Workflow: {workflow['workflow_name']}",
+                    description=f"Conversion rate {workflow['conversion_rate']:.1%} is below average {avg_conversion:.1%}",
+                    impact_level="medium",
+                    recommendation="Review workflow design, messaging, and targeting",
+                    expected_improvement="Align performance with top-performing workflows",
+                    data_supporting={"workflow_performance": workflow, "average_conversion": avg_conversion},
+                    confidence_score=0.7,
+                )
+            )
 
         return insights
 
@@ -722,14 +711,16 @@ class WorkflowAnalyticsService:
         for channel, metrics in self.channel_stats.items():
             if metrics.messages_sent > 0:
                 response_rate = metrics.responded / metrics.messages_sent
-                cost_per_response = metrics.cost / metrics.responded if metrics.responded > 0 else float('inf')
+                cost_per_response = metrics.cost / metrics.responded if metrics.responded > 0 else float("inf")
 
-                channel_performances.append({
-                    "channel": channel,
-                    "response_rate": response_rate,
-                    "cost_per_response": cost_per_response,
-                    "total_sent": metrics.messages_sent
-                })
+                channel_performances.append(
+                    {
+                        "channel": channel,
+                        "response_rate": response_rate,
+                        "cost_per_response": cost_per_response,
+                        "total_sent": metrics.messages_sent,
+                    }
+                )
 
         if len(channel_performances) < 2:
             return insights
@@ -740,19 +731,18 @@ class WorkflowAnalyticsService:
         worst_channel = channel_performances[-1]
 
         if best_channel["response_rate"] > worst_channel["response_rate"] * 2:
-            insights.append(PerformanceInsight(
-                insight_type="channel_optimization",
-                title=f"Channel Performance Gap",
-                description=f"{best_channel['channel']} outperforms {worst_channel['channel']} significantly",
-                impact_level="medium",
-                recommendation=f"Shift budget from {worst_channel['channel']} to {best_channel['channel']}",
-                expected_improvement="10-30% improvement in overall response rates",
-                data_supporting={
-                    "best_channel": best_channel,
-                    "worst_channel": worst_channel
-                },
-                confidence_score=0.75
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="channel_optimization",
+                    title=f"Channel Performance Gap",
+                    description=f"{best_channel['channel']} outperforms {worst_channel['channel']} significantly",
+                    impact_level="medium",
+                    recommendation=f"Shift budget from {worst_channel['channel']} to {best_channel['channel']}",
+                    expected_improvement="10-30% improvement in overall response rates",
+                    data_supporting={"best_channel": best_channel, "worst_channel": worst_channel},
+                    confidence_score=0.75,
+                )
+            )
 
         return insights
 
@@ -775,28 +765,26 @@ class WorkflowAnalyticsService:
 
         # If average is much higher than median, there are some very slow executions
         if avg_time > median_time * 1.5:
-            insights.append(PerformanceInsight(
-                insight_type="timing",
-                title="Inconsistent Workflow Timing",
-                description=f"Average time ({avg_time:.1f}min) significantly higher than median ({median_time:.1f}min)",
-                impact_level="medium",
-                recommendation="Investigate and optimize slow-running workflow instances",
-                expected_improvement="More consistent lead experience and faster conversions",
-                data_supporting={
-                    "avg_time": avg_time,
-                    "median_time": median_time,
-                    "sample_size": len(all_completion_times)
-                },
-                confidence_score=0.6
-            ))
+            insights.append(
+                PerformanceInsight(
+                    insight_type="timing",
+                    title="Inconsistent Workflow Timing",
+                    description=f"Average time ({avg_time:.1f}min) significantly higher than median ({median_time:.1f}min)",
+                    impact_level="medium",
+                    recommendation="Investigate and optimize slow-running workflow instances",
+                    expected_improvement="More consistent lead experience and faster conversions",
+                    data_supporting={
+                        "avg_time": avg_time,
+                        "median_time": median_time,
+                        "sample_size": len(all_completion_times),
+                    },
+                    confidence_score=0.6,
+                )
+            )
 
         return insights
 
-    def get_cohort_analysis(
-        self,
-        cohort_definition: str = "monthly",
-        period_count: int = 6
-    ) -> List[CohortAnalysis]:
+    def get_cohort_analysis(self, cohort_definition: str = "monthly", period_count: int = 6) -> List[CohortAnalysis]:
         """Perform cohort analysis on leads"""
 
         cohorts = []
@@ -823,12 +811,7 @@ class WorkflowAnalyticsService:
 
         return sorted(cohorts, key=lambda x: x.cohort_name, reverse=True)
 
-    def _analyze_cohort(
-        self,
-        cohort_name: str,
-        lead_ids: List[str],
-        period_count: int
-    ) -> Optional[CohortAnalysis]:
+    def _analyze_cohort(self, cohort_name: str, lead_ids: List[str], period_count: int) -> Optional[CohortAnalysis]:
         """Analyze individual cohort"""
 
         cohort_start = datetime.strptime(cohort_name, "%Y-%m")
@@ -838,9 +821,9 @@ class WorkflowAnalyticsService:
         revenue_per_cohort = []
 
         for i in range(period_count):
-            period_start = cohort_start + timedelta(days=30*i)
+            period_start = cohort_start + timedelta(days=30 * i)
             period_end = period_start + timedelta(days=30)
-            period_name = f"Month {i+1}"
+            period_name = f"Month {i + 1}"
 
             # Count active leads in this period
             active_leads = 0
@@ -852,7 +835,8 @@ class WorkflowAnalyticsService:
 
                 # Check if lead was active in this period
                 period_activity = [
-                    step for step in lead_journey
+                    step
+                    for step in lead_journey
                     if period_start <= datetime.fromisoformat(step["timestamp"]) < period_end
                 ]
 
@@ -861,8 +845,7 @@ class WorkflowAnalyticsService:
 
                     # Check for conversions
                     conversions = [
-                        step for step in period_activity
-                        if step.get("engagement_data", {}).get("converted", False)
+                        step for step in period_activity if step.get("engagement_data", {}).get("converted", False)
                     ]
 
                     if conversions:
@@ -880,7 +863,7 @@ class WorkflowAnalyticsService:
             time_periods=periods,
             retention_rates=retention_rates,
             conversion_rates=conversion_rates,
-            revenue_per_cohort=revenue_per_cohort
+            revenue_per_cohort=revenue_per_cohort,
         )
 
     def get_predictive_insights(self, workflow_id: str) -> Dict[str, Any]:
@@ -909,8 +892,10 @@ class WorkflowAnalyticsService:
             "trend_strength": "strong" if change_percentage > 20 else "moderate" if change_percentage > 10 else "weak",
             "recent_conversion_rate": recent_conversion_rate,
             "historical_conversion_rate": older_conversion_rate,
-            "predicted_next_period": recent_conversion_rate * 1.1 if trend == "improving" else recent_conversion_rate * 0.9,
-            "confidence": "low"  # Simple heuristic model has low confidence
+            "predicted_next_period": recent_conversion_rate * 1.1
+            if trend == "improving"
+            else recent_conversion_rate * 0.9,
+            "confidence": "low",  # Simple heuristic model has low confidence
         }
 
     def get_real_time_dashboard_data(self) -> Dict[str, Any]:
@@ -922,10 +907,9 @@ class WorkflowAnalyticsService:
         # Today's metrics
         today_executions = []
         for workflow_executions in self.workflow_executions.values():
-            today_executions.extend([
-                e for e in workflow_executions
-                if datetime.fromisoformat(e["timestamp"]) >= today_start
-            ])
+            today_executions.extend(
+                [e for e in workflow_executions if datetime.fromisoformat(e["timestamp"]) >= today_start]
+            )
 
         total_today = len(today_executions)
         successful_today = len([e for e in today_executions if e["success"]])
@@ -938,7 +922,9 @@ class WorkflowAnalyticsService:
             # This would need timestamp tracking in real implementation
             channel_activity[channel] = {
                 "messages_sent": metrics.messages_sent,  # This should be filtered by today
-                "response_rate": f"{(metrics.responded / metrics.messages_sent * 100):.1f}%" if metrics.messages_sent > 0 else "0%"
+                "response_rate": f"{(metrics.responded / metrics.messages_sent * 100):.1f}%"
+                if metrics.messages_sent > 0
+                else "0%",
             }
 
         # Recent insights
@@ -954,11 +940,11 @@ class WorkflowAnalyticsService:
                 "success_rate": f"{(successful_today / total_today * 100):.1f}%" if total_today > 0 else "0%",
                 "conversions": conversions_today,
                 "conversion_rate": f"{(conversions_today / total_today * 100):.1f}%" if total_today > 0 else "0%",
-                "revenue": f"${revenue_today:,.2f}"
+                "revenue": f"${revenue_today:,.2f}",
             },
             "channel_activity": channel_activity,
             "top_workflows": self.get_top_performing_workflows(3),
-            "alert_count": len([i for i in self._get_cached_insights() if i.impact_level == "high"])
+            "alert_count": len([i for i in self._get_cached_insights() if i.impact_level == "high"]),
         }
 
     def _get_cached_insights(self) -> List[PerformanceInsight]:
@@ -969,10 +955,7 @@ class WorkflowAnalyticsService:
         return insights
 
     def export_analytics_report(
-        self,
-        workflow_id: Optional[str] = None,
-        include_insights: bool = True,
-        include_segments: bool = True
+        self, workflow_id: Optional[str] = None, include_insights: bool = True, include_segments: bool = True
     ) -> Dict[str, Any]:
         """Export comprehensive analytics report"""
 
@@ -985,7 +968,7 @@ class WorkflowAnalyticsService:
                 "workflow_name": metrics.workflow_name,
                 "metrics": asdict(metrics),
                 "roi_analysis": self.calculate_roi(workflow_id),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.utcnow().isoformat(),
             }
 
             if include_insights:
@@ -994,7 +977,8 @@ class WorkflowAnalyticsService:
 
             if include_segments:
                 workflow_segments = {
-                    k: v for k, v in self.segment_analytics.items()
+                    k: v
+                    for k, v in self.segment_analytics.items()
                     # Filter for relevant segments
                 }
                 report["segment_analysis"] = workflow_segments
@@ -1006,12 +990,12 @@ class WorkflowAnalyticsService:
                 "summary": {
                     "total_workflows": len(self.workflow_executions),
                     "total_executions": sum(len(execs) for execs in self.workflow_executions.values()),
-                    "active_channels": len(self.channel_stats)
+                    "active_channels": len(self.channel_stats),
                 },
                 "top_performers": self.get_top_performing_workflows(),
                 "channel_performance": self.get_channel_performance(),
                 "trigger_accuracy": self.get_trigger_accuracy(),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.utcnow().isoformat(),
             }
 
         return report
@@ -1046,9 +1030,7 @@ def demo_workflow_analytics():
     metrics = service.get_workflow_metrics("wf_001")
     print(f"📈 Workflow Metrics (Welcome Sequence):")
     print(f"   Total executions: {metrics.total_executions}")
-    print(
-        f"   Success rate: {(metrics.successful_executions/metrics.total_executions*100):.1f}%"
-    )
+    print(f"   Success rate: {(metrics.successful_executions / metrics.total_executions * 100):.1f}%")
     print(f"   Conversions: {metrics.conversion_count}")
     print(f"   Revenue: ${metrics.revenue_generated:,.2f}")
 

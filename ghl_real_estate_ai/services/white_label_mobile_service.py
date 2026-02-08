@@ -9,37 +9,43 @@ Provides comprehensive white-label capabilities:
 - Automated app generation and deployment
 """
 
-import json
 import asyncio
+import json
 import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
 from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.billing_service import BillingService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.billing_service import BillingService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 class WhiteLabelTier(Enum):
     """White label subscription tiers."""
+
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
     CUSTOM = "custom"
 
+
 class AppPlatform(Enum):
     """Mobile app platforms."""
+
     IOS = "ios"
     ANDROID = "android"
     BOTH = "both"
 
+
 @dataclass
 class BrandingConfig:
     """Agency branding configuration."""
+
     primary_color: str = "#6D28D9"
     secondary_color: str = "#10B981"
     accent_color: str = "#F59E0B"
@@ -52,9 +58,11 @@ class BrandingConfig:
     support_email: Optional[str] = None
     support_phone: Optional[str] = None
 
+
 @dataclass
 class FeatureSet:
     """Available features for white-label apps."""
+
     # Core Features
     lead_management: bool = True
     property_search: bool = True
@@ -78,9 +86,11 @@ class FeatureSet:
     dedicated_support: bool = False
     custom_development: bool = False
 
+
 @dataclass
 class WhiteLabelConfig:
     """Complete white-label configuration."""
+
     agency_id: str
     tier: WhiteLabelTier
     branding: BrandingConfig
@@ -92,6 +102,7 @@ class WhiteLabelConfig:
     created_at: datetime = None
     updated_at: datetime = None
     is_active: bool = True
+
 
 class WhiteLabelMobileService:
     """
@@ -113,7 +124,7 @@ class WhiteLabelMobileService:
                 "features": ["basic_branding", "push_notifications", "basic_analytics"],
                 "platforms": [AppPlatform.ANDROID],
                 "max_users": 50,
-                "support_level": "email"
+                "support_level": "email",
             },
             WhiteLabelTier.PROFESSIONAL.value: {
                 "setup_fee": 15000,  # $15,000 setup
@@ -121,7 +132,7 @@ class WhiteLabelMobileService:
                 "features": ["full_branding", "advanced_analytics", "ar_visualization", "voice_notes"],
                 "platforms": [AppPlatform.IOS, AppPlatform.ANDROID],
                 "max_users": 200,
-                "support_level": "phone"
+                "support_level": "phone",
             },
             WhiteLabelTier.ENTERPRISE.value: {
                 "setup_fee": 25000,  # $25,000 setup
@@ -129,7 +140,7 @@ class WhiteLabelMobileService:
                 "features": ["all_features", "custom_domains", "compliance_reporting"],
                 "platforms": [AppPlatform.IOS, AppPlatform.ANDROID],
                 "max_users": 1000,
-                "support_level": "dedicated"
+                "support_level": "dedicated",
             },
             WhiteLabelTier.CUSTOM.value: {
                 "setup_fee": 50000,  # $50,000+ setup
@@ -137,8 +148,8 @@ class WhiteLabelMobileService:
                 "features": ["everything", "custom_development"],
                 "platforms": [AppPlatform.IOS, AppPlatform.ANDROID],
                 "max_users": "unlimited",
-                "support_level": "dedicated_team"
-            }
+                "support_level": "dedicated_team",
+            },
         }
 
     def _initialize_feature_matrix(self) -> Dict[str, FeatureSet]:
@@ -149,7 +160,7 @@ class WhiteLabelMobileService:
                 property_search=True,
                 analytics_basic=True,
                 push_notifications=True,
-                offline_mode=True
+                offline_mode=True,
             ),
             WhiteLabelTier.PROFESSIONAL.value: FeatureSet(
                 lead_management=True,
@@ -160,7 +171,7 @@ class WhiteLabelMobileService:
                 analytics_advanced=True,
                 ar_visualization=True,
                 voice_notes=True,
-                ai_insights=True
+                ai_insights=True,
             ),
             WhiteLabelTier.ENTERPRISE.value: FeatureSet(
                 lead_management=True,
@@ -177,11 +188,11 @@ class WhiteLabelMobileService:
                 white_label_portal=True,
                 custom_domains=True,
                 advanced_security=True,
-                compliance_reporting=True
+                compliance_reporting=True,
             ),
             WhiteLabelTier.CUSTOM.value: FeatureSet(
                 **{field.name: True for field in FeatureSet.__dataclass_fields__.values()}
-            )
+            ),
         }
 
     async def create_white_label_config(
@@ -190,7 +201,7 @@ class WhiteLabelMobileService:
         tier: WhiteLabelTier,
         branding: BrandingConfig,
         platforms: List[AppPlatform],
-        custom_features: Optional[FeatureSet] = None
+        custom_features: Optional[FeatureSet] = None,
     ) -> WhiteLabelConfig:
         """
         Create a new white-label configuration for an agency.
@@ -217,7 +228,7 @@ class WhiteLabelMobileService:
                 custom_domains=[],
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                is_active=True
+                is_active=True,
             )
 
             # Validate branding assets
@@ -242,11 +253,7 @@ class WhiteLabelMobileService:
             logger.error(f"Failed to create white-label config: {e}")
             raise
 
-    async def update_white_label_config(
-        self,
-        agency_id: str,
-        updates: Dict[str, Any]
-    ) -> WhiteLabelConfig:
+    async def update_white_label_config(self, agency_id: str, updates: Dict[str, Any]) -> WhiteLabelConfig:
         """
         Update existing white-label configuration.
         """
@@ -322,10 +329,7 @@ class WhiteLabelMobileService:
             return None
 
     async def generate_mobile_app(
-        self,
-        agency_id: str,
-        platform: AppPlatform,
-        build_type: str = "release"
+        self, agency_id: str, platform: AppPlatform, build_type: str = "release"
     ) -> Dict[str, Any]:
         """
         Generate custom mobile app for agency.
@@ -346,7 +350,7 @@ class WhiteLabelMobileService:
                 "branding": asdict(config.branding),
                 "features": asdict(config.features),
                 "app_config": await self._get_app_config(config, platform),
-                "build_timestamp": datetime.utcnow().isoformat()
+                "build_timestamp": datetime.utcnow().isoformat(),
             }
 
             # Queue build job
@@ -357,18 +361,14 @@ class WhiteLabelMobileService:
                 "status": "queued",
                 "estimated_completion": datetime.utcnow() + timedelta(hours=2),
                 "platform": platform.value,
-                "agency_id": agency_id
+                "agency_id": agency_id,
             }
 
         except Exception as e:
             logger.error(f"Failed to generate mobile app: {e}")
             raise
 
-    async def get_app_store_metadata(
-        self,
-        agency_id: str,
-        platform: AppPlatform
-    ) -> Dict[str, Any]:
+    async def get_app_store_metadata(self, agency_id: str, platform: AppPlatform) -> Dict[str, Any]:
         """
         Generate app store metadata for white-label app.
         """
@@ -393,7 +393,7 @@ class WhiteLabelMobileService:
                     "support_url": branding.website_url or branding.support_email,
                     "marketing_url": branding.website_url,
                     "version": "1.0.0",
-                    "copyright": f"© {datetime.now().year} {branding.app_name}"
+                    "copyright": f"© {datetime.now().year} {branding.app_name}",
                 }
 
             elif platform == AppPlatform.ANDROID:
@@ -411,7 +411,7 @@ class WhiteLabelMobileService:
                     "email": branding.support_email,
                     "phone": branding.support_phone,
                     "version_name": "1.0.0",
-                    "version_code": 1
+                    "version_code": 1,
                 }
 
             else:
@@ -421,11 +421,7 @@ class WhiteLabelMobileService:
             logger.error(f"Failed to get app store metadata: {e}")
             raise
 
-    async def track_white_label_revenue(
-        self,
-        agency_id: str,
-        revenue_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def track_white_label_revenue(self, agency_id: str, revenue_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Track revenue from white-label mobile apps.
         """
@@ -445,7 +441,7 @@ class WhiteLabelMobileService:
                 "additional_revenue": revenue_data.get("additional_fees", 0),
                 "platform_fees": self._calculate_platform_fees(config, revenue_data),
                 "period": revenue_data.get("period", datetime.utcnow().strftime("%Y-%m")),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             # Store revenue data
@@ -483,7 +479,7 @@ class WhiteLabelMobileService:
             "monthly_fee": tier_pricing["monthly_fee"],
             "features": tier_pricing["features"],
             "start_date": config.created_at.isoformat(),
-            "status": "active"
+            "status": "active",
         }
 
         await self.billing.create_subscription(subscription)
@@ -530,8 +526,12 @@ Download now and transform your real estate business!
     def _generate_app_keywords(self, config: WhiteLabelConfig) -> str:
         """Generate app store keywords."""
         base_keywords = [
-            "real estate", "property", "leads", "CRM", "sales",
-            config.branding.app_name.lower().replace(" ", "")
+            "real estate",
+            "property",
+            "leads",
+            "CRM",
+            "sales",
+            config.branding.app_name.lower().replace(" ", ""),
         ]
 
         if config.features.ar_visualization:
@@ -551,7 +551,7 @@ Download now and transform your real estate business!
             f"screenshot_dashboard_{platform.value}.png",
             f"screenshot_leads_{platform.value}.png",
             f"screenshot_properties_{platform.value}.png",
-            f"screenshot_analytics_{platform.value}.png"
+            f"screenshot_analytics_{platform.value}.png",
         ]
 
     def _calculate_platform_fees(self, config: WhiteLabelConfig, revenue_data: Dict[str, Any]) -> float:
@@ -567,8 +567,10 @@ Download now and transform your real estate business!
 
     # More helper methods would be implemented here...
 
+
 # Global service instance
 _white_label_mobile_service = None
+
 
 def get_white_label_mobile_service() -> WhiteLabelMobileService:
     """Get the global white label mobile service instance."""

@@ -10,20 +10,18 @@ Tests cover:
 6. Differentiation messaging
 """
 
-import pytest
+from datetime import datetime
 from unittest.mock import Mock
+
+import pytest
 
 from ghl_real_estate_ai.prompts.competitive_responses import (
     CompetitiveResponseSystem,
-    ResponseType,
     LeadProfile,
-    get_competitive_response_system
+    ResponseType,
+    get_competitive_response_system,
 )
-from ghl_real_estate_ai.services.competitor_intelligence import (
-    RiskLevel,
-    CompetitorMention
-)
-from datetime import datetime
+from ghl_real_estate_ai.services.competitor_intelligence import CompetitorMention, RiskLevel
 
 
 class TestCompetitiveResponseSystem:
@@ -48,7 +46,7 @@ class TestCompetitiveResponseSystem:
                 timestamp=datetime.now(),
                 patterns_matched=["named_competitor"],
                 sentiment_score=0.0,
-                urgency_indicators=[]
+                urgency_indicators=[],
             )
         ]
 
@@ -66,20 +64,16 @@ class TestCompetitiveResponseSystem:
         for risk_level, response_types in templates.items():
             for response_type, template_list in response_types.items():
                 for template in template_list:
-                    assert hasattr(template, 'message')
-                    assert hasattr(template, 'response_type')
-                    assert hasattr(template, 'risk_level')
-                    assert hasattr(template, 'success_rate')
+                    assert hasattr(template, "message")
+                    assert hasattr(template, "response_type")
+                    assert hasattr(template, "risk_level")
+                    assert hasattr(template, "success_rate")
                     assert isinstance(template.success_rate, float)
                     assert 0 <= template.success_rate <= 1
 
     def test_low_risk_positioning_response(self, system, sample_competitor_mentions):
         """Test positioning response for low risk situations"""
-        response = system.get_competitive_response(
-            risk_level=RiskLevel.LOW,
-            competitor_mentions=[],
-            lead_profile=None
-        )
+        response = system.get_competitive_response(risk_level=RiskLevel.LOW, competitor_mentions=[], lead_profile=None)
 
         assert response is not None
         assert "message" in response
@@ -92,7 +86,7 @@ class TestCompetitiveResponseSystem:
         response = system.get_competitive_response(
             risk_level=RiskLevel.MEDIUM,
             competitor_mentions=sample_competitor_mentions,
-            lead_profile=LeadProfile.INVESTOR
+            lead_profile=LeadProfile.INVESTOR,
         )
 
         assert response is not None
@@ -104,9 +98,7 @@ class TestCompetitiveResponseSystem:
     def test_high_risk_recovery_response(self, system, sample_competitor_mentions):
         """Test recovery response for high risk situations"""
         response = system.get_competitive_response(
-            risk_level=RiskLevel.HIGH,
-            competitor_mentions=sample_competitor_mentions,
-            lead_profile=None
+            risk_level=RiskLevel.HIGH, competitor_mentions=sample_competitor_mentions, lead_profile=None
         )
 
         assert response is not None
@@ -118,9 +110,7 @@ class TestCompetitiveResponseSystem:
     def test_critical_risk_nurture_response(self, system, sample_competitor_mentions):
         """Test nurture response for critical risk situations"""
         response = system.get_competitive_response(
-            risk_level=RiskLevel.CRITICAL,
-            competitor_mentions=sample_competitor_mentions,
-            lead_profile=None
+            risk_level=RiskLevel.CRITICAL, competitor_mentions=sample_competitor_mentions, lead_profile=None
         )
 
         assert response is not None
@@ -134,13 +124,13 @@ class TestCompetitiveResponseSystem:
         investor_response = system.get_competitive_response(
             risk_level=RiskLevel.MEDIUM,
             competitor_mentions=sample_competitor_mentions,
-            lead_profile=LeadProfile.INVESTOR
+            lead_profile=LeadProfile.INVESTOR,
         )
 
         relocating_response = system.get_competitive_response(
             risk_level=RiskLevel.MEDIUM,
             competitor_mentions=sample_competitor_mentions,
-            lead_profile=LeadProfile.RELOCATING
+            lead_profile=LeadProfile.RELOCATING,
         )
 
         # Responses should be different based on lead profile
@@ -148,16 +138,10 @@ class TestCompetitiveResponseSystem:
 
     def test_message_personalization(self, system, sample_competitor_mentions):
         """Test message personalization with conversation context"""
-        context = {
-            "lead_name": "John",
-            "property_type": "condo",
-            "location": "Austin"
-        }
+        context = {"lead_name": "John", "property_type": "condo", "location": "Austin"}
 
         response = system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=sample_competitor_mentions,
-            conversation_context=context
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=sample_competitor_mentions, conversation_context=context
         )
 
         # Message should be personalized
@@ -171,7 +155,7 @@ class TestCompetitiveResponseSystem:
         response = system.get_competitive_response(
             risk_level=RiskLevel.MEDIUM,
             competitor_mentions=sample_competitor_mentions,
-            lead_profile=LeadProfile.INVESTOR
+            lead_profile=LeadProfile.INVESTOR,
         )
 
         value_prop = response.get("value_proposition")
@@ -184,13 +168,7 @@ class TestCompetitiveResponseSystem:
         """Test Jorge's value propositions are properly structured"""
         value_props = system.jorge_value_props
 
-        required_props = [
-            "ai_technology",
-            "rc_expertise",
-            "amazon_specialization",
-            "investor_focus",
-            "response_speed"
-        ]
+        required_props = ["ai_technology", "rc_expertise", "amazon_specialization", "investor_focus", "response_speed"]
 
         for prop in required_props:
             assert prop in value_props
@@ -242,9 +220,7 @@ class TestCompetitiveResponseSystem:
         empty_system.response_templates = {}
 
         response = empty_system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=[],
-            lead_profile=None
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=[], lead_profile=None
         )
 
         assert response is not None
@@ -268,9 +244,7 @@ class TestCompetitiveResponseSystem:
         """Test follow-up strategy generation"""
         for risk_level in [RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL]:
             response = system.get_competitive_response(
-                risk_level=risk_level,
-                competitor_mentions=sample_competitor_mentions,
-                lead_profile=None
+                risk_level=risk_level, competitor_mentions=sample_competitor_mentions, lead_profile=None
             )
 
             if response["follow_up_required"]:
@@ -290,7 +264,7 @@ class TestCompetitiveResponseSystem:
             timestamp=datetime.now(),
             patterns_matched=[],
             sentiment_score=0.0,
-            urgency_indicators=[]
+            urgency_indicators=[],
         )
 
         remax_mention = CompetitorMention(
@@ -303,19 +277,15 @@ class TestCompetitiveResponseSystem:
             timestamp=datetime.now(),
             patterns_matched=[],
             sentiment_score=0.0,
-            urgency_indicators=[]
+            urgency_indicators=[],
         )
 
         kw_response = system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=[kw_mention],
-            lead_profile=None
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=[kw_mention], lead_profile=None
         )
 
         remax_response = system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=[remax_mention],
-            lead_profile=None
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=[remax_mention], lead_profile=None
         )
 
         # Responses should potentially be different based on competitor
@@ -341,9 +311,7 @@ class TestCompetitiveResponseSystem:
         """Test that responses maintain professionalism"""
         for risk_level in [RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL]:
             response = system.get_competitive_response(
-                risk_level=risk_level,
-                competitor_mentions=sample_competitor_mentions,
-                lead_profile=None
+                risk_level=risk_level, competitor_mentions=sample_competitor_mentions, lead_profile=None
             )
 
             message = response["message"].lower()
@@ -368,13 +336,11 @@ class TestCompetitiveResponseSystem:
             timestamp=datetime.now(),
             patterns_matched=[],
             sentiment_score=0.0,
-            urgency_indicators=["ASAP", "deadline"]
+            urgency_indicators=["ASAP", "deadline"],
         )
 
         response = system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=[urgent_mention],
-            lead_profile=None
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=[urgent_mention], lead_profile=None
         )
 
         # Should escalate urgency when urgency indicators present
@@ -391,31 +357,25 @@ class TestCompetitiveResponseSystem:
         """Test that responses are appropriate length for SMS/chat"""
         for risk_level in [RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL]:
             response = system.get_competitive_response(
-                risk_level=risk_level,
-                competitor_mentions=sample_competitor_mentions,
-                lead_profile=None
+                risk_level=risk_level, competitor_mentions=sample_competitor_mentions, lead_profile=None
             )
 
             message = response["message"]
             # Should be reasonable length for SMS (not too long)
             assert len(message) <= 500  # Reasonable for multiple SMS
-            assert len(message) >= 20   # Not too short to be useful
+            assert len(message) >= 20  # Not too short to be useful
 
     def test_edge_case_handling(self, system):
         """Test edge case handling"""
         # Empty competitor mentions
         response = system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=[],
-            lead_profile=None
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=[], lead_profile=None
         )
         assert response is not None
 
         # Unknown lead profile
         response = system.get_competitive_response(
-            risk_level=RiskLevel.MEDIUM,
-            competitor_mentions=[],
-            lead_profile=None
+            risk_level=RiskLevel.MEDIUM, competitor_mentions=[], lead_profile=None
         )
         assert response is not None
 

@@ -1,31 +1,34 @@
-import streamlit as st
-import pandas as pd
 import time
-import numpy as np
 from io import BytesIO
+
+import numpy as np
+import pandas as pd
+import streamlit as st
+
 try:
     import qrcode
 except ImportError:
     qrcode = None
 
+
 def render_buyer_portal_manager(lead_name: str):
     """
     Buyer portal configuration and QR code generation
     """
-    
+
     st.markdown("### 🌐 Branded Buyer Portal")
     st.markdown(f"*Custom portal management and behavioral telemetry for {lead_name}*")
-    
+
     col_config, col_preview = st.columns([1, 1.2])
-    
+
     with col_config:
         st.markdown("#### ⚙️ Portal Configuration")
-        
+
         with st.container(border=True):
             # Branding options
-            portal_logo = st.file_uploader("Upload Logo", type=['png', 'jpg'])
+            portal_logo = st.file_uploader("Upload Logo", type=["png", "jpg"])
             primary_color = st.color_picker("Primary Color", "#2563eb")
-            
+
             # Portal features
             st.markdown("**Enable Features:**")
             c1, c2 = st.columns(2)
@@ -35,13 +38,13 @@ def render_buyer_portal_manager(lead_name: str):
             with c2:
                 enable_financing = st.checkbox("Financing", value=True)
                 enable_scheduling = st.checkbox("Scheduling", value=True)
-            
+
             # Generate portal URL
             portal_url = f"https://portal.jorgesalas.com/{lead_name.lower().replace(' ', '-')}"
-            
+
             st.markdown("**Access Link:**")
             st.code(portal_url, language=None)
-            
+
             # QR Code generation
             if st.button("📱 Generate QR Code", use_container_width=True, type="primary"):
                 with st.spinner("Generating unique architectural QR..."):
@@ -52,25 +55,25 @@ def render_buyer_portal_manager(lead_name: str):
                         qr = qrcode.QRCode(version=1, box_size=10, border=5)
                         qr.add_data(portal_url)
                         qr.make(fit=True)
-                        
+
                         img = qr.make_image(fill_color="black", back_color="white")
-                        
+
                         # Display QR code
                         buf = BytesIO()
-                        img.save(buf, format='PNG')
+                        img.save(buf, format="PNG")
                         st.image(buf.getvalue(), width=200)
-                        
+
                         st.download_button(
                             "⬇️ Download QR Code",
                             data=buf.getvalue(),
                             file_name=f"{lead_name}_portal_qr.png",
                             mime="image/png",
-                            use_container_width=True
+                            use_container_width=True,
                         )
 
     with col_preview:
         st.markdown("#### 📊 Portal Analytics & Preview")
-        
+
         # Analytics Ribbon
         a1, a2, a3 = st.columns(3)
         with a1:
@@ -83,13 +86,13 @@ def render_buyer_portal_manager(lead_name: str):
         # Behavioral Pulse
         st.markdown("**Lead Behavioral Pulse (7 Days)**")
         chart_data = pd.DataFrame(
-            np.random.randn(7, 2) / [5, 5] + [0.5, 0.5],
-            columns=['Property Views', 'Financing Checks']
+            np.random.randn(7, 2) / [5, 5] + [0.5, 0.5], columns=["Property Views", "Financing Checks"]
         )
         st.line_chart(chart_data, height=150)
 
         # Mock portal preview - Obsidian Edition
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='background: linear-gradient(135deg, {primary_color} 0%, #05070A 100%); padding: 1.25rem; border-radius: 12px 12px 0 0; text-align: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1);'>
             <div style='color: white; font-size: 0.9rem; font-weight: 700; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.1em;'>{lead_name}'S PRIVATE PORTAL</div>
         </div>
@@ -106,6 +109,8 @@ def render_buyer_portal_manager(lead_name: str):
                 <button style='flex: 1; padding: 0.75rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #FFFFFF; border-radius: 8px; font-weight: 600; font-size: 0.75rem; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;'>SYNC CALENDAR</button>
             </div>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """,
+            unsafe_allow_html=True,
+        )
+
         st.caption("✅ Real-time telemetry is being recorded and synced to GHL.")

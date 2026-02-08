@@ -35,67 +35,73 @@ Created: January 2026
 
 import asyncio
 import json
+import logging
+import warnings
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta, date
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Tuple, Any, Union
-from enum import Enum
-from collections import defaultdict
-from decimal import Decimal
-import logging
-from abc import ABC, abstractmethod
+from sklearn.cluster import DBSCAN, KMeans
 
 # ML imports
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingClassifier
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
+from sklearn.metrics import classification_report, mean_squared_error, silhouette_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import mean_squared_error, classification_report, silhouette_score
-import warnings
-warnings.filterwarnings('ignore')
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+warnings.filterwarnings("ignore")
 
 # Service integrations
-from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import CacheService
 
 logger = get_logger(__name__)
 
 
 class CustomerSegment(str, Enum):
     """Customer segmentation categories."""
-    CHAMPIONS = "champions"        # High value, high engagement
+
+    CHAMPIONS = "champions"  # High value, high engagement
     LOYAL_CUSTOMERS = "loyal_customers"  # High value, low engagement
     POTENTIAL_LOYALISTS = "potential_loyalists"  # Medium value, high engagement
-    NEW_CUSTOMERS = "new_customers"     # Low tenure, medium value
-    PROMISING = "promising"        # Low value, high engagement
+    NEW_CUSTOMERS = "new_customers"  # Low tenure, medium value
+    PROMISING = "promising"  # Low value, high engagement
     CUSTOMERS_NEEDING_ATTENTION = "customers_needing_attention"  # Medium value, low engagement
-    ABOUT_TO_SLEEP = "about_to_sleep"   # Low value, declining engagement
-    AT_RISK = "at_risk"           # High value, very low engagement
+    ABOUT_TO_SLEEP = "about_to_sleep"  # Low value, declining engagement
+    AT_RISK = "at_risk"  # High value, very low engagement
     CANNOT_LOSE_THEM = "cannot_lose_them"  # High value, zero engagement
-    HIBERNATING = "hibernating"    # Low value, very low engagement
-    LOST = "lost"                 # Zero engagement for extended period
+    HIBERNATING = "hibernating"  # Low value, very low engagement
+    LOST = "lost"  # Zero engagement for extended period
 
 
 class ChurnRisk(str, Enum):
     """Customer churn risk levels."""
-    LOW = "low"           # < 10% chance of churning
-    MEDIUM = "medium"     # 10-30% chance of churning
-    HIGH = "high"         # 30-60% chance of churning
-    CRITICAL = "critical" # > 60% chance of churning
+
+    LOW = "low"  # < 10% chance of churning
+    MEDIUM = "medium"  # 10-30% chance of churning
+    HIGH = "high"  # 30-60% chance of churning
+    CRITICAL = "critical"  # > 60% chance of churning
 
 
 class CLVModel(str, Enum):
     """CLV prediction model types."""
-    TRADITIONAL = "traditional"    # RFM-based CLV
+
+    TRADITIONAL = "traditional"  # RFM-based CLV
     PROBABILISTIC = "probabilistic"  # BG/NBD + Gamma-Gamma
     MACHINE_LEARNING = "machine_learning"  # ML-based prediction
-    HYBRID = "hybrid"             # Combined approach
+    HYBRID = "hybrid"  # Combined approach
 
 
 @dataclass
 class CustomerMetrics:
     """Core customer metrics for CLV calculation."""
+
     customer_id: str
     first_purchase_date: datetime
     last_purchase_date: datetime
@@ -128,6 +134,7 @@ class CustomerMetrics:
 @dataclass
 class CLVPrediction:
     """Customer lifetime value prediction result."""
+
     customer_id: str
     predicted_clv: Decimal
     confidence_interval: Tuple[float, float]
@@ -154,6 +161,7 @@ class CLVPrediction:
 @dataclass
 class CohortAnalysis:
     """Customer cohort analysis results."""
+
     cohort_month: str
     cohort_size: int
 
@@ -176,6 +184,7 @@ class CohortAnalysis:
 @dataclass
 class ChurnPrediction:
     """Customer churn prediction result."""
+
     customer_id: str
     churn_probability: float
     risk_level: ChurnRisk
@@ -200,6 +209,7 @@ class ChurnPrediction:
 @dataclass
 class CustomerSegmentProfile:
     """Profile of a customer segment with characteristics and strategies."""
+
     segment: CustomerSegment
     customer_count: int
     avg_clv: Decimal
@@ -239,33 +249,37 @@ class RFMAnalyzer:
             # Create DataFrame for analysis
             data = []
             for metrics in customer_metrics:
-                data.append({
-                    'customer_id': metrics.customer_id,
-                    'recency': metrics.recency_days,
-                    'frequency': metrics.total_purchases,
-                    'monetary': float(metrics.total_revenue)
-                })
+                data.append(
+                    {
+                        "customer_id": metrics.customer_id,
+                        "recency": metrics.recency_days,
+                        "frequency": metrics.total_purchases,
+                        "monetary": float(metrics.total_revenue),
+                    }
+                )
 
             df = pd.DataFrame(data)
 
             # Calculate quintiles
-            self.recency_quintiles = pd.qcut(df['recency'], q=5, labels=[5,4,3,2,1], duplicates='drop')
-            self.frequency_quintiles = pd.qcut(df['frequency'].rank(method='first'), q=5, labels=[1,2,3,4,5], duplicates='drop')
-            self.monetary_quintiles = pd.qcut(df['monetary'], q=5, labels=[1,2,3,4,5], duplicates='drop')
+            self.recency_quintiles = pd.qcut(df["recency"], q=5, labels=[5, 4, 3, 2, 1], duplicates="drop")
+            self.frequency_quintiles = pd.qcut(
+                df["frequency"].rank(method="first"), q=5, labels=[1, 2, 3, 4, 5], duplicates="drop"
+            )
+            self.monetary_quintiles = pd.qcut(df["monetary"], q=5, labels=[1, 2, 3, 4, 5], duplicates="drop")
 
             # Assign scores
             rfm_scores = {}
             for i, row in df.iterrows():
-                customer_id = row['customer_id']
+                customer_id = row["customer_id"]
                 r_score = int(self.recency_quintiles.iloc[i]) if pd.notna(self.recency_quintiles.iloc[i]) else 3
                 f_score = int(self.frequency_quintiles.iloc[i]) if pd.notna(self.frequency_quintiles.iloc[i]) else 3
                 m_score = int(self.monetary_quintiles.iloc[i]) if pd.notna(self.monetary_quintiles.iloc[i]) else 3
 
                 rfm_scores[customer_id] = {
-                    'recency': r_score,
-                    'frequency': f_score,
-                    'monetary': m_score,
-                    'rfm_score': f"{r_score}{f_score}{m_score}"
+                    "recency": r_score,
+                    "frequency": f_score,
+                    "monetary": m_score,
+                    "rfm_score": f"{r_score}{f_score}{m_score}",
                 }
 
             return rfm_scores
@@ -279,7 +293,7 @@ class RFMAnalyzer:
         segments = {}
 
         for customer_id, scores in rfm_scores.items():
-            r, f, m = scores['recency'], scores['frequency'], scores['monetary']
+            r, f, m = scores["recency"], scores["frequency"], scores["monetary"]
 
             # Segment logic based on RFM scores
             if r >= 4 and f >= 4 and m >= 4:
@@ -325,34 +339,34 @@ class CLVPredictor:
 
             for metrics in customer_metrics:
                 feature_dict = {
-                    'customer_id': metrics.customer_id,
-                    'tenure_days': metrics.tenure_days,
-                    'recency_days': metrics.recency_days,
-                    'total_purchases': metrics.total_purchases,
-                    'avg_order_value': float(metrics.avg_order_value),
-                    'purchase_frequency': metrics.purchase_frequency,
-                    'total_sessions': metrics.total_sessions,
-                    'avg_session_duration': metrics.avg_session_duration,
-                    'page_views': metrics.page_views,
-                    'email_opens': metrics.email_opens,
-                    'email_clicks': metrics.email_clicks,
-                    'support_tickets': metrics.support_tickets,
-                    'total_revenue': float(metrics.total_revenue)  # target variable
+                    "customer_id": metrics.customer_id,
+                    "tenure_days": metrics.tenure_days,
+                    "recency_days": metrics.recency_days,
+                    "total_purchases": metrics.total_purchases,
+                    "avg_order_value": float(metrics.avg_order_value),
+                    "purchase_frequency": metrics.purchase_frequency,
+                    "total_sessions": metrics.total_sessions,
+                    "avg_session_duration": metrics.avg_session_duration,
+                    "page_views": metrics.page_views,
+                    "email_opens": metrics.email_opens,
+                    "email_clicks": metrics.email_clicks,
+                    "support_tickets": metrics.support_tickets,
+                    "total_revenue": float(metrics.total_revenue),  # target variable
                 }
 
                 # Add derived features
-                feature_dict['days_between_purchases'] = metrics.tenure_days / max(metrics.total_purchases, 1)
-                feature_dict['email_engagement_rate'] = metrics.email_clicks / max(metrics.email_opens, 1)
-                feature_dict['session_quality'] = metrics.page_views / max(metrics.total_sessions, 1)
-                feature_dict['support_intensity'] = metrics.support_tickets / max(metrics.tenure_days, 1) * 30
+                feature_dict["days_between_purchases"] = metrics.tenure_days / max(metrics.total_purchases, 1)
+                feature_dict["email_engagement_rate"] = metrics.email_clicks / max(metrics.email_opens, 1)
+                feature_dict["session_quality"] = metrics.page_views / max(metrics.total_sessions, 1)
+                feature_dict["support_intensity"] = metrics.support_tickets / max(metrics.tenure_days, 1) * 30
 
                 # Add subscription features if available
                 if metrics.monthly_recurring_revenue:
-                    feature_dict['mrr'] = float(metrics.monthly_recurring_revenue)
-                    feature_dict['is_subscription'] = 1
+                    feature_dict["mrr"] = float(metrics.monthly_recurring_revenue)
+                    feature_dict["is_subscription"] = 1
                 else:
-                    feature_dict['mrr'] = 0
-                    feature_dict['is_subscription'] = 0
+                    feature_dict["mrr"] = 0
+                    feature_dict["is_subscription"] = 0
 
                 features.append(feature_dict)
 
@@ -371,20 +385,30 @@ class CLVPredictor:
 
             # Prepare features and target
             feature_columns = [
-                'tenure_days', 'recency_days', 'total_purchases', 'avg_order_value',
-                'purchase_frequency', 'total_sessions', 'avg_session_duration',
-                'page_views', 'email_opens', 'email_clicks', 'support_tickets',
-                'days_between_purchases', 'email_engagement_rate', 'session_quality',
-                'support_intensity', 'mrr', 'is_subscription'
+                "tenure_days",
+                "recency_days",
+                "total_purchases",
+                "avg_order_value",
+                "purchase_frequency",
+                "total_sessions",
+                "avg_session_duration",
+                "page_views",
+                "email_opens",
+                "email_clicks",
+                "support_tickets",
+                "days_between_purchases",
+                "email_engagement_rate",
+                "session_quality",
+                "support_intensity",
+                "mrr",
+                "is_subscription",
             ]
 
             X = customer_data[feature_columns].fillna(0)
-            y = customer_data['total_revenue']
+            y = customer_data["total_revenue"]
 
             # Split data
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42
-            )
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
             # Scale features
             scaler = StandardScaler()
@@ -393,11 +417,7 @@ class CLVPredictor:
 
             # Train Random Forest model
             rf_model = RandomForestRegressor(
-                n_estimators=100,
-                max_depth=10,
-                min_samples_split=5,
-                random_state=42,
-                n_jobs=-1
+                n_estimators=100, max_depth=10, min_samples_split=5, random_state=42, n_jobs=-1
             )
 
             rf_model.fit(X_train_scaled, y_train)
@@ -409,9 +429,9 @@ class CLVPredictor:
             logger.info(f"CLV model trained - MSE: {mse:.2f}")
 
             # Store model and scaler
-            self.models['clv_rf'] = rf_model
-            self.scalers['clv_rf'] = scaler
-            self.trained_models.add('clv_rf')
+            self.models["clv_rf"] = rf_model
+            self.scalers["clv_rf"] = scaler
+            self.trained_models.add("clv_rf")
 
             return True
 
@@ -419,14 +439,10 @@ class CLVPredictor:
             logger.error(f"Error training CLV model: {e}", exc_info=True)
             return False
 
-    def predict_clv(
-        self,
-        customer_metrics: CustomerMetrics,
-        horizon_days: int = 365
-    ) -> Optional[CLVPrediction]:
+    def predict_clv(self, customer_metrics: CustomerMetrics, horizon_days: int = 365) -> Optional[CLVPrediction]:
         """Predict customer lifetime value."""
         try:
-            if 'clv_rf' not in self.trained_models:
+            if "clv_rf" not in self.trained_models:
                 logger.warning("CLV model not trained")
                 return None
 
@@ -436,21 +452,33 @@ class CLVPredictor:
                 return None
 
             feature_columns = [
-                'tenure_days', 'recency_days', 'total_purchases', 'avg_order_value',
-                'purchase_frequency', 'total_sessions', 'avg_session_duration',
-                'page_views', 'email_opens', 'email_clicks', 'support_tickets',
-                'days_between_purchases', 'email_engagement_rate', 'session_quality',
-                'support_intensity', 'mrr', 'is_subscription'
+                "tenure_days",
+                "recency_days",
+                "total_purchases",
+                "avg_order_value",
+                "purchase_frequency",
+                "total_sessions",
+                "avg_session_duration",
+                "page_views",
+                "email_opens",
+                "email_clicks",
+                "support_tickets",
+                "days_between_purchases",
+                "email_engagement_rate",
+                "session_quality",
+                "support_intensity",
+                "mrr",
+                "is_subscription",
             ]
 
             X = features_df[feature_columns].fillna(0)
 
             # Scale features
-            scaler = self.scalers['clv_rf']
+            scaler = self.scalers["clv_rf"]
             X_scaled = scaler.transform(X)
 
             # Predict
-            model = self.models['clv_rf']
+            model = self.models["clv_rf"]
             base_prediction = model.predict(X_scaled)[0]
 
             # Adjust for horizon
@@ -463,10 +491,7 @@ class CLVPredictor:
                 pred = estimator.predict(X_scaled)[0]
                 predictions.append(pred * horizon_days / max(customer_metrics.tenure_days, 1))
 
-            confidence_interval = (
-                np.percentile(predictions, 25),
-                np.percentile(predictions, 75)
-            )
+            confidence_interval = (np.percentile(predictions, 25), np.percentile(predictions, 75))
 
             # Calculate retention probability (simplified)
             retention_prob = max(0.1, 1.0 - (customer_metrics.recency_days / 365) * 0.5)
@@ -505,7 +530,7 @@ class CLVPredictor:
                 recommendations=recommendations,
                 segment=segment,
                 created_at=datetime.utcnow(),
-                model_version="1.0"
+                model_version="1.0",
             )
 
             return prediction
@@ -567,22 +592,26 @@ class ChurnPredictor:
                 return False
 
             # Create churn labels (simplified logic)
-            customer_data['churned'] = (customer_data['recency_days'] > 90).astype(int)
+            customer_data["churned"] = (customer_data["recency_days"] > 90).astype(int)
 
             # Prepare features
             feature_columns = [
-                'tenure_days', 'recency_days', 'total_purchases', 'avg_order_value',
-                'purchase_frequency', 'total_sessions', 'avg_session_duration',
-                'email_engagement_rate', 'support_intensity'
+                "tenure_days",
+                "recency_days",
+                "total_purchases",
+                "avg_order_value",
+                "purchase_frequency",
+                "total_sessions",
+                "avg_session_duration",
+                "email_engagement_rate",
+                "support_intensity",
             ]
 
             X = customer_data[feature_columns].fillna(0)
-            y = customer_data['churned']
+            y = customer_data["churned"]
 
             # Split data
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
-            )
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
             # Scale features
             scaler = StandardScaler()
@@ -590,12 +619,7 @@ class ChurnPredictor:
             X_test_scaled = scaler.transform(X_test)
 
             # Train Gradient Boosting model
-            gb_model = GradientBoostingClassifier(
-                n_estimators=100,
-                learning_rate=0.1,
-                max_depth=6,
-                random_state=42
-            )
+            gb_model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=6, random_state=42)
 
             gb_model.fit(X_train_scaled, y_train)
 
@@ -625,15 +649,15 @@ class ChurnPredictor:
 
             # Prepare features
             features = {
-                'tenure_days': customer_metrics.tenure_days,
-                'recency_days': customer_metrics.recency_days,
-                'total_purchases': customer_metrics.total_purchases,
-                'avg_order_value': float(customer_metrics.avg_order_value),
-                'purchase_frequency': customer_metrics.purchase_frequency,
-                'total_sessions': customer_metrics.total_sessions,
-                'avg_session_duration': customer_metrics.avg_session_duration,
-                'email_engagement_rate': customer_metrics.email_clicks / max(customer_metrics.email_opens, 1),
-                'support_intensity': customer_metrics.support_tickets / max(customer_metrics.tenure_days, 1) * 30
+                "tenure_days": customer_metrics.tenure_days,
+                "recency_days": customer_metrics.recency_days,
+                "total_purchases": customer_metrics.total_purchases,
+                "avg_order_value": float(customer_metrics.avg_order_value),
+                "purchase_frequency": customer_metrics.purchase_frequency,
+                "total_sessions": customer_metrics.total_sessions,
+                "avg_session_duration": customer_metrics.avg_session_duration,
+                "email_engagement_rate": customer_metrics.email_clicks / max(customer_metrics.email_opens, 1),
+                "support_intensity": customer_metrics.support_tickets / max(customer_metrics.tenure_days, 1) * 30,
             }
 
             X = pd.DataFrame([features]).fillna(0)
@@ -671,7 +695,7 @@ class ChurnPredictor:
                 model_confidence=0.85,  # Would calculate properly
                 feature_importance={},  # Would extract from model
                 created_at=datetime.utcnow(),
-                expires_at=datetime.utcnow() + timedelta(days=30)
+                expires_at=datetime.utcnow() + timedelta(days=30),
             )
 
             return prediction
@@ -680,18 +704,14 @@ class ChurnPredictor:
             logger.error(f"Error predicting churn: {e}", exc_info=True)
             return None
 
-    def _identify_risk_factors(
-        self,
-        metrics: CustomerMetrics,
-        features: Dict[str, float]
-    ) -> List[str]:
+    def _identify_risk_factors(self, metrics: CustomerMetrics, features: Dict[str, float]) -> List[str]:
         """Identify risk factors contributing to churn probability."""
         risk_factors = []
 
         if metrics.recency_days > 60:
             risk_factors.append("Long time since last purchase")
 
-        if features['email_engagement_rate'] < 0.1:
+        if features["email_engagement_rate"] < 0.1:
             risk_factors.append("Low email engagement")
 
         if metrics.total_sessions == 0:
@@ -705,34 +725,36 @@ class ChurnPredictor:
 
         return risk_factors
 
-    def _recommend_interventions(
-        self,
-        risk_level: ChurnRisk,
-        risk_factors: List[str]
-    ) -> List[str]:
+    def _recommend_interventions(self, risk_level: ChurnRisk, risk_factors: List[str]) -> List[str]:
         """Recommend intervention strategies based on risk level and factors."""
         interventions = []
 
         if risk_level == ChurnRisk.CRITICAL:
-            interventions.extend([
-                "Immediate phone call from account manager",
-                "Offer significant discount or incentive",
-                "Schedule product demo or training session"
-            ])
+            interventions.extend(
+                [
+                    "Immediate phone call from account manager",
+                    "Offer significant discount or incentive",
+                    "Schedule product demo or training session",
+                ]
+            )
 
         elif risk_level == ChurnRisk.HIGH:
-            interventions.extend([
-                "Send personalized email from customer success",
-                "Offer limited-time promotion",
-                "Provide helpful resources and tutorials"
-            ])
+            interventions.extend(
+                [
+                    "Send personalized email from customer success",
+                    "Offer limited-time promotion",
+                    "Provide helpful resources and tutorials",
+                ]
+            )
 
         elif risk_level == ChurnRisk.MEDIUM:
-            interventions.extend([
-                "Increase email communication frequency",
-                "Send usage tips and best practices",
-                "Invite to webinar or community event"
-            ])
+            interventions.extend(
+                [
+                    "Increase email communication frequency",
+                    "Send usage tips and best practices",
+                    "Invite to webinar or community event",
+                ]
+            )
 
         # Factor-specific interventions
         if "Low email engagement" in risk_factors:
@@ -764,11 +786,7 @@ class CustomerLifetimeAnalytics:
 
         logger.info("CustomerLifetimeAnalytics initialized for enterprise insights")
 
-    async def analyze_customer(
-        self,
-        customer_id: str,
-        include_predictions: bool = True
-    ) -> Dict[str, Any]:
+    async def analyze_customer(self, customer_id: str, include_predictions: bool = True) -> Dict[str, Any]:
         """
         Perform comprehensive analysis for a single customer.
 
@@ -788,7 +806,7 @@ class CustomerLifetimeAnalytics:
             analysis = {
                 "customer_id": customer_id,
                 "basic_metrics": asdict(metrics),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.utcnow().isoformat(),
             }
 
             # Add predictions if requested
@@ -822,7 +840,7 @@ class CustomerLifetimeAnalytics:
         self,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-        segment_filter: Optional[List[CustomerSegment]] = None
+        segment_filter: Optional[List[CustomerSegment]] = None,
     ) -> Dict[str, Any]:
         """
         Generate comprehensive CLV analysis report.
@@ -899,23 +917,25 @@ class CustomerLifetimeAnalytics:
                 "period": {
                     "start_date": start_date.isoformat(),
                     "end_date": end_date.isoformat(),
-                    "duration_days": (end_date - start_date).days
+                    "duration_days": (end_date - start_date).days,
                 },
                 "summary_metrics": {
                     "total_customers": total_customers,
                     "total_predicted_clv": total_predicted_clv,
                     "average_clv": avg_clv,
                     "customers_analyzed": len(clv_predictions),
-                    "high_value_customers": len([p for p in clv_predictions if p.predicted_clv > 1000])
+                    "high_value_customers": len([p for p in clv_predictions if p.predicted_clv > 1000]),
                 },
                 "churn_analysis": {
                     "total_analyzed": len(churn_predictions),
                     "risk_distribution": risk_distribution,
-                    "high_risk_customers": len([p for p in churn_predictions if p.risk_level in [ChurnRisk.HIGH, ChurnRisk.CRITICAL]])
+                    "high_risk_customers": len(
+                        [p for p in churn_predictions if p.risk_level in [ChurnRisk.HIGH, ChurnRisk.CRITICAL]]
+                    ),
                 },
                 "segmentation": {
                     "segment_distribution": segment_distribution,
-                    "total_segments": len(set(segments.values()))
+                    "total_segments": len(set(segments.values())),
                 },
                 "cohort_analysis": cohort_analysis,
                 "top_clv_predictions": [
@@ -923,7 +943,7 @@ class CustomerLifetimeAnalytics:
                         "customer_id": pred.customer_id,
                         "predicted_clv": float(pred.predicted_clv),
                         "churn_risk": pred.churn_risk_level.value,
-                        "segment": pred.segment.value
+                        "segment": pred.segment.value,
                     }
                     for pred in sorted(clv_predictions, key=lambda x: x.predicted_clv, reverse=True)[:10]
                 ],
@@ -932,14 +952,14 @@ class CustomerLifetimeAnalytics:
                         "customer_id": pred.customer_id,
                         "churn_probability": pred.churn_probability,
                         "urgency_score": pred.urgency_score,
-                        "interventions": pred.intervention_strategies[:3]
+                        "interventions": pred.intervention_strategies[:3],
                     }
                     for pred in sorted(churn_predictions, key=lambda x: x.churn_probability, reverse=True)[:10]
                 ],
                 "recommendations": await self._generate_strategic_recommendations(
                     clv_predictions, churn_predictions, segment_distribution
                 ),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.utcnow().isoformat(),
             }
 
             # Cache report
@@ -990,15 +1010,17 @@ class CustomerLifetimeAnalytics:
                 avg_clv = total_clv / len(segment_customer_list)
                 avg_tenure = sum(c.tenure_days for c in segment_customer_list) / len(segment_customer_list)
                 avg_frequency = sum(c.purchase_frequency for c in segment_customer_list) / len(segment_customer_list)
-                avg_order_value = sum(float(c.avg_order_value) for c in segment_customer_list) / len(segment_customer_list)
+                avg_order_value = sum(float(c.avg_order_value) for c in segment_customer_list) / len(
+                    segment_customer_list
+                )
 
                 # Calculate engagement score (simplified)
                 engagement_scores = []
                 for customer in segment_customer_list:
                     score = (
-                        (customer.total_sessions / max(customer.tenure_days, 1) * 30) * 0.3 +
-                        (customer.email_clicks / max(customer.email_opens, 1)) * 0.3 +
-                        (customer.purchase_frequency) * 0.4
+                        (customer.total_sessions / max(customer.tenure_days, 1) * 30) * 0.3
+                        + (customer.email_clicks / max(customer.email_opens, 1)) * 0.3
+                        + (customer.purchase_frequency) * 0.4
                     )
                     engagement_scores.append(score)
 
@@ -1022,11 +1044,13 @@ class CustomerLifetimeAnalytics:
                     communication_preferences={
                         "email_frequency": "weekly" if segment == CustomerSegment.CHAMPIONS else "bi-weekly",
                         "channel_preference": "email",
-                        "content_type": "educational"
+                        "content_type": "educational",
                     },
                     total_segment_value=Decimal(str(total_clv)),
                     growth_potential="high" if avg_clv > 500 else "medium",
-                    investment_priority="high" if segment in [CustomerSegment.CHAMPIONS, CustomerSegment.AT_RISK] else "medium"
+                    investment_priority="high"
+                    if segment in [CustomerSegment.CHAMPIONS, CustomerSegment.AT_RISK]
+                    else "medium",
                 )
 
                 profiles.append(profile)
@@ -1062,7 +1086,7 @@ class CustomerLifetimeAnalytics:
                 support_tickets=2,
                 subscription_plan="professional",
                 monthly_recurring_revenue=Decimal("99.00"),
-                subscription_status="active"
+                subscription_status="active",
             )
 
             return mock_metrics
@@ -1071,18 +1095,14 @@ class CustomerLifetimeAnalytics:
             logger.error(f"Error getting customer metrics: {e}", exc_info=True)
             return None
 
-    async def _get_customers_in_period(
-        self,
-        start_date: datetime,
-        end_date: datetime
-    ) -> List[CustomerMetrics]:
+    async def _get_customers_in_period(self, start_date: datetime, end_date: datetime) -> List[CustomerMetrics]:
         """Get all customers active in the specified period."""
         # This would typically query from database
         # For demo, return mock data for multiple customers
 
         customers = []
         for i in range(50):  # Generate 50 mock customers
-            customer_id = f"cust_{i+1:03d}"
+            customer_id = f"cust_{i + 1:03d}"
 
             # Vary the metrics to create realistic distribution
             tenure_days = np.random.randint(30, 720)
@@ -1104,18 +1124,14 @@ class CustomerLifetimeAnalytics:
                 page_views=np.random.randint(20, 500),
                 email_opens=np.random.randint(0, 50),
                 email_clicks=np.random.randint(0, 20),
-                support_tickets=np.random.randint(0, 8)
+                support_tickets=np.random.randint(0, 8),
             )
 
             customers.append(metrics)
 
         return customers
 
-    async def _generate_cohort_analysis(
-        self,
-        start_date: datetime,
-        end_date: datetime
-    ) -> Dict[str, Any]:
+    async def _generate_cohort_analysis(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Generate cohort analysis for the specified period."""
         try:
             # This would typically involve complex database queries
@@ -1134,10 +1150,7 @@ class CustomerLifetimeAnalytics:
                         base_retention = 0.8 ** (period - 1)  # Decay function
                         retention_rates[period] = max(0.1, base_retention + np.random.uniform(-0.1, 0.1))
 
-                cohorts[cohort_date] = {
-                    "cohort_size": np.random.randint(20, 100),
-                    "retention_rates": retention_rates
-                }
+                cohorts[cohort_date] = {"cohort_size": np.random.randint(20, 100), "retention_rates": retention_rates}
 
             return cohorts
 
@@ -1152,26 +1165,26 @@ class CustomerLifetimeAnalytics:
                 "Exclusive early access to new features",
                 "Dedicated account management",
                 "VIP customer community access",
-                "Personalized success metrics dashboard"
+                "Personalized success metrics dashboard",
             ],
             CustomerSegment.LOYAL_CUSTOMERS: [
                 "Regular check-ins and optimization reviews",
                 "Advanced training and certification programs",
                 "Referral incentive programs",
-                "Premium support tier upgrade"
+                "Premium support tier upgrade",
             ],
             CustomerSegment.AT_RISK: [
                 "Immediate intervention calls",
                 "Win-back discount campaigns",
                 "Success story case studies",
-                "Free consultation sessions"
+                "Free consultation sessions",
             ],
             CustomerSegment.NEW_CUSTOMERS: [
                 "Comprehensive onboarding program",
                 "Regular progress check-ins",
                 "Educational content series",
-                "Quick wins identification"
-            ]
+                "Quick wins identification",
+            ],
         }
 
         return strategies.get(segment, ["Standard engagement program"])
@@ -1183,20 +1196,20 @@ class CustomerLifetimeAnalytics:
                 "Enterprise features upgrade",
                 "Professional services packages",
                 "Advanced analytics modules",
-                "API and integration services"
+                "API and integration services",
             ],
             CustomerSegment.LOYAL_CUSTOMERS: [
                 "Feature expansion recommendations",
                 "Usage optimization consulting",
                 "Complementary product bundles",
-                "Volume discount tiers"
+                "Volume discount tiers",
             ],
             CustomerSegment.POTENTIAL_LOYALISTS: [
                 "Feature demonstration campaigns",
                 "Free trial extensions",
                 "Success-based pricing models",
-                "Gradual feature unlock program"
-            ]
+                "Gradual feature unlock program",
+            ],
         }
 
         return strategies.get(segment, ["Standard upselling program"])
@@ -1205,7 +1218,7 @@ class CustomerLifetimeAnalytics:
         self,
         clv_predictions: List[CLVPrediction],
         churn_predictions: List[ChurnPrediction],
-        segment_distribution: Dict[str, int]
+        segment_distribution: Dict[str, int],
     ) -> List[Dict[str, str]]:
         """Generate strategic recommendations based on analysis."""
         recommendations = []
@@ -1215,41 +1228,48 @@ class CustomerLifetimeAnalytics:
 
         # High-value customers at risk
         high_value_at_risk = [
-            p for p in clv_predictions
+            p
+            for p in clv_predictions
             if p.predicted_clv > 1000 and p.churn_risk_level in [ChurnRisk.HIGH, ChurnRisk.CRITICAL]
         ]
 
         if high_value_at_risk:
-            recommendations.append({
-                "priority": "critical",
-                "title": "Protect High-Value At-Risk Customers",
-                "description": f"{len(high_value_at_risk)} high-value customers at risk of churn",
-                "action": "Immediate account manager intervention and retention offers",
-                "impact": f"Potential revenue loss: ${sum(float(p.predicted_clv) for p in high_value_at_risk):,.2f}"
-            })
+            recommendations.append(
+                {
+                    "priority": "critical",
+                    "title": "Protect High-Value At-Risk Customers",
+                    "description": f"{len(high_value_at_risk)} high-value customers at risk of churn",
+                    "action": "Immediate account manager intervention and retention offers",
+                    "impact": f"Potential revenue loss: ${sum(float(p.predicted_clv) for p in high_value_at_risk):,.2f}",
+                }
+            )
 
         # Segment optimization
         champion_count = segment_distribution.get(CustomerSegment.CHAMPIONS.value, 0)
         total_customers = sum(segment_distribution.values())
 
         if champion_count / total_customers < 0.1:  # Less than 10% champions
-            recommendations.append({
-                "priority": "high",
-                "title": "Increase Champion Customer Ratio",
-                "description": f"Only {champion_count/total_customers*100:.1f}% of customers are Champions",
-                "action": "Focus on converting Loyal Customers to Champions through engagement",
-                "impact": "Improved retention and higher CLV"
-            })
+            recommendations.append(
+                {
+                    "priority": "high",
+                    "title": "Increase Champion Customer Ratio",
+                    "description": f"Only {champion_count / total_customers * 100:.1f}% of customers are Champions",
+                    "action": "Focus on converting Loyal Customers to Champions through engagement",
+                    "impact": "Improved retention and higher CLV",
+                }
+            )
 
         # CLV optimization
         avg_clv = sum(float(p.predicted_clv) for p in clv_predictions) / len(clv_predictions)
         if avg_clv < 500:
-            recommendations.append({
-                "priority": "medium",
-                "title": "Increase Average Customer Lifetime Value",
-                "description": f"Current average CLV: ${avg_clv:.2f}",
-                "action": "Implement upselling programs and increase engagement",
-                "impact": "20% CLV increase could add significant revenue"
-            })
+            recommendations.append(
+                {
+                    "priority": "medium",
+                    "title": "Increase Average Customer Lifetime Value",
+                    "description": f"Current average CLV: ${avg_clv:.2f}",
+                    "action": "Implement upselling programs and increase engagement",
+                    "impact": "20% CLV increase could add significant revenue",
+                }
+            )
 
         return recommendations

@@ -15,20 +15,23 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, get_type_hints, Union, get_origin, get_args
+from typing import Any, Dict, List, Optional, Tuple, Union, get_args, get_origin, get_type_hints
 
 try:
     from ghl_real_estate_ai.ghl_utils.logger import get_logger
 except ImportError:
     import logging
+
     def get_logger(name):
         return logging.getLogger(name)
+
 
 logger = get_logger(__name__)
 
 
 class SerializationMethod(Enum):
     """Serialization strategies in order of preference"""
+
     PYDANTIC_V2 = "pydantic_v2"
     FUNCTION_INTROSPECTION = "function_introspection"
     TYPE_HINT_ANALYSIS = "type_hint_analysis"
@@ -39,6 +42,7 @@ class SerializationMethod(Enum):
 @dataclass
 class SchemaSerializationResult:
     """Result of schema serialization attempt with diagnostic information"""
+
     success: bool
     method_used: SerializationMethod
     schema: Dict[str, Any]
@@ -56,7 +60,7 @@ class SchemaSerializationResult:
             "error": self.error,
             "tool_name": self.tool_name,
             "timestamp": self.timestamp.isoformat(),
-            "schema_keys": list(self.schema.keys()) if self.schema else []
+            "schema_keys": list(self.schema.keys()) if self.schema else [],
         }
 
 
@@ -85,14 +89,11 @@ class ToolSchemaSerializer:
             "total_attempts": 0,
             "successes": 0,
             "failures": 0,
-            "methods_used": {method.value: 0 for method in SerializationMethod}
+            "methods_used": {method.value: 0 for method in SerializationMethod},
         }
 
     async def serialize_tool_schema(
-        self,
-        mcp_tool: Any,
-        tool_name: str,
-        tenant_id: Optional[str] = None
+        self, mcp_tool: Any, tool_name: str, tenant_id: Optional[str] = None
     ) -> Tuple[Dict[str, Any], SchemaSerializationResult]:
         """
         Serialize MCP tool schema with progressive fallback strategies.
@@ -141,40 +142,37 @@ class ToolSchemaSerializer:
 
             logger.info(
                 f"Tool schema serialization successful (Pydantic V2): {tool_name}",
-                extra={"tool": tool_name, "method": "pydantic_v2", "schema_keys": list(schema.keys())}
+                extra={"tool": tool_name, "method": "pydantic_v2", "schema_keys": list(schema.keys())},
             )
 
             return SchemaSerializationResult(
-                success=True,
-                method_used=SerializationMethod.PYDANTIC_V2,
-                schema=schema,
-                tool_name=tool_name
+                success=True, method_used=SerializationMethod.PYDANTIC_V2, schema=schema, tool_name=tool_name
             )
 
         except AttributeError as e:
             logger.debug(
                 f"Pydantic V2 serialization failed (no model_json_schema method): {tool_name}",
-                extra={"tool": tool_name, "error": str(e)}
+                extra={"tool": tool_name, "error": str(e)},
             )
             return SchemaSerializationResult(
                 success=False,
                 method_used=SerializationMethod.PYDANTIC_V2,
                 schema={},
                 error=f"AttributeError: {str(e)}",
-                tool_name=tool_name
+                tool_name=tool_name,
             )
 
         except Exception as e:
             logger.warning(
                 f"Pydantic V2 serialization failed (unexpected error): {tool_name}",
-                extra={"tool": tool_name, "error": str(e), "error_type": type(e).__name__}
+                extra={"tool": tool_name, "error": str(e), "error_type": type(e).__name__},
             )
             return SchemaSerializationResult(
                 success=False,
                 method_used=SerializationMethod.PYDANTIC_V2,
                 schema={},
                 error=f"{type(e).__name__}: {str(e)}",
-                tool_name=tool_name
+                tool_name=tool_name,
             )
 
     async def _try_function_introspection(self, mcp_tool: Any, tool_name: str) -> SchemaSerializationResult:
@@ -186,9 +184,9 @@ class ToolSchemaSerializer:
         try:
             # Get the underlying function
             func = None
-            if hasattr(mcp_tool, 'fn'):
+            if hasattr(mcp_tool, "fn"):
                 func = mcp_tool.fn
-            elif hasattr(mcp_tool, '__call__'):
+            elif hasattr(mcp_tool, "__call__"):
                 func = mcp_tool.__call__
             elif callable(mcp_tool):
                 func = mcp_tool
@@ -199,7 +197,7 @@ class ToolSchemaSerializer:
                     method_used=SerializationMethod.FUNCTION_INTROSPECTION,
                     schema={},
                     error="No callable found on tool object",
-                    tool_name=tool_name
+                    tool_name=tool_name,
                 )
 
             # Introspect signature
@@ -208,7 +206,7 @@ class ToolSchemaSerializer:
             required = []
 
             for param_name, param in sig.parameters.items():
-                if param_name in ('self', 'cls'):
+                if param_name in ("self", "cls"):
                     continue
 
                 # Build parameter schema
@@ -219,19 +217,11 @@ class ToolSchemaSerializer:
                 if param.default == inspect.Parameter.empty:
                     required.append(param_name)
 
-            schema = {
-                "type": "object",
-                "properties": properties,
-                "required": required
-            }
+            schema = {"type": "object", "properties": properties, "required": required}
 
             logger.info(
                 f"Tool schema serialization successful (Introspection): {tool_name}",
-                extra={
-                    "tool": tool_name,
-                    "method": "function_introspection",
-                    "param_count": len(properties)
-                }
+                extra={"tool": tool_name, "method": "function_introspection", "param_count": len(properties)},
             )
 
             return SchemaSerializationResult(
@@ -239,20 +229,20 @@ class ToolSchemaSerializer:
                 method_used=SerializationMethod.FUNCTION_INTROSPECTION,
                 schema=schema,
                 tool_name=tool_name,
-                warnings=["Schema built via introspection, may lack detailed type information"]
+                warnings=["Schema built via introspection, may lack detailed type information"],
             )
 
         except Exception as e:
             logger.warning(
                 f"Function introspection serialization failed: {tool_name}",
-                extra={"tool": tool_name, "error": str(e), "error_type": type(e).__name__}
+                extra={"tool": tool_name, "error": str(e), "error_type": type(e).__name__},
             )
             return SchemaSerializationResult(
                 success=False,
                 method_used=SerializationMethod.FUNCTION_INTROSPECTION,
                 schema={},
                 error=f"{type(e).__name__}: {str(e)}",
-                tool_name=tool_name
+                tool_name=tool_name,
             )
 
     async def _try_type_hint_analysis(self, mcp_tool: Any, tool_name: str) -> SchemaSerializationResult:
@@ -264,9 +254,9 @@ class ToolSchemaSerializer:
         try:
             # Get the underlying function
             func = None
-            if hasattr(mcp_tool, 'fn'):
+            if hasattr(mcp_tool, "fn"):
                 func = mcp_tool.fn
-            elif hasattr(mcp_tool, '__call__'):
+            elif hasattr(mcp_tool, "__call__"):
                 func = mcp_tool.__call__
             elif callable(mcp_tool):
                 func = mcp_tool
@@ -277,7 +267,7 @@ class ToolSchemaSerializer:
                     method_used=SerializationMethod.TYPE_HINT_ANALYSIS,
                     schema={},
                     error="No callable found on tool object",
-                    tool_name=tool_name
+                    tool_name=tool_name,
                 )
 
             # Get type hints
@@ -292,7 +282,7 @@ class ToolSchemaSerializer:
             required = []
 
             for param_name, param in sig.parameters.items():
-                if param_name in ('self', 'cls', 'return'):
+                if param_name in ("self", "cls", "return"):
                     continue
 
                 # Get type hint
@@ -304,19 +294,11 @@ class ToolSchemaSerializer:
                 if param.default == inspect.Parameter.empty:
                     required.append(param_name)
 
-            schema = {
-                "type": "object",
-                "properties": properties,
-                "required": required
-            }
+            schema = {"type": "object", "properties": properties, "required": required}
 
             logger.info(
                 f"Tool schema serialization successful (Type Hint Analysis): {tool_name}",
-                extra={
-                    "tool": tool_name,
-                    "method": "type_hint_analysis",
-                    "param_count": len(properties)
-                }
+                extra={"tool": tool_name, "method": "type_hint_analysis", "param_count": len(properties)},
             )
 
             return SchemaSerializationResult(
@@ -324,20 +306,20 @@ class ToolSchemaSerializer:
                 method_used=SerializationMethod.TYPE_HINT_ANALYSIS,
                 schema=schema,
                 tool_name=tool_name,
-                warnings=["Schema built via type hint analysis, complex types may be simplified"]
+                warnings=["Schema built via type hint analysis, complex types may be simplified"],
             )
 
         except Exception as e:
             logger.warning(
                 f"Type hint analysis serialization failed: {tool_name}",
-                extra={"tool": tool_name, "error": str(e), "error_type": type(e).__name__}
+                extra={"tool": tool_name, "error": str(e), "error_type": type(e).__name__},
             )
             return SchemaSerializationResult(
                 success=False,
                 method_used=SerializationMethod.TYPE_HINT_ANALYSIS,
                 schema={},
                 error=f"{type(e).__name__}: {str(e)}",
-                tool_name=tool_name
+                tool_name=tool_name,
             )
 
     async def _minimal_fallback(self, mcp_tool: Any, tool_name: str) -> SchemaSerializationResult:
@@ -350,9 +332,9 @@ class ToolSchemaSerializer:
         try:
             # Try to extract description
             description = None
-            if hasattr(mcp_tool, 'description'):
+            if hasattr(mcp_tool, "description"):
                 description = mcp_tool.description
-            elif hasattr(mcp_tool, '__doc__'):
+            elif hasattr(mcp_tool, "__doc__"):
                 description = mcp_tool.__doc__
 
             # Build minimal schema with metadata
@@ -361,7 +343,7 @@ class ToolSchemaSerializer:
                 "properties": {},
                 "description": description or f"Tool: {tool_name} (schema unavailable)",
                 "x-serialization-fallback": True,
-                "x-tool-name": tool_name
+                "x-tool-name": tool_name,
             }
 
             logger.warning(
@@ -369,8 +351,8 @@ class ToolSchemaSerializer:
                 extra={
                     "tool": tool_name,
                     "method": "minimal_fallback",
-                    "warning": "All serialization strategies failed, using minimal schema"
-                }
+                    "warning": "All serialization strategies failed, using minimal schema",
+                },
             )
 
             return SchemaSerializationResult(
@@ -381,23 +363,20 @@ class ToolSchemaSerializer:
                 warnings=[
                     "All serialization strategies failed",
                     "Using minimal fallback schema",
-                    "Tool may not function correctly"
-                ]
+                    "Tool may not function correctly",
+                ],
             )
 
         except Exception as e:
             # This should never happen, but handle it anyway
-            logger.error(
-                f"Minimal fallback failed (critical): {tool_name}",
-                extra={"tool": tool_name, "error": str(e)}
-            )
+            logger.error(f"Minimal fallback failed (critical): {tool_name}", extra={"tool": tool_name, "error": str(e)})
             return SchemaSerializationResult(
                 success=False,
                 method_used=SerializationMethod.FAILED,
                 schema={"type": "object", "properties": {}},
                 error=f"Critical failure: {str(e)}",
                 tool_name=tool_name,
-                warnings=["Critical: Even minimal fallback failed"]
+                warnings=["Critical: Even minimal fallback failed"],
             )
 
     def _parameter_to_schema(self, param: inspect.Parameter) -> Dict[str, Any]:
@@ -474,8 +453,8 @@ class ToolSchemaSerializer:
                     data={
                         "tool_name": result.tool_name,
                         "method": result.method_used.value,
-                        "warnings": result.warnings
-                    }
+                        "warnings": result.warnings,
+                    },
                 )
             except Exception as e:
                 logger.debug(f"Failed to track serialization success: {e}")
@@ -494,8 +473,8 @@ class ToolSchemaSerializer:
                         "tool_name": result.tool_name,
                         "method": result.method_used.value,
                         "error": result.error,
-                        "warnings": result.warnings
-                    }
+                        "warnings": result.warnings,
+                    },
                 )
             except Exception as e:
                 logger.debug(f"Failed to track serialization failure: {e}")

@@ -10,16 +10,17 @@ Features:
 - Security event logging
 """
 
-import re
-import json
 import asyncio
-from typing import Any, Dict, List, Optional, Union
-from fastapi import Request, HTTPException, status
-from starlette.middleware.base import BaseHTTPMiddleware
-from pydantic import BaseModel, ValidationError
 import html
-import bleach
+import json
+import re
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import unquote
+
+import bleach
+from fastapi import HTTPException, Request, status
+from pydantic import BaseModel, ValidationError
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -59,7 +60,9 @@ class SecurityValidator:
         ]
 
         # Compile safe patterns
-        self.compiled_safe_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.conversation_safe_patterns]
+        self.compiled_safe_patterns = [
+            re.compile(pattern, re.IGNORECASE) for pattern in self.conversation_safe_patterns
+        ]
 
         # XSS patterns
         self.xss_patterns = [
@@ -111,7 +114,7 @@ class SecurityValidator:
                     r"\bor\s+1\s*=\s*1\b",
                     r"--\s",
                     r"/\*.*?\*/",
-                    r";\s*(select|insert|update|delete)\b"
+                    r";\s*(select|insert|update|delete)\b",
                 ]
                 for obvious_pattern in obvious_sql_patterns:
                     if re.search(obvious_pattern, decoded_value, re.IGNORECASE):
@@ -162,7 +165,7 @@ class SecurityValidator:
 
         if allow_html:
             # Allow safe HTML tags
-            allowed_tags = ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li']
+            allowed_tags = ["b", "i", "em", "strong", "p", "br", "ul", "ol", "li"]
             allowed_attributes = {}
             value = bleach.clean(value, tags=allowed_tags, attributes=allowed_attributes)
         else:
@@ -206,19 +209,16 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                     "content_length": content_length,
                     "max_allowed": self.max_request_size,
                     "ip_address": self._get_client_ip(request),
-                    "event_id": "VAL_001"
-                }
+                    "event_id": "VAL_001",
+                },
             )
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="Request entity too large"
-            )
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Request entity too large")
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP for logging."""
         forwarded_for = request.headers.get("X-Forwarded-For")
         if forwarded_for:
-            return forwarded_for.split(',')[0].strip()
+            return forwarded_for.split(",")[0].strip()
         return request.client.host if request.client else "unknown"
 
     def _validate_value(self, value: Any, param_name: str, request: Request) -> Any:
@@ -230,7 +230,7 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
         is_conversation_endpoint = self._is_real_estate_conversation_endpoint(request.url.path)
 
         # Skip SQL injection validation for conversation messages (natural language)
-        if not (is_conversation_endpoint and param_name in ['message', 'content', 'text', 'query']):
+        if not (is_conversation_endpoint and param_name in ["message", "content", "text", "query"]):
             # Check for SQL injection
             is_valid, reason = self.validator.validate_sql_injection(value)
             if not is_valid:
@@ -243,16 +243,16 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                         "reason": reason,
                         "ip_address": self._get_client_ip(request),
                         "path": request.url.path,
-                        "event_id": "VAL_002"
-                    }
+                        "event_id": "VAL_002",
+                    },
                 )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid input in parameter '{param_name}': {reason}"
+                    detail=f"Invalid input in parameter '{param_name}': {reason}",
                 )
 
         # FIXED: Apply relaxed XSS validation for conversation endpoints
-        if not (is_conversation_endpoint and param_name in ['message', 'content', 'text', 'query']):
+        if not (is_conversation_endpoint and param_name in ["message", "content", "text", "query"]):
             # Check for XSS
             is_valid, reason = self.validator.validate_xss(value)
             if not is_valid:
@@ -265,12 +265,12 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                         "reason": reason,
                         "ip_address": self._get_client_ip(request),
                         "path": request.url.path,
-                        "event_id": "VAL_003"
-                    }
+                        "event_id": "VAL_003",
+                    },
                 )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid input in parameter '{param_name}': {reason}"
+                    detail=f"Invalid input in parameter '{param_name}': {reason}",
                 )
 
         # Check for path traversal (still validate for all parameters)
@@ -285,17 +285,16 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                     "reason": reason,
                     "ip_address": self._get_client_ip(request),
                     "path": request.url.path,
-                    "event_id": "VAL_004"
-                }
+                    "event_id": "VAL_004",
+                },
             )
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid input in parameter '{param_name}': {reason}"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid input in parameter '{param_name}': {reason}"
             )
 
         # FIXED: Gentle sanitization for conversation messages, standard for other fields
         if self.enable_sanitization:
-            if is_conversation_endpoint and param_name in ['message', 'content', 'text', 'query']:
+            if is_conversation_endpoint and param_name in ["message", "content", "text", "query"]:
                 # Gentle sanitization for natural language - preserve contractions and natural text
                 value = self.validator.sanitize_string(value, allow_html=False)
             else:
@@ -314,8 +313,13 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                 validated_data[key] = self._validate_dict_recursive(value, request, param_name)
             elif isinstance(value, list):
                 validated_data[key] = [
-                    self._validate_value(item, f"{param_name}[{i}]", request) if isinstance(item, str)
-                    else (self._validate_dict_recursive(item, request, f"{param_name}[{i}]") if isinstance(item, dict) else item)
+                    self._validate_value(item, f"{param_name}[{i}]", request)
+                    if isinstance(item, str)
+                    else (
+                        self._validate_dict_recursive(item, request, f"{param_name}[{i}]")
+                        if isinstance(item, dict)
+                        else item
+                    )
                     for i, item in enumerate(value)
                 ]
             else:
@@ -348,7 +352,7 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
 
             # Parse JSON
             try:
-                json_data = json.loads(body.decode('utf-8'))
+                json_data = json.loads(body.decode("utf-8"))
             except json.JSONDecodeError as e:
                 logger.warning(
                     f"Invalid JSON in request body",
@@ -356,13 +360,10 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                         "security_event": "invalid_json",
                         "error": str(e),
                         "ip_address": self._get_client_ip(request),
-                        "event_id": "VAL_005"
-                    }
+                        "event_id": "VAL_005",
+                    },
                 )
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid JSON in request body"
-                )
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON in request body")
 
             # Validate JSON data
             if isinstance(json_data, dict):
@@ -382,33 +383,21 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                     "error_type": type(e).__name__,
                     "ip_address": self._get_client_ip(request),
                     "path": request.url.path,
-                    "event_id": "VAL_006"
-                }
+                    "event_id": "VAL_006",
+                },
             )
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Error processing request body: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error processing request body: {str(e)}"
             )
 
     def _is_business_critical_endpoint(self, path: str) -> bool:
         """Check if endpoint is business-critical and needs extra protection."""
-        critical_patterns = [
-            "/api/revenue",
-            "/api/commission",
-            "/api/analytics",
-            "/api/bi",
-            "/api/admin"
-        ]
+        critical_patterns = ["/api/revenue", "/api/commission", "/api/analytics", "/api/bi", "/api/admin"]
         return any(path.startswith(pattern) for pattern in critical_patterns)
 
     def _is_real_estate_conversation_endpoint(self, path: str) -> bool:
         """Check if endpoint handles real estate conversation data that should have relaxed validation."""
-        conversation_patterns = [
-            "/api/jorge-seller",
-            "/api/bot",
-            "/api/lead-bot",
-            "/api/claude-chat"
-        ]
+        conversation_patterns = ["/api/jorge-seller", "/api/bot", "/api/lead-bot", "/api/claude-chat"]
         return any(path.startswith(pattern) for pattern in conversation_patterns)
 
     async def dispatch(self, request: Request, call_next):
@@ -431,8 +420,8 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                         "path": request.url.path,
                         "method": request.method,
                         "ip_address": self._get_client_ip(request),
-                        "event_id": "VAL_007"
-                    }
+                        "event_id": "VAL_007",
+                    },
                 )
 
             # Validate query parameters
@@ -443,7 +432,7 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
 
             # Store validated data in request state for use by endpoints
             if validated_json is not None:
-                if hasattr(request, 'state'):
+                if hasattr(request, "state"):
                     request.state.validated_json = validated_json
 
             # Process request
@@ -465,16 +454,14 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                     "error": str(e),
                     "path": request.url.path,
                     "ip_address": self._get_client_ip(request),
-                    "event_id": "VAL_008"
-                }
+                    "event_id": "VAL_008",
+                },
             )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal validation error"
-            )
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal validation error")
 
 
 # Utility functions for endpoint-specific validation
+
 
 def validate_jorge_commission_data(data: Dict[str, Any]) -> Dict[str, Any]:
     """Special validation for Jorge's commission-related endpoints."""

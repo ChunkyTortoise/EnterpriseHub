@@ -4,20 +4,23 @@ Lead Sequence State Service - Persistent tracking for 3-7-30 lead nurture sequen
 Manages sequence progression state in Redis to ensure continuity across conversation sessions.
 Tracks which day each lead is on, completion status, and next scheduled actions.
 """
-import asyncio
-from typing import Optional, Dict, Any, List, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
-from enum import Enum
-import logging
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service, CacheService
+import asyncio
+import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
 
 logger = get_logger(__name__)
 
+
 class SequenceDay(Enum):
     """Enumeration of sequence days in the 3-7-30 automation."""
+
     INITIAL = "initial"
     DAY_3 = "day_3"
     DAY_7 = "day_7"
@@ -26,8 +29,10 @@ class SequenceDay(Enum):
     NURTURE = "nurture"
     QUALIFIED = "qualified"
 
+
 class SequenceStatus(Enum):
     """Status of sequence execution."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -60,17 +65,18 @@ VALID_DAY_TRANSITIONS: Dict[SequenceDay, List[SequenceDay]] = {
 
 class InvalidStateTransitionError(Exception):
     """Raised when an invalid state transition is attempted."""
+
     def __init__(self, from_state: str, to_state: str, state_type: str = "status"):
         self.from_state = from_state
         self.to_state = to_state
         self.state_type = state_type
-        super().__init__(
-            f"Invalid {state_type} transition from '{from_state}' to '{to_state}'"
-        )
+        super().__init__(f"Invalid {state_type} transition from '{from_state}' to '{to_state}'")
+
 
 @dataclass
 class LeadSequenceState:
     """Complete state tracking for a lead's sequence progression."""
+
     lead_id: str
     current_day: SequenceDay
     sequence_status: SequenceStatus
@@ -110,8 +116,8 @@ class LeadSequenceState:
         """Convert to dictionary for serialization."""
         data = asdict(self)
         # Convert enums to values
-        data['current_day'] = self.current_day.value
-        data['sequence_status'] = self.sequence_status.value
+        data["current_day"] = self.current_day.value
+        data["sequence_status"] = self.sequence_status.value
         # Convert datetime objects to ISO strings
         for key, value in data.items():
             if isinstance(value, datetime):
@@ -119,17 +125,25 @@ class LeadSequenceState:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'LeadSequenceState':
+    def from_dict(cls, data: Dict[str, Any]) -> "LeadSequenceState":
         """Create instance from dictionary."""
         # Convert enum values back to enums
-        data['current_day'] = SequenceDay(data['current_day'])
-        data['sequence_status'] = SequenceStatus(data['sequence_status'])
+        data["current_day"] = SequenceDay(data["current_day"])
+        data["sequence_status"] = SequenceStatus(data["sequence_status"])
 
         # Convert ISO strings back to datetime objects
         datetime_fields = [
-            'sequence_started_at', 'last_action_at', 'next_scheduled_at',
-            'day_3_delivered_at', 'day_7_delivered_at', 'day_14_delivered_at', 'day_30_delivered_at',
-            'last_response_at', 'cma_generated_at', 'created_at', 'updated_at'
+            "sequence_started_at",
+            "last_action_at",
+            "next_scheduled_at",
+            "day_3_delivered_at",
+            "day_7_delivered_at",
+            "day_14_delivered_at",
+            "day_30_delivered_at",
+            "last_response_at",
+            "cma_generated_at",
+            "created_at",
+            "updated_at",
         ]
 
         for field in datetime_fields:
@@ -137,6 +151,7 @@ class LeadSequenceState:
                 data[field] = datetime.fromisoformat(data[field])
 
         return cls(**data)
+
 
 class LeadSequenceStateService:
     """Service for managing lead sequence state persistence."""
@@ -156,10 +171,7 @@ class LeadSequenceStateService:
         return f"{self.key_prefix}:active"
 
     def _validate_status_transition(
-        self,
-        from_status: SequenceStatus,
-        to_status: SequenceStatus,
-        lead_id: str
+        self, from_status: SequenceStatus, to_status: SequenceStatus, lead_id: str
     ) -> Tuple[bool, Optional[str]]:
         """
         Validate a status transition is allowed.
@@ -183,10 +195,7 @@ class LeadSequenceStateService:
         return True, None
 
     def _validate_day_transition(
-        self,
-        from_day: SequenceDay,
-        to_day: SequenceDay,
-        lead_id: str
+        self, from_day: SequenceDay, to_day: SequenceDay, lead_id: str
     ) -> Tuple[bool, Optional[str]]:
         """
         Validate a day transition is allowed.
@@ -210,10 +219,7 @@ class LeadSequenceStateService:
         return True, None
 
     async def transition_status(
-        self,
-        lead_id: str,
-        new_status: SequenceStatus,
-        force: bool = False
+        self, lead_id: str, new_status: SequenceStatus, force: bool = False
     ) -> Tuple[bool, Optional[str]]:
         """
         Transition sequence status with validation.
@@ -231,9 +237,7 @@ class LeadSequenceStateService:
             return False, f"No sequence state found for lead {lead_id}"
 
         if not force:
-            is_valid, error_msg = self._validate_status_transition(
-                state.sequence_status, new_status, lead_id
-            )
+            is_valid, error_msg = self._validate_status_transition(state.sequence_status, new_status, lead_id)
             if not is_valid:
                 return False, error_msg
 
@@ -244,11 +248,7 @@ class LeadSequenceStateService:
         logger.info(f"Lead {lead_id} status transition: {old_status.value} -> {new_status.value}")
         return True, None
 
-    async def create_sequence(
-        self,
-        lead_id: str,
-        initial_day: SequenceDay = SequenceDay.DAY_3
-    ) -> LeadSequenceState:
+    async def create_sequence(self, lead_id: str, initial_day: SequenceDay = SequenceDay.DAY_3) -> LeadSequenceState:
         """Create a new sequence for a lead."""
         now = datetime.now()
 
@@ -258,7 +258,7 @@ class LeadSequenceStateService:
             sequence_status=SequenceStatus.PENDING,
             sequence_started_at=now,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
 
         await self.save_state(state)
@@ -324,9 +324,7 @@ class LeadSequenceStateService:
 
         next_day = next_day_map.get(state.current_day)
         if not next_day:
-            logger.warning(
-                f"Cannot advance lead {lead_id} from terminal state: {state.current_day.value}"
-            )
+            logger.warning(f"Cannot advance lead {lead_id} from terminal state: {state.current_day.value}")
             return None
 
         # Validate the transition unless forced
@@ -369,12 +367,7 @@ class LeadSequenceStateService:
         logger.info(f"Advanced lead {lead_id}: {old_day.value} -> {state.current_day.value}")
         return state
 
-    async def mark_action_completed(
-        self,
-        lead_id: str,
-        day: SequenceDay,
-        action_type: str = "delivered"
-    ) -> bool:
+    async def mark_action_completed(self, lead_id: str, day: SequenceDay, action_type: str = "delivered") -> bool:
         """Mark a specific day's action as completed."""
         state = await self.get_state(lead_id)
         if not state:
@@ -476,9 +469,7 @@ class LeadSequenceStateService:
             return False, f"No sequence state found for lead {lead_id}"
 
         # Validate the transition
-        is_valid, error_msg = self._validate_status_transition(
-            state.sequence_status, SequenceStatus.PAUSED, lead_id
-        )
+        is_valid, error_msg = self._validate_status_transition(state.sequence_status, SequenceStatus.PAUSED, lead_id)
         if not is_valid:
             return False, error_msg
 
@@ -526,9 +517,7 @@ class LeadSequenceStateService:
             return False, f"No sequence state found for lead {lead_id}"
 
         # Validate the transition
-        is_valid, error_msg = self._validate_status_transition(
-            state.sequence_status, SequenceStatus.COMPLETED, lead_id
-        )
+        is_valid, error_msg = self._validate_status_transition(state.sequence_status, SequenceStatus.COMPLETED, lead_id)
         if not is_valid:
             return False, error_msg
 
@@ -538,7 +527,9 @@ class LeadSequenceStateService:
         await self.save_state(state)
         await self._remove_from_active_sequences(lead_id)
 
-        logger.info(f"Completed sequence for lead {lead_id} ({old_status.value} -> completed) with status: {final_status}")
+        logger.info(
+            f"Completed sequence for lead {lead_id} ({old_status.value} -> completed) with status: {final_status}"
+        )
         return True, None
 
     async def get_sequence_summary(self, lead_id: str) -> Optional[Dict[str, Any]]:
@@ -551,21 +542,21 @@ class LeadSequenceStateService:
         days_in_sequence = (now - state.sequence_started_at).days if state.sequence_started_at else 0
 
         return {
-            'lead_id': lead_id,
-            'current_day': state.current_day.value,
-            'sequence_status': state.sequence_status.value,
-            'engagement_status': state.engagement_status,
-            'days_in_sequence': days_in_sequence,
-            'response_count': state.response_count,
-            'progress': {
-                'day_3_completed': state.day_3_completed,
-                'day_7_completed': state.day_7_completed,
-                'day_14_completed': state.day_14_completed,
-                'day_30_completed': state.day_30_completed,
+            "lead_id": lead_id,
+            "current_day": state.current_day.value,
+            "sequence_status": state.sequence_status.value,
+            "engagement_status": state.engagement_status,
+            "days_in_sequence": days_in_sequence,
+            "response_count": state.response_count,
+            "progress": {
+                "day_3_completed": state.day_3_completed,
+                "day_7_completed": state.day_7_completed,
+                "day_14_completed": state.day_14_completed,
+                "day_30_completed": state.day_30_completed,
             },
-            'next_scheduled_at': state.next_scheduled_at.isoformat() if state.next_scheduled_at else None,
-            'cma_generated': state.cma_generated,
-            'stall_breaker_attempts': state.stall_breaker_attempts,
+            "next_scheduled_at": state.next_scheduled_at.isoformat() if state.next_scheduled_at else None,
+            "cma_generated": state.cma_generated,
+            "stall_breaker_attempts": state.stall_breaker_attempts,
         }
 
     async def _add_to_active_sequences(self, lead_id: str) -> bool:
@@ -629,8 +620,10 @@ class LeadSequenceStateService:
         logger.info(f"Cleaned up {cleaned_count} expired sequences older than {older_than_days} days")
         return cleaned_count
 
+
 # Global service instance
 _sequence_service: Optional[LeadSequenceStateService] = None
+
 
 def get_sequence_service() -> LeadSequenceStateService:
     """Get global sequence service instance."""

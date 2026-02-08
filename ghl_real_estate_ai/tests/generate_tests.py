@@ -1081,12 +1081,14 @@ class TestBuyerBudgetConfig:
         assert hours == budget_config.QUALIFICATION_HOT_FOLLOWUP_HOURS
 '''
 
+
 def write_test_file(filename, content):
     """Write test content to file."""
     filepath = f"ghl_real_estate_ai/tests/services/{filename}"
     with open(filepath, "w") as f:
         f.write(content)
     print(f"Created: {filepath}")
+
 
 if __name__ == "__main__":
     # Create all test files

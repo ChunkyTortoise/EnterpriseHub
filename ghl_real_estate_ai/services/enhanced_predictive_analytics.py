@@ -5,23 +5,26 @@ AI-Powered Market Intelligence & Performance Optimization Engine
 
 import asyncio
 import json
-import numpy as np
-import pandas as pd
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from enum import Enum
 import logging
-from concurrent.futures import ThreadPoolExecutor
 import pickle
 import warnings
-warnings.filterwarnings('ignore')
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
+
+warnings.filterwarnings("ignore")
 
 # Placeholder imports for ML libraries (would be actual sklearn, etc. in production)
 try:
-    from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-    from sklearn.model_selection import train_test_split
+    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
     from sklearn.metrics import mean_absolute_error, r2_score
+    from sklearn.model_selection import train_test_split
+
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
@@ -31,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 class PredictionType(Enum):
     """Types of predictions available"""
+
     PROPERTY_VALUE = "property_value"
     LEAD_CONVERSION = "lead_conversion"
     MARKET_TIMING = "market_timing"
@@ -41,6 +45,7 @@ class PredictionType(Enum):
 
 class MarketCondition(Enum):
     """Market condition classifications"""
+
     BUYERS_MARKET = "buyers_market"
     SELLERS_MARKET = "sellers_market"
     BALANCED_MARKET = "balanced_market"
@@ -49,6 +54,7 @@ class MarketCondition(Enum):
 
 class RiskLevel(Enum):
     """Risk assessment levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -58,6 +64,7 @@ class RiskLevel(Enum):
 @dataclass
 class PropertyValuePrediction:
     """Property value prediction result"""
+
     property_id: str
     current_estimate: float
     predicted_value_3m: float
@@ -76,6 +83,7 @@ class PropertyValuePrediction:
 @dataclass
 class LeadScorePrediction:
     """Lead conversion prediction result"""
+
     lead_id: str
     lead_score: float  # 0-100
     conversion_probability: float  # 0.0-1.0
@@ -92,6 +100,7 @@ class LeadScorePrediction:
 @dataclass
 class MarketTimingPrediction:
     """Market timing prediction result"""
+
     market_area: str
     property_type: str
     current_condition: MarketCondition
@@ -109,6 +118,7 @@ class MarketTimingPrediction:
 @dataclass
 class AgentPerformancePrediction:
     """Agent performance prediction result"""
+
     agent_id: str
     performance_score: float  # 0-100
     predicted_monthly_revenue: float
@@ -124,6 +134,7 @@ class AgentPerformancePrediction:
 @dataclass
 class InvestmentAnalysis:
     """Investment opportunity analysis"""
+
     property_id: str
     roi_prediction_1yr: float
     roi_prediction_5yr: float
@@ -168,9 +179,7 @@ class EnhancedPredictiveAnalytics:
             logger.warning("Sklearn not available, using simulated predictions")
 
     async def predict_property_value(
-        self,
-        property_data: Dict[str, Any],
-        prediction_horizons: List[str] = ["3m", "6m", "12m"]
+        self, property_data: Dict[str, Any], prediction_horizons: List[str] = ["3m", "6m", "12m"]
     ) -> PropertyValuePrediction:
         """
         Predict property values for multiple time horizons
@@ -209,9 +218,7 @@ class EnhancedPredictiveAnalytics:
             key_factors = await self._identify_value_drivers(features, predictions)
 
             # Determine optimal timing
-            optimal_timing = await self._determine_optimal_timing(
-                market_conditions, predictions, risk_assessment
-            )
+            optimal_timing = await self._determine_optimal_timing(market_conditions, predictions, risk_assessment)
 
             result = PropertyValuePrediction(
                 property_id=property_data.get("property_id", "unknown"),
@@ -226,7 +233,7 @@ class EnhancedPredictiveAnalytics:
                 market_conditions=market_conditions,
                 risk_assessment=risk_assessment,
                 optimal_timing=optimal_timing,
-                prediction_timestamp=datetime.now()
+                prediction_timestamp=datetime.now(),
             )
 
             # Log performance
@@ -240,10 +247,7 @@ class EnhancedPredictiveAnalytics:
             return self._create_fallback_property_prediction(property_data)
 
     async def predict_lead_conversion(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict] = None,
-        behavioral_data: Dict[str, Any] = None
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict] = None, behavioral_data: Dict[str, Any] = None
     ) -> LeadScorePrediction:
         """
         Predict lead conversion probability and timeline
@@ -260,9 +264,7 @@ class EnhancedPredictiveAnalytics:
             start_time = datetime.now()
 
             # Extract comprehensive lead features
-            features = await self._extract_lead_features(
-                lead_data, conversation_history, behavioral_data
-            )
+            features = await self._extract_lead_features(lead_data, conversation_history, behavioral_data)
 
             # Calculate lead score (0-100)
             lead_score = await self._calculate_lead_score(features)
@@ -287,9 +289,7 @@ class EnhancedPredictiveAnalytics:
             recommended_agent = await self._recommend_optimal_agent(features, lead_data)
 
             # Generate coaching recommendations
-            coaching_recs = await self._generate_coaching_recommendations(
-                features, risk_factors, lead_data
-            )
+            coaching_recs = await self._generate_coaching_recommendations(features, risk_factors, lead_data)
 
             result = LeadScorePrediction(
                 lead_id=lead_data.get("lead_id", "unknown"),
@@ -302,13 +302,15 @@ class EnhancedPredictiveAnalytics:
                 expected_value=expected_value,
                 recommended_agent=recommended_agent,
                 coaching_recommendations=coaching_recs,
-                prediction_timestamp=datetime.now()
+                prediction_timestamp=datetime.now(),
             )
 
             # Log performance
             processing_time = (datetime.now() - start_time).total_seconds() * 1000
-            logger.info(f"Lead conversion prediction completed in {processing_time:.1f}ms, "
-                       f"score: {lead_score:.1f}, probability: {conversion_prob:.2f}")
+            logger.info(
+                f"Lead conversion prediction completed in {processing_time:.1f}ms, "
+                f"score: {lead_score:.1f}, probability: {conversion_prob:.2f}"
+            )
 
             return result
 
@@ -317,10 +319,7 @@ class EnhancedPredictiveAnalytics:
             return self._create_fallback_lead_prediction(lead_data)
 
     async def predict_market_timing(
-        self,
-        market_area: str,
-        property_type: str = "residential",
-        analysis_depth: str = "standard"
+        self, market_area: str, property_type: str = "residential", analysis_depth: str = "standard"
     ) -> MarketTimingPrediction:
         """
         Predict optimal market timing for buying/selling
@@ -343,22 +342,16 @@ class EnhancedPredictiveAnalytics:
             current_condition = await self._analyze_current_market(market_data)
 
             # Predict future market conditions
-            future_predictions = await self._predict_future_market_conditions(
-                market_data, ["3m", "6m", "12m"]
-            )
+            future_predictions = await self._predict_future_market_conditions(market_data, ["3m", "6m", "12m"])
 
             # Determine optimal timing
-            timing_analysis = await self._analyze_optimal_timing(
-                current_condition, future_predictions, market_data
-            )
+            timing_analysis = await self._analyze_optimal_timing(current_condition, future_predictions, market_data)
 
             # Identify key market indicators
             key_indicators = await self._identify_market_indicators(market_data)
 
             # Calculate prediction confidence
-            confidence_score = await self._calculate_timing_confidence(
-                market_data, future_predictions
-            )
+            confidence_score = await self._calculate_timing_confidence(market_data, future_predictions)
 
             result = MarketTimingPrediction(
                 market_area=market_area,
@@ -372,7 +365,7 @@ class EnhancedPredictiveAnalytics:
                 price_trend_direction=timing_analysis["price_trend"],
                 confidence_score=confidence_score,
                 key_indicators=key_indicators,
-                prediction_timestamp=datetime.now()
+                prediction_timestamp=datetime.now(),
             )
 
             # Log performance
@@ -386,10 +379,7 @@ class EnhancedPredictiveAnalytics:
             return self._create_fallback_timing_prediction(market_area, property_type)
 
     async def predict_agent_performance(
-        self,
-        agent_data: Dict[str, Any],
-        historical_performance: List[Dict] = None,
-        current_pipeline: List[Dict] = None
+        self, agent_data: Dict[str, Any], historical_performance: List[Dict] = None, current_pipeline: List[Dict] = None
     ) -> AgentPerformancePrediction:
         """
         Predict agent performance and provide optimization recommendations
@@ -406,9 +396,7 @@ class EnhancedPredictiveAnalytics:
             start_time = datetime.now()
 
             # Extract agent performance features
-            features = await self._extract_agent_features(
-                agent_data, historical_performance, current_pipeline
-            )
+            features = await self._extract_agent_features(agent_data, historical_performance, current_pipeline)
 
             # Calculate performance score
             performance_score = await self._calculate_performance_score(features)
@@ -424,17 +412,13 @@ class EnhancedPredictiveAnalytics:
             improvement_areas = await self._identify_improvement_areas(features)
 
             # Generate coaching priorities
-            coaching_priorities = await self._generate_coaching_priorities(
-                improvement_areas, features
-            )
+            coaching_priorities = await self._generate_coaching_priorities(improvement_areas, features)
 
             # Determine optimal lead types
             optimal_lead_types = await self._determine_optimal_lead_types(features)
 
             # Recommend workload optimization
-            workload_recommendation = await self._recommend_workload_optimization(
-                features, current_pipeline
-            )
+            workload_recommendation = await self._recommend_workload_optimization(features, current_pipeline)
 
             result = AgentPerformancePrediction(
                 agent_id=agent_data.get("agent_id", "unknown"),
@@ -446,7 +430,7 @@ class EnhancedPredictiveAnalytics:
                 coaching_priorities=coaching_priorities,
                 optimal_lead_types=optimal_lead_types,
                 workload_recommendation=workload_recommendation,
-                prediction_timestamp=datetime.now()
+                prediction_timestamp=datetime.now(),
             )
 
             # Log performance
@@ -460,10 +444,7 @@ class EnhancedPredictiveAnalytics:
             return self._create_fallback_agent_prediction(agent_data)
 
     async def analyze_investment_opportunity(
-        self,
-        property_data: Dict[str, Any],
-        investment_criteria: Dict[str, Any],
-        financing_options: List[Dict] = None
+        self, property_data: Dict[str, Any], investment_criteria: Dict[str, Any], financing_options: List[Dict] = None
     ) -> InvestmentAnalysis:
         """
         Comprehensive investment opportunity analysis
@@ -483,9 +464,7 @@ class EnhancedPredictiveAnalytics:
             roi_analysis = await self._analyze_roi_potential(property_data, investment_criteria)
 
             # Calculate cash flow projections
-            cash_flow = await self._calculate_cash_flow_projections(
-                property_data, financing_options
-            )
+            cash_flow = await self._calculate_cash_flow_projections(property_data, financing_options)
 
             # Forecast appreciation
             appreciation_forecast = await self._forecast_appreciation(property_data)
@@ -499,12 +478,8 @@ class EnhancedPredictiveAnalytics:
             )
 
             # Identify advantages and risks
-            advantages = await self._identify_investment_advantages(
-                property_data, roi_analysis
-            )
-            risk_factors = await self._identify_investment_risks(
-                property_data, risk_assessment
-            )
+            advantages = await self._identify_investment_advantages(property_data, roi_analysis)
+            risk_factors = await self._identify_investment_risks(property_data, risk_assessment)
 
             # Recommend financing strategies
             financing_recs = await self._recommend_financing_strategies(
@@ -512,9 +487,7 @@ class EnhancedPredictiveAnalytics:
             )
 
             # Suggest exit strategies
-            exit_strategies = await self._suggest_exit_strategies(
-                property_data, roi_analysis, investment_criteria
-            )
+            exit_strategies = await self._suggest_exit_strategies(property_data, roi_analysis, investment_criteria)
 
             result = InvestmentAnalysis(
                 property_id=property_data.get("property_id", "unknown"),
@@ -528,7 +501,7 @@ class EnhancedPredictiveAnalytics:
                 risk_factors=risk_factors,
                 financing_recommendations=financing_recs,
                 exit_strategy_options=exit_strategies,
-                analysis_timestamp=datetime.now()
+                analysis_timestamp=datetime.now(),
             )
 
             # Log performance
@@ -548,19 +521,19 @@ class EnhancedPredictiveAnalytics:
                 "luxury": ["west_lake_hills", "tarrytown", "rollingwood"],
                 "emerging": ["mueller", "east_austin", "riverside"],
                 "family": ["cedar_park", "round_rock", "pflugerville"],
-                "urban": ["downtown", "soco", "rainey_street"]
+                "urban": ["downtown", "soco", "rainey_street"],
             },
             "market_factors": {
                 "tech_job_correlation": 0.85,
                 "school_district_premium": 0.20,
                 "walkability_factor": 0.15,
-                "new_construction_impact": 0.12
+                "new_construction_impact": 0.12,
             },
             "seasonal_patterns": {
                 "peak_season": {"start": "March", "end": "June"},
                 "slow_season": {"start": "November", "end": "February"},
-                "price_appreciation": {"spring": 1.08, "summer": 1.05, "fall": 0.98, "winter": 0.95}
-            }
+                "price_appreciation": {"spring": 1.08, "summer": 1.05, "fall": 0.98, "winter": 0.95},
+            },
         }
 
     def _initialize_ml_models(self) -> None:
@@ -575,9 +548,7 @@ class EnhancedPredictiveAnalytics:
             )
 
             # Lead conversion prediction model
-            self.models["lead_conversion"] = RandomForestRegressor(
-                n_estimators=100, max_depth=8, random_state=42
-            )
+            self.models["lead_conversion"] = RandomForestRegressor(n_estimators=100, max_depth=8, random_state=42)
 
             logger.info("ML models initialized successfully")
 
@@ -595,7 +566,7 @@ class EnhancedPredictiveAnalytics:
             property_data.get("lot_size", 0.25),
             hash(property_data.get("zip_code", "78704")) % 100,  # Encoded location
             property_data.get("school_rating", 7),
-            property_data.get("walkability_score", 50)
+            property_data.get("walkability_score", 50),
         ]
 
         return np.array(features).reshape(1, -1)
@@ -622,16 +593,10 @@ class EnhancedPredictiveAnalytics:
         confidence_range = predicted_value * 0.05
         confidence_interval = (predicted_value - confidence_range, predicted_value + confidence_range)
 
-        return {
-            "value": predicted_value,
-            "confidence_interval": confidence_interval
-        }
+        return {"value": predicted_value, "confidence_interval": confidence_interval}
 
     async def _extract_lead_features(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict] = None,
-        behavioral_data: Dict[str, Any] = None
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict] = None, behavioral_data: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Extract comprehensive lead features"""
 
@@ -641,24 +606,21 @@ class EnhancedPredictiveAnalytics:
             "income": lead_data.get("income", 80000),
             "family_size": lead_data.get("family_size", 2),
             "first_time_buyer": lead_data.get("first_time_buyer", False),
-
             # Behavioral features
             "website_sessions": behavioral_data.get("session_count", 3) if behavioral_data else 3,
             "time_on_site": behavioral_data.get("total_time", 600) if behavioral_data else 600,
             "pages_visited": behavioral_data.get("page_count", 10) if behavioral_data else 10,
             "return_visits": behavioral_data.get("return_count", 2) if behavioral_data else 2,
-
             # Engagement features
             "conversation_count": len(conversation_history) if conversation_history else 1,
             "response_time_avg": 2.5,  # hours
             "question_count": 5,
             "detailed_responses": True,
-
             # Intent features
             "budget_defined": lead_data.get("budget_range") is not None,
             "timeline_defined": lead_data.get("timeline") is not None,
             "location_defined": len(lead_data.get("preferred_areas", [])) > 0,
-            "financing_ready": lead_data.get("pre_approved", False)
+            "financing_ready": lead_data.get("pre_approved", False),
         }
 
         return features
@@ -727,7 +689,7 @@ class EnhancedPredictiveAnalytics:
             market_conditions=MarketCondition.BALANCED_MARKET,
             risk_assessment=RiskLevel.MEDIUM,
             optimal_timing="Spring 2026",
-            prediction_timestamp=datetime.now()
+            prediction_timestamp=datetime.now(),
         )
 
     def _create_fallback_lead_prediction(self, lead_data: Dict[str, Any]) -> LeadScorePrediction:
@@ -743,7 +705,7 @@ class EnhancedPredictiveAnalytics:
             expected_value=15000.0,
             recommended_agent="lead_bot",
             coaching_recommendations=["follow up promptly", "qualify budget"],
-            prediction_timestamp=datetime.now()
+            prediction_timestamp=datetime.now(),
         )
 
     def _create_fallback_timing_prediction(self, market_area: str, property_type: str) -> MarketTimingPrediction:
@@ -760,7 +722,7 @@ class EnhancedPredictiveAnalytics:
             price_trend_direction="stable_growth",
             confidence_score=0.6,
             key_indicators=["seasonal_patterns"],
-            prediction_timestamp=datetime.now()
+            prediction_timestamp=datetime.now(),
         )
 
     def _create_fallback_agent_prediction(self, agent_data: Dict[str, Any]) -> AgentPerformancePrediction:
@@ -775,7 +737,7 @@ class EnhancedPredictiveAnalytics:
             coaching_priorities=["improve_follow_up_timing"],
             optimal_lead_types=["first_time_buyers"],
             workload_recommendation="maintain_current_volume",
-            prediction_timestamp=datetime.now()
+            prediction_timestamp=datetime.now(),
         )
 
     def _create_fallback_investment_analysis(self, property_data: Dict[str, Any]) -> InvestmentAnalysis:
@@ -792,13 +754,14 @@ class EnhancedPredictiveAnalytics:
             risk_factors=["market_volatility"],
             financing_recommendations=["conventional_loan"],
             exit_strategy_options=["hold_and_rent", "sell_after_appreciation"],
-            analysis_timestamp=datetime.now()
+            analysis_timestamp=datetime.now(),
         )
 
     # Additional implementation methods would go here...
 
 
 # Factory functions
+
 
 async def create_enhanced_predictive_analytics() -> EnhancedPredictiveAnalytics:
     """Factory function to create configured predictive analytics engine"""
@@ -818,7 +781,7 @@ if __name__ == "__main__":
             "bathrooms": 3,
             "year_built": 2005,
             "zip_code": "78704",
-            "current_value": 650000
+            "current_value": 650000,
         }
 
         prediction = await analytics.predict_property_value(property_data)
@@ -834,7 +797,7 @@ if __name__ == "__main__":
             "income": 120000,
             "pre_approved": True,
             "budget_range": (500000, 700000),
-            "timeline": "3-6 months"
+            "timeline": "3-6 months",
         }
 
         lead_prediction = await analytics.predict_lead_conversion(lead_data)

@@ -1,20 +1,20 @@
 """Tests for Advanced Parser module."""
 
-import pytest
 from datetime import datetime
 
+import pytest
+from src.core.exceptions import RetrievalError
 from src.query.advanced_parser import (
     AdvancedQueryParser,
-    QueryProcessingPipeline,
     ParsedQuery,
-    QueryUnderstandingResult,
-    QueryComplexity,
     ParserConfig,
+    QueryComplexity,
+    QueryProcessingPipeline,
+    QueryUnderstandingResult,
 )
-from src.query.intent_classifier_v2 import IntentType
 from src.query.entity_extractor import EntityType
+from src.query.intent_classifier_v2 import IntentType
 from src.query.temporal_processor import TemporalConstraintType
-from src.core.exceptions import RetrievalError
 
 
 class TestParsedQuery:
@@ -65,11 +65,11 @@ class TestQueryUnderstandingResult:
 
     def test_result_creation(self):
         """Test creating a result."""
+        from src.query.entity_extractor import KnowledgeGraphPrep
         from src.query.intent_classifier_v2 import (
             IntentClassificationResult,
             MultiLabelResult,
         )
-        from src.query.entity_extractor import KnowledgeGraphPrep
         from src.query.temporal_processor import TemporalContext
 
         result = QueryUnderstandingResult(
@@ -105,11 +105,11 @@ class TestQueryUnderstandingResult:
 
     def test_result_to_dict(self):
         """Test result serialization."""
+        from src.query.entity_extractor import KnowledgeGraphPrep
         from src.query.intent_classifier_v2 import (
             IntentClassificationResult,
             MultiLabelResult,
         )
-        from src.query.entity_extractor import KnowledgeGraphPrep
         from src.query.temporal_processor import TemporalContext
 
         result = QueryUnderstandingResult(
@@ -210,9 +210,7 @@ class TestAdvancedQueryParser:
 
     def test_parse_multi_intent(self, parser):
         """Test parsing query with multiple intents."""
-        result = parser.parse(
-            "I'm looking to buy a 3-bedroom house and schedule a showing"
-        )
+        result = parser.parse("I'm looking to buy a 3-bedroom house and schedule a showing")
 
         assert len(result.multi_label_result.intents) >= 1
         assert IntentType.BUYING_INTENT in result.multi_label_result.intents
@@ -355,6 +353,7 @@ class TestQueryProcessingPipeline:
 
     def test_add_stage(self, pipeline):
         """Test adding stages to pipeline."""
+
         def stage1(data, context):
             return data + "1"
 
@@ -369,6 +368,7 @@ class TestQueryProcessingPipeline:
 
     def test_process_through_stages(self, pipeline):
         """Test processing through multiple stages."""
+
         def stage1(data, context):
             return data.upper()
 
@@ -385,6 +385,7 @@ class TestQueryProcessingPipeline:
 
     def test_process_with_error(self, pipeline):
         """Test handling errors in pipeline."""
+
         def good_stage(data, context):
             return data + "1"
 
@@ -401,6 +402,7 @@ class TestQueryProcessingPipeline:
 
     def test_process_with_context(self, pipeline):
         """Test processing with context."""
+
         def context_stage(data, context):
             context["modified"] = True
             return data
@@ -520,9 +522,7 @@ class TestIntegration:
         """Test full pipeline with investment research query."""
         parser = AdvancedQueryParser()
 
-        result = parser.parse(
-            "Show me investment properties with good cash flow in Rancho Cucamonga"
-        )
+        result = parser.parse("Show me investment properties with good cash flow in Rancho Cucamonga")
 
         # Verify intent
         assert result.parsed_query.primary_intent == IntentType.INVESTMENT_RESEARCH

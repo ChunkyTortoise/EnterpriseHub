@@ -39,9 +39,7 @@ class ReportGenerator:
     def __init__(self, data_dir: Path = None):
         self.data_dir = data_dir or Path(__file__).parent.parent / "data"
 
-    def generate_daily_brief(
-        self, location_id: str, recipient_name: str = "Jorge"
-    ) -> Dict[str, Any]:
+    def generate_daily_brief(self, location_id: str, recipient_name: str = "Jorge") -> Dict[str, Any]:
         """
         Generate daily performance brief
 
@@ -78,9 +76,7 @@ class ReportGenerator:
 
         return report
 
-    def generate_weekly_summary(
-        self, location_id: str, recipient_name: str = "Jorge"
-    ) -> Dict[str, Any]:
+    def generate_weekly_summary(self, location_id: str, recipient_name: str = "Jorge") -> Dict[str, Any]:
         """
         Generate weekly executive summary
 
@@ -119,9 +115,7 @@ class ReportGenerator:
 
         return report
 
-    def generate_monthly_review(
-        self, location_id: str, recipient_name: str = "Jorge"
-    ) -> Dict[str, Any]:
+    def generate_monthly_review(self, location_id: str, recipient_name: str = "Jorge") -> Dict[str, Any]:
         """
         Generate monthly business review
 
@@ -175,11 +169,7 @@ class ReportGenerator:
             data = json.load(f)
 
         cutoff = datetime.now() - timedelta(days=days)
-        conversations = [
-            c
-            for c in data.get("conversations", [])
-            if datetime.fromisoformat(c["timestamp"]) >= cutoff
-        ]
+        conversations = [c for c in data.get("conversations", []) if datetime.fromisoformat(c["timestamp"]) >= cutoff]
 
         return conversations
 
@@ -187,14 +177,10 @@ class ReportGenerator:
         """Calculate daily metrics"""
         total = len(conversations)
         hot = len([c for c in conversations if c.get("lead_score", 0) >= 70])
-        appointments = len(
-            [c for c in conversations if c.get("appointment_set", False)]
-        )
+        appointments = len([c for c in conversations if c.get("appointment_set", False)])
 
         response_times = [c.get("response_time_minutes", 0) for c in conversations]
-        avg_response = (
-            sum(response_times) / len(response_times) if response_times else 0
-        )
+        avg_response = sum(response_times) / len(response_times) if response_times else 0
 
         pipeline_value = hot * 12500
 
@@ -202,9 +188,7 @@ class ReportGenerator:
             "conversations": total,
             "hot_leads": hot,
             "appointments": appointments,
-            "conversion_rate": (
-                round((appointments / total * 100), 1) if total > 0 else 0
-            ),
+            "conversion_rate": (round((appointments / total * 100), 1) if total > 0 else 0),
             "avg_response_time": round(avg_response, 1),
             "pipeline_value": pipeline_value,
         }
@@ -226,9 +210,7 @@ class ReportGenerator:
         elif metrics["conversion_rate"] > 20:
             return f"🎯 Excellent Conversion: {metrics['conversion_rate']}%"
         elif metrics["avg_response_time"] < 2:
-            return (
-                f"⚡ Lightning Fast: {metrics['avg_response_time']} min response time"
-            )
+            return f"⚡ Lightning Fast: {metrics['avg_response_time']} min response time"
         else:
             return f"📊 {metrics['conversations']} Conversations Yesterday"
 
@@ -237,9 +219,7 @@ class ReportGenerator:
         insights = []
 
         if metrics["hot_leads"] > 0:
-            insights.append(
-                f"Excellent lead quality with {metrics['hot_leads']} hot leads"
-            )
+            insights.append(f"Excellent lead quality with {metrics['hot_leads']} hot leads")
 
         if metrics["conversion_rate"] >= 20:
             insights.append("Conversion rate exceeds target")
@@ -253,11 +233,7 @@ class ReportGenerator:
 
     def _get_hot_leads(self, conversations: List[Dict]) -> List[Dict]:
         """Get hot leads needing attention"""
-        hot_leads = [
-            c
-            for c in conversations
-            if c.get("lead_score", 0) >= 70 and not c.get("appointment_set", False)
-        ]
+        hot_leads = [c for c in conversations if c.get("lead_score", 0) >= 70 and not c.get("appointment_set", False)]
 
         return [
             {
@@ -274,19 +250,13 @@ class ReportGenerator:
         actions = []
 
         hot_pending = len(
-            [
-                c
-                for c in conversations
-                if c.get("lead_score", 0) >= 70 and not c.get("appointment_set", False)
-            ]
+            [c for c in conversations if c.get("lead_score", 0) >= 70 and not c.get("appointment_set", False)]
         )
 
         if hot_pending > 0:
             actions.append(f"{hot_pending} hot leads need follow-up today")
 
-        slow_responses = len(
-            [c for c in conversations if c.get("response_time_minutes", 0) > 5]
-        )
+        slow_responses = len([c for c in conversations if c.get("response_time_minutes", 0) > 5])
 
         if slow_responses > len(conversations) * 0.3:
             actions.append("Response time needs improvement")
@@ -376,9 +346,7 @@ class ReportGenerator:
             "revenue_realized": int(revenue * 0.3),
         }
 
-    def _generate_strategic_insights(
-        self, metrics: Dict, conversations: List[Dict]
-    ) -> List[str]:
+    def _generate_strategic_insights(self, metrics: Dict, conversations: List[Dict]) -> List[str]:
         """Generate strategic insights"""
         return []
 

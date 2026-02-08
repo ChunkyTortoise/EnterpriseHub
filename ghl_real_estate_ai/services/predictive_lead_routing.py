@@ -15,19 +15,20 @@ Increases conversion rates by 30-45% through optimal lead-agent matching.
 Date: January 17, 2026
 Status: Advanced Agent-Driven Lead Routing System
 """
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import logging
-import json
-from collections import defaultdict
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import asyncio
+import json
+import logging
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
@@ -133,10 +134,7 @@ class RoutingAnalyzerAgent:
         self.llm_client = llm_client
 
     async def analyze_routing(
-        self,
-        lead_data: Dict[str, Any],
-        available_agents: List[Agent],
-        swarm_analysis: Any
+        self, lead_data: Dict[str, Any], available_agents: List[Agent], swarm_analysis: Any
     ) -> RoutingRecommendation:
         """Analyze and recommend agent routing."""
         raise NotImplementedError
@@ -149,16 +147,13 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
         super().__init__(AnalyzerAgentType.EXPERTISE_MATCHER, llm_client)
 
     async def analyze_routing(
-        self,
-        lead_data: Dict[str, Any],
-        available_agents: List[Agent],
-        swarm_analysis: Any
+        self, lead_data: Dict[str, Any], available_agents: List[Agent], swarm_analysis: Any
     ) -> RoutingRecommendation:
         """Match lead requirements with agent specialties."""
         try:
             # Extract lead requirements from swarm analysis
             lead_profile = swarm_analysis.consensus if swarm_analysis else {}
-            lead_requirements = lead_data.get('requirements', {})
+            lead_requirements = lead_data.get("requirements", {})
 
             best_match_agent = None
             best_match_score = 0.0
@@ -169,9 +164,7 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
                 if agent.availability not in [AgentAvailability.AVAILABLE, AgentAvailability.BUSY]:
                     continue
 
-                match_score = await self._calculate_expertise_match(
-                    agent, lead_requirements, swarm_analysis
-                )
+                match_score = await self._calculate_expertise_match(agent, lead_requirements, swarm_analysis)
 
                 if match_score > best_match_score:
                     best_match_score = match_score
@@ -197,7 +190,7 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
                     estimated_response_time=best_match_agent.avg_response_time,
                     load_impact=1.0 / max(best_match_agent.max_capacity - best_match_agent.current_load, 1),
                     specialty_match_score=best_match_score,
-                    metadata={'expertise_analysis': True}
+                    metadata={"expertise_analysis": True},
                 )
 
             raise ValueError("No suitable agent found")
@@ -213,7 +206,7 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
                 priority=RoutingPriority.LOW,
                 estimated_response_time=120,
                 load_impact=0.5,
-                specialty_match_score=0.3
+                specialty_match_score=0.3,
             )
 
     async def _calculate_expertise_match(
@@ -227,7 +220,7 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
 
             Agent Specialties: {[s.value for s in agent.specialties]}
             Lead Requirements: {lead_requirements}
-            Lead Intelligence: {swarm_analysis.consensus.primary_finding if swarm_analysis else 'None'}
+            Lead Intelligence: {swarm_analysis.consensus.primary_finding if swarm_analysis else "None"}
 
             Score the match from 0.0 to 1.0 based on:
             1. Specialty alignment
@@ -238,9 +231,7 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
             Return just the score as a decimal number.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=50, temperature=0.2
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=50, temperature=0.2)
 
             # Parse score from response
             score_text = response.content.strip() if response.content else "0.5"
@@ -262,10 +253,7 @@ class PerformancePredictorAgent(RoutingAnalyzerAgent):
         super().__init__(AnalyzerAgentType.PERFORMANCE_PREDICTOR, llm_client)
 
     async def analyze_routing(
-        self,
-        lead_data: Dict[str, Any],
-        available_agents: List[Agent],
-        swarm_analysis: Any
+        self, lead_data: Dict[str, Any], available_agents: List[Agent], swarm_analysis: Any
     ) -> RoutingRecommendation:
         """Predict which agent will perform best with this lead."""
         try:
@@ -277,9 +265,7 @@ class PerformancePredictorAgent(RoutingAnalyzerAgent):
                 if agent.availability == AgentAvailability.OFFLINE:
                     continue
 
-                predicted_rate = await self._predict_success_rate(
-                    agent, lead_data, swarm_analysis
-                )
+                predicted_rate = await self._predict_success_rate(agent, lead_data, swarm_analysis)
 
                 if predicted_rate > best_predicted_rate:
                     best_predicted_rate = predicted_rate
@@ -299,7 +285,7 @@ class PerformancePredictorAgent(RoutingAnalyzerAgent):
                     estimated_response_time=best_agent.avg_response_time,
                     load_impact=best_agent.current_load / best_agent.max_capacity,
                     specialty_match_score=0.8,  # Will be refined by consensus
-                    metadata={'prediction_model': 'historical_performance'}
+                    metadata={"prediction_model": "historical_performance"},
                 )
 
             raise ValueError("No suitable agent for performance prediction")
@@ -315,12 +301,10 @@ class PerformancePredictorAgent(RoutingAnalyzerAgent):
                 priority=RoutingPriority.MEDIUM,
                 estimated_response_time=90,
                 load_impact=0.5,
-                specialty_match_score=0.5
+                specialty_match_score=0.5,
             )
 
-    async def _predict_success_rate(
-        self, agent: Agent, lead_data: Dict[str, Any], swarm_analysis: Any
-    ) -> float:
+    async def _predict_success_rate(self, agent: Agent, lead_data: Dict[str, Any], swarm_analysis: Any) -> float:
         """Predict success rate for agent-lead combination."""
         try:
             # Base rate from agent's historical performance
@@ -328,10 +312,10 @@ class PerformancePredictorAgent(RoutingAnalyzerAgent):
 
             # Adjust for lead complexity and agent fit
             complexity_factor = 1.0
-            if swarm_analysis and hasattr(swarm_analysis.consensus, 'urgency_level'):
-                if swarm_analysis.consensus.urgency_level == 'high':
+            if swarm_analysis and hasattr(swarm_analysis.consensus, "urgency_level"):
+                if swarm_analysis.consensus.urgency_level == "high":
                     complexity_factor = 0.9  # Slightly harder
-                elif swarm_analysis.consensus.urgency_level == 'critical':
+                elif swarm_analysis.consensus.urgency_level == "critical":
                     complexity_factor = 0.8  # Significantly harder
 
             # Adjust for current workload
@@ -354,23 +338,16 @@ class AvailabilityOptimizerAgent(RoutingAnalyzerAgent):
         super().__init__(AnalyzerAgentType.AVAILABILITY_OPTIMIZER, llm_client)
 
     async def analyze_routing(
-        self,
-        lead_data: Dict[str, Any],
-        available_agents: List[Agent],
-        swarm_analysis: Any
+        self, lead_data: Dict[str, Any], available_agents: List[Agent], swarm_analysis: Any
     ) -> RoutingRecommendation:
         """Optimize routing for fastest response and availability."""
         try:
             # Sort agents by availability and response time
-            available_now = [
-                a for a in available_agents if a.availability == AgentAvailability.AVAILABLE
-            ]
+            available_now = [a for a in available_agents if a.availability == AgentAvailability.AVAILABLE]
 
             if not available_now:
                 # No immediately available agents, find best busy agent
-                busy_agents = [
-                    a for a in available_agents if a.availability == AgentAvailability.BUSY
-                ]
+                busy_agents = [a for a in available_agents if a.availability == AgentAvailability.BUSY]
                 if busy_agents:
                     best_agent = min(busy_agents, key=lambda a: a.current_load / a.max_capacity)
                     return RoutingRecommendation(
@@ -382,14 +359,11 @@ class AvailabilityOptimizerAgent(RoutingAnalyzerAgent):
                         priority=RoutingPriority.MEDIUM,
                         estimated_response_time=best_agent.avg_response_time * 2,  # Doubled due to busy status
                         load_impact=1.0,  # High impact as adding to busy agent
-                        specialty_match_score=0.6
+                        specialty_match_score=0.6,
                     )
 
             # Select best available agent based on response time and capacity
-            best_agent = min(available_now, key=lambda a: (
-                a.avg_response_time,
-                a.current_load / a.max_capacity
-            ))
+            best_agent = min(available_now, key=lambda a: (a.avg_response_time, a.current_load / a.max_capacity))
 
             confidence = 1.0 - (best_agent.current_load / best_agent.max_capacity)
             priority = RoutingPriority.HIGH if confidence > 0.8 else RoutingPriority.MEDIUM
@@ -404,7 +378,7 @@ class AvailabilityOptimizerAgent(RoutingAnalyzerAgent):
                 estimated_response_time=best_agent.avg_response_time,
                 load_impact=(best_agent.current_load + 1) / best_agent.max_capacity,
                 specialty_match_score=0.7,  # Will be refined by consensus
-                metadata={'optimization_factor': 'availability_response_time'}
+                metadata={"optimization_factor": "availability_response_time"},
             )
 
         except Exception as e:
@@ -418,7 +392,7 @@ class AvailabilityOptimizerAgent(RoutingAnalyzerAgent):
                 priority=RoutingPriority.MEDIUM,
                 estimated_response_time=120,
                 load_impact=0.5,
-                specialty_match_score=0.5
+                specialty_match_score=0.5,
             )
 
 
@@ -429,10 +403,7 @@ class WorkloadBalancerAgent(RoutingAnalyzerAgent):
         super().__init__(AnalyzerAgentType.WORKLOAD_BALANCER, llm_client)
 
     async def analyze_routing(
-        self,
-        lead_data: Dict[str, Any],
-        available_agents: List[Agent],
-        swarm_analysis: Any
+        self, lead_data: Dict[str, Any], available_agents: List[Agent], swarm_analysis: Any
     ) -> RoutingRecommendation:
         """Balance workload across available agents."""
         try:
@@ -453,10 +424,7 @@ class WorkloadBalancerAgent(RoutingAnalyzerAgent):
 
             if not underutilized_agents:
                 # All agents heavily loaded, select least loaded
-                least_loaded = min(
-                    available_agents,
-                    key=lambda a: a.current_load / a.max_capacity
-                )
+                least_loaded = min(available_agents, key=lambda a: a.current_load / a.max_capacity)
                 return RoutingRecommendation(
                     analyzer_type=self.analyzer_type,
                     recommended_agent_id=least_loaded.agent_id,
@@ -466,7 +434,7 @@ class WorkloadBalancerAgent(RoutingAnalyzerAgent):
                     priority=RoutingPriority.MEDIUM,
                     estimated_response_time=least_loaded.avg_response_time * 1.5,
                     load_impact=1.0,
-                    specialty_match_score=0.6
+                    specialty_match_score=0.6,
                 )
 
             # Select best underutilized agent
@@ -485,7 +453,7 @@ class WorkloadBalancerAgent(RoutingAnalyzerAgent):
                 estimated_response_time=best_agent.avg_response_time,
                 load_impact=(best_agent.current_load + 1) / best_agent.max_capacity,
                 specialty_match_score=0.7,
-                metadata={'workload_optimization': True, 'utilization': utilization}
+                metadata={"workload_optimization": True, "utilization": utilization},
             )
 
         except Exception as e:
@@ -499,7 +467,7 @@ class WorkloadBalancerAgent(RoutingAnalyzerAgent):
                 priority=RoutingPriority.MEDIUM,
                 estimated_response_time=90,
                 load_impact=0.5,
-                specialty_match_score=0.5
+                specialty_match_score=0.5,
             )
 
 
@@ -537,10 +505,7 @@ class PredictiveLeadRouter:
         }
 
     async def route_lead(
-        self,
-        lead_id: str,
-        lead_data: Dict[str, Any],
-        available_agents: List[Agent]
+        self, lead_id: str, lead_data: Dict[str, Any], available_agents: List[Agent]
     ) -> RoutingDecision:
         """
         Route lead to optimal agent using multi-agent consensus.
@@ -580,8 +545,7 @@ class PredictiveLeadRouter:
 
             # Filter valid recommendations
             valid_recommendations = [
-                rec for rec in recommendations
-                if isinstance(rec, RoutingRecommendation) and rec.confidence >= 0.3
+                rec for rec in recommendations if isinstance(rec, RoutingRecommendation) and rec.confidence >= 0.3
             ]
 
             if not valid_recommendations:
@@ -615,7 +579,7 @@ class PredictiveLeadRouter:
         try:
             suitable_agents = []
 
-            for agent in agents[:self.max_agents_to_analyze]:  # Limit for performance
+            for agent in agents[: self.max_agents_to_analyze]:  # Limit for performance
                 # Exclude offline agents
                 if agent.availability == AgentAvailability.OFFLINE:
                     continue
@@ -634,11 +598,7 @@ class PredictiveLeadRouter:
             return agents[:5]  # Return first 5 as fallback
 
     async def _build_routing_consensus(
-        self,
-        lead_id: str,
-        recommendations: List[RoutingRecommendation],
-        agents: List[Agent],
-        swarm_analysis: Any
+        self, lead_id: str, recommendations: List[RoutingRecommendation], agents: List[Agent], swarm_analysis: Any
     ) -> RoutingDecision:
         """Build routing consensus from analyzer recommendations."""
         try:
@@ -655,8 +615,7 @@ class PredictiveLeadRouter:
             for agent_id, agent_recs in agent_votes.items():
                 # Calculate weighted consensus score
                 total_weight = sum(
-                    rec.confidence * self.analyzer_performance.get(rec.analyzer_type, 0.8)
-                    for rec in agent_recs
+                    rec.confidence * self.analyzer_performance.get(rec.analyzer_type, 0.8) for rec in agent_recs
                 )
                 consensus_score = total_weight / len(recommendations) if recommendations else 0
 
@@ -666,15 +625,24 @@ class PredictiveLeadRouter:
                     best_recommendations = agent_recs
 
             # Get backup agents
-            backup_agents = [
-                agent_id for agent_id in agent_votes.keys()
-                if agent_id != best_agent_id
-            ][:2]  # Top 2 backup options
+            backup_agents = [agent_id for agent_id in agent_votes.keys() if agent_id != best_agent_id][
+                :2
+            ]  # Top 2 backup options
 
             # Calculate consensus metrics
-            predicted_success = sum(rec.predicted_success_rate for rec in best_recommendations) / len(best_recommendations) if best_recommendations else 0.6
-            avg_response_time = sum(rec.estimated_response_time for rec in best_recommendations) / len(best_recommendations) if best_recommendations else 90
-            priority = max((rec.priority for rec in best_recommendations), default=RoutingPriority.MEDIUM, key=lambda p: p.value)
+            predicted_success = (
+                sum(rec.predicted_success_rate for rec in best_recommendations) / len(best_recommendations)
+                if best_recommendations
+                else 0.6
+            )
+            avg_response_time = (
+                sum(rec.estimated_response_time for rec in best_recommendations) / len(best_recommendations)
+                if best_recommendations
+                else 90
+            )
+            priority = max(
+                (rec.priority for rec in best_recommendations), default=RoutingPriority.MEDIUM, key=lambda p: p.value
+            )
 
             # Determine overall reasoning
             reasoning_parts = [rec.reasoning for rec in best_recommendations]
@@ -691,10 +659,10 @@ class PredictiveLeadRouter:
                 priority=priority,
                 participating_analyzers=[rec.analyzer_type for rec in recommendations],
                 metadata={
-                    'total_analyzers': len(recommendations),
-                    'agent_votes': len(agent_votes),
-                    'swarm_consensus_score': swarm_analysis.consensus_score if swarm_analysis else 0.0
-                }
+                    "total_analyzers": len(recommendations),
+                    "agent_votes": len(agent_votes),
+                    "swarm_consensus_score": swarm_analysis.consensus_score if swarm_analysis else 0.0,
+                },
             )
 
         except Exception as e:
@@ -724,7 +692,7 @@ class PredictiveLeadRouter:
             estimated_response_time=120,
             priority=RoutingPriority.MEDIUM,
             participating_analyzers=[],
-            metadata={'is_fallback': True}
+            metadata={"is_fallback": True},
         )
 
     async def _update_routing_performance(
@@ -747,11 +715,11 @@ class PredictiveLeadRouter:
             # Store routing decision for future analysis
             decision_key = f"routing_decision:{decision.lead_id}"
             decision_data = {
-                'assigned_agent': decision.assigned_agent_id,
-                'consensus_confidence': decision.consensus_confidence,
-                'predicted_success_rate': decision.predicted_success_rate,
-                'timestamp': decision.routing_timestamp.isoformat(),
-                'analyzers': [a.value for a in decision.participating_analyzers]
+                "assigned_agent": decision.assigned_agent_id,
+                "consensus_confidence": decision.consensus_confidence,
+                "predicted_success_rate": decision.predicted_success_rate,
+                "timestamp": decision.routing_timestamp.isoformat(),
+                "analyzers": [a.value for a in decision.participating_analyzers],
             }
 
             await self.cache.set(decision_key, decision_data, ttl=86400 * 7)  # 7 days
@@ -766,17 +734,14 @@ class PredictiveLeadRouter:
             "consensus_threshold": self.consensus_threshold,
             "max_agents_analyzed": self.max_agents_to_analyze,
             "analyzer_performance": {
-                analyzer_type.value: performance
-                for analyzer_type, performance in self.analyzer_performance.items()
+                analyzer_type.value: performance for analyzer_type, performance in self.analyzer_performance.items()
             },
             "total_analyzers": len(AnalyzerAgentType),
             "routing_performance": dict(self.routing_performance),
-            "overall_system_effectiveness": sum(self.analyzer_performance.values()) / len(self.analyzer_performance)
+            "overall_system_effectiveness": sum(self.analyzer_performance.values()) / len(self.analyzer_performance),
         }
 
-    async def get_agent_recommendations(
-        self, lead_id: str, lead_data: Dict[str, Any]
-    ) -> List[RoutingRecommendation]:
+    async def get_agent_recommendations(self, lead_id: str, lead_data: Dict[str, Any]) -> List[RoutingRecommendation]:
         """Get routing recommendations without making final decision."""
         try:
             # Get sample of available agents (this would come from database in production)
@@ -799,10 +764,7 @@ class PredictiveLeadRouter:
             recommendations = await asyncio.gather(*analyzer_tasks, return_exceptions=True)
 
             # Filter valid recommendations
-            valid_recommendations = [
-                rec for rec in recommendations
-                if isinstance(rec, RoutingRecommendation)
-            ]
+            valid_recommendations = [rec for rec in recommendations if isinstance(rec, RoutingRecommendation)]
 
             return valid_recommendations
 
@@ -819,7 +781,7 @@ class PredictiveLeadRouter:
             agents = []
             for record in agent_records:
                 # Parse specializations from JSON
-                specializations_data = record.get('specializations', [])
+                specializations_data = record.get("specializations", [])
                 specialties = []
                 if isinstance(specializations_data, list):
                     for spec_str in specializations_data:
@@ -831,28 +793,28 @@ class PredictiveLeadRouter:
 
                 # Map availability
                 availability = AgentAvailability.AVAILABLE
-                if not record.get('is_available', True):
+                if not record.get("is_available", True):
                     availability = AgentAvailability.BUSY
 
                 # Create Agent object
                 agent = Agent(
-                    agent_id=str(record['id']),
+                    agent_id=str(record["id"]),
                     name=f"{record.get('first_name', '')} {record.get('last_name', '')}".strip(),
-                    email=record.get('email', ''),
-                    phone=record.get('phone', ''),
+                    email=record.get("email", ""),
+                    phone=record.get("phone", ""),
                     specialties=specialties,
                     availability=availability,
-                    current_load=record.get('current_load', 0),
-                    max_capacity=record.get('capacity', 15),
-                    success_rate=record.get('conversion_rate', 0.0) / 100.0 if record.get('conversion_rate') else 0.0,
-                    avg_response_time=record.get('avg_response_time_minutes', 60),
-                    last_activity=record.get('last_activity') or datetime.now(),
+                    current_load=record.get("current_load", 0),
+                    max_capacity=record.get("capacity", 15),
+                    success_rate=record.get("conversion_rate", 0.0) / 100.0 if record.get("conversion_rate") else 0.0,
+                    avg_response_time=record.get("avg_response_time_minutes", 60),
+                    last_activity=record.get("last_activity") or datetime.now(),
                     metadata={
-                        'role': record.get('role'),
-                        'customer_satisfaction': record.get('customer_satisfaction'),
-                        'total_leads_handled': record.get('total_leads_handled', 0),
-                        'timezone': record.get('timezone', 'America/Los_Angeles')
-                    }
+                        "role": record.get("role"),
+                        "customer_satisfaction": record.get("customer_satisfaction"),
+                        "total_leads_handled": record.get("total_leads_handled", 0),
+                        "timezone": record.get("timezone", "America/Los_Angeles"),
+                    },
                 )
                 agents.append(agent)
 
@@ -873,7 +835,7 @@ class PredictiveLeadRouter:
                     current_load=0,
                     max_capacity=100,
                     success_rate=0.75,
-                    avg_response_time=60
+                    avg_response_time=60,
                 )
             ]
 

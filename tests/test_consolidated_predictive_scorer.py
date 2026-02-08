@@ -5,8 +5,8 @@ This ensures all duplicate implementations can be safely replaced
 """
 
 import json
-import sys
 import os
+import sys
 import time
 import tracemalloc
 from datetime import datetime, timedelta
@@ -17,14 +17,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Import the canonical implementation
 try:
-    from ghl_real_estate_ai.services.ai_predictive_lead_scoring import (
-        PredictiveLeadScorer,
-        LeadFeatures,
-        LeadScore
-    )
+    from ghl_real_estate_ai.services.ai_predictive_lead_scoring import LeadFeatures, LeadScore, PredictiveLeadScorer
 except ImportError as e:
     print(f"❌ Import error: {e}")
     sys.exit(1)
+
 
 def get_sample_lead_data():
     """Sample lead data for testing"""
@@ -35,42 +32,44 @@ def get_sample_lead_data():
             {
                 "role": "user",
                 "content": "Hi, I'm looking for a 3 bedroom house in Austin. My budget is around $500k.",
-                "timestamp": (datetime.utcnow() - timedelta(minutes=10)).isoformat()
+                "timestamp": (datetime.utcnow() - timedelta(minutes=10)).isoformat(),
             },
             {
                 "role": "assistant",
                 "content": "Hi! Austin is a great choice. Are you pre-approved for a loan?",
-                "timestamp": (datetime.utcnow() - timedelta(minutes=9)).isoformat()
+                "timestamp": (datetime.utcnow() - timedelta(minutes=9)).isoformat(),
             },
             {
                 "role": "user",
                 "content": "Yes, I'm pre-approved and need to move within the next month.",
-                "timestamp": (datetime.utcnow() - timedelta(minutes=8)).isoformat()
-            }
+                "timestamp": (datetime.utcnow() - timedelta(minutes=8)).isoformat(),
+            },
         ],
         "extracted_preferences": {
             "location": "Austin",
             "budget": 500000,
             "bedrooms": 3,
             "financing": "pre-approved",
-            "timeline": "next month"
+            "timeline": "next month",
         },
         "messages": [
             {"text": "Looking for 3 bedroom house", "timestamp": datetime.utcnow().isoformat()},
             {"text": "Budget is $500k", "timestamp": datetime.utcnow().isoformat()},
-            {"text": "Need to move next month", "timestamp": datetime.utcnow().isoformat()}
+            {"text": "Need to move next month", "timestamp": datetime.utcnow().isoformat()},
         ],
         "last_interaction_at": datetime.utcnow().isoformat(),
-        "is_returning_lead": False
+        "is_returning_lead": False,
     }
+
 
 def test_initialization():
     """Test scorer initializes correctly"""
     print("🧪 Testing scorer initialization...")
     scorer = PredictiveLeadScorer()
     assert scorer is not None
-    assert hasattr(scorer, 'score_lead')
+    assert hasattr(scorer, "score_lead")
     print("✅ Scorer initialization - PASSED")
+
 
 def test_score_lead_interface():
     """Test primary score_lead interface"""
@@ -86,10 +85,11 @@ def test_score_lead_interface():
     assert result.lead_id == lead_id
     assert 0 <= result.score <= 100, f"Score {result.score} not in range 0-100"
     assert 0 <= result.confidence <= 1, f"Confidence {result.confidence} not in range 0-1"
-    assert result.tier in ['hot', 'warm', 'cold'], f"Invalid tier: {result.tier}"
+    assert result.tier in ["hot", "warm", "cold"], f"Invalid tier: {result.tier}"
     assert isinstance(result.reasoning, list)
     assert isinstance(result.recommendations, list)
     print("✅ Score lead interface - PASSED")
+
 
 def test_predict_conversion_legacy_interface():
     """Test legacy predict_conversion interface compatibility"""
@@ -98,7 +98,7 @@ def test_predict_conversion_legacy_interface():
     sample_lead_data = get_sample_lead_data()
 
     # Check if method exists
-    if not hasattr(scorer, 'predict_conversion'):
+    if not hasattr(scorer, "predict_conversion"):
         print("❌ predict_conversion method missing - FAILED")
         return
 
@@ -106,17 +106,24 @@ def test_predict_conversion_legacy_interface():
 
     # Validate legacy format
     assert isinstance(result, dict), f"Expected dict, got {type(result)}"
-    required_fields = ['contact_id', 'conversion_probability', 'confidence',
-                      'trajectory', 'reasoning', 'recommendations']
+    required_fields = [
+        "contact_id",
+        "conversion_probability",
+        "confidence",
+        "trajectory",
+        "reasoning",
+        "recommendations",
+    ]
 
     for field in required_fields:
         if field not in result:
             print(f"❌ Missing required field: {field} - FAILED")
             return
 
-    assert result['contact_id'] == sample_lead_data['contact_id']
-    assert 0 <= result['conversion_probability'] <= 100
+    assert result["contact_id"] == sample_lead_data["contact_id"]
+    assert 0 <= result["conversion_probability"] <= 100
     print("✅ Legacy predict_conversion interface - PASSED")
+
 
 def test_high_intent_lead_scoring():
     """Test scoring for high-intent lead (should score >= 70)"""
@@ -127,21 +134,21 @@ def test_high_intent_lead_scoring():
         "contact_id": "high_intent_lead",
         "location_id": "test_location",
         "messages": [
-            {"text": "I'm pre-approved for $800k and need to close within 2 weeks",
-             "timestamp": datetime.utcnow().isoformat()},
-            {"text": "I've been looking at houses in Westlake",
-             "timestamp": datetime.utcnow().isoformat()},
-            {"text": "Cash buyer, very serious",
-             "timestamp": datetime.utcnow().isoformat()}
+            {
+                "text": "I'm pre-approved for $800k and need to close within 2 weeks",
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+            {"text": "I've been looking at houses in Westlake", "timestamp": datetime.utcnow().isoformat()},
+            {"text": "Cash buyer, very serious", "timestamp": datetime.utcnow().isoformat()},
         ],
         "extracted_preferences": {
             "budget": 800000,
             "timeline": "immediate",
             "financing": "cash",
-            "location": "Westlake"
+            "location": "Westlake",
         },
         "conversation_history": [],
-        "is_returning_lead": True
+        "is_returning_lead": True,
     }
 
     result = scorer.score_lead("high_intent_lead", high_intent_data)
@@ -150,19 +157,17 @@ def test_high_intent_lead_scoring():
     if result.score < 70:
         print(f"❌ High intent lead scored only {result.score} (expected >= 70) - FAILED")
         return
-    if result.tier != 'hot':
+    if result.tier != "hot":
         print(f"❌ High intent lead tier is {result.tier} (expected 'hot') - WARNING")
     print(f"✅ High intent lead scoring: {result.score}/100 - PASSED")
+
 
 def test_missing_data_handling():
     """Test scorer handles missing/minimal data gracefully"""
     print("🧪 Testing missing data handling...")
     scorer = PredictiveLeadScorer()
 
-    minimal_data = {
-        "contact_id": "minimal_lead",
-        "location_id": "test_location"
-    }
+    minimal_data = {"contact_id": "minimal_lead", "location_id": "test_location"}
 
     try:
         result = scorer.score_lead("minimal_lead", minimal_data)
@@ -172,13 +177,14 @@ def test_missing_data_handling():
     except Exception as e:
         print(f"❌ Missing data handling failed with error: {e} - FAILED")
 
+
 def test_feature_extraction():
     """Test internal feature extraction logic"""
     print("🧪 Testing feature extraction...")
     scorer = PredictiveLeadScorer()
     sample_lead_data = get_sample_lead_data()
 
-    if not hasattr(scorer, '_extract_features'):
+    if not hasattr(scorer, "_extract_features"):
         print("❌ _extract_features method missing - WARNING")
         return
 
@@ -187,10 +193,11 @@ def test_feature_extraction():
         assert isinstance(features, LeadFeatures)
         assert 0 <= features.engagement_score <= 1
         assert features.response_time >= 0
-        assert features.timeline_urgency in ['immediate', 'soon', 'exploring']
+        assert features.timeline_urgency in ["immediate", "soon", "exploring"]
         print("✅ Feature extraction - PASSED")
     except Exception as e:
         print(f"❌ Feature extraction failed: {e} - FAILED")
+
 
 def test_performance():
     """Test performance requirements"""
@@ -209,6 +216,7 @@ def test_performance():
     else:
         print(f"❌ Performance: {latency_ms:.1f}ms (expected < 100ms) - FAILED")
 
+
 def run_all_tests():
     """Run all tests and report results"""
     print("🚀 Running Consolidated PredictiveLeadScorer Tests")
@@ -221,7 +229,7 @@ def run_all_tests():
         test_high_intent_lead_scoring,
         test_missing_data_handling,
         test_feature_extraction,
-        test_performance
+        test_performance,
     ]
 
     passed = 0
@@ -245,6 +253,7 @@ def run_all_tests():
     else:
         print("\n✅ All tests passed - ready for consolidation")
         return True
+
 
 if __name__ == "__main__":
     success = run_all_tests()

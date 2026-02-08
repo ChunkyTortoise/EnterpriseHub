@@ -15,11 +15,12 @@ Tests cover:
 Following TDD principles: RED -> GREEN -> REFACTOR
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
+
+import pytest
 
 from ghl_real_estate_ai.compliance_platform.models.compliance_models import (
     AIModelRegistration,
@@ -40,7 +41,6 @@ from ghl_real_estate_ai.compliance_platform.models.risk_models import (
 from ghl_real_estate_ai.compliance_platform.services.compliance_ai_analyzer import (
     ComplianceAIAnalyzer,
 )
-
 
 # ============================================================================
 # FIXTURES - Common test data following project patterns
@@ -611,11 +611,18 @@ class TestGenerateRiskRecommendations:
             # Assert
             assert len(result) > 0
             # Check for actionable verbs in recommendations
-            actionable_verbs = ["implement", "deploy", "update", "add", "conduct", "review", "establish", "priority", "improve"]
-            has_actionable = any(
-                any(verb in rec.lower() for verb in actionable_verbs)
-                for rec in result
-            )
+            actionable_verbs = [
+                "implement",
+                "deploy",
+                "update",
+                "add",
+                "conduct",
+                "review",
+                "establish",
+                "priority",
+                "improve",
+            ]
+            has_actionable = any(any(verb in rec.lower() for verb in actionable_verbs) for rec in result)
             assert has_actionable, "Recommendations should contain actionable verbs"
 
     @pytest.mark.asyncio
@@ -1316,9 +1323,7 @@ class TestErrorHandling:
         """Test handling of malformed LLM responses."""
         # Arrange
         mock_client = MagicMock()
-        mock_client.agenerate = AsyncMock(
-            return_value=MagicMock(content="Not valid JSON at all {{{")
-        )
+        mock_client.agenerate = AsyncMock(return_value=MagicMock(content="Not valid JSON at all {{{"))
 
         with patch(
             "ghl_real_estate_ai.compliance_platform.services.compliance_ai_analyzer.LLMClient",

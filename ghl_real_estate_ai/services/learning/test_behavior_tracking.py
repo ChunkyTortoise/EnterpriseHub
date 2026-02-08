@@ -7,8 +7,8 @@ Quick test to verify that the behavior tracking foundation is working correctly.
 
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -24,17 +24,14 @@ async def test_behavior_tracking():
 
     try:
         # Import tracking components
+        from learning.interfaces import EventType
         from learning.tracking.behavior_tracker import InMemoryBehaviorTracker
         from learning.tracking.event_collector import EventCollector
-        from learning.interfaces import EventType
 
         print("✅ Successfully imported tracking components")
 
         # Create tracker
-        tracker = InMemoryBehaviorTracker({
-            "max_memory_events": 1000,
-            "flush_interval_seconds": 300
-        })
+        tracker = InMemoryBehaviorTracker({"max_memory_events": 1000, "flush_interval_seconds": 300})
         print("✅ Created InMemoryBehaviorTracker")
 
         # Create event collector
@@ -55,25 +52,19 @@ async def test_behavior_tracking():
             session_id=session_id,
             device_type="web",
             view_duration_seconds=45.2,
-            page_source="search_results"
+            page_source="search_results",
         )
         print(f"✅ Tracked property view: {view_event_id}")
 
         # Track property like
         swipe_event_id = await collector.track_property_swipe(
-            lead_id=lead_id,
-            property_id=property_id,
-            swipe_direction="right",
-            session_id=session_id
+            lead_id=lead_id, property_id=property_id, swipe_direction="right", session_id=session_id
         )
         print(f"✅ Tracked property like: {swipe_event_id}")
 
         # Track property save
         save_event_id = await collector.track_property_save(
-            lead_id=lead_id,
-            property_id=property_id,
-            save_type="favorite",
-            session_id=session_id
+            lead_id=lead_id, property_id=property_id, save_type="favorite", session_id=session_id
         )
         print(f"✅ Tracked property save: {save_event_id}")
 
@@ -90,7 +81,7 @@ async def test_behavior_tracking():
             requested_time=datetime.now(),
             booking_type="tour",
             urgency="high",
-            session_id=session_id
+            session_id=session_id,
         )
         print(f"✅ Tracked booking request: {booking_event_id}")
 
@@ -102,7 +93,7 @@ async def test_behavior_tracking():
             property_id=property_id,
             completed=True,
             completion_rating=9,
-            feedback="Great tour, very helpful agent!"
+            feedback="Great tour, very helpful agent!",
         )
         print(f"✅ Tracked booking completion: {completion_event_id}")
 
@@ -114,7 +105,7 @@ async def test_behavior_tracking():
             search_query="3 bedroom house downtown",
             search_filters={"min_price": 600000, "max_price": 800000},
             results_count=25,
-            session_id=session_id
+            session_id=session_id,
         )
         print(f"✅ Tracked search query: {search_event_id}")
 
@@ -124,7 +115,7 @@ async def test_behavior_tracking():
             filter_value="Single Family",
             previous_results_count=25,
             new_results_count=18,
-            session_id=session_id
+            session_id=session_id,
         )
         print(f"✅ Tracked filter application: {filter_event_id}")
 
@@ -132,11 +123,7 @@ async def test_behavior_tracking():
         print("\n📊 Testing Event Retrieval...")
 
         # Get all events for the lead
-        lead_events = await tracker.get_events(
-            entity_id=lead_id,
-            entity_type="lead",
-            limit=100
-        )
+        lead_events = await tracker.get_events(entity_id=lead_id, entity_type="lead", limit=100)
         print(f"✅ Retrieved {len(lead_events)} events for lead")
 
         # Get property-specific events
@@ -144,14 +131,13 @@ async def test_behavior_tracking():
             entity_id=property_id,
             entity_type="property",
             event_types=[EventType.PROPERTY_VIEW, EventType.PROPERTY_SWIPE],
-            limit=100
+            limit=100,
         )
         print(f"✅ Retrieved {len(property_events)} property interaction events")
 
         # Get booking events
         booking_events = await tracker.get_events(
-            event_types=[EventType.BOOKING_REQUEST, EventType.BOOKING_COMPLETED],
-            limit=100
+            event_types=[EventType.BOOKING_REQUEST, EventType.BOOKING_COMPLETED], limit=100
         )
         print(f"✅ Retrieved {len(booking_events)} booking-related events")
 
@@ -174,7 +160,7 @@ async def test_behavior_tracking():
                 "lead_id": f"lead_{i}",
                 "property_id": f"prop_{i}",
                 "session_id": session_id,
-                "event_data": {"batch_test": True}
+                "event_data": {"batch_test": True},
             }
             for i in range(5)
         ]
@@ -206,6 +192,7 @@ async def test_behavior_tracking():
     except Exception as e:
         print(f"❌ Tracking test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -219,14 +206,12 @@ async def test_advanced_features():
         from learning.tracking.event_collector import PropertyInteractionCollector
 
         # Test TimedBehaviorTracker
-        timed_tracker = TimedBehaviorTracker({
-            "event_ttl_hours": 1,
-            "cleanup_interval_minutes": 1
-        })
+        timed_tracker = TimedBehaviorTracker({"event_ttl_hours": 1, "cleanup_interval_minutes": 1})
         print("✅ Created TimedBehaviorTracker with auto-cleanup")
 
         # Test PropertyInteractionCollector
         from learning.tracking.event_collector import EventCollector
+
         collector = EventCollector(timed_tracker)
         property_collector = PropertyInteractionCollector(collector)
 
@@ -237,7 +222,7 @@ async def test_advanced_features():
             interaction_type="hover",
             session_id="test_session_advanced",
             card_position=3,
-            total_cards=20
+            total_cards=20,
         )
         print(f"✅ Tracked property card interaction: {interaction_event_id}")
 
@@ -245,7 +230,7 @@ async def test_advanced_features():
         comparison_event_id = await property_collector.track_property_comparison(
             lead_id="test_lead_advanced",
             property_ids=["prop_1", "prop_2", "prop_3"],
-            session_id="test_session_advanced"
+            session_id="test_session_advanced",
         )
         print(f"✅ Tracked property comparison: {comparison_event_id}")
 
@@ -269,12 +254,12 @@ async def main():
     # Test core tracking
     core_ok = await test_behavior_tracking()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
     # Test advanced features
     advanced_ok = await test_advanced_features()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
     if core_ok and advanced_ok:
         print("\n🎉 ALL TESTS PASSED!")

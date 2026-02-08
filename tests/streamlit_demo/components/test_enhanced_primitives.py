@@ -3,9 +3,10 @@ Comprehensive tests for enhanced primitive components.
 Validates metric, badge, and performance optimization implementations.
 """
 
-import pytest
+from unittest.mock import AsyncMock, Mock, patch
+
 import pandas as pd
-from unittest.mock import Mock, patch, AsyncMock
+import pytest
 import streamlit as st
 from streamlit.testing.v1 import AppTest
 
@@ -27,7 +28,7 @@ render_obsidian_metric(
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify metric HTML was injected
         assert any("$2.4M" in str(m.body) for m in at.markdown)
@@ -50,10 +51,10 @@ for variant in variants:
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify all variants were rendered
-        variants = ['default', 'success', 'warning', 'error', 'premium']
+        variants = ["default", "success", "warning", "error", "premium"]
         for variant in variants:
             assert any(f"Test {variant}" in str(m.body) for m in at.markdown)
 
@@ -79,7 +80,7 @@ render_obsidian_metric(
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify trend and comparison elements
         assert any("847" in str(m.body) for m in at.markdown)
@@ -102,10 +103,10 @@ for size in sizes:
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify all sizes were rendered
-        sizes = ['small', 'medium', 'large']
+        sizes = ["small", "medium", "large"]
         for size in sizes:
             assert any(f"{size.title()} Value" in str(m.body) for m in at.markdown)
 
@@ -126,7 +127,7 @@ render_obsidian_badge(
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify badge HTML was injected
         assert any("HOT QUALIFIED" in str(m.body) for m in at.markdown)
@@ -144,7 +145,7 @@ for temp in temperatures:
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify temperature badges were rendered
         assert any("HOT LEAD" in str(m.body) for m in at.markdown)
@@ -169,7 +170,7 @@ for status, text in statuses:
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify status badges were rendered
         assert any("APPROVED" in str(m.body) for m in at.markdown)
@@ -202,10 +203,10 @@ for variant in variants:
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify key variants were rendered
-        key_variants = ['HOT', 'SUCCESS', 'PREMIUM', 'ELITE', 'URGENT']
+        key_variants = ["HOT", "SUCCESS", "PREMIUM", "ELITE", "URGENT"]
         for variant in key_variants:
             assert any(variant in str(m.body) for m in at.markdown)
 
@@ -236,7 +237,7 @@ render_obsidian_badge(
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify size variants were rendered
         assert any("XS SIZE" in str(m.body) for m in at.markdown)
@@ -262,13 +263,13 @@ st.write(f"Total Requests: {perf.cache_stats['total_requests']}")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify cache stats are displayed
         assert any("Cache Hit Rate:" in str(w.body) for w in at.text)
         assert any("Total Requests:" in str(w.body) for w in at.text)
 
-    @patch('ghl_real_estate_ai.streamlit_demo.components.performance_optimizations.CacheService')
+    @patch("ghl_real_estate_ai.streamlit_demo.components.performance_optimizations.CacheService")
     def test_optimized_lead_analytics(self, mock_cache_service):
         """Test optimized lead analytics with mocked cache service."""
         test_script = """
@@ -290,7 +291,7 @@ st.write(f"Columns: {list(df.columns)}")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify data was processed
         assert any("Data shape:" in str(w.body) for w in at.text)
@@ -324,7 +325,7 @@ st.write(f"Chart created: {type(fig).__name__}")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify chart was created
         assert any("Chart created:" in str(w.body) for w in at.text)
@@ -348,7 +349,7 @@ st.write(f"Hashes match: {hash_key == hash_key2}")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify hash generation works
         assert any("Generated hash:" in str(w.body) for w in at.text)
@@ -373,7 +374,7 @@ render_lead_dashboard_optimized()
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify key elements are present
         assert any("LEAD INTELLIGENCE TELEMETRY" in str(m.body) for m in at.markdown)
@@ -395,7 +396,7 @@ st.write(f"Tags count: {len(lead_data['tags'])}")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify cached data structure
         assert any("Lead name: SARAH MARTINEZ" in str(w.body) for w in at.text)
@@ -465,7 +466,7 @@ st.success("All primitives rendered successfully!")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify integration success
         assert any("Integration Test Dashboard" in str(t.body) for t in at.title)
@@ -482,7 +483,7 @@ demonstrate_performance_improvements()
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify performance dashboard elements
         assert any("PERFORMANCE OPTIMIZATION DEMONSTRATION" in str(m.body) for m in at.markdown)
@@ -492,7 +493,7 @@ demonstrate_performance_improvements()
 @pytest.fixture
 def mock_cache_service():
     """Mock cache service for testing."""
-    with patch('ghl_real_estate_ai.services.cache_service.CacheService') as mock:
+    with patch("ghl_real_estate_ai.services.cache_service.CacheService") as mock:
         mock_instance = Mock()
         mock_instance.get = AsyncMock(return_value=None)
         mock_instance.set = AsyncMock(return_value=True)
@@ -503,7 +504,7 @@ def mock_cache_service():
 # Performance benchmarks
 class TestPerformanceBenchmarks:
     """Performance benchmark tests to validate optimization claims."""
-    
+
     def test_cache_hit_rate_calculation(self):
         """Test cache hit rate calculation accuracy."""
         test_script = """
@@ -525,7 +526,7 @@ st.write(f"Expected 85%: {hit_rate == 85.0}")
 """
         at = AppTest.from_string(test_script)
         at.run()
-        
+
         assert not at.exception
         # Verify hit rate calculation
         assert any("Hit rate: 85.0%" in str(w.body) for w in at.text)
@@ -534,12 +535,14 @@ st.write(f"Expected 85%: {hit_rate == 85.0}")
 
 if __name__ == "__main__":
     # Run tests with coverage reporting
-    pytest.main([
-        __file__,
-        "--cov=ghl_real_estate_ai.streamlit_demo.components.primitives",
-        "--cov=ghl_real_estate_ai.streamlit_demo.components.performance_optimizations", 
-        "--cov=ghl_real_estate_ai.streamlit_demo.components.lead_dashboard_optimized",
-        "--cov-report=html",
-        "--cov-report=term",
-        "-v"
-    ])
+    pytest.main(
+        [
+            __file__,
+            "--cov=ghl_real_estate_ai.streamlit_demo.components.primitives",
+            "--cov=ghl_real_estate_ai.streamlit_demo.components.performance_optimizations",
+            "--cov=ghl_real_estate_ai.streamlit_demo.components.lead_dashboard_optimized",
+            "--cov-report=html",
+            "--cov-report=term",
+            "-v",
+        ]
+    )

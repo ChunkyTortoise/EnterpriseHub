@@ -20,14 +20,14 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import re
-import math
-import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Set, Union
-from dataclasses import dataclass
-from enum import Enum
 import json
+import math
+import re
+import statistics
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -36,6 +36,7 @@ logger = get_logger(__name__)
 
 class SignalCategory(Enum):
     """Categories of behavioral signals"""
+
     ENGAGEMENT = "engagement"
     FINANCIAL = "financial"
     URGENCY = "urgency"
@@ -48,6 +49,7 @@ class SignalCategory(Enum):
 
 class EngagementPattern(Enum):
     """Engagement patterns"""
+
     INCREASING = "increasing"
     DECREASING = "decreasing"
     STABLE = "stable"
@@ -58,6 +60,7 @@ class EngagementPattern(Enum):
 @dataclass
 class BehavioralSignal:
     """Individual behavioral signal"""
+
     name: str
     value: float  # Normalized 0-1
     confidence: float  # 0-1
@@ -84,9 +87,7 @@ class BehavioralSignalProcessor:
         logger.info("BehavioralSignalProcessor initialized with 50+ signal extractors")
 
     def extract_signals(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict[str, Any]]
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """
         Extract all behavioral signals and return normalized scores.
@@ -120,7 +121,7 @@ class BehavioralSignalProcessor:
                 **communication_signals,
                 **decision_signals,
                 **lifestyle_signals,
-                **technical_signals
+                **technical_signals,
             }
 
             # Normalize and validate
@@ -136,9 +137,7 @@ class BehavioralSignalProcessor:
         return signals
 
     def _extract_engagement_signals(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict[str, Any]]
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract engagement-related behavioral signals"""
         signals = {}
@@ -183,18 +182,15 @@ class BehavioralSignalProcessor:
                 signals["conversation_frequency"] = 0.0
 
             # Signal 5: Message length trend (increasing indicates growing interest)
-            message_lengths = [
-                len(msg.get("text", ""))
-                for msg in conversation_history
-                if msg.get("text")
-            ]
+            message_lengths = [len(msg.get("text", "")) for msg in conversation_history if msg.get("text")]
             if len(message_lengths) >= 2:
                 # Simple linear trend
                 x = list(range(len(message_lengths)))
                 y = message_lengths
                 if len(set(x)) > 1:  # Avoid division by zero
-                    slope = sum((xi - statistics.mean(x)) * (yi - statistics.mean(y))
-                              for xi, yi in zip(x, y)) / sum((xi - statistics.mean(x))**2 for xi in x)
+                    slope = sum((xi - statistics.mean(x)) * (yi - statistics.mean(y)) for xi, yi in zip(x, y)) / sum(
+                        (xi - statistics.mean(x)) ** 2 for xi in x
+                    )
                     signals["message_length_trend"] = max(0, min(slope / 100, 1.0))  # Normalize slope
                 else:
                     signals["message_length_trend"] = 0.5
@@ -203,36 +199,29 @@ class BehavioralSignalProcessor:
 
             # Signal 6: Question asking frequency
             total_messages = len(conversation_history)
-            question_messages = sum(
-                1 for msg in conversation_history
-                if "?" in msg.get("text", "")
-            )
-            signals["question_frequency"] = (
-                question_messages / max(total_messages, 1) if total_messages > 0 else 0
-            )
+            question_messages = sum(1 for msg in conversation_history if "?" in msg.get("text", ""))
+            signals["question_frequency"] = question_messages / max(total_messages, 1) if total_messages > 0 else 0
 
             # Signal 7: Proactive communication (initiating conversations)
             # Assume lead-initiated messages have certain indicators
             proactive_count = sum(
-                1 for msg in conversation_history
-                if msg.get("sender") == "lead" or any(
+                1
+                for msg in conversation_history
+                if msg.get("sender") == "lead"
+                or any(
                     indicator in msg.get("text", "").lower()
                     for indicator in ["hi", "hello", "quick question", "i was thinking"]
                 )
             )
-            signals["proactive_communication"] = (
-                proactive_count / max(total_messages, 1) if total_messages > 0 else 0
-            )
+            signals["proactive_communication"] = proactive_count / max(total_messages, 1) if total_messages > 0 else 0
 
             # Signal 8: Weekend/evening engagement
             weekend_msgs = sum(
-                1 for msg in conversation_history
-                if msg.get("timestamp") and
-                datetime.fromisoformat(msg["timestamp"].replace("Z", "")).weekday() >= 5
+                1
+                for msg in conversation_history
+                if msg.get("timestamp") and datetime.fromisoformat(msg["timestamp"].replace("Z", "")).weekday() >= 5
             )
-            signals["weekend_engagement"] = (
-                weekend_msgs / max(total_messages, 1) if total_messages > 0 else 0
-            )
+            signals["weekend_engagement"] = weekend_msgs / max(total_messages, 1) if total_messages > 0 else 0
 
             # Signal 9: Multi-channel engagement
             channels = set(msg.get("channel", "unknown") for msg in conversation_history)
@@ -244,76 +233,88 @@ class BehavioralSignalProcessor:
         return signals
 
     def _extract_financial_signals(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict[str, Any]]
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract financial readiness and capacity signals"""
         signals = {}
 
         try:
-            all_text = " ".join([
-                msg.get("text", "") for msg in conversation_history
-            ]).lower()
+            all_text = " ".join([msg.get("text", "") for msg in conversation_history]).lower()
 
             # Signal 10: Pre-approval mentions
             preapproval_indicators = [
-                "pre-approved", "preapproved", "pre approved", "approved for",
-                "pre-qualification", "lender approval", "financing approved"
+                "pre-approved",
+                "preapproved",
+                "pre approved",
+                "approved for",
+                "pre-qualification",
+                "lender approval",
+                "financing approved",
             ]
-            signals["preapproval_mentions"] = float(any(
-                indicator in all_text for indicator in preapproval_indicators
-            ))
+            signals["preapproval_mentions"] = float(any(indicator in all_text for indicator in preapproval_indicators))
 
             # Signal 11: Cash buyer indicators
             cash_indicators = [
-                "cash buyer", "cash purchase", "no financing", "cash offer",
-                "pay cash", "cash in hand", "no mortgage needed"
+                "cash buyer",
+                "cash purchase",
+                "no financing",
+                "cash offer",
+                "pay cash",
+                "cash in hand",
+                "no mortgage needed",
             ]
-            signals["cash_buyer_indicators"] = float(any(
-                indicator in all_text for indicator in cash_indicators
-            ))
+            signals["cash_buyer_indicators"] = float(any(indicator in all_text for indicator in cash_indicators))
 
             # Signal 12: Financial urgency
             financial_urgency = [
-                "need to close", "closing soon", "rate lock", "rate expires",
-                "financing deadline", "approval expires"
+                "need to close",
+                "closing soon",
+                "rate lock",
+                "rate expires",
+                "financing deadline",
+                "approval expires",
             ]
-            signals["financial_urgency"] = float(any(
-                indicator in all_text for indicator in financial_urgency
-            ))
+            signals["financial_urgency"] = float(any(indicator in all_text for indicator in financial_urgency))
 
             # Signal 13: Budget specificity
-            budget_patterns = re.findall(r'\$[\d,]+', all_text)
-            budget_ranges = len(re.findall(r'\$[\d,]+\s*to\s*\$[\d,]+', all_text))
+            budget_patterns = re.findall(r"\$[\d,]+", all_text)
+            budget_ranges = len(re.findall(r"\$[\d,]+\s*to\s*\$[\d,]+", all_text))
             signals["budget_specificity"] = min((len(budget_patterns) + budget_ranges) / 3.0, 1.0)
 
             # Signal 14: Down payment mentions
             down_payment_indicators = [
-                "down payment", "downpayment", "deposit", "earnest money",
-                "closing costs", "cash down"
+                "down payment",
+                "downpayment",
+                "deposit",
+                "earnest money",
+                "closing costs",
+                "cash down",
             ]
-            signals["down_payment_readiness"] = float(any(
-                indicator in all_text for indicator in down_payment_indicators
-            ))
+            signals["down_payment_readiness"] = float(
+                any(indicator in all_text for indicator in down_payment_indicators)
+            )
 
             # Signal 15: Credit score references
             credit_indicators = [
-                "credit score", "fico", "credit report", "credit check",
-                "excellent credit", "good credit"
+                "credit score",
+                "fico",
+                "credit report",
+                "credit check",
+                "excellent credit",
+                "good credit",
             ]
-            signals["credit_awareness"] = float(any(
-                indicator in all_text for indicator in credit_indicators
-            ))
+            signals["credit_awareness"] = float(any(indicator in all_text for indicator in credit_indicators))
 
             # Signal 16: Lender relationships
             lender_indicators = [
-                "my lender", "our lender", "bank pre-approved", "working with",
-                "loan officer", "mortgage broker"
+                "my lender",
+                "our lender",
+                "bank pre-approved",
+                "working with",
+                "loan officer",
+                "mortgage broker",
             ]
-            signals["lender_relationships"] = float(any(
-                indicator in all_text for indicator in lender_indicators
-            ))
+            signals["lender_relationships"] = float(any(indicator in all_text for indicator in lender_indicators))
 
         except Exception as e:
             logger.warning(f"Financial signal extraction failed: {e}")
@@ -321,69 +322,79 @@ class BehavioralSignalProcessor:
         return signals
 
     def _extract_urgency_signals(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict[str, Any]]
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract urgency and timeline signals"""
         signals = {}
 
         try:
-            all_text = " ".join([
-                msg.get("text", "") for msg in conversation_history
-            ]).lower()
+            all_text = " ".join([msg.get("text", "") for msg in conversation_history]).lower()
 
             # Signal 17: Immediate timeline
             immediate_indicators = [
-                "asap", "immediately", "urgent", "right away", "today",
-                "this week", "next week", "2 weeks", "by friday"
+                "asap",
+                "immediately",
+                "urgent",
+                "right away",
+                "today",
+                "this week",
+                "next week",
+                "2 weeks",
+                "by friday",
             ]
-            signals["immediate_timeline"] = float(any(
-                indicator in all_text for indicator in immediate_indicators
-            ))
+            signals["immediate_timeline"] = float(any(indicator in all_text for indicator in immediate_indicators))
 
             # Signal 18: Relocation pressure
             relocation_indicators = [
-                "relocating", "moving for work", "job transfer", "new job",
-                "start date", "lease expires", "lease ending"
+                "relocating",
+                "moving for work",
+                "job transfer",
+                "new job",
+                "start date",
+                "lease expires",
+                "lease ending",
             ]
-            signals["relocation_pressure"] = float(any(
-                indicator in all_text for indicator in relocation_indicators
-            ))
+            signals["relocation_pressure"] = float(any(indicator in all_text for indicator in relocation_indicators))
 
             # Signal 19: Market timing concern
             timing_concerns = [
-                "before rates go up", "before prices rise", "market is hot",
-                "competition is fierce", "inventory is low", "miss out"
+                "before rates go up",
+                "before prices rise",
+                "market is hot",
+                "competition is fierce",
+                "inventory is low",
+                "miss out",
             ]
-            signals["market_timing_concern"] = float(any(
-                concern in all_text for concern in timing_concerns
-            ))
+            signals["market_timing_concern"] = float(any(concern in all_text for concern in timing_concerns))
 
             # Signal 20: Life event drivers
             life_events = [
-                "getting married", "new baby", "divorce", "retirement",
-                "kids starting school", "family growing"
+                "getting married",
+                "new baby",
+                "divorce",
+                "retirement",
+                "kids starting school",
+                "family growing",
             ]
-            signals["life_event_drivers"] = float(any(
-                event in all_text for event in life_events
-            ))
+            signals["life_event_drivers"] = float(any(event in all_text for event in life_events))
 
             # Signal 21: Deadline mentions
             deadline_patterns = re.findall(
-                r'(Union[by, before]|need Union[to, must]|have to).{0,20}(Union[january, february]|Union[march, april]|Union[may, june]|Union[july, august]|Union[september, october]|Union[november, december]|\d{1,2}\/\d{1,2})',
-                all_text
+                r"(Union[by, before]|need Union[to, must]|have to).{0,20}(Union[january, february]|Union[march, april]|Union[may, june]|Union[july, august]|Union[september, october]|Union[november, december]|\d{1,2}\/\d{1,2})",
+                all_text,
             )
             signals["specific_deadlines"] = min(len(deadline_patterns) / 2.0, 1.0)
 
             # Signal 22: Viewing urgency
             viewing_urgency = [
-                "see it today", "available this weekend", "show me now",
-                "can we tour", "schedule viewing", "see it soon"
+                "see it today",
+                "available this weekend",
+                "show me now",
+                "can we tour",
+                "schedule viewing",
+                "see it soon",
             ]
-            signals["viewing_urgency"] = float(any(
-                phrase in all_text for phrase in viewing_urgency
-            ))
+            signals["viewing_urgency"] = float(any(phrase in all_text for phrase in viewing_urgency))
 
         except Exception as e:
             logger.warning(f"Urgency signal extraction failed: {e}")
@@ -395,54 +406,63 @@ class BehavioralSignalProcessor:
         signals = {}
 
         try:
-            all_text = " ".join([
-                msg.get("text", "") for msg in conversation_history
-            ]).lower()
+            all_text = " ".join([msg.get("text", "") for msg in conversation_history]).lower()
 
             # Signal 23: Price objections
             price_objections = [
-                "too expensive", "can't afford", "out of budget", "too much",
-                "price is high", "over my budget", "overpriced"
+                "too expensive",
+                "can't afford",
+                "out of budget",
+                "too much",
+                "price is high",
+                "over my budget",
+                "overpriced",
             ]
-            signals["price_objections"] = float(any(
-                objection in all_text for objection in price_objections
-            ))
+            signals["price_objections"] = float(any(objection in all_text for objection in price_objections))
 
             # Signal 24: Location concerns
             location_objections = [
-                "too far", "commute is long", "wrong area", "not the right neighborhood",
-                "don't like the location", "area is not good"
+                "too far",
+                "commute is long",
+                "wrong area",
+                "not the right neighborhood",
+                "don't like the location",
+                "area is not good",
             ]
-            signals["location_concerns"] = float(any(
-                objection in all_text for objection in location_objections
-            ))
+            signals["location_concerns"] = float(any(objection in all_text for objection in location_objections))
 
             # Signal 25: Condition concerns
             condition_objections = [
-                "needs work", "needs updating", "old house", "condition is poor",
-                "requires renovation", "fixer upper", "not move-in ready"
+                "needs work",
+                "needs updating",
+                "old house",
+                "condition is poor",
+                "requires renovation",
+                "fixer upper",
+                "not move-in ready",
             ]
-            signals["condition_concerns"] = float(any(
-                objection in all_text for objection in condition_objections
-            ))
+            signals["condition_concerns"] = float(any(objection in all_text for objection in condition_objections))
 
             # Signal 26: Market concerns
             market_objections = [
-                "market is volatile", "prices might drop", "bubble",
-                "wait for market to cool", "overheated market"
+                "market is volatile",
+                "prices might drop",
+                "bubble",
+                "wait for market to cool",
+                "overheated market",
             ]
-            signals["market_concerns"] = float(any(
-                objection in all_text for objection in market_objections
-            ))
+            signals["market_concerns"] = float(any(objection in all_text for objection in market_objections))
 
             # Signal 27: Decision maker involvement
             decision_maker_concerns = [
-                "need to ask my", "spouse needs to see", "family decision",
-                "have to discuss", "need approval", "not my decision alone"
+                "need to ask my",
+                "spouse needs to see",
+                "family decision",
+                "have to discuss",
+                "need approval",
+                "not my decision alone",
             ]
-            signals["decision_maker_concerns"] = float(any(
-                concern in all_text for concern in decision_maker_concerns
-            ))
+            signals["decision_maker_concerns"] = float(any(concern in all_text for concern in decision_maker_concerns))
 
         except Exception as e:
             logger.warning(f"Objection signal extraction failed: {e}")
@@ -456,9 +476,11 @@ class BehavioralSignalProcessor:
         try:
             # Signal 28: Communication preference (text vs call)
             text_indicators = sum(1 for msg in conversation_history if len(msg.get("text", "")) > 50)
-            call_mentions = sum(1 for msg in conversation_history if
-                             any(word in msg.get("text", "").lower()
-                                 for word in ["call me", "phone", "talk", "speak"]))
+            call_mentions = sum(
+                1
+                for msg in conversation_history
+                if any(word in msg.get("text", "").lower() for word in ["call me", "phone", "talk", "speak"])
+            )
 
             total_comm = text_indicators + call_mentions
             if total_comm > 0:
@@ -467,12 +489,16 @@ class BehavioralSignalProcessor:
                 signals["prefers_text_communication"] = 0.5
 
             # Signal 29: Formality level
-            formal_indicators = sum(1 for msg in conversation_history if
-                                  any(word in msg.get("text", "")
-                                      for word in ["Thank you", "Please", "I would", "Could you"]))
-            informal_indicators = sum(1 for msg in conversation_history if
-                                    any(word in msg.get("text", "").lower()
-                                        for word in ["hey", "yeah", "cool", "awesome", "lol"]))
+            formal_indicators = sum(
+                1
+                for msg in conversation_history
+                if any(word in msg.get("text", "") for word in ["Thank you", "Please", "I would", "Could you"])
+            )
+            informal_indicators = sum(
+                1
+                for msg in conversation_history
+                if any(word in msg.get("text", "").lower() for word in ["hey", "yeah", "cool", "awesome", "lol"])
+            )
 
             total_style = formal_indicators + informal_indicators
             if total_style > 0:
@@ -481,18 +507,25 @@ class BehavioralSignalProcessor:
                 signals["formal_communication_style"] = 0.5
 
             # Signal 30: Detail orientation
-            detailed_questions = sum(1 for msg in conversation_history if
-                                   len(msg.get("text", "")) > 100 and "?" in msg.get("text", ""))
+            detailed_questions = sum(
+                1 for msg in conversation_history if len(msg.get("text", "")) > 100 and "?" in msg.get("text", "")
+            )
             total_questions = sum(1 for msg in conversation_history if "?" in msg.get("text", ""))
 
-            signals["detail_oriented"] = (
-                detailed_questions / max(total_questions, 1) if total_questions > 0 else 0
-            )
+            signals["detail_oriented"] = detailed_questions / max(total_questions, 1) if total_questions > 0 else 0
 
             # Signal 31: Technical language usage
             technical_terms = [
-                "square footage", "sqft", "hoa", "apr", "down payment", "amortization",
-                "property tax", "closing costs", "inspection", "appraisal"
+                "square footage",
+                "sqft",
+                "hoa",
+                "apr",
+                "down payment",
+                "amortization",
+                "property tax",
+                "closing costs",
+                "inspection",
+                "appraisal",
             ]
             all_text = " ".join([msg.get("text", "") for msg in conversation_history]).lower()
             technical_count = sum(1 for term in technical_terms if term in all_text)
@@ -500,8 +533,15 @@ class BehavioralSignalProcessor:
 
             # Signal 32: Emotional language
             emotional_words = [
-                "love", "excited", "dream", "perfect", "amazing", "worried",
-                "concerned", "frustrated", "disappointed"
+                "love",
+                "excited",
+                "dream",
+                "perfect",
+                "amazing",
+                "worried",
+                "concerned",
+                "frustrated",
+                "disappointed",
             ]
             emotional_count = sum(1 for word in emotional_words if word in all_text)
             signals["emotional_language"] = min(emotional_count / 3.0, 1.0)
@@ -520,48 +560,62 @@ class BehavioralSignalProcessor:
 
             # Signal 33: Research stage indicators
             research_indicators = [
-                "looking for information", "researching", "comparing", "options",
-                "what's available", "tell me about", "how does", "what are"
+                "looking for information",
+                "researching",
+                "comparing",
+                "options",
+                "what's available",
+                "tell me about",
+                "how does",
+                "what are",
             ]
-            signals["in_research_stage"] = float(any(
-                indicator in all_text for indicator in research_indicators
-            ))
+            signals["in_research_stage"] = float(any(indicator in all_text for indicator in research_indicators))
 
             # Signal 34: Evaluation stage
             evaluation_indicators = [
-                "which is better", "pros and cons", "differences between",
-                "compare", "versus", "decision factors"
+                "which is better",
+                "pros and cons",
+                "differences between",
+                "compare",
+                "versus",
+                "decision factors",
             ]
-            signals["in_evaluation_stage"] = float(any(
-                indicator in all_text for indicator in evaluation_indicators
-            ))
+            signals["in_evaluation_stage"] = float(any(indicator in all_text for indicator in evaluation_indicators))
 
             # Signal 35: Purchase intent
             purchase_indicators = [
-                "ready to buy", "make an offer", "put in offer", "close on",
-                "purchase", "move forward", "next steps"
+                "ready to buy",
+                "make an offer",
+                "put in offer",
+                "close on",
+                "purchase",
+                "move forward",
+                "next steps",
             ]
-            signals["purchase_intent"] = float(any(
-                indicator in all_text for indicator in purchase_indicators
-            ))
+            signals["purchase_intent"] = float(any(indicator in all_text for indicator in purchase_indicators))
 
             # Signal 36: Comparison shopping
             comparison_indicators = [
-                "other agents", "shopping around", "other properties",
-                "different areas", "alternatives", "other options"
+                "other agents",
+                "shopping around",
+                "other properties",
+                "different areas",
+                "alternatives",
+                "other options",
             ]
-            signals["comparison_shopping"] = float(any(
-                indicator in all_text for indicator in comparison_indicators
-            ))
+            signals["comparison_shopping"] = float(any(indicator in all_text for indicator in comparison_indicators))
 
             # Signal 37: Commitment signals
             commitment_indicators = [
-                "this is the one", "perfect for us", "exactly what", "ready to move",
-                "let's do it", "when can we", "how soon"
+                "this is the one",
+                "perfect for us",
+                "exactly what",
+                "ready to move",
+                "let's do it",
+                "when can we",
+                "how soon",
             ]
-            signals["commitment_signals"] = float(any(
-                indicator in all_text for indicator in commitment_indicators
-            ))
+            signals["commitment_signals"] = float(any(indicator in all_text for indicator in commitment_indicators))
 
         except Exception as e:
             logger.warning(f"Decision stage signal extraction failed: {e}")
@@ -569,9 +623,7 @@ class BehavioralSignalProcessor:
         return signals
 
     def _extract_lifestyle_signals(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict[str, Any]]
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract lifestyle and demographic signals"""
         signals = {}
@@ -581,57 +633,77 @@ class BehavioralSignalProcessor:
 
             # Signal 38: Family status
             family_indicators = [
-                "kids", "children", "family", "school district", "playground",
-                "family room", "bedrooms for kids"
+                "kids",
+                "children",
+                "family",
+                "school district",
+                "playground",
+                "family room",
+                "bedrooms for kids",
             ]
-            signals["family_oriented"] = float(any(
-                indicator in all_text for indicator in family_indicators
-            ))
+            signals["family_oriented"] = float(any(indicator in all_text for indicator in family_indicators))
 
             # Signal 39: Professional status
             professional_indicators = [
-                "work from home", "home office", "commute", "job", "career",
-                "business", "company", "employer"
+                "work from home",
+                "home office",
+                "commute",
+                "job",
+                "career",
+                "business",
+                "company",
+                "employer",
             ]
-            signals["professional_focus"] = float(any(
-                indicator in all_text for indicator in professional_indicators
-            ))
+            signals["professional_focus"] = float(any(indicator in all_text for indicator in professional_indicators))
 
             # Signal 40: Investment mindset
             investment_indicators = [
-                "investment", "roi", "appreciation", "rental", "property value",
-                "market value", "resale", "equity"
+                "investment",
+                "roi",
+                "appreciation",
+                "rental",
+                "property value",
+                "market value",
+                "resale",
+                "equity",
             ]
-            signals["investment_mindset"] = float(any(
-                indicator in all_text for indicator in investment_indicators
-            ))
+            signals["investment_mindset"] = float(any(indicator in all_text for indicator in investment_indicators))
 
             # Signal 41: Luxury preferences
             luxury_indicators = [
-                "luxury", "high-end", "premium", "custom", "upgraded",
-                "gourmet", "spa", "pool", "view"
+                "luxury",
+                "high-end",
+                "premium",
+                "custom",
+                "upgraded",
+                "gourmet",
+                "spa",
+                "pool",
+                "view",
             ]
-            signals["luxury_preferences"] = float(any(
-                indicator in all_text for indicator in luxury_indicators
-            ))
+            signals["luxury_preferences"] = float(any(indicator in all_text for indicator in luxury_indicators))
 
             # Signal 42: First-time buyer
             first_time_indicators = [
-                "first time", "first home", "never bought", "new to",
-                "first purchase", "don't know process"
+                "first time",
+                "first home",
+                "never bought",
+                "new to",
+                "first purchase",
+                "don't know process",
             ]
-            signals["first_time_buyer"] = float(any(
-                indicator in all_text for indicator in first_time_indicators
-            ))
+            signals["first_time_buyer"] = float(any(indicator in all_text for indicator in first_time_indicators))
 
             # Signal 43: Relocation status
             relocation_indicators = [
-                "moving from", "relocating", "new to area", "unfamiliar with",
-                "coming from", "transferring"
+                "moving from",
+                "relocating",
+                "new to area",
+                "unfamiliar with",
+                "coming from",
+                "transferring",
             ]
-            signals["relocating"] = float(any(
-                indicator in all_text for indicator in relocation_indicators
-            ))
+            signals["relocating"] = float(any(indicator in all_text for indicator in relocation_indicators))
 
         except Exception as e:
             logger.warning(f"Lifestyle signal extraction failed: {e}")
@@ -639,9 +711,7 @@ class BehavioralSignalProcessor:
         return signals
 
     def _extract_technical_signals(
-        self,
-        lead_data: Dict[str, Any],
-        conversation_history: List[Dict[str, Any]]
+        self, lead_data: Dict[str, Any], conversation_history: List[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Extract technical and data-driven signals"""
         signals = {}
@@ -688,7 +758,7 @@ class BehavioralSignalProcessor:
                 "paid_search": 0.7,
                 "social": 0.6,
                 "direct": 0.8,
-                "other": 0.5
+                "other": 0.5,
             }
             source = lead_data.get("source", "other")
             signals["source_quality"] = source_quality_map.get(source, 0.5)
@@ -775,7 +845,7 @@ class BehavioralSignalProcessor:
             "persistent_interest": 0.3,
             "funnel_progression": 0.3,
             "ai_interaction_quality": 0.5,
-            "source_quality": 0.5
+            "source_quality": 0.5,
         }
 
     def _initialize_signal_weights(self) -> Dict[str, float]:
@@ -787,49 +857,44 @@ class BehavioralSignalProcessor:
             "cash_buyer_indicators": 0.10,
             "immediate_timeline": 0.10,
             "commitment_signals": 0.08,
-
             # Medium impact signals
             "response_velocity": 0.06,
             "financial_urgency": 0.06,
             "viewing_urgency": 0.05,
             "conversation_frequency": 0.05,
             "budget_specificity": 0.04,
-
             # Lower impact but still valuable
             "email_engagement": 0.03,
             "question_frequency": 0.03,
             "detail_oriented": 0.03,
             "digital_engagement": 0.03,
-            "source_quality": 0.02
+            "source_quality": 0.02,
         }
 
     def _initialize_financial_keywords(self) -> List[str]:
         """Initialize financial keywords for pattern matching"""
         return [
-            "pre-approved", "preapproved", "cash buyer", "financing",
-            "down payment", "credit score", "lender", "mortgage"
+            "pre-approved",
+            "preapproved",
+            "cash buyer",
+            "financing",
+            "down payment",
+            "credit score",
+            "lender",
+            "mortgage",
         ]
 
     def _initialize_urgency_keywords(self) -> List[str]:
         """Initialize urgency keywords"""
-        return [
-            "asap", "urgent", "immediately", "relocating", "deadline",
-            "by friday", "this week", "next week"
-        ]
+        return ["asap", "urgent", "immediately", "relocating", "deadline", "by friday", "this week", "next week"]
 
     def _initialize_objection_keywords(self) -> List[str]:
         """Initialize objection keywords"""
-        return [
-            "too expensive", "can't afford", "too far", "needs work",
-            "market is volatile", "need to ask"
-        ]
+        return ["too expensive", "can't afford", "too far", "needs work", "market is volatile", "need to ask"]
 
     def _initialize_lifestyle_keywords(self) -> List[str]:
         """Initialize lifestyle keywords"""
-        return [
-            "family", "kids", "work from home", "investment",
-            "luxury", "first time", "relocating"
-        ]
+        return ["family", "kids", "work from home", "investment", "luxury", "first time", "relocating"]
 
     def get_signal_summary(self, signals: Dict[str, float]) -> Dict[str, Any]:
         """Generate a summary of extracted signals"""
@@ -841,7 +906,7 @@ class BehavioralSignalProcessor:
             "engagement": [k for k in signals.keys() if "engagement" in k or "response" in k or "communication" in k],
             "financial": [k for k in signals.keys() if "financial" in k or "cash" in k or "preapproval" in k],
             "urgency": [k for k in signals.keys() if "urgent" in k or "timeline" in k or "deadline" in k],
-            "technical": [k for k in signals.keys() if "digital" in k or "property_view" in k or "search" in k]
+            "technical": [k for k in signals.keys() if "digital" in k or "property_view" in k or "search" in k],
         }
 
         summary = {}
@@ -872,13 +937,16 @@ if __name__ == "__main__":
         "emails_sent": 10,
         "page_views": 15,
         "session_duration_minutes": 25,
-        "source": "organic"
+        "source": "organic",
     }
 
     conversation_history = [
         {"text": "Hi, I'm looking for a house in Austin", "timestamp": "2026-01-15T10:00:00Z"},
-        {"text": "I'm pre-approved for $500K and need to buy ASAP for my new job at Apple", "timestamp": "2026-01-15T10:15:00Z"},
-        {"text": "Can we see some properties this weekend?", "timestamp": "2026-01-15T11:00:00Z"}
+        {
+            "text": "I'm pre-approved for $500K and need to buy ASAP for my new job at Apple",
+            "timestamp": "2026-01-15T10:15:00Z",
+        },
+        {"text": "Can we see some properties this weekend?", "timestamp": "2026-01-15T11:00:00Z"},
     ]
 
     # Extract signals

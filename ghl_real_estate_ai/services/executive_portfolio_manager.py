@@ -9,18 +9,20 @@ Tasks:
 """
 
 import logging
-from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from typing import Any, Dict, List, Optional
+
 from ghl_real_estate_ai.core.llm_client import LLMClient
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class PortfolioManagerAgent:
     """
     The Portfolio Manager: Maximizes the value of the entire lead database.
     """
-    
+
     def __init__(self):
         self.name = "Portfolio Manager"
         self.llm = LLMClient()
@@ -30,24 +32,21 @@ class PortfolioManagerAgent:
         Identify leads with high net yield that have been stalled for > 30 days.
         """
         logger.info(f"[{tenant_id}] {self.name}: Scanning for dormant high-value leads...")
-        
+
         # 1. Fetch leads from Memory (Simulated)
         # In production, this queries leads where:
         # status="active", last_interaction < (now - 30 days), and expected_revenue > $10k
         dormant_leads = [
             {"id": "LEAD_ dormant_1", "name": "Alice Smith", "potential_yield": 0.22, "location": "Austin"},
-            {"id": "LEAD_ dormant_2", "name": "Bob Jones", "potential_yield": 0.19, "location": "Miami"}
+            {"id": "LEAD_ dormant_2", "name": "Bob Jones", "potential_yield": 0.19, "location": "Miami"},
         ]
-        
+
         results = []
         for lead in dormant_leads:
             # 2. Generate a "Resurrection Script" for each
             script = await self._generate_resurrection_script(lead)
-            results.append({
-                **lead,
-                "resurrection_script": script
-            })
-            
+            results.append({**lead, "resurrection_script": script})
+
         return results
 
     async def _generate_resurrection_script(self, lead: Dict[str, Any]) -> str:
@@ -57,9 +56,9 @@ class PortfolioManagerAgent:
         prompt = f"""
         JORGE SYSTEM: RESURRECTION SCRIPT (DORMANT CAPITAL)
         
-        Lead: {lead['name']}
-        Location: {lead['location']}
-        Potential Yield: {lead['potential_yield']*100}%
+        Lead: {lead["name"]}
+        Location: {lead["location"]}
+        Potential Yield: {lead["potential_yield"] * 100}%
         
         This lead was interested but hasn't responded in 30+ days.
         Draft a short, expert SMS update that mentions a recent market shift 
@@ -67,11 +66,9 @@ class PortfolioManagerAgent:
         
         Tone: Professional, expert, time-sensitive.
         """
-        
+
         response = await self.llm.agenerate(
-            prompt=prompt,
-            system_prompt="You are an asset management specialist.",
-            temperature=0.7
+            prompt=prompt, system_prompt="You are an asset management specialist.", temperature=0.7
         )
         return response.content
 
@@ -79,6 +76,6 @@ class PortfolioManagerAgent:
         """
         Suggests moving equity from one market to another based on Hive Mind insights.
         """
-        # Logic: If lead has high equity in a 'Stable' market but a destination market 
+        # Logic: If lead has high equity in a 'Stable' market but a destination market
         # is 'Rapidly Growing', suggest an Equity Swap.
         return []

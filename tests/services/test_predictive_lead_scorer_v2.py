@@ -2,20 +2,20 @@
 Tests for Predictive Lead Scorer V2.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch, MagicMock
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
-    PredictiveLeadScorerV2,
-    PredictiveScore,
-    LeadInsights,
-    LeadPriority
-)
+import pytest
+
 from ghl_real_estate_ai.ml.closing_probability_model import ModelPrediction
 from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, MarketFeatures
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
+    LeadInsights,
+    LeadPriority,
+    PredictiveLeadScorerV2,
+    PredictiveScore,
+)
 
 
 class TestPredictiveLeadScorerV2:
@@ -46,20 +46,18 @@ class TestPredictiveLeadScorerV2:
                 "bathrooms": "2",
                 "timeline": "ASAP",
                 "motivation": "work relocation",
-                "financing": "pre-approved"
+                "financing": "pre-approved",
             },
-            "created_at": (datetime.now() - timedelta(hours=1)).isoformat()
+            "created_at": (datetime.now() - timedelta(hours=1)).isoformat(),
         }
 
     @pytest.fixture
     def mock_minimal_context(self):
         """Create minimal conversation context for testing edge cases."""
         return {
-            "conversation_history": [
-                {"role": "user", "text": "Hello"}
-            ],
+            "conversation_history": [{"role": "user", "text": "Hello"}],
             "extracted_preferences": {},
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
     @pytest.fixture
@@ -83,7 +81,7 @@ class TestPredictiveLeadScorerV2:
             message_length_variance=300.0,
             response_consistency=0.8,
             weekend_activity=False,
-            late_night_activity=False
+            late_night_activity=False,
         )
 
     @pytest.fixture
@@ -95,7 +93,7 @@ class TestPredictiveLeadScorerV2:
             price_trend=0.05,  # 5% appreciation
             seasonal_factor=0.8,  # Good season
             competition_level=0.7,
-            interest_rate_level=7.1
+            interest_rate_level=7.1,
         )
 
     @pytest.fixture
@@ -112,28 +110,29 @@ class TestPredictiveLeadScorerV2:
                 "engagement_score": 0.25,
                 "urgency_score": 0.2,
                 "budget_market_ratio": 0.15,
-                "other": 0.1
-            }
+                "other": 0.1,
+            },
         )
 
     @pytest.mark.asyncio
     async def test_calculate_predictive_score_success(
-        self,
-        scorer,
-        mock_conversation_context,
-        mock_conv_features,
-        mock_ml_prediction
+        self, scorer, mock_conversation_context, mock_conv_features, mock_ml_prediction
     ):
         """Test successful predictive score calculation."""
         # Mock dependencies
-        with patch.object(scorer.traditional_scorer, 'calculate_with_reasoning', new_callable=AsyncMock) as mock_traditional, \
-             patch.object(scorer.ml_model, 'predict_closing_probability', return_value=mock_ml_prediction) as mock_ml, \
-             patch.object(scorer.feature_engineer, 'extract_conversation_features', return_value=mock_conv_features) as mock_features:
-
+        with (
+            patch.object(
+                scorer.traditional_scorer, "calculate_with_reasoning", new_callable=AsyncMock
+            ) as mock_traditional,
+            patch.object(scorer.ml_model, "predict_closing_probability", return_value=mock_ml_prediction) as mock_ml,
+            patch.object(
+                scorer.feature_engineer, "extract_conversation_features", return_value=mock_conv_features
+            ) as mock_features,
+        ):
             mock_traditional.return_value = {
                 "score": 6,  # 6/7 questions answered
                 "classification": "hot",
-                "recommended_actions": ["Schedule showing", "Follow up"]
+                "recommended_actions": ["Schedule showing", "Follow up"],
             }
 
             score = await scorer.calculate_predictive_score(mock_conversation_context)
@@ -148,11 +147,7 @@ class TestPredictiveLeadScorerV2:
             assert score.estimated_revenue_potential > 0
 
     @pytest.mark.asyncio
-    async def test_calculate_predictive_score_minimal_data(
-        self,
-        scorer,
-        mock_minimal_context
-    ):
+    async def test_calculate_predictive_score_minimal_data(self, scorer, mock_minimal_context):
         """Test predictive score calculation with minimal data."""
         score = await scorer.calculate_predictive_score(mock_minimal_context)
 
@@ -161,22 +156,21 @@ class TestPredictiveLeadScorerV2:
         assert score.closing_probability >= 0.0
         assert score.overall_priority_score >= 0.0
         assert score.priority_level in [
-            LeadPriority.CRITICAL, LeadPriority.HIGH,
-            LeadPriority.MEDIUM, LeadPriority.LOW, LeadPriority.COLD
+            LeadPriority.CRITICAL,
+            LeadPriority.HIGH,
+            LeadPriority.MEDIUM,
+            LeadPriority.LOW,
+            LeadPriority.COLD,
         ]
 
     @pytest.mark.asyncio
-    async def test_generate_lead_insights(
-        self,
-        scorer,
-        mock_conversation_context,
-        mock_conv_features
-    ):
+    async def test_generate_lead_insights(self, scorer, mock_conversation_context, mock_conv_features):
         """Test lead insights generation."""
         # Mock dependencies
-        with patch.object(scorer, 'calculate_predictive_score') as mock_score, \
-             patch.object(scorer.feature_engineer, 'extract_conversation_features', return_value=mock_conv_features):
-
+        with (
+            patch.object(scorer, "calculate_predictive_score") as mock_score,
+            patch.object(scorer.feature_engineer, "extract_conversation_features", return_value=mock_conv_features),
+        ):
             mock_score.return_value = PredictiveScore(
                 qualification_score=6,
                 qualification_percentage=85,
@@ -195,7 +189,7 @@ class TestPredictiveLeadScorerV2:
                 estimated_revenue_potential=20000.0,
                 effort_efficiency_score=400.0,
                 model_confidence=0.8,
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
 
             insights = await scorer.generate_lead_insights(mock_conversation_context)
@@ -243,10 +237,7 @@ class TestPredictiveLeadScorerV2:
     def test_calculate_composite_score(self, scorer):
         """Test composite score calculation."""
         composite = scorer._calculate_composite_score(
-            qualification_pct=85.0,
-            closing_probability_pct=75.0,
-            engagement_score=80.0,
-            urgency_score=90.0
+            qualification_pct=85.0, closing_probability_pct=75.0, engagement_score=80.0, urgency_score=90.0
         )
 
         assert isinstance(composite, float)
@@ -262,7 +253,7 @@ class TestPredictiveLeadScorerV2:
             (80.0, LeadPriority.HIGH),
             (60.0, LeadPriority.MEDIUM),
             (35.0, LeadPriority.LOW),
-            (10.0, LeadPriority.COLD)
+            (10.0, LeadPriority.COLD),
         ]
 
         for score, expected_priority in test_cases:
@@ -270,24 +261,13 @@ class TestPredictiveLeadScorerV2:
             assert priority == expected_priority
 
     @pytest.mark.asyncio
-    async def test_generate_advanced_recommendations(
-        self,
-        scorer,
-        mock_conv_features,
-        mock_ml_prediction
-    ):
+    async def test_generate_advanced_recommendations(self, scorer, mock_conv_features, mock_ml_prediction):
         """Test advanced recommendations generation."""
-        traditional_result = {
-            "score": 6,
-            "recommended_actions": ["Schedule showing"]
-        }
+        traditional_result = {"score": 6, "recommended_actions": ["Schedule showing"]}
 
         # Test critical priority
         actions = await scorer._generate_advanced_recommendations(
-            LeadPriority.CRITICAL,
-            mock_ml_prediction,
-            mock_conv_features,
-            traditional_result
+            LeadPriority.CRITICAL, mock_ml_prediction, mock_conv_features, traditional_result
         )
 
         assert isinstance(actions, list)
@@ -296,27 +276,17 @@ class TestPredictiveLeadScorerV2:
 
         # Test low priority
         actions_low = await scorer._generate_advanced_recommendations(
-            LeadPriority.LOW,
-            mock_ml_prediction,
-            mock_conv_features,
-            traditional_result
+            LeadPriority.LOW, mock_ml_prediction, mock_conv_features, traditional_result
         )
 
         assert isinstance(actions_low, list)
         assert any("nurture" in action.lower() for action in actions_low)
 
     @pytest.mark.asyncio
-    async def test_calculate_roi_predictions(
-        self,
-        scorer,
-        mock_conv_features,
-        mock_conversation_context
-    ):
+    async def test_calculate_roi_predictions(self, scorer, mock_conv_features, mock_conversation_context):
         """Test ROI predictions calculation."""
         revenue, efficiency, yield_est, margin = await scorer._calculate_roi_predictions(
-            closing_probability=0.75,
-            conv_features=mock_conv_features,
-            context=mock_conversation_context
+            closing_probability=0.75, conv_features=mock_conv_features, context=mock_conversation_context
         )
 
         assert isinstance(revenue, float)
@@ -354,20 +324,19 @@ class TestPredictiveLeadScorerV2:
         assert score.closing_probability > 0.0
         assert "ML model unavailable" in score.risk_factors
         assert score.priority_level in [
-            LeadPriority.CRITICAL, LeadPriority.HIGH,
-            LeadPriority.MEDIUM, LeadPriority.LOW, LeadPriority.COLD
+            LeadPriority.CRITICAL,
+            LeadPriority.HIGH,
+            LeadPriority.MEDIUM,
+            LeadPriority.LOW,
+            LeadPriority.COLD,
         ]
 
     @pytest.mark.asyncio
     async def test_caching_behavior(self, scorer, mock_conversation_context):
         """Test that scoring results are properly cached."""
         # Mock cache to verify caching behavior
-        with patch.object(scorer.traditional_scorer, 'calculate_with_reasoning', new_callable=AsyncMock) as mock_scorer:
-            mock_scorer.return_value = {
-                "score": 5,
-                "classification": "hot",
-                "recommended_actions": ["Follow up"]
-            }
+        with patch.object(scorer.traditional_scorer, "calculate_with_reasoning", new_callable=AsyncMock) as mock_scorer:
+            mock_scorer.return_value = {"score": 5, "classification": "hot", "recommended_actions": ["Follow up"]}
 
             # First call
             score1 = await scorer.calculate_predictive_score(mock_conversation_context)
@@ -398,7 +367,7 @@ class TestPredictiveLeadScorerV2:
         empty_context = {
             "conversation_history": [],
             "extracted_preferences": {},
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         score = await scorer.calculate_predictive_score(empty_context)
@@ -409,14 +378,11 @@ class TestPredictiveLeadScorerV2:
         # Very long conversation
         long_context = {
             "conversation_history": [
-                {"role": "user", "text": f"Message {i}? I am very interested in learning more about this property."} for i in range(100)
+                {"role": "user", "text": f"Message {i}? I am very interested in learning more about this property."}
+                for i in range(100)
             ],
-            "extracted_preferences": {
-                "budget": "1000000",
-                "location": "luxury area",
-                "timeline": "urgent"
-            },
-            "created_at": datetime.now().isoformat()
+            "extracted_preferences": {"budget": "1000000", "location": "luxury area", "timeline": "urgent"},
+            "created_at": datetime.now().isoformat(),
         }
 
         score_long = await scorer.calculate_predictive_score(long_context)
@@ -498,7 +464,7 @@ class TestPredictiveLeadScorerV2:
             estimated_revenue_potential=20000.0,
             effort_efficiency_score=400.0,
             model_confidence=0.8,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         action = await scorer._recommend_next_best_action(mock_score, mock_conv_features)
@@ -545,7 +511,7 @@ class TestPredictiveLeadScorerV2:
             estimated_revenue_potential=20000.0,
             effort_efficiency_score=400.0,
             model_confidence=0.8,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         churn_prob = await scorer._calculate_churn_probability(mock_conv_features, mock_score)

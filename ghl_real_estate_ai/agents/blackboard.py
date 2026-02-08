@@ -2,16 +2,19 @@
 Shared Blackboard for Agent Swarm.
 A centralized context store for agents to share state and results.
 """
+
 import json
 import threading
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 
 class SharedBlackboard:
     """
     Thread-safe blackboard for shared agent context.
     Implemented as a singleton to sync state between API and Swarm.
     """
+
     _instance = None
     _lock = threading.Lock()
 
@@ -37,7 +40,7 @@ class SharedBlackboard:
                 "timestamp": datetime.now().isoformat(),
                 "agent": agent_name,
                 "key": key,
-                "value": str(value)[:500]  # Truncate large values for history
+                "value": str(value)[:500],  # Truncate large values for history
             }
             self._history.append(entry)
 
@@ -65,11 +68,9 @@ class SharedBlackboard:
                 "agent": agent_name,
                 "thought": thought,
                 "action_proposed": action_proposed,
-                "confidence": confidence
+                "confidence": confidence,
             }
             # We can store this in a special 'debates' list or write to a dedicated DB table
             debates = self._data.get("agent_debates", [])
             debates.append(entry)
-            self._data["agent_debates"] = debates[-50:] # Keep last 50 for live view
-
-    
+            self._data["agent_debates"] = debates[-50:]  # Keep last 50 for live view

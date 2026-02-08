@@ -14,13 +14,12 @@ from typing import List, Optional
 from src.core.config import get_settings
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
-from src.embeddings.openai_provider import OpenAIEmbeddingProvider
 from src.embeddings.base import EmbeddingConfig
-from src.vector_store.base import VectorStoreConfig, SearchOptions, VectorStore
+from src.embeddings.openai_provider import OpenAIEmbeddingProvider
+from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig
 from src.vector_store.chroma_store import ChromaVectorStore
 
 logger = logging.getLogger(__name__)
-
 
 
 def _create_vector_store(config: VectorStoreConfig, persist_directory: Optional[str] = None) -> VectorStore:
@@ -73,7 +72,7 @@ class DenseRetriever:
         collection_name: str = "dense_retrieval",
         embedding_model: str = "text-embedding-3-small",
         dimensions: int = 1536,
-        distance_metric: str = "cosine"
+        distance_metric: str = "cosine",
     ):
         """Initialize dense retriever.
 
@@ -104,19 +103,13 @@ class DenseRetriever:
         """
         try:
             # Initialize embedding provider
-            embedding_config = EmbeddingConfig(
-                model=self._embedding_model,
-                dimensions=self._dimensions,
-                batch_size=100
-            )
+            embedding_config = EmbeddingConfig(model=self._embedding_model, dimensions=self._dimensions, batch_size=100)
             self._embedding_provider = OpenAIEmbeddingProvider(embedding_config)
             await self._embedding_provider.initialize()
 
             # Initialize vector store (ChromaDB)
             vector_config = VectorStoreConfig(
-                collection_name=self._collection_name,
-                dimension=self._dimensions,
-                distance_metric=self._distance_metric
+                collection_name=self._collection_name, dimension=self._dimensions, distance_metric=self._distance_metric
             )
             self._vector_store = _create_vector_store(vector_config)
             await self._vector_store.initialize()
@@ -204,16 +197,9 @@ class DenseRetriever:
             query_embedding = query_embeddings[0]
 
             # Search vector store
-            search_options = SearchOptions(
-                top_k=top_k,
-                threshold=0.0,
-                include_metadata=True
-            )
+            search_options = SearchOptions(top_k=top_k, threshold=0.0, include_metadata=True)
 
-            results = await self._vector_store.search(
-                query_embedding=query_embedding,
-                options=search_options
-            )
+            results = await self._vector_store.search(query_embedding=query_embedding, options=search_options)
 
             elapsed_time = time.time() - start_time
 

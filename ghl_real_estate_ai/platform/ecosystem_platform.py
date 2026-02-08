@@ -4,18 +4,19 @@ Creates exponential value through partner ecosystem and integrations.
 Enables platform dominance through network effects and ecosystem lock-in.
 """
 
-from typing import Dict, List, Optional, Any, Union, Tuple
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
-import uuid
 import json
 import logging
-from dataclasses import dataclass, asdict
-from enum import Enum
+import uuid
 from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
+
 from ..services.cache_service import CacheService
 from ..services.database_service import DatabaseService
 from ..services.enhanced_error_handling import enhanced_error_handler
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class PartnerType(Enum):
     """Types of ecosystem partners."""
+
     TECHNOLOGY_INTEGRATION = "technology_integration"
     CHANNEL_PARTNER = "channel_partner"
     SOLUTION_PROVIDER = "solution_provider"
@@ -38,6 +40,7 @@ class PartnerType(Enum):
 
 class IntegrationType(Enum):
     """Types of platform integrations."""
+
     API_INTEGRATION = "api_integration"
     WEBHOOK_INTEGRATION = "webhook_integration"
     SDK_INTEGRATION = "sdk_integration"
@@ -49,6 +52,7 @@ class IntegrationType(Enum):
 
 class PartnerTier(Enum):
     """Partner tier classifications."""
+
     BRONZE = "bronze"
     SILVER = "silver"
     GOLD = "gold"
@@ -60,6 +64,7 @@ class PartnerTier(Enum):
 @dataclass
 class EcosystemPartner:
     """Ecosystem partner configuration."""
+
     partner_id: str
     company_name: str
     partner_type: PartnerType
@@ -81,6 +86,7 @@ class EcosystemPartner:
 @dataclass
 class PlatformIntegration:
     """Platform integration configuration."""
+
     integration_id: str
     partner_id: str
     integration_type: IntegrationType
@@ -102,6 +108,7 @@ class PlatformIntegration:
 @dataclass
 class PartnershipMetrics:
     """Partnership performance metrics."""
+
     partner_id: str
     revenue_generated: Decimal
     customers_acquired: int
@@ -116,6 +123,7 @@ class PartnershipMetrics:
 @dataclass
 class EcosystemOpportunity:
     """Ecosystem expansion opportunity."""
+
     opportunity_id: str
     opportunity_type: str
     target_company: str
@@ -140,7 +148,7 @@ class PartnerOnboardingEngine:
             "Provide certification materials",
             "Execute partnership agreement",
             "Deploy production integration",
-            "Launch go-to-market activities"
+            "Launch go-to-market activities",
         ]
 
         onboarding_results = {}
@@ -153,11 +161,7 @@ class PartnerOnboardingEngine:
     async def _execute_onboarding_step(self, step: str, partner_info: Dict[str, Any]) -> Dict[str, Any]:
         """Execute individual onboarding step."""
         # Simplified implementation
-        return {
-            "status": "completed",
-            "timestamp": datetime.utcnow().isoformat(),
-            "details": f"Completed: {step}"
-        }
+        return {"status": "completed", "timestamp": datetime.utcnow().isoformat(), "details": f"Completed: {step}"}
 
 
 class IntegrationMarketplace:
@@ -166,9 +170,15 @@ class IntegrationMarketplace:
     def __init__(self):
         self.integrations: Dict[str, PlatformIntegration] = {}
         self.categories = [
-            "CRM Integration", "Marketing Automation", "Analytics",
-            "Communication", "Document Management", "Payment Processing",
-            "AI & ML Services", "Data Sources", "Workflow Automation"
+            "CRM Integration",
+            "Marketing Automation",
+            "Analytics",
+            "Communication",
+            "Document Management",
+            "Payment Processing",
+            "AI & ML Services",
+            "Data Sources",
+            "Workflow Automation",
         ]
 
     async def publish_integration(self, integration: PlatformIntegration) -> Dict[str, Any]:
@@ -181,13 +191,10 @@ class IntegrationMarketplace:
             return {
                 "published": True,
                 "marketplace_url": f"https://marketplace.platform.com/integrations/{integration.integration_id}",
-                "estimated_downloads": await self._predict_download_volume(integration)
+                "estimated_downloads": await self._predict_download_volume(integration),
             }
         else:
-            return {
-                "published": False,
-                "errors": validation_result["errors"]
-            }
+            return {"published": False, "errors": validation_result["errors"]}
 
     async def _validate_integration(self, integration: PlatformIntegration) -> Dict[str, Any]:
         """Validate integration for marketplace publication."""
@@ -203,10 +210,7 @@ class IntegrationMarketplace:
         if not integration.capabilities:
             errors.append("No capabilities specified")
 
-        return {
-            "valid": len(errors) == 0,
-            "errors": errors
-        }
+        return {"valid": len(errors) == 0, "errors": errors}
 
     async def _predict_download_volume(self, integration: PlatformIntegration) -> int:
         """Predict download volume for integration."""
@@ -228,10 +232,7 @@ class EcosystemPlatform:
     - Ecosystem intelligence and analytics
     """
 
-    def __init__(self,
-                 llm_client: LLMClient,
-                 cache_service: CacheService,
-                 database_service: DatabaseService):
+    def __init__(self, llm_client: LLMClient, cache_service: CacheService, database_service: DatabaseService):
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service
@@ -248,32 +249,32 @@ class EcosystemPlatform:
                 "revenue_share": 0.15,
                 "support_level": "community",
                 "certification_access": ["basic"],
-                "marketing_support": False
+                "marketing_support": False,
             },
             PartnerTier.SILVER: {
                 "revenue_share": 0.20,
                 "support_level": "standard",
                 "certification_access": ["basic", "intermediate"],
-                "marketing_support": True
+                "marketing_support": True,
             },
             PartnerTier.GOLD: {
                 "revenue_share": 0.25,
                 "support_level": "priority",
                 "certification_access": ["basic", "intermediate", "advanced"],
-                "marketing_support": True
+                "marketing_support": True,
             },
             PartnerTier.PLATINUM: {
                 "revenue_share": 0.30,
                 "support_level": "premium",
                 "certification_access": ["all"],
-                "marketing_support": True
+                "marketing_support": True,
             },
             PartnerTier.STRATEGIC: {
                 "revenue_share": 0.35,
                 "support_level": "dedicated",
                 "certification_access": ["all"],
-                "marketing_support": True
-            }
+                "marketing_support": True,
+            },
         }
 
         # Ecosystem metrics
@@ -281,15 +282,15 @@ class EcosystemPlatform:
             "target_partners": 500,
             "target_integrations": 1000,
             "target_partner_revenue": Decimal("50000000"),  # $50M annual
-            "target_ecosystem_growth": 0.25  # 25% monthly growth
+            "target_ecosystem_growth": 0.25,  # 25% monthly growth
         }
 
         logger.info("Ecosystem Platform initialized")
 
     @enhanced_error_handler
-    async def register_ecosystem_partner(self,
-                                       partner_info: Dict[str, Any],
-                                       proposed_tier: PartnerTier = PartnerTier.BRONZE) -> EcosystemPartner:
+    async def register_ecosystem_partner(
+        self, partner_info: Dict[str, Any], proposed_tier: PartnerTier = PartnerTier.BRONZE
+    ) -> EcosystemPartner:
         """
         Register new ecosystem partner with automated onboarding.
 
@@ -326,7 +327,7 @@ class EcosystemPlatform:
             certification_status="pending",
             contract_start=datetime.utcnow(),
             contract_end=datetime.utcnow() + timedelta(days=365),
-            active=True
+            active=True,
         )
 
         # Execute automated onboarding
@@ -346,9 +347,9 @@ class EcosystemPlatform:
         return partner
 
     @enhanced_error_handler
-    async def create_platform_integration(self,
-                                        partner_id: str,
-                                        integration_config: Dict[str, Any]) -> PlatformIntegration:
+    async def create_platform_integration(
+        self, partner_id: str, integration_config: Dict[str, Any]
+    ) -> PlatformIntegration:
         """
         Create new platform integration with partner.
 
@@ -385,7 +386,7 @@ class EcosystemPlatform:
             usage_statistics={},
             status="development",
             created_at=datetime.utcnow(),
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
 
         # Set up integration sandbox
@@ -415,9 +416,7 @@ class EcosystemPlatform:
             raise ValueError(f"Integration validation failed: {validation_result['errors']}")
 
     @enhanced_error_handler
-    async def execute_joint_go_to_market(self,
-                                       partner_id: str,
-                                       campaign_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_joint_go_to_market(self, partner_id: str, campaign_config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Execute joint go-to-market campaign with ecosystem partner.
 
@@ -446,7 +445,7 @@ class EcosystemPlatform:
             "strategy": strategy,
             "execution_status": {},
             "performance_metrics": {},
-            "roi_projection": Decimal("0")
+            "roi_projection": Decimal("0"),
         }
 
         # Execute campaign elements
@@ -457,7 +456,7 @@ class EcosystemPlatform:
             "customer_case_studies",
             "sales_enablement",
             "marketing_automation",
-            "lead_nurturing"
+            "lead_nurturing",
         ]
 
         for element in campaign_elements:
@@ -494,7 +493,7 @@ class EcosystemPlatform:
             "revenue_increase": Decimal("0"),
             "partner_optimizations": [],
             "tier_adjustments": [],
-            "new_incentive_structures": []
+            "new_incentive_structures": [],
         }
 
         # Analyze current partner performance
@@ -538,8 +537,7 @@ class EcosystemPlatform:
 
         # Calculate total optimization impact
         optimization_results["revenue_increase"] = (
-            optimization_results["optimized_total_revenue"] -
-            optimization_results["current_total_revenue"]
+            optimization_results["optimized_total_revenue"] - optimization_results["current_total_revenue"]
         )
 
         return optimization_results
@@ -573,10 +571,10 @@ class EcosystemPlatform:
             evaluation_prompt = f"""
             Evaluate this ecosystem expansion opportunity:
 
-            Opportunity Type: {analysis['type']}
-            Target: {analysis['target']}
-            Market Context: {analysis['context']}
-            Strategic Fit: {analysis['strategic_fit']}
+            Opportunity Type: {analysis["type"]}
+            Target: {analysis["target"]}
+            Market Context: {analysis["context"]}
+            Strategic Fit: {analysis["strategic_fit"]}
 
             Evaluate:
             - Strategic value (1-10)
@@ -593,24 +591,21 @@ class EcosystemPlatform:
             # Parse evaluation and create opportunity
             opportunity = EcosystemOpportunity(
                 opportunity_id=str(uuid.uuid4()),
-                opportunity_type=analysis['type'],
-                target_company=analysis['target'],
-                market_segment=analysis.get('market_segment', 'enterprise'),
+                opportunity_type=analysis["type"],
+                target_company=analysis["target"],
+                market_segment=analysis.get("market_segment", "enterprise"),
                 estimated_value=await self._parse_estimated_value(evaluation),
                 success_probability=await self._parse_success_probability(evaluation),
-                strategic_value=analysis['strategic_fit'],
-                timeline_months=analysis.get('timeline_months', 6),
+                strategic_value=analysis["strategic_fit"],
+                timeline_months=analysis.get("timeline_months", 6),
                 required_investment=await self._parse_required_investment(evaluation),
-                roi_projection=await self._parse_roi_projection(evaluation)
+                roi_projection=await self._parse_roi_projection(evaluation),
             )
 
             opportunities.append(opportunity)
 
         # Sort opportunities by strategic value and ROI
-        opportunities.sort(
-            key=lambda o: o.roi_projection * o.success_probability,
-            reverse=True
-        )
+        opportunities.sort(key=lambda o: o.roi_projection * o.success_probability, reverse=True)
 
         return opportunities[:25]  # Top 25 opportunities
 
@@ -631,7 +626,7 @@ class EcosystemPlatform:
             "revenue_analytics": await self._generate_revenue_analytics(),
             "growth_trends": await self._generate_growth_trends(),
             "competitive_positioning": await self._generate_competitive_positioning(),
-            "strategic_recommendations": await self._generate_strategic_recommendations()
+            "strategic_recommendations": await self._generate_strategic_recommendations(),
         }
 
         return dashboard
@@ -645,18 +640,12 @@ class EcosystemPlatform:
         missing_fields = [field for field in required_fields if field not in partner_info]
 
         if missing_fields:
-            return {
-                "eligible": False,
-                "reason": f"Missing required fields: {missing_fields}"
-            }
+            return {"eligible": False, "reason": f"Missing required fields: {missing_fields}"}
 
         # Tier-specific requirements
         if tier in [PartnerTier.PLATINUM, PartnerTier.STRATEGIC]:
             if not partner_info.get("annual_revenue") or partner_info["annual_revenue"] < 10000000:
-                return {
-                    "eligible": False,
-                    "reason": "Insufficient annual revenue for tier"
-                }
+                return {"eligible": False, "reason": "Insufficient annual revenue for tier"}
 
         return {"eligible": True}
 
@@ -669,11 +658,13 @@ class EcosystemPlatform:
         analytics_config = {
             "partner_id": partner.partner_id,
             "tracking_started": datetime.utcnow().isoformat(),
-            "kpis": ["revenue", "customer_acquisition", "satisfaction", "growth_rate"]
+            "kpis": ["revenue", "customer_acquisition", "satisfaction", "growth_rate"],
         }
         await self.cache.set(f"partner_analytics_{partner.partner_id}", analytics_config, ttl=3600 * 24 * 365)
 
-    async def _send_partner_welcome_package(self, partner: EcosystemPartner, onboarding_results: Dict[str, Any]) -> None:
+    async def _send_partner_welcome_package(
+        self, partner: EcosystemPartner, onboarding_results: Dict[str, Any]
+    ) -> None:
         """Send welcome package and credentials to new partner."""
         logger.info(f"Sending welcome package to {partner.company_name}")
 
@@ -682,7 +673,7 @@ class EcosystemPlatform:
         return {
             "sandbox_url": f"https://sandbox.platform.com/integrations/{integration.integration_id}",
             "api_credentials": {"api_key": str(uuid.uuid4()), "secret": str(uuid.uuid4())},
-            "test_data": "sample_test_data_provided"
+            "test_data": "sample_test_data_provided",
         }
 
     async def _validate_integration_functionality(self, integration: PlatformIntegration) -> Dict[str, Any]:
@@ -692,9 +683,13 @@ class EcosystemPlatform:
 
     async def _store_integration_configuration(self, integration: PlatformIntegration) -> None:
         """Store integration configuration."""
-        await self.cache.set(f"platform_integration_{integration.integration_id}", asdict(integration), ttl=3600 * 24 * 30)
+        await self.cache.set(
+            f"platform_integration_{integration.integration_id}", asdict(integration), ttl=3600 * 24 * 30
+        )
 
-    async def _generate_campaign_strategy(self, partner: EcosystemPartner, campaign_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_campaign_strategy(
+        self, partner: EcosystemPartner, campaign_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate AI-powered campaign strategy."""
         strategy_prompt = f"""
         Generate a joint go-to-market strategy for:
@@ -704,9 +699,9 @@ class EcosystemPlatform:
         Capabilities: {partner.capabilities}
         Geographic Coverage: {partner.geographic_coverage}
 
-        Campaign Objectives: {campaign_config.get('objectives', [])}
-        Target Market: {campaign_config.get('target_market', 'enterprise')}
-        Budget: ${campaign_config.get('budget', 100000)}
+        Campaign Objectives: {campaign_config.get("objectives", [])}
+        Target Market: {campaign_config.get("target_market", "enterprise")}
+        Budget: ${campaign_config.get("budget", 100000)}
 
         Create comprehensive strategy with specific tactics and timelines.
         """
@@ -717,17 +712,19 @@ class EcosystemPlatform:
             "ai_generated_strategy": strategy,
             "recommended_channels": ["webinars", "content_marketing", "direct_sales"],
             "timeline_weeks": 12,
-            "success_metrics": ["leads_generated", "pipeline_created", "revenue_attributed"]
+            "success_metrics": ["leads_generated", "pipeline_created", "revenue_attributed"],
         }
 
-    async def _execute_campaign_element(self, element: str, partner: EcosystemPartner, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_campaign_element(
+        self, element: str, partner: EcosystemPartner, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute individual campaign element."""
         # Simplified execution
         return {
             "status": "completed",
             "metrics": {"impressions": 10000, "leads": 250, "conversions": 15},
             "cost": Decimal("5000"),
-            "roi": 3.2
+            "roi": 3.2,
         }
 
     async def _calculate_element_roi(self, element: str, result: Dict[str, Any]) -> Decimal:
@@ -753,7 +750,7 @@ class EcosystemPlatform:
             "total_leads": total_leads,
             "cost_per_lead": total_cost / max(total_leads, 1),
             "campaign_roi": results["roi_projection"] / max(total_cost, Decimal("1")),
-            "success_rate": 0.85
+            "success_rate": 0.85,
         }
 
     async def _analyze_partner_performance(self, partner: EcosystemPartner) -> Dict[str, Any]:
@@ -764,10 +761,12 @@ class EcosystemPlatform:
             "satisfaction_score": partner.satisfaction_score,
             "growth_rate": 0.15,
             "integration_adoption": len(partner.integration_types),
-            "market_penetration": 0.05
+            "market_penetration": 0.05,
         }
 
-    async def _apply_partner_optimization(self, partner: EcosystemPartner, performance: Dict[str, Any], ai_recommendations: str) -> Dict[str, Any]:
+    async def _apply_partner_optimization(
+        self, partner: EcosystemPartner, performance: Dict[str, Any], ai_recommendations: str
+    ) -> Dict[str, Any]:
         """Apply optimization recommendations to partner."""
         # Parse AI recommendations and implement changes
         current_share = partner.revenue_share_percentage
@@ -787,7 +786,7 @@ class EcosystemPlatform:
             "current_revenue_share": current_share,
             "optimized_revenue_share": new_share,
             "projected_revenue_increase": projected_increase,
-            "ai_rationale": ai_recommendations[:200]  # Truncated rationale
+            "ai_rationale": ai_recommendations[:200],  # Truncated rationale
         }
 
     # Additional helper methods for ecosystem analysis...
@@ -798,7 +797,7 @@ class EcosystemPlatform:
                 "type": "integration_gap",
                 "target": "Salesforce Advanced Analytics",
                 "context": "CRM integration gap",
-                "strategic_fit": "high"
+                "strategic_fit": "high",
             }
         ]
 
@@ -809,7 +808,7 @@ class EcosystemPlatform:
                 "type": "strategic_partnership",
                 "target": "Microsoft",
                 "context": "Cloud infrastructure partnership",
-                "strategic_fit": "very_high"
+                "strategic_fit": "very_high",
             }
         ]
 
@@ -820,7 +819,7 @@ class EcosystemPlatform:
                 "type": "data_integration",
                 "target": "Zillow",
                 "context": "Real estate data enhancement",
-                "strategic_fit": "high"
+                "strategic_fit": "high",
             }
         ]
 
@@ -848,7 +847,7 @@ class EcosystemPlatform:
             "total_partners": len(self.ecosystem_partners),
             "active_integrations": len(self.platform_integrations),
             "ecosystem_revenue": sum(p.joint_revenue for p in self.ecosystem_partners.values()),
-            "growth_rate": 0.22
+            "growth_rate": 0.22,
         }
 
     async def _generate_partner_performance_summary(self) -> Dict[str, Any]:
@@ -856,23 +855,19 @@ class EcosystemPlatform:
         return {
             "top_performers": ["Microsoft", "Salesforce", "HubSpot"],
             "average_satisfaction": 0.87,
-            "revenue_leaders": ["Partner A", "Partner B", "Partner C"]
+            "revenue_leaders": ["Partner A", "Partner B", "Partner C"],
         }
 
     async def _generate_integration_metrics(self) -> Dict[str, Any]:
         """Generate integration performance metrics."""
-        return {
-            "total_installs": 25000,
-            "popular_categories": ["CRM", "Marketing", "Analytics"],
-            "average_rating": 4.2
-        }
+        return {"total_installs": 25000, "popular_categories": ["CRM", "Marketing", "Analytics"], "average_rating": 4.2}
 
     async def _generate_revenue_analytics(self) -> Dict[str, Any]:
         """Generate revenue analytics."""
         return {
             "total_ecosystem_revenue": Decimal("25000000"),
             "revenue_growth_rate": 0.28,
-            "average_deal_size": Decimal("15000")
+            "average_deal_size": Decimal("15000"),
         }
 
     async def _generate_growth_trends(self) -> Dict[str, Any]:
@@ -880,7 +875,7 @@ class EcosystemPlatform:
         return {
             "partner_acquisition_rate": 15,  # per month
             "integration_growth_rate": 0.35,
-            "market_expansion": ["EMEA", "APAC"]
+            "market_expansion": ["EMEA", "APAC"],
         }
 
     async def _generate_competitive_positioning(self) -> Dict[str, Any]:
@@ -888,7 +883,7 @@ class EcosystemPlatform:
         return {
             "market_leadership": "Strong",
             "ecosystem_size_advantage": "2x larger than nearest competitor",
-            "integration_quality": "Industry leading"
+            "integration_quality": "Industry leading",
         }
 
     async def _generate_strategic_recommendations(self) -> List[str]:
@@ -897,5 +892,5 @@ class EcosystemPlatform:
             "Accelerate partnership with cloud providers",
             "Expand integration marketplace to mobile",
             "Invest in AI-powered partner matching",
-            "Launch global partner certification program"
+            "Launch global partner certification program",
         ]

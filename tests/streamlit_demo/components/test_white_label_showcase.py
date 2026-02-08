@@ -5,21 +5,22 @@ Tests for the high-ticket consulting demonstration interface
 showcasing $25K-$100K white-label platform capabilities.
 """
 
-import pytest
 import asyncio
-import streamlit as st
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-import pandas as pd
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pandas as pd
+import pytest
+import streamlit as st
+
+from ghl_real_estate_ai.services.white_label_service import (
+    BrandingConfig,
+    BrandingTier,
+    IntegrationMarketplace,
+    WorkflowTemplate,
+)
 from ghl_real_estate_ai.streamlit_demo.components.white_label_showcase import (
     WhiteLabelShowcase,
-    get_white_label_showcase
-)
-from ghl_real_estate_ai.services.white_label_service import (
-    BrandingTier,
-    BrandingConfig,
-    WorkflowTemplate,
-    IntegrationMarketplace
+    get_white_label_showcase,
 )
 
 
@@ -32,50 +33,57 @@ class TestWhiteLabelShowcase:
         service = Mock()
 
         # Mock workflow templates
-        service.get_available_workflows = AsyncMock(return_value=[
-            WorkflowTemplate(
-                template_id="test_workflow",
-                name="Test AI Workflow",
-                description="Test workflow description",
-                category="AI Analytics",
-                trigger_type="webhook",
-                actions=[{"type": "ai_analysis"}, {"type": "send_email"}],
-                conditions=[{"field": "lead_score", "operator": "greater_than", "value": 80}],
-                customizable_fields=["threshold", "email_template"],
-                consulting_tier=BrandingTier.PROFESSIONAL,
-                estimated_value="50+ hours/month automation"
-            )
-        ])
+        service.get_available_workflows = AsyncMock(
+            return_value=[
+                WorkflowTemplate(
+                    template_id="test_workflow",
+                    name="Test AI Workflow",
+                    description="Test workflow description",
+                    category="AI Analytics",
+                    trigger_type="webhook",
+                    actions=[{"type": "ai_analysis"}, {"type": "send_email"}],
+                    conditions=[{"field": "lead_score", "operator": "greater_than", "value": 80}],
+                    customizable_fields=["threshold", "email_template"],
+                    consulting_tier=BrandingTier.PROFESSIONAL,
+                    estimated_value="50+ hours/month automation",
+                )
+            ]
+        )
 
         # Mock integrations
-        service.get_integration_marketplace = AsyncMock(return_value=[
-            IntegrationMarketplace(
-                integration_id="test_crm",
-                name="Enterprise CRM Integration",
-                provider="TestCRM",
-                description="Advanced CRM integration with custom fields",
-                setup_instructions="OAuth2 setup with enterprise permissions",
-                api_endpoints=["/api/contacts", "/api/deals"],
-                required_credentials=["client_id", "client_secret"],
-                supported_features=["custom_fields", "workflow_automation"],
-                consulting_tier=BrandingTier.ENTERPRISE,
-                implementation_complexity="complex"
-            )
-        ])
+        service.get_integration_marketplace = AsyncMock(
+            return_value=[
+                IntegrationMarketplace(
+                    integration_id="test_crm",
+                    name="Enterprise CRM Integration",
+                    provider="TestCRM",
+                    description="Advanced CRM integration with custom fields",
+                    setup_instructions="OAuth2 setup with enterprise permissions",
+                    api_endpoints=["/api/contacts", "/api/deals"],
+                    required_credentials=["client_id", "client_secret"],
+                    supported_features=["custom_fields", "workflow_automation"],
+                    consulting_tier=BrandingTier.ENTERPRISE,
+                    implementation_complexity="complex",
+                )
+            ]
+        )
 
         return service
 
     @pytest.fixture
     def showcase_instance(self, mock_service):
         """Create WhiteLabelShowcase instance with mocked service."""
-        with patch('ghl_real_estate_ai.streamlit_demo.components.white_label_showcase.WhiteLabelService', return_value=mock_service):
+        with patch(
+            "ghl_real_estate_ai.streamlit_demo.components.white_label_showcase.WhiteLabelService",
+            return_value=mock_service,
+        ):
             return WhiteLabelShowcase()
 
     def test_initialization(self, showcase_instance):
         """Test showcase initialization."""
         assert showcase_instance is not None
-        assert hasattr(showcase_instance, 'consulting_packages')
-        assert hasattr(showcase_instance, 'demo_brands')
+        assert hasattr(showcase_instance, "consulting_packages")
+        assert hasattr(showcase_instance, "demo_brands")
         assert len(showcase_instance.consulting_packages) == 3
         assert len(showcase_instance.demo_brands) == 3
 
@@ -84,11 +92,7 @@ class TestWhiteLabelShowcase:
         packages = showcase_instance.consulting_packages
 
         # Check all expected packages exist
-        expected_packages = [
-            "AI Transformation Accelerator",
-            "Enterprise Intelligence Platform",
-            "AI Innovation Lab"
-        ]
+        expected_packages = ["AI Transformation Accelerator", "Enterprise Intelligence Platform", "AI Innovation Lab"]
 
         for package_name in expected_packages:
             assert package_name in packages
@@ -107,11 +111,7 @@ class TestWhiteLabelShowcase:
         """Test demo brands data structure."""
         brands = showcase_instance.demo_brands
 
-        expected_brands = [
-            "Luxury Real Estate Group",
-            "Metro Property Solutions",
-            "Coastal Realty Network"
-        ]
+        expected_brands = ["Luxury Real Estate Group", "Metro Property Solutions", "Coastal Realty Network"]
 
         for brand_name in expected_brands:
             assert brand_name in brands
@@ -144,18 +144,18 @@ class TestWhiteLabelShowcase:
         assert enterprise_capabilities["Advanced Analytics"] is True
         assert enterprise_capabilities["Enterprise SSO"] is True
 
-    @patch('streamlit.markdown')
-    @patch('streamlit.tabs')
+    @patch("streamlit.markdown")
+    @patch("streamlit.tabs")
     def test_render_showcase_structure(self, mock_tabs, mock_markdown, showcase_instance):
         """Test main showcase rendering structure."""
         # Mock tabs
         mock_tabs.return_value = [Mock(), Mock(), Mock(), Mock()]
 
-        with patch.object(showcase_instance, '_render_consulting_packages'):
-            with patch.object(showcase_instance, '_render_brand_customization'):
-                with patch.object(showcase_instance, '_render_workflow_engine'):
-                    with patch.object(showcase_instance, '_render_integration_marketplace'):
-                        with patch.object(showcase_instance, '_render_roi_calculator'):
+        with patch.object(showcase_instance, "_render_consulting_packages"):
+            with patch.object(showcase_instance, "_render_brand_customization"):
+                with patch.object(showcase_instance, "_render_workflow_engine"):
+                    with patch.object(showcase_instance, "_render_integration_marketplace"):
+                        with patch.object(showcase_instance, "_render_roi_calculator"):
                             showcase_instance.render_showcase()
 
         # Verify header was rendered
@@ -167,9 +167,9 @@ class TestWhiteLabelShowcase:
         # Verify tabs were created
         mock_tabs.assert_called_once()
 
-    @patch('streamlit.selectbox')
-    @patch('streamlit.dataframe')
-    @patch('streamlit.markdown')
+    @patch("streamlit.selectbox")
+    @patch("streamlit.dataframe")
+    @patch("streamlit.markdown")
     def test_render_consulting_packages(self, mock_markdown, mock_dataframe, mock_selectbox, showcase_instance):
         """Test consulting packages rendering."""
         mock_selectbox.return_value = "AI Transformation Accelerator"
@@ -185,13 +185,14 @@ class TestWhiteLabelShowcase:
         # Verify package selection works
         assert mock_selectbox.called
 
-    @patch('streamlit.selectbox')
-    @patch('streamlit.text_input')
-    @patch('streamlit.color_picker')
-    @patch('streamlit.markdown')
-    @patch('streamlit.columns')
-    def test_render_brand_customization(self, mock_columns, mock_markdown, mock_color_picker,
-                                      mock_text_input, mock_selectbox, showcase_instance):
+    @patch("streamlit.selectbox")
+    @patch("streamlit.text_input")
+    @patch("streamlit.color_picker")
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
+    def test_render_brand_customization(
+        self, mock_columns, mock_markdown, mock_color_picker, mock_text_input, mock_selectbox, showcase_instance
+    ):
         """Test brand customization rendering."""
         # Mock columns
         col1, col2 = Mock(), Mock()
@@ -202,8 +203,8 @@ class TestWhiteLabelShowcase:
         mock_text_input.return_value = "Test Company"
         mock_color_picker.side_effect = ["#FF0000", "#00FF00", "#0000FF"]
 
-        with patch.object(showcase_instance, '_render_brand_preview'):
-            with patch.object(showcase_instance, '_render_tier_features'):
+        with patch.object(showcase_instance, "_render_brand_preview"):
+            with patch.object(showcase_instance, "_render_tier_features"):
                 showcase_instance._render_brand_customization()
 
         # Verify brand selection works
@@ -211,23 +212,21 @@ class TestWhiteLabelShowcase:
 
     def test_render_brand_preview(self, showcase_instance):
         """Test brand preview rendering."""
-        with patch('streamlit.markdown') as mock_markdown:
-            showcase_instance._render_brand_preview(
-                "Test Company", "#FF0000", "#00FF00", "#0000FF", "Arial"
-            )
+        with patch("streamlit.markdown") as mock_markdown:
+            showcase_instance._render_brand_preview("Test Company", "#FF0000", "#00FF00", "#0000FF", "Arial")
 
             # Verify preview HTML was generated
             assert mock_markdown.call_count >= 2  # Header + dashboard preview
 
             # Check that brand elements are included
             html_calls = [call[0][0] for call in mock_markdown.call_args_list]
-            brand_html = ''.join(html_calls)
+            brand_html = "".join(html_calls)
             assert "Test Company" in brand_html
             assert "#FF0000" in brand_html
 
-    @patch('streamlit.selectbox')
-    @patch('streamlit.markdown')
-    @patch('streamlit.columns')
+    @patch("streamlit.selectbox")
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
     def test_render_workflow_engine(self, mock_columns, mock_markdown, mock_selectbox, showcase_instance, mock_service):
         """Test workflow engine rendering."""
         # Mock columns
@@ -237,15 +236,15 @@ class TestWhiteLabelShowcase:
         # Mock form inputs
         mock_selectbox.side_effect = ["Professional", "Test AI Workflow"]
 
-        with patch.object(showcase_instance, '_render_workflow_builder_demo'):
+        with patch.object(showcase_instance, "_render_workflow_builder_demo"):
             showcase_instance._render_workflow_engine()
 
         # Verify workflow selection interface was created
         assert mock_selectbox.called
 
-    @patch('streamlit.expander')
-    @patch('streamlit.markdown')
-    @patch('streamlit.columns')
+    @patch("streamlit.expander")
+    @patch("streamlit.markdown")
+    @patch("streamlit.columns")
     def test_render_integration_marketplace(self, mock_columns, mock_markdown, mock_expander, showcase_instance):
         """Test integration marketplace rendering."""
         # Mock columns
@@ -261,13 +260,14 @@ class TestWhiteLabelShowcase:
         # Verify tier-based integration display
         assert mock_markdown.called
 
-    @patch('streamlit.columns')
-    @patch('streamlit.number_input')
-    @patch('streamlit.selectbox')
-    @patch('streamlit.metric')
-    @patch('streamlit.success')
-    def test_render_roi_calculator(self, mock_success, mock_metric, mock_selectbox,
-                                 mock_number_input, mock_columns, showcase_instance):
+    @patch("streamlit.columns")
+    @patch("streamlit.number_input")
+    @patch("streamlit.selectbox")
+    @patch("streamlit.metric")
+    @patch("streamlit.success")
+    def test_render_roi_calculator(
+        self, mock_success, mock_metric, mock_selectbox, mock_number_input, mock_columns, showcase_instance
+    ):
         """Test ROI calculator rendering."""
         # Mock columns
         col1, col2, col3 = Mock(), Mock(), Mock()
@@ -284,8 +284,8 @@ class TestWhiteLabelShowcase:
         assert mock_selectbox.called
         assert mock_metric.called
 
-    @patch('streamlit.columns')
-    @patch('streamlit.markdown')
+    @patch("streamlit.columns")
+    @patch("streamlit.markdown")
     def test_render_tier_features(self, mock_markdown, mock_columns, showcase_instance):
         """Test tier features rendering."""
         col1, col2 = Mock(), Mock()
@@ -296,7 +296,7 @@ class TestWhiteLabelShowcase:
         # Verify features were displayed
         assert mock_markdown.called
 
-    @patch('streamlit.markdown')
+    @patch("streamlit.markdown")
     def test_render_workflow_builder_demo(self, mock_markdown, showcase_instance):
         """Test workflow builder demo rendering."""
         showcase_instance._render_workflow_builder_demo()
@@ -310,7 +310,7 @@ class TestWhiteLabelShowcase:
 
     def test_caching_decorator(self):
         """Test that the caching decorator works."""
-        with patch('streamlit.cache_resource') as mock_cache:
+        with patch("streamlit.cache_resource") as mock_cache:
             mock_cache.return_value = lambda func: func
 
             from ghl_real_estate_ai.streamlit_demo.components.white_label_showcase import get_white_label_showcase
@@ -361,7 +361,7 @@ class TestWhiteLabelShowcase:
             assert config.accent_color.startswith("#")
             assert len(config.accent_color) == 7
 
-    @patch('streamlit.error')
+    @patch("streamlit.error")
     def test_error_handling_workflow_loading(self, mock_error, showcase_instance):
         """Test error handling when workflow loading fails."""
         # Mock service to raise exception
@@ -373,7 +373,7 @@ class TestWhiteLabelShowcase:
         mock_error.assert_called_once()
         assert "Error loading workflows" in mock_error.call_args[0][0]
 
-    @patch('streamlit.error')
+    @patch("streamlit.error")
     def test_error_handling_integration_loading(self, mock_error, showcase_instance):
         """Test error handling when integration loading fails."""
         # Mock service to raise exception
@@ -432,11 +432,14 @@ class TestWhiteLabelShowcase:
 
     def test_main_render_function(self):
         """Test main render function execution."""
-        with patch('ghl_real_estate_ai.streamlit_demo.components.white_label_showcase.get_white_label_showcase') as mock_get:
+        with patch(
+            "ghl_real_estate_ai.streamlit_demo.components.white_label_showcase.get_white_label_showcase"
+        ) as mock_get:
             mock_showcase = Mock()
             mock_get.return_value = mock_showcase
 
             from ghl_real_estate_ai.streamlit_demo.components.white_label_showcase import render_white_label_showcase
+
             render_white_label_showcase()
 
             # Verify showcase was retrieved and rendered

@@ -48,9 +48,7 @@ class OneClickPropertyLaunch:
     Automate property listing across multiple platforms with one click.
     """
 
-    def __init__(
-        self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None
-    ):
+    def __init__(self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None):
         """Initialize the One-Click Property Launch service"""
         self.ghl_api_key = ghl_api_key
         self.ghl_location_id = ghl_location_id
@@ -66,9 +64,7 @@ class OneClickPropertyLaunch:
             Complete listing package with descriptions, photos, tours
         """
         package = {
-            "property_id": property_data.get(
-                "id", f"prop_{datetime.now().timestamp()}"
-            ),
+            "property_id": property_data.get("id", f"prop_{datetime.now().timestamp()}"),
             "created_at": datetime.now().isoformat(),
             "status": "draft",
             "materials": {},
@@ -81,22 +77,16 @@ class OneClickPropertyLaunch:
         package["materials"]["headlines"] = self._generate_headlines(property_data)
 
         # Optimize photos for each platform
-        package["materials"]["photos"] = self._optimize_photos(
-            property_data.get("photos", [])
-        )
+        package["materials"]["photos"] = self._optimize_photos(property_data.get("photos", []))
 
         # Generate virtual tour links
-        package["materials"]["virtual_tour"] = self._generate_virtual_tour_data(
-            property_data
-        )
+        package["materials"]["virtual_tour"] = self._generate_virtual_tour_data(property_data)
 
         # Create platform-specific metadata
         package["materials"]["metadata"] = self._generate_metadata(property_data)
 
         # Generate social media posts
-        package["materials"]["social_posts"] = self._generate_social_posts(
-            property_data
-        )
+        package["materials"]["social_posts"] = self._generate_social_posts(property_data)
 
         return package
 
@@ -119,11 +109,7 @@ class OneClickPropertyLaunch:
         """
         results = {
             "property_id": listing_package["property_id"],
-            "publish_time": (
-                schedule_time.isoformat()
-                if schedule_time
-                else datetime.now().isoformat()
-            ),
+            "publish_time": (schedule_time.isoformat() if schedule_time else datetime.now().isoformat()),
             "platforms": {},
             "summary": {
                 "total": len(platforms),
@@ -135,9 +121,7 @@ class OneClickPropertyLaunch:
 
         for platform in platforms:
             try:
-                result = self._publish_to_platform(
-                    listing_package, platform, schedule_time
-                )
+                result = self._publish_to_platform(listing_package, platform, schedule_time)
                 results["platforms"][platform.value] = result
 
                 if result["status"] == "published":
@@ -161,9 +145,7 @@ class OneClickPropertyLaunch:
 
         return results
 
-    def sync_across_platforms(
-        self, property_id: str, updates: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def sync_across_platforms(self, property_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
         """
         Synchronize updates across all platforms where property is listed.
 
@@ -225,30 +207,18 @@ class OneClickPropertyLaunch:
             status["platforms"][platform] = platform_status
 
             # Aggregate metrics
-            status["aggregated_metrics"]["total_views"] += platform_status.get(
-                "views", 0
-            )
-            status["aggregated_metrics"]["total_leads"] += platform_status.get(
-                "leads", 0
-            )
-            status["aggregated_metrics"]["total_inquiries"] += platform_status.get(
-                "inquiries", 0
-            )
+            status["aggregated_metrics"]["total_views"] += platform_status.get("views", 0)
+            status["aggregated_metrics"]["total_leads"] += platform_status.get("leads", 0)
+            status["aggregated_metrics"]["total_inquiries"] += platform_status.get("inquiries", 0)
 
         # Calculate average engagement
         if len(platforms) > 0:
-            total_engagement = sum(
-                status["platforms"][p].get("engagement_rate", 0) for p in platforms
-            )
-            status["aggregated_metrics"]["avg_engagement_rate"] = (
-                total_engagement / len(platforms)
-            )
+            total_engagement = sum(status["platforms"][p].get("engagement_rate", 0) for p in platforms)
+            status["aggregated_metrics"]["avg_engagement_rate"] = total_engagement / len(platforms)
 
         return status
 
-    def take_down_listing(
-        self, property_id: str, reason: str = "sold"
-    ) -> Dict[str, Any]:
+    def take_down_listing(self, property_id: str, reason: str = "sold") -> Dict[str, Any]:
         """
         Remove listing from all platforms.
 
@@ -282,17 +252,16 @@ class OneClickPropertyLaunch:
     def _generate_description(self, property_data: Dict[str, Any]) -> Dict[str, str]:
         """Generate compelling property descriptions for different platforms"""
         base_description = f"""
-        {property_data.get('bedrooms', 'N/A')} bed, {property_data.get('bathrooms', 'N/A')} bath 
-        {property_data.get('property_type', 'home')} located in {property_data.get('city', 'N/A')}.
-        {property_data.get('square_feet', 'N/A')} sq ft of living space.
+        {property_data.get("bedrooms", "N/A")} bed, {property_data.get("bathrooms", "N/A")} bath 
+        {property_data.get("property_type", "home")} located in {property_data.get("city", "N/A")}.
+        {property_data.get("square_feet", "N/A")} sq ft of living space.
         """
 
         return {
             "short": base_description[:100] + "...",  # For social media
             "medium": base_description[:300] + "...",  # For listings
             "long": base_description,  # For full descriptions
-            "seo_optimized": base_description
-            + f" Keywords: {property_data.get('city')}, real estate, homes for sale",
+            "seo_optimized": base_description + f" Keywords: {property_data.get('city')}, real estate, homes for sale",
         }
 
     def _generate_headlines(self, property_data: Dict[str, Any]) -> Dict[str, str]:
@@ -307,24 +276,13 @@ class OneClickPropertyLaunch:
     def _optimize_photos(self, photos: List[str]) -> Dict[str, List[Dict[str, str]]]:
         """Optimize photos for each platform's requirements"""
         return {
-            "mls": [
-                {"url": photo, "optimized": True, "size": "1200x800"}
-                for photo in photos
-            ],
-            "social": [
-                {"url": photo, "optimized": True, "size": "1080x1080"}
-                for photo in photos[:5]
-            ],
-            "zillow": [
-                {"url": photo, "optimized": True, "size": "1024x768"}
-                for photo in photos
-            ],
+            "mls": [{"url": photo, "optimized": True, "size": "1200x800"} for photo in photos],
+            "social": [{"url": photo, "optimized": True, "size": "1080x1080"} for photo in photos[:5]],
+            "zillow": [{"url": photo, "optimized": True, "size": "1024x768"} for photo in photos],
             "original": [{"url": photo, "optimized": False} for photo in photos],
         }
 
-    def _generate_virtual_tour_data(
-        self, property_data: Dict[str, Any]
-    ) -> Dict[str, str]:
+    def _generate_virtual_tour_data(self, property_data: Dict[str, Any]) -> Dict[str, str]:
         """Generate virtual tour links and embed codes"""
         return {
             "matterport_url": property_data.get("matterport_url", ""),
@@ -366,11 +324,7 @@ class OneClickPropertyLaunch:
             "status": "published" if not schedule_time else "pending",
             "platform": platform.value,
             "url": f"https://{platform.value}.com/listing/{listing_package['property_id']}",
-            "published_at": (
-                schedule_time.isoformat()
-                if schedule_time
-                else datetime.now().isoformat()
-            ),
+            "published_at": (schedule_time.isoformat() if schedule_time else datetime.now().isoformat()),
             "listing_id": f"{platform.value}_{listing_package['property_id']}",
         }
 
@@ -379,9 +333,7 @@ class OneClickPropertyLaunch:
         # In production, retrieve from database
         return ["mls", "zillow", "realtor_com", "facebook_marketplace"]
 
-    def _update_platform_listing(
-        self, property_id: str, platform: str, updates: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _update_platform_listing(self, property_id: str, platform: str, updates: Dict[str, Any]) -> Dict[str, Any]:
         """Update listing on specific platform"""
         return {
             "status": "updated",
@@ -402,9 +354,7 @@ class OneClickPropertyLaunch:
             "last_updated": datetime.now().isoformat(),
         }
 
-    def _remove_from_platform(
-        self, property_id: str, platform: str, reason: str
-    ) -> Dict[str, Any]:
+    def _remove_from_platform(self, property_id: str, platform: str, reason: str) -> Dict[str, Any]:
         """Remove listing from platform"""
         return {
             "status": "removed",
@@ -413,9 +363,7 @@ class OneClickPropertyLaunch:
             "timestamp": datetime.now().isoformat(),
         }
 
-    def _store_in_ghl(
-        self, listing_package: Dict[str, Any], publish_results: Dict[str, Any]
-    ) -> None:
+    def _store_in_ghl(self, listing_package: Dict[str, Any], publish_results: Dict[str, Any]) -> None:
         """Store listing data in GHL for tracking"""
         # In production, integrate with GHL API
         pass
@@ -456,9 +404,7 @@ if __name__ == "__main__":
         Platform.FACEBOOK_MARKETPLACE,
     ]
     results = service.publish_to_platforms(package, platforms)
-    print(
-        f"✅ Published to {results['summary']['successful']}/{results['summary']['total']} platforms"
-    )
+    print(f"✅ Published to {results['summary']['successful']}/{results['summary']['total']} platforms")
 
     # Get status
     print("\n📊 Checking listing status...")

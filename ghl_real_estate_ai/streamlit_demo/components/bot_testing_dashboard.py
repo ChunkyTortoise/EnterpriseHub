@@ -11,27 +11,29 @@ Features:
 - Client demonstration preparation
 """
 
-import streamlit as st
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
-import time
 import random
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
 
 # Import bot services for testing
 try:
-    from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
     from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+    from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
     from ghl_real_estate_ai.agents.lead_bot import LeadBot
-    from ghl_real_estate_ai.services.event_publisher import get_event_publisher
     from ghl_real_estate_ai.services.cache_service import get_cache_service
+    from ghl_real_estate_ai.services.event_publisher import get_event_publisher
     from ghl_real_estate_ai.services.sms_compliance_service import get_sms_compliance_service
 except ImportError:
     st.warning("Bot services not available - using demo mode for testing")
+
 
 class BotTestRunner:
     """Test runner for end-to-end bot workflow testing."""
@@ -50,7 +52,7 @@ class BotTestRunner:
                 "test_type": "seller_bot_workflow",
                 "lead_id": test_lead_data.get("lead_id", "test_lead_001"),
                 "start_time": datetime.now().isoformat(),
-                "steps": []
+                "steps": [],
             }
 
             # Step 1: Initial contact analysis
@@ -63,8 +65,8 @@ class BotTestRunner:
                     "intent_detected": "seller_interest",
                     "confidence": round(random.uniform(85, 95), 1),
                     "property_type": test_lead_data.get("property_type", "single_family"),
-                    "timeline": test_lead_data.get("timeline", "3-6 months")
-                }
+                    "timeline": test_lead_data.get("timeline", "3-6 months"),
+                },
             }
             test_result["steps"].append(analysis_result)
 
@@ -79,8 +81,10 @@ class BotTestRunner:
                     "pcs_score": round(random.uniform(65, 85), 1),
                     "stall_detection": random.choice(["none", "price_concern", "timeline_objection"]),
                     "temperature": random.choice(["hot", "warm", "cold"]),
-                    "recommended_action": random.choice(["schedule_appointment", "send_to_buyer_bot", "nurture_sequence"])
-                }
+                    "recommended_action": random.choice(
+                        ["schedule_appointment", "send_to_buyer_bot", "nurture_sequence"]
+                    ),
+                },
             }
             test_result["steps"].append(qualification_result)
 
@@ -93,20 +97,24 @@ class BotTestRunner:
                 "output": {
                     "routing_decision": qualification_result["output"]["recommended_action"],
                     "confidence": round(random.uniform(88, 96), 1),
-                    "next_bot": "jorge_buyer_bot" if qualification_result["output"]["recommended_action"] == "send_to_buyer_bot" else "lead_bot"
-                }
+                    "next_bot": "jorge_buyer_bot"
+                    if qualification_result["output"]["recommended_action"] == "send_to_buyer_bot"
+                    else "lead_bot",
+                },
             }
             test_result["steps"].append(routing_result)
 
             # Calculate overall metrics
             end_time = time.time()
-            test_result.update({
-                "end_time": datetime.now().isoformat(),
-                "total_duration": round(end_time - start_time, 2),
-                "overall_status": "success",
-                "success_rate": 100.0,
-                "performance_score": round(random.uniform(85, 95), 1)
-            })
+            test_result.update(
+                {
+                    "end_time": datetime.now().isoformat(),
+                    "total_duration": round(end_time - start_time, 2),
+                    "overall_status": "success",
+                    "success_rate": 100.0,
+                    "performance_score": round(random.uniform(85, 95), 1),
+                }
+            )
 
             return test_result
 
@@ -115,7 +123,7 @@ class BotTestRunner:
                 "test_type": "seller_bot_workflow",
                 "status": "error",
                 "error": str(e),
-                "duration": round(time.time() - start_time, 2)
+                "duration": round(time.time() - start_time, 2),
             }
 
     async def run_buyer_bot_test(self, test_lead_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -127,7 +135,7 @@ class BotTestRunner:
                 "test_type": "buyer_bot_workflow",
                 "lead_id": test_lead_data.get("lead_id", "test_lead_002"),
                 "start_time": datetime.now().isoformat(),
-                "steps": []
+                "steps": [],
             }
 
             # Step 1: Financial readiness assessment
@@ -140,8 +148,8 @@ class BotTestRunner:
                     "credit_estimate": random.choice(["excellent", "good", "fair"]),
                     "income_verification": "qualified",
                     "down_payment_ready": random.choice([True, False]),
-                    "pre_approval_status": random.choice(["ready", "needs_work", "qualified"])
-                }
+                    "pre_approval_status": random.choice(["ready", "needs_work", "qualified"]),
+                },
             }
             test_result["steps"].append(financial_assessment)
 
@@ -157,9 +165,9 @@ class BotTestRunner:
                     "preferences_captured": {
                         "budget": test_lead_data.get("budget", "$400K-$600K"),
                         "bedrooms": test_lead_data.get("bedrooms", 3),
-                        "area": test_lead_data.get("area", "Austin, TX")
-                    }
-                }
+                        "area": test_lead_data.get("area", "Austin, TX"),
+                    },
+                },
             }
             test_result["steps"].append(property_matching)
 
@@ -169,22 +177,26 @@ class BotTestRunner:
                 "status": "success",
                 "response_time": round(random.uniform(0.4, 0.9), 2),
                 "output": {
-                    "recommended_action": random.choice(["schedule_showing", "send_property_alerts", "education_sequence"]),
+                    "recommended_action": random.choice(
+                        ["schedule_showing", "send_property_alerts", "education_sequence"]
+                    ),
                     "urgency_level": random.choice(["high", "medium", "low"]),
-                    "follow_up_timeline": random.choice(["24_hours", "3_days", "1_week"])
-                }
+                    "follow_up_timeline": random.choice(["24_hours", "3_days", "1_week"]),
+                },
             }
             test_result["steps"].append(next_action)
 
             # Calculate metrics
             end_time = time.time()
-            test_result.update({
-                "end_time": datetime.now().isoformat(),
-                "total_duration": round(end_time - start_time, 2),
-                "overall_status": "success",
-                "success_rate": 100.0,
-                "performance_score": round(random.uniform(87, 96), 1)
-            })
+            test_result.update(
+                {
+                    "end_time": datetime.now().isoformat(),
+                    "total_duration": round(end_time - start_time, 2),
+                    "overall_status": "success",
+                    "success_rate": 100.0,
+                    "performance_score": round(random.uniform(87, 96), 1),
+                }
+            )
 
             return test_result
 
@@ -193,7 +205,7 @@ class BotTestRunner:
                 "test_type": "buyer_bot_workflow",
                 "status": "error",
                 "error": str(e),
-                "duration": round(time.time() - start_time, 2)
+                "duration": round(time.time() - start_time, 2),
             }
 
     async def run_lead_bot_test(self, test_lead_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -205,7 +217,7 @@ class BotTestRunner:
                 "test_type": "lead_bot_sequence",
                 "lead_id": test_lead_data.get("lead_id", "test_lead_003"),
                 "start_time": datetime.now().isoformat(),
-                "steps": []
+                "steps": [],
             }
 
             # Step 1: Sequence initialization
@@ -218,8 +230,8 @@ class BotTestRunner:
                     "touchpoints_scheduled": random.randint(6, 10),
                     "first_touchpoint": "day_3",
                     "voice_call_scheduled": True,
-                    "cma_generation_planned": True
-                }
+                    "cma_generation_planned": True,
+                },
             }
             test_result["steps"].append(sequence_init)
 
@@ -233,8 +245,8 @@ class BotTestRunner:
                     "email_sent": True,
                     "compliance_check": "passed",
                     "delivery_status": "delivered",
-                    "engagement_expected": "25-35%"
-                }
+                    "engagement_expected": "25-35%",
+                },
             }
             test_result["steps"].append(day_3_touchpoint)
 
@@ -248,8 +260,8 @@ class BotTestRunner:
                     "retell_ai_ready": True,
                     "script_loaded": True,
                     "expected_duration": "2-4 minutes",
-                    "qualification_possible": True
-                }
+                    "qualification_possible": True,
+                },
             }
             test_result["steps"].append(voice_call)
 
@@ -263,20 +275,22 @@ class BotTestRunner:
                     "property_data_fetched": True,
                     "market_analysis_complete": True,
                     "pdf_rendered": True,
-                    "personalization_applied": True
-                }
+                    "personalization_applied": True,
+                },
             }
             test_result["steps"].append(cma_generation)
 
             # Calculate metrics
             end_time = time.time()
-            test_result.update({
-                "end_time": datetime.now().isoformat(),
-                "total_duration": round(end_time - start_time, 2),
-                "overall_status": "success",
-                "success_rate": 100.0,
-                "performance_score": round(random.uniform(89, 97), 1)
-            })
+            test_result.update(
+                {
+                    "end_time": datetime.now().isoformat(),
+                    "total_duration": round(end_time - start_time, 2),
+                    "overall_status": "success",
+                    "success_rate": 100.0,
+                    "performance_score": round(random.uniform(89, 97), 1),
+                }
+            )
 
             return test_result
 
@@ -285,13 +299,15 @@ class BotTestRunner:
                 "test_type": "lead_bot_sequence",
                 "status": "error",
                 "error": str(e),
-                "duration": round(time.time() - start_time, 2)
+                "duration": round(time.time() - start_time, 2),
             }
+
 
 @st.cache_resource
 def get_test_runner():
     """Get cached test runner instance."""
     return BotTestRunner()
+
 
 def render_test_configuration():
     """Render test configuration and scenario setup."""
@@ -313,18 +329,16 @@ def render_test_configuration():
                 "First-Time Buyer",
                 "Investor Lead",
                 "Luxury Market Client",
-                "Distressed Seller"
-            ]
+                "Distressed Seller",
+            ],
         )
 
         test_mode = st.selectbox(
-            "Test Mode:",
-            ["Full Integration", "Individual Bot", "Performance Benchmark", "Error Simulation"]
+            "Test Mode:", ["Full Integration", "Individual Bot", "Performance Benchmark", "Error Simulation"]
         )
 
         data_source = st.selectbox(
-            "Data Source:",
-            ["Live GHL Data", "Synthetic Data", "Historical Data", "Custom Input"]
+            "Data Source:", ["Live GHL Data", "Synthetic Data", "Historical Data", "Custom Input"]
         )
 
     with col2:
@@ -343,17 +357,17 @@ def render_test_configuration():
 
         # Advanced options
         with st.expander("🔧 Advanced Test Options"):
-            enable_real_sms = st.checkbox("Enable Real SMS", value=False, help="Send actual SMS messages (use carefully)")
+            enable_real_sms = st.checkbox(
+                "Enable Real SMS", value=False, help="Send actual SMS messages (use carefully)"
+            )
             enable_voice_calls = st.checkbox("Enable Voice Calls", value=False, help="Make real Retell AI calls")
-            skip_delays = st.checkbox("Skip Time Delays", value=True, help="Skip normal sequence timing for faster testing")
+            skip_delays = st.checkbox(
+                "Skip Time Delays", value=True, help="Skip normal sequence timing for faster testing"
+            )
             verbose_logging = st.checkbox("Verbose Logging", value=True, help="Detailed step-by-step logging")
 
-    return {
-        "scenario": scenario,
-        "test_mode": test_mode,
-        "data_source": data_source,
-        "params": locals()
-    }
+    return {"scenario": scenario, "test_mode": test_mode, "data_source": data_source, "params": locals()}
+
 
 def render_live_testing_interface():
     """Render the live testing interface with real-time results."""
@@ -393,11 +407,11 @@ def render_live_testing_interface():
         "timeline": "3-6 months",
         "budget": "$400K-$600K",
         "bedrooms": 3,
-        "area": "Austin, TX"
+        "area": "Austin, TX",
     }
 
     # Seller Bot Test
-    if st.session_state.get('run_seller_test', False):
+    if st.session_state.get("run_seller_test", False):
         st.write("**🎯 Running Seller Bot Workflow Test...**")
 
         progress_bar = st.progress(0)
@@ -428,7 +442,7 @@ def render_live_testing_interface():
                 "frs_score": 78.3,
                 "pcs_score": 82.1,
                 "temperature": "warm",
-                "next_action": "send_to_buyer_bot"
+                "next_action": "send_to_buyer_bot",
             }
 
             st.success("✅ Seller Bot Test Completed Successfully!")
@@ -445,13 +459,15 @@ def render_live_testing_interface():
             with col4:
                 st.metric("🧠 PCS Score", f"{seller_result['pcs_score']}")
 
-            st.info(f"**🎯 Result:** Lead classified as '{seller_result['temperature']}' - {seller_result['next_action'].replace('_', ' ').title()}")
+            st.info(
+                f"**🎯 Result:** Lead classified as '{seller_result['temperature']}' - {seller_result['next_action'].replace('_', ' ').title()}"
+            )
 
         st.session_state.run_seller_test = False
         st.divider()
 
     # Buyer Bot Test
-    if st.session_state.get('run_buyer_test', False):
+    if st.session_state.get("run_buyer_test", False):
         st.write("**🏠 Running Buyer Bot Workflow Test...**")
 
         progress_bar = st.progress(0)
@@ -479,7 +495,7 @@ def render_live_testing_interface():
                 "matches_found": 6,
                 "match_accuracy": 89.4,
                 "frs_score": 84.2,
-                "next_action": "schedule_showing"
+                "next_action": "schedule_showing",
             }
 
             st.success("✅ Buyer Bot Test Completed Successfully!")
@@ -495,13 +511,15 @@ def render_live_testing_interface():
             with col4:
                 st.metric("💰 FRS Score", f"{buyer_result['frs_score']}")
 
-            st.info(f"**🎯 Result:** {buyer_result['matches_found']} properties matched - {buyer_result['next_action'].replace('_', ' ').title()}")
+            st.info(
+                f"**🎯 Result:** {buyer_result['matches_found']} properties matched - {buyer_result['next_action'].replace('_', ' ').title()}"
+            )
 
         st.session_state.run_buyer_test = False
         st.divider()
 
     # Lead Bot Test
-    if st.session_state.get('run_lead_test', False):
+    if st.session_state.get("run_lead_test", False):
         st.write("**📞 Running Lead Bot Sequence Test...**")
 
         progress_bar = st.progress(0)
@@ -531,7 +549,7 @@ def render_live_testing_interface():
                 "touchpoints_scheduled": 8,
                 "compliance_check": "passed",
                 "voice_call_ready": True,
-                "cma_generated": True
+                "cma_generated": True,
             }
 
             st.success("✅ Lead Bot Sequence Test Completed Successfully!")
@@ -543,17 +561,19 @@ def render_live_testing_interface():
             with col2:
                 st.metric("📅 Touchpoints", f"{lead_result['touchpoints_scheduled']}")
             with col3:
-                st.metric("📞 Voice Ready", "✅" if lead_result['voice_call_ready'] else "❌")
+                st.metric("📞 Voice Ready", "✅" if lead_result["voice_call_ready"] else "❌")
             with col4:
-                st.metric("📊 CMA Ready", "✅" if lead_result['cma_generated'] else "❌")
+                st.metric("📊 CMA Ready", "✅" if lead_result["cma_generated"] else "❌")
 
-            st.info(f"**🎯 Result:** Sequence initialized successfully - {lead_result['compliance_check'].title()} TCPA compliance")
+            st.info(
+                f"**🎯 Result:** Sequence initialized successfully - {lead_result['compliance_check'].title()} TCPA compliance"
+            )
 
         st.session_state.run_lead_test = False
         st.divider()
 
     # All Bots Test
-    if st.session_state.get('run_all_tests', False):
+    if st.session_state.get("run_all_tests", False):
         st.write("**🔄 Running Complete Bot Ecosystem Test...**")
 
         with st.spinner("Executing full integration test..."):
@@ -570,7 +590,7 @@ def render_live_testing_interface():
                 "📱 Verifying SMS compliance and delivery systems...",
                 "🧠 Testing Claude coaching integration...",
                 "⚡ Running performance and load testing...",
-                "✅ Validating end-to-end workflow integrity..."
+                "✅ Validating end-to-end workflow integrity...",
             ]
 
             for i, phase in enumerate(test_phases):
@@ -586,15 +606,23 @@ def render_live_testing_interface():
             st.write("**📊 Integration Test Results:**")
 
             results_data = {
-                "Component": ["Seller Bot", "Buyer Bot", "Lead Bot", "Bot Coordination", "SMS Compliance", "Claude Integration"],
+                "Component": [
+                    "Seller Bot",
+                    "Buyer Bot",
+                    "Lead Bot",
+                    "Bot Coordination",
+                    "SMS Compliance",
+                    "Claude Integration",
+                ],
                 "Status": ["✅ Passed", "✅ Passed", "✅ Passed", "✅ Passed", "✅ Passed", "✅ Passed"],
                 "Performance": ["92.5%", "89.4%", "94.1%", "96.2%", "100%", "91.8%"],
-                "Response Time": ["2.3s", "2.7s", "3.1s", "1.2s", "0.8s", "1.5s"]
+                "Response Time": ["2.3s", "2.7s", "3.1s", "1.2s", "0.8s", "1.5s"],
             }
 
             st.dataframe(pd.DataFrame(results_data), use_container_width=True)
 
         st.session_state.run_all_tests = False
+
 
 def render_performance_analytics():
     """Render performance analytics and benchmarking results."""
@@ -606,20 +634,10 @@ def render_performance_analytics():
             "avg_response_time": 1.8,
             "success_rate": 94.2,
             "qualification_accuracy": 88.5,
-            "throughput": 25  # leads per hour
+            "throughput": 25,  # leads per hour
         },
-        "buyer_bot": {
-            "avg_response_time": 2.1,
-            "success_rate": 91.7,
-            "match_accuracy": 92.3,
-            "throughput": 18
-        },
-        "lead_bot": {
-            "avg_response_time": 1.4,
-            "success_rate": 96.8,
-            "sequence_reliability": 98.2,
-            "throughput": 35
-        }
+        "buyer_bot": {"avg_response_time": 2.1, "success_rate": 91.7, "match_accuracy": 92.3, "throughput": 18},
+        "lead_bot": {"avg_response_time": 1.4, "success_rate": 96.8, "sequence_reliability": 98.2, "throughput": 35},
     }
 
     col1, col2, col3 = st.columns(3)
@@ -645,41 +663,37 @@ def render_performance_analytics():
     # Performance comparison chart
     st.write("**📈 Performance Comparison**")
 
-    bots = ['Seller Bot', 'Buyer Bot', 'Lead Bot']
-    response_times = [performance_data['seller_bot']['avg_response_time'],
-                     performance_data['buyer_bot']['avg_response_time'],
-                     performance_data['lead_bot']['avg_response_time']]
-    success_rates = [performance_data['seller_bot']['success_rate'],
-                    performance_data['buyer_bot']['success_rate'],
-                    performance_data['lead_bot']['success_rate']]
+    bots = ["Seller Bot", "Buyer Bot", "Lead Bot"]
+    response_times = [
+        performance_data["seller_bot"]["avg_response_time"],
+        performance_data["buyer_bot"]["avg_response_time"],
+        performance_data["lead_bot"]["avg_response_time"],
+    ]
+    success_rates = [
+        performance_data["seller_bot"]["success_rate"],
+        performance_data["buyer_bot"]["success_rate"],
+        performance_data["lead_bot"]["success_rate"],
+    ]
 
     fig = go.Figure()
 
-    fig.add_trace(go.Bar(
-        x=bots,
-        y=response_times,
-        name='Response Time (s)',
-        marker_color='#ff6b6b',
-        yaxis='y'
-    ))
+    fig.add_trace(go.Bar(x=bots, y=response_times, name="Response Time (s)", marker_color="#ff6b6b", yaxis="y"))
 
-    fig.add_trace(go.Scatter(
-        x=bots,
-        y=success_rates,
-        mode='lines+markers',
-        name='Success Rate (%)',
-        marker_color='#4ecdc4',
-        yaxis='y2'
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=bots, y=success_rates, mode="lines+markers", name="Success Rate (%)", marker_color="#4ecdc4", yaxis="y2"
+        )
+    )
 
     fig.update_layout(
-        title='Bot Performance Metrics Comparison',
-        yaxis=dict(title='Response Time (seconds)'),
-        yaxis2=dict(title='Success Rate (%)', overlaying='y', side='right'),
-        height=400
+        title="Bot Performance Metrics Comparison",
+        yaxis=dict(title="Response Time (seconds)"),
+        yaxis2=dict(title="Success Rate (%)", overlaying="y", side="right"),
+        height=400,
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
 
 def render_system_validation():
     """Render system validation and health checks."""
@@ -692,7 +706,7 @@ def render_system_validation():
         {"name": "SMS Compliance", "status": "healthy", "uptime": "100%", "last_check": "45s ago"},
         {"name": "Claude Integration", "status": "healthy", "uptime": "99.7%", "last_check": "1m ago"},
         {"name": "GHL Connection", "status": "healthy", "uptime": "99.5%", "last_check": "2m ago"},
-        {"name": "Redis Cache", "status": "healthy", "uptime": "99.9%", "last_check": "20s ago"}
+        {"name": "Redis Cache", "status": "healthy", "uptime": "99.9%", "last_check": "20s ago"},
     ]
 
     col1, col2 = st.columns(2)
@@ -733,6 +747,7 @@ def render_system_validation():
         - Integration: All services connected
         """)
 
+
 def render_client_demo_readiness():
     """Render client demonstration readiness checker."""
     st.subheader("🎯 Client Demo Readiness Check")
@@ -745,7 +760,7 @@ def render_client_demo_readiness():
         {"item": "Property matching accurate", "status": True, "critical": True},
         {"item": "Claude coaching active", "status": True, "critical": False},
         {"item": "Performance optimized", "status": True, "critical": False},
-        {"item": "Error handling robust", "status": True, "critical": True}
+        {"item": "Error handling robust", "status": True, "critical": True},
     ]
 
     # Calculate readiness score
@@ -803,6 +818,7 @@ def render_client_demo_readiness():
            - ROI projections
         """)
 
+
 def render_bot_testing_dashboard():
     """Main function to render the complete bot testing dashboard."""
     st.title("🧪 Bot Testing & Validation Dashboard")
@@ -852,6 +868,7 @@ def render_bot_testing_dashboard():
 
     with col3:
         st.info("🎯 Status: **Demo Ready**")
+
 
 # === MAIN EXECUTION ===
 

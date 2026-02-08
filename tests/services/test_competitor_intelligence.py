@@ -10,17 +10,18 @@ Tests cover:
 6. Edge cases and error handling
 """
 
-import pytest
 import asyncio
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.competitor_intelligence import (
+    CompetitiveAnalysis,
     CompetitorIntelligenceService,
     CompetitorMention,
-    CompetitiveAnalysis,
     RiskLevel,
-    get_competitor_intelligence
+    get_competitor_intelligence,
 )
 
 
@@ -115,12 +116,11 @@ class TestCompetitorIntelligenceService:
         conversation_history = [
             {"role": "user", "content": "I'm looking for a house"},
             {"role": "assistant", "content": "I can help you find the perfect home"},
-            {"role": "user", "content": "My other agent showed me this property yesterday"}
+            {"role": "user", "content": "My other agent showed me this property yesterday"},
         ]
 
         analysis = await service.analyze_conversation(
-            "What do you think about it?",
-            conversation_history=conversation_history
+            "What do you think about it?", conversation_history=conversation_history
         )
 
         assert analysis.has_competitor_risk is True
@@ -233,7 +233,7 @@ class TestCompetitorIntelligenceService:
             "I'm working with my brother who is an agent",  # Family relationship
             "I know an agent but haven't committed",  # Soft connection
             "The listing agent showed me this",  # Listing agent vs buyer agent
-            "My agent friend recommended this area"  # Friend vs working relationship
+            "My agent friend recommended this area",  # Friend vs working relationship
         ]
 
         for message in edge_cases:
@@ -274,12 +274,11 @@ class TestCompetitorIntelligenceService:
         conversation_history = [
             {"role": "user", "content": "I met an agent yesterday"},
             {"role": "user", "content": "They showed me some properties"},
-            {"role": "user", "content": "We're meeting again tomorrow"}
+            {"role": "user", "content": "We're meeting again tomorrow"},
         ]
 
         analysis = await service.analyze_conversation(
-            "I think I'm going to sign with them",
-            conversation_history=conversation_history
+            "I think I'm going to sign with them", conversation_history=conversation_history
         )
 
         assert analysis.has_competitor_risk is True
@@ -299,7 +298,7 @@ class TestCompetitorIntelligenceService:
             ("I might look elsewhere", RiskLevel.LOW),
             ("I'm comparing a few agents", RiskLevel.MEDIUM),
             ("I'm working with someone else", RiskLevel.HIGH),
-            ("I already signed with another agent", RiskLevel.CRITICAL)
+            ("I already signed with another agent", RiskLevel.CRITICAL),
         ]
 
         for message, expected_risk in test_cases:
@@ -338,7 +337,7 @@ class TestCompetitorIntelligenceService:
             "RE/MAX is helping me",
             "Coldwell Banker showed me properties",
             "I'm comparing different agents",
-            "No other agents involved"
+            "No other agents involved",
         ]
 
         # Run analyses concurrently
@@ -384,7 +383,7 @@ class TestCompetitorMentionDataStructure:
             timestamp=datetime.now(),
             patterns_matched=["working_with"],
             sentiment_score=-0.1,
-            urgency_indicators=["ASAP"]
+            urgency_indicators=["ASAP"],
         )
 
         assert mention.competitor_type == "direct"
@@ -406,7 +405,7 @@ class TestCompetitiveAnalysisDataStructure:
             alert_required=True,
             escalation_needed=True,
             recovery_strategies=["Strategy 1"],
-            confidence_score=0.8
+            confidence_score=0.8,
         )
 
         assert analysis.has_competitor_risk is True

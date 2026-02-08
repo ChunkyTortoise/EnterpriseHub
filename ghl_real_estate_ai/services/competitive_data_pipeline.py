@@ -28,21 +28,22 @@ Created: 2026-01-18
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, Callable, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import json
 import hashlib
+import json
+import logging
 import re
-from decimal import Decimal
-import numpy as np
 from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import numpy as np
+
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
@@ -144,7 +145,9 @@ class CompetitorDataPoint:
 class MarketInsight:
     """Market intelligence insight from data analysis."""
 
-    insight_id: str = field(default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12])
+    insight_id: str = field(
+        default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12]
+    )
     insight_type: str = "market_trend"
     market_area: str = ""
 
@@ -174,7 +177,9 @@ class MarketInsight:
 class ThreatAssessment:
     """Competitive threat assessment result."""
 
-    threat_id: str = field(default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12])
+    threat_id: str = field(
+        default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12]
+    )
     competitor_id: str = ""
     threat_level: ThreatLevel = ThreatLevel.LOW
 
@@ -212,7 +217,7 @@ class DataCollector:
             "total_collections": 0,
             "successful_collections": 0,
             "failed_collections": 0,
-            "avg_collection_time": 0.0
+            "avg_collection_time": 0.0,
         }
 
     async def collect_data(self, target_competitors: List[str]) -> List[CompetitorDataPoint]:
@@ -256,7 +261,7 @@ class MLSDataCollector(DataCollector):
                     data_type=DataType.LISTINGS,
                     raw_data=mls_data,
                     confidence_score=0.95,
-                    collected_at=datetime.now()
+                    collected_at=datetime.now(),
                 )
 
                 if await self.validate_data(data_point):
@@ -279,8 +284,8 @@ class MLSDataCollector(DataCollector):
             "sold_listings_30d": np.random.randint(6, 18),
             "commission_rates": {
                 "standard": 0.025 + np.random.uniform(-0.005, 0.005),
-                "premium": 0.03 + np.random.uniform(-0.005, 0.005)
-            }
+                "premium": 0.03 + np.random.uniform(-0.005, 0.005),
+            },
         }
 
 
@@ -304,7 +309,7 @@ class SocialMediaCollector(DataCollector):
                     data_type=DataType.SOCIAL_ACTIVITY,
                     raw_data=social_data,
                     confidence_score=0.8,
-                    collected_at=datetime.now()
+                    collected_at=datetime.now(),
                 )
 
                 if await self.validate_data(data_point):
@@ -322,17 +327,17 @@ class SocialMediaCollector(DataCollector):
                 "instagram": {
                     "followers": np.random.randint(1000, 10000),
                     "engagement_rate": np.random.uniform(0.02, 0.08),
-                    "posts_last_week": np.random.randint(3, 12)
+                    "posts_last_week": np.random.randint(3, 12),
                 },
                 "facebook": {
                     "followers": np.random.randint(800, 8000),
                     "engagement_rate": np.random.uniform(0.015, 0.06),
-                    "posts_last_week": np.random.randint(2, 8)
-                }
+                    "posts_last_week": np.random.randint(2, 8),
+                },
             },
             "sentiment_score": np.random.uniform(0.3, 0.9),
             "mention_volume": np.random.randint(10, 100),
-            "trending_content": ["virtual_tours", "market_updates", "client_testimonials"]
+            "trending_content": ["virtual_tours", "market_updates", "client_testimonials"],
         }
 
 
@@ -362,11 +367,7 @@ class CompetitiveDataPipeline:
         self.collection_stats = defaultdict(int)
 
         # Data quality thresholds
-        self.quality_thresholds = {
-            "minimum_confidence": 0.7,
-            "minimum_completeness": 0.8,
-            "maximum_age_hours": 24
-        }
+        self.quality_thresholds = {"minimum_confidence": 0.7, "minimum_completeness": 0.8, "maximum_age_hours": 24}
 
         logger.info("CompetitiveDataPipeline initialized")
 
@@ -374,8 +375,8 @@ class CompetitiveDataPipeline:
         """Initialize data collection system and register collectors."""
         try:
             # Register data collectors
-            self.data_collectors['mls'] = MLSDataCollector()
-            self.data_collectors['social'] = SocialMediaCollector()
+            self.data_collectors["mls"] = MLSDataCollector()
+            self.data_collectors["social"] = SocialMediaCollector()
 
             logger.info(f"Initialized {len(self.data_collectors)} data collectors")
 
@@ -411,9 +412,7 @@ class CompetitiveDataPipeline:
         return True
 
     async def collect_competitor_data(
-        self,
-        competitor_id: str,
-        data_sources: Optional[List[DataSource]] = None
+        self, competitor_id: str, data_sources: Optional[List[DataSource]] = None
     ) -> List[CompetitorDataPoint]:
         """Collect competitive data for a specific competitor."""
         try:
@@ -426,7 +425,7 @@ class CompetitiveDataPipeline:
             # Collect from specified sources
             collection_tasks = []
             for source in data_sources:
-                collector_key = source.value.split('_')[0]  # Get base name
+                collector_key = source.value.split("_")[0]  # Get base name
                 if collector_key in self.data_collectors:
                     collector = self.data_collectors[collector_key]
                     task = collector.collect_data([competitor_id])
@@ -453,11 +452,7 @@ class CompetitiveDataPipeline:
             logger.error(f"Error collecting competitor data for {competitor_id}: {e}")
             return []
 
-    async def analyze_market_trends(
-        self,
-        market_area: str,
-        time_period: int = 30
-    ) -> List[MarketInsight]:
+    async def analyze_market_trends(self, market_area: str, time_period: int = 30) -> List[MarketInsight]:
         """Analyze market trends and generate insights."""
         try:
             # Get recent market data
@@ -476,10 +471,7 @@ class CompetitiveDataPipeline:
             logger.error(f"Error analyzing market trends for {market_area}: {e}")
             return []
 
-    async def detect_competitive_threats(
-        self,
-        competitor_data: List[CompetitorDataPoint]
-    ) -> List[ThreatAssessment]:
+    async def detect_competitive_threats(self, competitor_data: List[CompetitorDataPoint]) -> List[ThreatAssessment]:
         """Detect competitive threats from collected data."""
         try:
             threats = []
@@ -491,9 +483,7 @@ class CompetitiveDataPipeline:
 
             # Analyze each competitor for threats
             for competitor_id, data_points in competitor_groups.items():
-                competitor_threats = await self._analyze_competitor_threats(
-                    competitor_id, data_points
-                )
+                competitor_threats = await self._analyze_competitor_threats(competitor_id, data_points)
                 threats.extend(competitor_threats)
 
             # Sort threats by severity
@@ -517,10 +507,9 @@ class CompetitiveDataPipeline:
             reliability_score = await self._calculate_reliability_score(data_point)
 
             # Calculate overall score
-            overall_score = np.mean([
-                accuracy_score, completeness_score, timeliness_score,
-                consistency_score, reliability_score
-            ])
+            overall_score = np.mean(
+                [accuracy_score, completeness_score, timeliness_score, consistency_score, reliability_score]
+            )
 
             # Identify quality issues
             quality_issues = []
@@ -547,11 +536,12 @@ class CompetitiveDataPipeline:
                 reliability_score=reliability_score,
                 validation_checks={
                     "has_required_fields": bool(data_point.raw_data),
-                    "confidence_threshold_met": data_point.confidence_score >= self.quality_thresholds["minimum_confidence"],
-                    "data_age_acceptable": self._is_data_fresh(data_point)
+                    "confidence_threshold_met": data_point.confidence_score
+                    >= self.quality_thresholds["minimum_confidence"],
+                    "data_age_acceptable": self._is_data_fresh(data_point),
                 },
                 quality_issues=quality_issues,
-                improvement_recommendations=recommendations
+                improvement_recommendations=recommendations,
             )
 
         except Exception as e:
@@ -564,7 +554,7 @@ class CompetitiveDataPipeline:
                 consistency_score=0.0,
                 reliability_score=0.0,
                 quality_issues=["Validation failed"],
-                improvement_recommendations=["Review data collection process"]
+                improvement_recommendations=["Review data collection process"],
             )
 
     async def enrich_data_with_ai(self, data_point: CompetitorDataPoint) -> CompetitorDataPoint:
@@ -574,16 +564,12 @@ class CompetitiveDataPipeline:
             analysis_prompt = self._create_analysis_prompt(data_point)
 
             # Get AI insights
-            response = await self.llm_client.generate(
-                prompt=analysis_prompt,
-                max_tokens=400,
-                temperature=0.3
-            )
+            response = await self.llm_client.generate(prompt=analysis_prompt, max_tokens=400, temperature=0.3)
 
             ai_insights = {
                 "analysis": response.content if response.content else "Analysis unavailable",
                 "generated_at": datetime.now().isoformat(),
-                "confidence": min(data_point.confidence_score + 0.1, 1.0)
+                "confidence": min(data_point.confidence_score + 0.1, 1.0),
             }
 
             # Create enriched data point
@@ -598,20 +584,14 @@ class CompetitiveDataPipeline:
             logger.error(f"Error enriching data with AI: {e}")
             return data_point
 
-    async def process_data_batch(
-        self,
-        data_points: List[CompetitorDataPoint]
-    ) -> List[Dict[str, Any]]:
+    async def process_data_batch(self, data_points: List[CompetitorDataPoint]) -> List[Dict[str, Any]]:
         """Process a batch of competitive data points."""
         try:
             results = []
 
             # Process in smaller chunks to avoid overwhelming the system
             chunk_size = min(self.batch_size, len(data_points))
-            chunks = [
-                data_points[i:i + chunk_size]
-                for i in range(0, len(data_points), chunk_size)
-            ]
+            chunks = [data_points[i : i + chunk_size] for i in range(0, len(data_points), chunk_size)]
 
             for chunk in chunks:
                 chunk_results = await self._process_data_chunk(chunk)
@@ -624,12 +604,7 @@ class CompetitiveDataPipeline:
             logger.error(f"Error processing data batch: {e}")
             return []
 
-    async def cache_competitor_data(
-        self,
-        cache_key: str,
-        data: Dict[str, Any],
-        ttl: int = 3600
-    ) -> None:
+    async def cache_competitor_data(self, cache_key: str, data: Dict[str, Any], ttl: int = 3600) -> None:
         """Cache competitor data for performance optimization."""
         try:
             await self.cache.set(cache_key, data, ttl=ttl)
@@ -647,10 +622,7 @@ class CompetitiveDataPipeline:
             return None
 
     async def aggregate_competitor_data(
-        self,
-        competitor_id: str,
-        time_range: timedelta,
-        aggregation_methods: List[str]
+        self, competitor_id: str, time_range: timedelta, aggregation_methods: List[str]
     ) -> Dict[str, Any]:
         """Aggregate competitor data across time periods and sources."""
         try:
@@ -667,21 +639,21 @@ class CompetitiveDataPipeline:
                 aggregated_metrics["average_metrics"] = {
                     "avg_confidence": 0.85,
                     "avg_data_quality": 0.82,
-                    "avg_collection_time": 45.2
+                    "avg_collection_time": 45.2,
                 }
 
             if "trend" in aggregation_methods:
                 aggregated_metrics["trend_analysis"] = {
                     "confidence_trend": "stable",
                     "data_volume_trend": "increasing",
-                    "quality_trend": "improving"
+                    "quality_trend": "improving",
                 }
 
             if "variance" in aggregation_methods:
                 aggregated_metrics["variance_metrics"] = {
                     "confidence_variance": 0.12,
                     "quality_variance": 0.08,
-                    "collection_time_variance": 12.5
+                    "collection_time_variance": 12.5,
                 }
 
             return {
@@ -689,7 +661,7 @@ class CompetitiveDataPipeline:
                 "time_range": f"{start_time.isoformat()}/{end_time.isoformat()}",
                 "aggregation_methods": aggregation_methods,
                 "aggregated_metrics": aggregated_metrics,
-                "data_points_analyzed": 150  # Simulated count
+                "data_points_analyzed": 150,  # Simulated count
             }
 
         except Exception as e:
@@ -697,27 +669,18 @@ class CompetitiveDataPipeline:
             return {"error": str(e)}
 
     async def compare_market_position(
-        self,
-        our_metrics: Dict[str, Any],
-        market_data: Dict[str, Any],
-        competitors: List[str]
+        self, our_metrics: Dict[str, Any], market_data: Dict[str, Any], competitors: List[str]
     ) -> Dict[str, Any]:
         """Compare market position against competitors."""
         try:
             # Calculate positioning score
-            positioning_score = self._calculate_positioning_score(
-                our_metrics, market_data, competitors
-            )
+            positioning_score = self._calculate_positioning_score(our_metrics, market_data, competitors)
 
             # Identify competitive advantages
-            advantages = self._identify_competitive_advantages(
-                our_metrics, market_data
-            )
+            advantages = self._identify_competitive_advantages(our_metrics, market_data)
 
             # Identify improvement areas
-            improvement_areas = self._identify_improvement_areas(
-                our_metrics, market_data
-            )
+            improvement_areas = self._identify_improvement_areas(our_metrics, market_data)
 
             return {
                 "positioning_score": positioning_score,
@@ -725,11 +688,7 @@ class CompetitiveDataPipeline:
                 "improvement_areas": improvement_areas,
                 "market_share_estimate": our_metrics.get("market_share", 0.1),
                 "competitive_pressure": "moderate",
-                "differentiation_opportunities": [
-                    "AI-powered insights",
-                    "24/7 availability",
-                    "Local market expertise"
-                ]
+                "differentiation_opportunities": ["AI-powered insights", "24/7 availability", "Local market expertise"],
             }
 
         except Exception as e:
@@ -743,9 +702,9 @@ class CompetitiveDataPipeline:
 
             # Check for PII in raw data
             pii_patterns = [
-                r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',  # Email
-                r'\+?\d[\d\-]{7,}\d',  # Phone number (various formats)
-                r'\b\d{3}-\d{2}-\d{4}\b'   # SSN
+                r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",  # Email
+                r"\+?\d[\d\-]{7,}\d",  # Phone number (various formats)
+                r"\b\d{3}-\d{2}-\d{4}\b",  # SSN
             ]
 
             raw_data_str = json.dumps(data_point.raw_data)
@@ -793,7 +752,7 @@ class CompetitiveDataPipeline:
                 "data_quality_score": 0.86,
                 "active_collectors": len(self.data_collectors),
                 "monitored_competitors": len(self.monitored_competitors),
-                "monitoring_active": self.monitoring_active
+                "monitoring_active": self.monitoring_active,
             }
 
         except Exception as e:
@@ -816,7 +775,7 @@ class CompetitiveDataPipeline:
             return {
                 "cleaned_records": cleaned_records,
                 "retained_records": retained_records,
-                "cutoff_date": cutoff_date.isoformat()
+                "cutoff_date": cutoff_date.isoformat(),
             }
 
         except Exception as e:
@@ -829,15 +788,12 @@ class CompetitiveDataPipeline:
             # Define alert conditions
             alert_conditions = [
                 # Major price changes
-                data_point.data_type == DataType.PRICING and
-                data_point.raw_data.get("price_change", 0) < -0.15,  # 15% drop
-
+                data_point.data_type == DataType.PRICING
+                and data_point.raw_data.get("price_change", 0) < -0.15,  # 15% drop
                 # High confidence threats
-                data_point.confidence_score > 0.95 and
-                data_point.raw_data.get("urgency") == "immediate",
-
+                data_point.confidence_score > 0.95 and data_point.raw_data.get("urgency") == "immediate",
                 # Market impact events
-                data_point.raw_data.get("market_impact") == "high"
+                data_point.raw_data.get("market_impact") == "high",
             ]
 
             return any(alert_conditions)
@@ -864,11 +820,7 @@ class CompetitiveDataPipeline:
                 logger.error(f"Error in monitoring loop: {e}")
                 await asyncio.sleep(60)  # Wait 1 minute before retrying
 
-    async def _cache_collected_data(
-        self,
-        competitor_id: str,
-        data_points: List[CompetitorDataPoint]
-    ) -> None:
+    async def _cache_collected_data(self, competitor_id: str, data_points: List[CompetitorDataPoint]) -> None:
         """Cache collected data points."""
         try:
             cache_key = f"competitor_data:{competitor_id}:{datetime.now().strftime('%Y%m%d%H')}"
@@ -884,10 +836,10 @@ class CompetitiveDataPipeline:
                         "data_source": dp.data_source.value,
                         "data_type": dp.data_type.value,
                         "confidence_score": dp.confidence_score,
-                        "collected_at": dp.collected_at.isoformat()
+                        "collected_at": dp.collected_at.isoformat(),
                     }
                     for dp in data_points
-                ]
+                ],
             }
 
             await self.cache.set(cache_key, cached_data, ttl=3600)
@@ -905,14 +857,10 @@ class CompetitiveDataPipeline:
             "avg_price": 685000,
             "price_trend": 0.035,  # 3.5% increase
             "inventory_change": -0.08,  # 8% decrease
-            "active_competitors": 12
+            "active_competitors": 12,
         }
 
-    async def _generate_market_insights(
-        self,
-        market_data: Dict[str, Any],
-        market_area: str
-    ) -> List[MarketInsight]:
+    async def _generate_market_insights(self, market_data: Dict[str, Any], market_area: str) -> List[MarketInsight]:
         """Generate market insights using AI analysis."""
         try:
             insights = []
@@ -926,15 +874,15 @@ class CompetitiveDataPipeline:
                     insight_type="price_trend",
                     market_area=market_area,
                     title=f"Significant Price Trend in {market_area}",
-                    description=f"Property prices are {trend_direction} by {abs(price_trend)*100:.1f}% in the current period",
+                    description=f"Property prices are {trend_direction} by {abs(price_trend) * 100:.1f}% in the current period",
                     key_findings=[
-                        f"Price trend: {price_trend*100:.1f}%",
+                        f"Price trend: {price_trend * 100:.1f}%",
                         f"Market area: {market_area}",
-                        f"Trend significance: High"
+                        f"Trend significance: High",
                     ],
                     confidence_score=0.85,
                     impact_assessment="moderate",
-                    data_sources=[DataSource.MLS_DATA]
+                    data_sources=[DataSource.MLS_DATA],
                 )
                 insights.append(insight)
 
@@ -944,11 +892,7 @@ class CompetitiveDataPipeline:
             logger.error(f"Error generating market insights: {e}")
             return []
 
-    async def _cache_market_insights(
-        self,
-        market_area: str,
-        insights: List[MarketInsight]
-    ) -> None:
+    async def _cache_market_insights(self, market_area: str, insights: List[MarketInsight]) -> None:
         """Cache generated market insights."""
         try:
             cache_key = f"market_insights:{market_area}:{datetime.now().strftime('%Y%m%d')}"
@@ -962,10 +906,10 @@ class CompetitiveDataPipeline:
                         "insight_id": insight.insight_id,
                         "title": insight.title,
                         "confidence_score": insight.confidence_score,
-                        "impact_assessment": insight.impact_assessment
+                        "impact_assessment": insight.impact_assessment,
                     }
                     for insight in insights
-                ]
+                ],
             }
 
             await self.cache.set(cache_key, cached_insights, ttl=7200)  # 2 hours
@@ -974,9 +918,7 @@ class CompetitiveDataPipeline:
             logger.error(f"Error caching market insights: {e}")
 
     async def _analyze_competitor_threats(
-        self,
-        competitor_id: str,
-        data_points: List[CompetitorDataPoint]
+        self, competitor_id: str, data_points: List[CompetitorDataPoint]
     ) -> List[ThreatAssessment]:
         """Analyze competitor data for potential threats."""
         threats = []
@@ -1003,9 +945,7 @@ class CompetitiveDataPipeline:
             return []
 
     async def _analyze_pricing_threat(
-        self,
-        competitor_id: str,
-        pricing_data: List[CompetitorDataPoint]
+        self, competitor_id: str, pricing_data: List[CompetitorDataPoint]
     ) -> Optional[ThreatAssessment]:
         """Analyze pricing-related threats."""
         try:
@@ -1020,12 +960,12 @@ class CompetitiveDataPipeline:
                         competitor_id=competitor_id,
                         threat_level=threat_level,
                         threat_type="aggressive_pricing",
-                        threat_description=f"Competitor reduced prices by {abs(price_change)*100:.1f}%",
+                        threat_description=f"Competitor reduced prices by {abs(price_change) * 100:.1f}%",
                         evidence=[data_point],
                         potential_impact="May trigger price competition in market",
                         recommended_response="Review pricing strategy and value proposition",
                         response_urgency="high" if threat_level == ThreatLevel.HIGH else "medium",
-                        confidence_level=data_point.confidence_score
+                        confidence_level=data_point.confidence_score,
                     )
 
             return None
@@ -1035,9 +975,7 @@ class CompetitiveDataPipeline:
             return None
 
     async def _analyze_expansion_threat(
-        self,
-        competitor_id: str,
-        performance_data: List[CompetitorDataPoint]
+        self, competitor_id: str, performance_data: List[CompetitorDataPoint]
     ) -> Optional[ThreatAssessment]:
         """Analyze market expansion threats."""
         try:
@@ -1050,12 +988,12 @@ class CompetitiveDataPipeline:
                         competitor_id=competitor_id,
                         threat_level=ThreatLevel.MEDIUM,
                         threat_type="market_expansion",
-                        threat_description=f"Competitor increased listings by {listings_increase*100:.1f}%",
+                        threat_description=f"Competitor increased listings by {listings_increase * 100:.1f}%",
                         evidence=[data_point],
                         potential_impact="Increased market competition",
                         recommended_response="Strengthen market presence and client acquisition",
                         response_urgency="medium",
-                        confidence_level=data_point.confidence_score
+                        confidence_level=data_point.confidence_score,
                     )
 
             return None
@@ -1072,7 +1010,7 @@ class CompetitiveDataPipeline:
             DataSource.PUBLIC_RECORDS: 0.9,
             DataSource.API_INTEGRATIONS: 0.85,
             DataSource.WEB_SCRAPING: 0.7,
-            DataSource.SOCIAL_MEDIA: 0.65
+            DataSource.SOCIAL_MEDIA: 0.65,
         }
 
         base_score = source_reliability.get(data_point.data_source, 0.5)
@@ -1124,7 +1062,7 @@ class CompetitiveDataPipeline:
                 total_checks += 1
                 try:
                     if isinstance(value, str):
-                        datetime.fromisoformat(value.replace('Z', '+00:00'))
+                        datetime.fromisoformat(value.replace("Z", "+00:00"))
                         consistency_checks += 1
                 except:
                     pass
@@ -1140,7 +1078,7 @@ class CompetitiveDataPipeline:
             DataSource.API_INTEGRATIONS: 0.85,
             DataSource.WEB_SCRAPING: 0.7,
             DataSource.SOCIAL_MEDIA: 0.65,
-            DataSource.CUSTOMER_FEEDBACK: 0.6
+            DataSource.CUSTOMER_FEEDBACK: 0.6,
         }
 
         return source_reliability.get(data_point.data_source, 0.5)
@@ -1183,35 +1121,32 @@ class CompetitiveDataPipeline:
                 if quality_score.overall_score >= self.quality_thresholds["minimum_confidence"]:
                     enriched_data = await self.enrich_data_with_ai(data_point)
 
-                    results.append({
-                        "data_id": enriched_data.data_id,
-                        "processed": True,
-                        "quality_score": quality_score.overall_score,
-                        "enriched": bool(enriched_data.ai_insights)
-                    })
+                    results.append(
+                        {
+                            "data_id": enriched_data.data_id,
+                            "processed": True,
+                            "quality_score": quality_score.overall_score,
+                            "enriched": bool(enriched_data.ai_insights),
+                        }
+                    )
                 else:
-                    results.append({
-                        "data_id": data_point.data_id,
-                        "processed": False,
-                        "quality_score": quality_score.overall_score,
-                        "issues": quality_score.quality_issues
-                    })
+                    results.append(
+                        {
+                            "data_id": data_point.data_id,
+                            "processed": False,
+                            "quality_score": quality_score.overall_score,
+                            "issues": quality_score.quality_issues,
+                        }
+                    )
 
             except Exception as e:
                 logger.error(f"Error processing data point {data_point.data_id}: {e}")
-                results.append({
-                    "data_id": data_point.data_id,
-                    "processed": False,
-                    "error": str(e)
-                })
+                results.append({"data_id": data_point.data_id, "processed": False, "error": str(e)})
 
         return results
 
     def _calculate_positioning_score(
-        self,
-        our_metrics: Dict[str, Any],
-        market_data: Dict[str, Any],
-        competitors: List[str]
+        self, our_metrics: Dict[str, Any], market_data: Dict[str, Any], competitors: List[str]
     ) -> float:
         """Calculate competitive positioning score."""
         base_score = 75.0  # Starting position
@@ -1234,11 +1169,7 @@ class CompetitiveDataPipeline:
 
         return max(0.0, min(100.0, base_score))
 
-    def _identify_competitive_advantages(
-        self,
-        our_metrics: Dict[str, Any],
-        market_data: Dict[str, Any]
-    ) -> List[str]:
+    def _identify_competitive_advantages(self, our_metrics: Dict[str, Any], market_data: Dict[str, Any]) -> List[str]:
         """Identify competitive advantages."""
         advantages = []
 
@@ -1248,20 +1179,18 @@ class CompetitiveDataPipeline:
         if our_metrics.get("avg_commission", 0.03) < 0.028:
             advantages.append("Competitive commission rates")
 
-        advantages.extend([
-            "AI-powered market intelligence",
-            "Real-time competitive monitoring",
-            "Local market expertise",
-            "24/7 availability"
-        ])
+        advantages.extend(
+            [
+                "AI-powered market intelligence",
+                "Real-time competitive monitoring",
+                "Local market expertise",
+                "24/7 availability",
+            ]
+        )
 
         return advantages
 
-    def _identify_improvement_areas(
-        self,
-        our_metrics: Dict[str, Any],
-        market_data: Dict[str, Any]
-    ) -> List[str]:
+    def _identify_improvement_areas(self, our_metrics: Dict[str, Any], market_data: Dict[str, Any]) -> List[str]:
         """Identify areas for improvement."""
         improvements = []
 
@@ -1271,11 +1200,9 @@ class CompetitiveDataPipeline:
         if our_metrics.get("client_satisfaction", 0.9) < 0.85:
             improvements.append("Improve client satisfaction")
 
-        improvements.extend([
-            "Enhance social media presence",
-            "Strengthen referral network",
-            "Expand service offerings"
-        ])
+        improvements.extend(
+            ["Enhance social media presence", "Strengthen referral network", "Expand service offerings"]
+        )
 
         return improvements
 

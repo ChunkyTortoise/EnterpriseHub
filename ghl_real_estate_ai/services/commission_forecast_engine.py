@@ -31,15 +31,15 @@ logger = logging.getLogger(__name__)
 
 # Rancho Cucamonga seasonal factors (index by month 1-12)
 SEASONAL_FACTORS = {
-    1: 0.75,   # January — post-holiday slowdown
-    2: 0.80,   # February — early spring stirrings
-    3: 0.95,   # March — spring market begins
-    4: 1.10,   # April — peak listing season
-    5: 1.15,   # May — highest activity
-    6: 1.10,   # June — strong but cooling
-    7: 1.00,   # July — summer plateau
-    8: 0.95,   # August — back-to-school dip
-    9: 0.90,   # September — fall stabilisation
+    1: 0.75,  # January — post-holiday slowdown
+    2: 0.80,  # February — early spring stirrings
+    3: 0.95,  # March — spring market begins
+    4: 1.10,  # April — peak listing season
+    5: 1.15,  # May — highest activity
+    6: 1.10,  # June — strong but cooling
+    7: 1.00,  # July — summer plateau
+    8: 0.95,  # August — back-to-school dip
+    9: 0.90,  # September — fall stabilisation
     10: 0.85,  # October — seasonal wind-down
     11: 0.78,  # November — holiday slowdown
     12: 0.70,  # December — year-end low
@@ -47,13 +47,14 @@ SEASONAL_FACTORS = {
 
 # Commission rate bands
 DEFAULT_COMMISSION_RATE = 0.025  # 2.5% per side
-LUXURY_COMMISSION_RATE = 0.03   # 3% for luxury ($1.2M+)
+LUXURY_COMMISSION_RATE = 0.03  # 3% for luxury ($1.2M+)
 LUXURY_THRESHOLD = 1_200_000
 
 
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
+
 
 class DealStage(Enum):
     PROSPECT = "prospect"
@@ -78,6 +79,7 @@ STAGE_PROBABILITIES: Dict[DealStage, float] = {
 @dataclass
 class PipelineDeal:
     """Single deal in the pipeline."""
+
     deal_id: str
     contact_name: str
     property_value: int
@@ -90,6 +92,7 @@ class PipelineDeal:
 @dataclass
 class MonthlyForecast:
     """Revenue forecast for a single month."""
+
     month: int  # 1-12
     expected_revenue: float
     weighted_pipeline: float
@@ -102,6 +105,7 @@ class MonthlyForecast:
 @dataclass
 class RevenueForecast:
     """Complete revenue forecast."""
+
     total_expected: float
     total_weighted: float
     monthly_forecasts: List[MonthlyForecast]
@@ -115,6 +119,7 @@ class RevenueForecast:
 @dataclass
 class MonteCarloResult:
     """Monte Carlo simulation result."""
+
     simulations: int
     mean_revenue: float
     median_revenue: float
@@ -131,6 +136,7 @@ class MonteCarloResult:
 @dataclass
 class ExecutiveSummary:
     """Executive reporting summary."""
+
     total_pipeline_value: int
     weighted_pipeline_value: float
     expected_commission: float
@@ -145,6 +151,7 @@ class ExecutiveSummary:
 # ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
+
 
 class CommissionForecastEngine:
     """
@@ -171,6 +178,7 @@ class CommissionForecastEngine:
         deals = [self._parse_deal(d) for d in pipeline]
         if current_month is None:
             import datetime
+
             current_month = datetime.datetime.now().month
 
         monthly: Dict[int, List[PipelineDeal]] = {}
@@ -200,23 +208,22 @@ class CommissionForecastEngine:
             low = weighted * 0.80
             high = weighted * 1.20
 
-            forecasts.append(MonthlyForecast(
-                month=month,
-                expected_revenue=round(expected, 2),
-                weighted_pipeline=round(weighted, 2),
-                deal_count=len(month_deals),
-                seasonal_factor=seasonal,
-                confidence_low=round(low, 2),
-                confidence_high=round(high, 2),
-            ))
+            forecasts.append(
+                MonthlyForecast(
+                    month=month,
+                    expected_revenue=round(expected, 2),
+                    weighted_pipeline=round(weighted, 2),
+                    deal_count=len(month_deals),
+                    seasonal_factor=seasonal,
+                    confidence_low=round(low, 2),
+                    confidence_high=round(high, 2),
+                )
+            )
 
             total_expected += expected
             total_weighted += weighted
 
-        avg_value = (
-            sum(d.property_value for d in deals) / len(deals)
-            if deals else 0
-        )
+        avg_value = sum(d.property_value for d in deals) / len(deals) if deals else 0
         avg_comm = total_expected / len(deals) if deals else 0
 
         return RevenueForecast(
@@ -316,10 +323,7 @@ class CommissionForecastEngine:
             key=lambda f: f.weighted_pipeline,
             reverse=True,
         )[:3]
-        top_deals = [
-            {"month": t.month, "weighted_revenue": t.weighted_pipeline, "deals": t.deal_count}
-            for t in top
-        ]
+        top_deals = [{"month": t.month, "weighted_revenue": t.weighted_pipeline, "deals": t.deal_count} for t in top]
 
         # Risk factors
         risks: List[str] = []

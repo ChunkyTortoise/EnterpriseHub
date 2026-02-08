@@ -6,127 +6,139 @@ and returns AI-generated responses.
 """
 
 # Fix for Python 3.10+ union syntax compatibility with FastAPI/Pydantic
-import sys
 import os
+import sys
+
 # Set environment variable to disable response model generation for union types
-os.environ['FASTAPI_DISABLE_RESPONSE_MODEL_VALIDATION'] = 'true'
+os.environ["FASTAPI_DISABLE_RESPONSE_MODEL_VALIDATION"] = "true"
 
 # Import Pydantic configuration to handle union syntax
 try:
-    from pydantic import ConfigDict
-    from pydantic._internal._config import ConfigWrapper
     # Override Pydantic config to be more lenient with union types
     import pydantic
-    if hasattr(pydantic, 'VERSION') and pydantic.VERSION >= '2.0.0':
+    from pydantic import ConfigDict
+    from pydantic._internal._config import ConfigWrapper
+
+    if hasattr(pydantic, "VERSION") and pydantic.VERSION >= "2.0.0":
         # For Pydantic v2, configure to handle union syntax
         import warnings
+
         warnings.filterwarnings("ignore", message=".*Union.*")
 except ImportError:
     pass
 
-from fastapi import FastAPI, Request, Response, APIRouter, HTTPException
+from typing import Any, Callable
+
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.routing import APIRoute
-from typing import Callable, Any
+
 
 # Custom route class to handle problematic union type responses
 class UnionCompatibleRoute(APIRoute):
     def __init__(self, *args, **kwargs):
         # Apply response_model=None for routes that might have union type issues
-        if 'response_model' not in kwargs:
-            kwargs['response_model'] = None
+        if "response_model" not in kwargs:
+            kwargs["response_model"] = None
         super().__init__(*args, **kwargs)
+
+
 import asyncio
+import logging
 import os
 import time
-import logging
 from contextlib import asynccontextmanager
 
-# Import WebSocket and Socket.IO integration services
-from ghl_real_estate_ai.api.socketio_app import integrate_socketio_with_fastapi
-from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.system_health_monitor import start_system_health_monitoring, stop_system_health_monitoring
-from ghl_real_estate_ai.services.coordination_engine import get_coordination_engine
+from fastapi.responses import JSONResponse
 
-from ghl_real_estate_ai.api.routes import (
-    analytics,
-    attribution_reports,
-    bot_management,  # Bot Management API for frontend integration
-    bulk_operations,
-    claude_chat,
-    crm,
-    golden_lead_detection,
-    health,
-    jorge_advanced,
-    lead_lifecycle,
-    leads,  # NEW: Leads Management API for frontend integration
-    lead_bot_management,  # NEW: Lead Bot Management API for sequence control
-    ml_scoring,  # Phase 4B: Real-time ML lead scoring API
-    portal,
-    predictive_analytics,
-    pricing_optimization,
-    properties,
-    team,
-    voice,
-    webhook,
-    auth,
-    lead_intelligence,
-    agent_sync,
-    agent_ui,
-    reports,
-    jorge_followup,
-    retell_webhook, # Added Retell Webhook
-    vapi,
-    websocket_routes, # Real-time WebSocket routes
-    websocket_performance,  # WebSocket Performance Monitoring API
-    external_webhooks,
-    agent_ecosystem,  # NEW: Agent ecosystem API for frontend integration
-    claude_concierge_integration,  # NEW: Claude Concierge integration API
-    customer_journey,  # NEW: Customer Journey API
-    property_intelligence,  # NEW: Property Intelligence API
-    business_intelligence,  # NEW: BI Dashboard API routes
-    bi_websocket_routes,  # NEW: BI WebSocket routes
-    error_monitoring,  # NEW: Error Monitoring Dashboard API
-    security,  # NEW: Security Monitoring and Management API
-    # Week 5-8 ROI Enhancement Routes
-    langgraph_orchestration,
-    behavioral_triggers,
-    fha_respa_compliance,
-    voice_intelligence,
-    propensity_scoring,
-    heygen_video,
-    sentiment_analysis,
-    channel_routing,
-    rc_market_intelligence,
-    export_engine,
-    commission_forecast,
-    sms_compliance,
-)
-from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
+from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, enterprise_auth_service
 from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
 from ghl_real_estate_ai.api.middleware.error_handler import ErrorHandlerMiddleware
+from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
+from ghl_real_estate_ai.api.routes import (
+    agent_ecosystem,  # NEW: Agent ecosystem API for frontend integration
+    agent_sync,
+    agent_ui,
+    analytics,
+    attribution_reports,
+    auth,
+    behavioral_triggers,
+    bi_websocket_routes,  # NEW: BI WebSocket routes
+    bot_management,  # Bot Management API for frontend integration
+    bulk_operations,
+    business_intelligence,  # NEW: BI Dashboard API routes
+    channel_routing,
+    claude_chat,
+    claude_concierge_integration,  # NEW: Claude Concierge integration API
+    commission_forecast,
+    crm,
+    customer_journey,  # NEW: Customer Journey API
+    error_monitoring,  # NEW: Error Monitoring Dashboard API
+    export_engine,
+    external_webhooks,
+    fha_respa_compliance,
+    golden_lead_detection,
+    health,
+    heygen_video,
+    jorge_advanced,
+    jorge_followup,
+    # Week 5-8 ROI Enhancement Routes
+    langgraph_orchestration,
+    lead_bot_management,  # NEW: Lead Bot Management API for sequence control
+    lead_intelligence,
+    lead_lifecycle,
+    leads,  # NEW: Leads Management API for frontend integration
+    ml_scoring,  # Phase 4B: Real-time ML lead scoring API
+    portal,
+    predictive_analytics,
+    pricing_optimization,
+    propensity_scoring,
+    properties,
+    property_intelligence,  # NEW: Property Intelligence API
+    rc_market_intelligence,
+    reports,
+    retell_webhook,  # Added Retell Webhook
+    security,  # NEW: Security Monitoring and Management API
+    sentiment_analysis,
+    sms_compliance,
+    team,
+    vapi,
+    voice,
+    voice_intelligence,
+    webhook,
+    websocket_performance,  # WebSocket Performance Monitoring API
+    websocket_routes,  # Real-time WebSocket routes
+)
+
+# Import WebSocket and Socket.IO integration services
+from ghl_real_estate_ai.api.socketio_app import integrate_socketio_with_fastapi
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service, EnterpriseAuthError
-from fastapi.responses import JSONResponse
+from ghl_real_estate_ai.services.coordination_engine import get_coordination_engine
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.services.system_health_monitor import (
+    start_system_health_monitoring,
+    stop_system_health_monitoring,
+)
+from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
+
 
 class OptimizedJSONResponse(JSONResponse):
     """Optimized JSON response with null value removal and compression."""
-    
+
     def render(self, content) -> bytes:
         """Render JSON with optimization for smaller payloads."""
         if isinstance(content, dict):
             # Remove null values to reduce payload size
             content = self._remove_nulls(content)
-        
+
         return super().render(content)
-    
+
     def _remove_nulls(self, obj):
         """Recursively remove null values from dictionaries."""
         if isinstance(obj, dict):
@@ -134,6 +146,7 @@ class OptimizedJSONResponse(JSONResponse):
         elif isinstance(obj, list):
             return [self._remove_nulls(item) for item in obj if item is not None]
         return obj
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -179,6 +192,7 @@ async def lifespan(app: FastAPI):
 
         # Start BI WebSocket services
         from ghl_real_estate_ai.api.routes.bi_websocket_routes import initialize_bi_websocket_services
+
         bi_started = await initialize_bi_websocket_services()
         if bi_started:
             logger.info("✅ BI WebSocket services started successfully")
@@ -191,14 +205,15 @@ async def lifespan(app: FastAPI):
 
         # Start error monitoring service
         from ghl_real_estate_ai.services.error_monitoring_service import get_error_monitoring_service
+
         error_monitoring = get_error_monitoring_service()
         await error_monitoring.start()
         logger.info("Error monitoring service started")
 
-        # Socket.IO is initialized at module level for uvicorn, 
+        # Socket.IO is initialized at module level for uvicorn,
         # but we ensure bridging is active
         if hasattr(app.state, "socketio_integration"):
-             logger.info("Socket.IO integration already active in app state")
+            logger.info("Socket.IO integration already active in app state")
 
         logger.info("✅ All real-time WebSocket services started successfully")
 
@@ -280,6 +295,7 @@ async def lifespan(app: FastAPI):
             pass
         logger.info("Periodic alerting background task stopped")
 
+
 async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
     """Build a flat stats dict matching AlertingService rule expectations.
 
@@ -302,11 +318,9 @@ async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
     rate_limit_error_rate = 0.0
     try:
         from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
         analytics = JorgeHandoffService.get_analytics_summary()
-        blocked_handoffs = (
-            analytics.get("blocked_by_circular", 0)
-            + analytics.get("blocked_by_rate_limit", 0)
-        )
+        blocked_handoffs = analytics.get("blocked_by_circular", 0) + analytics.get("blocked_by_rate_limit", 0)
         total_handoff_attempts = analytics.get("total_handoffs", 0) + blocked_handoffs
         if total_handoff_attempts > 0:
             rate_limit_error_rate = analytics.get("blocked_by_rate_limit", 0) / total_handoff_attempts
@@ -352,7 +366,9 @@ def _validate_jorge_services_config(logger) -> None:
         try:
             rate = float(sample_rate)
             if not 0.0 <= rate <= 1.0:
-                logger.warning("PERFORMANCE_TRACKING_SAMPLE_RATE=%s is out of range [0.0, 1.0] — defaulting to 1.0", sample_rate)
+                logger.warning(
+                    "PERFORMANCE_TRACKING_SAMPLE_RATE=%s is out of range [0.0, 1.0] — defaulting to 1.0", sample_rate
+                )
         except ValueError:
             logger.warning("PERFORMANCE_TRACKING_SAMPLE_RATE=%s is not a valid float — defaulting to 1.0", sample_rate)
 
@@ -372,7 +388,9 @@ def _validate_jorge_services_config(logger) -> None:
         try:
             iv = int(interval)
             if iv < 10:
-                logger.warning("BOT_METRICS_COLLECTION_INTERVAL=%s is very low (<10s) — may cause high CPU usage", interval)
+                logger.warning(
+                    "BOT_METRICS_COLLECTION_INTERVAL=%s is very low (<10s) — may cause high CPU usage", interval
+                )
         except ValueError:
             logger.warning("BOT_METRICS_COLLECTION_INTERVAL=%s is not a valid integer — defaulting to 60", interval)
 
@@ -390,24 +408,13 @@ def _verify_admin_api_key():
             return  # Allow in dev/demo/test
         if x_admin_key != expected:
             raise HTTPException(status_code=401, detail="Invalid admin API key")
+
     return Depends(_check)
 
 
 def _setup_routers(app: FastAPI):
     """Initialize all routers for the application."""
-    from ghl_real_estate_ai.api.routes import (
-        analytics, attribution_reports, bot_management, bulk_operations,
-        claude_chat, crm, demo, golden_lead_detection, health, jorge_advanced,
-        lead_lifecycle, leads, lead_bot_management, ml_scoring, portal,
-        predictive_analytics, pricing_optimization, properties, team,
-        voice, webhook, auth, lead_intelligence, agent_sync, agent_ui,
-        reports, jorge_followup, retell_webhook, vapi, websocket_routes,
-        websocket_performance, external_webhooks, agent_ecosystem,
-        claude_concierge, claude_concierge_integration, customer_journey,
-        property_intelligence, business_intelligence, bi_websocket_routes,
-        error_monitoring, security
-    )
-    from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
+    from ghl_real_estate_ai.api.routes import claude_concierge, demo
 
     admin_guard = _verify_admin_api_key()
 
@@ -437,7 +444,7 @@ def _setup_routers(app: FastAPI):
 
     # Enterprise Authentication Router
     enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
-    
+
     @enterprise_auth_router.post("/sso/initiate")
     async def initiate_enterprise_sso_login(domain: str, redirect_uri: str):
         try:
@@ -500,14 +507,19 @@ def _setup_routers(app: FastAPI):
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
 
+
+# Import OpenAPI tag metadata for enhanced documentation
+from ghl_real_estate_ai.api.schemas.api_docs import OPENAPI_TAGS
+
 # Create FastAPI app
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.version,
-    description="AI-powered real estate assistant for GoHighLevel - Mobile-First Agent Experience with AR/VR and Voice AI",
-    docs_url="/docs" if settings.environment == "development" else None,
-    redoc_url="/redoc" if settings.environment == "development" else None,
+    title="EnterpriseHub API",
+    description="AI-powered real estate lead qualification and CRM integration platform",
+    version="5.0.1",
+    docs_url="/docs",
+    redoc_url="/redoc",
     lifespan=lifespan,
+    openapi_tags=OPENAPI_TAGS,
 )
 
 # Apply custom route class to handle union type compatibility issues
@@ -533,12 +545,8 @@ if os.getenv("ENVIRONMENT") == "production":
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 
 # Performance metrics tracking
-performance_stats = {
-    "total_requests": 0,
-    "total_response_time": 0,
-    "cache_hits": 0,
-    "compression_saved": 0
-}
+performance_stats = {"total_requests": 0, "total_response_time": 0, "cache_hits": 0, "compression_saved": 0}
+
 
 @app.middleware("http")
 async def enhanced_performance_middleware(request: Request, call_next):
@@ -558,9 +566,9 @@ async def enhanced_performance_middleware(request: Request, call_next):
     performance_stats["total_requests"] += 1
 
     # Request optimization
-    if hasattr(request, 'headers'):
+    if hasattr(request, "headers"):
         # Enable client-side caching hints
-        accepts_gzip = 'gzip' in request.headers.get('accept-encoding', '')
+        accepts_gzip = "gzip" in request.headers.get("accept-encoding", "")
 
     # Process request
     response = await call_next(request)
@@ -668,8 +676,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
                 "status_code": response.status_code,
                 "user_agent": request.headers.get("user-agent", "unknown"),
                 "content_length": content_length,
-                "performance_tier": "slow"
-            }
+                "performance_tier": "slow",
+            },
         )
     elif process_time > 0.3:  # Warning threshold
         logger.info(
@@ -678,8 +686,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
                 "method": method,
                 "path": path,
                 "process_time": f"{process_time:.3f}s",
-                "performance_tier": "moderate"
-            }
+                "performance_tier": "moderate",
+            },
         )
 
     # Log performance milestones
@@ -693,11 +701,12 @@ async def enhanced_performance_middleware(request: Request, call_next):
                 "total_requests": performance_stats["total_requests"],
                 "avg_response_time": f"{avg_response_time:.3f}s",
                 "cache_hit_rate": f"{cache_hit_rate:.2%}",
-                "compression_rate": f"{compression_rate:.2%}"
-            }
+                "compression_rate": f"{compression_rate:.2%}",
+            },
         )
 
     return response
+
 
 # ============================================================================
 # COMPREHENSIVE ERROR HANDLING SYSTEM
@@ -708,11 +717,12 @@ app.add_middleware(ErrorHandlerMiddleware)
 
 # Set up global exception handlers for consistent error responses
 from ghl_real_estate_ai.api.middleware.global_exception_handler import setup_global_exception_handlers
+
 setup_global_exception_handlers(app)
 
 # Add CORS middleware (SECURITY FIX: Restrict origins)
 ALLOWED_ORIGINS = [
-    "*", # Dev: allow all for browser debugging
+    "*",  # Dev: allow all for browser debugging
     "https://app.gohighlevel.com",
     "https://*.gohighlevel.com",
     os.getenv("STREAMLIT_URL", "http://localhost:8501"),
@@ -721,10 +731,7 @@ ALLOWED_ORIGINS = [
 
 # Production security: Remove localhost origins
 if os.getenv("ENVIRONMENT") == "production":
-    ALLOWED_ORIGINS = [
-        origin for origin in ALLOWED_ORIGINS
-        if not origin.startswith("http://localhost")
-    ]
+    ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if not origin.startswith("http://localhost")]
 
 app.add_middleware(
     CORSMiddleware,
@@ -732,17 +739,17 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=[
-        "Content-Type", 
-        "Authorization", 
-        "X-API-Key", 
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
         "X-Location-ID",
-        "X-Device-ID",          # Mobile device identification
-        "X-App-Version",        # Mobile app version
-        "X-Platform",           # iOS/Android platform
-        "X-Device-Model",       # Device model for optimization
-        "X-Biometric-Token",    # Biometric authentication
-        "X-GPS-Coordinates",    # Location services
-        "X-AR-Capabilities"     # AR/VR capabilities
+        "X-Device-ID",  # Mobile device identification
+        "X-App-Version",  # Mobile app version
+        "X-Platform",  # iOS/Android platform
+        "X-Device-Model",  # Device model for optimization
+        "X-Biometric-Token",  # Biometric authentication
+        "X-GPS-Coordinates",  # Location services
+        "X-AR-Capabilities",  # AR/VR capabilities
     ],
 )
 # Enhanced Security Middleware (Comprehensive Security Hardening)
@@ -756,37 +763,24 @@ app.add_middleware(
     max_request_size=10 * 1024 * 1024,  # 10MB limit
     validate_json=True,
     validate_query_params=True,
-    enable_sanitization=True
+    enable_sanitization=True,
 )
+
 
 # 2. Enhanced rate limiting with environment-based configuration
 def get_rate_limit_config():
     """Get environment-appropriate rate limiting configuration"""
     env = os.getenv("ENVIRONMENT", "development")
     if env == "production":
-        return {
-            "requests_per_minute": 100,
-            "authenticated_rpm": 1000,
-            "enable_ip_blocking": True
-        }
+        return {"requests_per_minute": 100, "authenticated_rpm": 1000, "enable_ip_blocking": True}
     elif env == "staging":
-        return {
-            "requests_per_minute": 500,
-            "authenticated_rpm": 5000,
-            "enable_ip_blocking": True
-        }
+        return {"requests_per_minute": 500, "authenticated_rpm": 5000, "enable_ip_blocking": True}
     else:  # development/testing
-        return {
-            "requests_per_minute": 10000,
-            "authenticated_rpm": 50000,
-            "enable_ip_blocking": False
-        }
+        return {"requests_per_minute": 10000, "authenticated_rpm": 50000, "enable_ip_blocking": False}
+
 
 rate_config = get_rate_limit_config()
-app.add_middleware(
-    RateLimitMiddleware,
-    **rate_config
-)
+app.add_middleware(RateLimitMiddleware, **rate_config)
 
 # 3. Comprehensive security headers
 app.add_middleware(
@@ -794,7 +788,7 @@ app.add_middleware(
     environment=settings.environment,
     enable_csp=True,
     enable_hsts=True,
-    enable_request_id=True
+    enable_request_id=True,
 )
 
 
@@ -807,12 +801,9 @@ async def root():
         "version": settings.version,
         "status": "running",
         "environment": settings.environment,
-        "docs": (
-            "/docs"
-            if settings.environment == "development"
-            else "disabled in production"
-        ),
+        "docs": ("/docs" if settings.environment == "development" else "disabled in production"),
     }
+
 
 # Lightweight health endpoint for load balancers (Fly.io)
 @app.get("/health")
@@ -830,6 +821,7 @@ async def root_health():
 # Create the integrated Socket.IO + FastAPI app
 # This is what uvicorn/gunicorn should run: ghl_real_estate_ai.api.main:socketio_app
 from ghl_real_estate_ai.api.socketio_app import get_socketio_app_for_uvicorn
+
 socketio_app = get_socketio_app_for_uvicorn(app)
 
 

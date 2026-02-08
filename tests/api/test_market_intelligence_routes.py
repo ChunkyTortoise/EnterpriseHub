@@ -9,22 +9,21 @@ Tests comprehensive Austin real estate market API functionality including:
 - Property alert management
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
 try:
+    # Mock FastAPI app for testing
+    from fastapi import FastAPI, status
     from fastapi.testclient import TestClient
-    from fastapi import status
 
     # Import the FastAPI app and route components
     from ghl_real_estate_ai.api.routes.market_intelligence import router
-    from ghl_real_estate_ai.services.austin_market_service import PropertyType, MarketCondition
-
-
-    # Mock FastAPI app for testing
-    from fastapi import FastAPI
+    from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
 except (ImportError, TypeError, AttributeError, Exception):
     pytest.skip("required imports unavailable", allow_module_level=True)
 app = FastAPI()
@@ -137,17 +136,9 @@ class TestPropertySearchEndpoints:
 
     def test_search_properties_basic(self):
         """Test basic property search."""
-        search_request = {
-            "min_price": 400000,
-            "max_price": 700000,
-            "min_beds": 3,
-            "limit": 10
-        }
+        search_request = {"min_price": 400000, "max_price": 700000, "min_beds": 3, "limit": 10}
 
-        response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            json=search_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/search", json=search_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -171,16 +162,9 @@ class TestPropertySearchEndpoints:
 
     def test_search_properties_with_neighborhoods(self):
         """Test property search with neighborhood filter."""
-        search_request = {
-            "neighborhoods": ["Round Rock", "Cedar Park"],
-            "min_beds": 2,
-            "limit": 15
-        }
+        search_request = {"neighborhoods": ["Round Rock", "Cedar Park"], "min_beds": 2, "limit": 15}
 
-        response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            json=search_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/search", json=search_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -190,17 +174,9 @@ class TestPropertySearchEndpoints:
 
     def test_search_properties_with_commute_filter(self):
         """Test property search with commute requirements."""
-        search_request = {
-            "work_location": "Apple",
-            "max_commute_minutes": 30,
-            "min_beds": 3,
-            "limit": 5
-        }
+        search_request = {"work_location": "Apple", "max_commute_minutes": 30, "min_beds": 3, "limit": 5}
 
-        response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            json=search_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/search", json=search_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -211,10 +187,7 @@ class TestPropertySearchEndpoints:
         """Test property search with empty criteria."""
         search_request = {"limit": 5}
 
-        response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            json=search_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/search", json=search_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -229,13 +202,10 @@ class TestPropertySearchEndpoints:
             "budget_range": [500000, 800000],
             "family_status": "family with children",
             "lifestyle_preferences": ["family-friendly", "good schools"],
-            "timeline": "60 days"
+            "timeline": "60 days",
         }
 
-        response = client.post(
-            "/api/v1/market-intelligence/properties/recommendations",
-            json=recommendation_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/recommendations", json=recommendation_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -261,10 +231,7 @@ class TestPropertySearchEndpoints:
             "lead_id": "minimal_lead",
         }
 
-        response = client.post(
-            "/api/v1/market-intelligence/properties/recommendations",
-            json=recommendation_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/recommendations", json=recommendation_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -278,16 +245,9 @@ class TestCorporateIntelligenceEndpoints:
 
     def test_get_corporate_insights(self):
         """Test corporate insights endpoint."""
-        insights_request = {
-            "employer": "Apple",
-            "position_level": "Senior Engineer",
-            "salary_range": [140000, 200000]
-        }
+        insights_request = {"employer": "Apple", "position_level": "Senior Engineer", "salary_range": [140000, 200000]}
 
-        response = client.post(
-            "/api/v1/market-intelligence/corporate-insights",
-            json=insights_request
-        )
+        response = client.post("/api/v1/market-intelligence/corporate-insights", json=insights_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -307,14 +267,9 @@ class TestCorporateIntelligenceEndpoints:
 
     def test_get_corporate_insights_minimal(self):
         """Test corporate insights with minimal data."""
-        insights_request = {
-            "employer": "Google"
-        }
+        insights_request = {"employer": "Google"}
 
-        response = client.post(
-            "/api/v1/market-intelligence/corporate-insights",
-            json=insights_request
-        )
+        response = client.post("/api/v1/market-intelligence/corporate-insights", json=insights_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -353,16 +308,9 @@ class TestMarketTimingEndpoints:
 
     def test_get_market_timing_advice_buy(self):
         """Test market timing advice for buying."""
-        timing_request = {
-            "transaction_type": "buy",
-            "property_type": "single_family",
-            "neighborhood": "Round Rock"
-        }
+        timing_request = {"transaction_type": "buy", "property_type": "single_family", "neighborhood": "Round Rock"}
 
-        response = client.post(
-            "/api/v1/market-intelligence/market-timing",
-            json=timing_request
-        )
+        response = client.post("/api/v1/market-intelligence/market-timing", json=timing_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -378,15 +326,9 @@ class TestMarketTimingEndpoints:
 
     def test_get_market_timing_advice_sell(self):
         """Test market timing advice for selling."""
-        timing_request = {
-            "transaction_type": "sell",
-            "property_type": "condo"
-        }
+        timing_request = {"transaction_type": "sell", "property_type": "condo"}
 
-        response = client.post(
-            "/api/v1/market-intelligence/market-timing",
-            json=timing_request
-        )
+        response = client.post("/api/v1/market-intelligence/market-timing", json=timing_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -402,14 +344,11 @@ class TestMarketTimingEndpoints:
                 "lead_id": "timing_test",
                 "employer": "Apple",
                 "timeline": "90 days",
-                "family_status": "family"
-            }
+                "family_status": "family",
+            },
         }
 
-        response = client.post(
-            "/api/v1/market-intelligence/market-timing",
-            json=timing_request
-        )
+        response = client.post("/api/v1/market-intelligence/market-timing", json=timing_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -435,10 +374,7 @@ class TestMarketTimingEndpoints:
 
     def test_get_market_trends_with_parameters(self):
         """Test market trends with query parameters."""
-        response = client.get(
-            "/api/v1/market-intelligence/market-trends"
-            "?period=6m&neighborhood=Round Rock"
-        )
+        response = client.get("/api/v1/market-intelligence/market-trends?period=6m&neighborhood=Round Rock")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -463,14 +399,10 @@ class TestPropertyAlertsEndpoints:
             "min_beds": 3,
             "neighborhoods": ["Round Rock", "Cedar Park"],
             "work_location": "Apple",
-            "max_commute_minutes": 30
+            "max_commute_minutes": 30,
         }
 
-        response = client.post(
-            "/api/v1/market-intelligence/alerts/setup"
-            "?lead_id=alert_test_lead",
-            json=alert_request
-        )
+        response = client.post("/api/v1/market-intelligence/alerts/setup?lead_id=alert_test_lead", json=alert_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -482,17 +414,9 @@ class TestPropertyAlertsEndpoints:
     def test_get_alert_summary(self):
         """Test getting alert summary."""
         # First setup alerts
-        alert_request = {
-            "min_price": 500000,
-            "max_price": 800000,
-            "min_beds": 2
-        }
+        alert_request = {"min_price": 500000, "max_price": 800000, "min_beds": 2}
 
-        client.post(
-            "/api/v1/market-intelligence/alerts/setup"
-            "?lead_id=summary_test_lead",
-            json=alert_request
-        )
+        client.post("/api/v1/market-intelligence/alerts/setup?lead_id=summary_test_lead", json=alert_request)
 
         # Then get summary
         response = client.get("/api/v1/market-intelligence/alerts/summary_test_lead/summary")
@@ -525,15 +449,12 @@ class TestAIInsightsEndpoints:
             "employer": "Apple",
             "budget_max": 750000,
             "preferred_neighborhoods": ["Round Rock"],
-            "family_status": "married with kids"
+            "family_status": "married with kids",
         }
 
         response = client.post(
             "/api/v1/market-intelligence/ai-insights/lead-analysis",
-            json={
-                "lead_data": lead_data,
-                "conversation_history": []
-            }
+            json={"lead_data": lead_data, "conversation_history": []},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -550,15 +471,12 @@ class TestAIInsightsEndpoints:
                 "lead_id": "conversation_test",
                 "employer": "Apple",
                 "family_situation": "family with children",
-                "conversation_stage": "discovery"
+                "conversation_stage": "discovery",
             },
-            "conversation_history": []
+            "conversation_history": [],
         }
 
-        response = client.post(
-            "/api/v1/market-intelligence/ai-insights/conversation",
-            json=conversation_request
-        )
+        response = client.post("/api/v1/market-intelligence/ai-insights/conversation", json=conversation_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -574,15 +492,10 @@ class TestAIInsightsEndpoints:
         """Test AI conversation response with minimal context."""
         conversation_request = {
             "query": "Tell me about Austin real estate market",
-            "lead_context": {
-                "lead_id": "minimal_context"
-            }
+            "lead_context": {"lead_id": "minimal_context"},
         }
 
-        response = client.post(
-            "/api/v1/market-intelligence/ai-insights/conversation",
-            json=conversation_request
-        )
+        response = client.post("/api/v1/market-intelligence/ai-insights/conversation", json=conversation_request)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -614,41 +527,29 @@ class TestErrorHandling:
 
     def test_invalid_json_request(self):
         """Test handling of invalid JSON requests."""
-        response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            data="invalid json"
-        )
+        response = client.post("/api/v1/market-intelligence/properties/search", data="invalid json")
 
         assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_422_UNPROCESSABLE_ENTITY]
 
     def test_missing_required_fields(self):
         """Test handling of missing required fields."""
         # Missing lead_id in property recommendations
-        response = client.post(
-            "/api/v1/market-intelligence/properties/recommendations",
-            json={"employer": "Apple"}
-        )
+        response = client.post("/api/v1/market-intelligence/properties/recommendations", json={"employer": "Apple"})
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_invalid_field_values(self):
         """Test handling of invalid field values."""
         # Invalid transaction type in market timing
-        timing_request = {
-            "transaction_type": "invalid_type",
-            "property_type": "single_family"
-        }
+        timing_request = {"transaction_type": "invalid_type", "property_type": "single_family"}
 
-        response = client.post(
-            "/api/v1/market-intelligence/market-timing",
-            json=timing_request
-        )
+        response = client.post("/api/v1/market-intelligence/market-timing", json=timing_request)
 
         # Should handle gracefully or return appropriate error
         assert response.status_code in [
             status.HTTP_200_OK,  # If handled gracefully
             status.HTTP_400_BAD_REQUEST,  # If validation error
-            status.HTTP_422_UNPROCESSABLE_ENTITY  # If Pydantic validation error
+            status.HTTP_422_UNPROCESSABLE_ENTITY,  # If Pydantic validation error
         ]
 
 
@@ -664,13 +565,10 @@ class TestMarketIntelligenceIntegration:
             "max_price": 800000,
             "min_beds": 3,
             "neighborhoods": ["Round Rock"],
-            "limit": 10
+            "limit": 10,
         }
 
-        search_response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            json=search_request
-        )
+        search_response = client.post("/api/v1/market-intelligence/properties/search", json=search_request)
 
         assert search_response.status_code == status.HTTP_200_OK
 
@@ -680,28 +578,20 @@ class TestMarketIntelligenceIntegration:
             "employer": "Apple",
             "budget_range": [500000, 800000],
             "family_status": "family",
-            "timeline": "60 days"
+            "timeline": "60 days",
         }
 
         rec_response = client.post(
-            "/api/v1/market-intelligence/properties/recommendations",
-            json=recommendation_request
+            "/api/v1/market-intelligence/properties/recommendations", json=recommendation_request
         )
 
         assert rec_response.status_code == status.HTTP_200_OK
 
         # Step 3: Set up alerts based on criteria
-        alert_request = {
-            "min_price": 500000,
-            "max_price": 800000,
-            "min_beds": 3,
-            "neighborhoods": ["Round Rock"]
-        }
+        alert_request = {"min_price": 500000, "max_price": 800000, "min_beds": 3, "neighborhoods": ["Round Rock"]}
 
         alert_response = client.post(
-            "/api/v1/market-intelligence/alerts/setup"
-            "?lead_id=integration_test_lead",
-            json=alert_request
+            "/api/v1/market-intelligence/alerts/setup?lead_id=integration_test_lead", json=alert_request
         )
 
         assert alert_response.status_code == status.HTTP_200_OK
@@ -711,7 +601,7 @@ class TestMarketIntelligenceIntegration:
         # Step 1: Get corporate insights
         insights_response = client.post(
             "/api/v1/market-intelligence/corporate-insights",
-            json={"employer": "Apple", "position_level": "Senior Engineer"}
+            json={"employer": "Apple", "position_level": "Senior Engineer"},
         )
 
         assert insights_response.status_code == status.HTTP_200_OK
@@ -722,11 +612,8 @@ class TestMarketIntelligenceIntegration:
             json={
                 "transaction_type": "buy",
                 "property_type": "single_family",
-                "lead_context": {
-                    "lead_id": "corporate_test",
-                    "employer": "Apple"
-                }
-            }
+                "lead_context": {"lead_id": "corporate_test", "employer": "Apple"},
+            },
         )
 
         assert timing_response.status_code == status.HTTP_200_OK
@@ -734,13 +621,7 @@ class TestMarketIntelligenceIntegration:
         # Step 3: Get AI insights
         ai_response = client.post(
             "/api/v1/market-intelligence/ai-insights/lead-analysis",
-            json={
-                "lead_data": {
-                    "lead_id": "corporate_test",
-                    "employer": "Apple",
-                    "position": "Senior Engineer"
-                }
-            }
+            json={"lead_data": {"lead_id": "corporate_test", "employer": "Apple", "position": "Senior Engineer"}},
         )
 
         assert ai_response.status_code == status.HTTP_200_OK
@@ -752,25 +633,17 @@ class TestMarketIntelligenceIntegration:
         assert metrics_response.status_code == status.HTTP_200_OK
 
         # Step 2: Get neighborhood-specific analysis
-        neighborhood_response = client.get(
-            "/api/v1/market-intelligence/neighborhoods/Round Rock"
-        )
+        neighborhood_response = client.get("/api/v1/market-intelligence/neighborhoods/Round Rock")
         assert neighborhood_response.status_code == status.HTTP_200_OK
 
         # Step 3: Get market trends
-        trends_response = client.get(
-            "/api/v1/market-intelligence/market-trends?period=3m&neighborhood=Round Rock"
-        )
+        trends_response = client.get("/api/v1/market-intelligence/market-trends?period=3m&neighborhood=Round Rock")
         assert trends_response.status_code == status.HTTP_200_OK
 
         # Step 4: Get timing advice
         timing_response = client.post(
             "/api/v1/market-intelligence/market-timing",
-            json={
-                "transaction_type": "buy",
-                "property_type": "single_family",
-                "neighborhood": "Round Rock"
-            }
+            json={"transaction_type": "buy", "property_type": "single_family", "neighborhood": "Round Rock"},
         )
         assert timing_response.status_code == status.HTTP_200_OK
 
@@ -816,14 +689,11 @@ class TestMarketIntelligencePerformance:
         search_request = {
             "min_price": 200000,
             "max_price": 2000000,  # Wide range
-            "limit": 100  # Large limit
+            "limit": 100,  # Large limit
         }
 
         start_time = time.time()
-        response = client.post(
-            "/api/v1/market-intelligence/properties/search",
-            json=search_request
-        )
+        response = client.post("/api/v1/market-intelligence/properties/search", json=search_request)
         end_time = time.time()
 
         assert response.status_code == status.HTTP_200_OK

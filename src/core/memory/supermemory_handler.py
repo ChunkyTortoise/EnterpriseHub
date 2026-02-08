@@ -1,9 +1,11 @@
-import os
-from typing import Optional, Dict, List, Any
 import logging
+import os
+from typing import Any, Dict, List, Optional
+
 from supermemory import AsyncSupermemory
 
 logger = logging.getLogger(__name__)
+
 
 class SupermemoryHandler:
     """
@@ -13,7 +15,7 @@ class SupermemoryHandler:
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("SUPERMEMORY_API_KEY")
-        
+
         if not self.api_key:
             logger.warning("SUPERMEMORY_API_KEY not found in environment. Supermemory features will be disabled.")
             self.client = None
@@ -21,19 +23,19 @@ class SupermemoryHandler:
             # The SDK handles the base URL, but we can override it if needed
             self.client = AsyncSupermemory(api_key=self.api_key)
 
-    async def add_memory(self, content: str, metadata: Optional[Dict[str, Any]] = None, container_tag: str = "EnterpriseHub") -> Dict[str, Any]:
+    async def add_memory(
+        self, content: str, metadata: Optional[Dict[str, Any]] = None, container_tag: str = "EnterpriseHub"
+    ) -> Dict[str, Any]:
         """Adds a new memory to the semantic graph."""
         if not self.client:
             return {"error": "API key missing or client not initialized"}
 
         try:
             response = await self.client.memories.add(
-                content=content,
-                container_tag=container_tag,
-                metadata=metadata or {}
+                content=content, container_tag=container_tag, metadata=metadata or {}
             )
             # Support both Pydantic models (SDK v3+) and direct dicts
-            if hasattr(response, 'model_dump'):
+            if hasattr(response, "model_dump"):
                 return response.model_dump()
             return response if isinstance(response, dict) else {"message": str(response)}
         except Exception as e:
@@ -50,9 +52,9 @@ class SupermemoryHandler:
                 q=query,
             )
             results = []
-            if hasattr(searching, 'results'):
+            if hasattr(searching, "results"):
                 for res in searching.results:
-                    if hasattr(res, 'model_dump'):
+                    if hasattr(res, "model_dump"):
                         results.append(res.model_dump())
                     else:
                         results.append(res if isinstance(res, dict) else {"content": str(res)})
@@ -70,7 +72,7 @@ class SupermemoryHandler:
             # SDK v3 uses client.profile() to get the current profile
             # It requires a container_tag
             response = await self.client.profile(container_tag=container_tag)
-            if hasattr(response, 'model_dump'):
+            if hasattr(response, "model_dump"):
                 return response.model_dump()
             return response if isinstance(response, dict) else {"profile": str(response)}
         except Exception as e:

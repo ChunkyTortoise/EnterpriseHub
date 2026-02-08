@@ -7,12 +7,12 @@ Implements TCPA-style opt-out handling and frequency limits.
 
 from __future__ import annotations
 
+import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-import os
-import re
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -53,13 +53,23 @@ class SMSComplianceService:
     """Service for SMS compliance checks and auditing."""
 
     STOP_KEYWORDS = {
-        "STOP", "UNSUBSCRIBE", "QUIT", "CANCEL", "END",
-        "REMOVE", "HALT", "OPT-OUT", "OPTOUT", "NO", "OFF", "STOPALL"
+        "STOP",
+        "UNSUBSCRIBE",
+        "QUIT",
+        "CANCEL",
+        "END",
+        "REMOVE",
+        "HALT",
+        "OPT-OUT",
+        "OPTOUT",
+        "NO",
+        "OFF",
+        "STOPALL",
     }
     DAILY_LIMIT = 3
     MONTHLY_LIMIT = 20
-    BUSINESS_HOURS_START = 8   # 8 AM local time
-    BUSINESS_HOURS_END = 21    # 9 PM local time
+    BUSINESS_HOURS_START = 8  # 8 AM local time
+    BUSINESS_HOURS_END = 21  # 9 PM local time
 
     def __init__(self):
         self._tables_ready = False
@@ -146,10 +156,7 @@ class SMSComplianceService:
 
             normalized_phone = self._normalize_phone_number(phone_number)
             if self._contains_stop_keyword(message_content):
-                keywords_detected = [
-                    kw for kw in self.STOP_KEYWORDS
-                    if kw in (message_content or "").upper()
-                ]
+                keywords_detected = [kw for kw in self.STOP_KEYWORDS if kw in (message_content or "").upper()]
                 await self.process_opt_out(
                     phone_number=normalized_phone,
                     reason=OptOutReason.STOP_KEYWORD,

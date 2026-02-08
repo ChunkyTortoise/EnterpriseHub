@@ -5,26 +5,23 @@ Intelligent Agent Transition & Context Management System
 
 import asyncio
 import json
-import uuid
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from enum import Enum
 import logging
+import uuid
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.services.enhanced_intent_decoder import (
-    IntentAnalysisResult, IntentCategory, UrgencyLevel
-)
-from ghl_real_estate_ai.models.intelligence_context import (
-    ConversationContext, CustomerProfile
-)
+from ghl_real_estate_ai.models.intelligence_context import ConversationContext, CustomerProfile
+from ghl_real_estate_ai.services.enhanced_intent_decoder import IntentAnalysisResult, IntentCategory, UrgencyLevel
 
 logger = logging.getLogger(__name__)
 
 
 class HandoffReason(Enum):
     """Reasons for agent handoff"""
+
     SPECIALIZATION_REQUIRED = "specialization_required"
     COMPLEXITY_ESCALATION = "complexity_escalation"
     HUMAN_INTERVENTION = "human_intervention"
@@ -36,6 +33,7 @@ class HandoffReason(Enum):
 
 class HandoffStatus(Enum):
     """Handoff execution status"""
+
     INITIATED = "initiated"
     PREPARING = "preparing"
     TRANSFERRING = "transferring"
@@ -46,6 +44,7 @@ class HandoffStatus(Enum):
 
 class AgentType(Enum):
     """Available agent types for routing"""
+
     JORGE_SELLER_BOT = "jorge_seller_bot"
     JORGE_BUYER_BOT = "jorge_buyer_bot"
     LEAD_BOT = "lead_bot"
@@ -58,6 +57,7 @@ class AgentType(Enum):
 @dataclass
 class AgentAvailability:
     """Agent availability and performance metrics"""
+
     agent_id: str
     agent_type: AgentType
     is_available: bool
@@ -72,6 +72,7 @@ class AgentAvailability:
 @dataclass
 class HandoffContext:
     """Comprehensive context for agent handoff"""
+
     handoff_id: str
     source_agent: str
     target_agent: str
@@ -91,6 +92,7 @@ class HandoffContext:
 @dataclass
 class HandoffExecution:
     """Handoff execution tracking"""
+
     handoff_id: str
     status: HandoffStatus
     source_agent: str
@@ -131,7 +133,7 @@ class EnhancedHandoffOrchestrator:
             "context_preservation": 0.95,
             "customer_satisfaction": 0.9,
             "transition_time": 30.0,  # seconds
-            "overall_success": 0.9
+            "overall_success": 0.9,
         }
 
     async def analyze_handoff_necessity(
@@ -139,7 +141,7 @@ class EnhancedHandoffOrchestrator:
         conversation_context: ConversationContext,
         intent_analysis: IntentAnalysisResult,
         current_agent: str,
-        customer_profile: Optional[CustomerProfile] = None
+        customer_profile: Optional[CustomerProfile] = None,
     ) -> Tuple[bool, Optional[HandoffReason], Optional[str]]:
         """
         Analyze if handoff is necessary and determine target agent
@@ -196,7 +198,7 @@ class EnhancedHandoffOrchestrator:
         handoff_reason: HandoffReason,
         conversation_context: ConversationContext,
         intent_analysis: IntentAnalysisResult,
-        customer_profile: Optional[CustomerProfile] = None
+        customer_profile: Optional[CustomerProfile] = None,
     ) -> HandoffExecution:
         """
         Execute intelligent handoff with complete context preservation
@@ -219,7 +221,7 @@ class EnhancedHandoffOrchestrator:
                 customer_satisfaction=None,
                 context_preservation_score=None,
                 failure_reason=None,
-                rollback_reason=None
+                rollback_reason=None,
             )
 
             self.active_handoffs[handoff_id] = handoff_execution
@@ -229,8 +231,13 @@ class EnhancedHandoffOrchestrator:
             handoff_execution.status = HandoffStatus.PREPARING
 
             handoff_context = await self._prepare_handoff_context(
-                handoff_id, source_agent, target_agent, handoff_reason,
-                conversation_context, intent_analysis, customer_profile
+                handoff_id,
+                source_agent,
+                target_agent,
+                handoff_reason,
+                conversation_context,
+                intent_analysis,
+                customer_profile,
             )
 
             # Validate target agent availability
@@ -249,9 +256,7 @@ class EnhancedHandoffOrchestrator:
             transfer_start = datetime.now()
             handoff_execution.status = HandoffStatus.TRANSFERRING
 
-            context_transfer_success = await self._transfer_context_to_agent(
-                target_agent, handoff_context
-            )
+            context_transfer_success = await self._transfer_context_to_agent(target_agent, handoff_context)
 
             if not context_transfer_success:
                 raise Exception("Context transfer failed")
@@ -279,8 +284,10 @@ class EnhancedHandoffOrchestrator:
 
             # Log successful handoff
             total_duration = (datetime.now() - start_time).total_seconds()
-            logger.info(f"Handoff {handoff_id} completed successfully in {total_duration:.1f}s, "
-                       f"success_score: {handoff_execution.success_score:.2f}")
+            logger.info(
+                f"Handoff {handoff_id} completed successfully in {total_duration:.1f}s, "
+                f"success_score: {handoff_execution.success_score:.2f}"
+            )
 
             # Update performance metrics
             await self._update_performance_metrics(handoff_execution)
@@ -314,7 +321,7 @@ class EnhancedHandoffOrchestrator:
         consulting_agents: List[str],
         consultation_topic: str,
         conversation_context: ConversationContext,
-        intent_analysis: IntentAnalysisResult
+        intent_analysis: IntentAnalysisResult,
     ) -> Dict[str, Any]:
         """
         Coordinate parallel expert consultation without customer handoff
@@ -351,7 +358,7 @@ class EnhancedHandoffOrchestrator:
                 "expert_insights": aggregated_insights,
                 "recommendations": recommendations,
                 "confidence_score": self._calculate_consultation_confidence(aggregated_insights),
-                "execution_time": datetime.now()
+                "execution_time": datetime.now(),
             }
 
         except Exception as e:
@@ -360,20 +367,19 @@ class EnhancedHandoffOrchestrator:
                 "consultation_id": consultation_id,
                 "error": str(e),
                 "fallback_recommendations": ["Proceed with standard agent approach"],
-                "execution_time": datetime.now()
+                "execution_time": datetime.now(),
             }
 
     async def _analyze_specialization_needs(
         self,
         intent_analysis: IntentAnalysisResult,
         conversation_context: ConversationContext,
-        customer_profile: Optional[CustomerProfile]
+        customer_profile: Optional[CustomerProfile],
     ) -> Tuple[bool, Optional[str]]:
         """Determine if specialized agent is required"""
 
         # High-value property specialization
-        if (intent_analysis.budget_range and
-            intent_analysis.budget_range[0] > 1000000):
+        if intent_analysis.budget_range and intent_analysis.budget_range[0] > 1000000:
             return True, AgentType.LUXURY_SPECIALIST.value
 
         # Investment property specialization
@@ -397,7 +403,7 @@ class EnhancedHandoffOrchestrator:
         self,
         conversation_context: ConversationContext,
         intent_analysis: IntentAnalysisResult,
-        customer_profile: Optional[CustomerProfile]
+        customer_profile: Optional[CustomerProfile],
     ) -> float:
         """Calculate conversation complexity score"""
 
@@ -411,8 +417,7 @@ class EnhancedHandoffOrchestrator:
         complexity_score += len(intent_analysis.risk_factors) * 0.1
 
         # High-value transaction
-        if (intent_analysis.budget_range and
-            intent_analysis.budget_range[0] > 750000):
+        if intent_analysis.budget_range and intent_analysis.budget_range[0] > 750000:
             complexity_score += 0.2
 
         # Timeline pressure
@@ -420,7 +425,7 @@ class EnhancedHandoffOrchestrator:
             complexity_score += 0.15
 
         # Long conversation history without resolution
-        if hasattr(conversation_context, 'message_count') and conversation_context.message_count > 15:
+        if hasattr(conversation_context, "message_count") and conversation_context.message_count > 15:
             complexity_score += 0.2
 
         # Emotional distress indicators
@@ -437,16 +442,16 @@ class EnhancedHandoffOrchestrator:
         handoff_reason: HandoffReason,
         conversation_context: ConversationContext,
         intent_analysis: IntentAnalysisResult,
-        customer_profile: Optional[CustomerProfile]
+        customer_profile: Optional[CustomerProfile],
     ) -> HandoffContext:
         """Prepare comprehensive handoff context package"""
 
         # Conversation context
         conversation_dict = {
             "intent_analysis": asdict(intent_analysis),
-            "message_history": getattr(conversation_context, 'messages', []),
-            "conversation_state": getattr(conversation_context, 'state', {}),
-            "progress_milestones": getattr(conversation_context, 'milestones', [])
+            "message_history": getattr(conversation_context, "messages", []),
+            "conversation_state": getattr(conversation_context, "state", {}),
+            "progress_milestones": getattr(conversation_context, "milestones", []),
         }
 
         # Relationship context
@@ -454,7 +459,7 @@ class EnhancedHandoffOrchestrator:
             "rapport_level": self._assess_rapport_level(conversation_context),
             "communication_style": self._determine_communication_style(conversation_context),
             "emotional_state": self._assess_emotional_state(intent_analysis),
-            "trust_indicators": self._identify_trust_indicators(conversation_context)
+            "trust_indicators": self._identify_trust_indicators(conversation_context),
         }
 
         # Business context
@@ -462,15 +467,15 @@ class EnhancedHandoffOrchestrator:
             "opportunity_value": self._estimate_opportunity_value(intent_analysis),
             "timeline_pressure": intent_analysis.urgency_level.value,
             "competition_risk": self._assess_competition_risk(intent_analysis),
-            "referral_potential": self._assess_referral_potential(customer_profile)
+            "referral_potential": self._assess_referral_potential(customer_profile),
         }
 
         # Technical context
         technical_dict = {
-            "conversation_duration": getattr(conversation_context, 'duration', 0),
-            "interaction_count": getattr(conversation_context, 'interaction_count', 0),
-            "channel": getattr(conversation_context, 'channel', 'unknown'),
-            "device_info": getattr(conversation_context, 'device_info', {})
+            "conversation_duration": getattr(conversation_context, "duration", 0),
+            "interaction_count": getattr(conversation_context, "interaction_count", 0),
+            "channel": getattr(conversation_context, "channel", "unknown"),
+            "device_info": getattr(conversation_context, "device_info", {}),
         }
 
         # Success criteria
@@ -490,21 +495,15 @@ class EnhancedHandoffOrchestrator:
             risk_factors=intent_analysis.risk_factors,
             estimated_value=business_dict["opportunity_value"],
             priority_level=self._calculate_priority_level(intent_analysis),
-            created_timestamp=datetime.now()
+            created_timestamp=datetime.now(),
         )
 
-    async def _transfer_context_to_agent(
-        self,
-        target_agent: str,
-        handoff_context: HandoffContext
-    ) -> bool:
+    async def _transfer_context_to_agent(self, target_agent: str, handoff_context: HandoffContext) -> bool:
         """Transfer complete context to receiving agent"""
 
         try:
             # Prepare agent-specific context package
-            agent_context_package = self._prepare_agent_context_package(
-                target_agent, handoff_context
-            )
+            agent_context_package = self._prepare_agent_context_package(target_agent, handoff_context)
 
             # Simulate context transfer (in production, this would integrate with agent systems)
             logger.info(f"Transferring context to {target_agent}: {len(str(agent_context_package))} bytes")
@@ -523,22 +522,18 @@ class EnhancedHandoffOrchestrator:
             return False
 
     async def _execute_customer_introduction(
-        self,
-        handoff_context: HandoffContext,
-        source_agent: str,
-        target_agent: str
+        self, handoff_context: HandoffContext, source_agent: str, target_agent: str
     ) -> bool:
         """Execute seamless customer introduction"""
 
         try:
             # Prepare introduction script based on agent type and context
-            introduction_script = self._generate_introduction_script(
-                handoff_context, source_agent, target_agent
-            )
+            introduction_script = self._generate_introduction_script(handoff_context, source_agent, target_agent)
 
             # Log introduction for monitoring
-            logger.info(f"Customer introduction from {source_agent} to {target_agent}: "
-                       f"{handoff_context.handoff_reason.value}")
+            logger.info(
+                f"Customer introduction from {source_agent} to {target_agent}: {handoff_context.handoff_reason.value}"
+            )
 
             # In production, this would trigger the actual introduction
             # For now, we simulate successful introduction
@@ -556,40 +551,44 @@ class EnhancedHandoffOrchestrator:
                 "intent_confidence": 0.9,
                 "intent_categories": [IntentCategory.IMMEDIATE_SELLER],
                 "max_property_value": 2000000,
-                "complexity_threshold": 0.7
+                "complexity_threshold": 0.7,
             },
             AgentType.JORGE_BUYER_BOT.value: {
                 "intent_confidence": 0.9,
                 "intent_categories": [IntentCategory.IMMEDIATE_BUYER],
                 "financing_ready": True,
-                "urgency_levels": [UrgencyLevel.IMMEDIATE, UrgencyLevel.MODERATE]
+                "urgency_levels": [UrgencyLevel.IMMEDIATE, UrgencyLevel.MODERATE],
             },
             AgentType.LUXURY_SPECIALIST.value: {
                 "min_property_value": 1000000,
                 "buyer_sophistication": "high",
-                "complexity_threshold": 0.8
+                "complexity_threshold": 0.8,
             },
             AgentType.HUMAN_AGENT.value: {
                 "complexity_threshold": 0.8,
                 "emotional_distress": True,
-                "legal_complexity": "high"
-            }
+                "legal_complexity": "high",
+            },
         }
 
     def _check_emergency_escalation(
-        self,
-        conversation_context: ConversationContext,
-        intent_analysis: IntentAnalysisResult
+        self, conversation_context: ConversationContext, intent_analysis: IntentAnalysisResult
     ) -> bool:
         """Check for emergency escalation triggers"""
 
         emergency_indicators = [
-            "lawsuit", "legal action", "attorney", "threat",
-            "discrimination", "harassment", "emergency", "urgent legal"
+            "lawsuit",
+            "legal action",
+            "attorney",
+            "threat",
+            "discrimination",
+            "harassment",
+            "emergency",
+            "urgent legal",
         ]
 
         # Check for legal/emergency keywords in recent messages
-        recent_text = " ".join(getattr(conversation_context, 'messages', [])[-3:])
+        recent_text = " ".join(getattr(conversation_context, "messages", [])[-3:])
 
         return any(indicator in recent_text.lower() for indicator in emergency_indicators)
 
@@ -629,35 +628,26 @@ class EnhancedHandoffOrchestrator:
         if intent_analysis.urgency_level == UrgencyLevel.IMMEDIATE:
             priority += 1
 
-        if (intent_analysis.budget_range and
-            intent_analysis.budget_range[0] > 1000000):
+        if intent_analysis.budget_range and intent_analysis.budget_range[0] > 1000000:
             priority += 1
 
         return min(priority, 5)
 
     def _generate_introduction_script(
-        self,
-        handoff_context: HandoffContext,
-        source_agent: str,
-        target_agent: str
+        self, handoff_context: HandoffContext, source_agent: str, target_agent: str
     ) -> str:
         """Generate personalized introduction script"""
 
         base_scripts = {
-            AgentType.JORGE_BUYER_BOT.value:
-                "I'm connecting you with our buyer specialist who can help you find the perfect property...",
-            AgentType.JORGE_SELLER_BOT.value:
-                "Let me introduce you to our listing specialist who will help maximize your property value...",
-            AgentType.HUMAN_AGENT.value:
-                "I'm connecting you with one of our senior agents who specializes in your situation..."
+            AgentType.JORGE_BUYER_BOT.value: "I'm connecting you with our buyer specialist who can help you find the perfect property...",
+            AgentType.JORGE_SELLER_BOT.value: "Let me introduce you to our listing specialist who will help maximize your property value...",
+            AgentType.HUMAN_AGENT.value: "I'm connecting you with one of our senior agents who specializes in your situation...",
         }
 
         return base_scripts.get(target_agent, "I'm connecting you with a specialist...")
 
     async def _calculate_handoff_success(
-        self,
-        handoff_execution: HandoffExecution,
-        handoff_context: HandoffContext
+        self, handoff_execution: HandoffExecution, handoff_context: HandoffContext
     ) -> Dict[str, float]:
         """Calculate comprehensive handoff success metrics"""
 
@@ -676,9 +666,9 @@ class EnhancedHandoffOrchestrator:
 
         # Overall success calculation
         metrics["overall_success"] = (
-            metrics["context_preservation"] * 0.4 +
-            metrics["customer_satisfaction"] * 0.4 +
-            metrics["transition_time_score"] * 0.2
+            metrics["context_preservation"] * 0.4
+            + metrics["customer_satisfaction"] * 0.4
+            + metrics["transition_time_score"] * 0.2
         )
 
         return metrics
@@ -690,10 +680,12 @@ class EnhancedHandoffOrchestrator:
             "locations": intent_analysis.location_preferences,
             "budget_range": intent_analysis.budget_range,
             "timeline": intent_analysis.predicted_timeline,
-            "motivators": intent_analysis.key_motivators
+            "motivators": intent_analysis.key_motivators,
         }
 
-    def _define_success_criteria(self, intent_analysis: IntentAnalysisResult, handoff_reason: HandoffReason) -> List[str]:
+    def _define_success_criteria(
+        self, intent_analysis: IntentAnalysisResult, handoff_reason: HandoffReason
+    ) -> List[str]:
         """Define success criteria for handoff"""
         criteria = ["maintain_customer_satisfaction", "preserve_conversation_context"]
 
@@ -720,6 +712,7 @@ class EnhancedHandoffOrchestrator:
 
 # Factory functions
 
+
 async def create_enhanced_handoff_orchestrator() -> EnhancedHandoffOrchestrator:
     """Factory function to create configured handoff orchestrator"""
     return EnhancedHandoffOrchestrator()
@@ -731,8 +724,8 @@ if __name__ == "__main__":
         orchestrator = await create_enhanced_handoff_orchestrator()
 
         # Test handoff necessity analysis
-        from ghl_real_estate_ai.services.enhanced_intent_decoder import analyze_customer_intent
         from ghl_real_estate_ai.models.intelligence_context import ConversationContext
+        from ghl_real_estate_ai.services.enhanced_intent_decoder import analyze_customer_intent
 
         # Sample analysis
         intent_result = await analyze_customer_intent(

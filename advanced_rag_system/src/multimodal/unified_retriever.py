@@ -26,17 +26,17 @@ from uuid import UUID
 
 from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult
-from src.retrieval.advanced_hybrid_searcher import (
-    AdvancedHybridSearcher,
-    AdvancedSearchConfig,
-)
-from src.retrieval.multimodal_fusion import ModalityFusionConfig, MultiModalFusion
 from src.multimodal.image_retriever import ImageRetriever, ImageRetrieverConfig
 from src.multimodal.structured_retriever import (
     StructuredQuery,
     StructuredRetriever,
     StructuredRetrieverConfig,
 )
+from src.retrieval.advanced_hybrid_searcher import (
+    AdvancedHybridSearcher,
+    AdvancedSearchConfig,
+)
+from src.retrieval.multimodal_fusion import ModalityFusionConfig, MultiModalFusion
 
 logger = logging.getLogger(__name__)
 
@@ -196,9 +196,7 @@ class UnifiedRetriever:
 
         # Initialize structured retriever
         try:
-            structured_config = (
-                self.config.structured_config or StructuredRetrieverConfig()
-            )
+            structured_config = self.config.structured_config or StructuredRetrieverConfig()
             self._structured_retriever = StructuredRetriever(structured_config)
             init_tasks.append(self._structured_retriever.initialize())
             logger.info("Structured retriever initialized")
@@ -261,16 +259,39 @@ class UnifiedRetriever:
 
         # Image indicators
         image_keywords = [
-            "image", "picture", "photo", "visual", "look like",
-            "appearance", "color", "shape", "diagram", "chart",
-            "graph", "illustration", "drawing", "screenshot"
+            "image",
+            "picture",
+            "photo",
+            "visual",
+            "look like",
+            "appearance",
+            "color",
+            "shape",
+            "diagram",
+            "chart",
+            "graph",
+            "illustration",
+            "drawing",
+            "screenshot",
         ]
 
         # Structured data indicators
         structured_keywords = [
-            "table", "csv", "data", "statistics", "metrics",
-            "sales", "revenue", "count", "average", "sum",
-            "report", "spreadsheet", "excel", "json", "database"
+            "table",
+            "csv",
+            "data",
+            "statistics",
+            "metrics",
+            "sales",
+            "revenue",
+            "count",
+            "average",
+            "sum",
+            "report",
+            "spreadsheet",
+            "excel",
+            "json",
+            "database",
         ]
 
         image_score = sum(1 for kw in image_keywords if kw in query_lower)
@@ -404,23 +425,17 @@ class UnifiedRetriever:
         tasks = []
 
         if search_text and self._text_retriever:
-            tasks.append(
-                self._text_retriever.search(query, top_k=top_k)
-            )
+            tasks.append(self._text_retriever.search(query, top_k=top_k))
         else:
             tasks.append(asyncio.sleep(0))
 
         if search_image and self._image_retriever:
-            tasks.append(
-                self._image_retriever.search_by_text(query, top_k=top_k, threshold=threshold)
-            )
+            tasks.append(self._image_retriever.search_by_text(query, top_k=top_k, threshold=threshold))
         else:
             tasks.append(asyncio.sleep(0))
 
         if search_structured and self._structured_retriever:
-            tasks.append(
-                self._structured_retriever.semantic_search(query, top_k=top_k, threshold=threshold)
-            )
+            tasks.append(self._structured_retriever.semantic_search(query, top_k=top_k, threshold=threshold))
         else:
             tasks.append(asyncio.sleep(0))
 
@@ -479,9 +494,7 @@ class UnifiedRetriever:
 
         if search_image and self._image_retriever:
             try:
-                image_results = await self._image_retriever.search_by_text(
-                    query, top_k=top_k, threshold=threshold
-                )
+                image_results = await self._image_retriever.search_by_text(query, top_k=top_k, threshold=threshold)
             except Exception as e:
                 logger.error(f"Image search failed: {e}")
 
@@ -523,9 +536,7 @@ class UnifiedRetriever:
             raise RetrievalError("Image retriever not available")
 
         # Search images
-        image_results = await self._image_retriever.search_by_image(
-            image_path, top_k=top_k, threshold=threshold
-        )
+        image_results = await self._image_retriever.search_by_image(image_path, top_k=top_k, threshold=threshold)
 
         # Optionally search text with image-derived description
         text_results = []
@@ -688,9 +699,7 @@ class UnifiedRetriever:
             RetrievalError: If not initialized
         """
         if not self._initialized:
-            raise RetrievalError(
-                "Unified retriever not initialized. Call initialize() first."
-            )
+            raise RetrievalError("Unified retriever not initialized. Call initialize() first.")
 
     async def health_check(self) -> Dict[str, bool]:
         """Check health of all component retrievers.
@@ -705,7 +714,7 @@ class UnifiedRetriever:
             "structured": False,
         }
 
-        if self._text_retriever and hasattr(self._text_retriever, 'health_check'):
+        if self._text_retriever and hasattr(self._text_retriever, "health_check"):
             try:
                 health["text"] = await self._text_retriever.health_check()
             except Exception:

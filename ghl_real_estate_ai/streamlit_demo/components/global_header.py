@@ -2,18 +2,20 @@
 Global Header Component - Multi-Tenant Branding Orchestrator
 Centralized header rendering with tenant-specific branding
 """
-import streamlit as st
+
 from typing import Literal
+
+import streamlit as st
 
 
 def render_global_header(tenant_name: Literal["GHL", "ARETE", "SALES"] = "GHL"):
     """
     Render the global header with tenant-specific branding.
-    
+
     Args:
         tenant_name: Either "GHL", "ARETE", or "SALES" to determine branding style
     """
-    
+
     # Tenant-specific configuration - OBSIDIAN COMMAND EDITION
     if tenant_name == "ARETE":
         logo = "🦅"
@@ -34,8 +36,9 @@ def render_global_header(tenant_name: Literal["GHL", "ARETE", "SALES"] = "GHL"):
         subtitle = "Enterprise Intelligence Cockpit"
         gradient = "linear-gradient(135deg, #05070A 0%, #1E1B4B 100%)"
         glow = "0 25px 60px rgba(0, 0, 0, 0.9)"
-    
-    st.markdown(f"""
+
+    st.markdown(
+        f"""
         <div style='background: {gradient}; 
                     padding: 4rem 3.5rem; 
                     border-radius: 20px; 
@@ -109,23 +112,34 @@ def render_global_header(tenant_name: Literal["GHL", "ARETE", "SALES"] = "GHL"):
                 </div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_page_header(title: str, subtitle: str = "", icon: str = ""):
     """
     Render a standardized page header for internal pages.
-    
+
     Args:
         title: Page title
         subtitle: Optional subtitle
         icon: Optional icon or text for the page
     """
-    
-    subtitle_html = f"<p style='margin: 0.5rem 0 0 0; color: #8B949E; font-size: 1.1rem; font-weight: 500; font-family: \"Inter\", sans-serif;'>{subtitle}</p>" if subtitle else ""
-    icon_html = f"<div style='font-size: 3rem; background: rgba(99, 102, 241, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);'>{icon}</div>" if icon else ""
-    
-    st.markdown(f"""
+
+    subtitle_html = (
+        f"<p style='margin: 0.5rem 0 0 0; color: #8B949E; font-size: 1.1rem; font-weight: 500; font-family: \"Inter\", sans-serif;'>{subtitle}</p>"
+        if subtitle
+        else ""
+    )
+    icon_html = (
+        f"<div style='font-size: 3rem; background: rgba(99, 102, 241, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);'>{icon}</div>"
+        if icon
+        else ""
+    )
+
+    st.markdown(
+        f"""
         <div style='
             padding: 2.5rem;
             background: rgba(22, 27, 34, 0.5);
@@ -144,4 +158,6 @@ def render_page_header(title: str, subtitle: str = "", icon: str = ""):
                 </div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )

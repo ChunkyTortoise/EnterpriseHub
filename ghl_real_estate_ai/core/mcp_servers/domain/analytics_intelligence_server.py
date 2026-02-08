@@ -3,10 +3,12 @@ Analytics Intelligence MCP Server
 Exposes specialized analytics and ROI tracking tools for the AI platform.
 """
 
-from fastmcp import FastMCP
 import asyncio
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+from fastmcp import FastMCP
+
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 # Create the MCP server
@@ -14,6 +16,7 @@ mcp = FastMCP("AnalyticsIntelligence")
 
 # Initialize the service
 analytics_service = AnalyticsService()
+
 
 @mcp.tool()
 async def get_daily_summary(location_id: str) -> str:
@@ -25,6 +28,7 @@ async def get_daily_summary(location_id: str) -> str:
         return json.dumps(summary, indent=2, default=str)
     except Exception as e:
         return f"Error getting daily summary: {str(e)}"
+
 
 @mcp.tool()
 async def get_conversion_metrics(location_id: str, days: int = 30) -> str:
@@ -38,6 +42,7 @@ async def get_conversion_metrics(location_id: str, days: int = 30) -> str:
     except Exception as e:
         return f"Error getting conversion metrics: {str(e)}"
 
+
 @mcp.tool()
 async def get_llm_roi(location_id: str) -> str:
     """
@@ -48,6 +53,7 @@ async def get_llm_roi(location_id: str) -> str:
         return json.dumps(roi_data, indent=2, default=str)
     except Exception as e:
         return f"Error calculating ROI: {str(e)}"
+
 
 if __name__ == "__main__":
     mcp.run()

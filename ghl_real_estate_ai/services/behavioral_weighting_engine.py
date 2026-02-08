@@ -20,11 +20,11 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
+    DEFAULT_SEGMENT_WEIGHTS,
+    FACTOR_WEIGHTS_BASE,
     AdaptiveWeights,
     BehavioralProfile,
     LeadSegment,
-    DEFAULT_SEGMENT_WEIGHTS,
-    FACTOR_WEIGHTS_BASE
 )
 
 logger = get_logger(__name__)
@@ -49,18 +49,13 @@ class BehavioralWeightingEngine:
         Args:
             interaction_data_path: Path to lead interaction history data
         """
-        self.interaction_data_path = (
-            interaction_data_path or
-            str(Path(__file__).parent.parent / "data" / "portal_interactions" / "lead_interactions.json")
+        self.interaction_data_path = interaction_data_path or str(
+            Path(__file__).parent.parent / "data" / "portal_interactions" / "lead_interactions.json"
         )
         self._load_interaction_data()
         self._load_property_listings()
 
-    def analyze_behavioral_profile(
-        self,
-        lead_id: str,
-        stated_preferences: Dict[str, Any]
-    ) -> BehavioralProfile:
+    def analyze_behavioral_profile(self, lead_id: str, stated_preferences: Dict[str, Any]) -> BehavioralProfile:
         """
         Analyze lead's behavioral patterns to create comprehensive profile.
 
@@ -92,17 +87,13 @@ class BehavioralWeightingEngine:
         )
 
         # Detect lead segment
-        segment = self._detect_lead_segment(
-            stated_preferences, liked_properties, passed_properties
-        )
+        segment = self._detect_lead_segment(stated_preferences, liked_properties, passed_properties)
 
         # Calculate response metrics
         response_rate, avg_time_on_card = self._calculate_response_metrics(lead_interactions)
 
         # Assess search consistency
-        search_consistency = self._assess_search_consistency(
-            liked_properties, passed_properties
-        )
+        search_consistency = self._assess_search_consistency(liked_properties, passed_properties)
 
         return BehavioralProfile(
             segment=segment,
@@ -112,14 +103,14 @@ class BehavioralWeightingEngine:
             preference_deviations=preference_deviations,
             response_rate=response_rate,
             avg_time_on_card=avg_time_on_card,
-            search_consistency=search_consistency
+            search_consistency=search_consistency,
         )
 
     def calculate_adaptive_weights(
         self,
         behavioral_profile: BehavioralProfile,
         stated_preferences: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> AdaptiveWeights:
         """
         Calculate dynamically adjusted matching weights.
@@ -136,31 +127,24 @@ class BehavioralWeightingEngine:
 
         # Start with segment-specific base weights
         segment_weights = DEFAULT_SEGMENT_WEIGHTS.get(
-            behavioral_profile.segment,
-            DEFAULT_SEGMENT_WEIGHTS[LeadSegment.FIRST_TIME_BUYER]
+            behavioral_profile.segment, DEFAULT_SEGMENT_WEIGHTS[LeadSegment.FIRST_TIME_BUYER]
         ).copy()
 
         # Apply behavioral deviations
-        adjusted_weights = self._apply_behavioral_deviations(
-            segment_weights, behavioral_profile.preference_deviations
-        )
+        adjusted_weights = self._apply_behavioral_deviations(segment_weights, behavioral_profile.preference_deviations)
 
         # Apply engagement-based adjustments
-        engagement_adjustments = self._calculate_engagement_adjustments(
-            behavioral_profile.engagement_patterns
-        )
+        engagement_adjustments = self._calculate_engagement_adjustments(behavioral_profile.engagement_patterns)
 
         # Combine adjustments
-        final_weights = self._combine_weight_adjustments(
-            adjusted_weights, engagement_adjustments
-        )
+        final_weights = self._combine_weight_adjustments(adjusted_weights, engagement_adjustments)
 
         # Normalize weights to ensure they sum appropriately
         normalized_weights = self._normalize_weights(final_weights)
 
         # Split into categories
-        traditional_weights, lifestyle_weights, contextual_weights, market_timing_weight = (
-            self._categorize_weights(normalized_weights)
+        traditional_weights, lifestyle_weights, contextual_weights, market_timing_weight = self._categorize_weights(
+            normalized_weights
         )
 
         # Calculate confidence level based on data quality
@@ -173,15 +157,11 @@ class BehavioralWeightingEngine:
             market_timing_weight=market_timing_weight,
             confidence_level=confidence_level,
             learning_iterations=len(behavioral_profile.past_likes) + len(behavioral_profile.past_passes),
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
 
     def apply_negative_feedback(
-        self,
-        property_id: str,
-        feedback_category: str,
-        feedback_text: str,
-        current_weights: AdaptiveWeights
+        self, property_id: str, feedback_category: str, feedback_text: str, current_weights: AdaptiveWeights
     ) -> AdaptiveWeights:
         """
         Apply negative feedback loop to adjust weights.
@@ -221,13 +201,13 @@ class BehavioralWeightingEngine:
     def _get_lead_interactions(self, lead_id: str) -> List[Dict[str, Any]]:
         """Get all interactions for a specific lead."""
         return [
-            interaction for interaction in self.interaction_data.get("interactions", [])
+            interaction
+            for interaction in self.interaction_data.get("interactions", [])
             if interaction.get("lead_id") == lead_id
         ]
 
     def _categorize_interactions(
-        self,
-        interactions: List[Dict[str, Any]]
+        self, interactions: List[Dict[str, Any]]
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """Categorize interactions into likes and passes with property details."""
         liked_properties = []
@@ -242,12 +222,14 @@ class BehavioralWeightingEngine:
 
             # Add interaction metadata to property data
             enriched_property = property_data.copy()
-            enriched_property.update({
-                "interaction_timestamp": interaction.get("timestamp"),
-                "time_on_card": interaction.get("meta_data", {}).get("time_on_card"),
-                "feedback_category": interaction.get("meta_data", {}).get("feedback_category"),
-                "feedback_text": interaction.get("meta_data", {}).get("feedback_text")
-            })
+            enriched_property.update(
+                {
+                    "interaction_timestamp": interaction.get("timestamp"),
+                    "time_on_card": interaction.get("meta_data", {}).get("time_on_card"),
+                    "feedback_category": interaction.get("meta_data", {}).get("feedback_category"),
+                    "feedback_text": interaction.get("meta_data", {}).get("feedback_text"),
+                }
+            )
 
             if interaction.get("action") == "like":
                 liked_properties.append(enriched_property)
@@ -256,10 +238,7 @@ class BehavioralWeightingEngine:
 
         return liked_properties, passed_properties
 
-    def _analyze_engagement_patterns(
-        self,
-        interactions: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _analyze_engagement_patterns(self, interactions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze engagement patterns from interactions."""
         if not interactions:
             return {"total_interactions": 0, "like_ratio": 0.5, "avg_time_on_card": 0}
@@ -295,14 +274,14 @@ class BehavioralWeightingEngine:
             "avg_time_on_card": avg_time_on_card,
             "total_sessions": len(sessions),
             "avg_session_length": statistics.mean([len(s) for s in sessions]) if sessions else 0,
-            "most_active_hour": self._find_most_active_hour(interaction_times)
+            "most_active_hour": self._find_most_active_hour(interaction_times),
         }
 
     def _calculate_preference_deviations(
         self,
         liked_properties: List[Dict[str, Any]],
         passed_properties: List[Dict[str, Any]],
-        stated_preferences: Dict[str, Any]
+        stated_preferences: Dict[str, Any],
     ) -> Dict[str, float]:
         """
         Calculate deviations between stated preferences and actual behavior.
@@ -330,10 +309,7 @@ class BehavioralWeightingEngine:
         # Analyze location deviations
         stated_location = stated_preferences.get("location", "").lower()
         if stated_location:
-            liked_locations = [
-                prop.get("address", {}).get("neighborhood", "").lower()
-                for prop in liked_properties
-            ]
+            liked_locations = [prop.get("address", {}).get("neighborhood", "").lower() for prop in liked_properties]
             # If they consistently like different locations than stated
             location_matches = sum(1 for loc in liked_locations if stated_location in loc)
             location_deviation = (location_matches / len(liked_locations)) if liked_locations else 0.5
@@ -368,7 +344,7 @@ class BehavioralWeightingEngine:
         self,
         liked_properties: List[Dict[str, Any]],
         passed_properties: List[Dict[str, Any]],
-        deviations: Dict[str, float]
+        deviations: Dict[str, float],
     ):
         """Analyze implicit feature preferences from behavioral data."""
 
@@ -415,7 +391,7 @@ class BehavioralWeightingEngine:
             "walkable": "walkability",
             "schools": "schools",
             "safe": "safety",
-            "quiet": "safety"
+            "quiet": "safety",
         }
 
         # Apply feature preferences to deviations
@@ -432,7 +408,7 @@ class BehavioralWeightingEngine:
         self,
         stated_preferences: Dict[str, Any],
         liked_properties: List[Dict[str, Any]],
-        passed_properties: List[Dict[str, Any]]
+        passed_properties: List[Dict[str, Any]],
     ) -> LeadSegment:
         """Detect lead segment from preferences and behavior."""
 
@@ -447,7 +423,8 @@ class BehavioralWeightingEngine:
         # Check liked properties for family indicators
         family_features = ["school", "safe", "family", "playground", "park", "quiet"]
         liked_family_features = sum(
-            1 for prop in liked_properties
+            1
+            for prop in liked_properties
             for feature in prop.get("features", [])
             for family_feat in family_features
             if family_feat in feature.lower()
@@ -457,7 +434,8 @@ class BehavioralWeightingEngine:
         # Young professional indicators
         urban_features = ["walkable", "downtown", "restaurant", "nightlife", "transit"]
         urban_count = sum(
-            1 for prop in liked_properties
+            1
+            for prop in liked_properties
             for feature in prop.get("features", [])
             for urban_feat in urban_features
             if urban_feat in feature.lower()
@@ -472,7 +450,8 @@ class BehavioralWeightingEngine:
         # Look for investor-focused behavior
         investor_features = ["rental", "investment", "cash flow", "appreciation"]
         investor_count = sum(
-            1 for prop in liked_properties
+            1
+            for prop in liked_properties
             for feature in prop.get("features", [])
             for inv_feat in investor_features
             if inv_feat in feature.lower()
@@ -486,7 +465,8 @@ class BehavioralWeightingEngine:
 
         luxury_features = ["luxury", "premium", "high-end", "custom", "gourmet", "spa"]
         luxury_count = sum(
-            1 for prop in liked_properties
+            1
+            for prop in liked_properties
             for feature in prop.get("features", [])
             for lux_feat in luxury_features
             if lux_feat in feature.lower()
@@ -496,7 +476,8 @@ class BehavioralWeightingEngine:
         # Retiree indicators
         retiree_features = ["single-story", "low maintenance", "golf", "55+", "senior"]
         retiree_count = sum(
-            1 for prop in liked_properties
+            1
+            for prop in liked_properties
             for feature in prop.get("features", [])
             for retiree_feat in retiree_features
             if retiree_feat in feature.lower()
@@ -513,10 +494,7 @@ class BehavioralWeightingEngine:
         else:
             return LeadSegment.FIRST_TIME_BUYER
 
-    def _calculate_response_metrics(
-        self,
-        interactions: List[Dict[str, Any]]
-    ) -> Tuple[float, float]:
+    def _calculate_response_metrics(self, interactions: List[Dict[str, Any]]) -> Tuple[float, float]:
         """Calculate response rate and average time on card."""
         if not interactions:
             return 0.0, 0.0
@@ -525,7 +503,8 @@ class BehavioralWeightingEngine:
         # In real implementation, this would include email opens, call responses, etc.
         total_interactions = len(interactions)
         engaged_interactions = sum(
-            1 for i in interactions
+            1
+            for i in interactions
             if i.get("meta_data", {}).get("time_on_card", 0) > 10  # > 10 seconds = engaged
         )
 
@@ -542,9 +521,7 @@ class BehavioralWeightingEngine:
         return response_rate, avg_time
 
     def _assess_search_consistency(
-        self,
-        liked_properties: List[Dict[str, Any]],
-        passed_properties: List[Dict[str, Any]]
+        self, liked_properties: List[Dict[str, Any]], passed_properties: List[Dict[str, Any]]
     ) -> str:
         """Assess how consistent the lead's search patterns are."""
         all_properties = liked_properties + passed_properties
@@ -572,9 +549,7 @@ class BehavioralWeightingEngine:
     # Weight adjustment helper methods
 
     def _apply_behavioral_deviations(
-        self,
-        base_weights: Dict[str, float],
-        deviations: Dict[str, float]
+        self, base_weights: Dict[str, float], deviations: Dict[str, float]
     ) -> Dict[str, float]:
         """Apply behavioral deviations to base weights."""
         adjusted_weights = base_weights.copy()
@@ -588,10 +563,7 @@ class BehavioralWeightingEngine:
 
         return adjusted_weights
 
-    def _calculate_engagement_adjustments(
-        self,
-        engagement_patterns: Dict[str, Any]
-    ) -> Dict[str, float]:
+    def _calculate_engagement_adjustments(self, engagement_patterns: Dict[str, Any]) -> Dict[str, float]:
         """Calculate weight adjustments based on engagement patterns."""
         adjustments = {}
 
@@ -611,9 +583,7 @@ class BehavioralWeightingEngine:
         return adjustments
 
     def _combine_weight_adjustments(
-        self,
-        base_weights: Dict[str, float],
-        adjustments: Dict[str, float]
+        self, base_weights: Dict[str, float], adjustments: Dict[str, float]
     ) -> Dict[str, float]:
         """Combine base weights with adjustment multipliers."""
         combined = base_weights.copy()
@@ -633,8 +603,7 @@ class BehavioralWeightingEngine:
         return {factor: weight / total_weight for factor, weight in weights.items()}
 
     def _categorize_weights(
-        self,
-        all_weights: Dict[str, float]
+        self, all_weights: Dict[str, float]
     ) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], float]:
         """Split weights into traditional, lifestyle, contextual, and market timing."""
 
@@ -681,9 +650,7 @@ class BehavioralWeightingEngine:
             with open(listings_path, "r") as f:
                 listings_data = json.load(f)
                 # Create lookup dict for faster access
-                self.property_lookup = {
-                    prop["id"]: prop for prop in listings_data.get("listings", [])
-                }
+                self.property_lookup = {prop["id"]: prop for prop in listings_data.get("listings", [])}
         except Exception as e:
             logger.error(f"Failed to load property listings: {e}")
             self.property_lookup = {}
@@ -692,11 +659,7 @@ class BehavioralWeightingEngine:
         """Get property details by ID."""
         return self.property_lookup.get(property_id)
 
-    def _create_default_profile(
-        self,
-        lead_id: str,
-        stated_preferences: Dict[str, Any]
-    ) -> BehavioralProfile:
+    def _create_default_profile(self, lead_id: str, stated_preferences: Dict[str, Any]) -> BehavioralProfile:
         """Create default behavioral profile for leads with no history."""
         # Detect segment from preferences only
         segment = LeadSegment.FIRST_TIME_BUYER
@@ -718,16 +681,13 @@ class BehavioralWeightingEngine:
             preference_deviations={},
             response_rate=0.5,
             avg_time_on_card=0.0,
-            search_consistency="unknown"
+            search_consistency="unknown",
         )
 
     # Negative feedback methods
 
     def _calculate_negative_feedback_adjustments(
-        self,
-        rejected_property: Dict[str, Any],
-        feedback_category: str,
-        feedback_text: str
+        self, rejected_property: Dict[str, Any], feedback_category: str, feedback_text: str
     ) -> Dict[str, float]:
         """Calculate weight adjustments based on negative feedback."""
         adjustments = {}
@@ -741,7 +701,7 @@ class BehavioralWeightingEngine:
             "bad_schools": {"schools": 1.4},
             "not_walkable": {"walkability": 1.3},
             "unsafe_area": {"safety": 1.4},
-            "too_old": {"home_age": 1.2, "property_condition": 1.2}
+            "too_old": {"home_age": 1.2, "property_condition": 1.2},
         }
 
         if feedback_category in feedback_mappings:
@@ -757,9 +717,7 @@ class BehavioralWeightingEngine:
         return adjustments
 
     def _apply_weight_adjustments(
-        self,
-        current_weights: AdaptiveWeights,
-        adjustments: Dict[str, float]
+        self, current_weights: AdaptiveWeights, adjustments: Dict[str, float]
     ) -> AdaptiveWeights:
         """Apply negative feedback adjustments to current weights."""
         # Create new weights with adjustments applied
@@ -789,7 +747,7 @@ class BehavioralWeightingEngine:
             market_timing_weight=current_weights.market_timing_weight,
             confidence_level=current_weights.confidence_level * 1.05,  # Slightly increase confidence
             learning_iterations=current_weights.learning_iterations + 1,
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
 
     # Helper methods for consistency analysis
@@ -809,10 +767,7 @@ class BehavioralWeightingEngine:
 
     def _calculate_location_consistency(self, properties: List[Dict[str, Any]]) -> float:
         """Calculate location consistency."""
-        neighborhoods = [
-            prop.get("address", {}).get("neighborhood", "").lower()
-            for prop in properties
-        ]
+        neighborhoods = [prop.get("address", {}).get("neighborhood", "").lower() for prop in properties]
         unique_neighborhoods = set(neighborhoods)
 
         if len(unique_neighborhoods) <= 1:
@@ -834,10 +789,7 @@ class BehavioralWeightingEngine:
 
         return max(0, 1.0 - cv)
 
-    def _identify_browsing_sessions(
-        self,
-        interaction_times: List[datetime]
-    ) -> List[List[datetime]]:
+    def _identify_browsing_sessions(self, interaction_times: List[datetime]) -> List[List[datetime]]:
         """Identify browsing sessions from interaction timestamps."""
         if not interaction_times:
             return []
@@ -846,7 +798,7 @@ class BehavioralWeightingEngine:
         current_session = [interaction_times[0]]
 
         for i in range(1, len(interaction_times)):
-            time_gap = interaction_times[i] - interaction_times[i-1]
+            time_gap = interaction_times[i] - interaction_times[i - 1]
             if time_gap.total_seconds() <= 1800:  # 30 minutes = same session
                 current_session.append(interaction_times[i])
             else:
@@ -879,35 +831,22 @@ def demo_behavioral_weighting():
     test_scenarios = [
         {
             "lead_id": "test_contact_api",
-            "preferences": {
-                "budget": 600000,
-                "location": "Austin",
-                "bedrooms": 3,
-                "property_type": "Single Family"
-            }
+            "preferences": {"budget": 600000, "location": "Austin", "bedrooms": 3, "property_type": "Single Family"},
         },
         {
             "lead_id": "test_interactions_api",
-            "preferences": {
-                "budget": 450000,
-                "location": "East Austin",
-                "bedrooms": 2,
-                "property_type": "Condo"
-            }
-        }
+            "preferences": {"budget": 450000, "location": "East Austin", "bedrooms": 2, "property_type": "Condo"},
+        },
     ]
 
     for scenario in test_scenarios:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Lead: {scenario['lead_id']}")
         print(f"Preferences: {scenario['preferences']}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Analyze behavioral profile
-        profile = engine.analyze_behavioral_profile(
-            scenario["lead_id"],
-            scenario["preferences"]
-        )
+        profile = engine.analyze_behavioral_profile(scenario["lead_id"], scenario["preferences"])
 
         print(f"\n🎯 Detected Segment: {profile.segment.value}")
         print(f"📊 Past Interactions: {len(profile.past_likes)} likes, {len(profile.past_passes)} passes")

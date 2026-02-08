@@ -14,36 +14,36 @@ Integration Points:
 - Client Preference Learning Engine (Phase 2.4)
 """
 
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
-from uuid import UUID, uuid4
 import asyncio
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, BackgroundTasks
-from pydantic import BaseModel, Field
 import structlog
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.deps import get_current_user, get_location_access
-from ghl_real_estate_ai.services.advanced_property_matching_engine import get_advanced_property_matching_engine
-from ghl_real_estate_ai.services.conversation_intelligence_service import get_conversation_intelligence_service
-from ghl_real_estate_ai.services.client_preference_learning_engine import get_client_preference_learning_engine
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.jorge_config import get_jorge_config
+from ghl_real_estate_ai.services.advanced_property_matching_engine import get_advanced_property_matching_engine
+from ghl_real_estate_ai.services.client_preference_learning_engine import get_client_preference_learning_engine
+from ghl_real_estate_ai.services.conversation_intelligence_service import get_conversation_intelligence_service
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(
-    prefix="/api/v1/phase2-intelligence",
-    tags=["phase2-intelligence"],
-    responses={404: {"description": "Not found"}}
+    prefix="/api/v1/phase2-intelligence", tags=["phase2-intelligence"], responses={404: {"description": "Not found"}}
 )
 
 # =====================================================================================
 # Request/Response Models for Phase 2 Intelligence APIs
 # =====================================================================================
 
+
 class PropertyMatchRequest(BaseModel):
     """Request model for property matching analysis."""
+
     lead_id: str = Field(..., description="Lead ID for matching")
     preferences: Dict[str, Any] = Field(..., description="Lead preferences")
     conversation_history: Optional[List[Dict[str, Any]]] = Field(None, description="Recent conversations")
@@ -53,6 +53,7 @@ class PropertyMatchRequest(BaseModel):
 
 class ConversationAnalysisRequest(BaseModel):
     """Request model for conversation intelligence analysis."""
+
     conversation_id: str = Field(..., description="Conversation ID")
     lead_id: str = Field(..., description="Lead ID")
     conversation_history: List[Dict[str, Any]] = Field(..., description="Conversation messages")
@@ -61,6 +62,7 @@ class ConversationAnalysisRequest(BaseModel):
 
 class PreferenceLearningRequest(BaseModel):
     """Request model for preference learning analysis."""
+
     client_id: str = Field(..., description="Client ID")
     source_type: str = Field(..., description="Learning source: conversation, property_interaction")
     conversation_data: Optional[List[Dict[str, Any]]] = Field(None, description="Conversation data")
@@ -71,6 +73,7 @@ class PreferenceLearningRequest(BaseModel):
 
 class CrossTrackHandoffRequest(BaseModel):
     """Request model for cross-track handoff coordination."""
+
     lead_id: str = Field(..., description="Lead ID transitioning")
     client_id: str = Field(..., description="Client ID after transition")
     qualification_score: float = Field(..., ge=0.0, le=1.0, description="Lead qualification score")
@@ -82,13 +85,14 @@ class CrossTrackHandoffRequest(BaseModel):
 # Phase 2.2: Advanced Property Matching Endpoints
 # =====================================================================================
 
+
 @router.post("/{location_id}/property-matching/analyze")
 async def analyze_property_matches(
     location_id: str = Path(..., description="GHL Location ID"),
     request: PropertyMatchRequest = ...,
     current_user: Dict[str, Any] = Depends(get_current_user),
     location_access: bool = Depends(get_location_access),
-    force_refresh: bool = Query(False, description="Force cache refresh for analysis")
+    force_refresh: bool = Query(False, description="Force cache refresh for analysis"),
 ) -> Dict[str, Any]:
     """
     Advanced behavioral property matching with ML-enhanced scoring.
@@ -117,14 +121,12 @@ async def analyze_property_matches(
             conversation_history=request.conversation_history,
             max_results=request.max_results,
             min_score=request.min_score,
-            force_refresh=force_refresh
+            force_refresh=force_refresh,
         )
 
         # Get behavioral insights for transparency
         behavioral_weights = await matching_engine.get_behavioral_weights(
-            lead_id=request.lead_id,
-            location_id=location_id,
-            conversation_history=request.conversation_history
+            lead_id=request.lead_id, location_id=location_id, conversation_history=request.conversation_history
         )
 
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
@@ -141,7 +143,7 @@ async def analyze_property_matches(
             rank=1,
             presentation_strategy=matches[0].presentation_strategy if matches else "standard",
             reasoning=matches[0].match_reasoning if matches else "no_matches_found",
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         logger.info(
@@ -150,7 +152,7 @@ async def analyze_property_matches(
             lead_id=request.lead_id,
             matches_found=len(matches),
             processing_time_ms=processing_time_ms,
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         return {
@@ -159,7 +161,7 @@ async def analyze_property_matches(
             "behavioral_weights": behavioral_weights,
             "processing_time_ms": processing_time_ms,
             "cache_used": not force_refresh and processing_time_ms < 50,
-            "analysis_timestamp": datetime.now()
+            "analysis_timestamp": datetime.now(),
         }
 
     except Exception as e:
@@ -168,12 +170,9 @@ async def analyze_property_matches(
             location_id=location_id,
             lead_id=request.lead_id,
             error=str(e),
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Property matching analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Property matching analysis failed: {str(e)}")
 
 
 @router.get("/{location_id}/property-matching/{lead_id}/behavioral-weights")
@@ -182,7 +181,7 @@ async def get_behavioral_matching_weights(
     lead_id: str = Path(..., description="Lead ID"),
     current_user: Dict[str, Any] = Depends(get_current_user),
     location_access: bool = Depends(get_location_access),
-    include_conversation_history: bool = Query(True, description="Include conversation analysis")
+    include_conversation_history: bool = Query(True, description="Include conversation analysis"),
 ) -> Dict[str, Any]:
     """
     Get current behavioral matching weights for lead.
@@ -201,31 +200,21 @@ async def get_behavioral_matching_weights(
             # Get recent conversation data for context
             conversation_service = get_conversation_intelligence_service()
             recent_insights = await conversation_service.get_conversation_insights(
-                lead_id=lead_id,
-                location_id=location_id,
-                limit=5
+                lead_id=lead_id, location_id=location_id, limit=5
             )
-            conversation_history = [insight.conversation_data for insight in recent_insights if hasattr(insight, 'conversation_data')]
+            conversation_history = [
+                insight.conversation_data for insight in recent_insights if hasattr(insight, "conversation_data")
+            ]
 
         weights = await matching_engine.get_behavioral_weights(
-            lead_id=lead_id,
-            location_id=location_id,
-            conversation_history=conversation_history
+            lead_id=lead_id, location_id=location_id, conversation_history=conversation_history
         )
 
         return {"behavioral_weights": weights, "lead_id": lead_id, "location_id": location_id}
 
     except Exception as e:
-        logger.error(
-            "behavioral_weights_retrieval_failed",
-            location_id=location_id,
-            lead_id=lead_id,
-            error=str(e)
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve behavioral weights: {str(e)}"
-        )
+        logger.error("behavioral_weights_retrieval_failed", location_id=location_id, lead_id=lead_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve behavioral weights: {str(e)}")
 
 
 @router.put("/{location_id}/property-matching/{lead_id}/feedback")
@@ -236,7 +225,7 @@ async def record_matching_feedback(
     feedback_type: str = Query(..., description="Feedback type: viewed, liked, disliked, inquired"),
     engagement_score: Optional[float] = Query(None, description="Engagement score 0.0-1.0"),
     current_user: Dict[str, Any] = Depends(get_current_user),
-    location_access: bool = Depends(get_location_access)
+    location_access: bool = Depends(get_location_access),
 ) -> Dict[str, Any]:
     """
     Record lead feedback on property matches for algorithm learning.
@@ -256,7 +245,7 @@ async def record_matching_feedback(
             location_id=location_id,
             property_id=property_id,
             feedback_type=feedback_type,
-            engagement_score=engagement_score
+            engagement_score=engagement_score,
         )
 
         # Publish feedback event for learning
@@ -269,7 +258,7 @@ async def record_matching_feedback(
             previous_score=improvement_data.get("previous_score", 0.0),
             new_score=improvement_data.get("new_score", 0.0),
             learning_impact=improvement_data.get("learning_impact", 0.0),
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         return {
@@ -277,26 +266,20 @@ async def record_matching_feedback(
             "lead_id": lead_id,
             "property_id": property_id,
             "improvement_impact": improvement_data.get("learning_impact", 0.0),
-            "next_matches_updated": improvement_data.get("cache_updated", False)
+            "next_matches_updated": improvement_data.get("cache_updated", False),
         }
 
     except Exception as e:
         logger.error(
-            "matching_feedback_failed",
-            location_id=location_id,
-            lead_id=lead_id,
-            property_id=property_id,
-            error=str(e)
+            "matching_feedback_failed", location_id=location_id, lead_id=lead_id, property_id=property_id, error=str(e)
         )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to record matching feedback: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to record matching feedback: {str(e)}")
 
 
 # =====================================================================================
 # Phase 2.3: Conversation Intelligence Endpoints
 # =====================================================================================
+
 
 @router.post("/{location_id}/conversation-intelligence/analyze")
 async def analyze_conversation(
@@ -305,7 +288,7 @@ async def analyze_conversation(
     background_tasks: BackgroundTasks = BackgroundTasks(),
     current_user: Dict[str, Any] = Depends(get_current_user),
     location_access: bool = Depends(get_location_access),
-    force_refresh: bool = Query(False, description="Force re-analysis")
+    force_refresh: bool = Query(False, description="Force re-analysis"),
 ) -> Dict[str, Any]:
     """
     Real-time conversation intelligence with objection detection and coaching opportunities.
@@ -332,14 +315,14 @@ async def analyze_conversation(
             lead_id=request.lead_id,
             location_id=location_id,
             conversation_history=request.conversation_history,
-            force_refresh=force_refresh
+            force_refresh=force_refresh,
         )
 
         # Detect objections and generate responses
         objections = await conversation_service.detect_objections_and_recommend_responses(
             conversation_id=request.conversation_id,
             location_id=location_id,
-            conversation_history=request.conversation_history
+            conversation_history=request.conversation_history,
         )
 
         # Identify coaching opportunities
@@ -348,14 +331,14 @@ async def analyze_conversation(
             lead_id=request.lead_id,
             location_id=location_id,
             conversation_history=request.conversation_history,
-            agent_user_id=current_user.get("user_id")
+            agent_user_id=current_user.get("user_id"),
         )
 
         # Get sentiment timeline for detailed analysis
         sentiment_timeline = await conversation_service.track_sentiment_timeline(
             conversation_id=request.conversation_id,
             location_id=location_id,
-            conversation_history=request.conversation_history
+            conversation_history=request.conversation_history,
         )
 
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
@@ -371,7 +354,7 @@ async def analyze_conversation(
             coaching_opportunities_count=len(coaching_opportunities),
             analysis_type="real_time",
             processing_duration_ms=processing_time_ms,
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         # Schedule background preference learning if enabled
@@ -381,7 +364,7 @@ async def analyze_conversation(
                 request.lead_id,
                 location_id,
                 request.conversation_history,
-                insights
+                insights,
             )
 
         logger.info(
@@ -392,7 +375,7 @@ async def analyze_conversation(
             processing_time_ms=processing_time_ms,
             objections_found=len(objections),
             coaching_opportunities=len(coaching_opportunities),
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         return {
@@ -402,7 +385,7 @@ async def analyze_conversation(
             "sentiment_timeline": sentiment_timeline,
             "processing_time_ms": processing_time_ms,
             "analysis_timestamp": datetime.now(),
-            "recommendations": _generate_next_step_recommendations(insights, objections)
+            "recommendations": _generate_next_step_recommendations(insights, objections),
         }
 
     except Exception as e:
@@ -411,12 +394,9 @@ async def analyze_conversation(
             conversation_id=request.conversation_id,
             lead_id=request.lead_id,
             location_id=location_id,
-            error=str(e)
+            error=str(e),
         )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Conversation analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Conversation analysis failed: {str(e)}")
 
 
 @router.get("/{location_id}/conversation-intelligence/{conversation_id}/insights")
@@ -426,7 +406,7 @@ async def get_conversation_insights(
     current_user: Dict[str, Any] = Depends(get_current_user),
     location_access: bool = Depends(get_location_access),
     include_timeline: bool = Query(True, description="Include sentiment timeline"),
-    include_objections: bool = Query(True, description="Include objection analysis")
+    include_objections: bool = Query(True, description="Include objection analysis"),
 ) -> Dict[str, Any]:
     """
     Retrieve cached conversation insights with optional detailed analysis.
@@ -442,28 +422,25 @@ async def get_conversation_insights(
 
         # Get core insights
         insights = await conversation_service.get_conversation_insights(
-            conversation_id=conversation_id,
-            location_id=location_id
+            conversation_id=conversation_id, location_id=location_id
         )
 
         response_data = {
             "insights": insights[0] if insights else None,
             "conversation_id": conversation_id,
-            "location_id": location_id
+            "location_id": location_id,
         }
 
         # Add optional detailed data
         if include_timeline and insights:
             timeline = await conversation_service.get_sentiment_timeline(
-                conversation_id=conversation_id,
-                location_id=location_id
+                conversation_id=conversation_id, location_id=location_id
             )
             response_data["sentiment_timeline"] = timeline
 
         if include_objections and insights:
             objections = await conversation_service.get_objection_detections(
-                conversation_id=conversation_id,
-                location_id=location_id
+                conversation_id=conversation_id, location_id=location_id
             )
             response_data["objections"] = objections
 
@@ -474,12 +451,9 @@ async def get_conversation_insights(
             "conversation_insights_retrieval_failed",
             conversation_id=conversation_id,
             location_id=location_id,
-            error=str(e)
+            error=str(e),
         )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve conversation insights: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve conversation insights: {str(e)}")
 
 
 @router.get("/{location_id}/conversation-intelligence/coaching-opportunities")
@@ -490,7 +464,7 @@ async def get_coaching_opportunities(
     agent_user_id: Optional[str] = Query(None, description="Filter by agent ID"),
     priority_level: Optional[int] = Query(None, ge=1, le=5, description="Filter by priority level"),
     status: Optional[str] = Query("identified", description="Coaching opportunity status"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum results")
+    limit: int = Query(50, ge=1, le=100, description="Maximum results"),
 ) -> Dict[str, Any]:
     """
     Get coaching opportunities for agents with filtering.
@@ -509,33 +483,27 @@ async def get_coaching_opportunities(
             agent_user_id=agent_user_id,
             priority_level=priority_level,
             status=status,
-            limit=limit
+            limit=limit,
         )
 
         return {"coaching_opportunities": opportunities, "total_found": len(opportunities)}
 
     except Exception as e:
-        logger.error(
-            "coaching_opportunities_retrieval_failed",
-            location_id=location_id,
-            error=str(e)
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve coaching opportunities: {str(e)}"
-        )
+        logger.error("coaching_opportunities_retrieval_failed", location_id=location_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve coaching opportunities: {str(e)}")
 
 
 # =====================================================================================
 # Phase 2.4: Client Preference Learning Endpoints
 # =====================================================================================
 
+
 @router.post("/{location_id}/preference-learning/analyze")
 async def analyze_preferences_from_conversation(
     location_id: str = Path(..., description="GHL Location ID"),
     request: PreferenceLearningRequest = ...,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    location_access: bool = Depends(get_location_access)
+    location_access: bool = Depends(get_location_access),
 ) -> Dict[str, Any]:
     """
     Learn and update client preferences from conversation or interaction data.
@@ -562,20 +530,17 @@ async def analyze_preferences_from_conversation(
                 client_id=request.client_id,
                 location_id=location_id,
                 conversation_data=request.conversation_data,
-                conversation_analysis=request.conversation_analysis
+                conversation_analysis=request.conversation_analysis,
             )
         elif request.source_type == "property_interaction":
             profile = await learning_engine.learn_from_property_interaction(
                 client_id=request.client_id,
                 location_id=location_id,
                 property_id=request.property_id,
-                interaction_data=request.interaction_data
+                interaction_data=request.interaction_data,
             )
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported source type: {request.source_type}"
-            )
+            raise HTTPException(status_code=400, detail=f"Unsupported source type: {request.source_type}")
 
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
@@ -588,7 +553,7 @@ async def analyze_preferences_from_conversation(
             preferences_learned=len(request.conversation_data) if request.conversation_data else 1,
             confidence_improvement=profile.overall_confidence_score,
             profile_completeness=profile.profile_completeness_percentage,
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         logger.info(
@@ -598,22 +563,14 @@ async def analyze_preferences_from_conversation(
             source_type=request.source_type,
             processing_time_ms=processing_time_ms,
             new_confidence=profile.overall_confidence_score,
-            completeness=profile.profile_completeness_percentage
+            completeness=profile.profile_completeness_percentage,
         )
 
         return {"profile": profile, "processing_time_ms": processing_time_ms}
 
     except Exception as e:
-        logger.error(
-            "preference_learning_failed",
-            client_id=request.client_id,
-            location_id=location_id,
-            error=str(e)
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Preference learning failed: {str(e)}"
-        )
+        logger.error("preference_learning_failed", client_id=request.client_id, location_id=location_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Preference learning failed: {str(e)}")
 
 
 @router.get("/{location_id}/preference-learning/{client_id}/profile")
@@ -623,7 +580,7 @@ async def get_client_preference_profile(
     current_user: Dict[str, Any] = Depends(get_current_user),
     location_access: bool = Depends(get_location_access),
     include_confidence_history: bool = Query(False, description="Include confidence evolution"),
-    include_learning_events: bool = Query(False, description="Include recent learning events")
+    include_learning_events: bool = Query(False, description="Include recent learning events"),
 ) -> Dict[str, Any]:
     """
     Get comprehensive client preference profile with optional history.
@@ -638,37 +595,23 @@ async def get_client_preference_profile(
         learning_engine = get_client_preference_learning_engine()
 
         # Get core preference profile
-        profile = await learning_engine.get_preference_profile(
-            client_id=client_id,
-            location_id=location_id
-        )
+        profile = await learning_engine.get_preference_profile(client_id=client_id, location_id=location_id)
 
         if not profile:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Preference profile not found for client {client_id}"
-            )
+            raise HTTPException(status_code=404, detail=f"Preference profile not found for client {client_id}")
 
-        response_data = {
-            "profile": profile,
-            "client_id": client_id,
-            "location_id": location_id
-        }
+        response_data = {"profile": profile, "client_id": client_id, "location_id": location_id}
 
         # Add optional historical data
         if include_confidence_history:
             history = await learning_engine.get_confidence_history(
-                client_id=client_id,
-                location_id=location_id,
-                limit=20
+                client_id=client_id, location_id=location_id, limit=20
             )
             response_data["confidence_history"] = history
 
         if include_learning_events:
             events = await learning_engine.get_recent_learning_events(
-                client_id=client_id,
-                location_id=location_id,
-                limit=10
+                client_id=client_id, location_id=location_id, limit=10
             )
             response_data["recent_learning_events"] = events
 
@@ -677,16 +620,8 @@ async def get_client_preference_profile(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            "preference_profile_retrieval_failed",
-            client_id=client_id,
-            location_id=location_id,
-            error=str(e)
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve preference profile: {str(e)}"
-        )
+        logger.error("preference_profile_retrieval_failed", client_id=client_id, location_id=location_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve preference profile: {str(e)}")
 
 
 @router.post("/{location_id}/preference-learning/{client_id}/predict-match")
@@ -695,7 +630,7 @@ async def predict_preference_match(
     client_id: str = Path(..., description="Client ID"),
     property_data: Dict[str, Any] = ...,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    location_access: bool = Depends(get_location_access)
+    location_access: bool = Depends(get_location_access),
 ) -> Dict[str, Any]:
     """
     Predict how well a property matches client preferences.
@@ -711,36 +646,27 @@ async def predict_preference_match(
 
         # Get prediction with confidence and reasoning
         match_prediction = await learning_engine.predict_preference_match(
-            client_id=client_id,
-            location_id=location_id,
-            property_data=property_data
+            client_id=client_id, location_id=location_id, property_data=property_data
         )
 
         return match_prediction
 
     except Exception as e:
-        logger.error(
-            "preference_match_prediction_failed",
-            client_id=client_id,
-            location_id=location_id,
-            error=str(e)
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Preference match prediction failed: {str(e)}"
-        )
+        logger.error("preference_match_prediction_failed", client_id=client_id, location_id=location_id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Preference match prediction failed: {str(e)}")
 
 
 # =====================================================================================
 # Cross-Track Coordination Endpoints
 # =====================================================================================
 
+
 @router.post("/{location_id}/coordination/lead-to-client-handoff")
 async def coordinate_lead_to_client_handoff(
     location_id: str = Path(..., description="GHL Location ID"),
     request: CrossTrackHandoffRequest = ...,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    location_access: bool = Depends(get_location_access)
+    location_access: bool = Depends(get_location_access),
 ) -> Dict[str, Any]:
     """
     Coordinate transition from lead intelligence to client experience tracking.
@@ -767,15 +693,12 @@ async def coordinate_lead_to_client_handoff(
 
         # Gather context from lead intelligence track
         conversation_insights = await conversation_service.get_conversation_insights(
-            lead_id=request.lead_id,
-            location_id=location_id,
-            limit=10
+            lead_id=request.lead_id, location_id=location_id, limit=10
         )
 
         # Get current preference profile
         preference_profile = await learning_engine.get_preference_profile(
-            client_id=request.client_id,
-            location_id=location_id
+            client_id=request.client_id, location_id=location_id
         )
 
         # Create transition context
@@ -787,7 +710,7 @@ async def coordinate_lead_to_client_handoff(
             "preference_snapshot": preference_profile,
             "handoff_timestamp": datetime.now(),
             "handoff_reason": request.handoff_reason,
-            "agent_notes": request.agent_notes
+            "agent_notes": request.agent_notes,
         }
 
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
@@ -800,7 +723,7 @@ async def coordinate_lead_to_client_handoff(
             from_track="lead_intelligence",
             to_track="client_experience",
             context_data=transition_context,
-            user_id=current_user.get("user_id")
+            user_id=current_user.get("user_id"),
         )
 
         logger.info(
@@ -809,7 +732,7 @@ async def coordinate_lead_to_client_handoff(
             client_id=request.client_id,
             location_id=location_id,
             processing_time_ms=processing_time_ms,
-            qualification_score=request.qualification_score
+            qualification_score=request.qualification_score,
         )
 
         return {
@@ -822,7 +745,7 @@ async def coordinate_lead_to_client_handoff(
             "preferences_migrated": preference_profile is not None,
             "conversation_insights_count": len(conversation_insights),
             "processing_time_ms": processing_time_ms,
-            "next_steps": _generate_client_experience_next_steps(transition_context)
+            "next_steps": _generate_client_experience_next_steps(transition_context),
         }
 
     except Exception as e:
@@ -831,23 +754,21 @@ async def coordinate_lead_to_client_handoff(
             lead_id=request.lead_id,
             client_id=request.client_id,
             location_id=location_id,
-            error=str(e)
+            error=str(e),
         )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Cross-track handoff failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Cross-track handoff failed: {str(e)}")
 
 
 # =====================================================================================
 # Health Check and Performance Monitoring
 # =====================================================================================
 
+
 @router.get("/{location_id}/health")
 async def get_phase2_intelligence_health(
     location_id: str = Path(..., description="GHL Location ID"),
     current_user: Dict[str, Any] = Depends(get_current_user),
-    location_access: bool = Depends(get_location_access)
+    location_access: bool = Depends(get_location_access),
 ) -> Dict[str, Any]:
     """
     Get health status and performance metrics for Phase 2 intelligence services.
@@ -879,10 +800,7 @@ async def get_phase2_intelligence_health(
         services_health["preference_learning"] = learning_health
 
         # Overall health assessment
-        all_healthy = all(
-            health.get("status") == "healthy"
-            for health in services_health.values()
-        )
+        all_healthy = all(health.get("status") == "healthy" for health in services_health.values())
 
         return {
             "overall_status": "healthy" if all_healthy else "degraded",
@@ -892,33 +810,22 @@ async def get_phase2_intelligence_health(
             "performance_targets": {
                 "property_matching_ms": 100,
                 "conversation_analysis_ms": 500,
-                "preference_learning_ms": 50
-            }
+                "preference_learning_ms": 50,
+            },
         }
 
     except Exception as e:
-        logger.error(
-            "health_check_failed",
-            location_id=location_id,
-            error=str(e)
-        )
-        return {
-            "overall_status": "error",
-            "location_id": location_id,
-            "error": str(e),
-            "timestamp": datetime.now()
-        }
+        logger.error("health_check_failed", location_id=location_id, error=str(e))
+        return {"overall_status": "error", "location_id": location_id, "error": str(e), "timestamp": datetime.now()}
 
 
 # =====================================================================================
 # Helper Functions
 # =====================================================================================
 
+
 async def _update_preferences_from_conversation(
-    lead_id: str,
-    location_id: str,
-    conversation_history: List[Dict[str, Any]],
-    insights: Dict[str, Any]
+    lead_id: str, location_id: str, conversation_history: List[Dict[str, Any]], insights: Dict[str, Any]
 ) -> None:
     """Background task to update preferences based on conversation analysis."""
     try:
@@ -927,21 +834,13 @@ async def _update_preferences_from_conversation(
             client_id=lead_id,  # Using lead_id as client_id for preference learning
             location_id=location_id,
             conversation_data=conversation_history,
-            conversation_analysis=insights
+            conversation_analysis=insights,
         )
     except Exception as e:
-        logger.error(
-            "background_preference_learning_failed",
-            lead_id=lead_id,
-            location_id=location_id,
-            error=str(e)
-        )
+        logger.error("background_preference_learning_failed", lead_id=lead_id, location_id=location_id, error=str(e))
 
 
-def _generate_next_step_recommendations(
-    insights: Dict[str, Any],
-    objections: List[Dict[str, Any]]
-) -> List[str]:
+def _generate_next_step_recommendations(insights: Dict[str, Any], objections: List[Dict[str, Any]]) -> List[str]:
     """Generate next-step recommendations based on conversation analysis."""
     recommendations = []
 

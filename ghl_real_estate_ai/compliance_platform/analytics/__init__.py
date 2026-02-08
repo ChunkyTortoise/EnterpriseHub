@@ -37,13 +37,15 @@ try:
         ComplianceAnomalyDetector,
     )
 
-    __all__.extend([
-        "AnomalyType",
-        "AnomalySeverity",
-        "ComplianceAnomaly",
-        "AnomalyDetectionConfig",
-        "ComplianceAnomalyDetector",
-    ])
+    __all__.extend(
+        [
+            "AnomalyType",
+            "AnomalySeverity",
+            "ComplianceAnomaly",
+            "AnomalyDetectionConfig",
+            "ComplianceAnomalyDetector",
+        ]
+    )
 except ImportError:
     # Anomaly detection module not yet implemented
     pass

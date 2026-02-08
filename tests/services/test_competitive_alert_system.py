@@ -11,24 +11,21 @@ Tests cover:
 7. Alert resolution tracking
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 try:
     from ghl_real_estate_ai.services.competitive_alert_system import (
-        CompetitiveAlertSystem,
-        CompetitiveAlert,
         AlertPriority,
+        CompetitiveAlert,
+        CompetitiveAlertSystem,
         NotificationChannel,
-        get_competitive_alert_system
+        get_competitive_alert_system,
     )
-    from ghl_real_estate_ai.services.competitor_intelligence import (
-        CompetitiveAnalysis,
-        CompetitorMention,
-        RiskLevel
-    )
+    from ghl_real_estate_ai.services.competitor_intelligence import CompetitiveAnalysis, CompetitorMention, RiskLevel
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
 
@@ -55,10 +52,7 @@ class TestCompetitiveAlertSystem:
     @pytest.fixture
     def alert_system(self, mock_cache_service, mock_ghl_client):
         """Create alert system with mocked dependencies"""
-        system = CompetitiveAlertSystem(
-            cache_service=mock_cache_service,
-            ghl_client=mock_ghl_client
-        )
+        system = CompetitiveAlertSystem(cache_service=mock_cache_service, ghl_client=mock_ghl_client)
         return system
 
     @pytest.fixture
@@ -74,7 +68,7 @@ class TestCompetitiveAlertSystem:
             timestamp=datetime.now(),
             patterns_matched=["named_competitor"],
             sentiment_score=0.0,
-            urgency_indicators=["ASAP"]
+            urgency_indicators=["ASAP"],
         )
 
         return CompetitiveAnalysis(
@@ -85,7 +79,7 @@ class TestCompetitiveAlertSystem:
             alert_required=True,
             escalation_needed=True,
             recovery_strategies=["Provide market insights"],
-            confidence_score=0.85
+            confidence_score=0.85,
         )
 
     @pytest.fixture
@@ -96,16 +90,14 @@ class TestCompetitiveAlertSystem:
             "name": "John Doe",
             "first_name": "John",
             "phone": "+1234567890",
-            "email": "john.doe@example.com"
+            "email": "john.doe@example.com",
         }
 
     @pytest.mark.asyncio
     async def test_alert_creation_and_storage(self, alert_system, sample_competitive_analysis, sample_lead_data):
         """Test alert creation and storage"""
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_123",
-            lead_data=sample_lead_data,
-            competitive_analysis=sample_competitive_analysis
+            lead_id="lead_123", lead_data=sample_lead_data, competitive_analysis=sample_competitive_analysis
         )
 
         assert alert is not None
@@ -122,7 +114,7 @@ class TestCompetitiveAlertSystem:
             (RiskLevel.LOW, AlertPriority.LOW),
             (RiskLevel.MEDIUM, AlertPriority.MEDIUM),
             (RiskLevel.HIGH, AlertPriority.HIGH),
-            (RiskLevel.CRITICAL, AlertPriority.CRITICAL)
+            (RiskLevel.CRITICAL, AlertPriority.CRITICAL),
         ]
 
         for risk_level, expected_priority in mappings:
@@ -134,9 +126,7 @@ class TestCompetitiveAlertSystem:
         """Test notification channel selection based on risk level"""
         # Test HIGH risk alert
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_123",
-            lead_data=sample_lead_data,
-            competitive_analysis=sample_competitive_analysis
+            lead_id="lead_123", lead_data=sample_lead_data, competitive_analysis=sample_competitive_analysis
         )
 
         # HIGH risk should trigger multiple channels
@@ -173,9 +163,7 @@ class TestCompetitiveAlertSystem:
     async def test_ghl_tagging(self, alert_system, sample_competitive_analysis, sample_lead_data):
         """Test GHL tagging functionality"""
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_123",
-            lead_data=sample_lead_data,
-            competitive_analysis=sample_competitive_analysis
+            lead_id="lead_123", lead_data=sample_lead_data, competitive_analysis=sample_competitive_analysis
         )
 
         # Verify GHL client was called to add tags
@@ -188,7 +176,7 @@ class TestCompetitiveAlertSystem:
         assert any("Competitor-Risk-High" in tag for tag in tags)
 
     @pytest.mark.asyncio
-    @patch('httpx.AsyncClient')
+    @patch("httpx.AsyncClient")
     async def test_slack_notification(self, mock_httpx, alert_system, sample_competitive_analysis, sample_lead_data):
         """Test Slack notification sending"""
         # Mock successful HTTP response
@@ -214,7 +202,7 @@ class TestCompetitiveAlertSystem:
                 human_intervention_required=True,
                 escalation_level=0,
                 resolved=False,
-                resolution_notes=None
+                resolution_notes=None,
             )
         )
 
@@ -238,7 +226,7 @@ class TestCompetitiveAlertSystem:
             human_intervention_required=True,
             escalation_level=0,
             resolved=False,
-            resolution_notes=None
+            resolution_notes=None,
         )
 
         # Test SMS notification (placeholder should return True for now)
@@ -264,7 +252,7 @@ class TestCompetitiveAlertSystem:
             human_intervention_required=True,
             escalation_level=0,
             resolved=False,
-            resolution_notes=None
+            resolution_notes=None,
         )
 
         # Test email notification (placeholder should return True for now)
@@ -277,9 +265,7 @@ class TestCompetitiveAlertSystem:
     async def test_escalation_scheduling(self, alert_system, sample_competitive_analysis, sample_lead_data):
         """Test escalation scheduling"""
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_123",
-            lead_data=sample_lead_data,
-            competitive_analysis=sample_competitive_analysis
+            lead_id="lead_123", lead_data=sample_lead_data, competitive_analysis=sample_competitive_analysis
         )
 
         # Verify escalation was scheduled
@@ -287,8 +273,7 @@ class TestCompetitiveAlertSystem:
         alert_system.cache.set.assert_called()
 
         # Check if escalation data was stored
-        set_calls = [call for call in alert_system.cache.set.call_args_list
-                    if escalation_key in str(call)]
+        set_calls = [call for call in alert_system.cache.set.call_args_list if escalation_key in str(call)]
         assert len(set_calls) > 0
 
     @pytest.mark.asyncio
@@ -316,7 +301,7 @@ class TestCompetitiveAlertSystem:
             "lead_id": "lead_123",
             "risk_level": "high",
             "resolved": False,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         alert_system.cache.get_keys_by_pattern = AsyncMock(return_value=["competitive_alert:alert_123"])
@@ -339,19 +324,13 @@ class TestCompetitiveAlertSystem:
             alert_required=True,
             escalation_needed=True,
             recovery_strategies=[],
-            confidence_score=0.95
+            confidence_score=0.95,
         )
 
-        sample_lead_data = {
-            "id": "lead_critical",
-            "name": "Critical Lead",
-            "phone": "+1234567890"
-        }
+        sample_lead_data = {"id": "lead_critical", "name": "Critical Lead", "phone": "+1234567890"}
 
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_critical",
-            lead_data=sample_lead_data,
-            competitive_analysis=critical_analysis
+            lead_id="lead_critical", lead_data=sample_lead_data, competitive_analysis=critical_analysis
         )
 
         # CRITICAL risk should escalate to higher priority
@@ -370,14 +349,12 @@ class TestCompetitiveAlertSystem:
             alert_required=True,
             escalation_needed=False,
             recovery_strategies=[],
-            confidence_score=0.8
+            confidence_score=0.8,
         )
 
         # Should not raise exception, should return alert with error info
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_error",
-            lead_data=sample_lead_data,
-            competitive_analysis=malformed_analysis
+            lead_id="lead_error", lead_data=sample_lead_data, competitive_analysis=malformed_analysis
         )
 
         assert alert is not None
@@ -397,9 +374,9 @@ class TestCompetitiveAlertSystem:
 
         # Each config should have required fields
         for config in configs:
-            assert hasattr(config, 'enabled')
-            assert hasattr(config, 'priority_threshold')
-            assert hasattr(config, 'rate_limit')
+            assert hasattr(config, "enabled")
+            assert hasattr(config, "priority_threshold")
+            assert hasattr(config, "rate_limit")
 
     @pytest.mark.asyncio
     async def test_escalation_rules_loading(self, alert_system):
@@ -453,9 +430,7 @@ class TestCompetitiveAlertSystem:
         # Send alerts concurrently
         tasks = [
             alert_system.send_competitive_alert(
-                lead_id=lead_data["id"],
-                lead_data=lead_data,
-                competitive_analysis=sample_competitive_analysis
+                lead_id=lead_data["id"], lead_data=lead_data, competitive_analysis=sample_competitive_analysis
             )
             for lead_data in lead_data_list
         ]
@@ -476,23 +451,21 @@ class TestCompetitiveAlertSystem:
             "phone": "+1234567890",
             "email": "john@example.com",
             "ssn": "123-45-6789",  # Sensitive data
-            "credit_score": 750   # Sensitive data
+            "credit_score": 750,  # Sensitive data
         }
 
         alert = await alert_system.send_competitive_alert(
-            lead_id="lead_sensitive",
-            lead_data=sensitive_lead_data,
-            competitive_analysis=sample_competitive_analysis
+            lead_id="lead_sensitive", lead_data=sensitive_lead_data, competitive_analysis=sample_competitive_analysis
         )
 
         # Alert should not contain sensitive data
-        assert hasattr(alert, 'lead_name')
-        assert hasattr(alert, 'lead_phone')
-        assert hasattr(alert, 'lead_email')
+        assert hasattr(alert, "lead_name")
+        assert hasattr(alert, "lead_phone")
+        assert hasattr(alert, "lead_email")
 
         # Sensitive fields should not be stored in alert
-        assert not hasattr(alert, 'ssn')
-        assert not hasattr(alert, 'credit_score')
+        assert not hasattr(alert, "ssn")
+        assert not hasattr(alert, "credit_score")
 
 
 if __name__ == "__main__":

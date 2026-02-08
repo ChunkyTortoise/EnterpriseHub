@@ -1,20 +1,24 @@
 """Logging utility for AgentForge with Correlation ID support."""
+
 import logging
 import sys
-from typing import Optional
-from contextvars import ContextVar
 import uuid
+from contextvars import ContextVar
+from typing import Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 
 # Context variable to store correlation ID for the current task/request
 correlation_id: ContextVar[str] = ContextVar("correlation_id", default="system")
 
+
 class CorrelationFilter(logging.Filter):
     """Logging filter that injects the current correlation_id into the log record."""
+
     def filter(self, record):
         record.correlation_id = correlation_id.get()
         return True
+
 
 def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:
     """
@@ -33,18 +37,18 @@ def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:
 
         # Structured Format including Correlation ID
         formatter = logging.Formatter(
-            "%(asctime)s | %(levelname)-8s | [%(correlation_id)s] | %(name)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            "%(asctime)s | %(levelname)-8s | [%(correlation_id)s] | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         handler.setFormatter(formatter)
-        
+
         # Add Filter
         handler.addFilter(CorrelationFilter())
-        
+
         logger.addHandler(handler)
         logger.propagate = False
 
     return logger
+
 
 def set_correlation_id(cid: Optional[str] = None) -> str:
     """Set the correlation ID for the current context."""

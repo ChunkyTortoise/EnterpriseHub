@@ -2,22 +2,23 @@
 Test suite for Market Prediction Engine - Advanced ML-powered market analytics
 """
 
-import pytest
 import asyncio
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
 import numpy as np
 import pandas as pd
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timedelta
+import pytest
 
 from ghl_real_estate_ai.services.market_prediction_engine import (
-    MarketPredictionEngine,
-    MarketDataPoint,
-    PredictionResult,
-    MarketOpportunity,
-    PredictionType,
     MarketConfidence,
+    MarketDataPoint,
+    MarketOpportunity,
+    MarketPredictionEngine,
+    PredictionResult,
+    PredictionType,
     TimeHorizon,
-    get_market_prediction_engine
+    get_market_prediction_engine,
 )
 
 
@@ -47,7 +48,7 @@ def sample_market_data():
         is_holiday_season=datetime.now().month in [11, 12],
         gas_prices=4.2,
         mortgage_applications=12000,
-        consumer_confidence=98.5
+        consumer_confidence=98.5,
     )
 
 
@@ -72,7 +73,7 @@ def sample_prediction_result():
         update_frequency="weekly",
         model_accuracy=0.78,
         data_points_used=500,
-        last_training_date=datetime.now() - timedelta(days=7)
+        last_training_date=datetime.now() - timedelta(days=7),
     )
 
 
@@ -83,10 +84,10 @@ class TestMarketPredictionEngine:
     async def test_engine_initialization(self, prediction_engine):
         """Test prediction engine initializes correctly"""
         assert prediction_engine is not None
-        assert hasattr(prediction_engine, 'llm_client')
-        assert hasattr(prediction_engine, 'rc_assistant')
-        assert hasattr(prediction_engine, 'models')
-        assert hasattr(prediction_engine, 'scalers')
+        assert hasattr(prediction_engine, "llm_client")
+        assert hasattr(prediction_engine, "rc_assistant")
+        assert hasattr(prediction_engine, "models")
+        assert hasattr(prediction_engine, "scalers")
 
     async def test_historical_data_loading(self, prediction_engine):
         """Test historical data loading"""
@@ -123,16 +124,16 @@ class TestMarketPredictionEngine:
         await prediction_engine._train_models()
 
         # Check models were created
-        assert 'price_appreciation' in prediction_engine.models
-        assert 'timing' in prediction_engine.models
-        assert 'roi' in prediction_engine.models
+        assert "price_appreciation" in prediction_engine.models
+        assert "timing" in prediction_engine.models
+        assert "roi" in prediction_engine.models
 
         # Check model metadata
-        assert 'price_appreciation' in prediction_engine.model_metadata
-        price_model_meta = prediction_engine.model_metadata['price_appreciation']
-        assert 'features' in price_model_meta
-        assert 'mae' in price_model_meta
-        assert 'r2' in price_model_meta
+        assert "price_appreciation" in prediction_engine.model_metadata
+        price_model_meta = prediction_engine.model_metadata["price_appreciation"]
+        assert "features" in price_model_meta
+        assert "mae" in price_model_meta
+        assert "r2" in price_model_meta
 
     async def test_price_appreciation_prediction(self, prediction_engine):
         """Test price appreciation prediction"""
@@ -140,14 +141,13 @@ class TestMarketPredictionEngine:
         await prediction_engine._load_historical_data()
         await prediction_engine._train_models()
 
-        with patch.object(prediction_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(prediction_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"key_factors": ["Market momentum", "Employment growth"], "risk_factors": ["Interest rate risk"], "opportunities": ["Investment timing", "Market entry"]}'
             )
 
             result = await prediction_engine.predict_price_appreciation(
-                neighborhood="etiwanda",
-                time_horizon=TimeHorizon.MEDIUM_TERM
+                neighborhood="etiwanda", time_horizon=TimeHorizon.MEDIUM_TERM
             )
 
             assert isinstance(result, PredictionResult)
@@ -163,26 +163,20 @@ class TestMarketPredictionEngine:
         await prediction_engine._load_historical_data()
         await prediction_engine._train_models()
 
-        with patch.object(prediction_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(prediction_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"key_factors": ["Seasonal advantage", "Low inventory"], "risk_factors": ["Rate volatility"], "opportunities": ["Negotiation power", "Selection"]}'
             )
 
             # Test sell timing
-            sell_result = await prediction_engine.predict_optimal_timing(
-                action_type="sell",
-                neighborhood="etiwanda"
-            )
+            sell_result = await prediction_engine.predict_optimal_timing(action_type="sell", neighborhood="etiwanda")
 
             assert isinstance(sell_result, PredictionResult)
             assert sell_result.prediction_type == PredictionType.OPTIMAL_TIMING
             assert "sell_etiwanda" in sell_result.target
 
             # Test buy timing
-            buy_result = await prediction_engine.predict_optimal_timing(
-                action_type="buy",
-                neighborhood="etiwanda"
-            )
+            buy_result = await prediction_engine.predict_optimal_timing(action_type="buy", neighborhood="etiwanda")
 
             assert isinstance(buy_result, PredictionResult)
             assert "buy_etiwanda" in buy_result.target
@@ -192,22 +186,14 @@ class TestMarketPredictionEngine:
         await prediction_engine._load_historical_data()
         await prediction_engine._train_models()
 
-        property_data = {
-            "neighborhood": "etiwanda",
-            "price": 750000,
-            "sqft": 2000,
-            "property_type": "single_family"
-        }
+        property_data = {"neighborhood": "etiwanda", "price": 750000, "sqft": 2000, "property_type": "single_family"}
 
-        with patch.object(prediction_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(prediction_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"key_factors": ["Rental demand", "Appreciation potential"], "risk_factors": ["Market cycles"], "opportunities": ["Tax benefits", "Leverage"]}'
             )
 
-            result = await prediction_engine.predict_investment_roi(
-                property_data=property_data,
-                investment_horizon=5
-            )
+            result = await prediction_engine.predict_investment_roi(property_data=property_data, investment_horizon=5)
 
             assert isinstance(result, PredictionResult)
             assert result.prediction_type == PredictionType.INVESTMENT_ROI
@@ -219,7 +205,7 @@ class TestMarketPredictionEngine:
         await prediction_engine._load_historical_data()
         await prediction_engine._train_models()
 
-        with patch.object(prediction_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(prediction_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"key_factors": ["Growth momentum"], "risk_factors": ["Rate sensitivity"], "opportunities": ["Early entry"]}'
             )
@@ -241,7 +227,7 @@ class TestMarketPredictionEngine:
         """Test seasonal pattern analysis"""
         await prediction_engine._load_historical_data()
 
-        with patch.object(prediction_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(prediction_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"peak_months": [4, 5, 6], "seasonal_trends": "Spring peak activity", "buyer_timing": "Winter for better prices", "seller_timing": "Spring for exposure"}'
             )
@@ -261,7 +247,7 @@ class TestMarketPredictionEngine:
         """Test interest rate impact analysis"""
         analysis = await prediction_engine.analyze_interest_rate_impact(
             rate_change=0.5,  # 0.5% increase
-            neighborhood="etiwanda"
+            neighborhood="etiwanda",
         )
 
         assert "rate_change" in analysis
@@ -280,18 +266,12 @@ class TestMarketPredictionEngine:
         """Test confidence score calculation"""
         # High accuracy, recent data, low volatility = high confidence
         high_conf = prediction_engine._calculate_confidence(
-            model_accuracy=0.9,
-            data_recency=0.95,
-            market_volatility=0.1
+            model_accuracy=0.9, data_recency=0.95, market_volatility=0.1
         )
         assert high_conf > 0.7
 
         # Low accuracy, old data, high volatility = low confidence
-        low_conf = prediction_engine._calculate_confidence(
-            model_accuracy=0.3,
-            data_recency=0.4,
-            market_volatility=0.8
-        )
+        low_conf = prediction_engine._calculate_confidence(model_accuracy=0.3, data_recency=0.4, market_volatility=0.8)
         assert low_conf < 0.5
 
     async def test_confidence_level_mapping(self, prediction_engine):
@@ -342,10 +322,10 @@ class TestMarketPredictionEngine:
             "interest_rate": 5.5,
             "employment_rate": 0.94,
             "is_spring_market": True,
-            "consumer_confidence": 95.0
+            "consumer_confidence": 95.0,
         }
 
-        features = prediction_engine._prepare_prediction_features(conditions, 'price_appreciation')
+        features = prediction_engine._prepare_prediction_features(conditions, "price_appreciation")
 
         assert isinstance(features, list)
         assert len(features) > 0
@@ -353,10 +333,7 @@ class TestMarketPredictionEngine:
 
     async def test_opportunity_creation(self, prediction_engine, sample_prediction_result):
         """Test market opportunity creation"""
-        opportunity = await prediction_engine._create_appreciation_opportunity(
-            "etiwanda",
-            sample_prediction_result
-        )
+        opportunity = await prediction_engine._create_appreciation_opportunity("etiwanda", sample_prediction_result)
 
         assert isinstance(opportunity, MarketOpportunity)
         assert opportunity.opportunity_type == "appreciation"
@@ -366,11 +343,7 @@ class TestMarketPredictionEngine:
 
     async def test_affordability_calculation(self, prediction_engine):
         """Test affordability impact calculation"""
-        affordability = prediction_engine._calculate_affordability_impact(
-            price=750000,
-            old_rate=5.0,
-            new_rate=6.0
-        )
+        affordability = prediction_engine._calculate_affordability_impact(price=750000, old_rate=5.0, new_rate=6.0)
 
         assert "old_payment" in affordability
         assert "new_payment" in affordability
@@ -382,18 +355,18 @@ class TestMarketPredictionEngine:
 
     async def test_prediction_caching(self, prediction_engine, sample_prediction_result):
         """Test prediction result caching"""
-        with patch.object(prediction_engine.cache, 'set') as mock_set:
+        with patch.object(prediction_engine.cache, "set") as mock_set:
             await prediction_engine._cache_prediction_result(sample_prediction_result)
             mock_set.assert_called_once()
 
     async def test_prediction_analytics(self, prediction_engine):
         """Test prediction analytics generation"""
         # Add some model metadata
-        prediction_engine.model_metadata['test_model'] = {
-            'r2': 0.75,
-            'mae': 0.05,
-            'training_date': datetime.now(),
-            'data_points': 1000
+        prediction_engine.model_metadata["test_model"] = {
+            "r2": 0.75,
+            "mae": 0.05,
+            "training_date": datetime.now(),
+            "data_points": 1000,
         }
 
         analytics = await prediction_engine.get_prediction_analytics()
@@ -420,12 +393,10 @@ class TestMarketPredictionEngine:
 
     async def test_error_handling_ai_insights(self, prediction_engine):
         """Test fallback when AI insight generation fails"""
-        with patch.object(prediction_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(prediction_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.side_effect = Exception("AI service unavailable")
 
-            insights = await prediction_engine._generate_prediction_insights(
-                "etiwanda", "price_appreciation", 0.05, {}
-            )
+            insights = await prediction_engine._generate_prediction_insights("etiwanda", "price_appreciation", 0.05, {})
 
             # Should return fallback insights
             assert "key_factors" in insights
@@ -464,7 +435,7 @@ class TestMarketDataPoint:
             is_holiday_season=False,
             gas_prices=4.2,
             mortgage_applications=12000,
-            consumer_confidence=98.5
+            consumer_confidence=98.5,
         )
 
         assert data_point.neighborhood == "etiwanda"
@@ -497,7 +468,7 @@ class TestPredictionResult:
             update_frequency="weekly",
             model_accuracy=0.78,
             data_points_used=500,
-            last_training_date=datetime(2023, 12, 1)
+            last_training_date=datetime(2023, 12, 1),
         )
 
         assert result.prediction_type == PredictionType.PRICE_APPRECIATION
@@ -524,7 +495,7 @@ class TestPredictionResult:
             update_frequency="daily",
             model_accuracy=0.70,
             data_points_used=300,
-            last_training_date=datetime.now()
+            last_training_date=datetime.now(),
         )
 
         assert result.prediction_date is not None
@@ -550,7 +521,7 @@ class TestMarketOpportunity:
             risk_factors=["Rate sensitivity"],
             mitigation_strategies=["Timing flexibility"],
             recommended_actions=["Target investors"],
-            ideal_client_profile="Investment buyers"
+            ideal_client_profile="Investment buyers",
         )
 
         assert opportunity.opportunity_type == "appreciation"
@@ -577,27 +548,21 @@ class TestMarketPredictionIntegration:
             await engine._load_historical_data()
             await engine._train_models()
 
-        with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"key_factors": ["Market momentum"], "risk_factors": ["Rate risk"], "opportunities": ["Timing"]}'
             )
 
             # Test price prediction
-            price_pred = await engine.predict_price_appreciation(
-                "etiwanda", TimeHorizon.MEDIUM_TERM
-            )
+            price_pred = await engine.predict_price_appreciation("etiwanda", TimeHorizon.MEDIUM_TERM)
             assert price_pred.prediction_id
 
             # Test timing prediction
-            timing_pred = await engine.predict_optimal_timing(
-                "sell", "etiwanda"
-            )
+            timing_pred = await engine.predict_optimal_timing("sell", "etiwanda")
             assert timing_pred.prediction_id
 
             # Test ROI prediction
-            roi_pred = await engine.predict_investment_roi(
-                {"neighborhood": "etiwanda", "price": 750000, "sqft": 2000}
-            )
+            roi_pred = await engine.predict_investment_roi({"neighborhood": "etiwanda", "price": 750000, "sqft": 2000})
             assert roi_pred.prediction_id
 
     @pytest.mark.asyncio
@@ -610,7 +575,7 @@ class TestMarketPredictionIntegration:
             await engine._load_historical_data()
             await engine._train_models()
 
-        with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(engine.llm_client, "agenerate") as mock_agenerate:
             # Return a response that works for both seasonal analysis and prediction insights
             mock_agenerate.return_value = Mock(
                 content='{"peak_months": [4, 5], "seasonal_trends": "Spring surge", "buyer_timing": "Fall", "seller_timing": "Spring", "key_factors": ["Market momentum"], "risk_factors": ["Rate risk"], "opportunities": ["Timing"]}'
@@ -639,16 +604,14 @@ class TestMarketPredictionIntegration:
 
         neighborhoods = ["etiwanda", "alta_loma", "central_rc"]
 
-        with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"key_factors": ["Location"], "risk_factors": ["Market"], "opportunities": ["Growth"]}'
             )
 
             predictions = []
             for neighborhood in neighborhoods:
-                pred = await engine.predict_price_appreciation(
-                    neighborhood, TimeHorizon.MEDIUM_TERM
-                )
+                pred = await engine.predict_price_appreciation(neighborhood, TimeHorizon.MEDIUM_TERM)
                 predictions.append(pred)
 
             assert len(predictions) == 3
@@ -663,20 +626,18 @@ class TestMarketPredictionIntegration:
         await engine._load_historical_data()
         await engine._train_models()
 
-        initial_training_date = engine.model_metadata.get('price_appreciation', {}).get('training_date')
+        initial_training_date = engine.model_metadata.get("price_appreciation", {}).get("training_date")
 
         # Add more data (simulate)
         additional_data = engine._generate_synthetic_data_point(
-            datetime.now() - timedelta(days=1),
-            "new_neighborhood",
-            700000
+            datetime.now() - timedelta(days=1), "new_neighborhood", 700000
         )
         engine.market_data.append(additional_data)
 
         # Retrain
         await engine._train_models()
 
-        new_training_date = engine.model_metadata.get('price_appreciation', {}).get('training_date')
+        new_training_date = engine.model_metadata.get("price_appreciation", {}).get("training_date")
 
         # Training date should be updated
         if initial_training_date:

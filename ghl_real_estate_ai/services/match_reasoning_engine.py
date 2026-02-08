@@ -12,15 +12,15 @@ Generates human-readable explanations for property match scores:
 
 import json
 import random
-from typing import Any, Dict, List, Optional, Set, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
+    BehavioralProfile,
     MatchReasoning,
     MatchScoreBreakdown,
     PropertyMatch,
-    BehavioralProfile
 )
 
 logger = get_logger(__name__)
@@ -50,7 +50,7 @@ class MatchReasoningEngine:
         score_breakdown: MatchScoreBreakdown,
         preferences: Dict[str, Any],
         behavioral_profile: Optional[BehavioralProfile] = None,
-        past_liked_properties: Optional[List[Dict[str, Any]]] = None
+        past_liked_properties: Optional[List[Dict[str, Any]]] = None,
     ) -> MatchReasoning:
         """
         Generate comprehensive match reasoning with all explanation components.
@@ -68,19 +68,13 @@ class MatchReasoningEngine:
         logger.info(f"Generating reasoning for property {property_data.get('id', 'unknown')}")
 
         # Generate primary strengths
-        primary_strengths = self._identify_primary_strengths(
-            property_data, score_breakdown, preferences
-        )
+        primary_strengths = self._identify_primary_strengths(property_data, score_breakdown, preferences)
 
         # Generate secondary benefits
-        secondary_benefits = self._identify_secondary_benefits(
-            property_data, score_breakdown
-        )
+        secondary_benefits = self._identify_secondary_benefits(property_data, score_breakdown)
 
         # Identify potential concerns
-        potential_concerns = self._identify_potential_concerns(
-            property_data, score_breakdown, preferences
-        )
+        potential_concerns = self._identify_potential_concerns(property_data, score_breakdown, preferences)
 
         # Generate agent talking points
         agent_talking_points = self._generate_agent_talking_points(
@@ -93,14 +87,10 @@ class MatchReasoningEngine:
         )
 
         # Generate lifestyle fit summary
-        lifestyle_fit_summary = self._generate_lifestyle_summary(
-            score_breakdown.lifestyle_scores, preferences
-        )
+        lifestyle_fit_summary = self._generate_lifestyle_summary(score_breakdown.lifestyle_scores, preferences)
 
         # Generate market opportunity summary
-        market_opportunity_summary = self._generate_market_summary(
-            score_breakdown.market_timing_score
-        )
+        market_opportunity_summary = self._generate_market_summary(score_breakdown.market_timing_score)
 
         return MatchReasoning(
             primary_strengths=primary_strengths,
@@ -109,14 +99,11 @@ class MatchReasoningEngine:
             agent_talking_points=agent_talking_points,
             comparison_to_past_likes=comparison_to_past_likes,
             lifestyle_fit_summary=lifestyle_fit_summary,
-            market_opportunity_summary=market_opportunity_summary
+            market_opportunity_summary=market_opportunity_summary,
         )
 
     def generate_quick_explanation(
-        self,
-        property_data: Dict[str, Any],
-        score_breakdown: MatchScoreBreakdown,
-        preferences: Dict[str, Any]
+        self, property_data: Dict[str, Any], score_breakdown: MatchScoreBreakdown, preferences: Dict[str, Any]
     ) -> str:
         """
         Generate a quick, one-sentence explanation for the match.
@@ -132,7 +119,7 @@ class MatchReasoningEngine:
         if top_factor == "budget" and budget and property_price <= budget:
             savings = budget - property_price
             if savings > 50000:
-                return f"Great find! This home is ${savings//1000}k under your budget with {top_reasoning.lower()}."
+                return f"Great find! This home is ${savings // 1000}k under your budget with {top_reasoning.lower()}."
             else:
                 return f"Perfect fit within your budget with {top_reasoning.lower()}."
 
@@ -150,10 +137,7 @@ class MatchReasoningEngine:
             return f"Strong overall match with {top_reasoning.lower()}."
 
     def generate_agent_follow_up_script(
-        self,
-        property_data: Dict[str, Any],
-        reasoning: MatchReasoning,
-        lead_name: str = "Lead"
+        self, property_data: Dict[str, Any], reasoning: MatchReasoning, lead_name: str = "Lead"
     ) -> Dict[str, str]:
         """
         Generate follow-up scripts for different communication channels.
@@ -165,33 +149,20 @@ class MatchReasoningEngine:
         price = property_data.get("price", 0)
 
         # Phone script
-        phone_script = self._generate_phone_script(
-            lead_name, property_address, price, reasoning
-        )
+        phone_script = self._generate_phone_script(lead_name, property_address, price, reasoning)
 
         # Email script
-        email_script = self._generate_email_script(
-            lead_name, property_data, reasoning
-        )
+        email_script = self._generate_email_script(lead_name, property_data, reasoning)
 
         # Text script
-        text_script = self._generate_text_script(
-            property_address, price, reasoning
-        )
+        text_script = self._generate_text_script(property_address, price, reasoning)
 
-        return {
-            "phone": phone_script,
-            "email": email_script,
-            "text": text_script
-        }
+        return {"phone": phone_script, "email": email_script, "text": text_script}
 
     # Primary strength identification
 
     def _identify_primary_strengths(
-        self,
-        property_data: Dict[str, Any],
-        score_breakdown: MatchScoreBreakdown,
-        preferences: Dict[str, Any]
+        self, property_data: Dict[str, Any], score_breakdown: MatchScoreBreakdown, preferences: Dict[str, Any]
     ) -> List[str]:
         """Identify the top 3-5 reasons why this property matches well."""
         strengths = []
@@ -207,9 +178,7 @@ class MatchReasoningEngine:
             if contribution < 0.05:  # Skip factors with minimal contribution
                 continue
 
-            strength = self._generate_strength_statement(
-                factor_name, property_data, score_breakdown, preferences
-            )
+            strength = self._generate_strength_statement(factor_name, property_data, score_breakdown, preferences)
             if strength:
                 strengths.append(strength)
 
@@ -258,7 +227,7 @@ class MatchReasoningEngine:
         factor_name: str,
         property_data: Dict[str, Any],
         score_breakdown: MatchScoreBreakdown,
-        preferences: Dict[str, Any]
+        preferences: Dict[str, Any],
     ) -> Optional[str]:
         """Generate a strength statement for a specific factor."""
         if factor_name == "budget":
@@ -272,7 +241,7 @@ class MatchReasoningEngine:
             return f"Has the {bedrooms} bedrooms you need"
 
         elif factor_name == "schools":
-            if hasattr(score_breakdown.lifestyle_scores.schools, 'average_rating'):
+            if hasattr(score_breakdown.lifestyle_scores.schools, "average_rating"):
                 rating = score_breakdown.lifestyle_scores.schools.average_rating
                 if rating >= 8:
                     return f"Excellent schools (average {rating:.1f}/10 rating)"
@@ -280,7 +249,7 @@ class MatchReasoningEngine:
                     return f"Very good schools in the area"
 
         elif factor_name == "walkability":
-            if hasattr(score_breakdown.lifestyle_scores.walkability, 'walk_score'):
+            if hasattr(score_breakdown.lifestyle_scores.walkability, "walk_score"):
                 walk_score = score_breakdown.lifestyle_scores.walkability.walk_score
                 if walk_score and walk_score >= 70:
                     return f"Very walkable area (Walk Score: {walk_score})"
@@ -299,11 +268,7 @@ class MatchReasoningEngine:
 
         return None
 
-    def _generate_fallback_strengths(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_fallback_strengths(self, property_data: Dict[str, Any], preferences: Dict[str, Any]) -> List[str]:
         """Generate fallback strengths when scoring factors don't provide enough."""
         fallbacks = []
 
@@ -319,8 +284,7 @@ class MatchReasoningEngine:
         # Special features
         special_features = ["pool", "garage", "patio", "deck", "fireplace", "hardwood"]
         found_features = [
-            feature for feature in special_features
-            if any(feature in prop_feature.lower() for prop_feature in features)
+            feature for feature in special_features if any(feature in prop_feature.lower() for prop_feature in features)
         ]
 
         if found_features:
@@ -339,9 +303,7 @@ class MatchReasoningEngine:
     # Secondary benefits identification
 
     def _identify_secondary_benefits(
-        self,
-        property_data: Dict[str, Any],
-        score_breakdown: MatchScoreBreakdown
+        self, property_data: Dict[str, Any], score_breakdown: MatchScoreBreakdown
     ) -> List[str]:
         """Identify additional benefits beyond primary strengths."""
         benefits = []
@@ -379,20 +341,14 @@ class MatchReasoningEngine:
 
     def _categorize_property_features(self, features: List[str]) -> Dict[str, List[str]]:
         """Categorize property features into benefit groups."""
-        categories = {
-            "outdoor_living": [],
-            "modern_updates": [],
-            "storage": [],
-            "entertaining": [],
-            "convenience": []
-        }
+        categories = {"outdoor_living": [], "modern_updates": [], "storage": [], "entertaining": [], "convenience": []}
 
         feature_mapping = {
             "outdoor_living": ["patio", "deck", "pool", "backyard", "outdoor", "garden"],
             "modern_updates": ["updated", "renovated", "new", "modern", "upgraded"],
             "storage": ["garage", "storage", "pantry", "closet"],
             "entertaining": ["open concept", "kitchen island", "living room", "dining"],
-            "convenience": ["laundry", "parking", "elevator", "smart home"]
+            "convenience": ["laundry", "parking", "elevator", "smart home"],
         }
 
         for feature in features:
@@ -414,7 +370,7 @@ class MatchReasoningEngine:
             "modern_updates": "Move-in ready with modern updates throughout",
             "storage": "Excellent storage and organization options",
             "entertaining": "Great layout for hosting friends and family",
-            "convenience": "Convenient features for everyday living"
+            "convenience": "Convenient features for everyday living",
         }
 
         return benefit_templates.get(category)
@@ -422,10 +378,7 @@ class MatchReasoningEngine:
     # Concerns identification
 
     def _identify_potential_concerns(
-        self,
-        property_data: Dict[str, Any],
-        score_breakdown: MatchScoreBreakdown,
-        preferences: Dict[str, Any]
+        self, property_data: Dict[str, Any], score_breakdown: MatchScoreBreakdown, preferences: Dict[str, Any]
     ) -> List[str]:
         """Identify potential concerns or drawbacks to address proactively."""
         concerns = []
@@ -464,7 +417,7 @@ class MatchReasoningEngine:
 
         # Commute concerns (if applicable)
         lifestyle = score_breakdown.lifestyle_scores
-        if hasattr(lifestyle.commute, 'to_downtown_minutes'):
+        if hasattr(lifestyle.commute, "to_downtown_minutes"):
             commute_time = lifestyle.commute.to_downtown_minutes
             if commute_time and commute_time > 45:
                 concerns.append(f"~{commute_time} minute commute to downtown")
@@ -478,7 +431,7 @@ class MatchReasoningEngine:
         property_data: Dict[str, Any],
         score_breakdown: MatchScoreBreakdown,
         primary_strengths: List[str],
-        potential_concerns: List[str]
+        potential_concerns: List[str],
     ) -> List[str]:
         """Generate talking points for agent follow-up conversations."""
         talking_points = []
@@ -523,7 +476,7 @@ class MatchReasoningEngine:
         self,
         property_data: Dict[str, Any],
         past_liked_properties: Optional[List[Dict[str, Any]]],
-        behavioral_profile: Optional[BehavioralProfile]
+        behavioral_profile: Optional[BehavioralProfile],
     ) -> Optional[str]:
         """Generate comparison to previously liked properties."""
         if not past_liked_properties:
@@ -614,11 +567,11 @@ class MatchReasoningEngine:
 
         # Add specific highlights
         highlights = []
-        if hasattr(lifestyle_scores.schools, 'average_rating'):
+        if hasattr(lifestyle_scores.schools, "average_rating"):
             if lifestyle_scores.schools.average_rating >= 8:
                 highlights.append("outstanding schools")
 
-        if hasattr(lifestyle_scores.walkability, 'walk_score'):
+        if hasattr(lifestyle_scores.walkability, "walk_score"):
             if lifestyle_scores.walkability.walk_score and lifestyle_scores.walkability.walk_score >= 80:
                 highlights.append("very walkable area")
 
@@ -660,7 +613,7 @@ class MatchReasoningEngine:
         elif top_factor == "schools":
             reasoning = "excellent schools"
         elif top_factor == "market_timing":
-            reasoning = score_breakdown.market_timing_score.reasoning.split(';')[0]
+            reasoning = score_breakdown.market_timing_score.reasoning.split(";")[0]
         else:
             reasoning = f"strong {top_factor.replace('_', ' ')} match"
 
@@ -684,11 +637,7 @@ class MatchReasoningEngine:
     # Communication scripts
 
     def _generate_phone_script(
-        self,
-        lead_name: str,
-        property_address: str,
-        price: int,
-        reasoning: MatchReasoning
+        self, lead_name: str, property_address: str, price: int, reasoning: MatchReasoning
     ) -> str:
         """Generate phone conversation script."""
         script = f"Hi {lead_name}, I found a property that matches your criteria really well. "
@@ -706,12 +655,7 @@ class MatchReasoningEngine:
 
         return script
 
-    def _generate_email_script(
-        self,
-        lead_name: str,
-        property_data: Dict[str, Any],
-        reasoning: MatchReasoning
-    ) -> str:
+    def _generate_email_script(self, lead_name: str, property_data: Dict[str, Any], reasoning: MatchReasoning) -> str:
         """Generate email follow-up script."""
         property_address = self._format_property_address(property_data)
         price = property_data.get("price", 0)
@@ -743,12 +687,7 @@ class MatchReasoningEngine:
 
         return email
 
-    def _generate_text_script(
-        self,
-        property_address: str,
-        price: int,
-        reasoning: MatchReasoning
-    ) -> str:
+    def _generate_text_script(self, property_address: str, price: int, reasoning: MatchReasoning) -> str:
         """Generate text message script."""
         text = f"Found a great match for you! {property_address} for ${price:,}. "
 
@@ -777,31 +716,31 @@ class MatchReasoningEngine:
             "budget": [
                 "Within your budget with room to spare",
                 "Excellent value for the price",
-                "Fits comfortably in your price range"
+                "Fits comfortably in your price range",
             ],
             "location": [
                 "Perfect location in your preferred area",
                 "Highly desirable neighborhood",
-                "Great location with easy access to amenities"
+                "Great location with easy access to amenities",
             ],
             "schools": [
                 "Outstanding school district",
                 "Top-rated schools nearby",
-                "Excellent educational opportunities"
-            ]
+                "Excellent educational opportunities",
+            ],
         }
 
         self.concern_templates = {
             "budget": [
                 "Price is at the top of your range",
                 "May need to stretch budget slightly",
-                "Worth considering given other benefits"
+                "Worth considering given other benefits",
             ],
             "age": [
                 "Older home with character and charm",
                 "May need some updating over time",
-                "Built in a different era with unique features"
-            ]
+                "Built in a different era with unique features",
+            ],
         }
 
     def _load_comparison_data(self):
@@ -810,7 +749,7 @@ class MatchReasoningEngine:
         self.comparison_patterns = {
             "similar_price": "Similar price point to properties you've liked",
             "better_value": "Better value than similar properties",
-            "upgrade": "Step up from your previous choices"
+            "upgrade": "Step up from your previous choices",
         }
 
 
@@ -823,10 +762,17 @@ def demo_match_reasoning():
 
     # Create sample data for testing
     from ghl_real_estate_ai.models.matching_models import (
-        MatchScoreBreakdown, TraditionalScores, LifestyleScores,
-        ContextualScores, MarketTimingScore, FactorScore,
-        SchoolScore, CommuteScore, WalkabilityScore, SafetyScore,
-        AdaptiveWeights
+        AdaptiveWeights,
+        CommuteScore,
+        ContextualScores,
+        FactorScore,
+        LifestyleScores,
+        MarketTimingScore,
+        MatchScoreBreakdown,
+        SafetyScore,
+        SchoolScore,
+        TraditionalScores,
+        WalkabilityScore,
     )
 
     # Sample property
@@ -839,16 +785,11 @@ def demo_match_reasoning():
         "year_built": 2018,
         "features": ["Updated kitchen", "Large backyard", "Garage"],
         "highlights": ["Walkable neighborhood", "Top schools"],
-        "days_on_market": 12
+        "days_on_market": 12,
     }
 
     # Sample preferences
-    test_preferences = {
-        "budget": 700000,
-        "location": "Austin",
-        "bedrooms": 3,
-        "property_type": "Single Family"
-    }
+    test_preferences = {"budget": 700000, "location": "Austin", "bedrooms": 3, "property_type": "Single Family"}
 
     # Create mock score breakdown
     score_breakdown = MatchScoreBreakdown(
@@ -858,7 +799,7 @@ def demo_match_reasoning():
             bedrooms=FactorScore("bedrooms", 1.0, 0.10, 0.10, 0.95, "Exact match", "high"),
             bathrooms=FactorScore("bathrooms", 0.8, 0.04, 0.05, 0.85, "Good match", "high"),
             property_type=FactorScore("property_type", 1.0, 0.05, 0.05, 0.95, "Exact match", "high"),
-            sqft=FactorScore("sqft", 0.7, 0.035, 0.05, 0.80, "Adequate size", "medium")
+            sqft=FactorScore("sqft", 0.7, 0.035, 0.05, 0.80, "Adequate size", "medium"),
         ),
         lifestyle_scores=LifestyleScores(
             schools=SchoolScore(9, 8, 8, 8.3, 0.1, 0.85, "Mathews Elementary", "Excellent schools"),
@@ -866,7 +807,7 @@ def demo_match_reasoning():
             walkability=WalkabilityScore(85, 20, 0.3, 0.8, 0.7, 0.82, "Very walkable area"),
             safety=SafetyScore(12.0, 8.0, 6, 0.85, "Safe neighborhood"),
             amenities_proximity=0.7,
-            overall_score=0.79
+            overall_score=0.79,
         ),
         contextual_scores=ContextualScores(
             hoa_fee_score=FactorScore("hoa_fee", 1.0, 0.03, 0.03, 0.90, "No HOA", "high"),
@@ -874,22 +815,19 @@ def demo_match_reasoning():
             home_age_score=FactorScore("home_age", 0.9, 0.018, 0.02, 0.90, "Recently built", "high"),
             parking_score=FactorScore("parking", 0.8, 0.016, 0.02, 0.70, "Garage available", "medium"),
             property_condition_score=FactorScore("condition", 0.9, 0.018, 0.02, 0.85, "Excellent condition", "high"),
-            overall_score=0.096
+            overall_score=0.096,
         ),
         market_timing_score=MarketTimingScore(
-            0.6, 0.5, 0.7, "medium", 0.59, "good_time",
-            "Normal market time (12 days); moderate competition"
+            0.6, 0.5, 0.7, "medium", 0.59, "good_time", "Normal market time (12 days); moderate competition"
         ),
         adaptive_weights=AdaptiveWeights({}, {}, {}, 0.05, 0.85, 5, datetime.utcnow()),
         overall_score=0.83,
         confidence_level=0.88,
-        data_completeness=0.92
+        data_completeness=0.92,
     )
 
     # Generate reasoning
-    reasoning = engine.generate_comprehensive_reasoning(
-        test_property, score_breakdown, test_preferences
-    )
+    reasoning = engine.generate_comprehensive_reasoning(test_property, score_breakdown, test_preferences)
 
     print("🎯 Primary Strengths:")
     for strength in reasoning.primary_strengths:
@@ -911,9 +849,7 @@ def demo_match_reasoning():
         print(f"   • {point}")
 
     # Generate quick explanation
-    quick_explanation = engine.generate_quick_explanation(
-        test_property, score_breakdown, test_preferences
-    )
+    quick_explanation = engine.generate_quick_explanation(test_property, score_breakdown, test_preferences)
     print(f"\n💬 Quick Explanation: {quick_explanation}")
 
     # Generate follow-up scripts

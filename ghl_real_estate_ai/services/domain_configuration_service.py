@@ -6,21 +6,21 @@ for white-label deployments in the $500K ARR platform.
 
 import asyncio
 import hashlib
+import json
+import re
 import secrets
 import socket
 import ssl
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-from dataclasses import dataclass, asdict
 from enum import Enum
-import json
-import re
+from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 import asyncpg
-import dns.resolver
 import dns.asyncresolver
+import dns.resolver
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -31,6 +31,7 @@ logger = get_logger(__name__)
 
 class DomainType(Enum):
     """Domain configuration types."""
+
     AGENCY = "agency"
     CLIENT = "client"
     CUSTOM = "custom"
@@ -38,6 +39,7 @@ class DomainType(Enum):
 
 class VerificationMethod(Enum):
     """Domain verification methods."""
+
     DNS = "dns"
     FILE = "file"
     EMAIL = "email"
@@ -45,6 +47,7 @@ class VerificationMethod(Enum):
 
 class SSLProvider(Enum):
     """SSL certificate providers."""
+
     LETSENCRYPT = "letsencrypt"
     CLOUDFLARE = "cloudflare"
     AWS_ACM = "aws_acm"
@@ -53,6 +56,7 @@ class SSLProvider(Enum):
 
 class DNSProvider(Enum):
     """DNS service providers."""
+
     CLOUDFLARE = "cloudflare"
     ROUTE53 = "route53"
     GOOGLE_CLOUD_DNS = "google_cloud_dns"
@@ -62,6 +66,7 @@ class DNSProvider(Enum):
 @dataclass
 class DNSRecord:
     """DNS record configuration."""
+
     name: str
     type: str  # A, AAAA, CNAME, TXT, MX
     value: str
@@ -72,6 +77,7 @@ class DNSRecord:
 @dataclass
 class DomainConfiguration:
     """Complete domain configuration."""
+
     domain_id: str
     agency_id: str
     client_id: Optional[str]
@@ -156,7 +162,7 @@ class DomainConfigurationService:
         client_id: Optional[str] = None,
         dns_provider: Optional[DNSProvider] = None,
         ssl_provider: SSLProvider = SSLProvider.LETSENCRYPT,
-        cdn_enabled: bool = False
+        cdn_enabled: bool = False,
     ) -> DomainConfiguration:
         """Create new domain configuration."""
 
@@ -174,8 +180,8 @@ class DomainConfigurationService:
 
             # Extract subdomain if applicable
             subdomain = None
-            if domain_type == DomainType.CLIENT and '.' in domain_name:
-                parts = domain_name.split('.')
+            if domain_type == DomainType.CLIENT and "." in domain_name:
+                parts = domain_name.split(".")
                 if len(parts) > 2:
                     subdomain = parts[0]
 
@@ -192,7 +198,7 @@ class DomainConfigurationService:
                 dns_records=[],
                 ssl_provider=ssl_provider,
                 cdn_enabled=cdn_enabled,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
 
             # Save to database
@@ -273,10 +279,7 @@ class DomainConfigurationService:
             return None
 
     async def list_agency_domains(
-        self,
-        agency_id: str,
-        domain_type: Optional[DomainType] = None,
-        status: Optional[str] = None
+        self, agency_id: str, domain_type: Optional[DomainType] = None, status: Optional[str] = None
     ) -> List[DomainConfiguration]:
         """List domains for an agency."""
 
@@ -296,7 +299,7 @@ class DomainConfigurationService:
                 query = f"""
                     SELECT *
                     FROM domain_configurations
-                    WHERE {' AND '.join(conditions)}
+                    WHERE {" AND ".join(conditions)}
                     ORDER BY created_at DESC
                 """
 
@@ -378,10 +381,7 @@ class DomainConfigurationService:
             return False
 
     async def configure_dns_records(
-        self,
-        domain_id: str,
-        records: List[DNSRecord],
-        auto_configure: bool = True
+        self, domain_id: str, records: List[DNSRecord], auto_configure: bool = True
     ) -> bool:
         """Configure DNS records for domain."""
 
@@ -428,7 +428,7 @@ class DomainConfigurationService:
                 "domain_name": config.domain_name,
                 "overall_status": "healthy",
                 "checks": {},
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             # DNS resolution check
@@ -451,7 +451,9 @@ class DomainConfigurationService:
                 health_results["checks"]["cdn"] = cdn_check
 
             # Determine overall status
-            failed_checks = [name for name, result in health_results["checks"].items() if not result.get("success", False)]
+            failed_checks = [
+                name for name, result in health_results["checks"].items() if not result.get("success", False)
+            ]
             if failed_checks:
                 if len(failed_checks) == len(health_results["checks"]):
                     health_results["overall_status"] = "unhealthy"
@@ -472,7 +474,7 @@ class DomainConfigurationService:
                 "domain_name": domain_id,
                 "overall_status": "error",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
     async def auto_renew_ssl_certificates(self) -> Dict[str, Any]:
@@ -496,7 +498,7 @@ class DomainConfigurationService:
                 "total_checked": len(rows),
                 "successful_renewals": 0,
                 "failed_renewals": 0,
-                "details": []
+                "details": [],
             }
 
             for row in rows:
@@ -505,25 +507,17 @@ class DomainConfigurationService:
                     success = await self.provision_ssl_certificate(domain_id)
                     if success:
                         renewal_results["successful_renewals"] += 1
-                        renewal_results["details"].append({
-                            "domain_id": domain_id,
-                            "status": "renewed"
-                        })
+                        renewal_results["details"].append({"domain_id": domain_id, "status": "renewed"})
                     else:
                         renewal_results["failed_renewals"] += 1
-                        renewal_results["details"].append({
-                            "domain_id": domain_id,
-                            "status": "failed"
-                        })
+                        renewal_results["details"].append({"domain_id": domain_id, "status": "failed"})
                 except Exception as e:
                     renewal_results["failed_renewals"] += 1
-                    renewal_results["details"].append({
-                        "domain_id": domain_id,
-                        "status": "error",
-                        "error": str(e)
-                    })
+                    renewal_results["details"].append({"domain_id": domain_id, "status": "error", "error": str(e)})
 
-            logger.info(f"SSL auto-renewal completed: {renewal_results['successful_renewals']} successful, {renewal_results['failed_renewals']} failed")
+            logger.info(
+                f"SSL auto-renewal completed: {renewal_results['successful_renewals']} successful, {renewal_results['failed_renewals']} failed"
+            )
             return renewal_results
 
         except Exception as e:
@@ -535,7 +529,7 @@ class DomainConfigurationService:
     async def _validate_domain_name(self, domain_name: str) -> bool:
         """Validate domain name format."""
         domain_regex = re.compile(
-            r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
+            r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
         )
         if not domain_regex.match(domain_name):
             raise ValueError(f"Invalid domain name format: {domain_name}")
@@ -577,7 +571,7 @@ class DomainConfigurationService:
                 config.status,
                 json.dumps(config.configuration_metadata),
                 config.created_at,
-                datetime.utcnow()
+                datetime.utcnow(),
             )
 
     async def _update_domain_config(self, config: DomainConfiguration) -> None:
@@ -605,7 +599,7 @@ class DomainConfigurationService:
                 config.last_health_check,
                 json.dumps(config.configuration_metadata),
                 config.updated_at,
-                config.domain_id
+                config.domain_id,
             )
 
         # Invalidate cache
@@ -648,7 +642,7 @@ class DomainConfigurationService:
             health_status=row["health_status"],
             configuration_metadata=json.loads(row["configuration_metadata"]) if row["configuration_metadata"] else {},
             created_at=row["created_at"],
-            updated_at=row["updated_at"]
+            updated_at=row["updated_at"],
         )
 
     async def _verify_dns_ownership(self, config: DomainConfiguration) -> bool:
@@ -659,7 +653,7 @@ class DomainConfigurationService:
             # Look for TXT record with verification token
             result = await self.dns_resolver.resolve(config.domain_name, "TXT")
             for rdata in result:
-                if expected_record in str(rdata).replace('"', ''):
+                if expected_record in str(rdata).replace('"', ""):
                     return True
 
             return False
@@ -753,16 +747,9 @@ class DomainConfigurationService:
         """Check DNS resolution for domain."""
         try:
             result = await self.dns_resolver.resolve(domain_name, "A")
-            return {
-                "success": True,
-                "ip_addresses": [str(rdata) for rdata in result],
-                "ttl": result.rrset.ttl
-            }
+            return {"success": True, "ip_addresses": [str(rdata) for rdata in result], "ttl": result.rrset.ttl}
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _check_ssl_certificate(self, domain_name: str) -> Dict[str, Any]:
         """Check SSL certificate status."""
@@ -789,14 +776,11 @@ class DomainConfigurationService:
                 "subject": cert.get("subject", []),
                 "expires_at": cert["notAfter"],
                 "days_until_expiry": days_until_expiry,
-                "is_valid": days_until_expiry > 0
+                "is_valid": days_until_expiry > 0,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _check_http_response(self, url: str) -> Dict[str, Any]:
         """Check HTTP response for health check URL."""
@@ -810,14 +794,11 @@ class DomainConfigurationService:
                         "success": response.status < 400,
                         "status_code": response.status,
                         "response_time_ms": round(response_time, 2),
-                        "content_type": response.headers.get("Content-Type")
+                        "content_type": response.headers.get("Content-Type"),
                     }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _check_cdn_status(self, config: DomainConfiguration) -> Dict[str, Any]:
         """Check CDN status."""
@@ -825,11 +806,7 @@ class DomainConfigurationService:
             return {"success": True, "message": "CDN not enabled"}
 
         # This would check CDN provider status
-        return {
-            "success": True,
-            "provider": config.cdn_provider,
-            "endpoint": config.cdn_endpoint
-        }
+        return {"success": True, "provider": config.cdn_provider, "endpoint": config.cdn_endpoint}
 
 
 # Factory function for service initialization

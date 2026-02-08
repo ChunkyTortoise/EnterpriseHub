@@ -11,24 +11,24 @@ Validates the 40% faster lead→appointment conversion target.
 """
 
 import asyncio
+import json
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
-import json
 
 import pytest
 import pytz
 
 from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
 from ghl_real_estate_ai.api.schemas.ghl import (
-    GHLWebhookEvent,
-    GHLMessage,
+    ActionType,
     GHLContact,
-    MessageType,
+    GHLMessage,
+    GHLWebhookEvent,
     MessageDirection,
-    ActionType
+    MessageType,
 )
-from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, AUSTIN_TZ
 from ghl_real_estate_ai.core.conversation_manager import AIResponse
+from ghl_real_estate_ai.services.calendar_scheduler import AUSTIN_TZ, AppointmentType
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def qualified_lead_webhook_event():
         message=GHLMessage(
             type=MessageType.SMS,
             body="Yes, I'm pre-approved and ready to see homes in Austin. My budget is $450k and I need to move by next month.",
-            direction=MessageDirection.INBOUND
+            direction=MessageDirection.INBOUND,
         ),
         contact=GHLContact(
             id="contact_qualified_123",
@@ -50,8 +50,8 @@ def qualified_lead_webhook_event():
             phone="+15129876543",
             email="sarah.thompson@example.com",
             tags=["Hit List", "Needs Qualifying"],
-            customFields={}
-        )
+            customFields={},
+        ),
     )
 
 
@@ -62,11 +62,7 @@ def unqualified_lead_webhook_event():
         type="InboundMessage",
         contactId="contact_unqualified_789",
         locationId="location_jorge_456",
-        message=GHLMessage(
-            type=MessageType.SMS,
-            body="Hi, just looking around",
-            direction=MessageDirection.INBOUND
-        ),
+        message=GHLMessage(type=MessageType.SMS, body="Hi, just looking around", direction=MessageDirection.INBOUND),
         contact=GHLContact(
             id="contact_unqualified_789",
             firstName="John",
@@ -74,8 +70,8 @@ def unqualified_lead_webhook_event():
             phone="+15123334444",
             email="john.browser@example.com",
             tags=["Hit List"],
-            customFields={}
-        )
+            customFields={},
+        ),
     )
 
 
@@ -88,7 +84,7 @@ def mock_conversation_manager():
     manager.get_context.return_value = {
         "extracted_preferences": {},
         "conversation_history": [],
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
     }
 
     # Mock AI response for qualified lead
@@ -101,9 +97,9 @@ def mock_conversation_manager():
             "bedrooms": 3,
             "bathrooms": 2,
             "financing": "pre-approved",
-            "motivation": "need to move"
+            "motivation": "need to move",
         },
-        lead_score=6  # Qualified for auto-booking
+        lead_score=6,  # Qualified for auto-booking
     )
 
     return manager
@@ -120,13 +116,13 @@ def mock_ghl_client():
         {
             "start_time": austin_time.isoformat(),
             "end_time": (austin_time + timedelta(minutes=60)).isoformat(),
-            "available": True
+            "available": True,
         },
         {
             "start_time": (austin_time + timedelta(hours=2)).isoformat(),
             "end_time": (austin_time + timedelta(hours=3)).isoformat(),
-            "available": True
-        }
+            "available": True,
+        },
     ]
 
     # Mock appointment creation
@@ -136,7 +132,7 @@ def mock_ghl_client():
         "startTime": austin_time.isoformat(),
         "contactId": "contact_qualified_123",
         "calendarId": "cal_jorge_456",
-        "title": "Buyer Consultation - Sarah Thompson"
+        "title": "Buyer Consultation - Sarah Thompson",
     }
 
     # Mock message sending
@@ -146,7 +142,7 @@ def mock_ghl_client():
     client.apply_actions.return_value = [
         {"status": "success", "action": "add_tag"},
         {"status": "success", "action": "send_message"},
-        {"status": "success", "action": "update_custom_field"}
+        {"status": "success", "action": "update_custom_field"},
     ]
 
     return client
@@ -173,30 +169,32 @@ class TestSmartAppointmentSchedulingIntegration:
 
     @pytest.mark.asyncio
     async def test_qualified_lead_auto_booking_success(
-        self,
-        qualified_lead_webhook_event,
-        mock_background_tasks,
-        mock_request
+        self, qualified_lead_webhook_event, mock_background_tasks, mock_request
     ):
         """Test slot offer flow for qualified lead."""
 
-        with patch('ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine') as MockEngine:
+        with patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine") as MockEngine:
             instance = MockEngine.return_value
-            instance.process_seller_response = AsyncMock(return_value={
-                "message": "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n1) Thursday, January 18 at 2:00 PM PT",
-                "temperature": "hot",
-                "questions_answered": 4,
-                "actions": []
-            })
+            instance.process_seller_response = AsyncMock(
+                return_value={
+                    "message": "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n1) Thursday, January 18 at 2:00 PM PT",
+                    "temperature": "hot",
+                    "questions_answered": 4,
+                    "actions": [],
+                }
+            )
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager', new=AsyncMock()) as mock_cm,                  patch('ghl_real_estate_ai.api.routes.webhook.tenant_service', new=AsyncMock()) as mock_ts:
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", new=AsyncMock()) as mock_cm,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", new=AsyncMock()) as mock_ts,
+            ):
                 mock_cm.get_context = AsyncMock(return_value={"seller_preferences": {}, "conversation_history": []})
                 mock_cm.update_context = AsyncMock()
                 mock_cm.memory_service = AsyncMock()
                 mock_cm.memory_service.save_context = AsyncMock()
                 mock_ts.get_tenant_config = AsyncMock(return_value=None)
 
-                with patch('ghl_real_estate_ai.api.routes.webhook.jorge_settings') as mock_jorge_settings:
+                with patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_jorge_settings:
                     mock_jorge_settings.JORGE_SELLER_MODE = True
                     mock_jorge_settings.JORGE_BUYER_MODE = False
                     mock_jorge_settings.JORGE_LEAD_MODE = False
@@ -204,9 +202,7 @@ class TestSmartAppointmentSchedulingIntegration:
                     mock_jorge_settings.LEAD_ACTIVATION_TAG = "Lead-Qualified"
 
                     response = await handle_ghl_webhook.__wrapped__(
-                        request=mock_request,
-                        event=qualified_lead_webhook_event,
-                        background_tasks=mock_background_tasks
+                        request=mock_request, event=qualified_lead_webhook_event, background_tasks=mock_background_tasks
                     )
 
         # Verify response
@@ -216,30 +212,32 @@ class TestSmartAppointmentSchedulingIntegration:
 
     @pytest.mark.asyncio
     async def test_qualified_lead_no_availability_fallback(
-        self,
-        qualified_lead_webhook_event,
-        mock_background_tasks,
-        mock_request
+        self, qualified_lead_webhook_event, mock_background_tasks, mock_request
     ):
         """Test fallback message when manual scheduling is required."""
 
-        with patch('ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine') as MockEngine:
+        with patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine") as MockEngine:
             instance = MockEngine.return_value
-            instance.process_seller_response = AsyncMock(return_value={
-                "message": "I'd love to get you connected with Jorge! Let me check his calendar and get back to you with the best available times for your schedule.",
-                "temperature": "hot",
-                "questions_answered": 4,
-                "actions": [{"type": "add_tag", "tag": "Needs-Manual-Scheduling"}]
-            })
+            instance.process_seller_response = AsyncMock(
+                return_value={
+                    "message": "I'd love to get you connected with Jorge! Let me check his calendar and get back to you with the best available times for your schedule.",
+                    "temperature": "hot",
+                    "questions_answered": 4,
+                    "actions": [{"type": "add_tag", "tag": "Needs-Manual-Scheduling"}],
+                }
+            )
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager', new=AsyncMock()) as mock_cm,                  patch('ghl_real_estate_ai.api.routes.webhook.tenant_service', new=AsyncMock()) as mock_ts:
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", new=AsyncMock()) as mock_cm,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", new=AsyncMock()) as mock_ts,
+            ):
                 mock_cm.get_context = AsyncMock(return_value={"seller_preferences": {}, "conversation_history": []})
                 mock_cm.update_context = AsyncMock()
                 mock_cm.memory_service = AsyncMock()
                 mock_cm.memory_service.save_context = AsyncMock()
                 mock_ts.get_tenant_config = AsyncMock(return_value=None)
 
-                with patch('ghl_real_estate_ai.api.routes.webhook.jorge_settings') as mock_jorge_settings:
+                with patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_jorge_settings:
                     mock_jorge_settings.JORGE_SELLER_MODE = True
                     mock_jorge_settings.JORGE_BUYER_MODE = False
                     mock_jorge_settings.JORGE_LEAD_MODE = False
@@ -247,9 +245,7 @@ class TestSmartAppointmentSchedulingIntegration:
                     mock_jorge_settings.LEAD_ACTIVATION_TAG = "Lead-Qualified"
 
                     response = await handle_ghl_webhook.__wrapped__(
-                        request=mock_request,
-                        event=qualified_lead_webhook_event,
-                        background_tasks=mock_background_tasks
+                        request=mock_request, event=qualified_lead_webhook_event, background_tasks=mock_background_tasks
                     )
 
         # Verify fallback response
@@ -258,35 +254,37 @@ class TestSmartAppointmentSchedulingIntegration:
         assert "get back to you" in response.message.lower()
 
         tag_actions = [action for action in response.actions if action.type == ActionType.ADD_TAG]
-        tag_names = [action.tag for action in tag_actions if hasattr(action, 'tag')]
+        tag_names = [action.tag for action in tag_actions if hasattr(action, "tag")]
         assert "Needs-Manual-Scheduling" in tag_names
 
     @pytest.mark.asyncio
     async def test_unqualified_lead_no_booking_attempt(
-        self,
-        unqualified_lead_webhook_event,
-        mock_background_tasks,
-        mock_request
+        self, unqualified_lead_webhook_event, mock_background_tasks, mock_request
     ):
         """Test that unqualified leads don't trigger slot offers."""
 
-        with patch('ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine') as MockEngine:
+        with patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine") as MockEngine:
             instance = MockEngine.return_value
-            instance.process_seller_response = AsyncMock(return_value={
-                "message": "Tell me a bit about your timeline and condition.",
-                "temperature": "cold",
-                "questions_answered": 0,
-                "actions": []
-            })
+            instance.process_seller_response = AsyncMock(
+                return_value={
+                    "message": "Tell me a bit about your timeline and condition.",
+                    "temperature": "cold",
+                    "questions_answered": 0,
+                    "actions": [],
+                }
+            )
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager', new=AsyncMock()) as mock_cm,                  patch('ghl_real_estate_ai.api.routes.webhook.tenant_service', new=AsyncMock()) as mock_ts:
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", new=AsyncMock()) as mock_cm,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", new=AsyncMock()) as mock_ts,
+            ):
                 mock_cm.get_context = AsyncMock(return_value={"seller_preferences": {}, "conversation_history": []})
                 mock_cm.update_context = AsyncMock()
                 mock_cm.memory_service = AsyncMock()
                 mock_cm.memory_service.save_context = AsyncMock()
                 mock_ts.get_tenant_config = AsyncMock(return_value=None)
 
-                with patch('ghl_real_estate_ai.api.routes.webhook.jorge_settings') as mock_jorge_settings:
+                with patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_jorge_settings:
                     mock_jorge_settings.JORGE_SELLER_MODE = True
                     mock_jorge_settings.JORGE_BUYER_MODE = False
                     mock_jorge_settings.JORGE_LEAD_MODE = False
@@ -296,7 +294,7 @@ class TestSmartAppointmentSchedulingIntegration:
                     response = await handle_ghl_webhook.__wrapped__(
                         request=mock_request,
                         event=unqualified_lead_webhook_event,
-                        background_tasks=mock_background_tasks
+                        background_tasks=mock_background_tasks,
                     )
 
         # Verify no appointment booking attempted
@@ -306,37 +304,40 @@ class TestSmartAppointmentSchedulingIntegration:
         # Should not have appointment-related actions
         action_types = [action.type for action in response.actions]
         appointment_tags = [
-            action.tag for action in response.actions
-            if action.type == ActionType.ADD_TAG and hasattr(action, 'tag') and "Appointment" in str(action.tag)
+            action.tag
+            for action in response.actions
+            if action.type == ActionType.ADD_TAG and hasattr(action, "tag") and "Appointment" in str(action.tag)
         ]
         assert len(appointment_tags) == 0
 
     @pytest.mark.asyncio
     async def test_appointment_booking_disabled(
-        self,
-        qualified_lead_webhook_event,
-        mock_background_tasks,
-        mock_request
+        self, qualified_lead_webhook_event, mock_background_tasks, mock_request
     ):
         """Test behavior when seller engine does not offer slots."""
 
-        with patch('ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine') as MockEngine:
+        with patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine") as MockEngine:
             instance = MockEngine.return_value
-            instance.process_seller_response = AsyncMock(return_value={
-                "message": "Thanks, I can help. What's your timeline?",
-                "temperature": "warm",
-                "questions_answered": 2,
-                "actions": []
-            })
+            instance.process_seller_response = AsyncMock(
+                return_value={
+                    "message": "Thanks, I can help. What's your timeline?",
+                    "temperature": "warm",
+                    "questions_answered": 2,
+                    "actions": [],
+                }
+            )
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager', new=AsyncMock()) as mock_cm,                  patch('ghl_real_estate_ai.api.routes.webhook.tenant_service', new=AsyncMock()) as mock_ts:
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", new=AsyncMock()) as mock_cm,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", new=AsyncMock()) as mock_ts,
+            ):
                 mock_cm.get_context = AsyncMock(return_value={"seller_preferences": {}, "conversation_history": []})
                 mock_cm.update_context = AsyncMock()
                 mock_cm.memory_service = AsyncMock()
                 mock_cm.memory_service.save_context = AsyncMock()
                 mock_ts.get_tenant_config = AsyncMock(return_value=None)
 
-                with patch('ghl_real_estate_ai.api.routes.webhook.jorge_settings') as mock_jorge_settings:
+                with patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_jorge_settings:
                     mock_jorge_settings.JORGE_SELLER_MODE = True
                     mock_jorge_settings.JORGE_BUYER_MODE = False
                     mock_jorge_settings.JORGE_LEAD_MODE = False
@@ -344,9 +345,7 @@ class TestSmartAppointmentSchedulingIntegration:
                     mock_jorge_settings.LEAD_ACTIVATION_TAG = "Lead-Qualified"
 
                     response = await handle_ghl_webhook.__wrapped__(
-                        request=mock_request,
-                        event=qualified_lead_webhook_event,
-                        background_tasks=mock_background_tasks
+                        request=mock_request, event=qualified_lead_webhook_event, background_tasks=mock_background_tasks
                     )
 
         assert response.success is True
@@ -354,25 +353,25 @@ class TestSmartAppointmentSchedulingIntegration:
 
     @pytest.mark.asyncio
     async def test_calendar_scheduling_error_graceful_handling(
-        self,
-        qualified_lead_webhook_event,
-        mock_background_tasks,
-        mock_request
+        self, qualified_lead_webhook_event, mock_background_tasks, mock_request
     ):
         """Test graceful handling when seller engine raises an exception."""
 
-        with patch('ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine') as MockEngine:
+        with patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine") as MockEngine:
             instance = MockEngine.return_value
             instance.process_seller_response = AsyncMock(side_effect=Exception("Calendar API unavailable"))
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager', new=AsyncMock()) as mock_cm,                  patch('ghl_real_estate_ai.api.routes.webhook.tenant_service', new=AsyncMock()) as mock_ts:
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", new=AsyncMock()) as mock_cm,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", new=AsyncMock()) as mock_ts,
+            ):
                 mock_cm.get_context = AsyncMock(return_value={"seller_preferences": {}, "conversation_history": []})
                 mock_cm.update_context = AsyncMock()
                 mock_cm.memory_service = AsyncMock()
                 mock_cm.memory_service.save_context = AsyncMock()
                 mock_ts.get_tenant_config = AsyncMock(return_value=None)
 
-                with patch('ghl_real_estate_ai.api.routes.webhook.jorge_settings') as mock_jorge_settings:
+                with patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_jorge_settings:
                     mock_jorge_settings.JORGE_SELLER_MODE = True
                     mock_jorge_settings.JORGE_BUYER_MODE = False
                     mock_jorge_settings.JORGE_LEAD_MODE = False
@@ -380,20 +379,14 @@ class TestSmartAppointmentSchedulingIntegration:
                     mock_jorge_settings.LEAD_ACTIVATION_TAG = "Lead-Qualified"
 
                     response = await handle_ghl_webhook.__wrapped__(
-                        request=mock_request,
-                        event=qualified_lead_webhook_event,
-                        background_tasks=mock_background_tasks
+                        request=mock_request, event=qualified_lead_webhook_event, background_tasks=mock_background_tasks
                     )
 
         assert response.success is True
         assert len(response.message) > 0
 
     @pytest.mark.asyncio
-    async def test_appointment_type_detection_listing(
-        self,
-        mock_background_tasks,
-        mock_request
-    ):
+    async def test_appointment_type_detection_listing(self, mock_background_tasks, mock_request):
         """Test listing-related messaging for seller appointments."""
 
         # Create webhook event for seller
@@ -404,7 +397,7 @@ class TestSmartAppointmentSchedulingIntegration:
             message=GHLMessage(
                 type=MessageType.SMS,
                 body="I need to sell my house quickly. It's in excellent condition and ready to list.",
-                direction=MessageDirection.INBOUND
+                direction=MessageDirection.INBOUND,
             ),
             contact=GHLContact(
                 id="contact_seller_456",
@@ -413,27 +406,32 @@ class TestSmartAppointmentSchedulingIntegration:
                 phone="+15125551111",
                 email="lisa.seller@example.com",
                 tags=["Hit List", "Needs Qualifying"],
-                customFields={}
-            )
+                customFields={},
+            ),
         )
 
-        with patch('ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine') as MockEngine:
+        with patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine") as MockEngine:
             instance = MockEngine.return_value
-            instance.process_seller_response = AsyncMock(return_value={
-                "message": "I've got time to discuss your listing strategy. Reply with 1, 2, or 3.",
-                "temperature": "hot",
-                "questions_answered": 4,
-                "actions": []
-            })
+            instance.process_seller_response = AsyncMock(
+                return_value={
+                    "message": "I've got time to discuss your listing strategy. Reply with 1, 2, or 3.",
+                    "temperature": "hot",
+                    "questions_answered": 4,
+                    "actions": [],
+                }
+            )
 
-            with patch('ghl_real_estate_ai.api.routes.webhook.conversation_manager', new=AsyncMock()) as mock_cm,                  patch('ghl_real_estate_ai.api.routes.webhook.tenant_service', new=AsyncMock()) as mock_ts:
+            with (
+                patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", new=AsyncMock()) as mock_cm,
+                patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", new=AsyncMock()) as mock_ts,
+            ):
                 mock_cm.get_context = AsyncMock(return_value={"seller_preferences": {}, "conversation_history": []})
                 mock_cm.update_context = AsyncMock()
                 mock_cm.memory_service = AsyncMock()
                 mock_cm.memory_service.save_context = AsyncMock()
                 mock_ts.get_tenant_config = AsyncMock(return_value=None)
 
-                with patch('ghl_real_estate_ai.api.routes.webhook.jorge_settings') as mock_jorge_settings:
+                with patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_jorge_settings:
                     mock_jorge_settings.JORGE_SELLER_MODE = True
                     mock_jorge_settings.JORGE_BUYER_MODE = False
                     mock_jorge_settings.JORGE_LEAD_MODE = False
@@ -441,9 +439,7 @@ class TestSmartAppointmentSchedulingIntegration:
                     mock_jorge_settings.LEAD_ACTIVATION_TAG = "Lead-Qualified"
 
                     response = await handle_ghl_webhook.__wrapped__(
-                        request=mock_request,
-                        event=seller_event,
-                        background_tasks=mock_background_tasks
+                        request=mock_request, event=seller_event, background_tasks=mock_background_tasks
                     )
 
         # Verify seller slot offer messaging
@@ -479,14 +475,14 @@ class TestSmartAppointmentSchedulingIntegration:
         # Test duration mappings match Jorge's business needs
         assert AppointmentDuration.BUYER_CONSULTATION.value == 60  # 1 hour
         assert AppointmentDuration.LISTING_APPOINTMENT.value == 90  # 1.5 hours
-        assert AppointmentDuration.INVESTOR_MEETING.value == 45    # 45 minutes
-        assert AppointmentDuration.PROPERTY_SHOWING.value == 30    # 30 minutes
-        assert AppointmentDuration.FOLLOW_UP_CALL.value == 15      # 15 minutes
+        assert AppointmentDuration.INVESTOR_MEETING.value == 45  # 45 minutes
+        assert AppointmentDuration.PROPERTY_SHOWING.value == 30  # 30 minutes
+        assert AppointmentDuration.FOLLOW_UP_CALL.value == 15  # 15 minutes
 
     @pytest.mark.asyncio
     async def test_timezone_handling_austin(self):
         """Test proper timezone handling for Jorge's Austin market."""
-        from ghl_real_estate_ai.services.calendar_scheduler import TimeSlot, AppointmentType
+        from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, TimeSlot
 
         # Create UTC time
         utc_time = datetime(2024, 1, 17, 20, 0, 0, tzinfo=pytz.UTC)  # 8 PM UTC
@@ -495,7 +491,7 @@ class TestSmartAppointmentSchedulingIntegration:
             start_time=utc_time,
             end_time=utc_time + timedelta(minutes=60),
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         # Convert to Austin time
@@ -518,14 +514,13 @@ async def test_performance_40_percent_faster_target():
 
     This test ensures the system can book appointments faster than manual processes.
     """
-    from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
     import time
+
+    from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
 
     # Mock GHL client with fast responses
     mock_ghl_client = AsyncMock()
-    mock_ghl_client.get_available_slots.return_value = [
-        {"start_time": "2024-01-18T14:00:00Z", "available": True}
-    ]
+    mock_ghl_client.get_available_slots.return_value = [{"start_time": "2024-01-18T14:00:00Z", "available": True}]
     mock_ghl_client.create_appointment.return_value = {"id": "apt_123", "status": "confirmed"}
 
     scheduler = CalendarScheduler(ghl_client=mock_ghl_client)
@@ -536,7 +531,7 @@ async def test_performance_40_percent_faster_target():
         "first_name": "Speed",
         "last_name": "Test",
         "phone": "+15125551234",
-        "email": "speed@test.com"
+        "email": "speed@test.com",
     }
 
     extracted_data = {
@@ -544,7 +539,7 @@ async def test_performance_40_percent_faster_target():
         "location": ["Austin"],
         "timeline": "urgent",
         "bedrooms": 3,
-        "financing": "pre-approved"
+        "financing": "pre-approved",
     }
 
     # Measure booking time
@@ -555,7 +550,7 @@ async def test_performance_40_percent_faster_target():
         contact_info=contact_info,
         lead_score=6,  # Qualified
         extracted_data=extracted_data,
-        message_content="I'm ready to buy"
+        message_content="I'm ready to buy",
     )
 
     end_time = time.time()

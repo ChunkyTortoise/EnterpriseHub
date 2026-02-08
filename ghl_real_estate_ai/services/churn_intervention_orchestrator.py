@@ -17,26 +17,28 @@ Author: EnterpriseHub AI
 Last Updated: 2026-01-09
 """
 
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple, Any
-from dataclasses import dataclass, asdict
-from enum import Enum
 import asyncio
 import json
+import logging
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Internal imports
 from .churn_prediction_engine import ChurnPrediction, ChurnRiskTier
-from .reengagement_engine import ReengagementEngine
-from .memory_service import MemoryService
 from .ghl_service import GHLService
+from .memory_service import MemoryService
+from .reengagement_engine import ReengagementEngine
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
 class InterventionType(Enum):
     """Types of automated interventions"""
+
     EMAIL_REENGAGEMENT = "email_reengagement"
     SMS_URGENT = "sms_urgent"
     PHONE_CALLBACK = "phone_callback"
@@ -46,8 +48,10 @@ class InterventionType(Enum):
     INCENTIVE_OFFER = "incentive_offer"
     AGENT_ESCALATION = "agent_escalation"
 
+
 class InterventionStatus(Enum):
     """Status of intervention execution"""
+
     PENDING = "pending"
     SCHEDULED = "scheduled"
     EXECUTING = "executing"
@@ -55,9 +59,11 @@ class InterventionStatus(Enum):
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 @dataclass
 class InterventionConfig:
     """Configuration for intervention campaigns"""
+
     intervention_type: InterventionType
     trigger_risk_tier: ChurnRiskTier
     delay_minutes: int  # Delay before execution
@@ -67,9 +73,11 @@ class InterventionConfig:
     template_id: Optional[str] = None
     priority_score: int = 5  # 1-10 priority for scheduling
 
+
 @dataclass
 class InterventionExecution:
     """Record of intervention execution attempt"""
+
     execution_id: str
     lead_id: str
     intervention_type: InterventionType
@@ -94,6 +102,7 @@ class InterventionExecution:
     next_escalation: Optional[datetime] = None
     escalation_type: Optional[InterventionType] = None
 
+
 class InterventionOrchestrator:
     """
     Orchestrates automated interventions based on churn risk predictions
@@ -106,15 +115,12 @@ class InterventionOrchestrator:
     5. Prevents spam and manages intervention frequency
     """
 
-    def __init__(self,
-                 reengagement_engine: ReengagementEngine,
-                 memory_service: MemoryService,
-                 ghl_service: GHLService):
+    def __init__(self, reengagement_engine: ReengagementEngine, memory_service: MemoryService, ghl_service: GHLService):
 
         self.reengagement_engine = reengagement_engine
         self.memory_service = memory_service
         self.ghl_service = ghl_service
-        self.logger = logging.getLogger(__name__ + '.InterventionOrchestrator')
+        self.logger = logging.getLogger(__name__ + ".InterventionOrchestrator")
 
         # Intervention tracking
         self._active_interventions: Dict[str, List[InterventionExecution]] = defaultdict(list)
@@ -132,7 +138,9 @@ class InterventionOrchestrator:
 
         self.logger.info("InterventionOrchestrator initialized successfully")
 
-    async def process_churn_predictions(self, predictions: Dict[str, ChurnPrediction]) -> Dict[str, List[InterventionExecution]]:
+    async def process_churn_predictions(
+        self, predictions: Dict[str, ChurnPrediction]
+    ) -> Dict[str, List[InterventionExecution]]:
         """
         Process churn predictions and trigger appropriate interventions
 
@@ -180,8 +188,7 @@ class InterventionOrchestrator:
         pending_interventions = []
         for lead_interventions in self._active_interventions.values():
             for intervention in lead_interventions:
-                if (intervention.status == InterventionStatus.PENDING and
-                    intervention.scheduled_time <= current_time):
+                if intervention.status == InterventionStatus.PENDING and intervention.scheduled_time <= current_time:
                     pending_interventions.append(intervention)
 
         self.logger.info(f"Executing {len(pending_interventions)} pending interventions")
@@ -208,7 +215,9 @@ class InterventionOrchestrator:
 
         return execution_results
 
-    async def _analyze_intervention_requirements(self, lead_id: str, prediction: ChurnPrediction) -> List[InterventionType]:
+    async def _analyze_intervention_requirements(
+        self, lead_id: str, prediction: ChurnPrediction
+    ) -> List[InterventionType]:
         """Analyze churn prediction to determine required interventions"""
         required_interventions = []
 
@@ -217,21 +226,19 @@ class InterventionOrchestrator:
             ChurnRiskTier.CRITICAL: [
                 InterventionType.AGENT_ESCALATION,
                 InterventionType.PHONE_CALLBACK,
-                InterventionType.INCENTIVE_OFFER
+                InterventionType.INCENTIVE_OFFER,
             ],
             ChurnRiskTier.HIGH: [
                 InterventionType.PHONE_CALLBACK,
                 InterventionType.PERSONAL_CONSULTATION,
-                InterventionType.PROPERTY_ALERT
+                InterventionType.PROPERTY_ALERT,
             ],
             ChurnRiskTier.MEDIUM: [
                 InterventionType.SMS_URGENT,
                 InterventionType.EMAIL_REENGAGEMENT,
-                InterventionType.MARKET_UPDATE
+                InterventionType.MARKET_UPDATE,
             ],
-            ChurnRiskTier.LOW: [
-                InterventionType.EMAIL_REENGAGEMENT
-            ]
+            ChurnRiskTier.LOW: [InterventionType.EMAIL_REENGAGEMENT],
         }
 
         required_interventions.extend(risk_tier_interventions.get(prediction.risk_tier, []))
@@ -254,12 +261,12 @@ class InterventionOrchestrator:
     async def _get_factor_specific_interventions(self, factor: str, importance: float) -> List[InterventionType]:
         """Get interventions specific to risk factors"""
         factor_interventions = {
-            'days_since_last_interaction': [InterventionType.EMAIL_REENGAGEMENT, InterventionType.SMS_URGENT],
-            'response_rate_7d': [InterventionType.PHONE_CALLBACK],
-            'engagement_trend': [InterventionType.PROPERTY_ALERT, InterventionType.MARKET_UPDATE],
-            'stage_stagnation_days': [InterventionType.PERSONAL_CONSULTATION],
-            'email_open_rate': [InterventionType.SMS_URGENT],
-            'call_pickup_rate': [InterventionType.EMAIL_REENGAGEMENT]
+            "days_since_last_interaction": [InterventionType.EMAIL_REENGAGEMENT, InterventionType.SMS_URGENT],
+            "response_rate_7d": [InterventionType.PHONE_CALLBACK],
+            "engagement_trend": [InterventionType.PROPERTY_ALERT, InterventionType.MARKET_UPDATE],
+            "stage_stagnation_days": [InterventionType.PERSONAL_CONSULTATION],
+            "email_open_rate": [InterventionType.SMS_URGENT],
+            "call_pickup_rate": [InterventionType.EMAIL_REENGAGEMENT],
         }
 
         interventions = factor_interventions.get(factor, [])
@@ -269,8 +276,9 @@ class InterventionOrchestrator:
             return interventions
         return []
 
-    async def _filter_rate_limited_interventions(self, lead_id: str,
-                                               interventions: List[InterventionType]) -> List[InterventionType]:
+    async def _filter_rate_limited_interventions(
+        self, lead_id: str, interventions: List[InterventionType]
+    ) -> List[InterventionType]:
         """Filter interventions based on rate limiting rules"""
         current_time = datetime.now()
         viable_interventions = []
@@ -300,17 +308,19 @@ class InterventionOrchestrator:
 
         return viable_interventions
 
-    async def _schedule_interventions(self, lead_id: str,
-                                    interventions: List[InterventionType],
-                                    prediction: ChurnPrediction) -> List[InterventionExecution]:
+    async def _schedule_interventions(
+        self, lead_id: str, interventions: List[InterventionType], prediction: ChurnPrediction
+    ) -> List[InterventionExecution]:
         """Schedule interventions with appropriate timing and escalation"""
         scheduled = []
         current_time = datetime.now()
 
         # Sort interventions by priority and urgency
-        intervention_priorities = [(intervention, self._intervention_configs[intervention].priority_score)
-                                 for intervention in interventions
-                                 if intervention in self._intervention_configs]
+        intervention_priorities = [
+            (intervention, self._intervention_configs[intervention].priority_score)
+            for intervention in interventions
+            if intervention in self._intervention_configs
+        ]
         intervention_priorities.sort(key=lambda x: x[1], reverse=True)
 
         cumulative_delay = 0
@@ -327,7 +337,7 @@ class InterventionOrchestrator:
                 intervention_type=intervention_type,
                 trigger_prediction=prediction,
                 scheduled_time=scheduled_time,
-                personalization_data=await self._prepare_personalization_data(lead_id, prediction)
+                personalization_data=await self._prepare_personalization_data(lead_id, prediction),
             )
 
             # Set up escalation if applicable
@@ -346,7 +356,9 @@ class InterventionOrchestrator:
     async def _execute_intervention(self, intervention: InterventionExecution) -> bool:
         """Execute a specific intervention"""
         try:
-            self.logger.info(f"Executing intervention {intervention.intervention_type.value} for lead {intervention.lead_id}")
+            self.logger.info(
+                f"Executing intervention {intervention.intervention_type.value} for lead {intervention.lead_id}"
+            )
 
             # Determine execution channel and method
             execution_method = self._get_execution_method(intervention.intervention_type)
@@ -381,7 +393,7 @@ class InterventionOrchestrator:
             campaign_mapping = {
                 InterventionType.EMAIL_REENGAGEMENT: "high_intent_reengagement",
                 InterventionType.PROPERTY_ALERT: "property_match_alert",
-                InterventionType.MARKET_UPDATE: "market_insights_campaign"
+                InterventionType.MARKET_UPDATE: "market_insights_campaign",
             }
 
             campaign_type = campaign_mapping.get(intervention.intervention_type)
@@ -393,14 +405,14 @@ class InterventionOrchestrator:
                 lead_id=intervention.lead_id,
                 campaign_type=campaign_type,
                 personalization_data=intervention.personalization_data,
-                urgency_level=intervention.trigger_prediction.intervention_urgency
+                urgency_level=intervention.trigger_prediction.intervention_urgency,
             )
 
             intervention.channel = "email"
             intervention.template_used = campaign_type
-            intervention.delivery_status = "sent" if result.get('success') else "failed"
+            intervention.delivery_status = "sent" if result.get("success") else "failed"
 
-            return result.get('success', False)
+            return result.get("success", False)
 
         except Exception as e:
             self.logger.error(f"Error executing via reengagement engine: {str(e)}")
@@ -414,7 +426,7 @@ class InterventionOrchestrator:
                 InterventionType.SMS_URGENT: "urgent_followup_sms",
                 InterventionType.PHONE_CALLBACK: "agent_callback_scheduling",
                 InterventionType.PERSONAL_CONSULTATION: "consultation_booking",
-                InterventionType.AGENT_ESCALATION: "urgent_agent_assignment"
+                InterventionType.AGENT_ESCALATION: "urgent_agent_assignment",
             }
 
             workflow_id = workflow_mapping.get(intervention.intervention_type)
@@ -423,16 +435,14 @@ class InterventionOrchestrator:
 
             # Trigger GHL workflow
             result = await self.ghl_service.trigger_workflow(
-                contact_id=intervention.lead_id,
-                workflow_id=workflow_id,
-                custom_data=intervention.personalization_data
+                contact_id=intervention.lead_id, workflow_id=workflow_id, custom_data=intervention.personalization_data
             )
 
             intervention.channel = "ghl_workflow"
             intervention.template_used = workflow_id
-            intervention.delivery_status = "triggered" if result.get('success') else "failed"
+            intervention.delivery_status = "triggered" if result.get("success") else "failed"
 
-            return result.get('success', False)
+            return result.get("success", False)
 
         except Exception as e:
             self.logger.error(f"Error executing via GHL workflow: {str(e)}")
@@ -448,7 +458,7 @@ class InterventionOrchestrator:
                 self.logger.warning(f"Direct outreach not implemented for {intervention.intervention_type.value}")
                 return False
 
-            return result.get('success', False)
+            return result.get("success", False)
 
         except Exception as e:
             self.logger.error(f"Error executing direct outreach: {str(e)}")
@@ -463,7 +473,7 @@ class InterventionOrchestrator:
             "offer_type": "churn_prevention",
             "discount_percentage": 5.0,  # 5% off closing costs
             "expiry_date": datetime.now() + timedelta(days=7),
-            "personalized_message": intervention.personalization_data.get('incentive_message', '')
+            "personalized_message": intervention.personalization_data.get("incentive_message", ""),
         }
 
         # In production, this would create actual offers in the system
@@ -480,22 +490,19 @@ class InterventionOrchestrator:
             lead_context = await self.memory_service.get_lead_context(lead_id)
 
             personalization = {
-                "lead_name": lead_context.get('name', 'Valued Client'),
+                "lead_name": lead_context.get("name", "Valued Client"),
                 "risk_score": f"{prediction.risk_score_14d:.0f}%",
                 "risk_tier": prediction.risk_tier.value,
                 "top_risk_factor": prediction.top_risk_factors[0][0] if prediction.top_risk_factors else "engagement",
                 "recommended_actions": prediction.recommended_actions[:2],  # Top 2 actions
                 "urgency_level": prediction.intervention_urgency,
-
                 # Property preferences
-                "preferred_locations": lead_context.get('preferences', {}).get('locations', []),
-                "budget_range": lead_context.get('preferences', {}).get('budget_range', ''),
-                "property_types": lead_context.get('preferences', {}).get('property_types', []),
-
+                "preferred_locations": lead_context.get("preferences", {}).get("locations", []),
+                "budget_range": lead_context.get("preferences", {}).get("budget_range", ""),
+                "property_types": lead_context.get("preferences", {}).get("property_types", []),
                 # Contextual data
-                "days_since_interaction": prediction.feature_vector.get('days_since_last_interaction', 0),
-                "last_property_viewed": lead_context.get('last_property_viewed', {}),
-
+                "days_since_interaction": prediction.feature_vector.get("days_since_last_interaction", 0),
+                "last_property_viewed": lead_context.get("last_property_viewed", {}),
                 # Dynamic content
                 "incentive_message": self._generate_incentive_message(prediction),
                 "urgency_message": self._generate_urgency_message(prediction),
@@ -510,7 +517,9 @@ class InterventionOrchestrator:
     def _generate_incentive_message(self, prediction: ChurnPrediction) -> str:
         """Generate personalized incentive message based on risk factors"""
         if prediction.risk_tier == ChurnRiskTier.CRITICAL:
-            return "We value your business and would like to offer you exclusive benefits to help with your home search."
+            return (
+                "We value your business and would like to offer you exclusive benefits to help with your home search."
+            )
         elif prediction.risk_tier == ChurnRiskTier.HIGH:
             return "Let us help make your home buying journey smoother with personalized assistance."
         else:
@@ -522,7 +531,7 @@ class InterventionOrchestrator:
             "immediate": "Time-sensitive opportunity - let's connect today",
             "urgent": "Important updates about your home search",
             "moderate": "Checking in on your home buying progress",
-            "low": "Staying connected on your home search"
+            "low": "Staying connected on your home search",
         }
         return urgency_messages.get(prediction.intervention_urgency, "Following up on your home search")
 
@@ -539,7 +548,7 @@ class InterventionOrchestrator:
                     intervention_type=intervention.escalation_type,
                     trigger_prediction=intervention.trigger_prediction,
                     scheduled_time=intervention.next_escalation,
-                    personalization_data=intervention.personalization_data
+                    personalization_data=intervention.personalization_data,
                 )
 
                 self._active_interventions[intervention.lead_id].append(escalation_intervention)
@@ -562,7 +571,7 @@ class InterventionOrchestrator:
             InterventionType.MARKET_UPDATE: "reengagement_engine",
             InterventionType.PERSONAL_CONSULTATION: "ghl_workflow",
             InterventionType.INCENTIVE_OFFER: "direct_outreach",
-            InterventionType.AGENT_ESCALATION: "ghl_workflow"
+            InterventionType.AGENT_ESCALATION: "ghl_workflow",
         }
         return execution_methods.get(intervention_type, "reengagement_engine")
 
@@ -577,7 +586,7 @@ class InterventionOrchestrator:
             # No escalation for these types
             InterventionType.PHONE_CALLBACK: None,
             InterventionType.INCENTIVE_OFFER: None,
-            InterventionType.AGENT_ESCALATION: None
+            InterventionType.AGENT_ESCALATION: None,
         }
         return escalation_map.get(intervention_type)
 
@@ -591,7 +600,7 @@ class InterventionOrchestrator:
             "trigger_risk_score": intervention.trigger_prediction.risk_score_14d,
             "trigger_risk_tier": intervention.trigger_prediction.risk_tier.value,
             "channel_used": intervention.channel,
-            "template_used": intervention.template_used
+            "template_used": intervention.template_used,
         }
 
         # Store metrics for later analysis
@@ -605,8 +614,7 @@ class InterventionOrchestrator:
         count = 0
 
         for intervention in self._active_interventions.get(lead_id, []):
-            if (intervention.executed_time and
-                intervention.executed_time.date() == today):
+            if intervention.executed_time and intervention.executed_time.date() == today:
                 count += 1
 
         return count
@@ -621,7 +629,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(hours=24),
                 escalation_delay=timedelta(hours=6),
                 success_metrics=["email_open", "email_click", "property_view"],
-                priority_score=5
+                priority_score=5,
             ),
             InterventionType.SMS_URGENT: InterventionConfig(
                 intervention_type=InterventionType.SMS_URGENT,
@@ -630,7 +638,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(hours=12),
                 escalation_delay=timedelta(hours=3),
                 success_metrics=["sms_response", "call_back"],
-                priority_score=7
+                priority_score=7,
             ),
             InterventionType.PHONE_CALLBACK: InterventionConfig(
                 intervention_type=InterventionType.PHONE_CALLBACK,
@@ -639,7 +647,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(hours=8),
                 escalation_delay=timedelta(hours=2),
                 success_metrics=["call_connected", "appointment_scheduled"],
-                priority_score=9
+                priority_score=9,
             ),
             InterventionType.PROPERTY_ALERT: InterventionConfig(
                 intervention_type=InterventionType.PROPERTY_ALERT,
@@ -648,7 +656,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(hours=48),
                 escalation_delay=timedelta(hours=12),
                 success_metrics=["property_view", "favorite_added"],
-                priority_score=6
+                priority_score=6,
             ),
             InterventionType.MARKET_UPDATE: InterventionConfig(
                 intervention_type=InterventionType.MARKET_UPDATE,
@@ -657,7 +665,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(days=3),
                 escalation_delay=timedelta(days=1),
                 success_metrics=["email_open", "article_read"],
-                priority_score=4
+                priority_score=4,
             ),
             InterventionType.PERSONAL_CONSULTATION: InterventionConfig(
                 intervention_type=InterventionType.PERSONAL_CONSULTATION,
@@ -666,7 +674,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(days=2),
                 escalation_delay=timedelta(hours=4),
                 success_metrics=["consultation_scheduled", "consultation_completed"],
-                priority_score=8
+                priority_score=8,
             ),
             InterventionType.INCENTIVE_OFFER: InterventionConfig(
                 intervention_type=InterventionType.INCENTIVE_OFFER,
@@ -675,7 +683,7 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(days=7),
                 escalation_delay=None,  # No escalation
                 success_metrics=["offer_viewed", "offer_accepted"],
-                priority_score=10
+                priority_score=10,
             ),
             InterventionType.AGENT_ESCALATION: InterventionConfig(
                 intervention_type=InterventionType.AGENT_ESCALATION,
@@ -684,8 +692,8 @@ class InterventionOrchestrator:
                 max_frequency=timedelta(days=1),
                 escalation_delay=None,  # No escalation
                 success_metrics=["agent_assigned", "lead_contacted"],
-                priority_score=10
-            )
+                priority_score=10,
+            ),
         }
 
         return configs
@@ -696,7 +704,8 @@ class InterventionOrchestrator:
 
         # Filter recent interventions
         recent_interventions = [
-            intervention for intervention in self._intervention_history
+            intervention
+            for intervention in self._intervention_history
             if intervention.executed_time and intervention.executed_time >= cutoff_date
         ]
 
@@ -727,7 +736,9 @@ class InterventionOrchestrator:
             "success_rate": successful_interventions / total_interventions if total_interventions > 0 else 0,
             "by_intervention_type": dict(type_metrics),
             "by_risk_tier": dict(tier_metrics),
-            "avg_interventions_per_lead": total_interventions / len(set(i.lead_id for i in recent_interventions)) if recent_interventions else 0
+            "avg_interventions_per_lead": total_interventions / len(set(i.lead_id for i in recent_interventions))
+            if recent_interventions
+            else 0,
         }
 
         return analytics
@@ -744,11 +755,14 @@ class InterventionOrchestrator:
 
         self.logger.info(f"Cancelled {cancelled_count} pending interventions for lead {lead_id}")
 
+
 # Example usage and testing
 if __name__ == "__main__":
+
     async def test_intervention_orchestrator():
         """Test the intervention orchestrator"""
         from unittest.mock import AsyncMock
+
         from .churn_prediction_engine import ChurnPrediction, ChurnRiskTier
 
         # Mock services
@@ -757,9 +771,7 @@ if __name__ == "__main__":
         ghl_service = AsyncMock()
 
         # Initialize orchestrator
-        orchestrator = InterventionOrchestrator(
-            reengagement_engine, memory_service, ghl_service
-        )
+        orchestrator = InterventionOrchestrator(reengagement_engine, memory_service, ghl_service)
 
         # Create test prediction
         test_prediction = ChurnPrediction(
@@ -773,12 +785,12 @@ if __name__ == "__main__":
             top_risk_factors=[
                 ("days_since_last_interaction", 0.25),
                 ("response_rate_7d", 0.20),
-                ("engagement_trend", 0.18)
+                ("engagement_trend", 0.18),
             ],
             recommended_actions=["Immediate phone call", "Escalate to senior agent"],
             intervention_urgency="immediate",
             feature_vector={},
-            model_version="test-1.0.0"
+            model_version="test-1.0.0",
         )
 
         # Test intervention processing
@@ -796,4 +808,5 @@ if __name__ == "__main__":
         print(f"Execution results: {execution_results}")
 
     import asyncio
+
     asyncio.run(test_intervention_orchestrator())

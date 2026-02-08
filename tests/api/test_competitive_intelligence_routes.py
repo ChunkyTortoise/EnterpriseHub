@@ -13,12 +13,13 @@ Tests cover:
 9. Rate limiting and security
 """
 
+import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timedelta
-from typing import Dict, List, Any
-import json
 
 # Import the FastAPI app and routes
 try:
@@ -43,18 +44,22 @@ class TestCompetitiveIntelligenceAPI:
     @pytest.fixture
     def auth_headers(self):
         """Mock authentication headers"""
-        return {
-            "Authorization": "Bearer test_token_12345",
-            "Content-Type": "application/json"
-        }
+        return {"Authorization": "Bearer test_token_12345", "Content-Type": "application/json"}
 
     @pytest.fixture
     def mock_services(self):
         """Mock competitive intelligence services"""
-        with patch('ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_data_pipeline') as mock_pipeline, \
-             patch('ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_intelligence_system') as mock_intel, \
-             patch('ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_response_engine') as mock_response:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_data_pipeline"
+            ) as mock_pipeline,
+            patch(
+                "ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_intelligence_system"
+            ) as mock_intel,
+            patch(
+                "ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_response_engine"
+            ) as mock_response,
+        ):
             # Mock data pipeline
             mock_pipeline_instance = AsyncMock()
             mock_pipeline_instance.start_real_time_monitoring.return_value = True
@@ -71,7 +76,7 @@ class TestCompetitiveIntelligenceAPI:
                 "data_quality_score": 0.86,
                 "active_collectors": 6,
                 "monitored_competitors": 8,
-                "monitoring_active": True
+                "monitoring_active": True,
             }
             mock_pipeline.return_value = mock_pipeline_instance
 
@@ -93,7 +98,7 @@ class TestCompetitiveIntelligenceAPI:
                     "avg_response_time_ms": 1250.0,
                     "total_cost": 450.75,
                     "active_rules": 8,
-                    "pending_approvals": 2
+                    "pending_approvals": 2,
                 }
             }
             mock_response.return_value = mock_response_instance
@@ -101,7 +106,7 @@ class TestCompetitiveIntelligenceAPI:
             yield {
                 "pipeline": mock_pipeline_instance,
                 "intelligence": mock_intel_instance,
-                "response": mock_response_instance
+                "response": mock_response_instance,
             }
 
     def test_start_monitoring_endpoint(self, client, auth_headers, mock_services):
@@ -110,13 +115,11 @@ class TestCompetitiveIntelligenceAPI:
             "competitor_ids": ["comp_001", "comp_002", "comp_003"],
             "data_sources": ["mls_data", "social_media"],
             "monitoring_frequency": 300,
-            "alert_thresholds": {"price_change": 0.05}
+            "alert_thresholds": {"price_change": 0.05},
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/start",
-            json=request_data,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/monitoring/start", json=request_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -134,15 +137,10 @@ class TestCompetitiveIntelligenceAPI:
     def test_start_monitoring_validation_errors(self, client, auth_headers):
         """Test request validation for monitoring start"""
         # Empty competitor list
-        invalid_request = {
-            "competitor_ids": [],
-            "monitoring_frequency": 300
-        }
+        invalid_request = {"competitor_ids": [], "monitoring_frequency": 300}
 
         response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/start",
-            json=invalid_request,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/monitoring/start", json=invalid_request, headers=auth_headers
         )
 
         assert response.status_code == 422  # Validation error
@@ -150,23 +148,18 @@ class TestCompetitiveIntelligenceAPI:
         # Invalid monitoring frequency
         invalid_frequency = {
             "competitor_ids": ["comp_001"],
-            "monitoring_frequency": 30  # Below minimum
+            "monitoring_frequency": 30,  # Below minimum
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/start",
-            json=invalid_frequency,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/monitoring/start", json=invalid_frequency, headers=auth_headers
         )
 
         assert response.status_code == 422
 
     def test_stop_monitoring_endpoint(self, client, auth_headers, mock_services):
         """Test stopping competitive monitoring"""
-        response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/stop",
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/competitive-intelligence/monitoring/stop", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -185,6 +178,7 @@ class TestCompetitiveIntelligenceAPI:
 
         # Mock competitor data points
         from ghl_real_estate_ai.services.competitive_data_pipeline import CompetitorDataPoint, DataSource, DataType
+
         mock_data_points = [
             CompetitorDataPoint(
                 data_id="data_001",
@@ -193,7 +187,7 @@ class TestCompetitiveIntelligenceAPI:
                 data_type=DataType.PRICING,
                 raw_data={"commission": 0.025},
                 confidence_score=0.9,
-                collected_at=datetime.now()
+                collected_at=datetime.now(),
             )
         ]
 
@@ -201,20 +195,21 @@ class TestCompetitiveIntelligenceAPI:
 
         # Mock quality validation
         from ghl_real_estate_ai.services.competitive_data_pipeline import DataQualityScore
+
         mock_quality = DataQualityScore(
             overall_score=0.85,
             accuracy_score=0.9,
             completeness_score=0.8,
             timeliness_score=0.9,
             consistency_score=0.8,
-            reliability_score=0.85
+            reliability_score=0.85,
         )
         mock_services["pipeline"].validate_data_quality.return_value = mock_quality
 
         response = client.get(
             f"/api/v1/competitive-intelligence/competitors/{competitor_id}/data",
             headers=auth_headers,
-            params={"time_range_hours": 24}
+            params={"time_range_hours": 24},
         )
 
         assert response.status_code == 200
@@ -237,11 +232,12 @@ class TestCompetitiveIntelligenceAPI:
             "market_area": "Rancho Cucamonga",
             "time_period": 30,
             "analysis_types": ["pricing", "inventory", "competition"],
-            "include_forecasts": True
+            "include_forecasts": True,
         }
 
         # Mock market insights
-        from ghl_real_estate_ai.services.competitive_data_pipeline import MarketInsight, DataSource
+        from ghl_real_estate_ai.services.competitive_data_pipeline import DataSource, MarketInsight
+
         mock_insights = [
             MarketInsight(
                 insight_id="insight_001",
@@ -251,16 +247,14 @@ class TestCompetitiveIntelligenceAPI:
                 description="Property prices increasing by 3.5%",
                 confidence_score=0.85,
                 impact_assessment="moderate",
-                data_sources=[DataSource.MLS_DATA]
+                data_sources=[DataSource.MLS_DATA],
             )
         ]
 
         mock_services["pipeline"].analyze_market_trends.return_value = mock_insights
 
         response = client.post(
-            "/api/v1/competitive-intelligence/market-analysis",
-            json=request_data,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/market-analysis", json=request_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -287,11 +281,12 @@ class TestCompetitiveIntelligenceAPI:
             "competitor_id": "comp_001",
             "threat_types": ["pricing", "expansion", "technology"],
             "sensitivity_level": "high",
-            "time_range_hours": 24
+            "time_range_hours": 24,
         }
 
         # Mock threat assessments
         from ghl_real_estate_ai.services.competitive_data_pipeline import ThreatAssessment, ThreatLevel
+
         mock_threats = [
             ThreatAssessment(
                 threat_id="threat_001",
@@ -301,16 +296,14 @@ class TestCompetitiveIntelligenceAPI:
                 threat_description="Competitor reduced prices by 15%",
                 potential_impact="May trigger price competition",
                 recommended_response="Review pricing strategy",
-                confidence_level=0.9
+                confidence_level=0.9,
             )
         ]
 
         mock_services["pipeline"].detect_competitive_threats.return_value = mock_threats
 
         response = client.post(
-            "/api/v1/competitive-intelligence/threats/detect",
-            json=request_data,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/threats/detect", json=request_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -342,13 +335,11 @@ class TestCompetitiveIntelligenceAPI:
             "trigger_conditions": ["price_drop > 10%", "competitor_expansion"],
             "response_type": "pricing",
             "automation_level": "assisted",
-            "approval_required": True
+            "approval_required": True,
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/responses/configure",
-            json=request_data,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/responses/configure", json=request_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -363,10 +354,7 @@ class TestCompetitiveIntelligenceAPI:
 
     def test_system_performance_endpoint(self, client, auth_headers, mock_services):
         """Test system performance metrics endpoint"""
-        response = client.get(
-            "/api/v1/competitive-intelligence/system/performance",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/competitive-intelligence/system/performance", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -377,7 +365,7 @@ class TestCompetitiveIntelligenceAPI:
             "processing_metrics",
             "quality_metrics",
             "system_health",
-            "uptime_stats"
+            "uptime_stats",
         ]
 
         for category in required_categories:
@@ -401,10 +389,7 @@ class TestCompetitiveIntelligenceAPI:
 
     def test_system_health_endpoint(self, client, auth_headers):
         """Test system health check endpoint"""
-        response = client.get(
-            "/api/v1/competitive-intelligence/system/health",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/competitive-intelligence/system/health", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -427,16 +412,11 @@ class TestCompetitiveIntelligenceAPI:
     def test_data_cleanup_endpoint(self, client, auth_headers, mock_services):
         """Test data cleanup endpoint"""
         # Mock cleanup result
-        mock_cleanup_result = {
-            "cleaned_records": 45,
-            "retained_records": 1205
-        }
+        mock_cleanup_result = {"cleaned_records": 45, "retained_records": 1205}
         mock_services["pipeline"].cleanup_expired_data.return_value = mock_cleanup_result
 
         response = client.delete(
-            "/api/v1/competitive-intelligence/data/cleanup",
-            headers=auth_headers,
-            params={"retention_days": 30}
+            "/api/v1/competitive-intelligence/data/cleanup", headers=auth_headers, params={"retention_days": 30}
         )
 
         assert response.status_code == 200
@@ -478,8 +458,8 @@ class TestCompetitiveIntelligenceAPI:
             params={
                 "market_areas": ["Rancho Cucamonga", "Upland"],
                 "analysis_period": "30_days",
-                "report_format": "detailed"
-            }
+                "report_format": "detailed",
+            },
         )
 
         assert response.status_code == 200
@@ -509,10 +489,7 @@ class TestCompetitiveIntelligenceAPI:
 
         # Test with invalid auth
         invalid_headers = {"Authorization": "Bearer invalid_token"}
-        response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/start",
-            headers=invalid_headers
-        )
+        response = client.post("/api/v1/competitive-intelligence/monitoring/start", headers=invalid_headers)
         assert response.status_code in [401, 403]  # Unauthorized or Forbidden
 
     def test_request_validation_errors(self, client, auth_headers):
@@ -520,14 +497,12 @@ class TestCompetitiveIntelligenceAPI:
         # Invalid market analysis request - missing required field
         invalid_market_request = {
             "time_period": 30,
-            "analysis_types": ["pricing"]
+            "analysis_types": ["pricing"],
             # Missing required 'market_area' field
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/market-analysis",
-            json=invalid_market_request,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/market-analysis", json=invalid_market_request, headers=auth_headers
         )
         assert response.status_code == 422
 
@@ -535,13 +510,11 @@ class TestCompetitiveIntelligenceAPI:
         invalid_threat_request = {
             "threat_types": ["pricing"],
             "sensitivity_level": "invalid_level",
-            "time_range_hours": 24
+            "time_range_hours": 24,
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/threats/detect",
-            json=invalid_threat_request,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/threats/detect", json=invalid_threat_request, headers=auth_headers
         )
         assert response.status_code == 422
 
@@ -549,33 +522,28 @@ class TestCompetitiveIntelligenceAPI:
         invalid_response_request = {
             "trigger_conditions": ["price_drop"],
             "response_type": "invalid_type",
-            "automation_level": "manual"
+            "automation_level": "manual",
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/responses/configure",
-            json=invalid_response_request,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/responses/configure", json=invalid_response_request, headers=auth_headers
         )
         assert response.status_code == 422
 
     def test_error_handling(self, client, auth_headers):
         """Test error handling for service failures"""
-        with patch('ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_data_pipeline') as mock_pipeline:
+        with patch(
+            "ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_data_pipeline"
+        ) as mock_pipeline:
             # Mock service failure
             mock_pipeline_instance = AsyncMock()
             mock_pipeline_instance.start_real_time_monitoring.side_effect = Exception("Service unavailable")
             mock_pipeline.return_value = mock_pipeline_instance
 
-            request_data = {
-                "competitor_ids": ["comp_001"],
-                "monitoring_frequency": 300
-            }
+            request_data = {"competitor_ids": ["comp_001"], "monitoring_frequency": 300}
 
             response = client.post(
-                "/api/v1/competitive-intelligence/monitoring/start",
-                json=request_data,
-                headers=auth_headers
+                "/api/v1/competitive-intelligence/monitoring/start", json=request_data, headers=auth_headers
             )
 
             assert response.status_code == 500
@@ -589,10 +557,7 @@ class TestCompetitiveIntelligenceAPI:
         response = client.get(
             f"/api/v1/competitive-intelligence/competitors/{competitor_id}/data",
             headers=auth_headers,
-            params={
-                "data_sources": ["mls_data", "social_media"],
-                "time_range_hours": 48
-            }
+            params={"data_sources": ["mls_data", "social_media"], "time_range_hours": 48},
         )
 
         assert response.status_code == 200
@@ -610,13 +575,11 @@ class TestCompetitiveIntelligenceAPI:
             "market_area": "Rancho Cucamonga",
             "time_period": 90,
             "analysis_types": ["pricing", "inventory", "competition", "forecasting"],
-            "include_forecasts": True
+            "include_forecasts": True,
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/market-analysis",
-            json=request_data,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/market-analysis", json=request_data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -656,8 +619,8 @@ class TestCompetitiveIntelligenceAPI:
                 params={
                     "market_areas": ["Rancho Cucamonga"],
                     "analysis_period": "30_days",
-                    "report_format": report_format
-                }
+                    "report_format": report_format,
+                },
             )
 
             assert response.status_code == 200
@@ -688,10 +651,7 @@ class TestAPIRateLimiting:
     @pytest.fixture
     def auth_headers(self):
         """Mock authentication headers"""
-        return {
-            "Authorization": "Bearer test_token_12345",
-            "Content-Type": "application/json"
-        }
+        return {"Authorization": "Bearer test_token_12345", "Content-Type": "application/json"}
 
     def test_concurrent_request_handling(self, client, auth_headers):
         """Test handling of concurrent API requests"""
@@ -701,10 +661,7 @@ class TestAPIRateLimiting:
         results = []
 
         def make_request():
-            response = client.get(
-                "/api/v1/competitive-intelligence/system/health",
-                headers=auth_headers
-            )
+            response = client.get("/api/v1/competitive-intelligence/system/health", headers=auth_headers)
             results.append(response.status_code)
 
         # Create multiple threads for concurrent requests
@@ -727,14 +684,12 @@ class TestAPIRateLimiting:
         # Create large competitor list
         large_request = {
             "competitor_ids": [f"comp_{i:04d}" for i in range(50)],  # Maximum allowed
-            "monitoring_frequency": 300
+            "monitoring_frequency": 300,
         }
 
-        with patch('ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_data_pipeline'):
+        with patch("ghl_real_estate_ai.api.routes.competitive_intelligence.get_competitive_data_pipeline"):
             response = client.post(
-                "/api/v1/competitive-intelligence/monitoring/start",
-                json=large_request,
-                headers=auth_headers
+                "/api/v1/competitive-intelligence/monitoring/start", json=large_request, headers=auth_headers
             )
 
             # Should either accept the request or reject with validation error
@@ -744,9 +699,7 @@ class TestAPIRateLimiting:
         """Test handling of malformed requests"""
         # Invalid JSON
         response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/start",
-            data="invalid json data",
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/monitoring/start", data="invalid json data", headers=auth_headers
         )
 
         assert response.status_code == 422  # Unprocessable Entity
@@ -758,9 +711,7 @@ class TestAPIRateLimiting:
         }
 
         response = client.post(
-            "/api/v1/competitive-intelligence/monitoring/start",
-            json=incomplete_request,
-            headers=auth_headers
+            "/api/v1/competitive-intelligence/monitoring/start", json=incomplete_request, headers=auth_headers
         )
 
         assert response.status_code == 422

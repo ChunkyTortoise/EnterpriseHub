@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 # Data models
 # ---------------------------------------------------------------------------
 
+
 class ViolationCategory(str, Enum):
     STEERING = "steering"
     REDLINING = "redlining"
@@ -54,9 +55,9 @@ class ViolationCategory(str, Enum):
 
 class ViolationSeverity(str, Enum):
     CRITICAL = "critical"  # Auto-block
-    HIGH = "high"          # Block unless context-cleared
-    MEDIUM = "medium"      # Flag for review
-    LOW = "low"            # Log only
+    HIGH = "high"  # Block unless context-cleared
+    MEDIUM = "medium"  # Flag for review
+    LOW = "low"  # Log only
 
 
 @dataclass
@@ -142,6 +143,7 @@ SAFE_ALTERNATIVES = {
 # Middleware
 # ---------------------------------------------------------------------------
 
+
 class ComplianceMiddleware:
     """
     FHA/RESPA enforcement middleware.
@@ -198,13 +200,15 @@ class ComplianceMiddleware:
             for regex, explanation in patterns:
                 match = re.search(regex, message, re.IGNORECASE)
                 if match:
-                    violations.append(ComplianceViolation(
-                        category=category,
-                        severity=severity,
-                        pattern=regex,
-                        matched_text=match.group(0),
-                        explanation=explanation,
-                    ))
+                    violations.append(
+                        ComplianceViolation(
+                            category=category,
+                            severity=severity,
+                            pattern=regex,
+                            matched_text=match.group(0),
+                            explanation=explanation,
+                        )
+                    )
 
         # --- RESPA disclosure check ---
         respa_disclosures = self._check_respa_disclosures(message)
@@ -218,13 +222,15 @@ class ComplianceMiddleware:
             # If the same contact has accumulated 3+ violations across turns, escalate
             if len(prior) >= 3 and not any(v.severity == ViolationSeverity.CRITICAL for v in violations):
                 # Upgrade severity due to pattern across conversation
-                violations.append(ComplianceViolation(
-                    category=ViolationCategory.STEERING,
-                    severity=ViolationSeverity.HIGH,
-                    pattern="conversation_accumulation",
-                    matched_text="",
-                    explanation=f"Contact has {len(prior)} cumulative compliance flags across conversation",
-                ))
+                violations.append(
+                    ComplianceViolation(
+                        category=ViolationCategory.STEERING,
+                        severity=ViolationSeverity.HIGH,
+                        pattern="conversation_accumulation",
+                        matched_text="",
+                        explanation=f"Contact has {len(prior)} cumulative compliance flags across conversation",
+                    )
+                )
 
         # --- Risk score ---
         risk_score = self._compute_risk_score(violations)
@@ -233,7 +239,9 @@ class ComplianceMiddleware:
         status = self._determine_status(violations, risk_score)
 
         # --- Safe alternative ---
-        safe_alt = SAFE_ALTERNATIVES.get(mode, SAFE_ALTERNATIVES["general"]) if status == ComplianceStatus.BLOCKED else None
+        safe_alt = (
+            SAFE_ALTERNATIVES.get(mode, SAFE_ALTERNATIVES["general"]) if status == ComplianceStatus.BLOCKED else None
+        )
 
         reason = self._build_reason(violations, status)
 

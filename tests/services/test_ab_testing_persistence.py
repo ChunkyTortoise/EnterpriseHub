@@ -29,27 +29,33 @@ def service():
 @pytest.fixture
 def mock_repo():
     repo = AsyncMock()
-    repo.get_or_create_assignment = AsyncMock(return_value={
-        "experiment_name": "test",
-        "user_id": "c1",
-        "variant_name": "a",
-        "bucket_value": 0.5,
-    })
-    repo.record_outcome = AsyncMock(return_value={
-        "metric_id": "m1",
-        "experiment_name": "test",
-        "user_id": "c1",
-        "event_type": "conversion",
-        "value": 1.0,
-    })
+    repo.get_or_create_assignment = AsyncMock(
+        return_value={
+            "experiment_name": "test",
+            "user_id": "c1",
+            "variant_name": "a",
+            "bucket_value": 0.5,
+        }
+    )
+    repo.record_outcome = AsyncMock(
+        return_value={
+            "metric_id": "m1",
+            "experiment_name": "test",
+            "user_id": "c1",
+            "event_type": "conversion",
+            "value": 1.0,
+        }
+    )
     repo.list_active_experiments = AsyncMock(return_value=[])
     repo.get_experiment = AsyncMock(return_value=None)
-    repo.create_experiment = AsyncMock(return_value={
-        "experiment_id": "id1",
-        "experiment_name": "test",
-        "variants": ["a", "b"],
-        "status": "active",
-    })
+    repo.create_experiment = AsyncMock(
+        return_value={
+            "experiment_id": "id1",
+            "experiment_name": "test",
+            "variants": ["a", "b"],
+            "status": "active",
+        }
+    )
     return repo
 
 
@@ -79,9 +85,7 @@ class TestWriteThroughAssignment:
         assert call_kwargs.kwargs["variant_name"] == variant
 
     @pytest.mark.asyncio
-    async def test_get_variant_deduplicates_db_writes(
-        self, service, mock_repo
-    ):
+    async def test_get_variant_deduplicates_db_writes(self, service, mock_repo):
         service.set_repository(mock_repo)
         service.create_experiment("exp1", ["a", "b"])
 
@@ -101,15 +105,11 @@ class TestWriteThroughAssignment:
         assert variant in ("a", "b")
 
     @pytest.mark.asyncio
-    async def test_get_variant_survives_db_failure(
-        self, service, mock_repo
-    ):
+    async def test_get_variant_survives_db_failure(self, service, mock_repo):
         service.set_repository(mock_repo)
         service.create_experiment("exp1", ["a", "b"])
 
-        mock_repo.get_or_create_assignment.side_effect = Exception(
-            "DB connection lost"
-        )
+        mock_repo.get_or_create_assignment.side_effect = Exception("DB connection lost")
 
         # Should still return a variant (in-memory works)
         variant = await service.get_variant("exp1", "contact_1")
@@ -123,9 +123,7 @@ class TestWriteThroughOutcome:
         service.create_experiment("exp1", ["a", "b"])
 
         variant = await service.get_variant("exp1", "contact_1")
-        await service.record_outcome(
-            "exp1", "contact_1", variant, "conversion"
-        )
+        await service.record_outcome("exp1", "contact_1", variant, "conversion")
 
         mock_repo.record_outcome.assert_called_once()
         call_kwargs = mock_repo.record_outcome.call_args
@@ -137,24 +135,18 @@ class TestWriteThroughOutcome:
         service.create_experiment("exp1", ["a", "b"])
         variant = await service.get_variant("exp1", "contact_1")
 
-        result = await service.record_outcome(
-            "exp1", "contact_1", variant, "conversion"
-        )
+        result = await service.record_outcome("exp1", "contact_1", variant, "conversion")
         assert result["outcome"] == "conversion"
 
     @pytest.mark.asyncio
-    async def test_record_outcome_survives_db_failure(
-        self, service, mock_repo
-    ):
+    async def test_record_outcome_survives_db_failure(self, service, mock_repo):
         service.set_repository(mock_repo)
         service.create_experiment("exp1", ["a", "b"])
 
         mock_repo.record_outcome.side_effect = Exception("DB timeout")
 
         variant = await service.get_variant("exp1", "contact_1")
-        result = await service.record_outcome(
-            "exp1", "contact_1", variant, "conversion"
-        )
+        result = await service.record_outcome("exp1", "contact_1", variant, "conversion")
 
         # In-memory recording still succeeds
         assert result["outcome"] == "conversion"
@@ -223,9 +215,7 @@ class TestLoadFromDB:
 
     @pytest.mark.asyncio
     async def test_load_survives_db_failure(self, service, mock_repo):
-        mock_repo.list_active_experiments.side_effect = Exception(
-            "DB unreachable"
-        )
+        mock_repo.list_active_experiments.side_effect = Exception("DB unreachable")
 
         service.set_repository(mock_repo)
         loaded = await service.load_from_db()

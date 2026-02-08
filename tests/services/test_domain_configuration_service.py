@@ -4,24 +4,25 @@ Validates DNS/SSL automation and domain management functionality
 for the white-label platform.
 """
 
-import pytest
-import pytest_asyncio
 import asyncio
+import json
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
-import json
 
 import asyncpg
+import pytest
+import pytest_asyncio
+
+from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.domain_configuration_service import (
-    DomainConfigurationService,
-    DomainConfiguration,
-    DomainType,
     DNSProvider,
+    DNSRecord,
+    DomainConfiguration,
+    DomainConfigurationService,
+    DomainType,
     SSLProvider,
     VerificationMethod,
-    DNSRecord
 )
-from ghl_real_estate_ai.services.cache_service import CacheService
 
 
 @pytest_asyncio.fixture
@@ -62,7 +63,7 @@ def sample_domain_config():
         dns_records=[],
         ssl_provider=SSLProvider.LETSENCRYPT,
         verification_method=VerificationMethod.DNS,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
 
@@ -79,17 +80,16 @@ class TestDomainConfigurationService:
         conn_mock.execute = AsyncMock()
 
         # Mock DNS validation
-        with patch.object(domain_service, '_validate_domain_name', return_value=True):
-            with patch.object(domain_service, 'get_domain_by_name', return_value=None):
-                with patch.object(domain_service, '_save_domain_configuration') as mock_save:
-                    with patch.object(domain_service, 'initiate_domain_verification') as mock_verify:
-
+        with patch.object(domain_service, "_validate_domain_name", return_value=True):
+            with patch.object(domain_service, "get_domain_by_name", return_value=None):
+                with patch.object(domain_service, "_save_domain_configuration") as mock_save:
+                    with patch.object(domain_service, "initiate_domain_verification") as mock_verify:
                         result = await domain_service.create_domain_configuration(
                             agency_id="agency_001",
                             domain_name="test.example.com",
                             domain_type=DomainType.CLIENT,
                             client_id="client_001",
-                            dns_provider=DNSProvider.CLOUDFLARE
+                            dns_provider=DNSProvider.CLOUDFLARE,
                         )
 
                         assert result.agency_id == "agency_001"
@@ -105,65 +105,65 @@ class TestDomainConfigurationService:
     @pytest.mark.asyncio
     async def test_create_domain_configuration_duplicate_domain(self, domain_service, sample_domain_config):
         """Test domain configuration creation with duplicate domain."""
-        with patch.object(domain_service, '_validate_domain_name', return_value=True):
-            with patch.object(domain_service, 'get_domain_by_name', return_value=sample_domain_config):
-
+        with patch.object(domain_service, "_validate_domain_name", return_value=True):
+            with patch.object(domain_service, "get_domain_by_name", return_value=sample_domain_config):
                 with pytest.raises(ValueError, match="already configured"):
                     await domain_service.create_domain_configuration(
                         agency_id="agency_001",
                         domain_name="test.example.com",
                         domain_type=DomainType.CLIENT,
-                        client_id="client_001"
+                        client_id="client_001",
                     )
 
     @pytest.mark.asyncio
     async def test_create_domain_configuration_invalid_domain(self, domain_service):
         """Test domain configuration creation with invalid domain name."""
-        with patch.object(domain_service, '_validate_domain_name', side_effect=ValueError("Invalid domain")):
-
+        with patch.object(domain_service, "_validate_domain_name", side_effect=ValueError("Invalid domain")):
             with pytest.raises(ValueError, match="Invalid domain"):
                 await domain_service.create_domain_configuration(
                     agency_id="agency_001",
                     domain_name="invalid..domain",
                     domain_type=DomainType.CLIENT,
-                    client_id="client_001"
+                    client_id="client_001",
                 )
 
     @pytest.mark.asyncio
     async def test_get_domain_configuration_from_cache(self, domain_service, mock_cache_service, sample_domain_config):
         """Test getting domain configuration from cache."""
         # Setup cache hit
-        mock_cache_service.get.return_value = json.dumps({
-            "domain_id": "domain_test_123",
-            "agency_id": "agency_001",
-            "client_id": "client_001",
-            "domain_name": "test.example.com",
-            "subdomain": "test",
-            "domain_type": "client",
-            "dns_provider": "cloudflare",
-            "dns_zone_id": "zone_123",
-            "dns_records": [],
-            "ssl_enabled": True,
-            "ssl_provider": "letsencrypt",
-            "ssl_cert_status": "pending",
-            "ssl_cert_expires_at": None,
-            "ssl_auto_renew": True,
-            "cdn_enabled": False,
-            "cdn_provider": None,
-            "cdn_distribution_id": None,
-            "cdn_endpoint": None,
-            "verification_token": "test_token",
-            "verification_status": "pending",
-            "verification_method": "dns",
-            "verified_at": None,
-            "status": "pending",
-            "health_check_url": None,
-            "last_health_check": None,
-            "health_status": "unknown",
-            "configuration_metadata": {},
-            "created_at": "2024-01-01T00:00:00",
-            "updated_at": None
-        })
+        mock_cache_service.get.return_value = json.dumps(
+            {
+                "domain_id": "domain_test_123",
+                "agency_id": "agency_001",
+                "client_id": "client_001",
+                "domain_name": "test.example.com",
+                "subdomain": "test",
+                "domain_type": "client",
+                "dns_provider": "cloudflare",
+                "dns_zone_id": "zone_123",
+                "dns_records": [],
+                "ssl_enabled": True,
+                "ssl_provider": "letsencrypt",
+                "ssl_cert_status": "pending",
+                "ssl_cert_expires_at": None,
+                "ssl_auto_renew": True,
+                "cdn_enabled": False,
+                "cdn_provider": None,
+                "cdn_distribution_id": None,
+                "cdn_endpoint": None,
+                "verification_token": "test_token",
+                "verification_status": "pending",
+                "verification_method": "dns",
+                "verified_at": None,
+                "status": "pending",
+                "health_check_url": None,
+                "last_health_check": None,
+                "health_status": "unknown",
+                "configuration_metadata": {},
+                "created_at": "2024-01-01T00:00:00",
+                "updated_at": None,
+            }
+        )
 
         result = await domain_service.get_domain_configuration("domain_test_123")
 
@@ -211,17 +211,18 @@ class TestDomainConfigurationService:
             "health_status": "unknown",
             "configuration_metadata": "{}",
             "created_at": datetime.utcnow(),
-            "updated_at": None
+            "updated_at": None,
         }
 
         conn_mock.fetchrow.return_value = db_row
 
         # Patch json.dumps in the service module to handle Enum serialization
         original_json_dumps = json.dumps
+
         def _enum_json_dumps(obj, **kwargs):
             return original_json_dumps(obj, default=str, **kwargs)
 
-        with patch('ghl_real_estate_ai.services.domain_configuration_service.json.dumps', side_effect=_enum_json_dumps):
+        with patch("ghl_real_estate_ai.services.domain_configuration_service.json.dumps", side_effect=_enum_json_dumps):
             result = await domain_service.get_domain_configuration("domain_test_123")
 
         assert result is not None
@@ -268,7 +269,7 @@ class TestDomainConfigurationService:
                 "health_status": "healthy",
                 "configuration_metadata": "{}",
                 "created_at": datetime.utcnow(),
-                "updated_at": None
+                "updated_at": None,
             },
             {
                 "domain_id": "domain_002",
@@ -299,8 +300,8 @@ class TestDomainConfigurationService:
                 "health_status": "healthy",
                 "configuration_metadata": "{}",
                 "created_at": datetime.utcnow(),
-                "updated_at": None
-            }
+                "updated_at": None,
+            },
         ]
 
         conn_mock.fetch.return_value = db_rows
@@ -319,11 +320,7 @@ class TestDomainConfigurationService:
         mock_db_pool.acquire.return_value.__aenter__.return_value = conn_mock
         conn_mock.fetch.return_value = []
 
-        await domain_service.list_agency_domains(
-            "agency_001",
-            domain_type=DomainType.CLIENT,
-            status="active"
-        )
+        await domain_service.list_agency_domains("agency_001", domain_type=DomainType.CLIENT, status="active")
 
         # Verify correct query parameters were used
         call_args = conn_mock.fetch.call_args
@@ -335,12 +332,11 @@ class TestDomainConfigurationService:
     @pytest.mark.asyncio
     async def test_initiate_domain_verification_dns_success(self, domain_service, sample_domain_config):
         """Test successful DNS domain verification initiation."""
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-            with patch.object(domain_service, '_update_domain_config') as mock_update:
-                with patch.object(domain_service, '_verify_dns_ownership', return_value=True):
-                    with patch.object(domain_service, '_mark_domain_verified') as mock_mark_verified:
-                        with patch.object(domain_service, 'provision_ssl_certificate') as mock_provision_ssl:
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
+            with patch.object(domain_service, "_update_domain_config") as mock_update:
+                with patch.object(domain_service, "_verify_dns_ownership", return_value=True):
+                    with patch.object(domain_service, "_mark_domain_verified") as mock_mark_verified:
+                        with patch.object(domain_service, "provision_ssl_certificate") as mock_provision_ssl:
                             result = await domain_service.initiate_domain_verification("domain_test_123")
 
                             assert result is True
@@ -350,9 +346,8 @@ class TestDomainConfigurationService:
     @pytest.mark.asyncio
     async def test_initiate_domain_verification_dns_failure(self, domain_service, sample_domain_config):
         """Test DNS domain verification failure."""
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-            with patch.object(domain_service, '_verify_dns_ownership', return_value=False):
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
+            with patch.object(domain_service, "_verify_dns_ownership", return_value=False):
                 result = await domain_service.initiate_domain_verification("domain_test_123")
 
                 assert result is False
@@ -360,8 +355,7 @@ class TestDomainConfigurationService:
     @pytest.mark.asyncio
     async def test_initiate_domain_verification_domain_not_found(self, domain_service):
         """Test domain verification with non-existent domain."""
-        with patch.object(domain_service, 'get_domain_configuration', return_value=None):
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=None):
             result = await domain_service.initiate_domain_verification("nonexistent_domain")
 
             assert result is False
@@ -372,10 +366,9 @@ class TestDomainConfigurationService:
         # Set domain as verified
         sample_domain_config.verification_status = "verified"
 
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-            with patch.object(domain_service, '_provision_letsencrypt_certificate', return_value=True):
-                with patch.object(domain_service, '_update_domain_config') as mock_update:
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
+            with patch.object(domain_service, "_provision_letsencrypt_certificate", return_value=True):
+                with patch.object(domain_service, "_update_domain_config") as mock_update:
                     result = await domain_service.provision_ssl_certificate("domain_test_123")
 
                     assert result is True
@@ -392,8 +385,7 @@ class TestDomainConfigurationService:
         # Keep domain as unverified
         sample_domain_config.verification_status = "pending"
 
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
             result = await domain_service.provision_ssl_certificate("domain_test_123")
 
             assert result is False
@@ -404,17 +396,14 @@ class TestDomainConfigurationService:
         dns_records = [
             DNSRecord(name="@", type="A", value="192.168.1.1", ttl=300),
             DNSRecord(name="www", type="CNAME", value="example.com", ttl=300),
-            DNSRecord(name="@", type="TXT", value="v=spf1 include:_spf.google.com ~all", ttl=300)
+            DNSRecord(name="@", type="TXT", value="v=spf1 include:_spf.google.com ~all", ttl=300),
         ]
 
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-            with patch.object(domain_service, '_configure_cloudflare_dns', return_value=True) as mock_cf_dns:
-                with patch.object(domain_service, '_update_domain_config') as mock_update:
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
+            with patch.object(domain_service, "_configure_cloudflare_dns", return_value=True) as mock_cf_dns:
+                with patch.object(domain_service, "_update_domain_config") as mock_update:
                     result = await domain_service.configure_dns_records(
-                        "domain_test_123",
-                        dns_records,
-                        auto_configure=True
+                        "domain_test_123", dns_records, auto_configure=True
                     )
 
                     assert result is True
@@ -428,13 +417,18 @@ class TestDomainConfigurationService:
         sample_domain_config.health_check_url = "https://test.example.com/health"
         sample_domain_config.cdn_enabled = True
 
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-            with patch.object(domain_service, '_check_dns_resolution', return_value={"success": True, "ip_addresses": ["192.168.1.1"]}):
-                with patch.object(domain_service, '_check_ssl_certificate', return_value={"success": True, "days_until_expiry": 60}):
-                    with patch.object(domain_service, '_check_http_response', return_value={"success": True, "status_code": 200}):
-                        with patch.object(domain_service, '_check_cdn_status', return_value={"success": True}):
-                            with patch.object(domain_service, '_update_domain_config') as mock_update:
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
+            with patch.object(
+                domain_service, "_check_dns_resolution", return_value={"success": True, "ip_addresses": ["192.168.1.1"]}
+            ):
+                with patch.object(
+                    domain_service, "_check_ssl_certificate", return_value={"success": True, "days_until_expiry": 60}
+                ):
+                    with patch.object(
+                        domain_service, "_check_http_response", return_value={"success": True, "status_code": 200}
+                    ):
+                        with patch.object(domain_service, "_check_cdn_status", return_value={"success": True}):
+                            with patch.object(domain_service, "_update_domain_config") as mock_update:
                                 result = await domain_service.perform_health_check("domain_test_123")
 
                                 assert result["overall_status"] == "healthy"
@@ -452,12 +446,15 @@ class TestDomainConfigurationService:
         sample_domain_config.ssl_enabled = True
         sample_domain_config.health_check_url = "https://test.example.com/health"
 
-        with patch.object(domain_service, 'get_domain_configuration', return_value=sample_domain_config):
-            with patch.object(domain_service, '_check_dns_resolution', return_value={"success": True}):
-                with patch.object(domain_service, '_check_ssl_certificate', return_value={"success": False, "error": "Certificate expired"}):
-                    with patch.object(domain_service, '_check_http_response', return_value={"success": True}):
-                        with patch.object(domain_service, '_update_domain_config'):
-
+        with patch.object(domain_service, "get_domain_configuration", return_value=sample_domain_config):
+            with patch.object(domain_service, "_check_dns_resolution", return_value={"success": True}):
+                with patch.object(
+                    domain_service,
+                    "_check_ssl_certificate",
+                    return_value={"success": False, "error": "Certificate expired"},
+                ):
+                    with patch.object(domain_service, "_check_http_response", return_value={"success": True}):
+                        with patch.object(domain_service, "_update_domain_config"):
                             result = await domain_service.perform_health_check("domain_test_123")
 
                             assert result["overall_status"] == "degraded"
@@ -471,13 +468,10 @@ class TestDomainConfigurationService:
         mock_db_pool.acquire.return_value.__aenter__.return_value = conn_mock
 
         # Mock expiring certificates
-        expiring_certs = [
-            {"domain_id": "domain_001"},
-            {"domain_id": "domain_002"}
-        ]
+        expiring_certs = [{"domain_id": "domain_001"}, {"domain_id": "domain_002"}]
         conn_mock.fetch.return_value = expiring_certs
 
-        with patch.object(domain_service, 'provision_ssl_certificate') as mock_provision:
+        with patch.object(domain_service, "provision_ssl_certificate") as mock_provision:
             mock_provision.side_effect = [True, False]  # First succeeds, second fails
 
             result = await domain_service.auto_renew_ssl_certificates()
@@ -492,12 +486,7 @@ class TestDomainConfigurationService:
     @pytest.mark.asyncio
     async def test_validate_domain_name_valid_domains(self, domain_service):
         """Test domain name validation with valid domains."""
-        valid_domains = [
-            "example.com",
-            "subdomain.example.com",
-            "test-domain.co.uk",
-            "my.domain.example.org"
-        ]
+        valid_domains = ["example.com", "subdomain.example.com", "test-domain.co.uk", "my.domain.example.org"]
 
         for domain in valid_domains:
             result = await domain_service._validate_domain_name(domain)
@@ -512,7 +501,7 @@ class TestDomainConfigurationService:
             "invalid.domain.",
             "invalid_domain.com",
             "invalid domain.com",
-            ""
+            "",
         ]
 
         for domain in invalid_domains:
@@ -532,7 +521,7 @@ class TestDomainConfigurationService:
             dns_provider=None,
             dns_zone_id=None,
             dns_records=[],
-            verification_token="test_token_123"
+            verification_token="test_token_123",
         )
 
         # Mock DNS resolver
@@ -540,8 +529,8 @@ class TestDomainConfigurationService:
         mock_result.__iter__ = lambda x: iter([MagicMock()])
         mock_result.__getitem__ = lambda x, y: MagicMock()
 
-        with patch.object(domain_service.dns_resolver, 'resolve') as mock_resolve:
-            mock_resolve.return_value = [MagicMock(__str__=lambda x: 'white-label-verify=test_token_123')]
+        with patch.object(domain_service.dns_resolver, "resolve") as mock_resolve:
+            mock_resolve.return_value = [MagicMock(__str__=lambda x: "white-label-verify=test_token_123")]
 
             result = await domain_service._verify_dns_ownership(config)
 
@@ -560,11 +549,11 @@ class TestDomainConfigurationService:
             dns_provider=None,
             dns_zone_id=None,
             dns_records=[],
-            verification_token="test_token_123"
+            verification_token="test_token_123",
         )
 
-        with patch.object(domain_service.dns_resolver, 'resolve') as mock_resolve:
-            mock_resolve.return_value = [MagicMock(__str__=lambda x: 'different-verification-token')]
+        with patch.object(domain_service.dns_resolver, "resolve") as mock_resolve:
+            mock_resolve.return_value = [MagicMock(__str__=lambda x: "different-verification-token")]
 
             result = await domain_service._verify_dns_ownership(config)
 
@@ -583,7 +572,7 @@ class TestDomainConfigurationService:
             dns_provider=None,
             dns_zone_id=None,
             dns_records=[],
-            verification_token="test_token_123"
+            verification_token="test_token_123",
         )
 
         # Mock HTTP response
@@ -598,7 +587,7 @@ class TestDomainConfigurationService:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        with patch("aiohttp.ClientSession", return_value=mock_session):
             result = await domain_service._verify_file_ownership(config)
 
             assert result is True
@@ -616,7 +605,7 @@ class TestDomainConfigurationService:
             dns_provider=None,
             dns_zone_id=None,
             dns_records=[],
-            verification_token="test_token_123"
+            verification_token="test_token_123",
         )
 
         # Mock HTTP response with wrong token
@@ -631,7 +620,7 @@ class TestDomainConfigurationService:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        with patch("aiohttp.ClientSession", return_value=mock_session):
             result = await domain_service._verify_file_ownership(config)
 
             assert result is False

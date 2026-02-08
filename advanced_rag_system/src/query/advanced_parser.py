@@ -7,37 +7,36 @@ into a unified query understanding pipeline.
 
 from __future__ import annotations
 
-import re
-from typing import Dict, List, Optional, Set, Tuple, Any, Union
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from datetime import datetime
 import json
 import logging
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from src.core.exceptions import RetrievalError
+from src.query.entity_extractor import (
+    Entity,
+    EntityExtractor,
+    EntityType,
+    ExtractionConfig,
+    KnowledgeGraphPrep,
+)
 from src.query.intent_classifier_v2 import (
-    IntentClassifierV2,
+    ClassifierConfig,
     IntentClassificationResult,
+    IntentClassifierV2,
     IntentType,
     MultiLabelResult,
-    ClassifierConfig,
 )
 from src.query.temporal_processor import (
-    TemporalProcessor,
-    TemporalContext,
-    TemporalConstraint,
     RecencyBoostConfig,
+    TemporalConstraint,
+    TemporalContext,
+    TemporalProcessor,
     TimeAwareRetriever,
 )
-from src.query.entity_extractor import (
-    EntityExtractor,
-    Entity,
-    EntityType,
-    KnowledgeGraphPrep,
-    ExtractionConfig,
-)
-
 
 logger = logging.getLogger(__name__)
 
@@ -241,9 +240,7 @@ class AdvancedQueryParser:
             temporal_context = self.temporal_processor.extract_temporal_context(normalized_query)
 
             # Step 6: Determine complexity
-            complexity = self._calculate_complexity(
-                normalized_query, multi_label_result, entities, temporal_context
-            )
+            complexity = self._calculate_complexity(normalized_query, multi_label_result, entities, temporal_context)
 
             # Step 7: Build parsed query
             parsed_query = ParsedQuery(
@@ -259,21 +256,15 @@ class AdvancedQueryParser:
 
             # Step 8: Prepare for knowledge graph (if enabled)
             if self.config.enable_kg_prep:
-                kg_prep = self.entity_extractor.prepare_for_knowledge_graph(
-                    entities, normalized_query
-                )
+                kg_prep = self.entity_extractor.prepare_for_knowledge_graph(entities, normalized_query)
             else:
                 kg_prep = KnowledgeGraphPrep(entities=entities)
 
             # Step 9: Generate retrieval parameters
-            retrieval_params = self._generate_retrieval_params(
-                parsed_query, temporal_context
-            )
+            retrieval_params = self._generate_retrieval_params(parsed_query, temporal_context)
 
             # Step 10: Calculate overall confidence
-            confidence = self._calculate_overall_confidence(
-                intent_result, entities, temporal_context
-            )
+            confidence = self._calculate_overall_confidence(intent_result, entities, temporal_context)
 
             processing_time = (time.time() - start_time) * 1000
 

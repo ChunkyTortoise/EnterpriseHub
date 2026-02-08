@@ -11,23 +11,23 @@ Tests the smart appointment scheduling system for Jorge's lead bot including:
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
 from typing import Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import pytz
 
-from ghl_real_estate_ai.api.schemas.ghl import GHLAction, ActionType, MessageType
-from ghl_real_estate_ai.services.calendar_scheduler import (
-    CalendarScheduler,
-    AppointmentType,
-    AppointmentDuration,
-    TimeSlot,
-    AppointmentBooking,
-    BookingResult,
-    AUSTIN_TZ
-)
+from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.services.calendar_scheduler import (
+    AUSTIN_TZ,
+    AppointmentBooking,
+    AppointmentDuration,
+    AppointmentType,
+    BookingResult,
+    CalendarScheduler,
+    TimeSlot,
+)
 
 
 @pytest.fixture
@@ -39,9 +39,9 @@ def mock_ghl_client():
     # Times in UTC that fall within LA business hours (9-18 PT = 17:00-02:00+1 UTC in winter)
     # Jan 17, 2024 is a Wednesday
     client.get_available_slots.return_value = [
-        {"start_time": "2024-01-17T18:00:00Z", "end_time": "2024-01-17T19:00:00Z"},   # 10:00 AM PT
-        {"start_time": "2024-01-17T21:30:00Z", "end_time": "2024-01-17T22:30:00Z"},   # 1:30 PM PT
-        {"start_time": "2024-01-18T19:00:00Z", "end_time": "2024-01-18T20:00:00Z"},   # 11:00 AM PT (Thu)
+        {"start_time": "2024-01-17T18:00:00Z", "end_time": "2024-01-17T19:00:00Z"},  # 10:00 AM PT
+        {"start_time": "2024-01-17T21:30:00Z", "end_time": "2024-01-17T22:30:00Z"},  # 1:30 PM PT
+        {"start_time": "2024-01-18T19:00:00Z", "end_time": "2024-01-18T20:00:00Z"},  # 11:00 AM PT (Thu)
     ]
 
     # Mock appointment creation
@@ -49,7 +49,7 @@ def mock_ghl_client():
         "id": "apt_123456789",
         "status": "confirmed",
         "startTime": "2024-01-17T14:00:00Z",
-        "contactId": "contact_123"
+        "contactId": "contact_123",
     }
 
     return client
@@ -58,7 +58,7 @@ def mock_ghl_client():
 @pytest.fixture
 def calendar_scheduler(mock_ghl_client):
     """Calendar scheduler instance for testing."""
-    with patch('ghl_real_estate_ai.services.calendar_scheduler.settings') as mock_settings:
+    with patch("ghl_real_estate_ai.services.calendar_scheduler.settings") as mock_settings:
         mock_settings.ghl_calendar_id = "cal_jorge_123"
         mock_settings.appointment_buffer_minutes = 15
         mock_settings.jorge_user_id = "user_jorge_456"
@@ -76,7 +76,7 @@ def qualified_lead_data():
             "first_name": "John",
             "last_name": "Doe",
             "phone": "+1234567890",
-            "email": "john.doe@example.com"
+            "email": "john.doe@example.com",
         },
         "extracted_data": {
             "budget": 450000,
@@ -85,10 +85,10 @@ def qualified_lead_data():
             "bedrooms": 3,
             "bathrooms": 2,
             "motivation": "buying first home",
-            "financing": "pre-approved"
+            "financing": "pre-approved",
         },
         "lead_score": 6,  # Above threshold (5)
-        "message_content": "I'm ready to start looking at homes"
+        "message_content": "I'm ready to start looking at homes",
     }
 
 
@@ -101,13 +101,11 @@ def unqualified_lead_data():
             "first_name": "Jane",
             "last_name": "Smith",
             "phone": "+1987654321",
-            "email": "jane.smith@example.com"
+            "email": "jane.smith@example.com",
         },
-        "extracted_data": {
-            "location": ["Austin"]
-        },
+        "extracted_data": {"location": ["Austin"]},
         "lead_score": 3,  # Below threshold (5)
-        "message_content": "I'm thinking about buying"
+        "message_content": "I'm thinking about buying",
     }
 
 
@@ -126,16 +124,12 @@ class TestCalendarScheduler:
         assert scheduler.business_hours["sunday"]["start"] == "closed"
 
     @pytest.mark.asyncio
-    async def test_should_auto_book_qualified_lead(
-        self,
-        calendar_scheduler,
-        qualified_lead_data
-    ):
+    async def test_should_auto_book_qualified_lead(self, calendar_scheduler, qualified_lead_data):
         """Test auto-booking logic for qualified lead."""
         should_book, reason, appointment_type = await calendar_scheduler.should_auto_book(
             lead_score=qualified_lead_data["lead_score"],
             contact_info=qualified_lead_data["contact_info"],
-            extracted_data=qualified_lead_data["extracted_data"]
+            extracted_data=qualified_lead_data["extracted_data"],
         )
 
         assert should_book is True
@@ -143,26 +137,19 @@ class TestCalendarScheduler:
         assert appointment_type == AppointmentType.BUYER_CONSULTATION
 
     @pytest.mark.asyncio
-    async def test_should_auto_book_unqualified_lead(
-        self,
-        calendar_scheduler,
-        unqualified_lead_data
-    ):
+    async def test_should_auto_book_unqualified_lead(self, calendar_scheduler, unqualified_lead_data):
         """Test auto-booking logic for unqualified lead."""
         should_book, reason, appointment_type = await calendar_scheduler.should_auto_book(
             lead_score=unqualified_lead_data["lead_score"],
             contact_info=unqualified_lead_data["contact_info"],
-            extracted_data=unqualified_lead_data["extracted_data"]
+            extracted_data=unqualified_lead_data["extracted_data"],
         )
 
         assert should_book is False
         assert "below threshold" in reason.lower()
 
     @pytest.mark.asyncio
-    async def test_should_auto_book_missing_contact_info(
-        self,
-        calendar_scheduler
-    ):
+    async def test_should_auto_book_missing_contact_info(self, calendar_scheduler):
         """Test auto-booking with missing contact information."""
         contact_info = {
             "contact_id": "contact_123",
@@ -171,9 +158,7 @@ class TestCalendarScheduler:
         }
 
         should_book, reason, _ = await calendar_scheduler.should_auto_book(
-            lead_score=6,
-            contact_info=contact_info,
-            extracted_data={"budget": 400000}
+            lead_score=6, contact_info=contact_info, extracted_data={"budget": 400000}
         )
 
         assert should_book is False
@@ -182,10 +167,7 @@ class TestCalendarScheduler:
     @pytest.mark.asyncio
     async def test_determine_appointment_type_buyer(self, calendar_scheduler):
         """Test appointment type determination for buyer."""
-        extracted_data = {
-            "motivation": "looking to buy my first home",
-            "budget": 350000
-        }
+        extracted_data = {"motivation": "looking to buy my first home", "budget": 350000}
 
         appointment_type = calendar_scheduler._determine_appointment_type(extracted_data)
         assert appointment_type == AppointmentType.BUYER_CONSULTATION
@@ -193,10 +175,7 @@ class TestCalendarScheduler:
     @pytest.mark.asyncio
     async def test_determine_appointment_type_seller(self, calendar_scheduler):
         """Test appointment type determination for seller."""
-        extracted_data = {
-            "motivation": "need to sell my house quickly",
-            "home_condition": "excellent"
-        }
+        extracted_data = {"motivation": "need to sell my house quickly", "home_condition": "excellent"}
 
         appointment_type = calendar_scheduler._determine_appointment_type(extracted_data)
         assert appointment_type == AppointmentType.LISTING_APPOINTMENT
@@ -204,10 +183,7 @@ class TestCalendarScheduler:
     @pytest.mark.asyncio
     async def test_determine_appointment_type_investor(self, calendar_scheduler):
         """Test appointment type determination for investor."""
-        extracted_data = {
-            "motivation": "looking for rental investment properties",
-            "budget": 200000
-        }
+        extracted_data = {"motivation": "looking for rental investment properties", "budget": 200000}
 
         appointment_type = calendar_scheduler._determine_appointment_type(extracted_data)
         assert appointment_type == AppointmentType.INVESTOR_MEETING
@@ -215,20 +191,9 @@ class TestCalendarScheduler:
     @pytest.mark.asyncio
     async def test_is_urgent_timeline(self, calendar_scheduler):
         """Test urgent timeline detection."""
-        urgent_timelines = [
-            "ASAP",
-            "this month",
-            "immediately",
-            "next week",
-            "urgent"
-        ]
+        urgent_timelines = ["ASAP", "this month", "immediately", "next week", "urgent"]
 
-        non_urgent_timelines = [
-            "next year",
-            "6 months",
-            "eventually",
-            "when I'm ready"
-        ]
+        non_urgent_timelines = ["next year", "6 months", "eventually", "when I'm ready"]
 
         for timeline in urgent_timelines:
             assert calendar_scheduler._is_urgent_timeline(timeline) is True
@@ -266,28 +231,19 @@ class TestCalendarScheduler:
         """Test preferred time matching."""
         # Morning time (10 AM)
         morning_time = datetime(2024, 1, 15, 10, 0, 0, tzinfo=AUSTIN_TZ)
-        assert calendar_scheduler._matches_preferred_time(
-            morning_time, ["morning"]
-        ) is True
-        assert calendar_scheduler._matches_preferred_time(
-            morning_time, ["afternoon"]
-        ) is False
+        assert calendar_scheduler._matches_preferred_time(morning_time, ["morning"]) is True
+        assert calendar_scheduler._matches_preferred_time(morning_time, ["afternoon"]) is False
 
         # Afternoon time (3 PM)
         afternoon_time = datetime(2024, 1, 15, 15, 0, 0, tzinfo=AUSTIN_TZ)
-        assert calendar_scheduler._matches_preferred_time(
-            afternoon_time, ["afternoon"]
-        ) is True
-        assert calendar_scheduler._matches_preferred_time(
-            afternoon_time, ["evening"]
-        ) is False
+        assert calendar_scheduler._matches_preferred_time(afternoon_time, ["afternoon"]) is True
+        assert calendar_scheduler._matches_preferred_time(afternoon_time, ["evening"]) is False
 
     @pytest.mark.asyncio
     async def test_get_available_slots(self, calendar_scheduler, mock_ghl_client):
         """Test fetching available appointment slots."""
         slots = await calendar_scheduler.get_available_slots(
-            appointment_type=AppointmentType.BUYER_CONSULTATION,
-            days_ahead=7
+            appointment_type=AppointmentType.BUYER_CONSULTATION, days_ahead=7
         )
 
         assert len(slots) > 0
@@ -300,25 +256,18 @@ class TestCalendarScheduler:
     @pytest.mark.asyncio
     async def test_get_available_slots_no_calendar_id(self, mock_ghl_client):
         """Test handling missing calendar ID."""
-        with patch('ghl_real_estate_ai.services.calendar_scheduler.settings') as mock_settings:
+        with patch("ghl_real_estate_ai.services.calendar_scheduler.settings") as mock_settings:
             mock_settings.ghl_calendar_id = None
 
             scheduler = CalendarScheduler(ghl_client=mock_ghl_client)
-            slots = await scheduler.get_available_slots(
-                appointment_type=AppointmentType.BUYER_CONSULTATION
-            )
+            slots = await scheduler.get_available_slots(appointment_type=AppointmentType.BUYER_CONSULTATION)
 
             assert slots == []
             # Should not call GHL client
             mock_ghl_client.get_available_slots.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_book_appointment_success(
-        self,
-        calendar_scheduler,
-        qualified_lead_data,
-        mock_ghl_client
-    ):
+    async def test_book_appointment_success(self, calendar_scheduler, qualified_lead_data, mock_ghl_client):
         """Test successful appointment booking."""
         # Create a time slot
         start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ)
@@ -326,7 +275,7 @@ class TestCalendarScheduler:
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         result = await calendar_scheduler.book_appointment(
@@ -334,7 +283,7 @@ class TestCalendarScheduler:
             contact_info=qualified_lead_data["contact_info"],
             time_slot=time_slot,
             lead_score=qualified_lead_data["lead_score"],
-            extracted_data=qualified_lead_data["extracted_data"]
+            extracted_data=qualified_lead_data["extracted_data"],
         )
 
         assert result.success is True
@@ -347,12 +296,7 @@ class TestCalendarScheduler:
         mock_ghl_client.create_appointment.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_book_appointment_failure(
-        self,
-        calendar_scheduler,
-        qualified_lead_data,
-        mock_ghl_client
-    ):
+    async def test_book_appointment_failure(self, calendar_scheduler, qualified_lead_data, mock_ghl_client):
         """Test appointment booking failure handling."""
         # Mock GHL client to fail
         mock_ghl_client.create_appointment.side_effect = Exception("Calendar API error")
@@ -362,7 +306,7 @@ class TestCalendarScheduler:
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         result = await calendar_scheduler.book_appointment(
@@ -370,7 +314,7 @@ class TestCalendarScheduler:
             contact_info=qualified_lead_data["contact_info"],
             time_slot=time_slot,
             lead_score=qualified_lead_data["lead_score"],
-            extracted_data=qualified_lead_data["extracted_data"]
+            extracted_data=qualified_lead_data["extracted_data"],
         )
 
         assert result.success is False
@@ -385,7 +329,7 @@ class TestCalendarScheduler:
             Exception("No availability"),
             Exception("Double booking detected"),
             Exception("Timeout error"),
-            Exception("Rate limit exceeded")
+            Exception("Rate limit exceeded"),
         ]
 
         for error in fallback_errors:
@@ -396,16 +340,10 @@ class TestCalendarScheduler:
         assert calendar_scheduler._should_fallback_to_manual(non_fallback_error) is False
 
     @pytest.mark.asyncio
-    async def test_suggest_appointment_times(
-        self,
-        calendar_scheduler,
-        mock_ghl_client
-    ):
+    async def test_suggest_appointment_times(self, calendar_scheduler, mock_ghl_client):
         """Test appointment time suggestions for AI responses."""
         suggestions = await calendar_scheduler.suggest_appointment_times(
-            contact_id="contact_123",
-            appointment_type=AppointmentType.BUYER_CONSULTATION,
-            days_ahead=5
+            contact_id="contact_123", appointment_type=AppointmentType.BUYER_CONSULTATION, days_ahead=5
         )
 
         assert len(suggestions) > 0
@@ -414,18 +352,13 @@ class TestCalendarScheduler:
         assert any("at" in suggestion for suggestion in suggestions)
 
     @pytest.mark.asyncio
-    async def test_suggest_appointment_times_no_availability(
-        self,
-        calendar_scheduler,
-        mock_ghl_client
-    ):
+    async def test_suggest_appointment_times_no_availability(self, calendar_scheduler, mock_ghl_client):
         """Test appointment suggestions when no slots available."""
         # Mock no availability
         mock_ghl_client.get_available_slots.return_value = []
 
         suggestions = await calendar_scheduler.suggest_appointment_times(
-            contact_id="contact_123",
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            contact_id="contact_123", appointment_type=AppointmentType.BUYER_CONSULTATION
         )
 
         assert len(suggestions) == 1
@@ -433,19 +366,11 @@ class TestCalendarScheduler:
 
     def test_generate_appointment_title(self, calendar_scheduler):
         """Test appointment title generation."""
-        contact_info = {
-            "first_name": "John",
-            "last_name": "Doe"
-        }
-        extracted_data = {
-            "budget": 450000,
-            "location": ["Austin", "Round Rock"]
-        }
+        contact_info = {"first_name": "John", "last_name": "Doe"}
+        extracted_data = {"budget": 450000, "location": ["Austin", "Round Rock"]}
 
         title = calendar_scheduler._generate_appointment_title(
-            contact_info,
-            AppointmentType.BUYER_CONSULTATION,
-            extracted_data
+            contact_info, AppointmentType.BUYER_CONSULTATION, extracted_data
         )
 
         assert "Buyer Consultation - John Doe" in title
@@ -463,17 +388,15 @@ class TestCalendarScheduler:
                 start_time=datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ),
                 end_time=datetime(2024, 1, 17, 15, 0, 0, tzinfo=AUSTIN_TZ),
                 duration_minutes=60,
-                appointment_type=AppointmentType.BUYER_CONSULTATION
+                appointment_type=AppointmentType.BUYER_CONSULTATION,
             ),
-            contact_info={"first_name": "John", "last_name": "Doe"}
+            contact_info={"first_name": "John", "last_name": "Doe"},
         )
 
         contact_info = {"first_name": "John", "last_name": "Doe"}
         extracted_data = {"timeline": "urgent"}
 
-        actions = await calendar_scheduler._generate_confirmation_actions(
-            booking, contact_info, extracted_data
-        )
+        actions = await calendar_scheduler._generate_confirmation_actions(booking, contact_info, extracted_data)
 
         assert len(actions) > 0
 
@@ -500,9 +423,9 @@ class TestCalendarScheduler:
                 start_time=datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ),
                 end_time=datetime(2024, 1, 17, 15, 0, 0, tzinfo=AUSTIN_TZ),
                 duration_minutes=60,
-                appointment_type=AppointmentType.BUYER_CONSULTATION
+                appointment_type=AppointmentType.BUYER_CONSULTATION,
             ),
-            contact_info={"first_name": "John", "last_name": "Doe"}
+            contact_info={"first_name": "John", "last_name": "Doe"},
         )
 
         contact_info = {"first_name": "John", "last_name": "Doe"}
@@ -518,10 +441,7 @@ class TestCalendarScheduler:
 
     @pytest.mark.asyncio
     async def test_handle_appointment_request_qualified_lead(
-        self,
-        calendar_scheduler,
-        qualified_lead_data,
-        mock_ghl_client
+        self, calendar_scheduler, qualified_lead_data, mock_ghl_client
     ):
         """Test full appointment request handling for qualified lead."""
         booking_attempted, response_message, actions = await calendar_scheduler.handle_appointment_request(
@@ -529,7 +449,7 @@ class TestCalendarScheduler:
             contact_info=qualified_lead_data["contact_info"],
             lead_score=qualified_lead_data["lead_score"],
             extracted_data=qualified_lead_data["extracted_data"],
-            message_content=qualified_lead_data["message_content"]
+            message_content=qualified_lead_data["message_content"],
         )
 
         assert booking_attempted is True
@@ -540,18 +460,14 @@ class TestCalendarScheduler:
         mock_ghl_client.get_available_slots.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_appointment_request_unqualified_lead(
-        self,
-        calendar_scheduler,
-        unqualified_lead_data
-    ):
+    async def test_handle_appointment_request_unqualified_lead(self, calendar_scheduler, unqualified_lead_data):
         """Test appointment request handling for unqualified lead."""
         booking_attempted, response_message, actions = await calendar_scheduler.handle_appointment_request(
             contact_id=unqualified_lead_data["contact_info"]["contact_id"],
             contact_info=unqualified_lead_data["contact_info"],
             lead_score=unqualified_lead_data["lead_score"],
             extracted_data=unqualified_lead_data["extracted_data"],
-            message_content=unqualified_lead_data["message_content"]
+            message_content=unqualified_lead_data["message_content"],
         )
 
         assert booking_attempted is False
@@ -571,7 +487,7 @@ class TestTimeSlot:
             start_time=start_time,
             end_time=end_time,
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         assert slot.start_time == start_time
@@ -586,9 +502,9 @@ class TestTimeSlot:
         with pytest.raises(ValueError, match="timezone-aware"):
             TimeSlot(
                 start_time=datetime(2024, 1, 17, 14, 0, 0),  # No timezone
-                end_time=datetime(2024, 1, 17, 15, 0, 0),    # No timezone
+                end_time=datetime(2024, 1, 17, 15, 0, 0),  # No timezone
                 duration_minutes=60,
-                appointment_type=AppointmentType.BUYER_CONSULTATION
+                appointment_type=AppointmentType.BUYER_CONSULTATION,
             )
 
     def test_time_slot_to_austin_time(self):
@@ -601,7 +517,7 @@ class TestTimeSlot:
             start_time=utc_time,
             end_time=end_time,
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         austin_time = slot.to_austin_time()
@@ -619,7 +535,7 @@ class TestTimeSlot:
             start_time=austin_time,
             end_time=end_time,
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         formatted = slot.format_for_lead()
@@ -638,7 +554,7 @@ class TestAppointmentBooking:
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         booking = AppointmentBooking(
@@ -646,7 +562,7 @@ class TestAppointmentBooking:
             lead_score=6,
             appointment_type=AppointmentType.BUYER_CONSULTATION,
             time_slot=time_slot,
-            contact_info={"first_name": "John", "last_name": "Doe"}
+            contact_info={"first_name": "John", "last_name": "Doe"},
         )
 
         assert booking.contact_id == "contact_123"
@@ -663,7 +579,7 @@ class TestAppointmentBooking:
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
             duration_minutes=60,
-            appointment_type=AppointmentType.BUYER_CONSULTATION
+            appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
         with pytest.raises(ValueError, match="below booking threshold"):
@@ -672,7 +588,7 @@ class TestAppointmentBooking:
                 lead_score=3,  # Below threshold
                 appointment_type=AppointmentType.BUYER_CONSULTATION,
                 time_slot=time_slot,
-                contact_info={"first_name": "John", "last_name": "Doe"}
+                contact_info={"first_name": "John", "last_name": "Doe"},
             )
 
 

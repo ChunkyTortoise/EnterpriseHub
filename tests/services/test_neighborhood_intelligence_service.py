@@ -12,24 +12,25 @@ Test coverage:
 - Integration with external services
 """
 
-import pytest
-import pytest_asyncio
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
 import numpy as np
-from typing import Dict, List, Any
+import pytest
+import pytest_asyncio
 
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
+    InvestmentGrade,
+    MarketAlert,
+    MarketDataSource,
+    MarketSegment,
+    MarketTrend,
     NeighborhoodIntelligenceService,
     NeighborhoodMetrics,
-    MarketAlert,
     PricePrediction,
-    MarketDataSource,
-    MarketTrend,
-    InvestmentGrade,
-    MarketSegment,
-    get_neighborhood_intelligence_service
+    get_neighborhood_intelligence_service,
 )
 
 
@@ -50,7 +51,7 @@ class TestNeighborhoodIntelligenceService:
                 refresh_interval=5,
                 reliability_score=0.95,
                 data_types=["listings", "sales"],
-                is_active=True
+                is_active=True,
             )
         ]
         await service.initialize()
@@ -105,7 +106,7 @@ class TestNeighborhoodIntelligenceService:
             amenity_scores={"restaurants": 94.0, "shopping": 89.0},
             data_freshness=datetime.now(),
             confidence_score=0.94,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     @pytest.mark.asyncio
@@ -115,10 +116,11 @@ class TestNeighborhoodIntelligenceService:
         service.cache = AsyncMock()
 
         # Mock ML model loading
-        with patch.object(service, '_load_ml_models', new_callable=AsyncMock), \
-             patch.object(service, '_validate_data_sources', new_callable=AsyncMock), \
-             patch.object(service, '_start_background_tasks', new_callable=AsyncMock):
-
+        with (
+            patch.object(service, "_load_ml_models", new_callable=AsyncMock),
+            patch.object(service, "_validate_data_sources", new_callable=AsyncMock),
+            patch.object(service, "_start_background_tasks", new_callable=AsyncMock),
+        ):
             await service.initialize()
 
             assert service.is_initialized
@@ -133,7 +135,7 @@ class TestNeighborhoodIntelligenceService:
             "neighborhood_id": neighborhood_id,
             "metrics": {"median_home_value": 750000},
             "analysis": {"market_summary": "Strong market"},
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
         service.cache.get.return_value = cached_data
@@ -152,9 +154,10 @@ class TestNeighborhoodIntelligenceService:
         service.cache.get.return_value = None
 
         # Mock metrics retrieval
-        with patch.object(service, '_fetch_neighborhood_metrics', return_value=sample_neighborhood_metrics), \
-             patch.object(service, '_generate_comparative_analysis', return_value={}):
-
+        with (
+            patch.object(service, "_fetch_neighborhood_metrics", return_value=sample_neighborhood_metrics),
+            patch.object(service, "_generate_comparative_analysis", return_value={}),
+        ):
             result = await service.get_neighborhood_intelligence(neighborhood_id)
 
             assert result is not None
@@ -189,7 +192,7 @@ class TestNeighborhoodIntelligenceService:
         service.cache.get.return_value = None
 
         # Mock metrics fetching
-        with patch.object(service, '_fetch_neighborhood_metrics', return_value=sample_neighborhood_metrics):
+        with patch.object(service, "_fetch_neighborhood_metrics", return_value=sample_neighborhood_metrics):
             result = await service.get_market_metrics(neighborhood_id)
 
             assert isinstance(result, NeighborhoodMetrics)
@@ -218,16 +221,16 @@ class TestNeighborhoodIntelligenceService:
                 "1m": (740000.0, 772000.0),
                 "3m": (750000.0, 786000.0),
                 "6m": (775000.0, 815000.0),
-                "12m": (800000.0, 885000.0)
+                "12m": (800000.0, 885000.0),
             },
             prediction_confidence=0.956,
             factors_analyzed=["market_trends", "comparables"],
             market_context={"trend": "appreciation"},
             model_version="2.1.0",
-            generated_at=datetime.now()
+            generated_at=datetime.now(),
         )
 
-        with patch.object(service, '_generate_price_predictions', return_value=sample_prediction):
+        with patch.object(service, "_generate_price_predictions", return_value=sample_prediction):
             result = await service.get_price_predictions(neighborhood_id)
 
             assert isinstance(result, PricePrediction)
@@ -256,11 +259,11 @@ class TestNeighborhoodIntelligenceService:
                 impact_score=85.0,
                 recommended_actions=["Monitor market", "Prepare buyers"],
                 created_at=datetime.now(),
-                expires_at=datetime.now() + timedelta(hours=24)
+                expires_at=datetime.now() + timedelta(hours=24),
             )
         ]
 
-        with patch.object(service, '_fetch_market_alerts', return_value=sample_alerts):
+        with patch.object(service, "_fetch_market_alerts", return_value=sample_alerts):
             result = await service.get_market_alerts(neighborhood_ids)
 
             assert len(result) == 1
@@ -270,11 +273,7 @@ class TestNeighborhoodIntelligenceService:
     @pytest.mark.asyncio
     async def test_analyze_investment_opportunities(self, service):
         """Test investment opportunity analysis."""
-        criteria = {
-            "max_budget": 800000,
-            "min_roi": 15.0,
-            "risk_tolerance": "medium"
-        }
+        criteria = {"max_budget": 800000, "min_roi": 15.0, "risk_tolerance": "medium"}
 
         # Mock cache miss
         service.cache.get.return_value = None
@@ -286,11 +285,11 @@ class TestNeighborhoodIntelligenceService:
                 "opportunity_type": "value_play",
                 "score": 94.2,
                 "roi_projection": {"1_year": 18.5, "3_year": 42.8},
-                "investment_thesis": "Strong fundamentals with growth potential"
+                "investment_thesis": "Strong fundamentals with growth potential",
             }
         ]
 
-        with patch.object(service, '_analyze_investment_opportunities', return_value=sample_opportunities):
+        with patch.object(service, "_analyze_investment_opportunities", return_value=sample_opportunities):
             result = await service.analyze_investment_opportunities(criteria)
 
             assert len(result) == 1
@@ -315,12 +314,12 @@ class TestNeighborhoodIntelligenceService:
                     "area": "Central District",
                     "price_range": "$800K - $1.5M",
                     "characteristics": "High-end condos",
-                    "target_demographic": "Professionals"
+                    "target_demographic": "Professionals",
                 }
-            ]
+            ],
         }
 
-        with patch.object(service, '_perform_micro_market_analysis', return_value=sample_analysis):
+        with patch.object(service, "_perform_micro_market_analysis", return_value=sample_analysis):
             result = await service.get_micro_market_analysis(neighborhood_id, segment)
 
             assert result["neighborhood_id"] == neighborhood_id
@@ -340,15 +339,13 @@ class TestNeighborhoodIntelligenceService:
         sample_performance = {
             "performance_data": {
                 "area1": {"price_performance": 12.5, "market_activity": 85.0},
-                "area2": {"price_performance": 8.3, "market_activity": 72.0}
+                "area2": {"price_performance": 8.3, "market_activity": 72.0},
             },
-            "rankings": {
-                "price_performance": {"top": "area1", "ranking": ["area1", "area2"]}
-            },
-            "summary": {"top_performer": "area1"}
+            "rankings": {"price_performance": {"top": "area1", "ranking": ["area1", "area2"]}},
+            "summary": {"top_performer": "area1"},
         }
 
-        with patch.object(service, '_track_neighborhood_performance', return_value=sample_performance):
+        with patch.object(service, "_track_neighborhood_performance", return_value=sample_performance):
             result = await service.track_neighborhood_performance(neighborhood_ids, timeframe)
 
             assert "performance_data" in result
@@ -359,7 +356,7 @@ class TestNeighborhoodIntelligenceService:
     async def test_data_source_validation(self, service):
         """Test data source validation."""
         # Mock successful validation
-        with patch.object(service, '_validate_data_sources') as mock_validate:
+        with patch.object(service, "_validate_data_sources") as mock_validate:
             mock_validate.return_value = None
             await service._validate_data_sources()
             mock_validate.assert_called_once()
@@ -368,7 +365,7 @@ class TestNeighborhoodIntelligenceService:
     async def test_ml_model_loading(self, service):
         """Test ML model loading and configuration."""
         # Mock model loading
-        with patch.object(service, '_load_ml_models') as mock_load:
+        with patch.object(service, "_load_ml_models") as mock_load:
             mock_load.return_value = None
             await service._load_ml_models()
             mock_load.assert_called_once()
@@ -382,7 +379,7 @@ class TestNeighborhoodIntelligenceService:
         service.cache.get.return_value = None
 
         # Mock no metrics found
-        with patch.object(service, '_fetch_neighborhood_metrics', return_value=None):
+        with patch.object(service, "_fetch_neighborhood_metrics", return_value=None):
             result = await service.get_neighborhood_intelligence(invalid_id)
 
             assert result is None
@@ -396,7 +393,7 @@ class TestNeighborhoodIntelligenceService:
         service.cache.get.side_effect = [None, sample_neighborhood_metrics.__dict__]
 
         # Mock metrics fetching
-        with patch.object(service, '_fetch_neighborhood_metrics', return_value=sample_neighborhood_metrics):
+        with patch.object(service, "_fetch_neighborhood_metrics", return_value=sample_neighborhood_metrics):
             # First call - should cache
             result1 = await service.get_market_metrics(neighborhood_id)
             service.cache.set.assert_called_once()
@@ -436,12 +433,9 @@ class TestNeighborhoodIntelligenceService:
         service.cache.get.return_value = None
 
         # Mock metrics fetching
-        with patch.object(service, '_fetch_neighborhood_metrics', return_value=sample_neighborhood_metrics):
+        with patch.object(service, "_fetch_neighborhood_metrics", return_value=sample_neighborhood_metrics):
             # Make multiple concurrent requests
-            tasks = [
-                service.get_market_metrics(neighborhood_id)
-                for _ in range(5)
-            ]
+            tasks = [service.get_market_metrics(neighborhood_id) for _ in range(5)]
 
             results = await asyncio.gather(*tasks)
 
@@ -503,12 +497,12 @@ class TestNeighborhoodIntelligenceService:
             amenity_scores={"restaurants": 94.0, "shopping": 89.0},
             data_freshness=datetime.now(),
             confidence_score=0.98,  # High confidence
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         service.cache.get.return_value = None
 
-        with patch.object(service, '_fetch_neighborhood_metrics', return_value=high_quality_metrics):
+        with patch.object(service, "_fetch_neighborhood_metrics", return_value=high_quality_metrics):
             result = await service.get_market_metrics(neighborhood_id)
 
             assert result.confidence_score >= 0.9
@@ -531,7 +525,7 @@ class TestNeighborhoodIntelligenceService:
         # Mock efficient processing
         service.cache.get.return_value = None
 
-        with patch.object(service, '_fetch_neighborhood_metrics') as mock_fetch:
+        with patch.object(service, "_fetch_neighborhood_metrics") as mock_fetch:
             mock_fetch.return_value = None  # Simulate no data found
 
             # Process multiple neighborhoods
@@ -563,11 +557,11 @@ class TestNeighborhoodIntelligenceService:
                 impact_score=75.0,
                 recommended_actions=["Monitor market"],
                 created_at=datetime.now(),
-                expires_at=datetime.now() + timedelta(hours=12)
+                expires_at=datetime.now() + timedelta(hours=12),
             )
         ]
 
-        with patch.object(service, '_fetch_market_alerts', return_value=sample_alerts):
+        with patch.object(service, "_fetch_market_alerts", return_value=sample_alerts):
             result = await service.get_market_alerts(neighborhood_ids)
 
             assert len(result) == 1

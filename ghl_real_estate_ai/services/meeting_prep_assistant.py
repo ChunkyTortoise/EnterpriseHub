@@ -34,9 +34,7 @@ class MeetingPrepAssistant:
     Automated meeting preparation with intelligent briefing generation.
     """
 
-    def __init__(
-        self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None
-    ):
+    def __init__(self, ghl_api_key: Optional[str] = None, ghl_location_id: Optional[str] = None):
         """Initialize the Meeting Prep Assistant service"""
         self.ghl_api_key = ghl_api_key
         self.ghl_location_id = ghl_location_id
@@ -67,12 +65,8 @@ class MeetingPrepAssistant:
             "generated_at": datetime.now().isoformat(),
             "contact_summary": self._get_contact_summary(contact_id),
             "recent_activity": self._get_recent_activity(contact_id),
-            "property_info": (
-                self._get_property_info(property_id) if property_id else None
-            ),
-            "talking_points": self._generate_talking_points(
-                meeting_type, contact_id, property_id
-            ),
+            "property_info": (self._get_property_info(property_id) if property_id else None),
+            "talking_points": self._generate_talking_points(meeting_type, contact_id, property_id),
             "recommendations": self._generate_recommendations(meeting_type, contact_id),
             "documents_to_bring": self._get_required_documents(meeting_type),
             "agenda": self._create_agenda(meeting_type),
@@ -135,9 +129,7 @@ class MeetingPrepAssistant:
         ]
         return points
 
-    def _generate_recommendations(
-        self, meeting_type: MeetingType, contact_id: str
-    ) -> List[str]:
+    def _generate_recommendations(self, meeting_type: MeetingType, contact_id: str) -> List[str]:
         """Generate action recommendations"""
         return [
             "Schedule showings for 3 properties",

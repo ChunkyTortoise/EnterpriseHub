@@ -16,19 +16,19 @@ Checks:
 - Snapshots directory exists
 - GitHub Actions workflow exists
 """
+
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
-
 # ANSI color codes
-GREEN = '\033[0;32m'
-RED = '\033[0;31m'
-YELLOW = '\033[1;33m'
-BLUE = '\033[0;34m'
-NC = '\033[0m'  # No Color
+GREEN = "\033[0;32m"
+RED = "\033[0;31m"
+YELLOW = "\033[1;33m"
+BLUE = "\033[0;34m"
+NC = "\033[0m"  # No Color
 
 
 def log_info(msg: str) -> None:
@@ -74,8 +74,8 @@ def check_directory_exists(dir_path: Path, description: str) -> bool:
 def check_python_syntax(file_path: Path) -> bool:
     """Check if a Python file has valid syntax."""
     try:
-        with open(file_path, 'r') as f:
-            compile(f.read(), file_path, 'exec')
+        with open(file_path, "r") as f:
+            compile(f.read(), file_path, "exec")
         log_success(f"Valid Python syntax: {file_path.name}")
         return True
     except SyntaxError as e:
@@ -86,7 +86,7 @@ def check_python_syntax(file_path: Path) -> bool:
 def check_dependency_installed(package: str) -> bool:
     """Check if a Python package is installed."""
     try:
-        __import__(package.replace('-', '_'))
+        __import__(package.replace("-", "_"))
         log_success(f"Package installed: {package}")
         return True
     except ImportError:
@@ -98,12 +98,9 @@ def check_playwright_browser() -> bool:
     """Check if Playwright Chromium is installed."""
     try:
         result = subprocess.run(
-            ['playwright', 'install', '--dry-run', 'chromium'],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["playwright", "install", "--dry-run", "chromium"], capture_output=True, text=True, timeout=10
         )
-        if 'chromium' in result.stdout.lower():
+        if "chromium" in result.stdout.lower():
             log_success("Playwright Chromium browser is installed")
             return True
         else:
@@ -117,20 +114,21 @@ def check_playwright_browser() -> bool:
 def count_components_in_test_file(test_file: Path) -> int:
     """Count number of components in COMPONENTS list."""
     try:
-        with open(test_file, 'r') as f:
+        with open(test_file, "r") as f:
             content = f.read()
 
         # Find COMPONENTS list
-        if 'COMPONENTS = [' not in content:
+        if "COMPONENTS = [" not in content:
             return 0
 
         # Extract COMPONENTS list
-        start = content.index('COMPONENTS = [')
-        end = content.index(']', start) + 1
+        start = content.index("COMPONENTS = [")
+        end = content.index("]", start) + 1
         components_str = content[start:end]
 
         # Count quoted strings (component IDs)
         import re
+
         components = re.findall(r"'([^']+)'", components_str)
 
         return len(components)
@@ -217,9 +215,9 @@ def main():
     log_info("\nChecking Python dependencies...")
 
     dependencies = [
-        'playwright',
-        'pytest',
-        'axe_playwright',
+        "playwright",
+        "pytest",
+        "axe_playwright",
     ]
 
     for dep in dependencies:
@@ -268,14 +266,14 @@ def main():
 
     requirements_file = project_root / "requirements.txt"
     if requirements_file.exists():
-        with open(requirements_file, 'r') as f:
+        with open(requirements_file, "r") as f:
             requirements = f.read()
 
         required_packages = [
-            'pytest-playwright',
-            'playwright',
-            'axe-playwright',
-            'pixelmatch',
+            "pytest-playwright",
+            "playwright",
+            "axe-playwright",
+            "pixelmatch",
         ]
 
         all_found = True

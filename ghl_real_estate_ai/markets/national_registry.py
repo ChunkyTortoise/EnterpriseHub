@@ -16,37 +16,40 @@ Author: EnterpriseHub AI
 Created: 2026-01-18
 """
 
-import os
-import json
-import yaml
 import asyncio
+import json
 import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Type, Any, Tuple
-from datetime import datetime, timedelta
+import os
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Type
 
-from .registry import MarketRegistry, get_market_registry
+import yaml
+
+from ..ghl_utils.logger import get_logger
+from ..services.cache_service import get_cache_service
 from .base_market_service import BaseMarketService, ConfigDrivenMarketService
 from .config_schemas import MarketConfig
-from ..services.cache_service import get_cache_service
-from ..ghl_utils.logger import get_logger
+from .registry import MarketRegistry, get_market_registry
 
 logger = get_logger(__name__)
 
 
 class CorporatePartnerTier(Enum):
     """Corporate partnership tiers for Fortune 500 programs"""
+
     PLATINUM = "platinum"  # Major Fortune 100 with >10K employees
-    GOLD = "gold"         # Fortune 500 with 5K-10K employees
-    SILVER = "silver"     # Mid-market with 1K-5K employees
-    BRONZE = "bronze"     # Growing companies with <1K employees
+    GOLD = "gold"  # Fortune 500 with 5K-10K employees
+    SILVER = "silver"  # Mid-market with 1K-5K employees
+    BRONZE = "bronze"  # Growing companies with <1K employees
 
 
 @dataclass
 class CorporateHeadquarters:
     """Corporate headquarters information for relocation programs"""
+
     company_name: str
     ticker_symbol: Optional[str]
     industry: str
@@ -67,6 +70,7 @@ class CorporateHeadquarters:
 @dataclass
 class MarketExpansionTarget:
     """Target market for national expansion"""
+
     market_id: str
     market_name: str
     state: str
@@ -85,6 +89,7 @@ class MarketExpansionTarget:
 @dataclass
 class CrossMarketInsights:
     """Cross-market analytics and intelligence"""
+
     source_market: str
     target_market: str
     migration_volume: int
@@ -135,8 +140,10 @@ class NationalMarketRegistry:
         # Initialize new market services for Denver, Phoenix, Seattle
         self._initialize_national_markets()
 
-        logger.info(f"NationalMarketRegistry initialized with {len(self.corporate_headquarters)} "
-                   f"corporate headquarters and {len(self.expansion_targets)} expansion targets")
+        logger.info(
+            f"NationalMarketRegistry initialized with {len(self.corporate_headquarters)} "
+            f"corporate headquarters and {len(self.expansion_targets)} expansion targets"
+        )
 
     def _load_corporate_headquarters(self) -> None:
         """Load corporate headquarters data from JSON file"""
@@ -146,14 +153,14 @@ class NationalMarketRegistry:
             return
 
         try:
-            with open(self.corporate_data_file, 'r') as f:
+            with open(self.corporate_data_file, "r") as f:
                 data = json.load(f)
 
             for corp_id, corp_data in data.items():
                 # Convert datetime strings back to datetime objects
-                corp_data['program_start_date'] = datetime.fromisoformat(corp_data['program_start_date'])
-                corp_data['last_updated'] = datetime.fromisoformat(corp_data['last_updated'])
-                corp_data['partnership_tier'] = CorporatePartnerTier(corp_data['partnership_tier'])
+                corp_data["program_start_date"] = datetime.fromisoformat(corp_data["program_start_date"])
+                corp_data["last_updated"] = datetime.fromisoformat(corp_data["last_updated"])
+                corp_data["partnership_tier"] = CorporatePartnerTier(corp_data["partnership_tier"])
 
                 self.corporate_headquarters[corp_id] = CorporateHeadquarters(**corp_data)
 
@@ -169,7 +176,7 @@ class NationalMarketRegistry:
             return
 
         try:
-            with open(self.expansion_targets_file, 'r') as f:
+            with open(self.expansion_targets_file, "r") as f:
                 data = json.load(f)
 
             for target_id, target_data in data.items():
@@ -199,12 +206,11 @@ class NationalMarketRegistry:
                 contact_info={
                     "hr_director": "corporate-relocations@amazon.com",
                     "phone": "+1-206-266-1000",
-                    "program_manager": "Jane Smith"
+                    "program_manager": "Jane Smith",
                 },
                 program_start_date=datetime(2024, 1, 15),
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             ),
-
             "microsoft": CorporateHeadquarters(
                 company_name="Microsoft Corporation",
                 ticker_symbol="MSFT",
@@ -221,12 +227,11 @@ class NationalMarketRegistry:
                 contact_info={
                     "hr_director": "relocations@microsoft.com",
                     "phone": "+1-425-882-8080",
-                    "program_manager": "David Chen"
+                    "program_manager": "David Chen",
                 },
                 program_start_date=datetime(2024, 3, 1),
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             ),
-
             "google": CorporateHeadquarters(
                 company_name="Alphabet Inc. (Google)",
                 ticker_symbol="GOOGL",
@@ -243,12 +248,11 @@ class NationalMarketRegistry:
                 contact_info={
                     "hr_director": "people-ops-relocations@google.com",
                     "phone": "+1-650-253-0000",
-                    "program_manager": "Sarah Martinez"
+                    "program_manager": "Sarah Martinez",
                 },
                 program_start_date=datetime(2024, 2, 1),
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             ),
-
             "boeing": CorporateHeadquarters(
                 company_name="Boeing Company",
                 ticker_symbol="BA",
@@ -265,12 +269,11 @@ class NationalMarketRegistry:
                 contact_info={
                     "hr_director": "talent.mobility@boeing.com",
                     "phone": "+1-312-544-2000",
-                    "program_manager": "Michael Johnson"
+                    "program_manager": "Michael Johnson",
                 },
                 program_start_date=datetime(2024, 4, 15),
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             ),
-
             "intel": CorporateHeadquarters(
                 company_name="Intel Corporation",
                 ticker_symbol="INTC",
@@ -287,23 +290,23 @@ class NationalMarketRegistry:
                 contact_info={
                     "hr_director": "global.mobility@intel.com",
                     "phone": "+1-408-765-8080",
-                    "program_manager": "Lisa Wang"
+                    "program_manager": "Lisa Wang",
                 },
                 program_start_date=datetime(2024, 5, 1),
-                last_updated=datetime.now()
-            )
+                last_updated=datetime.now(),
+            ),
         }
 
         # Save to file
         serializable_data = {}
         for corp_id, headquarters in initial_headquarters.items():
             data_dict = headquarters.__dict__.copy()
-            data_dict['program_start_date'] = headquarters.program_start_date.isoformat()
-            data_dict['last_updated'] = headquarters.last_updated.isoformat()
-            data_dict['partnership_tier'] = headquarters.partnership_tier.value
+            data_dict["program_start_date"] = headquarters.program_start_date.isoformat()
+            data_dict["last_updated"] = headquarters.last_updated.isoformat()
+            data_dict["partnership_tier"] = headquarters.partnership_tier.value
             serializable_data[corp_id] = data_dict
 
-        with open(self.corporate_data_file, 'w') as f:
+        with open(self.corporate_data_file, "w") as f:
             json.dump(serializable_data, f, indent=2)
 
         self.corporate_headquarters = initial_headquarters
@@ -325,13 +328,12 @@ class NationalMarketRegistry:
                 competitive_landscape={
                     "major_competitors": ["Re/Max", "Coldwell Banker", "Kentwood Real Estate"],
                     "market_share_opportunity": 0.15,
-                    "differentiation_factors": ["Tech hub expertise", "Corporate relocation specialization"]
+                    "differentiation_factors": ["Tech hub expertise", "Corporate relocation specialization"],
                 },
                 expansion_timeline="Q1 2026",
                 investment_required=125000.0,
-                roi_projection=3.8
+                roi_projection=3.8,
             ),
-
             "phoenix": MarketExpansionTarget(
                 market_id="phoenix",
                 market_name="Phoenix Metropolitan Area",
@@ -345,13 +347,12 @@ class NationalMarketRegistry:
                 competitive_landscape={
                     "major_competitors": ["Long Realty", "Russ Lyon Sotheby's", "HomeSmart"],
                     "market_share_opportunity": 0.18,
-                    "differentiation_factors": ["Luxury retirement expertise", "Corporate headquarters focus"]
+                    "differentiation_factors": ["Luxury retirement expertise", "Corporate headquarters focus"],
                 },
                 expansion_timeline="Q2 2026",
                 investment_required=145000.0,
-                roi_projection=4.2
+                roi_projection=4.2,
             ),
-
             "seattle": MarketExpansionTarget(
                 market_id="seattle",
                 market_name="Seattle Metropolitan Area",
@@ -365,13 +366,12 @@ class NationalMarketRegistry:
                 competitive_landscape={
                     "major_competitors": ["Windermere", "John L. Scott", "Redfin"],
                     "market_share_opportunity": 0.12,
-                    "differentiation_factors": ["Tech giant specialization", "International corporate transfers"]
+                    "differentiation_factors": ["Tech giant specialization", "International corporate transfers"],
                 },
                 expansion_timeline="Q1 2026",
                 investment_required=225000.0,
-                roi_projection=4.8
+                roi_projection=4.8,
             ),
-
             "london": MarketExpansionTarget(
                 market_id="london",
                 market_name="London Metropolitan Area",
@@ -385,13 +385,12 @@ class NationalMarketRegistry:
                 competitive_landscape={
                     "major_competitors": ["Savills", "Knight Frank", "Foxtons"],
                     "market_share_opportunity": 0.08,
-                    "differentiation_factors": ["US-style proactive service", "AI-powered ROI defense"]
+                    "differentiation_factors": ["US-style proactive service", "AI-powered ROI defense"],
                 },
                 expansion_timeline="Q3 2026",
                 investment_required=450000.0,
-                roi_projection=5.2
+                roi_projection=5.2,
             ),
-
             "singapore": MarketExpansionTarget(
                 market_id="singapore",
                 market_name="Singapore",
@@ -405,12 +404,12 @@ class NationalMarketRegistry:
                 competitive_landscape={
                     "major_competitors": ["PropNex", "ERA", "Huttons"],
                     "market_share_opportunity": 0.10,
-                    "differentiation_factors": ["Cross-border relocation", "Advanced data analytics"]
+                    "differentiation_factors": ["Cross-border relocation", "Advanced data analytics"],
                 },
                 expansion_timeline="Q4 2026",
                 investment_required=350000.0,
-                roi_projection=4.5
-            )
+                roi_projection=4.5,
+            ),
         }
 
         # Save to file
@@ -418,7 +417,7 @@ class NationalMarketRegistry:
         for target_id, target in initial_targets.items():
             serializable_data[target_id] = target.__dict__
 
-        with open(self.expansion_targets_file, 'w') as f:
+        with open(self.expansion_targets_file, "w") as f:
             json.dump(serializable_data, f, indent=2)
 
         self.expansion_targets = initial_targets
@@ -467,23 +466,23 @@ class NationalMarketRegistry:
                 "industry": headquarters.industry,
                 "employee_count": headquarters.employee_count,
                 "fortune_ranking": headquarters.fortune_ranking,
-                "partnership_tier": headquarters.partnership_tier.value
+                "partnership_tier": headquarters.partnership_tier.value,
             },
             "headquarters": {
                 "location": headquarters.headquarters_location,
                 "city": headquarters.headquarters_city,
-                "state": headquarters.headquarters_state
+                "state": headquarters.headquarters_state,
             },
             "relocation_program": {
                 "annual_volume": headquarters.relocation_volume_annual,
                 "average_budget": headquarters.average_relocation_budget,
                 "preferred_markets": headquarters.preferred_markets,
                 "program_start_date": headquarters.program_start_date.isoformat(),
-                "last_updated": headquarters.last_updated.isoformat()
+                "last_updated": headquarters.last_updated.isoformat(),
             },
             "preferred_market_details": [],
             "contact_information": headquarters.contact_info,
-            "service_tiers": self._get_service_tiers_for_partnership(headquarters.partnership_tier)
+            "service_tiers": self._get_service_tiers_for_partnership(headquarters.partnership_tier),
         }
 
         # Add detailed market information for preferred markets
@@ -495,15 +494,17 @@ class NationalMarketRegistry:
                     # Get corporate-specific insights for this market
                     corporate_insights = await market_service.get_corporate_relocation_insights(
                         company_identifier.lower().replace(" ", "_"),
-                        "executive"  # Default to executive level
+                        "executive",  # Default to executive level
                     )
 
-                    program_details["preferred_market_details"].append({
-                        "market_id": market_id,
-                        "market_name": market_config.get("market_name", market_id),
-                        "median_home_price": market_config.get("median_home_price", 0),
-                        "corporate_insights": corporate_insights
-                    })
+                    program_details["preferred_market_details"].append(
+                        {
+                            "market_id": market_id,
+                            "market_name": market_config.get("market_name", market_id),
+                            "median_home_price": market_config.get("median_home_price", 0),
+                            "corporate_insights": corporate_insights,
+                        }
+                    )
 
         # Cache for 6 hours
         await self.cache.set(cache_key, program_details, ttl=21600)
@@ -544,7 +545,7 @@ class NationalMarketRegistry:
                 "exclusive_market_insights": True,
                 "volume_discounts": 15,
                 "quarterly_business_reviews": True,
-                "custom_reporting": True
+                "custom_reporting": True,
             },
             CorporatePartnerTier.GOLD: {
                 "dedicated_relocation_specialist": True,
@@ -553,7 +554,7 @@ class NationalMarketRegistry:
                 "exclusive_market_insights": True,
                 "volume_discounts": 10,
                 "quarterly_business_reviews": False,
-                "custom_reporting": True
+                "custom_reporting": True,
             },
             CorporatePartnerTier.SILVER: {
                 "dedicated_relocation_specialist": False,
@@ -562,7 +563,7 @@ class NationalMarketRegistry:
                 "exclusive_market_insights": False,
                 "volume_discounts": 5,
                 "quarterly_business_reviews": False,
-                "custom_reporting": False
+                "custom_reporting": False,
             },
             CorporatePartnerTier.BRONZE: {
                 "dedicated_relocation_specialist": False,
@@ -571,17 +572,13 @@ class NationalMarketRegistry:
                 "exclusive_market_insights": False,
                 "volume_discounts": 0,
                 "quarterly_business_reviews": False,
-                "custom_reporting": False
-            }
+                "custom_reporting": False,
+            },
         }
 
         return service_tiers.get(tier, service_tiers[CorporatePartnerTier.BRONZE])
 
-    async def get_cross_market_insights(
-        self,
-        source_market: str,
-        target_market: str
-    ) -> Optional[CrossMarketInsights]:
+    async def get_cross_market_insights(self, source_market: str, target_market: str) -> Optional[CrossMarketInsights]:
         """
         Get cross-market migration and relocation insights
 
@@ -618,7 +615,7 @@ class NationalMarketRegistry:
             corporate_driving_factors=self._identify_corporate_factors(source_market, target_market),
             seasonal_patterns=self._analyze_seasonal_patterns(source_market, target_market),
             top_employment_sectors=self._get_top_sectors(target_config),
-            success_probability=self._calculate_success_probability(source_market, target_market)
+            success_probability=self._calculate_success_probability(source_market, target_market),
         )
 
         # Cache for 24 hours
@@ -713,7 +710,7 @@ class NationalMarketRegistry:
             "Q1": 35,  # High corporate relocation season
             "Q2": 25,  # Moderate
             "Q3": 20,  # Lower (school year considerations)
-            "Q4": 20   # Lower (holidays)
+            "Q4": 20,  # Lower (holidays)
         }
 
     def _get_top_sectors(self, market_config: Dict[str, Any]) -> List[str]:
@@ -726,7 +723,7 @@ class NationalMarketRegistry:
             "finance_hub": ["Financial Services", "Banking", "Insurance"],
             "energy_hub": ["Energy", "Oil & Gas", "Renewable Energy"],
             "corporate_hub": ["Corporate Services", "Finance", "Technology"],
-            "mixed_economy": ["Healthcare", "Education", "Government"]
+            "mixed_economy": ["Healthcare", "Education", "Government"],
         }
 
         return sector_mapping.get(market_type, ["Professional Services", "Healthcare", "Technology"])
@@ -787,8 +784,7 @@ class NationalMarketRegistry:
         # Aggregate data from all markets
         all_markets = self.base_registry.list_markets()
         total_revenue_potential = sum(
-            target.estimated_annual_revenue_potential
-            for target in self.expansion_targets.values()
+            target.estimated_annual_revenue_potential for target in self.expansion_targets.values()
         )
 
         summary = {
@@ -796,21 +792,17 @@ class NationalMarketRegistry:
             "expansion_markets": len(self.expansion_targets),
             "corporate_partnerships": len(self.corporate_headquarters),
             "revenue_enhancement_target": total_revenue_potential,
-            "investment_required": sum(
-                target.investment_required
-                for target in self.expansion_targets.values()
-            ),
-            "average_roi_projection": sum(
-                target.roi_projection
-                for target in self.expansion_targets.values()
-            ) / len(self.expansion_targets) if self.expansion_targets else 0,
+            "investment_required": sum(target.investment_required for target in self.expansion_targets.values()),
+            "average_roi_projection": sum(target.roi_projection for target in self.expansion_targets.values())
+            / len(self.expansion_targets)
+            if self.expansion_targets
+            else 0,
             "partnership_tiers": {
-                tier.value: len([h for h in self.corporate_headquarters.values()
-                               if h.partnership_tier == tier])
+                tier.value: len([h for h in self.corporate_headquarters.values() if h.partnership_tier == tier])
                 for tier in CorporatePartnerTier
             },
             "markets_by_type": {},
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
         # Categorize markets by type
@@ -828,10 +820,7 @@ class NationalMarketRegistry:
 
         return summary
 
-    def register_corporate_partnership(
-        self,
-        headquarters: CorporateHeadquarters
-    ) -> bool:
+    def register_corporate_partnership(self, headquarters: CorporateHeadquarters) -> bool:
         """Register a new corporate partnership"""
         try:
             # Generate corporate ID
@@ -854,12 +843,12 @@ class NationalMarketRegistry:
         serializable_data = {}
         for corp_id, headquarters in self.corporate_headquarters.items():
             data_dict = headquarters.__dict__.copy()
-            data_dict['program_start_date'] = headquarters.program_start_date.isoformat()
-            data_dict['last_updated'] = headquarters.last_updated.isoformat()
-            data_dict['partnership_tier'] = headquarters.partnership_tier.value
+            data_dict["program_start_date"] = headquarters.program_start_date.isoformat()
+            data_dict["last_updated"] = headquarters.last_updated.isoformat()
+            data_dict["partnership_tier"] = headquarters.partnership_tier.value
             serializable_data[corp_id] = data_dict
 
-        with open(self.corporate_data_file, 'w') as f:
+        with open(self.corporate_data_file, "w") as f:
             json.dump(serializable_data, f, indent=2)
 
     def health_check(self) -> Dict[str, Any]:
@@ -874,20 +863,16 @@ class NationalMarketRegistry:
                     "expansion_targets": len(self.expansion_targets),
                     "data_files_exist": {
                         "corporate_data": self.corporate_data_file.exists(),
-                        "expansion_targets": self.expansion_targets_file.exists()
-                    }
+                        "expansion_targets": self.expansion_targets_file.exists(),
+                    },
                 },
                 "base_registry": base_health,
                 "cache_available": self.cache is not None,
-                "last_check": datetime.now().isoformat()
+                "last_check": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now().isoformat()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now().isoformat()}
 
 
 # Global registry instance

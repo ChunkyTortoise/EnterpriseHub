@@ -12,7 +12,6 @@ same algorithm:
 
 import pytest
 
-
 SMS_MAX_CHARS = 320
 
 

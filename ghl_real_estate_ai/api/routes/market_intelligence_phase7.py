@@ -8,23 +8,23 @@ and strategic market opportunity identification.
 Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from fastapi.responses import StreamingResponse
-from typing import Dict, List, Any, Optional
-import json
 import asyncio
+import json
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.intelligence.market_intelligence_automation import (
-    EnhancedMarketIntelligenceAutomation,
-    MarketTrendAlert,
     CompetitivePositioningAlert,
+    EnhancedMarketIntelligenceAutomation,
     MarketOpportunity,
+    MarketTrendAlert,
     MarketTrendType,
-    TrendSeverity
+    TrendSeverity,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
-
 
 router = APIRouter(prefix="/api/v1/market-intelligence-phase7", tags=["Phase 7 Market Intelligence"])
 # Lazy singleton — defer initialization until first request
@@ -37,6 +37,7 @@ def _get_cache():
         _cache = CacheService()
     return _cache
 
+
 # Global automation instance
 market_intelligence: Optional[EnhancedMarketIntelligenceAutomation] = None
 
@@ -46,6 +47,7 @@ async def get_market_intelligence() -> EnhancedMarketIntelligenceAutomation:
     global market_intelligence
     if market_intelligence is None:
         from ghl_real_estate_ai.intelligence.market_intelligence_automation import create_market_intelligence_automation
+
         market_intelligence = await create_market_intelligence_automation()
     return market_intelligence
 
@@ -70,7 +72,7 @@ async def get_market_intelligence_dashboard() -> Dict[str, Any]:
             "status": "success",
             "data": dashboard_data,
             "timestamp": datetime.now().isoformat(),
-            "phase": "7_advanced_intelligence"
+            "phase": "7_advanced_intelligence",
         }
 
     except Exception as e:
@@ -79,9 +81,7 @@ async def get_market_intelligence_dashboard() -> Dict[str, Any]:
 
 @router.get("/market-trends")
 async def get_current_market_trends(
-    severity_filter: Optional[str] = None,
-    market_area: Optional[str] = None,
-    limit: Optional[int] = 20
+    severity_filter: Optional[str] = None, market_area: Optional[str] = None, limit: Optional[int] = 20
 ) -> Dict[str, Any]:
     """
     Get current market trends with optional filtering
@@ -121,7 +121,7 @@ async def get_current_market_trends(
                 "detection_timestamp": trend.detection_timestamp.isoformat(),
                 "predicted_duration": trend.predicted_duration,
                 "affected_price_ranges": trend.affected_price_ranges,
-                "data_points": trend.data_points
+                "data_points": trend.data_points,
             }
             for trend in trends
         ]
@@ -130,12 +130,8 @@ async def get_current_market_trends(
             "status": "success",
             "trends": trends_data,
             "total_count": len(trends_data),
-            "filters_applied": {
-                "severity": severity_filter,
-                "market_area": market_area,
-                "limit": limit
-            },
-            "last_updated": datetime.now().isoformat()
+            "filters_applied": {"severity": severity_filter, "market_area": market_area, "limit": limit},
+            "last_updated": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -171,7 +167,7 @@ async def get_competitive_positioning() -> Dict[str, Any]:
                 "commission_comparison": alert.commission_rate_comparison,
                 "competitive_advantages": alert.competitive_advantages,
                 "action_timeline": alert.action_timeline,
-                "detection_timestamp": alert.detection_timestamp.isoformat()
+                "detection_timestamp": alert.detection_timestamp.isoformat(),
             }
             for alert in competitive_alerts
         ]
@@ -188,9 +184,9 @@ async def get_competitive_positioning() -> Dict[str, Any]:
                 "high_threats": high_threat_count,
                 "critical_threats": critical_threat_count,
                 "jorge_commission_rate": 0.06,
-                "commission_defense_status": "active"
+                "commission_defense_status": "active",
             },
-            "last_analysis": datetime.now().isoformat()
+            "last_analysis": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -199,9 +195,7 @@ async def get_competitive_positioning() -> Dict[str, Any]:
 
 @router.get("/market-opportunities")
 async def get_market_opportunities(
-    opportunity_type: Optional[str] = None,
-    min_value: Optional[float] = None,
-    time_sensitivity: Optional[str] = None
+    opportunity_type: Optional[str] = None, min_value: Optional[float] = None, time_sensitivity: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Get identified market opportunities with filtering
@@ -240,7 +234,7 @@ async def get_market_opportunities(
                 "time_sensitivity": opp.time_sensitivity,
                 "entry_strategy": opp.entry_strategy,
                 "resource_requirements": opp.resource_requirements,
-                "competitive_landscape": opp.competitive_landscape
+                "competitive_landscape": opp.competitive_landscape,
             }
             for opp in opportunities
         ]
@@ -256,13 +250,13 @@ async def get_market_opportunities(
                 "total_opportunities": len(opportunities_data),
                 "total_projected_value": total_projected_value,
                 "avg_success_probability": avg_success_probability,
-                "high_confidence_opportunities": len([o for o in opportunities if o.confidence_score >= 0.8])
+                "high_confidence_opportunities": len([o for o in opportunities if o.confidence_score >= 0.8]),
             },
             "filters_applied": {
                 "opportunity_type": opportunity_type,
                 "min_value": min_value,
-                "time_sensitivity": time_sensitivity
-            }
+                "time_sensitivity": time_sensitivity,
+            },
         }
 
     except Exception as e:
@@ -290,7 +284,7 @@ async def get_strategic_insights() -> Dict[str, Any]:
             "status": "success",
             "strategic_insights": insights,
             "generated_at": datetime.now().isoformat(),
-            "insights_type": "claude_ai_powered"
+            "insights_type": "claude_ai_powered",
         }
 
     except Exception as e:
@@ -321,9 +315,9 @@ async def start_automated_monitoring(background_tasks: BackgroundTasks) -> Dict[
                 "Real-time market trend detection",
                 "Competitive positioning alerts",
                 "Market opportunity identification",
-                "Strategic insights generation"
+                "Strategic insights generation",
             ],
-            "started_at": datetime.now().isoformat()
+            "started_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -341,6 +335,7 @@ async def stream_market_alerts():
     - Strategic opportunities
     - Critical market updates
     """
+
     async def generate_alert_stream():
         """Generate real-time market alert stream"""
         try:
@@ -351,33 +346,25 @@ async def stream_market_alerts():
                 dashboard_data = await automation.get_market_intelligence_dashboard_data()
 
                 # Stream market trends
-                trends = dashboard_data.get('market_trends', [])
+                trends = dashboard_data.get("market_trends", [])
                 for trend in trends:
-                    if isinstance(trend, dict) and trend.get('severity') in ['high', 'critical']:
-                        alert_data = {
-                            "type": "market_trend",
-                            "data": trend,
-                            "timestamp": datetime.now().isoformat()
-                        }
+                    if isinstance(trend, dict) and trend.get("severity") in ["high", "critical"]:
+                        alert_data = {"type": "market_trend", "data": trend, "timestamp": datetime.now().isoformat()}
                         yield f"data: {json.dumps(alert_data)}\n\n"
 
                 # Stream competitive alerts
-                competitive_alerts = dashboard_data.get('competitive_alerts', [])
+                competitive_alerts = dashboard_data.get("competitive_alerts", [])
                 for alert in competitive_alerts:
-                    alert_data = {
-                        "type": "competitive_alert",
-                        "data": alert,
-                        "timestamp": datetime.now().isoformat()
-                    }
+                    alert_data = {"type": "competitive_alert", "data": alert, "timestamp": datetime.now().isoformat()}
                     yield f"data: {json.dumps(alert_data)}\n\n"
 
                 # Stream opportunities
-                opportunities = dashboard_data.get('market_opportunities', [])
+                opportunities = dashboard_data.get("market_opportunities", [])
                 for opportunity in opportunities[:3]:  # Top 3 opportunities
                     alert_data = {
                         "type": "market_opportunity",
                         "data": opportunity,
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": datetime.now().isoformat(),
                     }
                     yield f"data: {json.dumps(alert_data)}\n\n"
 
@@ -385,21 +372,13 @@ async def stream_market_alerts():
                 await asyncio.sleep(30)  # 30-second intervals
 
         except Exception as e:
-            error_data = {
-                "type": "error",
-                "message": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            error_data = {"type": "error", "message": str(e), "timestamp": datetime.now().isoformat()}
             yield f"data: {json.dumps(error_data)}\n\n"
 
     return StreamingResponse(
         generate_alert_stream(),
         media_type="text/plain",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "Content-Type": "text/event-stream"
-        }
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "Content-Type": "text/event-stream"},
     )
 
 
@@ -420,8 +399,8 @@ async def get_market_health_score() -> Dict[str, Any]:
         dashboard_data = await automation.get_market_intelligence_dashboard_data()
 
         # Market health calculation logic
-        trends = dashboard_data.get('market_trends', [])
-        critical_alerts = len([t for t in trends if isinstance(t, dict) and t.get('severity') == 'critical'])
+        trends = dashboard_data.get("market_trends", [])
+        critical_alerts = len([t for t in trends if isinstance(t, dict) and t.get("severity") == "critical"])
         total_trends = len(trends)
 
         # Base health score
@@ -440,7 +419,7 @@ async def get_market_health_score() -> Dict[str, Any]:
             "inventory_levels": 0.75,
             "demand_strength": 0.9,
             "economic_factors": 0.85,
-            "competitive_pressure": 0.7
+            "competitive_pressure": 0.7,
         }
 
         # Risk factors
@@ -453,13 +432,19 @@ async def get_market_health_score() -> Dict[str, Any]:
         return {
             "status": "success",
             "market_health_score": health_score,
-            "health_grade": "A" if health_score >= 0.9 else "B" if health_score >= 0.8 else "C" if health_score >= 0.7 else "D",
+            "health_grade": "A"
+            if health_score >= 0.9
+            else "B"
+            if health_score >= 0.8
+            else "C"
+            if health_score >= 0.7
+            else "D",
             "indicators": indicators,
             "risk_factors": risk_factors,
             "total_market_trends": total_trends,
             "critical_alerts": critical_alerts,
             "last_calculated": datetime.now().isoformat(),
-            "trend_direction": "stable"  # Would be calculated from historical data
+            "trend_direction": "stable",  # Would be calculated from historical data
         }
 
     except Exception as e:
@@ -481,40 +466,40 @@ async def get_jorge_performance_summary() -> Dict[str, Any]:
         automation = await get_market_intelligence()
         dashboard_data = await automation.get_market_intelligence_dashboard_data()
 
-        performance_metrics = dashboard_data.get('jorge_performance_metrics', {})
+        performance_metrics = dashboard_data.get("jorge_performance_metrics", {})
 
         # Enhance with additional calculations
         jorge_summary = {
             "overall_performance_score": 0.88,  # Calculated from multiple factors
             "commission_metrics": {
                 "target_rate": 0.06,
-                "defense_success_rate": performance_metrics.get('commission_rate_defense', 0.95),
+                "defense_success_rate": performance_metrics.get("commission_rate_defense", 0.95),
                 "market_premium": 0.005,  # 0.5% above market average
-                "rate_pressure_resistance": 0.92
+                "rate_pressure_resistance": 0.92,
             },
             "market_position": {
-                "market_share_growth": performance_metrics.get('market_share_growth', 0.15),
-                "competitive_advantage_score": performance_metrics.get('competitive_advantage_score', 0.88),
+                "market_share_growth": performance_metrics.get("market_share_growth", 0.15),
+                "competitive_advantage_score": performance_metrics.get("competitive_advantage_score", 0.88),
                 "client_retention_rate": 0.94,
-                "referral_rate": 0.67
+                "referral_rate": 0.67,
             },
             "strategic_strengths": [
                 "Jorge's confrontational qualification methodology",
                 "Advanced AI-powered client matching system",
                 "Superior market intelligence capabilities",
-                "Proven track record in challenging markets"
+                "Proven track record in challenging markets",
             ],
             "improvement_areas": [
                 "Enhanced digital marketing presence",
                 "Expanded geographic market coverage",
-                "Additional service differentiation opportunities"
+                "Additional service differentiation opportunities",
             ],
             "market_outlook": {
                 "next_quarter_projection": "strong",
                 "commission_stability": "high",
                 "growth_opportunities": "expanding",
-                "competitive_threats": "manageable"
-            }
+                "competitive_threats": "manageable",
+            },
         }
 
         return {
@@ -523,9 +508,9 @@ async def get_jorge_performance_summary() -> Dict[str, Any]:
             "benchmark_comparison": {
                 "industry_average_commission": 0.055,
                 "market_leader_performance": 0.85,
-                "jorge_vs_market_leader": "+3.5%"
+                "jorge_vs_market_leader": "+3.5%",
             },
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -547,14 +532,10 @@ async def market_intelligence_health() -> Dict[str, Any]:
                 "Market trend detection",
                 "Competitive analysis",
                 "Opportunity identification",
-                "Strategic insights generation"
+                "Strategic insights generation",
             ],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}

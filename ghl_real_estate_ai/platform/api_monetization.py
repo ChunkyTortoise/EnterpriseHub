@@ -4,17 +4,18 @@ Transform platform capabilities into monetizable API products.
 Creates exponential revenue opportunities beyond core SaaS.
 """
 
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
-import uuid
-import jwt
-from dataclasses import dataclass, asdict
-from enum import Enum
 import json
 import logging
+import uuid
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+import jwt
 
 from ..core.llm_client import LLMClient
 from ..services.cache_service import CacheService
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class PricingTier(Enum):
     """API pricing tiers."""
+
     FREE = "free"
     STARTER = "starter"
     PRO = "pro"
@@ -35,6 +37,7 @@ class PricingTier(Enum):
 
 class APIEndpoint(Enum):
     """Available API endpoints."""
+
     LEAD_SCORING = "lead_scoring"
     PROPERTY_MATCHING = "property_matching"
     CONVERSATION_INTELLIGENCE = "conversation_intelligence"
@@ -48,6 +51,7 @@ class APIEndpoint(Enum):
 @dataclass
 class APIKey:
     """API key configuration and tracking."""
+
     api_key: str
     customer_id: str
     tier: PricingTier
@@ -64,6 +68,7 @@ class APIKey:
 @dataclass
 class APIUsageRecord:
     """Individual API usage record."""
+
     request_id: str
     api_key: str
     endpoint: APIEndpoint
@@ -79,6 +84,7 @@ class APIUsageRecord:
 @dataclass
 class RevenueTier:
     """Revenue tier configuration."""
+
     tier: PricingTier
     monthly_price: Decimal
     requests_per_month: int
@@ -92,6 +98,7 @@ class RevenueTier:
 @dataclass
 class APIAnalytics:
     """Comprehensive API analytics."""
+
     total_requests: int
     successful_requests: int
     error_rate: float
@@ -114,10 +121,7 @@ class APIMonetization:
     - Per-request and subscription monetization
     """
 
-    def __init__(self,
-                 llm_client: LLMClient,
-                 cache_service: CacheService,
-                 database_service: DatabaseService):
+    def __init__(self, llm_client: LLMClient, cache_service: CacheService, database_service: DatabaseService):
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service
@@ -132,7 +136,7 @@ class APIMonetization:
                 features=["Basic lead scoring", "Property matching"],
                 support_level="Community",
                 sla_uptime=0.95,
-                priority_support=False
+                priority_support=False,
             ),
             PricingTier.STARTER: RevenueTier(
                 tier=PricingTier.STARTER,
@@ -142,7 +146,7 @@ class APIMonetization:
                 features=["All basic features", "Conversation intelligence", "Email support"],
                 support_level="Standard",
                 sla_uptime=0.99,
-                priority_support=False
+                priority_support=False,
             ),
             PricingTier.PRO: RevenueTier(
                 tier=PricingTier.PRO,
@@ -152,7 +156,7 @@ class APIMonetization:
                 features=["All features", "Advanced analytics", "Priority support"],
                 support_level="Priority",
                 sla_uptime=0.999,
-                priority_support=True
+                priority_support=True,
             ),
             PricingTier.ENTERPRISE: RevenueTier(
                 tier=PricingTier.ENTERPRISE,
@@ -162,7 +166,7 @@ class APIMonetization:
                 features=["All features", "Custom integrations", "24/7 support", "SLA guarantees"],
                 support_level="Enterprise",
                 sla_uptime=0.9999,
-                priority_support=True
+                priority_support=True,
             ),
             PricingTier.WHITE_LABEL: RevenueTier(
                 tier=PricingTier.WHITE_LABEL,
@@ -172,29 +176,28 @@ class APIMonetization:
                 features=["All features", "White-label branding", "Custom domains", "Dedicated support"],
                 support_level="Dedicated",
                 sla_uptime=0.9999,
-                priority_support=True
-            )
+                priority_support=True,
+            ),
         }
 
         # Per-request pricing for overage
         self.overage_pricing = {
-            APIEndpoint.LEAD_SCORING: Decimal("0.001"),        # $0.001 per request
-            APIEndpoint.PROPERTY_MATCHING: Decimal("0.002"),   # $0.002 per request
+            APIEndpoint.LEAD_SCORING: Decimal("0.001"),  # $0.001 per request
+            APIEndpoint.PROPERTY_MATCHING: Decimal("0.002"),  # $0.002 per request
             APIEndpoint.CONVERSATION_INTELLIGENCE: Decimal("0.005"),  # $0.005 per request
             APIEndpoint.PREDICTIVE_ANALYTICS: Decimal("0.003"),
             APIEndpoint.WORKFLOW_AUTOMATION: Decimal("0.002"),
             APIEndpoint.MARKET_INTELLIGENCE: Decimal("0.004"),
             APIEndpoint.BEHAVIORAL_ANALYSIS: Decimal("0.003"),
-            APIEndpoint.CONTENT_GENERATION: Decimal("0.006")
+            APIEndpoint.CONTENT_GENERATION: Decimal("0.006"),
         }
 
         logger.info("API Monetization Platform initialized")
 
     @enhanced_error_handler
-    async def create_api_key(self,
-                           customer_id: str,
-                           tier: PricingTier,
-                           custom_config: Optional[Dict[str, Any]] = None) -> APIKey:
+    async def create_api_key(
+        self, customer_id: str, tier: PricingTier, custom_config: Optional[Dict[str, Any]] = None
+    ) -> APIKey:
         """Create a new API key for a customer."""
         logger.info(f"Creating API key for customer {customer_id}, tier {tier.value}")
 
@@ -216,7 +219,7 @@ class APIMonetization:
             monthly_cost=tier_config.monthly_price,
             created_at=datetime.utcnow(),
             last_used=None,
-            active=True
+            active=True,
         )
 
         # Apply custom configuration if provided
@@ -235,10 +238,9 @@ class APIMonetization:
         return api_key
 
     @enhanced_error_handler
-    async def track_api_usage(self,
-                            api_key: str,
-                            endpoint: APIEndpoint,
-                            request_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    async def track_api_usage(
+        self, api_key: str, endpoint: APIEndpoint, request_metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Track API usage and billing.
 
@@ -282,7 +284,7 @@ class APIMonetization:
             success=request_metadata.get("success", True),
             cost=cost,
             customer_id=key_config.customer_id,
-            metadata=request_metadata
+            metadata=request_metadata,
         )
 
         # Store usage record
@@ -301,13 +303,13 @@ class APIMonetization:
             "remaining_quota": quota_result["remaining"],
             "rate_limit_remaining": rate_limit_result["remaining"],
             "overage_charges": overage_info["charges"],
-            "timestamp": timestamp.isoformat()
+            "timestamp": timestamp.isoformat(),
         }
 
     @enhanced_error_handler
-    async def get_api_analytics(self,
-                              customer_id: Optional[str] = None,
-                              date_range: Optional[Dict[str, datetime]] = None) -> APIAnalytics:
+    async def get_api_analytics(
+        self, customer_id: Optional[str] = None, date_range: Optional[Dict[str, datetime]] = None
+    ) -> APIAnalytics:
         """Get comprehensive API analytics."""
         logger.info(f"Generating API analytics for customer: {customer_id}")
 
@@ -360,14 +362,13 @@ class APIMonetization:
             top_endpoints=[endpoint[0] for endpoint in top_endpoints],
             customer_distribution=dict(customer_counts),
             growth_rate=growth_rate,
-            revenue_per_customer=revenue_per_customer
+            revenue_per_customer=revenue_per_customer,
         )
 
     @enhanced_error_handler
-    async def upgrade_api_tier(self,
-                             api_key: str,
-                             new_tier: PricingTier,
-                             effective_date: Optional[datetime] = None) -> Dict[str, Any]:
+    async def upgrade_api_tier(
+        self, api_key: str, new_tier: PricingTier, effective_date: Optional[datetime] = None
+    ) -> Dict[str, Any]:
         """Upgrade API tier for a customer."""
         logger.info(f"Upgrading API key {api_key[:8]}... to tier {new_tier.value}")
 
@@ -406,13 +407,13 @@ class APIMonetization:
             "new_tier": new_tier.value,
             "new_monthly_cost": new_tier_config.monthly_price,
             "billing_info": billing_info,
-            "effective_date": effective_date or datetime.utcnow()
+            "effective_date": effective_date or datetime.utcnow(),
         }
 
     @enhanced_error_handler
-    async def generate_white_label_deployment(self,
-                                            customer_id: str,
-                                            white_label_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_white_label_deployment(
+        self, customer_id: str, white_label_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate white-label platform deployment for enterprise customers."""
         logger.info(f"Generating white-label deployment for customer {customer_id}")
 
@@ -442,12 +443,11 @@ class APIMonetization:
             "custom_domain": domain_result["domain"],
             "api_endpoints": environment_result["api_endpoints"],
             "billing_info": billing_setup,
-            "estimated_go_live": datetime.utcnow() + timedelta(days=7)
+            "estimated_go_live": datetime.utcnow() + timedelta(days=7),
         }
 
     @enhanced_error_handler
-    async def get_revenue_projection(self,
-                                   growth_assumptions: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_revenue_projection(self, growth_assumptions: Dict[str, Any]) -> Dict[str, Any]:
         """Generate revenue projections based on API platform growth."""
         logger.info("Generating API revenue projections")
 
@@ -486,7 +486,7 @@ class APIMonetization:
                 "base_revenue": base_revenue,
                 "upgrade_revenue": upgrade_revenue,
                 "white_label_revenue": white_label_revenue,
-                "total_revenue": total_revenue
+                "total_revenue": total_revenue,
             }
 
         # Annual totals
@@ -499,9 +499,9 @@ class APIMonetization:
                 "total_annual_revenue": annual_revenue,
                 "year_end_customers": annual_customers,
                 "revenue_growth_rate": (annual_revenue / current_revenue - 1) * 100,
-                "customer_growth_rate": (annual_customers / current_customers - 1) * 100
+                "customer_growth_rate": (annual_customers / current_customers - 1) * 100,
             },
-            "assumptions": growth_assumptions
+            "assumptions": growth_assumptions,
         }
 
     # Private implementation methods
@@ -512,7 +512,7 @@ class APIMonetization:
             "customer_id": customer_id,
             "tier": tier.value,
             "created_at": datetime.utcnow().isoformat(),
-            "uuid": str(uuid.uuid4())
+            "uuid": str(uuid.uuid4()),
         }
 
         # Use JWT for secure, self-contained API keys
@@ -555,24 +555,16 @@ class APIMonetization:
     async def _check_rate_limit(self, api_key: APIKey) -> Dict[str, Any]:
         """Check rate limiting for API key."""
         # Simplified rate limiting check
-        return {
-            "allowed": True,
-            "remaining": api_key.rate_limit_per_minute - 1,
-            "retry_after": 0
-        }
+        return {"allowed": True, "remaining": api_key.rate_limit_per_minute - 1, "retry_after": 0}
 
     async def _check_monthly_quota(self, api_key: APIKey) -> Dict[str, Any]:
         """Check monthly quota for API key."""
         remaining = max(0, api_key.requests_per_month - api_key.requests_used)
-        return {
-            "remaining": remaining,
-            "exceeded": remaining <= 0
-        }
+        return {"remaining": remaining, "exceeded": remaining <= 0}
 
-    async def _calculate_request_cost(self,
-                                    api_key: APIKey,
-                                    endpoint: APIEndpoint,
-                                    metadata: Dict[str, Any]) -> Decimal:
+    async def _calculate_request_cost(
+        self, api_key: APIKey, endpoint: APIEndpoint, metadata: Dict[str, Any]
+    ) -> Decimal:
         """Calculate cost for API request."""
         # Base cost included in subscription
         if api_key.requests_used < api_key.requests_per_month:
@@ -598,9 +590,9 @@ class APIMonetization:
             return {"charges": usage_record.cost}
         return {"charges": Decimal("0")}
 
-    async def _get_usage_records(self,
-                               customer_id: Optional[str],
-                               date_range: Dict[str, datetime]) -> List[APIUsageRecord]:
+    async def _get_usage_records(
+        self, customer_id: Optional[str], date_range: Dict[str, datetime]
+    ) -> List[APIUsageRecord]:
         """Get usage records for analytics."""
         # Simplified - would query time-series database
         return []
@@ -612,8 +604,13 @@ class APIMonetization:
     # Additional helper methods for tier management, billing, etc.
     async def _validate_tier_upgrade(self, current_tier: PricingTier, new_tier: PricingTier) -> Dict[str, Any]:
         """Validate tier upgrade path."""
-        tier_order = [PricingTier.FREE, PricingTier.STARTER, PricingTier.PRO,
-                      PricingTier.ENTERPRISE, PricingTier.WHITE_LABEL]
+        tier_order = [
+            PricingTier.FREE,
+            PricingTier.STARTER,
+            PricingTier.PRO,
+            PricingTier.ENTERPRISE,
+            PricingTier.WHITE_LABEL,
+        ]
 
         current_index = tier_order.index(current_tier)
         new_index = tier_order.index(new_tier)
@@ -623,10 +620,9 @@ class APIMonetization:
 
         return {"valid": True}
 
-    async def _calculate_prorated_billing(self,
-                                        current_config: APIKey,
-                                        new_tier: PricingTier,
-                                        effective_date: Optional[datetime]) -> Dict[str, Any]:
+    async def _calculate_prorated_billing(
+        self, current_config: APIKey, new_tier: PricingTier, effective_date: Optional[datetime]
+    ) -> Dict[str, Any]:
         """Calculate prorated billing for tier change."""
         # Simplified prorated billing calculation
         old_cost = current_config.monthly_cost
@@ -636,7 +632,7 @@ class APIMonetization:
             "old_monthly_cost": old_cost,
             "new_monthly_cost": new_cost,
             "prorated_charge": new_cost - old_cost,
-            "effective_date": effective_date or datetime.utcnow()
+            "effective_date": effective_date or datetime.utcnow(),
         }
 
     async def _process_tier_upgrade_billing(self, api_key: APIKey, billing_info: Dict[str, Any]) -> Dict[str, Any]:
@@ -660,7 +656,7 @@ class APIMonetization:
             "customer_id": customer_id,
             "custom_domain": config.get("domain", f"{customer_id}.platform.com"),
             "branding": config.get("branding", {}),
-            "features": config.get("features", [])
+            "features": config.get("features", []),
         }
 
     async def _create_isolated_environment(self, deployment_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -668,7 +664,7 @@ class APIMonetization:
         return {
             "environment_id": deployment_config["deployment_id"],
             "api_endpoints": [f"https://{deployment_config['custom_domain']}/api/v1"],
-            "status": "provisioning"
+            "status": "provisioning",
         }
 
     async def _apply_custom_branding(self, deployment_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -684,5 +680,5 @@ class APIMonetization:
         return {
             "monthly_cost": self.pricing_tiers[PricingTier.WHITE_LABEL].monthly_price,
             "billing_cycle": "monthly",
-            "next_billing_date": (datetime.utcnow() + timedelta(days=30)).isoformat()
+            "next_billing_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
         }

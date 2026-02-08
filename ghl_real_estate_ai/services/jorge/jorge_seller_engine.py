@@ -9,17 +9,18 @@ Author: Claude Code Assistant
 Created: 2026-01-19
 """
 
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Any, Union
-from enum import Enum
 import asyncio
 import json
 import logging
 import time
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
+
 # Lazy import to avoid circular dependency - imported where used
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class SellerQuestionType(Enum):
     """Jorge's 4 seller qualification question types"""
+
     MOTIVATION = "motivation"
     TIMELINE = "timeline"
     CONDITION = "condition"
@@ -50,14 +52,18 @@ class SellerQuestions:
     PRICE = "What price would incentivize you to sell?"
 
     # --- SPECIALIZED PERSONA QUESTIONS (Tactical Behavioral Response) ---
-    
+
     # Investor Branch
     INVESTOR_CAP_RATE = "What's your target cap rate for this asset, and are you looking to do a 1031 exchange?"
     INVESTOR_LIQUIDITY = "Are you looking for a quick cash exit or are you open to terms if the ROI is right?"
-    
+
     # Loss Aversion Branch
-    LOSS_AVERSION_PLAN_B = "If the market shifts and inventory doubles next month, what's your plan B if the home doesn't sell?"
-    LOSS_AVERSION_RATE_RISK = "With rates being volatile, if your buying power drops 10% by waiting, does selling now become a necessity?"
+    LOSS_AVERSION_PLAN_B = (
+        "If the market shifts and inventory doubles next month, what's your plan B if the home doesn't sell?"
+    )
+    LOSS_AVERSION_RATE_RISK = (
+        "With rates being volatile, if your buying power drops 10% by waiting, does selling now become a necessity?"
+    )
 
     @classmethod
     def get_question_order(cls) -> List[SellerQuestionType]:
@@ -66,7 +72,7 @@ class SellerQuestions:
             SellerQuestionType.MOTIVATION,
             SellerQuestionType.TIMELINE,
             SellerQuestionType.CONDITION,
-            SellerQuestionType.PRICE
+            SellerQuestionType.PRICE,
         ]
 
     @classmethod
@@ -76,14 +82,14 @@ class SellerQuestions:
             SellerQuestionType.MOTIVATION: cls.MOTIVATION,
             SellerQuestionType.TIMELINE: cls.TIMELINE,
             SellerQuestionType.CONDITION: cls.CONDITION,
-            SellerQuestionType.PRICE: cls.PRICE
+            SellerQuestionType.PRICE: cls.PRICE,
         }
 
         field_mapping = {
             SellerQuestionType.MOTIVATION: "motivation",
             SellerQuestionType.TIMELINE: "timeline_acceptable",
             SellerQuestionType.CONDITION: "property_condition",
-            SellerQuestionType.PRICE: "price_expectation"
+            SellerQuestionType.PRICE: "price_expectation",
         }
 
         for q_type in cls.get_question_order():
@@ -95,12 +101,7 @@ class SellerQuestions:
     @classmethod
     def get_question_number(cls, answered_questions: Dict) -> int:
         """Get the current question number (1-4) based on answered questions"""
-        field_mapping = [
-            "motivation",
-            "timeline_acceptable",
-            "property_condition",
-            "price_expectation"
-        ]
+        field_mapping = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
 
         for i, field in enumerate(field_mapping, 1):
             if not answered_questions.get(field):
@@ -134,16 +135,17 @@ class JorgeSellerEngine:
 
         # Initialize Analytics Service
         from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+
         self.analytics_service = AnalyticsService()
-        
+
         # Governance & Recovery
         from ghl_real_estate_ai.core.governance_engine import GovernanceEngine
         from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
-        from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
         from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
+        from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
         from ghl_real_estate_ai.services.psychographic_segmentation_engine import PsychographicSegmentationEngine
         from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
-        
+
         self.governance = GovernanceEngine()
         self.recovery = RecoveryEngine()
         self.predictive_scorer = PredictiveLeadScorerV2()
@@ -157,7 +159,7 @@ class JorgeSellerEngine:
         user_message: str,
         location_id: str,
         tenant_config: Optional[Dict] = None,
-        images: Optional[List[str]] = None
+        images: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Main processing method for Jorge's seller bot.
@@ -179,7 +181,7 @@ class JorgeSellerEngine:
             context = await self.conversation_manager.get_context(contact_id, location_id)
             current_seller_data = context.get("seller_preferences", {})
             contact_name = context.get("contact_name", "there")
-            
+
             # Phase 7: Track probability jump for Adaptive Escalation
             previous_closing_prob = context.get("closing_probability", 0.0)
 
@@ -188,11 +190,12 @@ class JorgeSellerEngine:
             if context.get("active_ab_test") and context.get("last_ai_message_type") == "follow_up":
                 try:
                     from ghl_real_estate_ai.services.autonomous_ab_testing import get_autonomous_ab_testing
+
                     ab_testing = get_autonomous_ab_testing()
                     await ab_testing.record_conversion(
                         test_id=context["active_ab_test"]["test_id"],
                         participant_id=contact_id,
-                        conversion_data={"type": "response", "message": user_message}
+                        conversion_data={"type": "response", "message": user_message},
                     )
                     self.logger.info(f"Recorded A/B test conversion for contact {contact_id}")
                 except Exception as ab_conv_e:
@@ -204,7 +207,7 @@ class JorgeSellerEngine:
                     user_message=user_message,
                     current_seller_data=current_seller_data,
                     tenant_config=tenant_config or {},
-                    images=images
+                    images=images,
                 )
             except Exception as ee:
                 self.logger.warning(f"Seller data extraction failed, using existing context: {ee}")
@@ -221,7 +224,7 @@ class JorgeSellerEngine:
                     # Attempt to analyze seller psychology based on property and comms
                     # This uses DOM, price drops, and tone to determine negotiation stance
                     from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
-                    
+
                     # Attempt real listing history lookup via MLS/Attom
                     listing_history = None
                     property_address = extracted_seller_data.get("property_address") or context.get("property_address")
@@ -237,20 +240,20 @@ class JorgeSellerEngine:
                             days_on_market=context.get("days_since_first_contact", 0),
                             original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
                             current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                            price_drops=[]
+                            price_drops=[],
                         )
 
                     comm_data = {
                         "avg_response_time_hours": context.get("avg_response_time", 24),
-                        "communication_tone": context.get("last_ai_message_type", "professional")
+                        "communication_tone": context.get("last_ai_message_type", "professional"),
                     }
 
                     psychology_profile = await self.psychology_analyzer.analyze_seller_psychology(
-                        property_id=contact_id,
-                        listing_history=listing_history,
-                        communication_data=comm_data
+                        property_id=contact_id, listing_history=listing_history, communication_data=comm_data
                     )
-                    self.logger.info(f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}")
+                    self.logger.info(
+                        f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}"
+                    )
                 except Exception as pe:
                     self.logger.warning(f"Psychology analysis failed: {pe}")
 
@@ -262,9 +265,9 @@ class JorgeSellerEngine:
             persona_data = await self.psychographic_engine.detect_persona(
                 messages=context.get("conversation_history", []),
                 lead_context={**extracted_seller_data, "contact_id": contact_id},
-                tenant_id=location_id
+                tenant_id=location_id,
             )
-            
+
             # 5b. Swarm Intelligence (Parallel Analysis)
             # Deploy the swarm to analyze the lead while we process other ML models
             # Lazy import to avoid circular dependency
@@ -272,8 +275,7 @@ class JorgeSellerEngine:
 
             swarm_task = asyncio.create_task(
                 lead_intelligence_swarm.analyze_lead_comprehensive(
-                    contact_id,
-                    {**context, **extracted_seller_data, "persona": persona_data.get("primary_persona")}
+                    contact_id, {**context, **extracted_seller_data, "persona": persona_data.get("primary_persona")}
                 )
             )
 
@@ -281,13 +283,17 @@ class JorgeSellerEngine:
             # We await the swarm result specifically for NegotiationStrategistAgent (COMMUNICATION_OPTIMIZER)
             try:
                 swarm_consensus = await swarm_task
-                optimizer_insight = next((i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None)
-                
+                optimizer_insight = next(
+                    (i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None
+                )
+
                 if optimizer_insight:
                     drift_data = optimizer_insight.metadata.get("drift", {})
                     extracted_seller_data["drift_softening"] = drift_data.get("is_softening", False)
                     extracted_seller_data["price_break_probability"] = drift_data.get("price_break_probability", 0.0)
-                    self.logger.info(f"🧠 Swarm-Driven Drift Detection: softening={extracted_seller_data['drift_softening']}")
+                    self.logger.info(
+                        f"🧠 Swarm-Driven Drift Detection: softening={extracted_seller_data['drift_softening']}"
+                    )
                 else:
                     # Fallback to local tone engine if agent failed
                     drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
@@ -298,13 +304,16 @@ class JorgeSellerEngine:
                 drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
                 extracted_seller_data["drift_softening"] = drift.is_softening
                 extracted_seller_data["price_break_probability"] = drift.price_break_probability
-            
+
             # --- ADAPTIVE ESCALATION (Phase 7) ---
             new_closing_prob = predictive_result.closing_probability
             if (new_closing_prob - previous_closing_prob) > 0.30:
-                self.logger.info(f"🚀 ADAPTIVE ESCALATION for {contact_id}: Prob jumped {previous_closing_prob:.2f} -> {new_closing_prob:.2f}")
+                self.logger.info(
+                    f"🚀 ADAPTIVE ESCALATION for {contact_id}: Prob jumped {previous_closing_prob:.2f} -> {new_closing_prob:.2f}"
+                )
                 try:
                     from ghl_real_estate_ai.services.vapi_service import VapiService
+
                     vapi = VapiService()
                     vapi.trigger_outbound_call(
                         contact_phone=extracted_seller_data.get("phone", ""),
@@ -314,8 +323,8 @@ class JorgeSellerEngine:
                             "escalation_type": "high_intent_jump",
                             "prob_jump": new_closing_prob - previous_closing_prob,
                             "auto_book": True,
-                            "persona": persona_data.get("primary_persona")
-                        }
+                            "persona": persona_data.get("primary_persona"),
+                        },
                     )
                 except Exception as ve:
                     self.logger.warning(f"Adaptive escalation failed: {ve}")
@@ -328,15 +337,12 @@ class JorgeSellerEngine:
                 pending_appointment_data = None
 
                 if temperature == "hot" and not context.get("pending_appointment"):
-                    from ghl_real_estate_ai.services.calendar_scheduler import (
-                        get_smart_scheduler,
-                        AppointmentType
-                    )
+                    from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+
                     scheduler = get_smart_scheduler(self.ghl_client)
 
                     available_slots = await scheduler.get_available_slots(
-                        appointment_type=AppointmentType.LISTING_APPOINTMENT,
-                        days_ahead=7
+                        appointment_type=AppointmentType.LISTING_APPOINTMENT, days_ahead=7
                     )
 
                     if available_slots:
@@ -344,25 +350,26 @@ class JorgeSellerEngine:
                         lines = []
                         for i, slot in enumerate(available_slots[:3], 1):
                             display = slot.format_for_lead()
-                            options.append({
-                                "label": str(i),
-                                "display": display,
-                                "start_time": slot.start_time.isoformat(),
-                                "end_time": slot.end_time.isoformat(),
-                                "appointment_type": slot.appointment_type.value
-                            })
+                            options.append(
+                                {
+                                    "label": str(i),
+                                    "display": display,
+                                    "start_time": slot.start_time.isoformat(),
+                                    "end_time": slot.end_time.isoformat(),
+                                    "appointment_type": slot.appointment_type.value,
+                                }
+                            )
                             lines.append(f"{i}) {display}")
 
-                        booking_message = (
-                            "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n"
-                            + "\n".join(lines)
+                        booking_message = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
+                            lines
                         )
 
                         pending_appointment_data = {
                             "status": "awaiting_selection",
                             "options": options,
                             "attempts": 0,
-                            "expires_at": (datetime.utcnow().isoformat())
+                            "expires_at": (datetime.utcnow().isoformat()),
                         }
 
                 if booking_message:
@@ -375,7 +382,7 @@ class JorgeSellerEngine:
                         location_id=location_id,
                         predictive_result=predictive_result,
                         persona_data=persona_data,
-                        psychology_profile=psychology_profile
+                        psychology_profile=psychology_profile,
                     )
                     final_message = response_result["message"]
             except Exception as re:
@@ -385,7 +392,7 @@ class JorgeSellerEngine:
                     contact_name=contact_name,
                     conversation_history=context.get("conversation_history", []),
                     extracted_preferences=extracted_seller_data,
-                    is_seller=True
+                    is_seller=True,
                 )
 
             # --- GOVERNANCE ENFORCEMENT (AGENT G1) ---
@@ -398,7 +405,7 @@ class JorgeSellerEngine:
                 temperature=temperature,
                 seller_data=extracted_seller_data,
                 pricing_result=pricing_result,
-                persona_data=persona_data
+                persona_data=persona_data,
             )
 
             # 7. Update conversation context
@@ -412,17 +419,19 @@ class JorgeSellerEngine:
                 predictive_score=predictive_result.overall_priority_score,
                 closing_probability=predictive_result.closing_probability,
                 persona=persona_data.get("primary_persona"),
-                persona_full=persona_data
+                persona_full=persona_data,
             )
 
             if pending_appointment_data:
                 context = await self.conversation_manager.get_context(contact_id, location_id)
                 context["pending_appointment"] = pending_appointment_data
-                await self.conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+                await self.conversation_manager.memory_service.save_context(
+                    contact_id, context, location_id=location_id
+                )
                 await self._track_seller_interaction(
                     contact_id=contact_id,
                     location_id=location_id,
-                    interaction_data={"appointment_slot_offer_sent": True}
+                    interaction_data={"appointment_slot_offer_sent": True},
                 )
 
             # 8. Log analytics data including ROI insights
@@ -437,12 +446,13 @@ class JorgeSellerEngine:
                     "vague_streak": extracted_seller_data.get("vague_streak", 0),
                     "closing_probability": predictive_result.closing_probability,
                     "expected_roi": pricing_result.expected_roi,
-                    "final_price": pricing_result.final_price
-                }
+                    "final_price": pricing_result.final_price,
+                },
             )
 
             # P0 FIX: Extract handoff signals for cross-bot handoff detection
             from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
             handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
 
             return {
@@ -456,13 +466,13 @@ class JorgeSellerEngine:
                     **temperature_result["analytics"],
                     "closing_probability": predictive_result.closing_probability,
                     "expected_roi": pricing_result.expected_roi,
-                    "priority_level": predictive_result.priority_level.value
+                    "priority_level": predictive_result.priority_level.value,
                 },
                 "pricing": {
                     "final_price": pricing_result.final_price,
                     "tier": pricing_result.tier,
-                    "justification": pricing_result.justification
-                }
+                    "justification": pricing_result.justification,
+                },
             }
 
         except Exception as e:
@@ -474,7 +484,7 @@ class JorgeSellerEngine:
                 "actions": [],
                 "temperature": "cold",
                 "error": str(e),
-                "handoff_signals": {}  # P0 FIX: Include empty handoff_signals in error case
+                "handoff_signals": {},  # P0 FIX: Include empty handoff_signals in error case
             }
 
     async def handle_vapi_booking(self, contact_id: str, location_id: str, booking_details: Dict[str, Any]) -> bool:
@@ -485,44 +495,40 @@ class JorgeSellerEngine:
         """
         try:
             self.logger.info(f"📅 Received Vapi booking confirmation for contact {contact_id}")
-            
+
             # 1. Update GHL Tags
             # Apply the specific tag requested: Appointment-Booked-Autonomous
             actions = [
                 {"type": "add_tag", "tag": "Appointment-Booked-Autonomous"},
-                {"type": "remove_tag", "tag": "Needs Qualifying"}
+                {"type": "remove_tag", "tag": "Needs Qualifying"},
             ]
             await self.ghl_client.apply_actions(contact_id, actions)
-            
+
             # 2. Log event in Analytics
             await self.analytics_service.track_event(
                 event_type="vapi_appointment_booked",
                 location_id=location_id,
                 contact_id=contact_id,
-                data=booking_details
+                data=booking_details,
             )
-            
+
             # 3. Add internal note to GHL
             note = f"Autonomous Voice AI (Vapi) successfully booked an appointment. Details: {booking_details.get('summary', 'No summary provided')}"
             try:
                 # Assuming ghl_client has a method to create notes, or use a general API call
-                # For now, we'll try to use a standard GHL action if supported, 
+                # For now, we'll try to use a standard GHL action if supported,
                 # otherwise just log it.
                 self.logger.info(f"Adding note to GHL for {contact_id}: {note}")
             except Exception as note_e:
                 self.logger.warning(f"Failed to add GHL note: {note_e}")
-            
+
             return True
         except Exception as e:
             self.logger.error(f"❌ Error handling Vapi booking: {e}")
             return False
 
     async def _extract_seller_data(
-        self,
-        user_message: str,
-        current_seller_data: Dict,
-        tenant_config: Dict,
-        images: Optional[List[str]] = None
+        self, user_message: str, current_seller_data: Dict, tenant_config: Dict, images: Optional[List[str]] = None
     ) -> Dict:
         """Extract and merge seller data from user message"""
         try:
@@ -531,36 +537,39 @@ class JorgeSellerEngine:
                 user_message=user_message,
                 current_seller_data=current_seller_data,
                 tenant_config=tenant_config,
-                images=images
+                images=images,
             )
 
             # --- LOCAL REGEX ENHANCEMENT (Pillar 1: NLP Optimization) ---
             # Fallback/Validation if ConversationManager missed it
             import re
+
             msg_lower = user_message.lower()
 
             # 1. Timeline (30-45 days)
             if extracted_data.get("timeline_acceptable") is None:
-                if re.search(r'(Union[yes, yeah]|Union[sure, fine]|Union[ok, works]|doable)', msg_lower):
+                if re.search(r"(Union[yes, yeah]|Union[sure, fine]|Union[ok, works]|doable)", msg_lower):
                     # Check if context implies agreement to timeline
                     # (This assumes the bot just asked Q2)
                     pass  # Hard to be sure without knowing previous question context explicitly here, rely on flow
-                if re.search(r'(Union[no, nope]|Union[cant, impossible]|too fast)', msg_lower):
+                if re.search(r"(Union[no, nope]|Union[cant, impossible]|too fast)", msg_lower):
                     extracted_data["timeline_acceptable"] = False
-                elif re.search(r'(Union[30, 45]|Union[thirty, forty])', msg_lower) and not re.search(r'(Union[no, not])', msg_lower):
+                elif re.search(r"(Union[30, 45]|Union[thirty, forty])", msg_lower) and not re.search(
+                    r"(Union[no, not])", msg_lower
+                ):
                     extracted_data["timeline_acceptable"] = True
 
             # 2. Price
             if not extracted_data.get("price_expectation"):
-                price_match = re.search(r'\$?(\d{1,3}(?:,\d{3})*(?:k)?)', user_message)
+                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:k)?)", user_message)
                 if price_match:
                     extracted_data["price_expectation"] = price_match.group(1)
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r'(move.?in.?Union[ready, perfect]|Union[great, good]|excellent)', msg_lower):
+                if re.search(r"(move.?in.?Union[ready, perfect]|Union[great, good]|excellent)", msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
-                elif re.search(r'(needs?.?Union[work, fixer]|Union[repairs, bad]|rough)', msg_lower):
+                elif re.search(r"(needs?.?Union[work, fixer]|Union[repairs, bad]|rough)", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
 
             # --- VAGUE ANSWER TRACKING (Pillar 1: NLP Optimization) ---
@@ -580,17 +589,17 @@ class JorgeSellerEngine:
             # Ensure questions_answered count is accurate
             question_fields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
             questions_answered = sum(1 for field in question_fields if extracted_data.get(field) is not None)
-            
+
             # --- MULTI-QUESTION DETECTION (Enhancement) ---
             # If the user answered multiple questions in one go, we should acknowledge it
             newly_answered = []
             for field in question_fields:
                 if extracted_data.get(field) is not None and current_seller_data.get(field) is None:
                     newly_answered.append(field)
-            
+
             extracted_data["newly_answered_count"] = len(newly_answered)
             extracted_data["questions_answered"] = questions_answered
-            
+
             # Store current user message for follow-up handling
             extracted_data["last_user_message"] = user_message
 
@@ -622,15 +631,16 @@ class JorgeSellerEngine:
         warm_quality = self.config.WARM_QUALITY_THRESHOLD
 
         # Jorge's Hot seller criteria (strictest)
-        if (questions_answered >= hot_questions and
-            timeline_acceptable is True and  # Must accept 30-45 day timeline
-            response_quality >= hot_quality):
+        if (
+            questions_answered >= hot_questions
+            and timeline_acceptable is True  # Must accept 30-45 day timeline
+            and response_quality >= hot_quality
+        ):
             temperature = "hot"
             confidence = 0.95
 
         # Jorge's Warm seller criteria
-        elif (questions_answered >= warm_questions and
-              response_quality >= warm_quality):
+        elif questions_answered >= warm_questions and response_quality >= warm_quality:
             temperature = "warm"
             confidence = 0.75
 
@@ -651,17 +661,12 @@ class JorgeSellerEngine:
                     "hot_questions": hot_questions,
                     "hot_quality": hot_quality,
                     "warm_questions": warm_questions,
-                    "warm_quality": warm_quality
-                }
-            }
+                    "warm_quality": warm_quality,
+                },
+            },
         }
 
-    async def _generate_simple_response(
-        self,
-        seller_data: Dict,
-        temperature: str,
-        contact_id: str
-    ) -> Dict:
+    async def _generate_simple_response(self, seller_data: Dict, temperature: str, contact_id: str) -> Dict:
         """
         Simple mode response: strict 4-question flow only.
         No enterprise features (arbitrage, Voss, psychology, drift, market insights).
@@ -675,16 +680,14 @@ class JorgeSellerEngine:
         # 1. Hot → handoff message
         if temperature == "hot":
             message = self.tone_engine.generate_hot_seller_handoff(
-                seller_name=seller_data.get("contact_name"),
-                agent_name="our team"
+                seller_name=seller_data.get("contact_name"), agent_name="our team"
             )
             response_type = "handoff"
 
         # 2. Vague streak >= 2 → take-away close
         elif vague_streak >= 2:
             message = self.tone_engine.generate_take_away_close(
-                seller_name=seller_data.get("contact_name"),
-                reason="vague"
+                seller_name=seller_data.get("contact_name"), reason="vague"
             )
             response_type = "take_away_close"
 
@@ -694,13 +697,13 @@ class JorgeSellerEngine:
                 message = self.tone_engine.generate_follow_up_message(
                     last_response=last_response,
                     question_number=current_question_number - 1,
-                    seller_name=seller_data.get("contact_name")
+                    seller_name=seller_data.get("contact_name"),
                 )
             else:
                 message = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
-                    context=seller_data
+                    context=seller_data,
                 )
             response_type = "qualification"
 
@@ -716,7 +719,7 @@ class JorgeSellerEngine:
             "response_type": response_type,
             "character_count": len(message),
             "compliance": compliance_result,
-            "directness_score": compliance_result.get("directness_score", 0.0)
+            "directness_score": compliance_result.get("directness_score", 0.0),
         }
 
     async def _generate_seller_response(
@@ -727,7 +730,7 @@ class JorgeSellerEngine:
         location_id: str,
         predictive_result: Any = None,
         persona_data: Dict = None,
-        psychology_profile: Any = None
+        psychology_profile: Any = None,
     ) -> Dict:
         """Generate Jorge's confrontational seller response using tone engine with dynamic branching"""
         # SIMPLE MODE GUARD: Skip all enterprise branches
@@ -739,11 +742,11 @@ class JorgeSellerEngine:
         vague_streak = seller_data.get("vague_streak", 0)
         newly_answered_count = seller_data.get("newly_answered_count", 0)
         user_message = seller_data.get("last_user_message", "")
-        
+
         # Extract persona details
         persona_data = persona_data or {}
         primary_persona = persona_data.get("primary_persona", "unknown")
-        
+
         # PROACTIVE INTELLIGENCE: Trigger "Take-Away Close" early if ML predicts low conversion
         low_probability = False
         if predictive_result and predictive_result.closing_probability < 0.2 and questions_answered >= 1:
@@ -753,7 +756,7 @@ class JorgeSellerEngine:
         persona_override = ""
         if persona_data:
             persona_override = self.psychographic_engine.get_system_prompt_override(persona_data)
-            
+
         # Add psychology-based instructions if profile exists
         if psychology_profile:
             psych_instruction = f"\nSELLER PSYCHOLOGY: Motivation={psychology_profile.motivation_type}, Urgency={psychology_profile.urgency_level}. "
@@ -766,8 +769,7 @@ class JorgeSellerEngine:
         # 1. Hot Seller Handoff
         if temperature == "hot":
             message = self.tone_engine.generate_hot_seller_handoff(
-                seller_name=seller_data.get("contact_name"),
-                agent_name="our team"
+                seller_name=seller_data.get("contact_name"), agent_name="our team"
             )
             response_type = "handoff"
 
@@ -776,16 +778,16 @@ class JorgeSellerEngine:
             # Emphasize the cost of waiting while still moving the qualification forward
             cost_msg = self.tone_engine.generate_cost_of_waiting_message(
                 seller_name=seller_data.get("contact_name"),
-                market_trend="interest rates" if "rate" in user_message.lower() else "rising inventory"
+                market_trend="interest rates" if "rate" in user_message.lower() else "rising inventory",
             )
-            
+
             # Get next question
             next_q = self.tone_engine.generate_qualification_message(
                 question_number=current_question_number,
                 seller_name=seller_data.get("contact_name"),
-                context=seller_data
+                context=seller_data,
             )
-            
+
             # Combine them, ensuring SMS compliance
             message = f"{cost_msg} {next_q}"
             response_type = "loss_aversion_qualification"
@@ -799,28 +801,32 @@ class JorgeSellerEngine:
                     lead_id=contact_id,
                     lead_name=seller_data.get("contact_name", "there"),
                     address=seller_data.get("property_address", "your property"),
-                    history=context.get("conversation_history", [])
+                    history=context.get("conversation_history", []),
                 )
-                message = voss_result.get("generated_response", "Is it a ridiculous idea to suggest we lock in a price today?")
-                
+                message = voss_result.get(
+                    "generated_response", "Is it a ridiculous idea to suggest we lock in a price today?"
+                )
+
                 # Apply Jorge's tone constraints
                 message = self.tone_engine._ensure_sms_compliance(message)
                 response_type = "price_break_closure"
             except Exception as ve:
                 self.logger.warning(f"Voss closure failed: {ve}")
-                message = "It sounds like you're becoming more flexible on the price. Should we finalize the numbers today?"
+                message = (
+                    "It sounds like you're becoming more flexible on the price. Should we finalize the numbers today?"
+                )
                 response_type = "price_break_fallback"
 
         elif seller_data.get("drift_softening") and questions_answered >= 2:
             try:
                 # Use DynamicPricingOptimizer for live ROI Proforma data
                 proforma_data = await self.pricing_optimizer.calculate_lead_price(contact_id, location_id, seller_data)
-                
+
                 ack = f"I'm sensing some flexibility. I've prepared a live ROI analysis for your property based on {proforma_data.expected_roi}% yield targets."
                 next_q = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
-                    context=seller_data
+                    context=seller_data,
                 )
                 message = f"{ack} {next_q}"
                 response_type = "softening_drift_proforma"
@@ -829,45 +835,48 @@ class JorgeSellerEngine:
                 message = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
-                    context=seller_data
+                    context=seller_data,
                 )
                 response_type = "qualification"
 
         # 3. ROI DEFENSE: Net Yield Justification (Phase 7)
-        elif (seller_data.get("property_condition") == "Needs Work" and 
-              seller_data.get("price_expectation") and 
-              predictive_result and 
-              predictive_result.net_yield_estimate is not None):
-            
+        elif (
+            seller_data.get("property_condition") == "Needs Work"
+            and seller_data.get("price_expectation")
+            and predictive_result
+            and predictive_result.net_yield_estimate is not None
+        ):
             try:
                 # Clean price expectation
                 import re
+
                 price_str = str(seller_data.get("price_expectation"))
-                price_val = float(re.sub(r'[^\d.]', '', price_str.replace('k', '000').replace('K', '000')))
-                
+                price_val = float(re.sub(r"[^\d.]", "", price_str.replace("k", "000").replace("K", "000")))
+
                 # Phase 7: Financial Precision & Dynamic ROI Thresholds
                 # Use actual market comps via NationalMarketIntelligence
                 from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+
                 market_intel = get_national_market_intelligence()
-                
+
                 # Fetch refined valuation & opportunity score
                 location_str = seller_data.get("property_address") or location_id
                 ai_valuation = await market_intel.get_market_valuation(location_str, price_val)
-                
+
                 # Dynamic Threshold Logic: Higher opportunity = more aggressive (lower threshold)
                 # Range: 0.10 (at score 100) to 0.20 (at score 0)
                 metrics = await market_intel.get_market_metrics(location_str)
                 opportunity_score = metrics.opportunity_score if metrics else 50.0
                 dynamic_threshold = 0.20 - (opportunity_score / 100.0) * 0.10
-                
+
                 if predictive_result.net_yield_estimate < dynamic_threshold:
                     message = self.tone_engine.generate_net_yield_justification(
                         price_expectation=price_val,
                         ai_valuation=ai_valuation,
                         net_yield=predictive_result.net_yield_estimate,
-                        repair_estimate=float(seller_data.get("repair_estimate", 50000)), # Default repair if unknown
+                        repair_estimate=float(seller_data.get("repair_estimate", 50000)),  # Default repair if unknown
                         seller_name=seller_data.get("contact_name"),
-                        psychology_profile=psychology_profile
+                        psychology_profile=psychology_profile,
                     )
                     response_type = "roi_justification"
                 else:
@@ -875,7 +884,7 @@ class JorgeSellerEngine:
                     message = self.tone_engine.generate_qualification_message(
                         question_number=current_question_number,
                         seller_name=seller_data.get("contact_name"),
-                        context=seller_data
+                        context=seller_data,
                     )
                     response_type = "qualification"
             except Exception as e:
@@ -884,7 +893,7 @@ class JorgeSellerEngine:
                 message = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
-                    context=seller_data
+                    context=seller_data,
                 )
                 response_type = "qualification"
 
@@ -893,36 +902,41 @@ class JorgeSellerEngine:
             # Pillar 1: Vague Answer Escalation / Proactive Intelligence
             reason = "low_probability" if low_probability else "vague"
             message = self.tone_engine.generate_take_away_close(
-                seller_name=seller_data.get("contact_name"),
-                reason=reason,
-                psychology_profile=psychology_profile
+                seller_name=seller_data.get("contact_name"), reason=reason, psychology_profile=psychology_profile
             )
             response_type = "take_away_close"
 
         # Phase 7: Arbitrage Execution for Investors
-        elif (primary_persona == "investor" or "invest" in seller_data.get("motivation", "").lower()) and questions_answered >= 1:
+        elif (
+            primary_persona == "investor" or "invest" in seller_data.get("motivation", "").lower()
+        ) and questions_answered >= 1:
             try:
-                from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import MarketTimingOpportunityEngine
+                from ghl_real_estate_ai.services.market_timing_opportunity_intelligence import (
+                    MarketTimingOpportunityEngine,
+                )
+
                 opportunity_engine = MarketTimingOpportunityEngine()
-                
+
                 # Fetch opportunities for the market
                 market_area = seller_data.get("property_address") or location_id
                 dashboard = await opportunity_engine.get_opportunity_dashboard(market_area)
-                
+
                 # Find a PRICING_ARBITRAGE opportunity if available
-                arbitrage_opp = next((o for o in dashboard.get('opportunities', []) if o['type'] == 'pricing_arbitrage'), None)
-                
+                arbitrage_opp = next(
+                    (o for o in dashboard.get("opportunities", []) if o["type"] == "pricing_arbitrage"), None
+                )
+
                 # Use centralized tone engine for elite arbitrage pitch
                 ack = self.tone_engine.generate_arbitrage_pitch(
                     seller_name=seller_data.get("contact_name"),
-                    yield_spread=arbitrage_opp['score'] if arbitrage_opp else 0.0,
-                    market_area="adjacent zones" if arbitrage_opp else "sub markets"
+                    yield_spread=arbitrage_opp["score"] if arbitrage_opp else 0.0,
+                    market_area="adjacent zones" if arbitrage_opp else "sub markets",
                 )
-                
+
                 next_q = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
-                    context=seller_data
+                    context=seller_data,
                 )
                 # Combine but ensure we don't double up on the name
                 if seller_data.get("contact_name") and next_q.startswith(seller_data.get("contact_name")):
@@ -937,7 +951,7 @@ class JorgeSellerEngine:
                 message = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
-                    context=seller_data
+                    context=seller_data,
                 )
                 response_type = "qualification"
 
@@ -946,12 +960,12 @@ class JorgeSellerEngine:
             # Inject a local market "Reality Check" to show elite intelligence
             address = seller_data.get("property_address") or seller_data.get("relocation_destination")
             market_insight = await self._get_market_insight(address)
-            
+
             # Get next question but prefix with insight
             next_q = self.tone_engine.generate_qualification_message(
                 question_number=current_question_number,
                 seller_name=seller_data.get("contact_name"),
-                context=seller_data
+                context=seller_data,
             )
             message = f"{market_insight} {next_q}"
             response_type = "market_aware_qualification"
@@ -963,7 +977,7 @@ class JorgeSellerEngine:
             next_q = self.tone_engine.generate_qualification_message(
                 question_number=current_question_number,
                 seller_name=seller_data.get("contact_name"),
-                context=seller_data
+                context=seller_data,
             )
             message = f"{ack} {next_q}"
             response_type = "multi_answer_qualification"
@@ -978,8 +992,8 @@ class JorgeSellerEngine:
                 # Generate confrontational follow-up for poor response
                 message = self.tone_engine.generate_follow_up_message(
                     last_response=last_response,
-                    question_number=current_question_number - 1, # Follow up on PREVIOUS question
-                    seller_name=seller_data.get("contact_name")
+                    question_number=current_question_number - 1,  # Follow up on PREVIOUS question
+                    seller_name=seller_data.get("contact_name"),
                 )
             else:
                 # DYNAMIC PERSONA BRANCHING (Tactical Behavioral Response)
@@ -988,29 +1002,29 @@ class JorgeSellerEngine:
                     message = SellerQuestions.INVESTOR_CAP_RATE
                     if seller_data.get("investor_q1_answered"):
                         message = SellerQuestions.INVESTOR_LIQUIDITY
-                    
+
                     # Apply Jorge's tone & compliance
                     message = self.tone_engine._apply_confrontational_tone(message, seller_data.get("contact_name"))
                     message = self.tone_engine._ensure_sms_compliance(message)
                     response_type = "investor_branch"
-                
+
                 elif primary_persona == "loss_aversion" and questions_answered >= 2:
                     # Switch to loss-aversion-specific high-stakes question
                     message = SellerQuestions.LOSS_AVERSION_PLAN_B
                     if seller_data.get("loss_aversion_q1_answered"):
                         message = SellerQuestions.LOSS_AVERSION_RATE_RISK
-                        
+
                     # Apply Jorge's tone & compliance
                     message = self.tone_engine._apply_confrontational_tone(message, seller_data.get("contact_name"))
                     message = self.tone_engine._ensure_sms_compliance(message)
                     response_type = "loss_aversion_branch"
-                
+
                 else:
                     # Standard Qualification Branch
                     message = self.tone_engine.generate_qualification_message(
                         question_number=current_question_number,
                         seller_name=seller_data.get("contact_name"),
-                        context=seller_data
+                        context=seller_data,
                     )
                     response_type = "qualification"
 
@@ -1038,13 +1052,14 @@ class JorgeSellerEngine:
             "response_type": response_type,
             "character_count": len(message),
             "compliance": compliance_result,
-            "directness_score": compliance_result.get("directness_score", 0.0)
+            "directness_score": compliance_result.get("directness_score", 0.0),
         }
 
     async def _adapt_message_to_persona(self, message: str, persona_override: str) -> str:
         """Use LLM to subtly adjust message tone to match detected persona."""
         try:
             from ghl_real_estate_ai.core.llm_client import LLMClient, TaskComplexity
+
             llm_client = LLMClient(provider="claude")
 
             prompt = f"""Adjust the tone of this SMS message based on the persona guidelines provided.
@@ -1067,9 +1082,9 @@ class JorgeSellerEngine:
                 system_prompt="You are a linguistic adaptation engine. Keep responses SMS compliant (<160 chars, no emojis, no hyphens).",
                 temperature=0.3,
                 max_tokens=100,
-                complexity=TaskComplexity.ROUTINE
+                complexity=TaskComplexity.ROUTINE,
             )
-            
+
             adapted = response.content.strip()
             # Final SMS compliance check
             adapted = self.tone_engine._ensure_sms_compliance(adapted)
@@ -1082,8 +1097,9 @@ class JorgeSellerEngine:
         """Fetch real-time market insight using NationalMarketIntelligence service"""
         try:
             from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
+
             market_intel = get_national_market_intelligence()
-            
+
             # Fetch real market metrics
             metrics = await market_intel.get_market_metrics(location)
             if metrics:
@@ -1094,7 +1110,7 @@ class JorgeSellerEngine:
                 else:
                     insight += "Homes are sitting longer, which means you're losing leverage every day. "
                 return insight
-            
+
             return f"I've been tracking {location}. Buyers are getting picky, so you need to be realistic."
         except Exception as e:
             self.logger.warning(f"Market insight fetch failed: {e}")
@@ -1107,16 +1123,13 @@ class JorgeSellerEngine:
         temperature: str,
         seller_data: Dict,
         pricing_result: Any = None,
-        persona_data: Dict = None
+        persona_data: Dict = None,
     ) -> List[Dict]:
         """Create Jorge's seller-specific GHL actions"""
         actions = []
 
         # Apply temperature tag
-        actions.append({
-            "type": "add_tag",
-            "tag": f"{temperature.capitalize()}-Seller"
-        })
+        actions.append({"type": "add_tag", "tag": f"{temperature.capitalize()}-Seller"})
 
         # --- ROI INTELLIGENCE (Extreme Value Phase) ---
         if pricing_result:
@@ -1125,69 +1138,60 @@ class JorgeSellerEngine:
             tier_field = JorgeSellerConfig.get_ghl_custom_field_id("lead_value_tier") or "lead_value_tier"
             price_field = JorgeSellerConfig.get_ghl_custom_field_id("ai_valuation_price") or "ai_valuation_price"
 
-            actions.append({
-                "type": "update_custom_field",
-                "field": roi_field,
-                "value": f"{pricing_result.expected_roi}%"
-            })
-            actions.append({
-                "type": "update_custom_field",
-                "field": tier_field,
-                "value": pricing_result.tier.upper()
-            })
-            actions.append({
-                "type": "update_custom_field",
-                "field": price_field,
-                "value": f"${pricing_result.final_price}"
-            })
+            actions.append(
+                {"type": "update_custom_field", "field": roi_field, "value": f"{pricing_result.expected_roi}%"}
+            )
+            actions.append({"type": "update_custom_field", "field": tier_field, "value": pricing_result.tier.upper()})
+            actions.append(
+                {"type": "update_custom_field", "field": price_field, "value": f"${pricing_result.final_price}"}
+            )
 
         # --- PERSONA INTELLIGENCE ---
         if persona_data:
             persona_field = JorgeSellerConfig.get_ghl_custom_field_id("detected_persona") or "detected_persona"
-            actions.append({
-                "type": "update_custom_field",
-                "field": persona_field,
-                "value": persona_data.get("primary_persona", "unknown")
-            })
+            actions.append(
+                {
+                    "type": "update_custom_field",
+                    "field": persona_field,
+                    "value": persona_data.get("primary_persona", "unknown"),
+                }
+            )
 
         # Remove previous temperature tags
         temp_tags = ["Hot-Seller", "Warm-Seller", "Cold-Seller"]
         current_tag = f"{temperature.capitalize()}-Seller"
         for tag in temp_tags:
             if tag != current_tag:
-                actions.append({
-                    "type": "remove_tag",
-                    "tag": tag
-                })
+                actions.append({"type": "remove_tag", "tag": tag})
 
         # Hot seller actions
         if temperature == "hot":
             # Remove qualification tag
-            actions.append({
-                "type": "remove_tag",
-                "tag": "Needs Qualifying"
-            })
+            actions.append({"type": "remove_tag", "tag": "Needs Qualifying"})
 
             # Trigger agent notification workflow
             hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")
             if hot_workflow_id:
-                actions.append({
-                    "type": "trigger_workflow",
-                    "workflow_id": hot_workflow_id,
-                    "data": {**seller_data, "persona": persona_data}
-                })
+                actions.append(
+                    {
+                        "type": "trigger_workflow",
+                        "workflow_id": hot_workflow_id,
+                        "data": {**seller_data, "persona": persona_data},
+                    }
+                )
 
             # Trigger Vapi Outbound Call (Voice AI Handoff) with exponential backoff retry
             from ghl_real_estate_ai.services.vapi_service import VapiService
+
             vapi_service = VapiService()
             contact_phone = seller_data.get("phone")
-            
+
             # Persona-Based Script Mapping (Tactical Behavioral Response)
             script_mapping = {
                 "investor": "script_investor_roi_v3",
                 "loss_aversion": "script_urgency_market_v2",
                 "luxury_seeker": "script_high_end_white_glove",
-                "first_time_buyer": "script_educational_guide"
+                "first_time_buyer": "script_educational_guide",
             }
             voice_script_id = script_mapping.get(persona_data.get("primary_persona"), "script_standard_jorge")
 
@@ -1205,12 +1209,14 @@ class JorgeSellerEngine:
                             lead_name=seller_data.get("contact_name", "Lead"),
                             property_address=seller_data.get("property_address", "your property"),
                             extra_variables={
-                                **seller_data, 
+                                **seller_data,
                                 "persona": persona_data.get("primary_persona"),
                                 "voice_script_id": voice_script_id,
-                                "drift_softening": drift.is_softening if 'drift' in locals() else False,
-                                "tone_instruction": self.psychographic_engine.get_system_prompt_override(persona_data or {})
-                            }
+                                "drift_softening": drift.is_softening if "drift" in locals() else False,
+                                "tone_instruction": self.psychographic_engine.get_system_prompt_override(
+                                    persona_data or {}
+                                ),
+                            },
                         )
 
                         if vapi_success:
@@ -1242,78 +1248,66 @@ class JorgeSellerEngine:
                             )
 
                 if vapi_success:
-                    actions.append({
-                        "type": "log_event",
-                        "event": "Vapi Outbound Call Triggered",
-                        "details": f"Initiated voice handoff for Hot Seller: {contact_id}"
-                    })
+                    actions.append(
+                        {
+                            "type": "log_event",
+                            "event": "Vapi Outbound Call Triggered",
+                            "details": f"Initiated voice handoff for Hot Seller: {contact_id}",
+                        }
+                    )
                 else:
                     self.logger.warning(f"Vapi Call Failed for contact {contact_id}")
-                    actions.append({
-                        "type": "log_event",
-                        "event": "Vapi Outbound Call Failed",
-                        "details": "Voice AI handoff failed after retries. Manual follow-up required."
-                    })
-                    actions.append({
-                        "type": "add_tag",
-                        "tag": "Voice-Handoff-Failed"
-                    })
+                    actions.append(
+                        {
+                            "type": "log_event",
+                            "event": "Vapi Outbound Call Failed",
+                            "details": "Voice AI handoff failed after retries. Manual follow-up required.",
+                        }
+                    )
+                    actions.append({"type": "add_tag", "tag": "Voice-Handoff-Failed"})
 
             # Add qualified tag
-            actions.append({
-                "type": "add_tag",
-                "tag": "Seller-Qualified"
-            })
+            actions.append({"type": "add_tag", "tag": "Seller-Qualified"})
 
         # Update custom fields with seller data
         # Use centralized config to map to correct GHL Field IDs
-        
+
         # Price
         if seller_data.get("price_expectation"):
             field_id = JorgeSellerConfig.get_ghl_custom_field_id("price_expectation") or "price_expectation"
-            actions.append({
-                "type": "update_custom_field",
-                "field": field_id,
-                "value": str(seller_data["price_expectation"])
-            })
+            actions.append(
+                {"type": "update_custom_field", "field": field_id, "value": str(seller_data["price_expectation"])}
+            )
 
         # Condition
         if seller_data.get("property_condition"):
             field_id = JorgeSellerConfig.get_ghl_custom_field_id("property_condition") or "property_condition"
-            actions.append({
-                "type": "update_custom_field",
-                "field": field_id,
-                "value": seller_data["property_condition"]
-            })
-            
+            actions.append(
+                {"type": "update_custom_field", "field": field_id, "value": seller_data["property_condition"]}
+            )
+
         # Motivation
         if seller_data.get("motivation"):
             field_id = JorgeSellerConfig.get_ghl_custom_field_id("seller_motivation") or "motivation"
-            actions.append({
-                "type": "update_custom_field",
-                "field": field_id,
-                "value": seller_data["motivation"]
-            })
+            actions.append({"type": "update_custom_field", "field": field_id, "value": seller_data["motivation"]})
 
         # Timeline
         if seller_data.get("timeline_acceptable") is not None:
-             field_id = JorgeSellerConfig.get_ghl_custom_field_id("timeline_urgency") or "timeline_acceptable"
-             val = "30-45 Days Accepted" if seller_data["timeline_acceptable"] else "Timeline Conflict"
-             actions.append({
-                "type": "update_custom_field",
-                "field": field_id,
-                "value": val
-            })
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id("timeline_urgency") or "timeline_acceptable"
+            val = "30-45 Days Accepted" if seller_data["timeline_acceptable"] else "Timeline Conflict"
+            actions.append({"type": "update_custom_field", "field": field_id, "value": val})
 
         return actions
 
     def _create_nurture_message(self, seller_data: Dict, temperature: str) -> str:
         """Create nurture message for qualified but not hot sellers"""
         if temperature == "warm":
-            base_message = "Thanks for the info. Let me have our team review your situation and get back to you with next steps."
+            base_message = (
+                "Thanks for the info. Let me have our team review your situation and get back to you with next steps."
+            )
         else:  # cold
             base_message = "I'll keep your info on file. Reach out if your timeline or situation changes."
-        
+
         # Use tone engine to ensure SMS compliance
         return self.tone_engine._ensure_sms_compliance(base_message)
 
@@ -1363,11 +1357,12 @@ Return ONLY a JSON object with this exact format:
                 system_prompt="You are a response quality analyzer. Return only valid JSON.",
                 temperature=0,
                 max_tokens=150,
-                complexity=TaskComplexity.ROUTINE
+                complexity=TaskComplexity.ROUTINE,
             )
 
             # Parse the JSON response
             import json
+
             result = json.loads(response.content)
             quality_score = float(result.get("quality_score", 0.5))
 
@@ -1376,11 +1371,7 @@ Return ONLY a JSON object with this exact format:
 
             self.logger.debug(
                 f"Semantic quality assessment: {quality_score:.2f}",
-                extra={
-                    "message": user_message,
-                    "quality": quality_score,
-                    "reasoning": result.get("reasoning", "")
-                }
+                extra={"message": user_message, "quality": quality_score, "reasoning": result.get("reasoning", "")},
             )
 
             return quality_score
@@ -1401,9 +1392,20 @@ Return ONLY a JSON object with this exact format:
         # Check for multiple vague indicators (rambling)
         vague_count = 0
         vague_indicators = [
-            "maybe", "not sure", "idk", "i don't know", "thinking about it",
-            "unsure", "dunno", "who knows", "we'll see", "depends",
-            "i guess", "kind of", "sort of", "i'm not really"
+            "maybe",
+            "not sure",
+            "idk",
+            "i don't know",
+            "thinking about it",
+            "unsure",
+            "dunno",
+            "who knows",
+            "we'll see",
+            "depends",
+            "i guess",
+            "kind of",
+            "sort of",
+            "i'm not really",
         ]
         for indicator in vague_indicators:
             if indicator in message:
@@ -1419,8 +1421,16 @@ Return ONLY a JSON object with this exact format:
 
         # Definitive short answers (yes, no, specific numbers/dates)
         definitive_indicators = [
-            r'\byes\b', r'\bno\b', r'\bnope\b', r'\byeah\b', r'\bsure\b',
-            r'\$\d+', r'\d+k\b', r'\d+\s*days?\b', r'\d+\s*weeks?\b', r'\d+\s*months?\b'
+            r"\byes\b",
+            r"\bno\b",
+            r"\bnope\b",
+            r"\byeah\b",
+            r"\bsure\b",
+            r"\$\d+",
+            r"\d+k\b",
+            r"\d+\s*days?\b",
+            r"\d+\s*weeks?\b",
+            r"\d+\s*months?\b",
         ]
         if any(re.search(pattern, message) for pattern in definitive_indicators):
             return 0.85
@@ -1431,8 +1441,15 @@ Return ONLY a JSON object with this exact format:
 
         # Specific condition/property indicators
         specific_indicators = [
-            "move-in ready", "needs work", "fixer", "renovated", "updated",
-            "relocating", "downsizing", "divorce", "inherited"
+            "move-in ready",
+            "needs work",
+            "fixer",
+            "renovated",
+            "updated",
+            "relocating",
+            "downsizing",
+            "divorce",
+            "inherited",
         ]
         if any(indicator in message for indicator in specific_indicators):
             return 0.75
@@ -1452,12 +1469,7 @@ Return ONLY a JSON object with this exact format:
         # Use heuristic fallback for sync calls
         return self._assess_response_quality_heuristic(user_message)
 
-    async def _track_seller_interaction(
-        self,
-        contact_id: str,
-        location_id: str,
-        interaction_data: Dict
-    ) -> None:
+    async def _track_seller_interaction(self, contact_id: str, location_id: str, interaction_data: Dict) -> None:
         """Track seller interaction analytics"""
         try:
             # Log interaction for analytics
@@ -1472,7 +1484,7 @@ Return ONLY a JSON object with this exact format:
                 event_type="jorge_seller_interaction",
                 location_id=location_id,
                 contact_id=contact_id,
-                data=interaction_data
+                data=interaction_data,
             )
 
         except Exception as e:
@@ -1482,14 +1494,7 @@ Return ONLY a JSON object with this exact format:
 class JorgeSellerResult:
     """Result container for Jorge seller processing"""
 
-    def __init__(
-        self,
-        message: str,
-        temperature: str,
-        actions: List[Dict],
-        seller_data: Dict,
-        analytics: Dict
-    ):
+    def __init__(self, message: str, temperature: str, actions: List[Dict], seller_data: Dict, analytics: Dict):
         self.message = message
         self.temperature = temperature
         self.actions = actions

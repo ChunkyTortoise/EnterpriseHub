@@ -6,22 +6,26 @@ Provides seamless integration of existing bot ecosystem into agent mesh
 with progressive skills and MCP protocol support.
 """
 
-import json
 import asyncio
+import importlib.util
+import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import importlib.util
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.services.agent_mesh_coordinator import (
-    MeshAgent, AgentMetrics, AgentStatus, AgentCapability,
-    get_mesh_coordinator
-)
-from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
-from ghl_real_estate_ai.services.mcp_client import get_mcp_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.agent_mesh_coordinator import (
+    AgentCapability,
+    AgentMetrics,
+    AgentStatus,
+    MeshAgent,
+    get_mesh_coordinator,
+)
+from ghl_real_estate_ai.services.mcp_client import get_mcp_client
+from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
 
 logger = get_logger(__name__)
+
 
 class MeshAgentRegistry:
     """
@@ -73,7 +77,7 @@ class MeshAgentRegistry:
                 logger.error(f"Configuration file not found: {self.config_path}")
                 raise FileNotFoundError(f"Config file missing: {self.config_path}")
 
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 self.config = json.load(f)
 
             logger.info("Mesh configuration loaded successfully")
@@ -122,7 +126,7 @@ class MeshAgentRegistry:
             metrics=metrics,
             endpoint=config["endpoint"],
             health_check_url=config.get("health_check_url", "/health"),
-            last_heartbeat=datetime.now()
+            last_heartbeat=datetime.now(),
         )
 
         return agent
@@ -148,20 +152,20 @@ class MeshAgentRegistry:
                 "file": "ghl_real_estate_ai/agents/jorge_seller_bot.py",
                 "class": "JorgeSellerBot",
                 "capabilities": [AgentCapability.LEAD_QUALIFICATION, AgentCapability.CONVERSATION_ANALYSIS],
-                "name": "Jorge Seller Bot"
+                "name": "Jorge Seller Bot",
             },
             {
                 "file": "ghl_real_estate_ai/agents/lead_bot.py",
                 "class": "LeadBot",
                 "capabilities": [AgentCapability.FOLLOWUP_AUTOMATION, AgentCapability.VOICE_INTERACTION],
-                "name": "Lead Lifecycle Bot"
+                "name": "Lead Lifecycle Bot",
             },
             {
                 "file": "ghl_real_estate_ai/agents/intent_decoder.py",
                 "class": "IntentDecoder",
                 "capabilities": [AgentCapability.CONVERSATION_ANALYSIS],
-                "name": "Intent Decoder"
-            }
+                "name": "Intent Decoder",
+            },
         ]
 
         for bot_info in jorge_bots:
@@ -192,7 +196,7 @@ class MeshAgentRegistry:
                     metrics=AgentMetrics(),
                     endpoint=f"internal:{bot_info['class']}",
                     health_check_url="/health",
-                    last_heartbeat=datetime.now()
+                    last_heartbeat=datetime.now(),
                 )
 
                 if await self.mesh_coordinator.register_agent(agent):
@@ -209,26 +213,26 @@ class MeshAgentRegistry:
                 "file": "ghl_real_estate_ai/services/claude_conversation_intelligence.py",
                 "name": "Conversation Intelligence Service",
                 "capabilities": [AgentCapability.CONVERSATION_ANALYSIS, AgentCapability.MARKET_INTELLIGENCE],
-                "cost_per_token": 0.000008
+                "cost_per_token": 0.000008,
             },
             {
                 "file": "ghl_real_estate_ai/services/enhanced_property_matcher.py",
                 "name": "Enhanced Property Matcher",
                 "capabilities": [AgentCapability.PROPERTY_MATCHING, AgentCapability.MARKET_INTELLIGENCE],
-                "cost_per_token": 0.00001
+                "cost_per_token": 0.00001,
             },
             {
                 "file": "ghl_real_estate_ai/services/ghost_followup_engine.py",
                 "name": "Ghost Followup Engine",
                 "capabilities": [AgentCapability.FOLLOWUP_AUTOMATION],
-                "cost_per_token": 0.000005
+                "cost_per_token": 0.000005,
             },
             {
                 "file": "bots/shared/ml_analytics_engine.py",
                 "name": "ML Analytics Engine",
                 "capabilities": [AgentCapability.CONVERSATION_ANALYSIS, AgentCapability.MARKET_INTELLIGENCE],
-                "cost_per_token": 0.000003
-            }
+                "cost_per_token": 0.000003,
+            },
         ]
 
         for service_info in services:
@@ -257,7 +261,7 @@ class MeshAgentRegistry:
                     metrics=AgentMetrics(),
                     endpoint=f"internal:service_{service_info['name'].lower().replace(' ', '_')}",
                     health_check_url="/health",
-                    last_heartbeat=datetime.now()
+                    last_heartbeat=datetime.now(),
                 )
 
                 if await self.mesh_coordinator.register_agent(agent):
@@ -276,7 +280,7 @@ class MeshAgentRegistry:
                 logger.warning("MCP servers configuration not found")
                 return
 
-            with open(mcp_config_path, 'r') as f:
+            with open(mcp_config_path, "r") as f:
                 mcp_config = json.load(f)
 
             for server_config in mcp_config.get("servers", []):
@@ -304,7 +308,7 @@ class MeshAgentRegistry:
                         metrics=AgentMetrics(),
                         endpoint=f"mcp:{server_config['name']}",
                         health_check_url="mcp:health",
-                        last_heartbeat=datetime.now()
+                        last_heartbeat=datetime.now(),
                     )
 
                     if await self.mesh_coordinator.register_agent(agent):
@@ -329,7 +333,7 @@ class MeshAgentRegistry:
             "document_storage": AgentCapability.DOCUMENT_PROCESSING,
             "e_signature": AgentCapability.DOCUMENT_PROCESSING,
             "automated_valuation": AgentCapability.MARKET_INTELLIGENCE,
-            "investment_analysis": AgentCapability.MARKET_INTELLIGENCE
+            "investment_analysis": AgentCapability.MARKET_INTELLIGENCE,
         }
 
         mapped_capabilities = []
@@ -362,7 +366,7 @@ class MeshAgentRegistry:
                     "basic_valid": is_valid,
                     "health_check": is_healthy,
                     "capabilities_valid": capabilities_valid,
-                    "overall_valid": is_valid and is_healthy and capabilities_valid
+                    "overall_valid": is_valid and is_healthy and capabilities_valid,
                 }
 
                 if not validation_results[agent_id]["overall_valid"]:
@@ -414,9 +418,12 @@ class MeshAgentRegistry:
             },
             "total_capacity": sum(a.max_concurrent_tasks for a in self.registered_agents.values()),
             "current_load": sum(a.current_tasks for a in self.registered_agents.values()),
-            "average_cost_per_token": sum(a.cost_per_token for a in self.registered_agents.values()) / len(self.registered_agents) if self.registered_agents else 0,
+            "average_cost_per_token": sum(a.cost_per_token for a in self.registered_agents.values())
+            / len(self.registered_agents)
+            if self.registered_agents
+            else 0,
             "configuration_loaded": bool(self.config),
-            "last_update": datetime.now().isoformat()
+            "last_update": datetime.now().isoformat(),
         }
 
     async def register_dynamic_agent(self, agent_config: Dict[str, Any]) -> bool:
@@ -457,8 +464,10 @@ class MeshAgentRegistry:
             logger.error(f"Agent deregistration failed: {e}")
             return False
 
+
 # Global registry instance
 _agent_registry = None
+
 
 def get_agent_registry() -> MeshAgentRegistry:
     """Get singleton agent registry instance"""

@@ -71,28 +71,17 @@ def generate_property_matches(lead_context: Dict) -> List[Dict]:
 ```
 """
 
+from .context import PropertyMatcherContext, ScoringFactory, create_strategy, get_default_strategy, get_scoring_factory
 from .interfaces import (
-    PropertyScorer,
-    ScoringResult,
-    ConfidenceLevel,
-    TrainableScorer,
     AdaptiveScorer,
+    ConfidenceLevel,
+    LeadPreferences,
+    PropertyScorer,
     ScoringContext,
-    LeadPreferences
+    ScoringResult,
+    TrainableScorer,
 )
-
-from .strategies import (
-    BasicPropertyScorer,
-    EnhancedPropertyScorer
-)
-
-from .context import (
-    PropertyMatcherContext,
-    ScoringFactory,
-    get_scoring_factory,
-    create_strategy,
-    get_default_strategy
-)
+from .strategies import BasicPropertyScorer, EnhancedPropertyScorer
 
 # Version information
 __version__ = "1.0.0"
@@ -107,29 +96,26 @@ __url__ = "https://github.com/ghl/real-estate-ai"
 # Public API
 __all__ = [
     # Core interfaces
-    'PropertyScorer',
-    'ScoringResult',
-    'ConfidenceLevel',
-    'TrainableScorer',
-    'AdaptiveScorer',
-    'ScoringContext',
-    'LeadPreferences',
-
+    "PropertyScorer",
+    "ScoringResult",
+    "ConfidenceLevel",
+    "TrainableScorer",
+    "AdaptiveScorer",
+    "ScoringContext",
+    "LeadPreferences",
     # Strategy implementations
-    'BasicPropertyScorer',
-    'EnhancedPropertyScorer',
-
+    "BasicPropertyScorer",
+    "EnhancedPropertyScorer",
     # Context and factory
-    'PropertyMatcherContext',
-    'ScoringFactory',
-    'get_scoring_factory',
-    'create_strategy',
-    'get_default_strategy',
-
+    "PropertyMatcherContext",
+    "ScoringFactory",
+    "get_scoring_factory",
+    "create_strategy",
+    "get_default_strategy",
     # Package metadata
-    '__version__',
-    '__author__',
-    '__email__'
+    "__version__",
+    "__author__",
+    "__email__",
 ]
 
 
@@ -137,32 +123,27 @@ def get_package_info() -> dict:
     """Get comprehensive package information"""
     factory = get_scoring_factory()
     return {
-        'version': __version__,
-        'title': __title__,
-        'description': __description__,
-        'available_strategies': [s['name'] for s in factory.list_strategies()],
-        'default_strategy': factory._default_strategy_name,
-        'features': [
-            'Strategy Pattern Architecture',
-            'Multiple Scoring Algorithms',
-            'Factory Pattern Management',
-            'SOLID Principles Compliance',
-            'Performance Monitoring',
-            'Legacy Compatibility',
-            'Comprehensive Testing',
-            'Error Handling & Resilience'
-        ]
+        "version": __version__,
+        "title": __title__,
+        "description": __description__,
+        "available_strategies": [s["name"] for s in factory.list_strategies()],
+        "default_strategy": factory._default_strategy_name,
+        "features": [
+            "Strategy Pattern Architecture",
+            "Multiple Scoring Algorithms",
+            "Factory Pattern Management",
+            "SOLID Principles Compliance",
+            "Performance Monitoring",
+            "Legacy Compatibility",
+            "Comprehensive Testing",
+            "Error Handling & Resilience",
+        ],
     }
 
 
 def validate_installation() -> dict:
     """Validate package installation and dependencies"""
-    results = {
-        'status': 'success',
-        'errors': [],
-        'warnings': [],
-        'strategy_validation': {}
-    }
+    results = {"status": "success", "errors": [], "warnings": [], "strategy_validation": {}}
 
     try:
         # Test factory creation
@@ -170,18 +151,13 @@ def validate_installation() -> dict:
 
         # Validate all strategies
         validation_results = factory.validate_all_strategies()
-        results['strategy_validation'] = validation_results
+        results["strategy_validation"] = validation_results
 
         # Check for any failed validations
-        failed_strategies = [
-            name for name, result in validation_results.items()
-            if not result['is_valid']
-        ]
+        failed_strategies = [name for name, result in validation_results.items() if not result["is_valid"]]
 
         if failed_strategies:
-            results['warnings'].append(
-                f"Some strategies failed validation: {failed_strategies}"
-            )
+            results["warnings"].append(f"Some strategies failed validation: {failed_strategies}")
 
         # Test basic functionality
         try:
@@ -189,25 +165,22 @@ def validate_installation() -> dict:
             context = PropertyMatcherContext(strategy)
 
             # Test scoring with minimal data
-            test_result = context.score_property(
-                {'price': 500000, 'bedrooms': 3},
-                {'budget': 600000}
-            )
+            test_result = context.score_property({"price": 500000, "bedrooms": 3}, {"budget": 600000})
 
-            if not hasattr(test_result, 'overall_score'):
-                results['errors'].append("Basic scoring test failed")
+            if not hasattr(test_result, "overall_score"):
+                results["errors"].append("Basic scoring test failed")
 
         except Exception as e:
-            results['errors'].append(f"Basic functionality test failed: {e}")
+            results["errors"].append(f"Basic functionality test failed: {e}")
 
     except Exception as e:
-        results['status'] = 'error'
-        results['errors'].append(f"Package validation failed: {e}")
+        results["status"] = "error"
+        results["errors"].append(f"Package validation failed: {e}")
 
-    if results['errors']:
-        results['status'] = 'error'
-    elif results['warnings']:
-        results['status'] = 'warning'
+    if results["errors"]:
+        results["status"] = "error"
+    elif results["warnings"]:
+        results["status"] = "warning"
 
     return results
 
@@ -215,15 +188,11 @@ def validate_installation() -> dict:
 # Initialize and validate on import
 try:
     _validation_results = validate_installation()
-    if _validation_results['status'] == 'error':
+    if _validation_results["status"] == "error":
         import warnings
-        warnings.warn(
-            f"Property Scoring package validation failed: {_validation_results['errors']}",
-            UserWarning
-        )
+
+        warnings.warn(f"Property Scoring package validation failed: {_validation_results['errors']}", UserWarning)
 except Exception as e:
     import warnings
-    warnings.warn(
-        f"Property Scoring package initialization failed: {e}",
-        UserWarning
-    )
+
+    warnings.warn(f"Property Scoring package initialization failed: {e}", UserWarning)

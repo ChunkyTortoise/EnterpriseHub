@@ -8,19 +8,21 @@ Tests generated answer quality according to targets:
 - Context Recall: >85% target, >90% stretch
 """
 
-import pytest
 import asyncio
-import numpy as np
-import re
-from typing import List, Dict, Any, Optional
-import sys
 import os
+import re
+import sys
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pytest
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 
 try:
     from ai_ml_showcase.rag_excellence.advanced_rag_orchestrator import ProductionRAGOrchestrator
+
     from ghl_real_estate_ai.core.rag_engine import VectorStore
 except ImportError:
     # Mock RAG system for testing
@@ -73,38 +75,38 @@ class TestAnswerQuality:
                 "query": "What are vector databases and how do they work?",
                 "expected_topics": ["vector", "database", "similarity", "search", "embeddings"],
                 "context_requirements": ["storage", "retrieval", "performance"],
-                "domain": "technical"
+                "domain": "technical",
             },
             {
                 "query": "How does RAG improve language model responses?",
                 "expected_topics": ["retrieval", "generation", "context", "grounding"],
                 "context_requirements": ["accuracy", "relevance", "information"],
-                "domain": "technical"
+                "domain": "technical",
             },
             {
                 "query": "What are important factors in embedding model selection?",
                 "expected_topics": ["embeddings", "models", "selection", "factors"],
                 "context_requirements": ["performance", "accuracy", "domain"],
-                "domain": "technical"
+                "domain": "technical",
             },
             {
                 "query": "Explain the benefits of hybrid search approaches",
                 "expected_topics": ["hybrid", "search", "benefits", "approaches"],
                 "context_requirements": ["combination", "accuracy", "coverage"],
-                "domain": "technical"
+                "domain": "technical",
             },
             {
                 "query": "How to optimize RAG system performance?",
                 "expected_topics": ["optimization", "performance", "rag", "system"],
                 "context_requirements": ["latency", "accuracy", "efficiency"],
-                "domain": "technical"
+                "domain": "technical",
             },
             {
                 "query": "What are important considerations for production deployment?",
                 "expected_topics": ["production", "deployment", "considerations"],
                 "context_requirements": ["scalability", "monitoring", "reliability"],
-                "domain": "operational"
-            }
+                "domain": "operational",
+            },
         ]
 
     @pytest.mark.quality
@@ -122,9 +124,7 @@ class TestAnswerQuality:
 
             # Simulate LLM-as-judge evaluation
             score = await self._evaluate_relevance(
-                query=item["query"],
-                answer=response.answer,
-                expected_topics=item["expected_topics"]
+                query=item["query"], answer=response.answer, expected_topics=item["expected_topics"]
             )
             relevance_scores.append(score)
 
@@ -142,9 +142,9 @@ class TestAnswerQuality:
         print(f"  Relevance stretch goal (>4.5/5.0): {'✅ MET' if relevance_stretch_met else '⚠️  NOT MET'}")
 
         return {
-            'answer_relevance': mean_relevance,
-            'relevance_stretch_met': relevance_stretch_met,
-            'individual_scores': relevance_scores
+            "answer_relevance": mean_relevance,
+            "relevance_stretch_met": relevance_stretch_met,
+            "individual_scores": relevance_scores,
         }
 
     @pytest.mark.quality
@@ -162,9 +162,7 @@ class TestAnswerQuality:
 
             # Evaluate faithfulness based on context grounding
             score = await self._evaluate_faithfulness(
-                answer=response.answer,
-                sources=response.sources,
-                context_requirements=item["context_requirements"]
+                answer=response.answer, sources=response.sources, context_requirements=item["context_requirements"]
             )
             faithfulness_scores.append(score)
 
@@ -182,9 +180,9 @@ class TestAnswerQuality:
         print(f"  Faithfulness stretch goal (>95%): {'✅ MET' if faithfulness_stretch_met else '⚠️  NOT MET'}")
 
         return {
-            'faithfulness': mean_faithfulness,
-            'faithfulness_stretch_met': faithfulness_stretch_met,
-            'individual_scores': faithfulness_scores
+            "faithfulness": mean_faithfulness,
+            "faithfulness_stretch_met": faithfulness_stretch_met,
+            "individual_scores": faithfulness_scores,
         }
 
     @pytest.mark.quality
@@ -202,9 +200,7 @@ class TestAnswerQuality:
 
             # Evaluate how much of the context is relevant to the query
             score = await self._evaluate_context_precision(
-                query=item["query"],
-                sources=response.sources,
-                expected_topics=item["expected_topics"]
+                query=item["query"], sources=response.sources, expected_topics=item["expected_topics"]
             )
             precision_scores.append(score)
 
@@ -222,9 +218,9 @@ class TestAnswerQuality:
         print(f"  Precision stretch goal (>85%): {'✅ MET' if precision_stretch_met else '⚠️  NOT MET'}")
 
         return {
-            'context_precision': mean_precision,
-            'precision_stretch_met': precision_stretch_met,
-            'individual_scores': precision_scores
+            "context_precision": mean_precision,
+            "precision_stretch_met": precision_stretch_met,
+            "individual_scores": precision_scores,
         }
 
     @pytest.mark.quality
@@ -242,9 +238,7 @@ class TestAnswerQuality:
 
             # Evaluate how much necessary information was retrieved
             score = await self._evaluate_context_recall(
-                query=item["query"],
-                sources=response.sources,
-                context_requirements=item["context_requirements"]
+                query=item["query"], sources=response.sources, context_requirements=item["context_requirements"]
             )
             recall_scores.append(score)
 
@@ -262,9 +256,9 @@ class TestAnswerQuality:
         print(f"  Recall stretch goal (>90%): {'✅ MET' if recall_stretch_met else '⚠️  NOT MET'}")
 
         return {
-            'context_recall': mean_recall,
-            'recall_stretch_met': recall_stretch_met,
-            'individual_scores': recall_scores
+            "context_recall": mean_recall,
+            "recall_stretch_met": recall_stretch_met,
+            "individual_scores": recall_scores,
         }
 
     @pytest.mark.quality
@@ -280,8 +274,7 @@ class TestAnswerQuality:
 
             # Check if answer covers expected topics
             topic_coverage = sum(
-                1 for topic in item["expected_topics"]
-                if topic.lower() in response.answer.lower()
+                1 for topic in item["expected_topics"] if topic.lower() in response.answer.lower()
             ) / len(item["expected_topics"])
 
             # Check if answer has sufficient detail (simple heuristic)
@@ -300,10 +293,7 @@ class TestAnswerQuality:
         # Completeness should be reasonable
         assert mean_completeness > 0.70, f"Answer completeness {mean_completeness:.1%} too low"
 
-        return {
-            'answer_completeness': mean_completeness,
-            'individual_scores': completeness_scores
-        }
+        return {"answer_completeness": mean_completeness, "individual_scores": completeness_scores}
 
     @pytest.mark.quality
     @pytest.mark.asyncio
@@ -315,7 +305,7 @@ class TestAnswerQuality:
         similar_queries = [
             ("What are vector databases?", "How do vector databases work?"),
             ("Explain RAG systems", "What is retrieval-augmented generation?"),
-            ("How to optimize embeddings?", "What are embedding optimization techniques?")
+            ("How to optimize embeddings?", "What are embedding optimization techniques?"),
         ]
 
         consistency_scores = []
@@ -329,7 +319,26 @@ class TestAnswerQuality:
             words2 = set(response2.answer.lower().split())
 
             # Remove common stop words for better comparison
-            stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "is", "are", "was", "were"}
+            stop_words = {
+                "the",
+                "a",
+                "an",
+                "and",
+                "or",
+                "but",
+                "in",
+                "on",
+                "at",
+                "to",
+                "for",
+                "of",
+                "with",
+                "by",
+                "is",
+                "are",
+                "was",
+                "were",
+            }
             words1 = words1 - stop_words
             words2 = words2 - stop_words
 
@@ -351,10 +360,7 @@ class TestAnswerQuality:
         # Consistency should show reasonable similarity for similar queries
         assert mean_consistency > 0.30, f"Answer consistency {mean_consistency:.1%} too low"
 
-        return {
-            'answer_consistency': mean_consistency,
-            'individual_scores': consistency_scores
-        }
+        return {"answer_consistency": mean_consistency, "individual_scores": consistency_scores}
 
     # Helper methods for evaluation
     async def _evaluate_relevance(self, query: str, answer: str, expected_topics: List[str]) -> float:
@@ -362,24 +368,22 @@ class TestAnswerQuality:
         await asyncio.sleep(0.01)  # Simulate evaluation time
 
         # Topic coverage score
-        topic_score = sum(
-            1 for topic in expected_topics
-            if topic.lower() in answer.lower()
-        ) / len(expected_topics)
+        topic_score = sum(1 for topic in expected_topics if topic.lower() in answer.lower()) / len(expected_topics)
 
         # Query term coverage
         query_terms = query.lower().split()
         term_score = sum(
-            1 for term in query_terms
+            1
+            for term in query_terms
             if term.lower() in answer.lower() and len(term) > 3  # Skip short words
         ) / max(len([t for t in query_terms if len(t) > 3]), 1)
 
         # Answer quality indicators
         quality_indicators = [
             len(answer) > 20,  # Sufficient length
-            answer.count('.') >= 1,  # Complete sentences
+            answer.count(".") >= 1,  # Complete sentences
             not answer.startswith("This is"),  # Avoid generic starts
-            "relevant" in answer.lower() or "important" in answer.lower()  # Quality keywords
+            "relevant" in answer.lower() or "important" in answer.lower(),  # Quality keywords
         ]
         quality_score = sum(quality_indicators) / len(quality_indicators)
 
@@ -395,21 +399,19 @@ class TestAnswerQuality:
 
         # Check if answer content aligns with sources
         source_alignment = any(
-            any(keyword in source.lower() for keyword in answer.lower().split()[:5])
-            for source in sources
+            any(keyword in source.lower() for keyword in answer.lower().split()[:5]) for source in sources
         )
 
         # Check for required context elements
-        context_coverage = sum(
-            1 for req in context_requirements
-            if req.lower() in answer.lower()
-        ) / len(context_requirements)
+        context_coverage = sum(1 for req in context_requirements if req.lower() in answer.lower()) / len(
+            context_requirements
+        )
 
         # Check for hallucination indicators (overly specific claims without basis)
         hallucination_indicators = [
-            re.search(r'\d{4}', answer),  # Specific years without context
-            'exactly' in answer.lower(),  # Overly precise claims
-            'always' in answer.lower() or 'never' in answer.lower(),  # Absolute statements
+            re.search(r"\d{4}", answer),  # Specific years without context
+            "exactly" in answer.lower(),  # Overly precise claims
+            "always" in answer.lower() or "never" in answer.lower(),  # Absolute statements
         ]
         hallucination_penalty = sum(1 for indicator in hallucination_indicators if indicator) * 0.1
 
@@ -426,10 +428,7 @@ class TestAnswerQuality:
         relevant_sources = 0
         for source in sources:
             # Check if source content relates to query topics
-            source_relevance = any(
-                topic.lower() in source.lower()
-                for topic in expected_topics
-            )
+            source_relevance = any(topic.lower() in source.lower() for topic in expected_topics)
             if source_relevance:
                 relevant_sources += 1
 
@@ -443,7 +442,7 @@ class TestAnswerQuality:
             return 1.0
 
         covered_requirements = 0
-        all_sources_text = ' '.join(sources).lower()
+        all_sources_text = " ".join(sources).lower()
 
         for requirement in context_requirements:
             if requirement.lower() in all_sources_text:

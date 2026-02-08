@@ -4,8 +4,9 @@ Tests for Jorge A/B Testing Service.
 Validates experiment creation, variant assignment, and statistical analysis.
 """
 
-import pytest
 import time
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_service import (
     ABTestingService,

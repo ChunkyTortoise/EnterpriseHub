@@ -25,6 +25,7 @@ class MemoryService:
     Persistent memory service for storing conversation context.
     Uses singleton pattern to avoid redundant initialization across modules.
     """
+
     _instances: dict = {}
 
     def __new__(cls, storage_type: Optional[str] = None):
@@ -48,15 +49,14 @@ class MemoryService:
         self._initialized = True
 
         from ghl_real_estate_ai.services.cache_service import get_cache_service
+
         self.cache_service = get_cache_service()
         self.storage_type = storage_type or ("redis" if settings.environment == "production" else "file")
         self.memory_dir = Path("data/memory")
 
         if self.storage_type == "file":
             self.memory_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(
-                f"Memory service initialized with file storage at {self.memory_dir}"
-            )
+            logger.info(f"Memory service initialized with file storage at {self.memory_dir}")
         elif self.storage_type == "redis":
             logger.info("Memory service initialized with Redis-first storage")
         else:
@@ -75,19 +75,20 @@ class MemoryService:
     def _sanitize_path_component(value: str) -> str:
         """Sanitize a value for safe use as a path component (no traversal)."""
         import re
+
         # Strip path separators and dangerous characters
-        sanitized = re.sub(r'[/\:*?"<>|.]', '_', value)
+        sanitized = re.sub(r'[/\:*?"<>|.]', "_", value)
         # Prevent empty result
         return sanitized or "unknown"
 
     def _get_file_path(self, contact_id: str, location_id: Optional[str] = None) -> Path:
         """
         Get the file path for storing a contact's context.
-        
+
         Args:
             contact_id: GHL contact ID
             location_id: Optional GHL location ID for tenant isolation
-            
+
         Returns:
             Path object
         """
@@ -97,40 +98,38 @@ class MemoryService:
             location_dir = self.memory_dir / safe_location
             location_dir.mkdir(parents=True, exist_ok=True)
             return location_dir / f"{safe_contact}.json"
-        
+
         return self.memory_dir / f"{safe_contact}.json"
 
     def _resolve_location_id(self, location_id: Optional[str]) -> str:
         """
         Resolve location_id with strict enforcement.
-        
+
         Args:
             location_id: The location_id passed to the method
-            
+
         Returns:
             Resolved location_id string
-            
+
         Raises:
             ValueError: If location_id cannot be resolved and strict mode is on
         """
         if location_id:
             return location_id
-            
+
         # Fallback to global settings if available
         if settings.ghl_location_id:
             # logger.debug(f"Using default location_id from settings: {settings.ghl_location_id}")
             return settings.ghl_location_id
-            
+
         # In production, we MUST have a location_id
         if settings.environment == "production":
             logger.error("CRITICAL: Operation attempted without location_id in production")
             raise ValueError("location_id is required for all memory operations in production")
-            
+
         return "default"
 
-    async def get_context(
-        self, contact_id: str, location_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Retrieve conversation context for a contact with strict tenant isolation.
 
@@ -150,11 +149,14 @@ class MemoryService:
             if context:
                 # Security Verification: Ensure retrieved context belongs to this location_id
                 if context.get("location_id") != resolved_loc:
-                    logger.error(f"TENANT LEAK PREVENTED: Contact {contact_id} context for location {context.get('location_id')} accessed with location {resolved_loc}")
+                    logger.error(
+                        f"TENANT LEAK PREVENTED: Contact {contact_id} context for location {context.get('location_id')} accessed with location {resolved_loc}"
+                    )
                     return self._get_default_context(contact_id, resolved_loc)
 
                 # Graphiti Integration: Inject Semantic Context
                 from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
+
                 if graphiti_manager.enabled:
                     try:
                         graphiti_context = await graphiti_manager.retrieve_context(contact_id)
@@ -169,7 +171,9 @@ class MemoryService:
             context = self._memory_cache.get(cache_key)
             if context:
                 if context.get("location_id") != resolved_loc:
-                    logger.error(f"TENANT LEAK PREVENTED (Memory): {contact_id} leak from {context.get('location_id')} to {resolved_loc}")
+                    logger.error(
+                        f"TENANT LEAK PREVENTED (Memory): {contact_id} leak from {context.get('location_id')} to {resolved_loc}"
+                    )
                     return self._get_default_context(contact_id, resolved_loc)
                 return context
             return self._get_default_context(contact_id, resolved_loc)
@@ -180,21 +184,24 @@ class MemoryService:
             try:
                 with open(file_path, "r") as f:
                     context = json.load(f)
-                    
+
                     # Security Verification
                     if context.get("location_id") != resolved_loc:
-                        logger.error(f"TENANT LEAK PREVENTED (File): {contact_id} leak from {context.get('location_id')} to {resolved_loc}")
+                        logger.error(
+                            f"TENANT LEAK PREVENTED (File): {contact_id} leak from {context.get('location_id')} to {resolved_loc}"
+                        )
                         return self._get_default_context(contact_id, resolved_loc)
 
                     # Graphiti Integration: Inject Semantic Context
                     from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
+
                     if graphiti_manager.enabled:
                         try:
                             graphiti_context = await graphiti_manager.retrieve_context(contact_id)
                             context["relevant_knowledge"] = graphiti_context
                         except Exception as ge:
                             logger.warning(f"Failed to retrieve Graphiti context for {contact_id}: {ge}")
-                            
+
                     return context
             except Exception as e:
                 logger.error(f"Failed to read memory file for {contact_id}: {e}")
@@ -202,11 +209,7 @@ class MemoryService:
         return self._get_default_context(contact_id, resolved_loc)
 
     async def add_interaction(
-        self,
-        contact_id: str,
-        message: str,
-        role: str,
-        location_id: Optional[str] = None
+        self, contact_id: str, message: str, role: str, location_id: Optional[str] = None
     ) -> None:
         """
         Record a new interaction to preferred storage and Graphiti with strict isolation.
@@ -215,23 +218,20 @@ class MemoryService:
 
         # 1. Update Context (handles Redis/File/Memory internally)
         context = await self.get_context(contact_id, resolved_loc)
-        
-        interaction = {
-            "role": role,
-            "content": message,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
+
+        interaction = {"role": role, "content": message, "timestamp": datetime.utcnow().isoformat()}
+
         if "conversation_history" not in context:
             context["conversation_history"] = []
-            
+
         context["conversation_history"].append(interaction)
         context["last_interaction_at"] = interaction["timestamp"]
-        
+
         await self.save_context(contact_id, context, resolved_loc)
-        
+
         # 2. Update Graphiti (Episodic Memory)
         from ghl_real_estate_ai.agent_system.memory import memory_manager as graphiti_manager
+
         if graphiti_manager.enabled:
             try:
                 # NOTE: Graphiti should also be scoped, but for now we use contact_id
@@ -263,7 +263,7 @@ class MemoryService:
             cache_key = f"ctx:{resolved_loc}:{contact_id}"
             # Context lasts 7 days in Redis
             await self.cache_service.set(cache_key, context, ttl=604800)
-            
+
             # If we are in transition/backup mode, also save to file
             if settings.environment != "production":
                 file_path = self._get_file_path(contact_id, resolved_loc)
@@ -288,9 +288,7 @@ class MemoryService:
         except Exception as e:
             logger.error(f"Failed to save memory file for {contact_id}: {e}")
 
-    def _get_default_context(
-        self, contact_id: str, location_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def _get_default_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """Return default context for new conversations."""
         return {
             "contact_id": contact_id,
@@ -310,17 +308,17 @@ class MemoryService:
                     "real_time_lead_scoring_pipeline",
                     "unified_lead_intelligence_schema",
                     "ml_behavioral_features_engine",
-                    "modular_statusline_plugin_system"
+                    "modular_statusline_plugin_system",
                 ],
                 "in_progress_agents": {
                     "a059964": "dynamic_scoring_weights",
                     "ad71ba7": "contextual_property_matching",
                     "ab5d2ca": "advanced_workflow_automation",
                     "a52bf61": "real_time_intelligence_dashboard",
-                    "a39dab4": "churn_prediction_system"
+                    "a39dab4": "churn_prediction_system",
                 },
                 "next_session_priority": "verify_agent_completion_status_then_continue_or_demo",
-                "expected_business_impact": "25_to_30_percent_conversion_improvement"
+                "expected_business_impact": "25_to_30_percent_conversion_improvement",
             },
             # Lead Intelligence Enhancement Features (2026-01-09)
             "lead_intelligence": {
@@ -328,30 +326,22 @@ class MemoryService:
                 "engagement_metrics": {
                     "engagement_velocity": 0.0,
                     "sentiment_progression": 0.0,
-                    "response_consistency": 0.0
+                    "response_consistency": 0.0,
                 },
                 "churn_risk": {
                     "risk_score": 0.0,
                     "risk_level": "low",
                     "prediction_horizon": "30_days",
-                    "last_prediction": None
+                    "last_prediction": None,
                 },
-                "property_matching": {
-                    "lifestyle_scores": {},
-                    "behavioral_weights": {},
-                    "match_history": []
-                },
+                "property_matching": {"lifestyle_scores": {}, "behavioral_weights": {}, "match_history": []},
                 "workflow_automation": {
                     "active_workflows": [],
                     "completed_workflows": [],
-                    "next_scheduled_action": None
+                    "next_scheduled_action": None,
                 },
-                "real_time_events": {
-                    "last_score_update": None,
-                    "recent_alerts": [],
-                    "websocket_session_id": None
-                }
-            }
+                "real_time_events": {"last_score_update": None, "recent_alerts": [], "websocket_session_id": None},
+            },
         }
 
     async def update_lead_intelligence(
@@ -387,9 +377,7 @@ class MemoryService:
         await self.save_context(contact_id, context, resolved_loc)
         logger.info(f"Updated lead intelligence for contact {contact_id} in location {resolved_loc}")
 
-    async def get_lead_intelligence(
-        self, contact_id: str, location_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_lead_intelligence(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get lead intelligence data for a contact with strict tenant isolation.
 
@@ -431,10 +419,7 @@ class MemoryService:
                 logger.error(f"Failed to delete memory file for {contact_id} in {resolved_loc}: {e}")
 
     async def store_conversation_memory(
-        self,
-        conversation_id: str,
-        content: Dict[str, Any],
-        ttl_hours: Optional[int] = None
+        self, conversation_id: str, content: Dict[str, Any], ttl_hours: Optional[int] = None
     ) -> None:
         """
         Store a specialized conversation memory (e.g., for analytics).
@@ -442,16 +427,21 @@ class MemoryService:
         # For now, we store it as a regular file in a sub-directory
         memory_path = self.memory_dir / "specialized"
         memory_path.mkdir(parents=True, exist_ok=True)
-        
+
         file_path = memory_path / f"{conversation_id}.json"
-        
+
         try:
             with open(file_path, "w") as f:
-                json.dump({
-                    "content": content,
-                    "stored_at": datetime.utcnow().isoformat(),
-                    "expires_at": (datetime.utcnow() + timedelta(hours=ttl_hours)).isoformat() if ttl_hours else None
-                }, f, indent=2)
+                json.dump(
+                    {
+                        "content": content,
+                        "stored_at": datetime.utcnow().isoformat(),
+                        "expires_at": (datetime.utcnow() + timedelta(hours=ttl_hours)).isoformat()
+                        if ttl_hours
+                        else None,
+                    },
+                    f,
+                    indent=2,
+                )
         except Exception as e:
             logger.error(f"Failed to store conversation memory {conversation_id}: {e}")
-

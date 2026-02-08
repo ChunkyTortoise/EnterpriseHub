@@ -3,10 +3,11 @@ Jorge's Advanced Analytics Models
 Data structures for business intelligence and forecasting
 """
 
-from datetime import datetime, date
-from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
+from datetime import date, datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
@@ -14,6 +15,7 @@ from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
 
 class ForecastHorizon(Enum):
     """Forecast time horizons."""
+
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
@@ -22,6 +24,7 @@ class ForecastHorizon(Enum):
 
 class MetricCategory(Enum):
     """Categories of performance metrics."""
+
     REVENUE = "revenue"
     CONVERSION = "conversion"
     QUALITY = "quality"
@@ -32,6 +35,7 @@ class MetricCategory(Enum):
 
 class FunnelStage(Enum):
     """Conversion funnel stages."""
+
     NEW_LEAD = "new_lead"
     QUALIFIED = "qualified"
     APPOINTMENT = "appointment"
@@ -45,6 +49,7 @@ class FunnelStage(Enum):
 
 class MarketTemperature(Enum):
     """Market condition indicators."""
+
     HOT = "hot"
     WARM = "warm"
     COOL = "cool"
@@ -53,6 +58,7 @@ class MarketTemperature(Enum):
 
 class CompetitivePressure(Enum):
     """Competitive pressure levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -61,6 +67,7 @@ class CompetitivePressure(Enum):
 
 class RevenueForecast(BaseModel):
     """Revenue forecasting model."""
+
     forecasted_revenue: float
     confidence_lower: float
     confidence_upper: float
@@ -87,6 +94,7 @@ class RevenueForecast(BaseModel):
 
 class FunnelMetrics(BaseModel):
     """Metrics for a single funnel stage."""
+
     stage: FunnelStage
     lead_count: int
     conversion_rate: float = Field(..., ge=0.0, le=1.0)
@@ -97,6 +105,7 @@ class FunnelMetrics(BaseModel):
 
 class DropOffAnalysis(BaseModel):
     """Analysis of funnel drop-off points."""
+
     from_stage: FunnelStage
     to_stage: FunnelStage
     drop_off_count: int
@@ -107,6 +116,7 @@ class DropOffAnalysis(BaseModel):
 
 class FunnelAnalysis(BaseModel):
     """Complete conversion funnel analysis."""
+
     time_period_days: int
     stages: List[FunnelMetrics]
     conversion_rates: Dict[str, float]  # stage_to_stage rates
@@ -127,6 +137,7 @@ class FunnelAnalysis(BaseModel):
 
 class LeadQualityMetrics(BaseModel):
     """Lead scoring quality and accuracy metrics."""
+
     total_leads_scored: int
     avg_lead_score: float
     score_distribution: Dict[str, int]  # score_range -> count
@@ -145,6 +156,7 @@ class LeadQualityMetrics(BaseModel):
 
 class CalibrationBucket(BaseModel):
     """Calibration analysis bucket."""
+
     predicted_probability_range: str  # "0.8-1.0"
     predicted_avg: float
     actual_conversion_rate: float
@@ -154,6 +166,7 @@ class CalibrationBucket(BaseModel):
 
 class LeadQualityTrend(BaseModel):
     """Trend analysis of lead quality metrics."""
+
     time_series_data: List[Dict[str, Any]]  # [{date, accuracy, score_distribution, etc}]
     trend_direction: str  # "improving", "stable", "declining"
     trend_rate: float  # percentage change per day
@@ -178,6 +191,7 @@ class LeadQualityTrend(BaseModel):
 
 class MarketTimingMetrics(BaseModel):
     """Market timing and conditions."""
+
     market_area: str = "Rancho Cucamonga"
 
     # Supply metrics
@@ -206,6 +220,7 @@ class MarketTimingMetrics(BaseModel):
 
 class MarketTimingInsight(BaseModel):
     """Market timing intelligence and recommendations."""
+
     current_conditions: MarketTimingMetrics
     historical_trends: List[MarketTimingMetrics]
 
@@ -228,6 +243,7 @@ class MarketTimingInsight(BaseModel):
 
 class GeographicMetrics(BaseModel):
     """Performance metrics by geographic area."""
+
     zip_code: str
     neighborhood: str
     city: str = "Rancho Cucamonga"
@@ -256,6 +272,7 @@ class GeographicMetrics(BaseModel):
 
 class GeographicAnalysis(BaseModel):
     """Complete geographic performance analysis."""
+
     total_areas_analyzed: int
     geographic_metrics: List[GeographicMetrics]
 
@@ -280,6 +297,7 @@ class GeographicAnalysis(BaseModel):
 
 class SourceROI(BaseModel):
     """ROI analysis for a lead source."""
+
     source_name: str
     campaign_id: Optional[str] = None
 
@@ -310,6 +328,7 @@ class SourceROI(BaseModel):
 
 class CompetitiveIntel(BaseModel):
     """Competitive intelligence analysis."""
+
     market_area: str = "Rancho Cucamonga"
 
     # Market share
@@ -338,6 +357,7 @@ class CompetitiveIntel(BaseModel):
 
 class PerformanceGoal(BaseModel):
     """Performance goal tracking."""
+
     goal_name: str
     goal_category: MetricCategory
     metric_name: str
@@ -364,6 +384,7 @@ class PerformanceGoal(BaseModel):
 
 class PerformanceSummary(BaseModel):
     """Executive summary of all performance metrics."""
+
     summary_period_days: int
 
     # Key metrics
@@ -395,6 +416,7 @@ class PerformanceSummary(BaseModel):
 
 class ExecutiveSummary(BaseModel):
     """Top-level executive dashboard summary."""
+
     revenue_forecast: RevenueForecast
     funnel_analysis: FunnelAnalysis
     lead_quality_summary: LeadQualityMetrics
@@ -419,6 +441,7 @@ class ExecutiveSummary(BaseModel):
 # Time series data models
 class TimeSeriesDataPoint(BaseModel):
     """Single data point in time series."""
+
     timestamp: datetime
     value: float
     metadata: Optional[Dict[str, Any]] = None
@@ -426,6 +449,7 @@ class TimeSeriesDataPoint(BaseModel):
 
 class TimeSeriesAnalysis(BaseModel):
     """Time series analysis results."""
+
     data_points: List[TimeSeriesDataPoint]
     trend: str  # "increasing", "decreasing", "stable", "volatile"
     seasonality_detected: bool
@@ -437,6 +461,7 @@ class TimeSeriesAnalysis(BaseModel):
 # Analytics request/response models
 class AnalyticsRequest(BaseModel):
     """Request for analytics data."""
+
     time_window_days: int = 30
     include_forecasts: bool = True
     include_geographic: bool = True
@@ -446,6 +471,7 @@ class AnalyticsRequest(BaseModel):
 
 class AnalyticsResponse(BaseModel):
     """Response from analytics service."""
+
     executive_summary: ExecutiveSummary
     processing_time_ms: int
     cache_hit: bool = False
@@ -454,11 +480,29 @@ class AnalyticsResponse(BaseModel):
 
 # Export all models
 __all__ = [
-    'ForecastHorizon', 'MetricCategory', 'FunnelStage', 'MarketTemperature', 'CompetitivePressure',
-    'RevenueForecast', 'FunnelMetrics', 'DropOffAnalysis', 'FunnelAnalysis',
-    'LeadQualityMetrics', 'CalibrationBucket', 'LeadQualityTrend',
-    'MarketTimingMetrics', 'MarketTimingInsight', 'GeographicMetrics', 'GeographicAnalysis',
-    'SourceROI', 'CompetitiveIntel', 'PerformanceGoal', 'PerformanceSummary',
-    'ExecutiveSummary', 'TimeSeriesDataPoint', 'TimeSeriesAnalysis',
-    'AnalyticsRequest', 'AnalyticsResponse'
+    "ForecastHorizon",
+    "MetricCategory",
+    "FunnelStage",
+    "MarketTemperature",
+    "CompetitivePressure",
+    "RevenueForecast",
+    "FunnelMetrics",
+    "DropOffAnalysis",
+    "FunnelAnalysis",
+    "LeadQualityMetrics",
+    "CalibrationBucket",
+    "LeadQualityTrend",
+    "MarketTimingMetrics",
+    "MarketTimingInsight",
+    "GeographicMetrics",
+    "GeographicAnalysis",
+    "SourceROI",
+    "CompetitiveIntel",
+    "PerformanceGoal",
+    "PerformanceSummary",
+    "ExecutiveSummary",
+    "TimeSeriesDataPoint",
+    "TimeSeriesAnalysis",
+    "AnalyticsRequest",
+    "AnalyticsResponse",
 ]

@@ -9,26 +9,32 @@ Created: 2026-01-17
 """
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-import json
+from typing import Any, Dict, List, Optional, Union
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Path
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user, require_auth
 from ghl_real_estate_ai.services.golden_lead_detector import (
+    BehavioralSignal,
     GoldenLeadDetector,
+    GoldenLeadPattern,
     GoldenLeadScore,
     GoldenLeadTier,
-    BehavioralSignal,
-    GoldenLeadPattern,
-    create_golden_lead_detector,
+    analyze_single_lead,
     batch_detect_golden_leads,
-    analyze_single_lead
+    create_golden_lead_detector,
 )
-from ghl_real_estate_ai.api.middleware.jwt_auth import require_auth, get_current_user
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = logging.getLogger(__name__)
@@ -52,12 +58,16 @@ async def get_detector_service() -> GoldenLeadDetector:
 # Pydantic models for request/response
 class LeadIntelligenceRequest(BaseModel):
     """Request model for single lead intelligence analysis"""
+
     lead_id: str = Field(..., description="Unique lead identifier")
     contact_id: Optional[str] = Field(None, description="GHL contact ID")
-    lead_data: Dict[str, Any] = Field(..., description="Complete lead data including preferences and conversation history")
+    lead_data: Dict[str, Any] = Field(
+        ..., description="Complete lead data including preferences and conversation history"
+    )
     include_optimization: bool = Field(True, description="Include optimization recommendations")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "lead_id": "lead_abc123",
                 "contact_id": "contact_abc123",
@@ -68,53 +78,58 @@ class LeadIntelligenceRequest(BaseModel):
                         "location": "downtown Seattle near Pike Market",
                         "timeline": "next month",
                         "bedrooms": 3,
-                        "financing": "pre-approved with Wells Fargo"
+                        "financing": "pre-approved with Wells Fargo",
                     },
                     "conversation_history": [
                         {"role": "user", "content": "Looking for a 3br home downtown"},
-                        {"role": "assistant", "content": "I can help you find the perfect home..."}
-                    ]
+                        {"role": "assistant", "content": "I can help you find the perfect home..."},
+                    ],
                 },
-                "include_optimization": True
+                "include_optimization": True,
             }
-        })
+        }
+    )
 
 
 class BatchLeadDetectionRequest(BaseModel):
     """Request model for batch lead detection"""
+
     leads_data: List[Dict[str, Any]] = Field(..., description="Array of lead data objects")
     batch_size: int = Field(50, description="Processing batch size for performance", ge=1, le=100)
     sort_by_probability: bool = Field(True, description="Sort results by conversion probability")
 
-    @field_validator('leads_data')
+    @field_validator("leads_data")
     @classmethod
     def validate_leads_data(cls, v):
         if len(v) > 500:
             raise ValueError("Maximum 500 leads per batch request")
         return v
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "leads_data": [
                     {
                         "id": "lead_001",
                         "extracted_preferences": {"budget": 500000, "timeline": "ASAP"},
-                        "conversation_history": []
+                        "conversation_history": [],
                     },
                     {
                         "id": "lead_002",
                         "extracted_preferences": {"budget": 750000, "location": "Bellevue"},
-                        "conversation_history": []
-                    }
+                        "conversation_history": [],
+                    },
                 ],
                 "batch_size": 25,
-                "sort_by_probability": True
+                "sort_by_probability": True,
             }
-        })
+        }
+    )
 
 
 class GoldenLeadFilterRequest(BaseModel):
     """Request model for filtering golden leads"""
+
     tier: Optional[GoldenLeadTier] = Field(None, description="Filter by golden lead tier")
     min_conversion_probability: float = Field(0.0, description="Minimum conversion probability", ge=0.0, le=1.0)
     max_conversion_probability: float = Field(1.0, description="Maximum conversion probability", ge=0.0, le=1.0)
@@ -122,16 +137,17 @@ class GoldenLeadFilterRequest(BaseModel):
     min_jorge_score: int = Field(0, description="Minimum Jorge score (questions answered)", ge=0, le=7)
     hours_since_analysis: int = Field(24, description="Hours since analysis (for freshness)", ge=1, le=168)
 
-    @field_validator('max_conversion_probability')
+    @field_validator("max_conversion_probability")
     @classmethod
     def validate_probability_range(cls, v, info: ValidationInfo):
-        if 'min_conversion_probability' in info.data and v <= info.data['min_conversion_probability']:
+        if "min_conversion_probability" in info.data and v <= info.data["min_conversion_probability"]:
             raise ValueError("max_conversion_probability must be greater than min_conversion_probability")
         return v
 
 
 class BehavioralInsightResponse(BaseModel):
     """Response model for behavioral insights"""
+
     signal_type: str
     strength: float = Field(..., ge=0.0, le=1.0)
     evidence: str
@@ -141,6 +157,7 @@ class BehavioralInsightResponse(BaseModel):
 
 class GoldenLeadScoreResponse(BaseModel):
     """Response model for golden lead scoring results"""
+
     lead_id: str
     tenant_id: str
     overall_score: float = Field(..., ge=0.0, le=100.0)
@@ -173,6 +190,7 @@ class GoldenLeadScoreResponse(BaseModel):
 
 class BatchDetectionResponse(BaseModel):
     """Response model for batch detection results"""
+
     total_leads_processed: int
     golden_leads_found: int
     processing_time_seconds: float
@@ -182,6 +200,7 @@ class BatchDetectionResponse(BaseModel):
 
 class PerformanceMetricsResponse(BaseModel):
     """Response model for system performance metrics"""
+
     detection_metrics: Dict[str, Any]
     circuit_breaker_status: Dict[str, Any]
     golden_patterns_count: int
@@ -197,7 +216,7 @@ def convert_golden_lead_score_to_response(score: GoldenLeadScore) -> GoldenLeadS
             strength=signal.strength,
             evidence=signal.evidence,
             confidence=signal.confidence,
-            weight=signal.weight
+            weight=signal.weight,
         )
         for signal in score.behavioral_signals
     ]
@@ -222,7 +241,7 @@ def convert_golden_lead_score_to_response(score: GoldenLeadScore) -> GoldenLeadS
         risk_factors=score.risk_factors,
         detection_confidence=score.detection_confidence,
         analysis_timestamp=score.analysis_timestamp,
-        expires_at=score.expires_at
+        expires_at=score.expires_at,
     )
 
 
@@ -231,7 +250,7 @@ def convert_golden_lead_score_to_response(score: GoldenLeadScore) -> GoldenLeadS
 async def analyze_lead_intelligence(
     request: LeadIntelligenceRequest,
     current_user: dict = Depends(require_auth),
-    detector: GoldenLeadDetector = Depends(get_detector_service)
+    detector: GoldenLeadDetector = Depends(get_detector_service),
 ):
     """
     🎯 Analyze single lead for golden lead potential
@@ -243,28 +262,26 @@ async def analyze_lead_intelligence(
     **Accuracy**: 95%+ conversion prediction accuracy
     """
     try:
-        tenant_id = current_user.get('tenant_id')
+        tenant_id = current_user.get("tenant_id")
         if not tenant_id:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tenant ID required")
 
         start_time = datetime.now()
 
         # Validate lead data structure
-        if not request.lead_data.get('id') and not request.lead_id:
+        if not request.lead_data.get("id") and not request.lead_id:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Lead ID must be provided either in lead_data.id or lead_id field"
+                detail="Lead ID must be provided either in lead_data.id or lead_id field",
             )
 
         # Ensure lead_data has an ID
-        if 'id' not in request.lead_data:
-            request.lead_data['id'] = request.lead_id
+        if "id" not in request.lead_data:
+            request.lead_data["id"] = request.lead_id
 
         # Perform analysis
         result = await detector.analyze_lead_intelligence(
-            lead_data=request.lead_data,
-            tenant_id=tenant_id,
-            include_optimization=request.include_optimization
+            lead_data=request.lead_data, tenant_id=tenant_id, include_optimization=request.include_optimization
         )
 
         # Convert to response model
@@ -292,7 +309,7 @@ async def batch_detect_leads(
     request: BatchLeadDetectionRequest,
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(require_auth),
-    detector: GoldenLeadDetector = Depends(get_detector_service)
+    detector: GoldenLeadDetector = Depends(get_detector_service),
 ):
     """
     🎯 Batch detection of golden leads with high performance
@@ -304,7 +321,7 @@ async def batch_detect_leads(
     **Performance**: Processes 1000+ leads/minute
     """
     try:
-        tenant_id = current_user.get('tenant_id')
+        tenant_id = current_user.get("tenant_id")
         if not tenant_id:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tenant ID required")
 
@@ -312,9 +329,7 @@ async def batch_detect_leads(
 
         # Perform batch detection
         results = await detector.detect_golden_leads(
-            leads_data=request.leads_data,
-            tenant_id=tenant_id,
-            batch_size=request.batch_size
+            leads_data=request.leads_data, tenant_id=tenant_id, batch_size=request.batch_size
         )
 
         # Sort if requested
@@ -342,7 +357,7 @@ async def batch_detect_leads(
             golden_leads_found=golden_leads_count,
             processing_time_seconds=processing_time,
             results=response_results,
-            performance_metrics=performance_metrics
+            performance_metrics=performance_metrics,
         )
 
     except Exception as e:
@@ -360,7 +375,7 @@ async def filter_golden_leads(
     min_jorge_score: int = Query(0, description="Minimum Jorge score", ge=0, le=7),
     hours_since_analysis: int = Query(24, description="Hours since analysis", ge=1, le=168),
     limit: int = Query(50, description="Maximum results to return", ge=1, le=500),
-    current_user: dict = Depends(require_auth)
+    current_user: dict = Depends(require_auth),
 ):
     """
     🔍 Filter golden leads by criteria
@@ -369,15 +384,14 @@ async def filter_golden_leads(
     Jorge score, and analysis freshness.
     """
     try:
-        tenant_id = current_user.get('tenant_id')
+        tenant_id = current_user.get("tenant_id")
         if not tenant_id:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tenant ID required")
 
         # Validate probability range
         if max_probability <= min_probability:
             raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="max_probability must be greater than min_probability"
+                status_code=HTTP_400_BAD_REQUEST, detail="max_probability must be greater than min_probability"
             )
 
         # This would typically query from a database or cache
@@ -404,7 +418,7 @@ async def get_lead_analysis(
     lead_id: str = Path(..., description="Lead identifier"),
     force_refresh: bool = Query(False, description="Force fresh analysis (bypass cache)"),
     current_user: dict = Depends(require_auth),
-    detector: GoldenLeadDetector = Depends(get_detector_service)
+    detector: GoldenLeadDetector = Depends(get_detector_service),
 ):
     """
     📊 Get existing lead analysis by ID
@@ -413,7 +427,7 @@ async def get_lead_analysis(
     Use force_refresh=true to perform new analysis.
     """
     try:
-        tenant_id = current_user.get('tenant_id')
+        tenant_id = current_user.get("tenant_id")
         if not tenant_id:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tenant ID required")
 
@@ -443,8 +457,7 @@ async def get_lead_analysis(
 
 @router.get("/metrics", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
-    current_user: dict = Depends(require_auth),
-    detector: GoldenLeadDetector = Depends(get_detector_service)
+    current_user: dict = Depends(require_auth), detector: GoldenLeadDetector = Depends(get_detector_service)
 ):
     """
     📈 Get system performance metrics
@@ -453,17 +466,17 @@ async def get_performance_metrics(
     cache hit rates, and circuit breaker status.
     """
     try:
-        tenant_id = current_user.get('tenant_id')
+        tenant_id = current_user.get("tenant_id")
         if not tenant_id:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tenant ID required")
 
         metrics = await detector.get_performance_metrics()
 
         return PerformanceMetricsResponse(
-            detection_metrics=metrics['detection_metrics'],
-            circuit_breaker_status=metrics['circuit_breaker_status'],
-            golden_patterns_count=metrics['golden_patterns_count'],
-            cache_hit_rate=metrics['cache_hit_rate']
+            detection_metrics=metrics["detection_metrics"],
+            circuit_breaker_status=metrics["circuit_breaker_status"],
+            golden_patterns_count=metrics["golden_patterns_count"],
+            cache_hit_rate=metrics["cache_hit_rate"],
         )
 
     except Exception as e:
@@ -475,8 +488,7 @@ async def get_performance_metrics(
 
 @router.post("/circuit-breaker/reset")
 async def reset_circuit_breaker(
-    current_user: dict = Depends(require_auth),
-    detector: GoldenLeadDetector = Depends(get_detector_service)
+    current_user: dict = Depends(require_auth), detector: GoldenLeadDetector = Depends(get_detector_service)
 ):
     """
     🔄 Reset circuit breaker for error recovery
@@ -485,16 +497,15 @@ async def reset_circuit_breaker(
     an error state. Use with caution.
     """
     try:
-        tenant_id = current_user.get('tenant_id')
+        tenant_id = current_user.get("tenant_id")
         if not tenant_id:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tenant ID required")
 
         # Check if user has admin privileges (simplified check)
-        user_role = current_user.get('role', 'user')
-        if user_role not in ['admin', 'owner']:
+        user_role = current_user.get("role", "user")
+        if user_role not in ["admin", "owner"]:
             raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="Admin privileges required to reset circuit breaker"
+                status_code=HTTP_400_BAD_REQUEST, detail="Admin privileges required to reset circuit breaker"
             )
 
         success = await detector.reset_circuit_breaker()
@@ -530,8 +541,8 @@ async def health_check():
                 "Pattern recognition for conversion prediction",
                 "Multi-dimensional lead intelligence scoring",
                 "Optimization recommendations for sales strategy",
-                "Batch processing with high performance"
-            ]
+                "Batch processing with high performance",
+            ],
         }
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")

@@ -3,14 +3,19 @@ Comprehensive tests for SMS Compliance Service
 Tests TCPA compliance, opt-out handling, and frequency caps.
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.sms_compliance_service import (
-    SMSComplianceService, SMSValidationResult, OptOutReason, get_sms_compliance_service
+    OptOutReason,
+    SMSComplianceService,
+    SMSValidationResult,
+    get_sms_compliance_service,
 )
+
 
 class TestSMSComplianceService:
     """Test suite for SMS Compliance Service implementation."""
@@ -69,8 +74,7 @@ class TestSMSComplianceService:
         mock_cache_service.get.side_effect = [None, None, None]  # No frequency counts, no last sent
 
         result = await sms_compliance_service.validate_sms_send(
-            phone_number="+15551234567",
-            message_content="Your property showing is confirmed for tomorrow."
+            phone_number="+15551234567", message_content="Your property showing is confirmed for tomorrow."
         )
 
         assert result.allowed == True
@@ -84,8 +88,7 @@ class TestSMSComplianceService:
         mock_cache_service.exists.return_value = True  # Opted out
 
         result = await sms_compliance_service.validate_sms_send(
-            phone_number="+15551234567",
-            message_content="Your property showing is confirmed."
+            phone_number="+15551234567", message_content="Your property showing is confirmed."
         )
 
         assert result.allowed == False
@@ -99,8 +102,7 @@ class TestSMSComplianceService:
         mock_cache_service.get.side_effect = ["3", None, None]  # Daily count at limit, no monthly, no last sent
 
         result = await sms_compliance_service.validate_sms_send(
-            phone_number="+15551234567",
-            message_content="Another message"
+            phone_number="+15551234567", message_content="Another message"
         )
 
         assert result.allowed == False
@@ -115,8 +117,7 @@ class TestSMSComplianceService:
         mock_cache_service.get.side_effect = ["2", "20", None]  # Under daily, at monthly limit
 
         result = await sms_compliance_service.validate_sms_send(
-            phone_number="+15551234567",
-            message_content="Another message"
+            phone_number="+15551234567", message_content="Another message"
         )
 
         assert result.allowed == False
@@ -127,11 +128,9 @@ class TestSMSComplianceService:
     @pytest.mark.asyncio
     async def test_process_incoming_sms_stop_keyword(self, sms_compliance_service):
         """Test processing incoming SMS with STOP keyword."""
-        with patch.object(sms_compliance_service, 'process_opt_out', new_callable=AsyncMock) as mock_opt_out:
+        with patch.object(sms_compliance_service, "process_opt_out", new_callable=AsyncMock) as mock_opt_out:
             result = await sms_compliance_service.process_incoming_sms(
-                phone_number="+15551234567",
-                message_content="STOP sending me messages",
-                location_id="test_location"
+                phone_number="+15551234567", message_content="STOP sending me messages", location_id="test_location"
             )
 
             # Verify opt-out was processed
@@ -139,7 +138,7 @@ class TestSMSComplianceService:
                 phone_number="+15551234567",
                 reason=OptOutReason.STOP_KEYWORD,
                 message_content="STOP sending me messages",
-                location_id="test_location"
+                location_id="test_location",
             )
 
             assert result["action"] == "opt_out_processed"
@@ -152,7 +151,7 @@ class TestSMSComplianceService:
         result = await sms_compliance_service.process_incoming_sms(
             phone_number="+15551234567",
             message_content="Yes, I'm interested in the property",
-            location_id="test_location"
+            location_id="test_location",
         )
 
         assert result["action"] == "message_processed"
@@ -169,7 +168,7 @@ class TestSMSComplianceService:
             "QUIT sending messages",
             "CANCEL this service",
             "END these notifications",
-            "REMOVE me from list"
+            "REMOVE me from list",
         ]
 
         for message in stop_messages:
@@ -185,17 +184,14 @@ class TestSMSComplianceService:
         message_content = "STOP"
 
         await sms_compliance_service.process_opt_out(
-            phone_number=phone_number,
-            reason=reason,
-            message_content=message_content,
-            location_id="test_location"
+            phone_number=phone_number, reason=reason, message_content=message_content, location_id="test_location"
         )
 
         # Verify cache was updated
         mock_cache_service.set.assert_called_once()
         call_args = mock_cache_service.set.call_args
         assert call_args[0][0] == f"sms_opted_out:{phone_number}"
-        assert call_args[1]["ttl"] == 86400*365*2  # 2 years
+        assert call_args[1]["ttl"] == 86400 * 365 * 2  # 2 years
 
         # Verify events were published
         mock_event_publisher.publish_sms_opt_out_processed.assert_called_once()
@@ -208,10 +204,7 @@ class TestSMSComplianceService:
         message_content = "Your showing is confirmed"
 
         await sms_compliance_service.record_sms_sent(
-            phone_number=phone_number,
-            message_content=message_content,
-            success=True,
-            location_id="test_location"
+            phone_number=phone_number, message_content=message_content, success=True, location_id="test_location"
         )
 
         # Verify cache increments were called
@@ -226,9 +219,9 @@ class TestSMSComplianceService:
         # Mock return values
         mock_cache_service.exists.return_value = False  # Not opted out
         mock_cache_service.get.side_effect = [
-            "2",   # Daily count
+            "2",  # Daily count
             "15",  # Monthly count
-            datetime.now().isoformat()  # Last sent timestamp
+            datetime.now().isoformat(),  # Last sent timestamp
         ]
 
         status = await sms_compliance_service.get_compliance_status(phone_number)
@@ -247,7 +240,9 @@ class TestSMSComplianceService:
         mock_cache_service.exists.return_value = True  # Opted out
         mock_cache_service.get.side_effect = [
             {"opted_out_at": datetime.now().isoformat(), "reason": "stop_keyword"},
-            "0", "0", None
+            "0",
+            "0",
+            None,
         ]
 
         status = await sms_compliance_service.get_compliance_status(phone_number)
@@ -280,8 +275,7 @@ class TestSMSComplianceService:
         mock_cache_service.exists.side_effect = Exception("Cache error")
 
         result = await sms_compliance_service.validate_sms_send(
-            phone_number="+15551234567",
-            message_content="Test message"
+            phone_number="+15551234567", message_content="Test message"
         )
 
         assert result.allowed == False
@@ -291,11 +285,11 @@ class TestSMSComplianceService:
     @pytest.mark.asyncio
     async def test_process_incoming_sms_error_handling(self, sms_compliance_service):
         """Test error handling in incoming SMS processing."""
-        with patch.object(sms_compliance_service, '_normalize_phone_number', side_effect=Exception("Normalization error")):
+        with patch.object(
+            sms_compliance_service, "_normalize_phone_number", side_effect=Exception("Normalization error")
+        ):
             result = await sms_compliance_service.process_incoming_sms(
-                phone_number="invalid",
-                message_content="test",
-                location_id="test"
+                phone_number="invalid", message_content="test", location_id="test"
             )
 
             assert result["action"] == "processing_error"
@@ -319,8 +313,17 @@ class TestSMSComplianceServiceLimits:
     def test_stop_keywords_comprehensive(self, service):
         """Test comprehensive STOP keywords list."""
         expected_keywords = {
-            "STOP", "UNSUBSCRIBE", "QUIT", "CANCEL", "END",
-            "REMOVE", "HALT", "OPT-OUT", "OPTOUT", "NO", "OFF"
+            "STOP",
+            "UNSUBSCRIBE",
+            "QUIT",
+            "CANCEL",
+            "END",
+            "REMOVE",
+            "HALT",
+            "OPT-OUT",
+            "OPTOUT",
+            "NO",
+            "OFF",
         }
 
         for keyword in expected_keywords:

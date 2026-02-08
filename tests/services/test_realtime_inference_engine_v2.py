@@ -9,19 +9,20 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
-    RealTimeInferenceEngineV2,
+    InferenceMode,
     InferenceRequest,
     InferenceResult,
-    InferenceMode,
     MarketSegment,
-    PerformanceMonitor
+    PerformanceMonitor,
+    RealTimeInferenceEngineV2,
 )
 
 
@@ -48,7 +49,7 @@ class TestPerformanceMonitor:
 
         assert monitor.metrics["total_requests"] == 3
         assert monitor.metrics["cache_hits"] == 2
-        assert monitor.get_cache_hit_rate() == 2/3
+        assert monitor.get_cache_hit_rate() == 2 / 3
 
         # Check model usage tracking
         assert monitor.metrics["model_calls"]["tech_hub"] == 2
@@ -93,7 +94,7 @@ class TestInferenceRequest:
             lead_id="test_123",
             lead_data={"budget": 500000, "location": "Austin"},
             conversation_history=[{"text": "Looking for a home"}],
-            mode=InferenceMode.REAL_TIME
+            mode=InferenceMode.REAL_TIME,
         )
 
         assert request.lead_id == "test_123"
@@ -106,13 +107,13 @@ class TestInferenceRequest:
         request1 = InferenceRequest(
             lead_id="test_123",
             lead_data={"budget": 500000, "location": "Austin"},
-            conversation_history=[{"text": "Looking for a home"}]
+            conversation_history=[{"text": "Looking for a home"}],
         )
 
         request2 = InferenceRequest(
             lead_id="test_123",
             lead_data={"budget": 500000, "location": "Austin"},
-            conversation_history=[{"text": "Looking for a home"}]
+            conversation_history=[{"text": "Looking for a home"}],
         )
 
         # Same data should generate same cache key
@@ -122,7 +123,7 @@ class TestInferenceRequest:
         request3 = InferenceRequest(
             lead_id="test_123",
             lead_data={"budget": 600000, "location": "Austin"},  # Different budget
-            conversation_history=[{"text": "Looking for a home"}]
+            conversation_history=[{"text": "Looking for a home"}],
         )
 
         assert request1.cache_key() != request3.cache_key()
@@ -147,14 +148,14 @@ class TestRealTimeInferenceEngineV2:
                 "source": "organic",
                 "timeline": "immediate",
                 "email_opens": 8,
-                "email_clicks": 3
+                "email_clicks": 3,
             },
             conversation_history=[
                 {"text": "I'm a software engineer at Apple looking for a home", "timestamp": "2026-01-15T10:00:00Z"},
                 {"text": "Budget is $750K, need to move ASAP for new job", "timestamp": "2026-01-15T10:15:00Z"},
-                {"text": "Prefer Austin area near tech companies", "timestamp": "2026-01-15T11:00:00Z"}
+                {"text": "Prefer Austin area near tech companies", "timestamp": "2026-01-15T11:00:00Z"},
             ],
-            mode=InferenceMode.REAL_TIME
+            mode=InferenceMode.REAL_TIME,
         )
 
     @pytest.mark.asyncio
@@ -223,7 +224,7 @@ class TestRealTimeInferenceEngineV2:
             conversation_history=[
                 {"text": "I want to find a home for cache testing", "timestamp": "2026-01-15T10:00:00Z"},
             ],
-            mode=InferenceMode.REAL_TIME
+            mode=InferenceMode.REAL_TIME,
         )
 
         # Clear any cached result for this specific request
@@ -253,7 +254,7 @@ class TestRealTimeInferenceEngineV2:
                 lead_id=f"batch_lead_{i}",
                 lead_data={"budget": 500000 + i * 50000, "location": "Austin"},
                 conversation_history=[{"text": f"Lead {i} looking for home"}],
-                mode=InferenceMode.BATCH_FAST
+                mode=InferenceMode.BATCH_FAST,
             )
             requests.append(request)
 
@@ -276,7 +277,9 @@ class TestRealTimeInferenceEngineV2:
     async def test_error_handling_and_fallback(self, engine, sample_request):
         """Test error handling and fallback mechanisms"""
         # Mock signal processor to raise exception
-        with patch.object(engine.signal_processor, 'extract_signals', side_effect=Exception("Signal extraction failed")):
+        with patch.object(
+            engine.signal_processor, "extract_signals", side_effect=Exception("Signal extraction failed")
+        ):
             result = await engine.predict(sample_request)
 
             # Should still return a valid result (fallback)
@@ -291,20 +294,20 @@ class TestRealTimeInferenceEngineV2:
         test_cases = [
             {
                 "data": {"budget": 600000, "messages": [{"text": "Software engineer at Google"}]},
-                "expected_segment": MarketSegment.TECH_HUB
+                "expected_segment": MarketSegment.TECH_HUB,
             },
             {
                 "data": {"budget": 400000, "messages": [{"text": "Work at ExxonMobil in oil and gas"}]},
-                "expected_segment": MarketSegment.ENERGY_SECTOR
+                "expected_segment": MarketSegment.ENERGY_SECTOR,
             },
             {
                 "data": {"budget": 300000, "messages": [{"text": "Active duty military, need VA loan"}]},
-                "expected_segment": MarketSegment.MILITARY_MARKET
+                "expected_segment": MarketSegment.MILITARY_MARKET,
             },
             {
                 "data": {"budget": 1500000, "messages": [{"text": "Looking for luxury waterfront property"}]},
-                "expected_segment": MarketSegment.LUXURY_RESIDENTIAL
-            }
+                "expected_segment": MarketSegment.LUXURY_RESIDENTIAL,
+            },
         ]
 
         for case in test_cases:
@@ -312,12 +315,13 @@ class TestRealTimeInferenceEngineV2:
                 lead_id="test_segment",
                 lead_data=case["data"],
                 conversation_history=case["data"].get("messages", []),
-                mode=InferenceMode.REAL_TIME
+                mode=InferenceMode.REAL_TIME,
             )
 
             result = await engine.predict(request)
-            assert result.market_segment == case["expected_segment"], \
+            assert result.market_segment == case["expected_segment"], (
                 f"Expected {case['expected_segment']}, got {result.market_segment}"
+            )
 
     @pytest.mark.asyncio
     async def test_performance_monitoring_integration(self, engine, sample_request):
@@ -339,19 +343,14 @@ class TestRealTimeInferenceEngineV2:
     @pytest.mark.asyncio
     async def test_different_inference_modes(self, engine, sample_request):
         """Test different inference modes"""
-        modes = [
-            InferenceMode.REAL_TIME,
-            InferenceMode.BATCH_FAST,
-            InferenceMode.BATCH_BULK,
-            InferenceMode.BACKGROUND
-        ]
+        modes = [InferenceMode.REAL_TIME, InferenceMode.BATCH_FAST, InferenceMode.BATCH_BULK, InferenceMode.BACKGROUND]
 
         for mode in modes:
             request = InferenceRequest(
                 lead_id=f"mode_test_{mode.value}",
                 lead_data=sample_request.lead_data,
                 conversation_history=sample_request.conversation_history,
-                mode=mode
+                mode=mode,
             )
 
             result = await engine.predict(request)
@@ -373,7 +372,7 @@ class TestRealTimeInferenceEngineV2:
                 {"text": "Looking for a home for AB testing", "timestamp": "2026-01-20T10:00:00Z"},
             ],
             mode=InferenceMode.REAL_TIME,
-            ab_test_group="experimental_v1"
+            ab_test_group="experimental_v1",
         )
 
         # Clear any cached result
@@ -392,8 +391,13 @@ class TestRealTimeInferenceEngineV2:
         metrics = engine.get_performance_metrics()
 
         required_keys = [
-            "p95_latency_ms", "cache_hit_rate", "total_requests",
-            "error_rate", "is_healthy", "model_usage", "target_p95_ms"
+            "p95_latency_ms",
+            "cache_hit_rate",
+            "total_requests",
+            "error_rate",
+            "is_healthy",
+            "model_usage",
+            "target_p95_ms",
         ]
 
         for key in required_keys:
@@ -408,7 +412,7 @@ class TestRealTimeInferenceEngineV2:
                 lead_id=f"warmup_{i}",
                 lead_data={"budget": 500000, "location": "Test"},
                 conversation_history=[{"text": f"Warmup request {i}"}],
-                mode=InferenceMode.REAL_TIME
+                mode=InferenceMode.REAL_TIME,
             )
             sample_requests.append(request)
 
@@ -434,7 +438,7 @@ class TestRealTimeInferenceEngineV2:
                 lead_id=f"concurrent_{i}",
                 lead_data=sample_request.lead_data,
                 conversation_history=sample_request.conversation_history,
-                mode=InferenceMode.REAL_TIME
+                mode=InferenceMode.REAL_TIME,
             )
             tasks.append(engine.predict(request))
 

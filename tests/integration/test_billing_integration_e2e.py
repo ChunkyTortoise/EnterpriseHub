@@ -15,23 +15,27 @@ Author: Claude Code Agent Swarm (Phase 2B)
 Created: 2026-01-18
 """
 
-import pytest
 import asyncio
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Import the billing components
 try:
+    from ghl_real_estate_ai.api.schemas.billing import (
+        CreateSubscriptionRequest,
+        RevenueAnalytics,
+        SubscriptionStatus,
+        SubscriptionTier,
+        UsageRecordRequest,
+    )
+    from ghl_real_estate_ai.api.schemas.ghl import Contact, GHLWebhookEvent, Message, MessageType
     from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
     from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
-    from ghl_real_estate_ai.api.schemas.billing import (
-        CreateSubscriptionRequest, SubscriptionTier, SubscriptionStatus,
-        UsageRecordRequest, RevenueAnalytics
-    )
-    from ghl_real_estate_ai.api.schemas.ghl import GHLWebhookEvent, MessageType, Contact, Message
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
 
@@ -44,11 +48,7 @@ class TestBillingIntegrationE2E:
     @pytest.fixture
     def mock_stripe_customer(self):
         """Mock Stripe customer object"""
-        return Mock(
-            id="cus_test_customer",
-            email="test@example.com",
-            metadata={"location_id": "test_location_123"}
-        )
+        return Mock(id="cus_test_customer", email="test@example.com", metadata={"location_id": "test_location_123"})
 
     @pytest.fixture
     def mock_stripe_subscription(self):
@@ -58,32 +58,27 @@ class TestBillingIntegrationE2E:
             customer="cus_test_customer",
             status="active",
             current_period_start=1703980800,  # 2024-01-01
-            current_period_end=1706659200,   # 2024-02-01
+            current_period_end=1706659200,  # 2024-02-01
             cancel_at_period_end=False,
             metadata={
                 "location_id": "test_location_123",
                 "tier": "professional",
                 "usage_allowance": "150",
-                "overage_rate": "1.50"
-            }
+                "overage_rate": "1.50",
+            },
         )
 
     @pytest.fixture
     def mock_stripe_usage_record(self):
         """Mock Stripe usage record object"""
-        return Mock(
-            id="ur_test_usage_record",
-            quantity=1,
-            timestamp=1703980800
-        )
+        return Mock(id="ur_test_usage_record", quantity=1, timestamp=1703980800)
 
     @pytest.fixture
     def billing_service(self):
         """Initialize billing service with mocked Stripe"""
-        with patch.dict('os.environ', {
-            'STRIPE_SECRET_KEY': 'sk_test_fake_key',
-            'STRIPE_WEBHOOK_SECRET': 'whsec_test_fake_secret'
-        }):
+        with patch.dict(
+            "os.environ", {"STRIPE_SECRET_KEY": "sk_test_fake_key", "STRIPE_WEBHOOK_SECRET": "whsec_test_fake_secret"}
+        ):
             return BillingService()
 
     @pytest.fixture
@@ -100,7 +95,7 @@ class TestBillingIntegrationE2E:
             payment_method_id="pm_test_payment_method",
             trial_days=14,
             email="test@example.com",
-            name="Test Customer"
+            name="Test Customer",
         )
 
     @pytest.fixture
@@ -114,12 +109,11 @@ class TestBillingIntegrationE2E:
                 last_name="Doe",
                 phone="+15551234567",
                 email="john.doe@example.com",
-                tags=["Needs Qualifying"]
+                tags=["Needs Qualifying"],
             ),
             message=Message(
-                type=MessageType.SMS,
-                body="I'm looking for a 3-bedroom house in Austin with a budget of $450,000"
-            )
+                type=MessageType.SMS, body="I'm looking for a 3-bedroom house in Austin with a budget of $450,000"
+            ),
         )
 
     @pytest.mark.asyncio
@@ -131,7 +125,7 @@ class TestBillingIntegrationE2E:
         sample_webhook_event,
         mock_stripe_customer,
         mock_stripe_subscription,
-        mock_stripe_usage_record
+        mock_stripe_usage_record,
     ):
         """
         Test the complete billing workflow end-to-end
@@ -145,21 +139,20 @@ class TestBillingIntegrationE2E:
         print("\n🚀 Testing Complete Billing Workflow...")
 
         # Step 1: Mock Stripe API calls for subscription creation
-        with patch('stripe.Customer.list') as mock_customer_list, \
-             patch('stripe.Customer.create') as mock_customer_create, \
-             patch('stripe.PaymentMethod.attach') as mock_payment_attach, \
-             patch('stripe.Customer.modify') as mock_customer_modify, \
-             patch('stripe.Subscription.create') as mock_subscription_create:
-
+        with (
+            patch("stripe.Customer.list") as mock_customer_list,
+            patch("stripe.Customer.create") as mock_customer_create,
+            patch("stripe.PaymentMethod.attach") as mock_payment_attach,
+            patch("stripe.Customer.modify") as mock_customer_modify,
+            patch("stripe.Subscription.create") as mock_subscription_create,
+        ):
             # Configure mocks
             mock_customer_list.return_value.data = []  # No existing customer
             mock_customer_create.return_value = mock_stripe_customer
             mock_subscription_create.return_value = mock_stripe_subscription
 
             # Create subscription
-            subscription = await subscription_manager.initialize_subscription(
-                sample_subscription_request
-            )
+            subscription = await subscription_manager.initialize_subscription(sample_subscription_request)
 
             assert subscription is not None
             assert subscription.location_id == "test_location_123"
@@ -167,19 +160,17 @@ class TestBillingIntegrationE2E:
             print("✅ Subscription creation successful")
 
         # Step 2: Test lead processing with billing tracking
-        with patch('ghl_real_estate_ai.services.dynamic_pricing_optimizer.DynamicPricingOptimizer.calculate_lead_price') as mock_pricing:
-
+        with patch(
+            "ghl_real_estate_ai.services.dynamic_pricing_optimizer.DynamicPricingOptimizer.calculate_lead_price"
+        ) as mock_pricing:
             # Mock pricing calculation
             mock_pricing_result = Mock(
-                final_price=Decimal("15.50"),
-                tier="warm",
-                multiplier=Decimal("1.25"),
-                expected_roi=Decimal("185.00")
+                final_price=Decimal("15.50"), tier="warm", multiplier=Decimal("1.25"), expected_roi=Decimal("185.00")
             )
             mock_pricing.return_value = mock_pricing_result
 
             # Mock subscription lookup
-            with patch.object(subscription_manager, 'get_active_subscription') as mock_get_subscription:
+            with patch.object(subscription_manager, "get_active_subscription") as mock_get_subscription:
                 mock_subscription_response = Mock(
                     id=1,
                     location_id="test_location_123",
@@ -187,7 +178,7 @@ class TestBillingIntegrationE2E:
                     usage_current=149,  # One below limit
                     current_period_start=datetime.now(timezone.utc),
                     current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
-                    tier=SubscriptionTier.PROFESSIONAL
+                    tier=SubscriptionTier.PROFESSIONAL,
                 )
                 mock_get_subscription.return_value = mock_subscription_response
 
@@ -198,13 +189,12 @@ class TestBillingIntegrationE2E:
                 print("✅ Lead processing within allowance - no overage billing")
 
         # Step 3: Test usage overage billing
-        with patch('stripe.Subscription.retrieve') as mock_sub_retrieve, \
-             patch('stripe.UsageRecord.create') as mock_usage_create:
-
+        with (
+            patch("stripe.Subscription.retrieve") as mock_sub_retrieve,
+            patch("stripe.UsageRecord.create") as mock_usage_create,
+        ):
             # Mock subscription with usage item
-            mock_subscription_with_items = Mock(
-                items=Mock(data=[Mock(id="si_test_subscription_item")])
-            )
+            mock_subscription_with_items = Mock(items=Mock(data=[Mock(id="si_test_subscription_item")]))
             mock_sub_retrieve.return_value = mock_subscription_with_items
             mock_usage_create.return_value = mock_stripe_usage_record
 
@@ -216,7 +206,7 @@ class TestBillingIntegrationE2E:
                 amount=Decimal("15.50"),
                 tier="warm",
                 billing_period_start=datetime.now(timezone.utc),
-                billing_period_end=datetime.now(timezone.utc) + timedelta(days=30)
+                billing_period_end=datetime.now(timezone.utc) + timedelta(days=30),
             )
 
             # Record usage
@@ -225,12 +215,9 @@ class TestBillingIntegrationE2E:
             print("✅ Usage overage billing successful")
 
         # Step 4: Test revenue analytics calculation
-        with patch.object(subscription_manager, 'get_tier_distribution') as mock_tier_dist:
+        with patch.object(subscription_manager, "get_tier_distribution") as mock_tier_dist:
             mock_tier_distribution = Mock(
-                starter_count=15,
-                professional_count=35,
-                enterprise_count=12,
-                total_subscriptions=62
+                starter_count=15, professional_count=35, enterprise_count=12, total_subscriptions=62
             )
             mock_tier_dist.return_value = mock_tier_distribution
 
@@ -260,9 +247,9 @@ class TestBillingIntegrationE2E:
                     "customer": "cus_test_customer",
                     "subscription": "sub_test_subscription",
                     "amount_paid": 24900,  # $249.00 in cents
-                    "status": "paid"
+                    "status": "paid",
                 }
-            }
+            },
         }
 
         # Process webhook event
@@ -291,20 +278,13 @@ class TestBillingIntegrationE2E:
         print("✅ Webhook signature verification working correctly")
 
     @pytest.mark.asyncio
-    async def test_subscription_tier_upgrade(
-        self,
-        billing_service,
-        subscription_manager,
-        mock_stripe_subscription
-    ):
+    async def test_subscription_tier_upgrade(self, billing_service, subscription_manager, mock_stripe_subscription):
         """
         Test subscription tier upgrade workflow
         """
         print("\n⬆️ Testing Subscription Tier Upgrade...")
 
-        with patch('stripe.Subscription.retrieve') as mock_retrieve, \
-             patch('stripe.Subscription.modify') as mock_modify:
-
+        with patch("stripe.Subscription.retrieve") as mock_retrieve, patch("stripe.Subscription.modify") as mock_modify:
             # Mock current subscription
             mock_retrieve.return_value = mock_stripe_subscription
 
@@ -319,21 +299,18 @@ class TestBillingIntegrationE2E:
                     "location_id": "test_location_123",
                     "tier": "enterprise",
                     "usage_allowance": "500",
-                    "overage_rate": "0.75"
-                }
+                    "overage_rate": "0.75",
+                },
             )
             mock_modify.return_value = upgraded_subscription
 
             # Perform tier upgrade
             from ghl_real_estate_ai.api.schemas.billing import ModifySubscriptionRequest
 
-            upgrade_request = ModifySubscriptionRequest(
-                tier=SubscriptionTier.ENTERPRISE
-            )
+            upgrade_request = ModifySubscriptionRequest(tier=SubscriptionTier.ENTERPRISE)
 
             result = await subscription_manager.handle_tier_change(
-                subscription_id=1,
-                new_tier=SubscriptionTier.ENTERPRISE
+                subscription_id=1, new_tier=SubscriptionTier.ENTERPRISE
             )
 
             assert result.tier == SubscriptionTier.ENTERPRISE
@@ -347,7 +324,7 @@ class TestBillingIntegrationE2E:
         print("\n📊 Testing Billing Analytics Dashboard Data...")
 
         # Test tier distribution
-        with patch.object(subscription_manager, 'get_tier_distribution') as mock_tier_dist:
+        with patch.object(subscription_manager, "get_tier_distribution") as mock_tier_dist:
             mock_tier_distribution = Mock(
                 starter_count=20,
                 professional_count=30,
@@ -355,7 +332,7 @@ class TestBillingIntegrationE2E:
                 total_subscriptions=65,
                 starter_percentage=30.8,
                 professional_percentage=46.2,
-                enterprise_percentage=23.1
+                enterprise_percentage=23.1,
             )
             mock_tier_dist.return_value = mock_tier_distribution
 
@@ -366,13 +343,13 @@ class TestBillingIntegrationE2E:
             assert abs(tier_data.professional_percentage - 46.2) < 0.1
 
         # Test usage summary
-        with patch.object(subscription_manager, 'get_usage_summary') as mock_usage_summary:
+        with patch.object(subscription_manager, "get_usage_summary") as mock_usage_summary:
             mock_usage = Mock(
                 usage_allowance=150,
                 usage_current=127,
                 overage_count=0,
                 total_cost=Decimal("249.00"),
-                usage_by_tier={"hot": 45, "warm": 52, "cold": 30}
+                usage_by_tier={"hot": 45, "warm": 52, "cold": 30},
             )
             mock_usage_summary.return_value = mock_usage
 
@@ -392,21 +369,21 @@ class TestBillingIntegrationE2E:
         print("\n🎯 Testing Revenue Target Achievement...")
 
         # Mock subscription distribution that achieves target
-        with patch.object(subscription_manager, 'get_tier_distribution') as mock_tier_dist:
+        with patch.object(subscription_manager, "get_tier_distribution") as mock_tier_dist:
             # Configuration to achieve $240K+ ARR
             mock_tier_distribution = Mock(
-                starter_count=25,      # 25 × $99 × 12 = $29,700
-                professional_count=45, # 45 × $249 × 12 = $134,460
-                enterprise_count=20,   # 20 × $499 × 12 = $119,760
-                total_subscriptions=90 # Total base ARR = $283,920
+                starter_count=25,  # 25 × $99 × 12 = $29,700
+                professional_count=45,  # 45 × $249 × 12 = $134,460
+                enterprise_count=20,  # 20 × $499 × 12 = $119,760
+                total_subscriptions=90,  # Total base ARR = $283,920
             )
             mock_tier_dist.return_value = mock_tier_distribution
 
             # Calculate total ARR
             base_arr = (
-                mock_tier_distribution.starter_count * 99 * 12 +
-                mock_tier_distribution.professional_count * 249 * 12 +
-                mock_tier_distribution.enterprise_count * 499 * 12
+                mock_tier_distribution.starter_count * 99 * 12
+                + mock_tier_distribution.professional_count * 249 * 12
+                + mock_tier_distribution.enterprise_count * 499 * 12
             )
 
             # Add projected usage revenue (33% of total)
@@ -417,7 +394,7 @@ class TestBillingIntegrationE2E:
 
             print(f"✅ Revenue target achieved: ${total_arr:,.2f} ARR (Target: $240K)")
             print(f"   Base subscriptions: ${base_arr:,.2f}")
-            print(f"   Usage revenue: ${total_arr - base_arr:,.2f} ({((total_arr - base_arr)/total_arr)*100:.1f}%)")
+            print(f"   Usage revenue: ${total_arr - base_arr:,.2f} ({((total_arr - base_arr) / total_arr) * 100:.1f}%)")
 
     def test_billing_error_handling(self, billing_service):
         """
@@ -426,11 +403,7 @@ class TestBillingIntegrationE2E:
         print("\n❌ Testing Billing Error Handling...")
 
         # Test BillingServiceError creation
-        error = BillingServiceError(
-            "Test error message",
-            recoverable=True,
-            stripe_error_code="card_declined"
-        )
+        error = BillingServiceError("Test error message", recoverable=True, stripe_error_code="card_declined")
 
         assert error.message == "Test error message"
         assert error.recoverable is True
@@ -449,7 +422,7 @@ class TestBillingIntegrationE2E:
         warning_result = await subscription_manager.handle_usage_threshold(
             location_id="test_location_123",
             current_usage=112,  # 75% of 150
-            period_usage_allowance=150
+            period_usage_allowance=150,
         )
 
         assert warning_result["usage_percentage"] == 74.67
@@ -459,7 +432,7 @@ class TestBillingIntegrationE2E:
         critical_result = await subscription_manager.handle_usage_threshold(
             location_id="test_location_123",
             current_usage=135,  # 90% of 150
-            period_usage_allowance=150
+            period_usage_allowance=150,
         )
 
         assert critical_result["usage_percentage"] == 90.0
@@ -469,7 +442,7 @@ class TestBillingIntegrationE2E:
         overage_result = await subscription_manager.handle_usage_threshold(
             location_id="test_location_123",
             current_usage=165,  # 110% of 150
-            period_usage_allowance=150
+            period_usage_allowance=150,
         )
 
         assert overage_result["usage_percentage"] == 110.0
@@ -489,12 +462,9 @@ class TestBillingIntegrationE2E:
         # For now, we'll test the logic components
 
         # Mock the billing integration in webhook processing
-        with patch('ghl_real_estate_ai.services.subscription_manager.SubscriptionManager') as mock_sub_manager:
+        with patch("ghl_real_estate_ai.services.subscription_manager.SubscriptionManager") as mock_sub_manager:
             mock_sub_manager.return_value.get_active_subscription.return_value = Mock(
-                id=1,
-                usage_allowance=150,
-                usage_current=75,
-                tier=SubscriptionTier.PROFESSIONAL
+                id=1, usage_allowance=150, usage_current=75, tier=SubscriptionTier.PROFESSIONAL
             )
 
             # Simulate webhook processing that would trigger billing
@@ -512,23 +482,18 @@ def run_e2e_billing_tests():
     """
     Run the complete end-to-end billing integration test suite
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🏗️ ENTERPRISE HUB - BILLING INTEGRATION E2E TESTS")
     print("   Jorge's $240K ARR Foundation Validation")
-    print("="*60)
+    print("=" * 60)
 
     # Run tests
-    pytest.main([
-        __file__,
-        "-v",
-        "--tb=short",
-        "--durations=10"
-    ])
+    pytest.main([__file__, "-v", "--tb=short", "--durations=10"])
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("✅ BILLING INTEGRATION E2E TESTS COMPLETE")
     print("   $240K ARR Foundation Ready for Production")
-    print("="*60)
+    print("=" * 60)
 
 
 if __name__ == "__main__":

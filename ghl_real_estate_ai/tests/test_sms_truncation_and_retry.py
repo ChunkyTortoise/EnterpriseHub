@@ -8,13 +8,14 @@ Covers:
 - Compliance guard max input length limit
 - Webhook inbound message length cap
 """
+
 import asyncio
-import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
-from unittest.mock import AsyncMock, patch, MagicMock
+import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import ComplianceGuard, ComplianceStatus
-
 
 # ---------------------------------------------------------------------------
 # SMS Truncation Logic (extracted from webhook.py for testability)
@@ -97,7 +98,7 @@ class TestSmsTruncation:
         # Build a message with sentence boundaries in the second half of 320 chars
         # "A...A. B...B. C...C" where the second period lands around position 250
         s1 = "A" * 160  # 160 chars
-        s2 = "B" * 88   # +90 chars (including ". ") = 250
+        s2 = "B" * 88  # +90 chars (including ". ") = 250
         s3 = "C" * 200  # pushes well over 320
         msg = f"{s1}. {s2}. {s3}"
         result = truncate_sms(msg)
@@ -130,6 +131,7 @@ class TestGhlClientRetry:
             mock_settings.webhook_timeout_seconds = 5.0
 
             from ghl_real_estate_ai.services.ghl_client import GHLClient
+
             client = GHLClient(api_key="test-key", location_id="test-location")
             # Re-patch settings for method calls (module-level reference)
             yield client, mock_settings
@@ -141,9 +143,7 @@ class TestGhlClientRetry:
 
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock(
-            side_effect=httpx.HTTPStatusError(
-                "Server error", request=MagicMock(), response=MagicMock(status_code=500)
-            )
+            side_effect=httpx.HTTPStatusError("Server error", request=MagicMock(), response=MagicMock(status_code=500))
         )
 
         with patch("httpx.AsyncClient") as mock_async:
@@ -171,9 +171,7 @@ class TestGhlClientRetry:
 
         fail_response = MagicMock()
         fail_response.raise_for_status = MagicMock(
-            side_effect=httpx.HTTPStatusError(
-                "Server error", request=MagicMock(), response=MagicMock(status_code=502)
-            )
+            side_effect=httpx.HTTPStatusError("Server error", request=MagicMock(), response=MagicMock(status_code=502))
         )
 
         success_response = MagicMock()
@@ -199,9 +197,7 @@ class TestGhlClientRetry:
 
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock(
-            side_effect=httpx.HTTPStatusError(
-                "Server error", request=MagicMock(), response=MagicMock(status_code=500)
-            )
+            side_effect=httpx.HTTPStatusError("Server error", request=MagicMock(), response=MagicMock(status_code=500))
         )
 
         with patch("httpx.AsyncClient") as mock_async:
@@ -237,9 +233,7 @@ class TestGhlClientRetry:
 
         with patch("httpx.AsyncClient") as mock_async:
             mock_ctx = AsyncMock()
-            mock_ctx.put = AsyncMock(
-                side_effect=[fail_response, fail_response, success_response]
-            )
+            mock_ctx.put = AsyncMock(side_effect=[fail_response, fail_response, success_response])
             mock_async.return_value.__aenter__ = AsyncMock(return_value=mock_ctx)
             mock_async.return_value.__aexit__ = AsyncMock(return_value=False)
 

@@ -30,11 +30,11 @@ import aiohttp
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.compliance_platform.realtime.event_publisher import (
     ComplianceEvent,
     ComplianceEventType,
 )
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -264,7 +264,7 @@ class WebhookDeliveryService:
                 "subscription_id": subscription.id,
                 "url": str(subscription.url),
                 "events": [e.value for e in subscription.events],
-            }
+            },
         )
 
     def get_subscription(self, subscription_id: str) -> Optional[WebhookSubscription]:
@@ -308,7 +308,7 @@ class WebhookDeliveryService:
             extra={
                 "subscription_id": subscription_id,
                 "updated_fields": list(update_data.keys()),
-            }
+            },
         )
         return subscription
 
@@ -408,9 +408,7 @@ class WebhookDeliveryService:
             # Check timestamp tolerance
             current_time = int(time.time())
             if abs(current_time - timestamp) > tolerance_seconds:
-                logger.warning(
-                    f"Webhook signature timestamp out of tolerance: {timestamp}"
-                )
+                logger.warning(f"Webhook signature timestamp out of tolerance: {timestamp}")
                 return False
 
             # Verify signature
@@ -500,10 +498,7 @@ class WebhookDeliveryService:
             }
 
         # Find subscriptions for this event type
-        subscriptions = [
-            s for s in self._subscriptions.values()
-            if s.active and event_type in s.events
-        ]
+        subscriptions = [s for s in self._subscriptions.values() if s.active and event_type in s.events]
 
         if not subscriptions:
             logger.debug(f"No active subscriptions for event type: {event_type}")
@@ -536,7 +531,7 @@ class WebhookDeliveryService:
                 "delivered": delivered,
                 "failed": failed,
                 "retrying": retrying,
-            }
+            },
         )
 
         return {
@@ -593,9 +588,7 @@ class WebhookDeliveryService:
             record.status = DeliveryStatus.FAILED
             record.error_message = "Rate limit exceeded"
             self._delivery_history.append(record)
-            logger.warning(
-                f"Rate limit exceeded for subscription {subscription.id}"
-            )
+            logger.warning(f"Rate limit exceeded for subscription {subscription.id}")
             return record
 
         # Prepare payload
@@ -632,17 +625,13 @@ class WebhookDeliveryService:
                     if 200 <= response.status < 300:
                         record.status = DeliveryStatus.DELIVERED
                         subscription.successful_deliveries += 1
-                        logger.debug(
-                            f"Webhook delivered to {subscription.id}: {response.status}"
-                        )
+                        logger.debug(f"Webhook delivered to {subscription.id}: {response.status}")
                     else:
                         # Non-2xx response
                         response_text = await response.text()
                         record.status = DeliveryStatus.FAILED
                         record.error_message = f"HTTP {response.status}: {response_text[:200]}"
-                        logger.warning(
-                            f"Webhook delivery failed for {subscription.id}: {response.status}"
-                        )
+                        logger.warning(f"Webhook delivery failed for {subscription.id}: {response.status}")
 
         except asyncio.TimeoutError:
             record.status = DeliveryStatus.FAILED
@@ -670,15 +659,10 @@ class WebhookDeliveryService:
             subscription.failed_deliveries += 1
 
             # Schedule retry if enabled and attempts remaining
-            if (
-                subscription.retry_enabled
-                and attempt < subscription.max_retries
-            ):
+            if subscription.retry_enabled and attempt < subscription.max_retries:
                 record.status = DeliveryStatus.RETRYING
                 retry_delay = self._calculate_retry_delay(attempt)
-                record.next_retry_at = datetime.now(timezone.utc) + timedelta(
-                    seconds=retry_delay
-                )
+                record.next_retry_at = datetime.now(timezone.utc) + timedelta(seconds=retry_delay)
 
                 # Schedule async retry
                 task = asyncio.create_task(
@@ -691,9 +675,7 @@ class WebhookDeliveryService:
                 )
                 self._retry_tasks[f"{subscription.id}:{payload.event_id}"] = task
 
-                logger.info(
-                    f"Scheduled retry {attempt + 1} for {subscription.id} in {retry_delay:.1f}s"
-                )
+                logger.info(f"Scheduled retry {attempt + 1} for {subscription.id} in {retry_delay:.1f}s")
 
         # Store delivery record
         self._delivery_history.append(record)
@@ -831,7 +813,7 @@ async def subscribe_webhook(
             "subscription_id": subscription.id,
             "url": str(subscription.url),
             "events": [e.value for e in subscription.events],
-        }
+        },
     )
 
     return {
@@ -912,7 +894,7 @@ async def get_subscription(subscription_id: str) -> Dict[str, Any]:
             detail={
                 "error_code": "subscription_not_found",
                 "error_message": f"Subscription {subscription_id} not found",
-            }
+            },
         )
 
     return {
@@ -934,10 +916,15 @@ async def get_subscription(subscription_id: str) -> Dict[str, Any]:
                 "failed_deliveries": subscription.failed_deliveries,
                 "success_rate": (
                     subscription.successful_deliveries / subscription.total_deliveries * 100
-                    if subscription.total_deliveries > 0 else 0
+                    if subscription.total_deliveries > 0
+                    else 0
                 ),
-                "last_delivery_at": subscription.last_delivery_at.isoformat() if subscription.last_delivery_at else None,
-                "last_delivery_status": subscription.last_delivery_status.value if subscription.last_delivery_status else None,
+                "last_delivery_at": subscription.last_delivery_at.isoformat()
+                if subscription.last_delivery_at
+                else None,
+                "last_delivery_status": subscription.last_delivery_status.value
+                if subscription.last_delivery_status
+                else None,
             },
         }
     }
@@ -970,7 +957,7 @@ async def update_subscription(
             detail={
                 "error_code": "subscription_not_found",
                 "error_message": f"Subscription {subscription_id} not found",
-            }
+            },
         )
 
     logger.info(f"Updated webhook subscription {subscription_id}")
@@ -1011,7 +998,7 @@ async def delete_subscription(subscription_id: str) -> Dict[str, Any]:
             detail={
                 "error_code": "subscription_not_found",
                 "error_message": f"Subscription {subscription_id} not found",
-            }
+            },
         )
 
     logger.info(f"Deleted webhook subscription {subscription_id}")
@@ -1054,15 +1041,19 @@ async def test_webhook(
             detail={
                 "error_code": "subscription_not_found",
                 "error_message": f"Subscription {subscription_id} not found",
-            }
+            },
         )
 
     # Create test payload
-    test_data = request.custom_payload if request and request.custom_payload else {
-        "test": True,
-        "message": "This is a test webhook delivery",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    test_data = (
+        request.custom_payload
+        if request and request.custom_payload
+        else {
+            "test": True,
+            "message": "This is a test webhook delivery",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
 
     payload = WebhookPayload(
         event_type=WebhookEventType.MODEL_REGISTERED,  # Use a safe test event type
@@ -1079,7 +1070,7 @@ async def test_webhook(
         extra={
             "subscription_id": subscription_id,
             "status": record.status.value,
-        }
+        },
     )
 
     return {
@@ -1127,7 +1118,7 @@ async def get_subscription_delivery_history(
             detail={
                 "error_code": "subscription_not_found",
                 "error_message": f"Subscription {subscription_id} not found",
-            }
+            },
         )
 
     records = service.get_delivery_history(
@@ -1306,7 +1297,7 @@ async def handle_incoming_webhook(
                 "integration_type": integration_type,
                 "content_length": len(body),
                 "has_signature": bool(x_webhook_signature),
-            }
+            },
         )
 
         # Parse payload
@@ -1318,7 +1309,7 @@ async def handle_incoming_webhook(
                 detail={
                     "error_code": "invalid_json",
                     "error_message": f"Invalid JSON payload: {e}",
-                }
+                },
             )
 
         # Integration-specific handling
@@ -1357,7 +1348,7 @@ async def handle_incoming_webhook(
             detail={
                 "error_code": "processing_error",
                 "error_message": f"Failed to process webhook: {str(e)}",
-            }
+            },
         )
 
 

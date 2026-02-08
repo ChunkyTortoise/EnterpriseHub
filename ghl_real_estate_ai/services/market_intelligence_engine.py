@@ -20,30 +20,30 @@ Features:
 """
 
 import asyncio
-import json
-import time
 import hashlib
+import json
 import statistics
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 
+from ghl_real_estate_ai.api.schemas.analytics import (
+    AnalyticsMetric,
+    AnalyticsWebSocketEvent,
+    EventPriority,
+    EventType,
+    Granularity,
+    MarketHeatmapDataPoint,
+)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.api.schemas.analytics import (
-    MarketHeatmapDataPoint,
-    AnalyticsMetric,
-    Granularity,
-    AnalyticsWebSocketEvent,
-    EventType,
-    EventPriority
-)
 
 logger = get_logger(__name__)
 
@@ -60,15 +60,15 @@ class GeoBounds:
     center_lng: float
 
     @classmethod
-    def from_dict(cls, data: Dict[str, float]) -> 'GeoBounds':
+    def from_dict(cls, data: Dict[str, float]) -> "GeoBounds":
         """Create GeoBounds from dictionary with automatic center calculation."""
         return cls(
-            north=data['north'],
-            south=data['south'],
-            east=data['east'],
-            west=data['west'],
-            center_lat=(data['north'] + data['south']) / 2,
-            center_lng=(data['east'] + data['west']) / 2
+            north=data["north"],
+            south=data["south"],
+            east=data["east"],
+            west=data["west"],
+            center_lat=(data["north"] + data["south"]) / 2,
+            center_lng=(data["east"] + data["west"]) / 2,
         )
 
 
@@ -128,12 +128,12 @@ class MarketIntelligenceEngine:
 
         # Austin market boundaries (expanded for metro area coverage)
         self.austin_bounds = GeoBounds(
-            north=30.5168,   # North Austin/Round Rock
-            south=30.0986,   # South Austin/Buda
-            east=-97.5684,   # East Austin
-            west=-97.9383,   # West Lake Hills
+            north=30.5168,  # North Austin/Round Rock
+            south=30.0986,  # South Austin/Buda
+            east=-97.5684,  # East Austin
+            west=-97.9383,  # West Lake Hills
             center_lat=30.2672,
-            center_lng=-97.7431
+            center_lng=-97.7431,
         )
 
         # Austin neighborhood definitions with market intelligence
@@ -141,10 +141,10 @@ class MarketIntelligenceEngine:
 
         # Hot zone detection thresholds
         self.hot_zone_thresholds = {
-            "lead_density_min": 50.0,          # Leads per square mile
-            "conversion_rate_min": 0.15,       # 15% conversion minimum
-            "ml_score_min": 75.0,              # ML score threshold
-            "combined_score_min": 80.0         # Combined hot zone score
+            "lead_density_min": 50.0,  # Leads per square mile
+            "conversion_rate_min": 0.15,  # 15% conversion minimum
+            "ml_score_min": 75.0,  # ML score threshold
+            "combined_score_min": 80.0,  # Combined hot zone score
         }
 
         # Performance tracking
@@ -153,10 +153,12 @@ class MarketIntelligenceEngine:
             "avg_response_time_ms": 0.0,
             "cache_hits": 0,
             "hot_zones_detected": 0,
-            "last_reset": datetime.utcnow()
+            "last_reset": datetime.utcnow(),
         }
 
-        logger.info(f"MarketIntelligenceEngine initialized for Austin market with {len(self.neighborhoods)} neighborhoods")
+        logger.info(
+            f"MarketIntelligenceEngine initialized for Austin market with {len(self.neighborhoods)} neighborhoods"
+        )
 
     def _initialize_austin_neighborhoods(self) -> List[NeighborhoodProfile]:
         """Initialize Austin neighborhood profiles with current market data."""
@@ -164,54 +166,64 @@ class MarketIntelligenceEngine:
         neighborhoods_data = [
             {
                 "name": "Downtown Austin",
-                "centroid_lat": 30.2672, "centroid_lng": -97.7431,
-                "bounds": {"north": 30.2750, "south": 30.2594, "east": -97.7300, "west": -97.7562}
+                "centroid_lat": 30.2672,
+                "centroid_lng": -97.7431,
+                "bounds": {"north": 30.2750, "south": 30.2594, "east": -97.7300, "west": -97.7562},
             },
             {
                 "name": "South Congress",
-                "centroid_lat": 30.2515, "centroid_lng": -97.7481,
-                "bounds": {"north": 30.2600, "south": 30.2430, "east": -97.7350, "west": -97.7612}
+                "centroid_lat": 30.2515,
+                "centroid_lng": -97.7481,
+                "bounds": {"north": 30.2600, "south": 30.2430, "east": -97.7350, "west": -97.7612},
             },
             {
                 "name": "East Austin",
-                "centroid_lat": 30.2713, "centroid_lng": -97.7156,
-                "bounds": {"north": 30.2850, "south": 30.2576, "east": -97.7000, "west": -97.7312}
+                "centroid_lat": 30.2713,
+                "centroid_lng": -97.7156,
+                "bounds": {"north": 30.2850, "south": 30.2576, "east": -97.7000, "west": -97.7312},
             },
             {
                 "name": "West Lake Hills",
-                "centroid_lat": 30.2733, "centroid_lng": -97.8089,
-                "bounds": {"north": 30.2900, "south": 30.2566, "east": -97.7800, "west": -97.8378}
+                "centroid_lat": 30.2733,
+                "centroid_lng": -97.8089,
+                "bounds": {"north": 30.2900, "south": 30.2566, "east": -97.7800, "west": -97.8378},
             },
             {
                 "name": "North Austin",
-                "centroid_lat": 30.3878, "centroid_lng": -97.7272,
-                "bounds": {"north": 30.4100, "south": 30.3656, "east": -97.7000, "west": -97.7544}
+                "centroid_lat": 30.3878,
+                "centroid_lng": -97.7272,
+                "bounds": {"north": 30.4100, "south": 30.3656, "east": -97.7000, "west": -97.7544},
             },
             {
                 "name": "Zilker/Barton Hills",
-                "centroid_lat": 30.2669, "centroid_lng": -97.7731,
-                "bounds": {"north": 30.2800, "south": 30.2538, "east": -97.7550, "west": -97.7912}
+                "centroid_lat": 30.2669,
+                "centroid_lng": -97.7731,
+                "bounds": {"north": 30.2800, "south": 30.2538, "east": -97.7550, "west": -97.7912},
             },
             {
                 "name": "Mueller",
-                "centroid_lat": 30.2936, "centroid_lng": -97.7069,
-                "bounds": {"north": 30.3050, "south": 30.2822, "east": -97.6900, "west": -97.7238}
+                "centroid_lat": 30.2936,
+                "centroid_lng": -97.7069,
+                "bounds": {"north": 30.3050, "south": 30.2822, "east": -97.6900, "west": -97.7238},
             },
             {
                 "name": "Tarrytown",
-                "centroid_lat": 30.2869, "centroid_lng": -97.7661,
-                "bounds": {"north": 30.2980, "south": 30.2758, "east": -97.7500, "west": -97.7822}
+                "centroid_lat": 30.2869,
+                "centroid_lng": -97.7661,
+                "bounds": {"north": 30.2980, "south": 30.2758, "east": -97.7500, "west": -97.7822},
             },
             {
                 "name": "Cedar Park",
-                "centroid_lat": 30.5052, "centroid_lng": -97.8203,
-                "bounds": {"north": 30.5200, "south": 30.4904, "east": -97.8000, "west": -97.8406}
+                "centroid_lat": 30.5052,
+                "centroid_lng": -97.8203,
+                "bounds": {"north": 30.5200, "south": 30.4904, "east": -97.8000, "west": -97.8406},
             },
             {
                 "name": "Round Rock",
-                "centroid_lat": 30.5083, "centroid_lng": -97.6789,
-                "bounds": {"north": 30.5250, "south": 30.4916, "east": -97.6500, "west": -97.7078}
-            }
+                "centroid_lat": 30.5083,
+                "centroid_lng": -97.6789,
+                "bounds": {"north": 30.5250, "south": 30.4916, "east": -97.6500, "west": -97.7078},
+            },
         ]
 
         neighborhoods = []
@@ -230,7 +242,7 @@ class MarketIntelligenceEngine:
                 avg_deal_value=0.0,
                 hot_zone_score=0.0,
                 market_trend=MarketTrend.STABLE.value,
-                last_updated=datetime.utcnow()
+                last_updated=datetime.utcnow(),
             )
             neighborhoods.append(neighborhood)
 
@@ -240,7 +252,7 @@ class MarketIntelligenceEngine:
         self,
         time_range_days: int = 30,
         granularity: Granularity = Granularity.NEIGHBORHOOD,
-        min_threshold: Optional[float] = None
+        min_threshold: Optional[float] = None,
     ) -> List[MarketHeatmapDataPoint]:
         """
         Generate lead density heatmap data for Deck.gl HexagonLayer visualization.
@@ -296,10 +308,7 @@ class MarketIntelligenceEngine:
 
             # Apply minimum threshold filter
             if min_threshold:
-                aggregated_data = [
-                    data for data in aggregated_data
-                    if data["lead_count"] >= min_threshold
-                ]
+                aggregated_data = [data for data in aggregated_data if data["lead_count"] >= min_threshold]
 
             # Convert to heatmap data points
             heatmap_data = []
@@ -315,8 +324,8 @@ class MarketIntelligenceEngine:
                         "conversion_rate": round(data.get("conversion_rate", 0.0), 3),
                         "total_leads": data["lead_count"],
                         "market_trend": data.get("market_trend", "stable"),
-                        "avg_deal_value": data.get("avg_deal_value", 0)
-                    }
+                        "avg_deal_value": data.get("avg_deal_value", 0),
+                    },
                 )
                 heatmap_data.append(heatmap_point)
 
@@ -339,11 +348,7 @@ class MarketIntelligenceEngine:
             logger.error(f"Lead density heatmap generation failed: {e} (took {processing_time_ms:.1f}ms)")
             raise RuntimeError(f"Failed to generate lead density heatmap: {str(e)}")
 
-    async def calculate_market_metrics(
-        self,
-        region: str = "austin_tx",
-        time_range_days: int = 30
-    ) -> Dict[str, Any]:
+    async def calculate_market_metrics(self, region: str = "austin_tx", time_range_days: int = 30) -> Dict[str, Any]:
         """
         Calculate comprehensive market intelligence metrics with parallel processing.
 
@@ -381,51 +386,46 @@ class MarketIntelligenceEngine:
                 self.generate_lead_density_heatmap(time_range_days, Granularity.NEIGHBORHOOD),
                 self._calculate_conversion_rates(time_range_days),
                 self._calculate_avg_deal_values(time_range_days),
-                self._analyze_market_trends(time_range_days)
+                self._analyze_market_trends(time_range_days),
             ]
 
             lead_density_data, conversion_rates, deal_values, trends = await asyncio.gather(*tasks)
 
             # Identify hot zones using combined scoring
-            hot_zones = await self._identify_hot_zones(
-                lead_density_data,
-                conversion_rates,
-                deal_values,
-                trends
-            )
+            hot_zones = await self._identify_hot_zones(lead_density_data, conversion_rates, deal_values, trends)
 
             # Compile comprehensive metrics
             metrics = {
                 "lead_density": {
                     "total_leads": sum(point.value for point in lead_density_data),
-                    "avg_per_zone": statistics.mean([point.value for point in lead_density_data]) if lead_density_data else 0,
+                    "avg_per_zone": statistics.mean([point.value for point in lead_density_data])
+                    if lead_density_data
+                    else 0,
                     "max_zone": max(lead_density_data, key=lambda p: p.value).label if lead_density_data else None,
-                    "zones_analyzed": len(lead_density_data)
+                    "zones_analyzed": len(lead_density_data),
                 },
                 "conversion_rates": {
                     "market_avg": conversion_rates.get("market_avg", 0.0),
                     "best_zone": conversion_rates.get("best_zone", {}),
                     "worst_zone": conversion_rates.get("worst_zone", {}),
-                    "trend": conversion_rates.get("trend", "stable")
+                    "trend": conversion_rates.get("trend", "stable"),
                 },
                 "deal_values": {
                     "market_median": deal_values.get("median", 0),
                     "premium_zones": deal_values.get("premium_zones", []),
                     "growth_rate": deal_values.get("growth_rate", 0.0),
-                    "trend": deal_values.get("trend", "stable")
+                    "trend": deal_values.get("trend", "stable"),
                 },
                 "market_trends": trends,
                 "hot_zones": [asdict(zone) for zone in hot_zones],
                 "analysis_summary": {
                     "total_zones_analyzed": len(self.neighborhoods),
                     "hot_zones_count": len(hot_zones),
-                    "market_health_score": self._calculate_market_health_score(
-                        conversion_rates, deal_values, trends
-                    ),
-                    "recommended_focus_areas": self._generate_focus_recommendations(hot_zones)
+                    "market_health_score": self._calculate_market_health_score(conversion_rates, deal_values, trends),
+                    "recommended_focus_areas": self._generate_focus_recommendations(hot_zones),
                 },
                 "calculated_at": datetime.utcnow().isoformat(),
-                "time_range_days": time_range_days
+                "time_range_days": time_range_days,
             }
 
             # Cache comprehensive metrics with 5-minute TTL
@@ -466,14 +466,8 @@ class MarketIntelligenceEngine:
 
             for i in range(lead_count):
                 # Generate coordinates within neighborhood bounds
-                lat = np.random.uniform(
-                    neighborhood.bounds.south,
-                    neighborhood.bounds.north
-                )
-                lng = np.random.uniform(
-                    neighborhood.bounds.west,
-                    neighborhood.bounds.east
-                )
+                lat = np.random.uniform(neighborhood.bounds.south, neighborhood.bounds.north)
+                lng = np.random.uniform(neighborhood.bounds.west, neighborhood.bounds.east)
 
                 # Generate realistic ML score with neighborhood bias
                 base_score = {
@@ -481,23 +475,26 @@ class MarketIntelligenceEngine:
                     "West Lake Hills": 82.3,
                     "South Congress": 75.2,
                     "East Austin": 69.8,
-                    "Mueller": 81.4
+                    "Mueller": 81.4,
                 }.get(neighborhood.name, 72.0)
 
                 ml_score = np.random.normal(base_score, 8.0)
                 ml_score = max(0, min(100, ml_score))  # Clamp to 0-100
 
-                leads.append({
-                    "lead_id": f"lead_{neighborhood.name.replace(' ', '_')}_{i}",
-                    "lat": lat,
-                    "lng": lng,
-                    "ml_score": ml_score,
-                    "status": np.random.choice(["active", "converted", "nurture", "disqualified"],
-                                               p=[0.4, 0.15, 0.35, 0.1]),
-                    "created_at": start_date + timedelta(days=np.random.randint(0, days)),
-                    "deal_value": np.random.randint(300000, 800000) if np.random.random() > 0.5 else None,
-                    "neighborhood": neighborhood.name
-                })
+                leads.append(
+                    {
+                        "lead_id": f"lead_{neighborhood.name.replace(' ', '_')}_{i}",
+                        "lat": lat,
+                        "lng": lng,
+                        "ml_score": ml_score,
+                        "status": np.random.choice(
+                            ["active", "converted", "nurture", "disqualified"], p=[0.4, 0.15, 0.35, 0.1]
+                        ),
+                        "created_at": start_date + timedelta(days=np.random.randint(0, days)),
+                        "deal_value": np.random.randint(300000, 800000) if np.random.random() > 0.5 else None,
+                        "neighborhood": neighborhood.name,
+                    }
+                )
 
         logger.debug(f"Retrieved {len(leads)} leads with location data")
         return leads
@@ -510,10 +507,7 @@ class MarketIntelligenceEngine:
         for neighborhood in self.neighborhoods:
             # Filter leads within this neighborhood's bounds
             neighborhood_leads = [
-                lead for lead in leads
-                if self._point_in_bounds(
-                    lead["lat"], lead["lng"], neighborhood.bounds
-                )
+                lead for lead in leads if self._point_in_bounds(lead["lat"], lead["lng"], neighborhood.bounds)
             ]
 
             if not neighborhood_leads:
@@ -536,18 +530,20 @@ class MarketIntelligenceEngine:
             # Market trend analysis (simplified - in production, use historical data)
             trend = self._analyze_neighborhood_trend(neighborhood_leads)
 
-            aggregated.append({
-                "name": neighborhood.name,
-                "centroid_lat": neighborhood.centroid_lat,
-                "centroid_lng": neighborhood.centroid_lng,
-                "lead_count": total_leads,
-                "avg_ml_score": avg_ml_score,
-                "hot_lead_count": hot_leads,
-                "conversion_rate": conversion_rate,
-                "avg_deal_value": avg_deal_value,
-                "market_trend": trend,
-                "bounds": asdict(neighborhood.bounds)
-            })
+            aggregated.append(
+                {
+                    "name": neighborhood.name,
+                    "centroid_lat": neighborhood.centroid_lat,
+                    "centroid_lng": neighborhood.centroid_lng,
+                    "lead_count": total_leads,
+                    "avg_ml_score": avg_ml_score,
+                    "hot_lead_count": hot_leads,
+                    "conversion_rate": conversion_rate,
+                    "avg_deal_value": avg_deal_value,
+                    "market_trend": trend,
+                    "bounds": asdict(neighborhood.bounds),
+                }
+            )
 
         return aggregated
 
@@ -560,7 +556,7 @@ class MarketIntelligenceEngine:
             "78704": {"lat": 30.2515, "lng": -97.7481, "name": "South Austin"},
             "78702": {"lat": 30.2713, "lng": -97.7156, "name": "East Austin"},
             "78746": {"lat": 30.2733, "lng": -97.8089, "name": "West Lake Hills"},
-            "78759": {"lat": 30.3878, "lng": -97.7272, "name": "North Austin"}
+            "78759": {"lat": 30.3878, "lng": -97.7272, "name": "North Austin"},
         }
 
         aggregated = []
@@ -568,9 +564,9 @@ class MarketIntelligenceEngine:
         for zipcode, center in zipcode_centers.items():
             # Assign leads to ZIP codes based on proximity (simplified)
             zip_leads = [
-                lead for lead in leads
-                if geodesic((lead["lat"], lead["lng"]),
-                           (center["lat"], center["lng"])).miles < 3.0
+                lead
+                for lead in leads
+                if geodesic((lead["lat"], lead["lng"]), (center["lat"], center["lng"])).miles < 3.0
             ]
 
             if zip_leads:
@@ -579,15 +575,17 @@ class MarketIntelligenceEngine:
                 conversion_rate = converted / total_leads if total_leads > 0 else 0.0
                 avg_ml_score = statistics.mean([l["ml_score"] for l in zip_leads])
 
-                aggregated.append({
-                    "name": f"{center['name']} ({zipcode})",
-                    "centroid_lat": center["lat"],
-                    "centroid_lng": center["lng"],
-                    "lead_count": total_leads,
-                    "avg_ml_score": avg_ml_score,
-                    "conversion_rate": conversion_rate,
-                    "zipcode": zipcode
-                })
+                aggregated.append(
+                    {
+                        "name": f"{center['name']} ({zipcode})",
+                        "centroid_lat": center["lat"],
+                        "centroid_lng": center["lng"],
+                        "lead_count": total_leads,
+                        "avg_ml_score": avg_ml_score,
+                        "conversion_rate": conversion_rate,
+                        "zipcode": zipcode,
+                    }
+                )
 
         return aggregated
 
@@ -597,7 +595,7 @@ class MarketIntelligenceEngine:
         cities = {
             "Austin": {"bounds": self.austin_bounds, "leads": []},
             "Round Rock": {"bounds": GeoBounds(30.49, 30.53, -97.65, -97.72, 30.51, -97.685), "leads": []},
-            "Cedar Park": {"bounds": GeoBounds(30.48, 30.52, -97.80, -97.85, 30.50, -97.825), "leads": []}
+            "Cedar Park": {"bounds": GeoBounds(30.48, 30.52, -97.80, -97.85, 30.50, -97.825), "leads": []},
         }
 
         # Assign leads to cities
@@ -616,21 +614,22 @@ class MarketIntelligenceEngine:
                 conversion_rate = converted / total_leads if total_leads > 0 else 0.0
                 avg_ml_score = statistics.mean([l["ml_score"] for l in city_leads])
 
-                aggregated.append({
-                    "name": city_name,
-                    "centroid_lat": city_data["bounds"].center_lat,
-                    "centroid_lng": city_data["bounds"].center_lng,
-                    "lead_count": total_leads,
-                    "avg_ml_score": avg_ml_score,
-                    "conversion_rate": conversion_rate
-                })
+                aggregated.append(
+                    {
+                        "name": city_name,
+                        "centroid_lat": city_data["bounds"].center_lat,
+                        "centroid_lng": city_data["bounds"].center_lng,
+                        "lead_count": total_leads,
+                        "avg_ml_score": avg_ml_score,
+                        "conversion_rate": conversion_rate,
+                    }
+                )
 
         return aggregated
 
     def _point_in_bounds(self, lat: float, lng: float, bounds: GeoBounds) -> bool:
         """Check if a point is within geographic bounds."""
-        return (bounds.south <= lat <= bounds.north and
-                bounds.west <= lng <= bounds.east)
+        return bounds.south <= lat <= bounds.north and bounds.west <= lng <= bounds.east
 
     def _analyze_neighborhood_trend(self, leads: List[Dict[str, Any]]) -> str:
         """Analyze market trend for a neighborhood based on lead patterns."""
@@ -642,8 +641,8 @@ class MarketIntelligenceEngine:
         sorted_leads = sorted(leads, key=lambda l: l["created_at"])
 
         # Calculate trend based on ML score changes over time
-        early_leads = sorted_leads[:len(sorted_leads)//2]
-        recent_leads = sorted_leads[len(sorted_leads)//2:]
+        early_leads = sorted_leads[: len(sorted_leads) // 2]
+        recent_leads = sorted_leads[len(sorted_leads) // 2 :]
 
         early_avg = statistics.mean([l["ml_score"] for l in early_leads])
         recent_avg = statistics.mean([l["ml_score"] for l in recent_leads])
@@ -673,7 +672,7 @@ class MarketIntelligenceEngine:
             "market_avg": market_avg,
             "best_zone": {"name": best_zone.get("name"), "rate": best_zone.get("conversion_rate")},
             "worst_zone": {"name": worst_zone.get("name"), "rate": worst_zone.get("conversion_rate")},
-            "trend": "increasing" if market_avg > 0.12 else "stable"  # 12% baseline
+            "trend": "increasing" if market_avg > 0.12 else "stable",  # 12% baseline
         }
 
     async def _calculate_avg_deal_values(self, time_range_days: int) -> Dict[str, Any]:
@@ -701,7 +700,7 @@ class MarketIntelligenceEngine:
             "median": median_value,
             "premium_zones": premium_zones,
             "growth_rate": 0.08,  # Simplified - in production, calculate from historical data
-            "trend": "increasing"
+            "trend": "increasing",
         }
 
     async def _analyze_market_trends(self, time_range_days: int) -> Dict[str, Any]:
@@ -712,7 +711,7 @@ class MarketIntelligenceEngine:
             "lead_volume_trend": "stable",
             "quality_trend": "increasing",
             "geographic_shifts": ["East Austin growth", "West Lake Hills premium demand"],
-            "seasonal_factors": ["Spring buying season", "Low inventory pressure"]
+            "seasonal_factors": ["Spring buying season", "Low inventory pressure"],
         }
 
     async def _identify_hot_zones(
@@ -720,7 +719,7 @@ class MarketIntelligenceEngine:
         lead_density_data: List[MarketHeatmapDataPoint],
         conversion_rates: Dict[str, Any],
         deal_values: Dict[str, Any],
-        trends: Dict[str, Any]
+        trends: Dict[str, Any],
     ) -> List[HotZoneAlert]:
         """Identify hot zones requiring immediate attention using composite scoring."""
 
@@ -732,14 +731,13 @@ class MarketIntelligenceEngine:
             conversion_score = min(100, (point.metadata.get("conversion_rate", 0) / 0.20) * 100)
             ml_score = point.metadata.get("avg_ml_score", 0)
 
-            composite_score = (lead_density_score * 0.4 +
-                             conversion_score * 0.4 +
-                             ml_score * 0.2)
+            composite_score = lead_density_score * 0.4 + conversion_score * 0.4 + ml_score * 0.2
 
             # Check if zone qualifies as hot zone
-            if (composite_score >= self.hot_zone_thresholds["combined_score_min"] and
-                point.value >= self.hot_zone_thresholds["lead_density_min"]):
-
+            if (
+                composite_score >= self.hot_zone_thresholds["combined_score_min"]
+                and point.value >= self.hot_zone_thresholds["lead_density_min"]
+            ):
                 # Determine contributing factors
                 factors = []
                 if point.value >= self.hot_zone_thresholds["lead_density_min"]:
@@ -763,7 +761,7 @@ class MarketIntelligenceEngine:
                     contributing_factors=factors,
                     recommended_actions=actions,
                     urgency=urgency,
-                    detected_at=datetime.utcnow()
+                    detected_at=datetime.utcnow(),
                 )
 
                 hot_zones.append(hot_zone)
@@ -810,7 +808,7 @@ class MarketIntelligenceEngine:
                         score=zone.score,
                         factors=zone.contributing_factors,
                         actions=zone.recommended_actions,
-                        urgency=zone.urgency
+                        urgency=zone.urgency,
                     )
 
                     self._performance_metrics["hot_zones_detected"] += 1
@@ -820,10 +818,7 @@ class MarketIntelligenceEngine:
                     logger.error(f"Failed to publish hot zone alert: {e}")
 
     def _calculate_market_health_score(
-        self,
-        conversion_rates: Dict[str, Any],
-        deal_values: Dict[str, Any],
-        trends: Dict[str, Any]
+        self, conversion_rates: Dict[str, Any], deal_values: Dict[str, Any], trends: Dict[str, Any]
     ) -> float:
         """Calculate overall market health score (0-100)."""
 
@@ -832,7 +827,7 @@ class MarketIntelligenceEngine:
         value_score = min(100, (deal_values.get("median", 0) / 500000) * 100)
         trend_score = 80 if trends.get("overall_market_direction") == "increasing" else 60
 
-        health_score = (conversion_score * 0.4 + value_score * 0.3 + trend_score * 0.3)
+        health_score = conversion_score * 0.4 + value_score * 0.3 + trend_score * 0.3
         return round(health_score, 1)
 
     def _generate_focus_recommendations(self, hot_zones: List[HotZoneAlert]) -> List[str]:
@@ -861,11 +856,7 @@ class MarketIntelligenceEngine:
 
         return recommendations
 
-    async def _publish_market_update_event(
-        self,
-        metric_type: str,
-        heatmap_data: List[MarketHeatmapDataPoint]
-    ):
+    async def _publish_market_update_event(self, metric_type: str, heatmap_data: List[MarketHeatmapDataPoint]):
         """Publish real-time market update event via WebSocket."""
 
         try:
@@ -881,16 +872,15 @@ class MarketIntelligenceEngine:
                     "name": top_zone.label,
                     "value": top_zone.value,
                     "lat": top_zone.lat,
-                    "lng": top_zone.lng
-                } if top_zone else None,
-                "updated_at": datetime.utcnow().isoformat()
+                    "lng": top_zone.lng,
+                }
+                if top_zone
+                else None,
+                "updated_at": datetime.utcnow().isoformat(),
             }
 
             # Publish through existing event system
-            await self.event_publisher.publish_dashboard_refresh(
-                component="market_heatmap",
-                data=event_data
-            )
+            await self.event_publisher.publish_dashboard_refresh(component="market_heatmap", data=event_data)
 
             logger.debug(f"Published market update event: {metric_type}")
 
@@ -921,8 +911,10 @@ class MarketIntelligenceEngine:
             "hot_zones_detected": self._performance_metrics["hot_zones_detected"],
             "neighborhoods_monitored": len(self.neighborhoods),
             "target_response_time_ms": 50.0,
-            "performance_status": "good" if self._performance_metrics["avg_response_time_ms"] < 50.0 else "needs_optimization",
-            "last_reset": self._performance_metrics["last_reset"].isoformat()
+            "performance_status": "good"
+            if self._performance_metrics["avg_response_time_ms"] < 50.0
+            else "needs_optimization",
+            "last_reset": self._performance_metrics["last_reset"].isoformat(),
         }
 
 
@@ -931,6 +923,7 @@ class MarketIntelligenceEngine:
 # ============================================================================
 
 _market_intelligence_instance = None
+
 
 def get_market_intelligence_engine() -> MarketIntelligenceEngine:
     """Get singleton instance of MarketIntelligenceEngine."""

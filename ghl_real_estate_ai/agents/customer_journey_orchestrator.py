@@ -8,33 +8,37 @@ agent coordination based on customer context, preferences, and journey stage.
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import re
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.agents.claude_concierge_agent import get_claude_concierge
 from ghl_real_estate_ai.agents.enhanced_bot_orchestrator import get_enhanced_bot_orchestrator
 from ghl_real_estate_ai.agents.property_intelligence_agent import get_property_intelligence_agent
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
+
 class JourneyStage(Enum):
     """Customer journey stages."""
-    DISCOVERY = "discovery"               # Initial awareness/research
-    EXPLORATION = "exploration"           # Active property searching
-    EVALUATION = "evaluation"            # Comparing options/analysis
-    NEGOTIATION = "negotiation"          # Making offers/negotiating
-    TRANSACTION = "transaction"          # Under contract/closing
-    OWNERSHIP = "ownership"              # Post-purchase support
-    SELLING = "selling"                  # Property disposition
+
+    DISCOVERY = "discovery"  # Initial awareness/research
+    EXPLORATION = "exploration"  # Active property searching
+    EVALUATION = "evaluation"  # Comparing options/analysis
+    NEGOTIATION = "negotiation"  # Making offers/negotiating
+    TRANSACTION = "transaction"  # Under contract/closing
+    OWNERSHIP = "ownership"  # Post-purchase support
+    SELLING = "selling"  # Property disposition
+
 
 class CustomerType(Enum):
     """Customer type classifications."""
+
     FIRST_TIME_BUYER = "first_time_buyer"
     EXPERIENCED_BUYER = "experienced_buyer"
     INVESTOR = "investor"
@@ -42,25 +46,31 @@ class CustomerType(Enum):
     DEVELOPER = "developer"
     COMMERCIAL_CLIENT = "commercial_client"
 
+
 class JourneyPriority(Enum):
     """Priority levels for journey optimization."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     URGENT = "urgent"
     VIP = "vip"
 
+
 class AgentHandoffType(Enum):
     """Types of agent handoffs."""
-    SEQUENTIAL = "sequential"           # One agent after another
-    COLLABORATIVE = "collaborative"    # Multiple agents working together
-    ESCALATION = "escalation"          # Moving to higher-level agent
+
+    SEQUENTIAL = "sequential"  # One agent after another
+    COLLABORATIVE = "collaborative"  # Multiple agents working together
+    ESCALATION = "escalation"  # Moving to higher-level agent
     SPECIALIZATION = "specialization"  # Moving to domain expert
-    FALLBACK = "fallback"              # Falling back to simpler agent
+    FALLBACK = "fallback"  # Falling back to simpler agent
+
 
 @dataclass
 class CustomerProfile:
     """Comprehensive customer profile."""
+
     customer_id: str
     customer_type: CustomerType
     journey_stage: JourneyStage
@@ -90,9 +100,11 @@ class CustomerProfile:
     pain_points: List[str] = field(default_factory=list)
     success_moments: List[str] = field(default_factory=list)
 
+
 @dataclass
 class JourneyStep:
     """Individual step in the customer journey."""
+
     step_id: str
     step_name: str
     description: str
@@ -102,9 +114,11 @@ class JourneyStep:
     exit_conditions: List[str]
     next_steps: List[str]
 
+
 @dataclass
 class AgentHandoff:
     """Agent handoff coordination."""
+
     from_agent: str
     to_agent: str
     handoff_type: AgentHandoffType
@@ -113,15 +127,18 @@ class AgentHandoff:
     priority: JourneyPriority
     estimated_completion_time: Optional[datetime] = None
 
+
 @dataclass
 class JourneyOptimization:
     """Journey optimization recommendations."""
+
     optimization_type: str
     current_performance: float
     target_performance: float
     recommended_changes: List[str]
     expected_impact: str
     implementation_complexity: str
+
 
 class JourneyTemplateEngine:
     """Manages journey templates for different customer types."""
@@ -141,7 +158,7 @@ class JourneyTemplateEngine:
                     estimated_duration="2-5 days",
                     success_criteria=["Process understanding confirmed", "Budget established"],
                     exit_conditions=["Customer decides not to proceed"],
-                    next_steps=["ftb_002"]
+                    next_steps=["ftb_002"],
                 ),
                 JourneyStep(
                     step_id="ftb_002",
@@ -151,7 +168,7 @@ class JourneyTemplateEngine:
                     estimated_duration="3-7 days",
                     success_criteria=["Pre-approval obtained", "Budget finalized"],
                     exit_conditions=["Financing not available"],
-                    next_steps=["ftb_003"]
+                    next_steps=["ftb_003"],
                 ),
                 JourneyStep(
                     step_id="ftb_003",
@@ -161,7 +178,7 @@ class JourneyTemplateEngine:
                     estimated_duration="2-6 weeks",
                     success_criteria=["Properties identified", "Showing scheduled"],
                     exit_conditions=["No suitable properties found"],
-                    next_steps=["ftb_004"]
+                    next_steps=["ftb_004"],
                 ),
                 JourneyStep(
                     step_id="ftb_004",
@@ -171,7 +188,7 @@ class JourneyTemplateEngine:
                     estimated_duration="1-2 weeks",
                     success_criteria=["Property analyzed", "Decision made"],
                     exit_conditions=["Property not suitable"],
-                    next_steps=["ftb_005"]
+                    next_steps=["ftb_005"],
                 ),
                 JourneyStep(
                     step_id="ftb_005",
@@ -181,7 +198,7 @@ class JourneyTemplateEngine:
                     estimated_duration="1-2 weeks",
                     success_criteria=["Offer accepted", "Contract signed"],
                     exit_conditions=["Offer rejected", "Terms not acceptable"],
-                    next_steps=["ftb_006"]
+                    next_steps=["ftb_006"],
                 ),
                 JourneyStep(
                     step_id="ftb_006",
@@ -191,7 +208,7 @@ class JourneyTemplateEngine:
                     estimated_duration="3-6 weeks",
                     success_criteria=["Closing completed", "Keys transferred"],
                     exit_conditions=["Transaction falls through"],
-                    next_steps=["ftb_007"]
+                    next_steps=["ftb_007"],
                 ),
                 JourneyStep(
                     step_id="ftb_007",
@@ -201,10 +218,9 @@ class JourneyTemplateEngine:
                     estimated_duration="Ongoing",
                     success_criteria=["Customer satisfaction", "Referral potential"],
                     exit_conditions=["Customer relationship ends"],
-                    next_steps=[]
-                )
+                    next_steps=[],
+                ),
             ],
-
             "investor": [
                 JourneyStep(
                     step_id="inv_001",
@@ -214,7 +230,7 @@ class JourneyTemplateEngine:
                     estimated_duration="1-3 days",
                     success_criteria=["Strategy defined", "Criteria established"],
                     exit_conditions=["No clear investment thesis"],
-                    next_steps=["inv_002"]
+                    next_steps=["inv_002"],
                 ),
                 JourneyStep(
                     step_id="inv_002",
@@ -224,7 +240,7 @@ class JourneyTemplateEngine:
                     estimated_duration="3-7 days",
                     success_criteria=["Market analysis complete", "Opportunities identified"],
                     exit_conditions=["Market not suitable"],
-                    next_steps=["inv_003"]
+                    next_steps=["inv_003"],
                 ),
                 JourneyStep(
                     step_id="inv_003",
@@ -234,7 +250,7 @@ class JourneyTemplateEngine:
                     estimated_duration="2-8 weeks",
                     success_criteria=["Properties sourced", "Analysis completed"],
                     exit_conditions=["No suitable properties"],
-                    next_steps=["inv_004"]
+                    next_steps=["inv_004"],
                 ),
                 JourneyStep(
                     step_id="inv_004",
@@ -244,7 +260,7 @@ class JourneyTemplateEngine:
                     estimated_duration="1-2 weeks",
                     success_criteria=["Due diligence complete", "Investment approved"],
                     exit_conditions=["Investment thesis not met"],
-                    next_steps=["inv_005"]
+                    next_steps=["inv_005"],
                 ),
                 JourneyStep(
                     step_id="inv_005",
@@ -254,7 +270,7 @@ class JourneyTemplateEngine:
                     estimated_duration="2-4 weeks",
                     success_criteria=["Property acquired", "Terms optimized"],
                     exit_conditions=["Unable to acquire on terms"],
-                    next_steps=["inv_006"]
+                    next_steps=["inv_006"],
                 ),
                 JourneyStep(
                     step_id="inv_006",
@@ -264,10 +280,9 @@ class JourneyTemplateEngine:
                     estimated_duration="Ongoing",
                     success_criteria=["Performance tracking", "Optimization opportunities"],
                     exit_conditions=["Investment disposed"],
-                    next_steps=[]
-                )
+                    next_steps=[],
+                ),
             ],
-
             "seller": [
                 JourneyStep(
                     step_id="sel_001",
@@ -277,7 +292,7 @@ class JourneyTemplateEngine:
                     estimated_duration="1-3 days",
                     success_criteria=["Motivation confirmed", "Timeline established"],
                     exit_conditions=["Not serious about selling"],
-                    next_steps=["sel_002"]
+                    next_steps=["sel_002"],
                 ),
                 JourneyStep(
                     step_id="sel_002",
@@ -287,7 +302,7 @@ class JourneyTemplateEngine:
                     estimated_duration="2-5 days",
                     success_criteria=["Valuation complete", "Pricing strategy set"],
                     exit_conditions=["Unrealistic price expectations"],
-                    next_steps=["sel_003"]
+                    next_steps=["sel_003"],
                 ),
                 JourneyStep(
                     step_id="sel_003",
@@ -297,7 +312,7 @@ class JourneyTemplateEngine:
                     estimated_duration="1-4 weeks",
                     success_criteria=["Property ready", "Marketing materials prepared"],
                     exit_conditions=["Property not marketable"],
-                    next_steps=["sel_004"]
+                    next_steps=["sel_004"],
                 ),
                 JourneyStep(
                     step_id="sel_004",
@@ -307,7 +322,7 @@ class JourneyTemplateEngine:
                     estimated_duration="2-12 weeks",
                     success_criteria=["Offers received", "Buyer interest"],
                     exit_conditions=["No market interest"],
-                    next_steps=["sel_005"]
+                    next_steps=["sel_005"],
                 ),
                 JourneyStep(
                     step_id="sel_005",
@@ -317,7 +332,7 @@ class JourneyTemplateEngine:
                     estimated_duration="3-8 weeks",
                     success_criteria=["Sale completed", "Proceeds received"],
                     exit_conditions=["Sale falls through"],
-                    next_steps=["sel_006"]
+                    next_steps=["sel_006"],
                 ),
                 JourneyStep(
                     step_id="sel_006",
@@ -327,9 +342,9 @@ class JourneyTemplateEngine:
                     estimated_duration="Ongoing",
                     success_criteria=["Relationship maintained", "Referral potential"],
                     exit_conditions=["Relationship ends"],
-                    next_steps=[]
-                )
-            ]
+                    next_steps=[],
+                ),
+            ],
         }
 
     def get_journey_template(self, customer_type: CustomerType) -> List[JourneyStep]:
@@ -353,12 +368,14 @@ class JourneyTemplateEngine:
             # Adjust agents based on customer sophistication
             if profile.investment_experience == "advanced" and "adaptive_jorge" in step.required_agents:
                 # Use more sophisticated agents for advanced customers
-                customized_step.required_agents = [agent if agent != "adaptive_jorge"
-                                                 else "property_intelligence" for agent in step.required_agents]
+                customized_step.required_agents = [
+                    agent if agent != "adaptive_jorge" else "property_intelligence" for agent in step.required_agents
+                ]
 
             customized_template.append(customized_step)
 
         return customized_template
+
 
 class JourneyAnalyticsEngine:
     """Analyzes journey performance and optimization opportunities."""
@@ -369,7 +386,7 @@ class JourneyAnalyticsEngine:
             "conversion_rates": {},
             "satisfaction_scores": {},
             "drop_off_points": {},
-            "bottlenecks": {}
+            "bottlenecks": {},
         }
 
     async def analyze_journey_performance(self, customer_id: str, journey_history: List[Dict]) -> Dict[str, Any]:
@@ -391,11 +408,11 @@ class JourneyAnalyticsEngine:
                 "total_duration_days": total_duration,
                 "completion_rate": completion_rate,
                 "satisfaction_score": satisfaction_score,
-                "bottlenecks": bottlenecks
+                "bottlenecks": bottlenecks,
             },
             "optimization_opportunities": optimizations,
             "performance_grade": self._calculate_performance_grade(completion_rate, satisfaction_score),
-            "recommendations": await self._generate_recommendations(journey_history, optimizations)
+            "recommendations": await self._generate_recommendations(journey_history, optimizations),
         }
 
     def _calculate_total_duration(self, journey_history: List[Dict]) -> float:
@@ -435,11 +452,13 @@ class JourneyAnalyticsEngine:
             duration = (next_time - current_time).total_seconds() / 3600  # Hours
 
             if duration > 48:  # More than 48 hours
-                bottlenecks.append({
-                    "step": step["step_name"],
-                    "duration_hours": duration,
-                    "severity": "high" if duration > 168 else "medium"  # 1 week threshold
-                })
+                bottlenecks.append(
+                    {
+                        "step": step["step_name"],
+                        "duration_hours": duration,
+                        "severity": "high" if duration > 168 else "medium",  # 1 week threshold
+                    }
+                )
 
         return bottlenecks
 
@@ -461,20 +480,22 @@ class JourneyAnalyticsEngine:
         for agent, metrics in agent_performance.items():
             avg_time = metrics["total_time"] / metrics["count"] if metrics["count"] > 0 else 0
             if avg_time > 120:  # More than 2 hours average
-                optimizations.append(JourneyOptimization(
-                    optimization_type="agent_performance",
-                    current_performance=avg_time,
-                    target_performance=60,  # 1 hour target
-                    recommended_changes=[f"Optimize {agent} response time", "Consider alternative agents"],
-                    expected_impact="Reduce journey time by 25-40%",
-                    implementation_complexity="medium"
-                ))
+                optimizations.append(
+                    JourneyOptimization(
+                        optimization_type="agent_performance",
+                        current_performance=avg_time,
+                        target_performance=60,  # 1 hour target
+                        recommended_changes=[f"Optimize {agent} response time", "Consider alternative agents"],
+                        expected_impact="Reduce journey time by 25-40%",
+                        implementation_complexity="medium",
+                    )
+                )
 
         return optimizations
 
     def _calculate_performance_grade(self, completion_rate: float, satisfaction_score: float) -> str:
         """Calculate overall performance grade."""
-        overall_score = (completion_rate * 0.6 + satisfaction_score * 0.4)
+        overall_score = completion_rate * 0.6 + satisfaction_score * 0.4
 
         if overall_score >= 90:
             return "A"
@@ -487,7 +508,9 @@ class JourneyAnalyticsEngine:
         else:
             return "F"
 
-    async def _generate_recommendations(self, journey_history: List[Dict], optimizations: List[JourneyOptimization]) -> List[str]:
+    async def _generate_recommendations(
+        self, journey_history: List[Dict], optimizations: List[JourneyOptimization]
+    ) -> List[str]:
         """Generate actionable recommendations."""
         recommendations = []
 
@@ -502,6 +525,7 @@ class JourneyAnalyticsEngine:
             recommendations.append("Focus on customer satisfaction improvements")
 
         return recommendations
+
 
 class CustomerJourneyOrchestrator:
     """
@@ -529,10 +553,9 @@ class CustomerJourneyOrchestrator:
         self.active_journeys: Dict[str, Dict] = {}
         self.customer_profiles: Dict[str, CustomerProfile] = {}
 
-    async def start_customer_journey(self,
-                                   customer_id: str,
-                                   customer_type: CustomerType,
-                                   initial_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def start_customer_journey(
+        self, customer_id: str, customer_type: CustomerType, initial_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Initiate a new customer journey."""
 
         logger.info(f"Starting customer journey for {customer_id} as {customer_type.value}")
@@ -546,7 +569,7 @@ class CustomerJourneyOrchestrator:
             communication_preference=initial_context.get("communication_preference", "sms"),
             response_speed_preference=initial_context.get("response_speed", "same_day"),
             information_depth_preference=initial_context.get("info_depth", "moderate"),
-            decision_making_style=initial_context.get("decision_style", "analytical")
+            decision_making_style=initial_context.get("decision_style", "analytical"),
         )
 
         # Get and customize journey template
@@ -561,7 +584,7 @@ class CustomerJourneyOrchestrator:
             "active_agents": [],
             "journey_history": [],
             "start_time": datetime.now(),
-            "estimated_completion": datetime.now() + timedelta(days=30)  # Default estimate
+            "estimated_completion": datetime.now() + timedelta(days=30),  # Default estimate
         }
 
         # Store journey state
@@ -576,7 +599,7 @@ class CustomerJourneyOrchestrator:
             customer_id=customer_id,
             customer_type=customer_type.value,
             journey_template=len(customized_journey),
-            estimated_duration=30
+            estimated_duration=30,
         )
 
         return {
@@ -585,15 +608,13 @@ class CustomerJourneyOrchestrator:
             "journey_overview": {
                 "total_steps": len(customized_journey),
                 "current_step": 1,
-                "estimated_completion": journey_state["estimated_completion"].isoformat()
+                "estimated_completion": journey_state["estimated_completion"].isoformat(),
             },
             "first_step_result": first_step_result,
-            "next_actions": customized_journey[0].success_criteria
+            "next_actions": customized_journey[0].success_criteria,
         }
 
-    async def advance_customer_journey(self,
-                                     customer_id: str,
-                                     completion_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def advance_customer_journey(self, customer_id: str, completion_data: Dict[str, Any]) -> Dict[str, Any]:
         """Advance customer to next journey step."""
 
         if customer_id not in self.active_journeys:
@@ -611,18 +632,20 @@ class CustomerJourneyOrchestrator:
             return {
                 "advancement_status": "blocked",
                 "reason": "Step completion criteria not met",
-                "required_actions": current_step.success_criteria
+                "required_actions": current_step.success_criteria,
             }
 
         # Record step completion
-        journey_state["journey_history"].append({
-            "step_id": current_step.step_id,
-            "step_name": current_step.step_name,
-            "completion_time": datetime.now(),
-            "agents_used": journey_state.get("active_agents", []),
-            "status": "completed",
-            "completion_data": completion_data
-        })
+        journey_state["journey_history"].append(
+            {
+                "step_id": current_step.step_id,
+                "step_name": current_step.step_name,
+                "completion_time": datetime.now(),
+                "agents_used": journey_state.get("active_agents", []),
+                "status": "completed",
+                "completion_data": completion_data,
+            }
+        )
 
         # Advance to next step
         next_step_index = current_step_index + 1
@@ -643,7 +666,7 @@ class CustomerJourneyOrchestrator:
             customer_id=customer_id,
             from_step=current_step.step_name,
             to_step=journey_template[next_step_index].step_name,
-            completion_data=completion_data
+            completion_data=completion_data,
         )
 
         return {
@@ -651,13 +674,10 @@ class CustomerJourneyOrchestrator:
             "previous_step": current_step.step_name,
             "current_step": journey_template[next_step_index].step_name,
             "progress": (next_step_index + 1) / len(journey_template) * 100,
-            "next_step_result": next_step_result
+            "next_step_result": next_step_result,
         }
 
-    async def _execute_journey_step(self,
-                                  customer_id: str,
-                                  step_index: int,
-                                  context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_journey_step(self, customer_id: str, step_index: int, context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a specific journey step."""
 
         journey_state = self.active_journeys[customer_id]
@@ -688,13 +708,12 @@ class CustomerJourneyOrchestrator:
             "results": results,
             "step_summary": step_summary,
             "estimated_duration": step.estimated_duration,
-            "success_criteria": step.success_criteria
+            "success_criteria": step.success_criteria,
         }
 
-    async def _plan_agent_handoffs(self,
-                                 step: JourneyStep,
-                                 profile: CustomerProfile,
-                                 context: Dict[str, Any]) -> List[AgentHandoff]:
+    async def _plan_agent_handoffs(
+        self, step: JourneyStep, profile: CustomerProfile, context: Dict[str, Any]
+    ) -> List[AgentHandoff]:
         """Plan agent handoffs for journey step."""
 
         handoffs = []
@@ -710,18 +729,16 @@ class CustomerJourneyOrchestrator:
                 handoff_type = AgentHandoffType.COLLABORATIVE
                 from_agent = step.required_agents[i - 1]
 
-            handoffs.append(AgentHandoff(
-                from_agent=from_agent,
-                to_agent=agent,
-                handoff_type=handoff_type,
-                context_data={
-                    "customer_profile": profile,
-                    "journey_step": step.step_name,
-                    "step_context": context
-                },
-                handoff_reason=f"Journey step: {step.step_name}",
-                priority=profile.priority_level
-            ))
+            handoffs.append(
+                AgentHandoff(
+                    from_agent=from_agent,
+                    to_agent=agent,
+                    handoff_type=handoff_type,
+                    context_data={"customer_profile": profile, "journey_step": step.step_name, "step_context": context},
+                    handoff_reason=f"Journey step: {step.step_name}",
+                    priority=profile.priority_level,
+                )
+            )
 
         return handoffs
 
@@ -735,33 +752,33 @@ class CustomerJourneyOrchestrator:
             result = await self.concierge.process_user_interaction(
                 user_id=handoff.context_data["customer_profile"].customer_id,
                 message=f"Journey step: {handoff.context_data['journey_step']}",
-                context=context
+                context=context,
             )
         elif handoff.to_agent in ["adaptive_jorge", "predictive_lead", "realtime_intent"]:
             result = await self.bot_orchestrator.orchestrate_conversation(
                 lead_id=handoff.context_data["customer_profile"].customer_id,
                 lead_name=handoff.context_data["customer_profile"].customer_id,
                 message=f"Journey step execution",
-                conversation_type="seller" if "jorge" in handoff.to_agent else "lead_sequence"
+                conversation_type="seller" if "jorge" in handoff.to_agent else "lead_sequence",
             )
         elif handoff.to_agent == "property_intelligence":
             # Mock property intelligence call
             result = {
                 "agent_response": f"Property intelligence analysis for {handoff.context_data['journey_step']}",
-                "analysis_type": "journey_step"
+                "analysis_type": "journey_step",
             }
         else:
             # Generic agent response
             result = {
                 "agent_response": f"{handoff.to_agent} executed for journey step",
-                "handoff_type": handoff.handoff_type.value
+                "handoff_type": handoff.handoff_type.value,
             }
 
         return {
             "handoff_id": f"{handoff.from_agent}_to_{handoff.to_agent}",
             "agent_result": result,
             "execution_time": datetime.now(),
-            "success": True
+            "success": True,
         }
 
     async def _validate_step_completion(self, step: JourneyStep, completion_data: Dict[str, Any]) -> bool:
@@ -807,9 +824,7 @@ class CustomerJourneyOrchestrator:
         journey_history = journey_state["journey_history"]
 
         # Analyze journey performance
-        performance_analysis = await self.analytics_engine.analyze_journey_performance(
-            customer_id, journey_history
-        )
+        performance_analysis = await self.analytics_engine.analyze_journey_performance(customer_id, journey_history)
 
         # Generate completion report
         completion_report = await self._generate_completion_report(customer_id, performance_analysis)
@@ -822,7 +837,7 @@ class CustomerJourneyOrchestrator:
             customer_id=customer_id,
             total_duration=(datetime.now() - archived_journey["start_time"]).days,
             performance_grade=performance_analysis["performance_grade"],
-            satisfaction_score=performance_analysis["journey_performance"]["satisfaction_score"]
+            satisfaction_score=performance_analysis["journey_performance"]["satisfaction_score"],
         )
 
         return {
@@ -830,13 +845,10 @@ class CustomerJourneyOrchestrator:
             "customer_id": customer_id,
             "completion_report": completion_report,
             "performance_analysis": performance_analysis,
-            "final_satisfaction": performance_analysis["journey_performance"]["satisfaction_score"]
+            "final_satisfaction": performance_analysis["journey_performance"]["satisfaction_score"],
         }
 
-    async def _generate_step_summary(self,
-                                   step: JourneyStep,
-                                   results: List[Dict],
-                                   profile: CustomerProfile) -> str:
+    async def _generate_step_summary(self, step: JourneyStep, results: List[Dict], profile: CustomerProfile) -> str:
         """Generate summary of step execution."""
 
         summary_prompt = f"""
@@ -845,7 +857,7 @@ class CustomerJourneyOrchestrator:
         Step: {step.step_name}
         Description: {step.description}
         Customer Type: {profile.customer_type.value}
-        Agents Used: {', '.join(step.required_agents)}
+        Agents Used: {", ".join(step.required_agents)}
 
         Results: {len(results)} agent interactions completed
 
@@ -864,11 +876,11 @@ class CustomerJourneyOrchestrator:
         report_prompt = f"""
         Generate a completion report for customer journey:
 
-        Customer Type: {customer_profile.customer_type.value if customer_profile else 'Unknown'}
-        Journey Duration: {performance_analysis['journey_performance']['total_duration_days']} days
-        Completion Rate: {performance_analysis['journey_performance']['completion_rate']}%
-        Satisfaction Score: {performance_analysis['journey_performance']['satisfaction_score']}/100
-        Performance Grade: {performance_analysis['performance_grade']}
+        Customer Type: {customer_profile.customer_type.value if customer_profile else "Unknown"}
+        Journey Duration: {performance_analysis["journey_performance"]["total_duration_days"]} days
+        Completion Rate: {performance_analysis["journey_performance"]["completion_rate"]}%
+        Satisfaction Score: {performance_analysis["journey_performance"]["satisfaction_score"]}/100
+        Performance Grade: {performance_analysis["performance_grade"]}
 
         Create a 2-3 sentence executive summary of the journey outcome.
         """
@@ -897,16 +909,18 @@ class CustomerJourneyOrchestrator:
             "current_step": {
                 "step_name": current_step.step_name,
                 "description": current_step.description,
-                "progress": (current_step_index + 1) / total_steps * 100
+                "progress": (current_step_index + 1) / total_steps * 100,
             },
             "active_agents": journey_state["active_agents"],
             "journey_start": journey_state["start_time"].isoformat(),
-            "estimated_completion": journey_state["estimated_completion"].isoformat()
+            "estimated_completion": journey_state["estimated_completion"].isoformat(),
         }
+
 
 # --- Factory Functions ---
 
 _orchestrator_instance: Optional[CustomerJourneyOrchestrator] = None
+
 
 def get_customer_journey_orchestrator() -> CustomerJourneyOrchestrator:
     """Get singleton Customer Journey Orchestrator instance."""
@@ -917,25 +931,26 @@ def get_customer_journey_orchestrator() -> CustomerJourneyOrchestrator:
 
     return _orchestrator_instance
 
+
 # --- Event Publisher Extensions ---
+
 
 async def publish_journey_started(event_publisher, **kwargs):
     """Publish journey started event."""
     await event_publisher.publish_event(
-        event_type="journey_started",
-        data={**kwargs, "timestamp": datetime.now().isoformat()}
+        event_type="journey_started", data={**kwargs, "timestamp": datetime.now().isoformat()}
     )
+
 
 async def publish_journey_advanced(event_publisher, **kwargs):
     """Publish journey advanced event."""
     await event_publisher.publish_event(
-        event_type="journey_advanced",
-        data={**kwargs, "timestamp": datetime.now().isoformat()}
+        event_type="journey_advanced", data={**kwargs, "timestamp": datetime.now().isoformat()}
     )
+
 
 async def publish_journey_completed(event_publisher, **kwargs):
     """Publish journey completed event."""
     await event_publisher.publish_event(
-        event_type="journey_completed",
-        data={**kwargs, "timestamp": datetime.now().isoformat()}
+        event_type="journey_completed", data={**kwargs, "timestamp": datetime.now().isoformat()}
     )

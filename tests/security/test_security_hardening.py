@@ -10,20 +10,21 @@ Tests for all implemented security features:
 - Security monitoring and event logging
 """
 
-import pytest
 import json
 import time
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
-from ghl_real_estate_ai.api.middleware.rate_limiter import EnhancedRateLimitMiddleware, ThreatDetector
-from ghl_real_estate_ai.api.middleware.security_headers import SecurityHeadersMiddleware
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 from ghl_real_estate_ai.api.middleware.input_validation import InputValidationMiddleware
 from ghl_real_estate_ai.api.middleware.jwt_auth import JWTAuth
+from ghl_real_estate_ai.api.middleware.rate_limiter import EnhancedRateLimitMiddleware, ThreatDetector
+from ghl_real_estate_ai.api.middleware.security_headers import SecurityHeadersMiddleware
 from ghl_real_estate_ai.api.middleware.websocket_security import WebSocketConnectionManager
-from ghl_real_estate_ai.services.security_monitor import SecurityMonitor, EventType, ThreatLevel
+from ghl_real_estate_ai.services.security_monitor import EventType, SecurityMonitor, ThreatLevel
 
 
 class TestRateLimiting:
@@ -34,7 +35,7 @@ class TestRateLimiting:
         limiter = EnhancedRateLimitMiddleware(
             app=Mock(),
             requests_per_minute=5,  # Very low for testing
-            authenticated_rpm=10
+            authenticated_rpm=10,
         )
 
         # Test within limits
@@ -62,34 +63,20 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_rate_limit_with_authentication(self):
         """Test different rate limits for authenticated vs unauthenticated users."""
-        limiter = EnhancedRateLimitMiddleware(
-            app=Mock(),
-            requests_per_minute=10,
-            authenticated_rpm=100
-        )
+        limiter = EnhancedRateLimitMiddleware(app=Mock(), requests_per_minute=10, authenticated_rpm=100)
 
         # Test unauthenticated rate limit
-        allowed, reason = await limiter.limiter.is_allowed(
-            key="test_ip",
-            is_authenticated=False
-        )
+        allowed, reason = await limiter.limiter.is_allowed(key="test_ip", is_authenticated=False)
         assert allowed
 
         # Test authenticated higher rate limit
-        allowed, reason = await limiter.limiter.is_allowed(
-            key="test_ip_auth",
-            is_authenticated=True
-        )
+        allowed, reason = await limiter.limiter.is_allowed(key="test_ip_auth", is_authenticated=True)
         assert allowed
 
     @pytest.mark.asyncio
     async def test_ip_blocking_functionality(self):
         """Test IP blocking after violations."""
-        limiter = EnhancedRateLimitMiddleware(
-            app=Mock(),
-            requests_per_minute=2,
-            authenticated_rpm=5
-        )
+        limiter = EnhancedRateLimitMiddleware(app=Mock(), requests_per_minute=2, authenticated_rpm=5)
 
         # Simulate repeated violations
         for i in range(10):
@@ -104,10 +91,7 @@ class TestSecurityHeaders:
 
     def test_security_headers_middleware_development(self):
         """Test security headers in development environment."""
-        middleware = SecurityHeadersMiddleware(
-            app=Mock(),
-            environment="development"
-        )
+        middleware = SecurityHeadersMiddleware(app=Mock(), environment="development")
 
         headers = middleware._get_security_headers(Mock(url=Mock(scheme="http")))
 
@@ -118,12 +102,7 @@ class TestSecurityHeaders:
 
     def test_security_headers_middleware_production(self):
         """Test security headers in production environment."""
-        middleware = SecurityHeadersMiddleware(
-            app=Mock(),
-            environment="production",
-            enable_hsts=True,
-            enable_csp=True
-        )
+        middleware = SecurityHeadersMiddleware(app=Mock(), environment="production", enable_hsts=True, enable_csp=True)
 
         request_mock = Mock()
         request_mock.url.scheme = "https"
@@ -137,11 +116,7 @@ class TestSecurityHeaders:
 
     def test_csp_policy_generation(self):
         """Test Content Security Policy generation."""
-        middleware = SecurityHeadersMiddleware(
-            app=Mock(),
-            environment="production",
-            enable_csp=True
-        )
+        middleware = SecurityHeadersMiddleware(app=Mock(), environment="production", enable_csp=True)
 
         csp_policy = middleware._get_production_csp()
 
@@ -158,7 +133,7 @@ class TestSecurityHeaders:
         request_mock = Mock()
         request_mock.headers.items.return_value = [
             ("User-Agent", "normal browser"),
-            ("X-Custom", "<script>alert('xss')</script>")
+            ("X-Custom", "<script>alert('xss')</script>"),
         ]
         request_mock.client.host = "192.168.1.1"
 
@@ -183,7 +158,7 @@ class TestInputValidation:
             "admin' --",
             "UNION SELECT * FROM users",
             "exec xp_cmdshell",
-            "1; WAITFOR DELAY '00:00:05'"
+            "1; WAITFOR DELAY '00:00:05'",
         ]
 
         for payload in sql_payloads:
@@ -209,7 +184,7 @@ class TestInputValidation:
             "javascript:alert('xss')",
             "<iframe src='evil.com'></iframe>",
             "onclick='alert(1)'",
-            "vbscript:msgbox('xss')"
+            "vbscript:msgbox('xss')",
         ]
 
         for payload in xss_payloads:
@@ -229,7 +204,7 @@ class TestInputValidation:
             "..\\..\\windows\\system32",
             "file:///etc/passwd",
             "~root/",
-            "/proc/self/environ"
+            "/proc/self/environ",
         ]
 
         for payload in traversal_payloads:
@@ -254,11 +229,7 @@ class TestInputValidation:
         from ghl_real_estate_ai.api.middleware.input_validation import validate_jorge_commission_data
 
         # Test valid commission data
-        valid_data = {
-            "commission_percentage": 6.0,
-            "deal_amount": 500000,
-            "commission_amount": 30000
-        }
+        valid_data = {"commission_percentage": 6.0, "deal_amount": 500000, "commission_amount": 30000}
         result = validate_jorge_commission_data(valid_data)
         assert result == valid_data
 
@@ -284,9 +255,7 @@ class TestJWTSecurity:
         assert len(access_token) > 0
 
         # Test refresh token creation
-        access_token, refresh_token = JWTAuth.create_access_token(
-            test_data, include_refresh_token=True
-        )
+        access_token, refresh_token = JWTAuth.create_access_token(test_data, include_refresh_token=True)
         assert isinstance(access_token, str)
         assert isinstance(refresh_token, str)
 
@@ -381,10 +350,7 @@ class TestWebSocketSecurity:
         manager = WebSocketConnectionManager()
 
         # Test message with suspicious content
-        suspicious_message = json.dumps({
-            "type": "command",
-            "script": "document.location = 'evil.com'"
-        })
+        suspicious_message = json.dumps({"type": "command", "script": "document.location = 'evil.com'"})
 
         is_valid, parsed, error = await manager.validate_message("conn1", suspicious_message)
         assert not is_valid
@@ -415,7 +381,7 @@ class TestSecurityMonitoring:
             endpoint="/api/login",
             method="POST",
             description="Test authentication event",
-            details={"user_id": "test123"}
+            details={"user_id": "test123"},
         )
 
         assert event.event_id is not None
@@ -438,7 +404,7 @@ class TestSecurityMonitoring:
             endpoint="/api/vulnerable",
             method="POST",
             description="SQL injection attempt detected",
-            details={"payload": "'; DROP TABLE users; --"}
+            details={"payload": "'; DROP TABLE users; --"},
         )
 
         # Should be classified as high threat
@@ -457,7 +423,7 @@ class TestSecurityMonitoring:
                 endpoint="/api/test",
                 method="GET",
                 description="Rate limit test",
-                details={}
+                details={},
             )
 
         # Get dashboard data
@@ -492,7 +458,7 @@ class TestSecurityIntegration:
         # Test production config
         prod_config = SecurityConfig(
             environment=SecurityLevel.PRODUCTION,
-            jwt_secret_key="a" * 64  # 64 character key
+            jwt_secret_key="a" * 64,  # 64 character key
         )
 
         # Should have secure production defaults
@@ -508,6 +474,7 @@ class TestSecurityIntegration:
 
 
 # Performance Tests for Security Features
+
 
 class TestSecurityPerformance:
     """Test performance impact of security features."""
@@ -565,7 +532,7 @@ class TestSecurityPerformance:
                 endpoint="/api/test",
                 method="GET",
                 description=f"Test event {i}",
-                details={"test": i}
+                details={"test": i},
             )
 
         end_time = time.time()

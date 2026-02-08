@@ -2,9 +2,12 @@
 Demo State Manager
 Shared state between Admin Dashboard and Buyer Portal for the live demo.
 """
-import streamlit as st
+
 import json
 from pathlib import Path
+
+import streamlit as st
+
 
 class DemoStateManager:
     def __init__(self):
@@ -16,7 +19,7 @@ class DemoStateManager:
             initial_state = {
                 "custom_listings": [],
                 "user_actions": [],  # saved, liked, etc.
-                "simulation_active": False
+                "simulation_active": False,
             }
             self.save_state(initial_state)
 

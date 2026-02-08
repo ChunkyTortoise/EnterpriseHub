@@ -30,14 +30,14 @@ Date: 2026-01-18
 """
 
 import asyncio
-import random
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import json
-import statistics
 import math
+import random
+import statistics
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -47,6 +47,7 @@ logger = get_logger(__name__)
 
 class RoutingStrategy(Enum):
     """Routing strategy types"""
+
     ROUND_ROBIN = "round_robin"
     PERFORMANCE_BASED = "performance_based"
     SPECIALIZATION_MATCH = "specialization_match"
@@ -56,6 +57,7 @@ class RoutingStrategy(Enum):
 
 class AgentStatus(Enum):
     """Agent availability status"""
+
     AVAILABLE = "available"
     BUSY = "busy"
     OFFLINE = "offline"
@@ -65,16 +67,18 @@ class AgentStatus(Enum):
 
 class PriorityLevel(Enum):
     """Lead priority levels"""
+
     CRITICAL = "critical"  # <15 min response
-    HIGH = "high"         # <1 hour response
-    MEDIUM = "medium"     # <4 hours response
-    LOW = "low"          # <24 hours response
-    NURTURE = "nurture"   # No SLA
+    HIGH = "high"  # <1 hour response
+    MEDIUM = "medium"  # <4 hours response
+    LOW = "low"  # <24 hours response
+    NURTURE = "nurture"  # No SLA
 
 
 @dataclass
 class Agent:
     """Agent profile and performance data"""
+
     agent_id: str
     name: str
     email: str
@@ -115,12 +119,13 @@ class Agent:
 @dataclass
 class RoutingRecommendation:
     """Lead routing recommendation"""
+
     lead_id: str
     recommended_agent_id: str
     agent_name: str
     routing_strategy: RoutingStrategy
     match_score: float  # 0-100
-    confidence: float   # 0-1
+    confidence: float  # 0-1
 
     # Reasoning
     primary_reason: str
@@ -157,7 +162,7 @@ class AgentCapacityManager:
             "max_capacity": 30,
             "availability_percentage": random.uniform(0.4, 1.0),
             "last_lead_assignment": datetime.now() - timedelta(hours=random.randint(1, 12)),
-            "response_time_today": random.uniform(15, 180)  # minutes
+            "response_time_today": random.uniform(15, 180),  # minutes
         }
 
         await self.cache.set(cache_key, mock_capacity, 300)  # Cache for 5 minutes
@@ -196,17 +201,13 @@ class PerformanceAnalyzer:
             "client_satisfaction": random.uniform(3.5, 5.0),
             "follow_up_rate": random.uniform(0.7, 0.98),
             "deal_velocity": random.uniform(0.5, 2.0),  # deals/month
-            "lead_quality_score": random.uniform(0.6, 0.95)
+            "lead_quality_score": random.uniform(0.6, 0.95),
         }
 
         await self.cache.set(cache_key, mock_performance, 1800)  # Cache for 30 minutes
         return mock_performance
 
-    def calculate_performance_score(
-        self,
-        agent: Agent,
-        lead_characteristics: Dict[str, Any]
-    ) -> float:
+    def calculate_performance_score(self, agent: Agent, lead_characteristics: Dict[str, Any]) -> float:
         """Calculate performance-based match score"""
         score = 0.0
 
@@ -235,10 +236,7 @@ class SpecializationMatcher:
     """Matches agents based on specialization and expertise"""
 
     def calculate_specialization_score(
-        self,
-        agent: Agent,
-        lead_data: Dict[str, Any],
-        behavioral_signals: Dict[str, float]
+        self, agent: Agent, lead_data: Dict[str, Any], behavioral_signals: Dict[str, float]
     ) -> Tuple[float, Dict[str, float]]:
         """Calculate specialization match score with detailed breakdown"""
         factors = {}
@@ -251,10 +249,7 @@ class SpecializationMatcher:
             total_score += 20.0
         else:
             # Partial credit for close ranges
-            distance = min(
-                abs(lead_budget - agent.price_range_min),
-                abs(lead_budget - agent.price_range_max)
-            )
+            distance = min(abs(lead_budget - agent.price_range_min), abs(lead_budget - agent.price_range_max))
             range_width = agent.price_range_max - agent.price_range_min
             if range_width > 0:
                 proximity = max(0, 1 - (distance / range_width))
@@ -335,7 +330,7 @@ class IntelligentLeadRouter:
         lead_score: float,
         behavioral_signals: Dict[str, float],
         lead_data: Dict[str, Any],
-        strategy: Optional[RoutingStrategy] = None
+        strategy: Optional[RoutingStrategy] = None,
     ) -> Dict[str, Any]:
         """
         Generate intelligent routing recommendation
@@ -376,9 +371,7 @@ class IntelligentLeadRouter:
                     lead_id, lead_score, behavioral_signals, lead_data, available_agents, priority
                 )
             else:
-                recommendation = await self._round_robin_routing(
-                    lead_id, available_agents, priority
-                )
+                recommendation = await self._round_robin_routing(lead_id, available_agents, priority)
 
             # Update agent capacity
             if recommendation and recommendation.recommended_agent_id != "auto_assign":
@@ -399,7 +392,7 @@ class IntelligentLeadRouter:
         behavioral_signals: Dict[str, float],
         lead_data: Dict[str, Any],
         available_agents: List[Agent],
-        priority: PriorityLevel
+        priority: PriorityLevel,
     ) -> RoutingRecommendation:
         """Hybrid intelligent routing combining multiple criteria"""
 
@@ -407,9 +400,7 @@ class IntelligentLeadRouter:
 
         for agent in available_agents:
             # Calculate component scores
-            performance_score = self.performance_analyzer.calculate_performance_score(
-                agent, lead_data
-            )
+            performance_score = self.performance_analyzer.calculate_performance_score(agent, lead_data)
 
             specialization_score, spec_factors = self.specialization_matcher.calculate_specialization_score(
                 agent, lead_data, behavioral_signals
@@ -428,18 +419,10 @@ class IntelligentLeadRouter:
             # Composite scoring with dynamic weights based on priority
             if priority in [PriorityLevel.CRITICAL, PriorityLevel.HIGH]:
                 # Prioritize performance and capacity for urgent leads
-                composite_score = (
-                    performance_score * 0.4 +
-                    capacity_score * 0.35 +
-                    specialization_score * 0.25
-                )
+                composite_score = performance_score * 0.4 + capacity_score * 0.35 + specialization_score * 0.25
             else:
                 # Prioritize specialization for non-urgent leads
-                composite_score = (
-                    specialization_score * 0.4 +
-                    performance_score * 0.35 +
-                    capacity_score * 0.25
-                )
+                composite_score = specialization_score * 0.4 + performance_score * 0.35 + capacity_score * 0.25
 
             # Calculate expected conversion probability
             base_conversion = agent.leads_converted / max(agent.leads_assigned, 1)
@@ -447,23 +430,25 @@ class IntelligentLeadRouter:
             spec_boost = (specialization_score / 100) * 0.1
             expected_conversion = min(base_conversion + spec_boost, 0.8)
 
-            agent_scores.append({
-                "agent": agent,
-                "composite_score": composite_score,
-                "performance_score": performance_score,
-                "specialization_score": specialization_score,
-                "capacity_score": capacity_score,
-                "predicted_response_time": predicted_response_time,
-                "expected_conversion": expected_conversion,
-                "match_factors": spec_factors
-            })
+            agent_scores.append(
+                {
+                    "agent": agent,
+                    "composite_score": composite_score,
+                    "performance_score": performance_score,
+                    "specialization_score": specialization_score,
+                    "capacity_score": capacity_score,
+                    "predicted_response_time": predicted_response_time,
+                    "expected_conversion": expected_conversion,
+                    "match_factors": spec_factors,
+                }
+            )
 
         # Sort by composite score
         agent_scores.sort(key=lambda x: x["composite_score"], reverse=True)
 
         # Select best agent
         best_match = agent_scores[0]
-        backup_agents = [score["agent"].agent_id for score in agent_scores[1:self.max_backup_agents+1]]
+        backup_agents = [score["agent"].agent_id for score in agent_scores[1 : self.max_backup_agents + 1]]
 
         # Determine SLA target based on priority
         sla_targets = {
@@ -471,7 +456,7 @@ class IntelligentLeadRouter:
             PriorityLevel.HIGH: "1_hour",
             PriorityLevel.MEDIUM: "4_hours",
             PriorityLevel.LOW: "24_hours",
-            PriorityLevel.NURTURE: "no_sla"
+            PriorityLevel.NURTURE: "no_sla",
         }
 
         return RoutingRecommendation(
@@ -486,7 +471,7 @@ class IntelligentLeadRouter:
             expected_response_time_minutes=int(best_match["predicted_response_time"]),
             expected_conversion_probability=best_match["expected_conversion"],
             backup_agents=backup_agents,
-            sla_target=sla_targets.get(priority, "24_hours")
+            sla_target=sla_targets.get(priority, "24_hours"),
         )
 
     async def _performance_based_routing(
@@ -496,7 +481,7 @@ class IntelligentLeadRouter:
         behavioral_signals: Dict[str, float],
         lead_data: Dict[str, Any],
         available_agents: List[Agent],
-        priority: PriorityLevel
+        priority: PriorityLevel,
     ) -> RoutingRecommendation:
         """Route based purely on agent performance metrics"""
 
@@ -521,7 +506,7 @@ class IntelligentLeadRouter:
             expected_response_time_minutes=int(best_agent.avg_response_time_minutes),
             expected_conversion_probability=best_agent.leads_converted / max(best_agent.leads_assigned, 1),
             backup_agents=[agent.agent_id for agent, _ in performance_scores[1:3]],
-            sla_target="4_hours"
+            sla_target="4_hours",
         )
 
     async def _specialization_routing(
@@ -531,7 +516,7 @@ class IntelligentLeadRouter:
         behavioral_signals: Dict[str, float],
         lead_data: Dict[str, Any],
         available_agents: List[Agent],
-        priority: PriorityLevel
+        priority: PriorityLevel,
     ) -> RoutingRecommendation:
         """Route based on agent specialization match"""
 
@@ -558,14 +543,11 @@ class IntelligentLeadRouter:
             expected_response_time_minutes=int(best_agent.avg_response_time_minutes),
             expected_conversion_probability=best_agent.leads_converted / max(best_agent.leads_assigned, 1),
             backup_agents=[agent.agent_id for agent, _, _ in specialization_scores[1:3]],
-            sla_target="2_hours"
+            sla_target="2_hours",
         )
 
     async def _round_robin_routing(
-        self,
-        lead_id: str,
-        available_agents: List[Agent],
-        priority: PriorityLevel
+        self, lead_id: str, available_agents: List[Agent], priority: PriorityLevel
     ) -> RoutingRecommendation:
         """Simple round-robin routing"""
 
@@ -591,7 +573,7 @@ class IntelligentLeadRouter:
             expected_response_time_minutes=int(selected_agent.avg_response_time_minutes),
             expected_conversion_probability=0.25,
             backup_agents=[agent.agent_id for agent, _ in agent_loads[1:3]],
-            sla_target="4_hours"
+            sla_target="4_hours",
         )
 
     async def _get_available_agents(self, priority: PriorityLevel) -> List[Agent]:
@@ -617,23 +599,23 @@ class IntelligentLeadRouter:
 
         return available
 
-    def _determine_priority(
-        self,
-        lead_score: float,
-        behavioral_signals: Dict[str, float]
-    ) -> PriorityLevel:
+    def _determine_priority(self, lead_score: float, behavioral_signals: Dict[str, float]) -> PriorityLevel:
         """Determine lead priority based on score and signals"""
 
         # Critical priority indicators
-        if (lead_score >= 90 or
-            behavioral_signals.get("immediate_timeline", 0) > 0.8 or
-            behavioral_signals.get("cash_buyer_indicators", 0) > 0.5):
+        if (
+            lead_score >= 90
+            or behavioral_signals.get("immediate_timeline", 0) > 0.8
+            or behavioral_signals.get("cash_buyer_indicators", 0) > 0.5
+        ):
             return PriorityLevel.CRITICAL
 
         # High priority
-        if (lead_score >= 75 or
-            behavioral_signals.get("preapproval_mentions", 0) > 0.5 or
-            behavioral_signals.get("viewing_urgency", 0) > 0.6):
+        if (
+            lead_score >= 75
+            or behavioral_signals.get("preapproval_mentions", 0) > 0.5
+            or behavioral_signals.get("viewing_urgency", 0) > 0.6
+        ):
             return PriorityLevel.HIGH
 
         # Medium priority
@@ -647,11 +629,7 @@ class IntelligentLeadRouter:
         # Nurture
         return PriorityLevel.NURTURE
 
-    def _calculate_confidence(
-        self,
-        best_match: Dict[str, Any],
-        all_matches: List[Dict[str, Any]]
-    ) -> float:
+    def _calculate_confidence(self, best_match: Dict[str, Any], all_matches: List[Dict[str, Any]]) -> float:
         """Calculate confidence in the routing recommendation"""
 
         if len(all_matches) < 2:
@@ -692,7 +670,7 @@ class IntelligentLeadRouter:
             "primary_reason": reason,
             "expected_response_time": "4_hours",
             "backup_agents": [],
-            "sla_target": "24_hours"
+            "sla_target": "24_hours",
         }
 
     def _format_routing_response(self, recommendation: RoutingRecommendation) -> Dict[str, Any]:
@@ -709,7 +687,7 @@ class IntelligentLeadRouter:
             "expected_conversion_probability": recommendation.expected_conversion_probability,
             "backup_agents": recommendation.backup_agents,
             "sla_target": recommendation.sla_target,
-            "routing_timestamp": recommendation.routing_timestamp.isoformat()
+            "routing_timestamp": recommendation.routing_timestamp.isoformat(),
         }
 
     def _initialize_mock_agents(self) -> List[Agent]:
@@ -735,7 +713,7 @@ class IntelligentLeadRouter:
                 client_satisfaction_score=4.8,
                 avg_days_to_close=32,
                 total_sales_volume=2450000.0,
-                preferred_communication=["email", "text"]
+                preferred_communication=["email", "text"],
             ),
             Agent(
                 agent_id="agent_002",
@@ -757,7 +735,7 @@ class IntelligentLeadRouter:
                 client_satisfaction_score=4.6,
                 avg_days_to_close=28,
                 total_sales_volume=1800000.0,
-                preferred_communication=["phone", "email"]
+                preferred_communication=["phone", "email"],
             ),
             Agent(
                 agent_id="agent_003",
@@ -779,13 +757,14 @@ class IntelligentLeadRouter:
                 client_satisfaction_score=4.9,
                 avg_days_to_close=21,
                 total_sales_volume=1950000.0,
-                preferred_communication=["phone", "email", "text"]
-            )
+                preferred_communication=["phone", "email", "text"],
+            ),
         ]
 
 
 # Example usage
 if __name__ == "__main__":
+
     async def demo():
         router = IntelligentLeadRouter()
 
@@ -797,15 +776,13 @@ if __name__ == "__main__":
                 "immediate_timeline": 0.8,
                 "tech_company_association": 0.9,
                 "preapproval_mentions": 1.0,
-                "digital_engagement": 0.9
+                "digital_engagement": 0.9,
             },
             lead_data={
                 "budget": 750000,
                 "location": "Austin, TX",
-                "messages": [
-                    {"text": "Software engineer at Apple, need home ASAP for relocation"}
-                ]
-            }
+                "messages": [{"text": "Software engineer at Apple, need home ASAP for relocation"}],
+            },
         )
 
         print("Intelligent Lead Routing Recommendation:")

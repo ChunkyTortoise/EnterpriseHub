@@ -18,16 +18,17 @@ Date: 2026-01-05
 
 import asyncio
 import json
+import subprocess
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
-from dataclasses import dataclass, field
-from enum import Enum
-import subprocess
 
 
 class AgentRole(Enum):
     """Agent role definitions"""
+
     ALPHA = "code_auditor"
     BETA = "test_completer"
     GAMMA = "integration_validator"
@@ -38,6 +39,7 @@ class AgentRole(Enum):
 
 class TaskStatus(Enum):
     """Task status tracking"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -48,6 +50,7 @@ class TaskStatus(Enum):
 @dataclass
 class Task:
     """Individual task definition"""
+
     id: str
     title: str
     description: str
@@ -65,33 +68,35 @@ class Task:
 @dataclass
 class Agent:
     """Agent definition"""
+
     role: AgentRole
     name: str
     description: str
     capabilities: List[str]
     tasks: List[Task] = field(default_factory=list)
     status: str = "idle"  # idle, working, completed, error
-    
 
-from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
-from ghl_real_estate_ai.agent_system.skills.base import registry as skill_registry
-import ghl_real_estate_ai.agent_system.skills.frontend
+
 import ghl_real_estate_ai.agent_system.skills.codebase
+import ghl_real_estate_ai.agent_system.skills.frontend
 import ghl_real_estate_ai.agent_system.skills.ghl_bridge
-from ghl_real_estate_ai.core.llm_client import LLMClient
-from ghl_real_estate_ai.agents.traceability import trace_agent_action
-from ghl_real_estate_ai.agent_system.hooks.security import SecuritySentry
-from ghl_real_estate_ai.agent_system.hooks.real_estate import SentimentDecoder
-
 from ghl_real_estate_ai.agent_system.hooks.governance import governance_auditor
-from ghl_real_estate_ai.services.roi_engine import roi_engine
+from ghl_real_estate_ai.agent_system.hooks.real_estate import SentimentDecoder
+from ghl_real_estate_ai.agent_system.hooks.security import SecuritySentry
+from ghl_real_estate_ai.agent_system.skills.base import registry as skill_registry
+from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
+from ghl_real_estate_ai.agents.traceability import trace_agent_action
+from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.services.roi_engine import roi_engine
+
 
 class RecoveryOrchestrator:
     """
     Handles GHL API failures (429s/500s) by proposing alternative paths.
     Logs recovery events to AUDIT_MANIFEST.md.
     """
+
     def __init__(self, llm: LLMClient):
         self.llm = llm
 
@@ -103,9 +108,9 @@ class RecoveryOrchestrator:
         agent_name = error_context.get("agent", "Unknown")
         error_msg = error_context.get("error", "Unknown error")
         failed_action = error_context.get("action", "Unknown action")
-        
+
         print(f"🩹 RecoveryOrchestrator triggered for {failed_action} (Error: {error_msg})")
-        
+
         prompt = f"""
         A GHL API action has failed in the agent swarm.
         
@@ -121,20 +126,16 @@ class RecoveryOrchestrator:
         
         Provide a concise recovery plan (max 2 sentences).
         """
-        
-        response = await self.llm.agenerate(
-            prompt=prompt,
-            model="gemini-2.0-flash",
-            temperature=0.1
-        )
+
+        response = await self.llm.agenerate(prompt=prompt, model="gemini-2.0-flash", temperature=0.1)
         recovery_plan = response.content.strip()
-        
+
         # Log to Audit Manifest
         self.log_recovery_event(failed_action, error_msg, recovery_plan)
-        
+
         # Write to blackboard
         blackboard.write(f"recovery_plan_{failed_action}", recovery_plan, "RecoveryOrchestrator")
-        
+
         return recovery_plan
 
     def log_recovery_event(self, action: str, error: str, resolution: str):
@@ -144,11 +145,13 @@ class RecoveryOrchestrator:
         except:
             pass
 
+
 class ConflictResolver:
     """
     Identifies and resolves contradictions on the Shared Blackboard.
     Used when multiple agents propose conflicting actions or state updates.
     """
+
     def __init__(self, llm: LLMClient):
         self.llm = llm
 
@@ -160,33 +163,33 @@ class ConflictResolver:
         history = blackboard.get_history()
         # Find recent duplicate writes to same keys or related keys
         recent_entries = history[-10:] if len(history) > 10 else history
-        
+
         # Simple heuristic: Check for multiple agents writing to the same key in a short window
         key_map = {}
         for entry in recent_entries:
-            key = entry['key']
+            key = entry["key"]
             if key not in key_map:
                 key_map[key] = []
             key_map[key].append(entry)
-            
+
         resolutions = []
         for key, entries in key_map.items():
-            if len(set(e['agent'] for e in entries)) > 1:
+            if len(set(e["agent"] for e in entries)) > 1:
                 # Potential conflict: Multiple agents writing to the same key
                 print(f"⚖️ Conflict detected on key '{key}' between {set(e['agent'] for e in entries)}")
-                
+
                 resolution = await self._resolve_with_llm(key, entries)
                 blackboard.write(f"resolution_{key}", resolution, "ConflictResolver")
-                
-                agents = list(set(e['agent'] for e in entries))
+
+                agents = list(set(e["agent"] for e in entries))
                 governance_auditor.log_conflict_resolution(agents, f"Multiple agents wrote to {key}", resolution)
                 resolutions.append(f"Resolved {key}: {resolution}")
-                
+
         return resolutions
 
     async def _resolve_with_llm(self, key: str, entries: List[Dict]) -> str:
         conflict_desc = "\n".join([f"- Agent {e['agent']}: {e['value']}" for e in entries])
-        
+
         prompt = f"""
         A conflict has been detected on the Shared Blackboard for the key '{key}'.
         Multiple agents have provided different values:
@@ -199,19 +202,16 @@ class ConflictResolver:
         Provide the final resolved value for the key '{key}'.
         Reply ONLY with the resolved value.
         """
-        
-        response = await self.llm.agenerate(
-            prompt=prompt,
-            model="gemini-2.0-flash",
-            temperature=0.1
-        )
+
+        response = await self.llm.agenerate(prompt=prompt, model="gemini-2.0-flash", temperature=0.1)
         return response.content.strip()
+
 
 class SwarmOrchestrator:
     """
     Orchestrates the agent swarm for GHL project finalization
     """
-    
+
     def __init__(self, project_root: Path):
         self.project_root = project_root
         self.agents: Dict[AgentRole, Agent] = {}
@@ -220,13 +220,13 @@ class SwarmOrchestrator:
         self.completed_tasks: Set[str] = set()
         self.blackboard = SharedBlackboard()
         self.llm = LLMClient()
-        
+
         # Hardening Hooks (Phase 4)
         self.security_sentry = SecuritySentry()
         self.sentiment_decoder = SentimentDecoder()
         self.conflict_resolver = ConflictResolver(self.llm)
         self.recovery_orchestrator = RecoveryOrchestrator(self.llm)
-        
+
         self._initialize_agents()
         self._initialize_tasks()
 
@@ -252,13 +252,13 @@ class SwarmOrchestrator:
         If yes, reply with 'APPROVED'.
         If no, reply with 'REJECTED: <reason>'.
         """
-        
+
         response = await self.llm.agenerate(
             prompt=reflection_prompt,
-            model="gemini-2.0-flash", # Always use high-reasoning model for reflection
-            temperature=0.1
+            model="gemini-2.0-flash",  # Always use high-reasoning model for reflection
+            temperature=0.1,
         )
-        
+
         if "APPROVED" in response.content:
             print(f"✅ Reflection PASSED for task {task.id}")
             return True
@@ -274,11 +274,11 @@ class SwarmOrchestrator:
         """
         task = self.tasks[task_id]
         agent = self.agents[task.assigned_to]
-        
+
         # HITL Gatekeeping
         if risk == "high":
             confirm = input(f"⚠️ [HITL] Task {task_id} is HIGH RISK. Approve execution? (y/n): ")
-            if confirm.lower() != 'y':
+            if confirm.lower() != "y":
                 task.status = TaskStatus.BLOCKED
                 self.blackboard.write(f"task_blocked_{task_id}", "User denied high-risk execution", agent.name)
                 return
@@ -286,17 +286,20 @@ class SwarmOrchestrator:
         print(f"🚀 Executing task {task_id}: {task.title} (Agent: {agent.name})")
         task.status = TaskStatus.IN_PROGRESS
         task.started_at = datetime.now()
-        
+
         # Dynamic Model Selection
         model_name = "gemini-2.0-flash" if complexity == "high" else self.llm.model
-        
+
         context = self.blackboard.get_full_context()
         skills = skill_registry.find_relevant_skills(task.description)
         skill_tools = [s.to_gemini_tool()["function_declarations"][0] for s in skills]
-        
+
         # Maintain conversation history
         messages = [
-            {"role": "user", "content": f"Objective: {task.description}\n\nCurrent Blackboard Context:\n{context}\n\nPlease achieve the objective. Use available tools if needed."}
+            {
+                "role": "user",
+                "content": f"Objective: {task.description}\n\nCurrent Blackboard Context:\n{context}\n\nPlease achieve the objective. Use available tools if needed.",
+            }
         ]
 
         # RECURSIVE TOOL LOOP (Max 10 turns)
@@ -307,9 +310,9 @@ class SwarmOrchestrator:
                 history=messages[:-1],
                 system_prompt=f"You are {agent.name}, an expert {agent.description}. Use tools provided to achieve the objective.",
                 tools=skill_tools if skill_tools else None,
-                model=model_name
+                model=model_name,
             )
-            
+
             # Record response in messages for context maintenance
             if response.content:
                 # 🛡️ Security Check (Phase 4 Hardening)
@@ -322,17 +325,19 @@ class SwarmOrchestrator:
 
                 messages.append({"role": "assistant", "content": response.content})
                 final_response = response.content
-            
+
             # Handle Tool Calls
             if response.tool_calls:
                 tool_results = []
                 for tool_call in response.tool_calls:
                     tool_name = tool_call["name"]
                     tool_args = tool_call["args"]
-                    
+
                     print(f"🛠️ Agent {agent.name} calling tool: {tool_name}({tool_args})")
-                    self.blackboard.write(f"tool_call_{task_id}_t{turn}", {"tool": tool_name, "args": tool_args}, agent.name)
-                    
+                    self.blackboard.write(
+                        f"tool_call_{task_id}_t{turn}", {"tool": tool_name, "args": tool_args}, agent.name
+                    )
+
                     skill = skill_registry.get_skill(tool_name)
                     if skill:
                         try:
@@ -342,45 +347,39 @@ class SwarmOrchestrator:
                         except Exception as e:
                             print(f"❌ Tool {tool_name} failed: {e}")
                             recovery_plan = await self.recovery_orchestrator.propose_recovery(
-                                {"agent": agent.name, "action": tool_name, "error": str(e)},
-                                self.blackboard
+                                {"agent": agent.name, "action": tool_name, "error": str(e)}, self.blackboard
                             )
-                            tool_results.append({
-                                "tool": tool_name, 
-                                "error": str(e),
-                                "recovery_plan": recovery_plan
-                            })
+                            tool_results.append({"tool": tool_name, "error": str(e), "recovery_plan": recovery_plan})
                     else:
                         tool_results.append({"tool": tool_name, "error": "Skill not found"})
 
                 # Add tool results back to context
-                messages.append({
-                    "role": "user", 
-                    "content": f"Tool Results: {json.dumps(tool_results)}"
-                })
-                
+                messages.append({"role": "user", "content": f"Tool Results: {json.dumps(tool_results)}"})
+
                 # Continue loop to allow agent to process results
                 continue
-            
+
             # If no tool calls and we have content, we are done
             if response.content:
                 break
-        
+
         # Automated Reflection (Phase 4 Enhancement)
         # Verify the result before marking complete
-        if complexity == "high" or risk == "high" or True: # Enable for all for now to test
-             approved = await self.reflect_on_result(task, context, final_response)
-             if not approved:
-                 # In a full implementation, this would trigger a retry loop or human escalation
-                 # For now, we log the failure but mark as completed (with warning) to avoid infinite loops
-                 self.blackboard.write(f"task_reflection_failed_{task_id}", "Auto-reflection rejected the result", agent.name)
-                 task.error = "Auto-reflection rejected the result"
+        if complexity == "high" or risk == "high" or True:  # Enable for all for now to test
+            approved = await self.reflect_on_result(task, context, final_response)
+            if not approved:
+                # In a full implementation, this would trigger a retry loop or human escalation
+                # For now, we log the failure but mark as completed (with warning) to avoid infinite loops
+                self.blackboard.write(
+                    f"task_reflection_failed_{task_id}", "Auto-reflection rejected the result", agent.name
+                )
+                task.error = "Auto-reflection rejected the result"
 
         # Post-execution Reflection & Blackboard Update
         task.status = TaskStatus.COMPLETED
         task.completed_at = datetime.now()
         task.result = {"content": final_response, "messages_count": len(messages)}
-        
+
         # 🧠 Sentiment Analysis (Phase 4 Hardening)
         sentiment = self.sentiment_decoder.analyze(final_response)
         task.result["sentiment"] = sentiment["sentiment"]
@@ -389,15 +388,14 @@ class SwarmOrchestrator:
             self.blackboard.write(f"task_warning_{task_id}", "Volatile sentiment detected in output", agent.name)
 
         self.completed_tasks.add(task_id)
-        
+
         self.blackboard.write(f"task_result_{task_id}", task.result, agent.name)
-        
+
         return task.result
 
-        
     def _initialize_agents(self):
         """Initialize all agents with their capabilities"""
-        
+
         # Alpha - Code Auditor
         self.agents[AgentRole.ALPHA] = Agent(
             role=AgentRole.ALPHA,
@@ -408,10 +406,10 @@ class SwarmOrchestrator:
                 "Security vulnerability scanning",
                 "Performance optimization identification",
                 "Code smell detection",
-                "Dependency analysis"
-            ]
+                "Dependency analysis",
+            ],
         )
-        
+
         # Beta - Test Completer
         self.agents[AgentRole.BETA] = Agent(
             role=AgentRole.BETA,
@@ -422,10 +420,10 @@ class SwarmOrchestrator:
                 "Test logic implementation",
                 "Test coverage analysis",
                 "Mock creation",
-                "Assertion writing"
-            ]
+                "Assertion writing",
+            ],
         )
-        
+
         # Gamma - Integration Validator
         self.agents[AgentRole.GAMMA] = Agent(
             role=AgentRole.GAMMA,
@@ -436,10 +434,10 @@ class SwarmOrchestrator:
                 "API endpoint validation",
                 "Database connection verification",
                 "External service connectivity",
-                "Error handling validation"
-            ]
+                "Error handling validation",
+            ],
         )
-        
+
         # Delta - Documentation Finalizer
         self.agents[AgentRole.DELTA] = Agent(
             role=AgentRole.DELTA,
@@ -450,10 +448,10 @@ class SwarmOrchestrator:
                 "API documentation",
                 "Inline documentation",
                 "Architecture diagrams",
-                "User guides"
-            ]
+                "User guides",
+            ],
         )
-        
+
         # Epsilon - Deployment Preparer
         self.agents[AgentRole.EPSILON] = Agent(
             role=AgentRole.EPSILON,
@@ -464,8 +462,8 @@ class SwarmOrchestrator:
                 "Dependency management",
                 "Build process validation",
                 "Deployment scripts",
-                "Production readiness checklist"
-            ]
+                "Production readiness checklist",
+            ],
         )
 
         # Phi - Frontend Engineer
@@ -481,13 +479,13 @@ class SwarmOrchestrator:
                 "Frontend state management",
                 "Hot-reload preview management",
                 "Visual regression testing",
-                "Semantic React Refactoring"
-            ]
+                "Semantic React Refactoring",
+            ],
         )
-        
+
     def _initialize_tasks(self):
         """Initialize all finalization tasks with dependencies"""
-        
+
         tasks = [
             # Phase 1: Analysis & Planning
             Task(
@@ -496,7 +494,7 @@ class SwarmOrchestrator:
                 description="Analyze complete project structure and identify all components",
                 assigned_to=AgentRole.ALPHA,
                 priority=1,
-                estimated_time=5
+                estimated_time=5,
             ),
             Task(
                 id="task_002",
@@ -504,9 +502,8 @@ class SwarmOrchestrator:
                 description="Identify all TODO comments in test files",
                 assigned_to=AgentRole.BETA,
                 priority=1,
-                estimated_time=5
+                estimated_time=5,
             ),
-            
             # Phase 2: Code Quality
             Task(
                 id="task_003",
@@ -515,7 +512,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.ALPHA,
                 dependencies=["task_001"],
                 priority=1,
-                estimated_time=15
+                estimated_time=15,
             ),
             Task(
                 id="task_004",
@@ -524,9 +521,8 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.ALPHA,
                 dependencies=["task_001"],
                 priority=1,
-                estimated_time=10
+                estimated_time=10,
             ),
-            
             # Phase 3: Test Completion
             Task(
                 id="task_005",
@@ -535,7 +531,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.BETA,
                 dependencies=["task_002"],
                 priority=2,
-                estimated_time=20
+                estimated_time=20,
             ),
             Task(
                 id="task_006",
@@ -544,7 +540,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.BETA,
                 dependencies=["task_002"],
                 priority=2,
-                estimated_time=20
+                estimated_time=20,
             ),
             Task(
                 id="task_007",
@@ -553,7 +549,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.BETA,
                 dependencies=["task_002"],
                 priority=2,
-                estimated_time=20
+                estimated_time=20,
             ),
             Task(
                 id="task_008",
@@ -562,9 +558,8 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.BETA,
                 dependencies=["task_002"],
                 priority=1,
-                estimated_time=30
+                estimated_time=30,
             ),
-            
             # Phase 4: Integration Validation
             Task(
                 id="task_009",
@@ -573,7 +568,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.GAMMA,
                 dependencies=["task_005", "task_006", "task_007"],
                 priority=2,
-                estimated_time=25
+                estimated_time=25,
             ),
             Task(
                 id="task_010",
@@ -582,7 +577,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.GAMMA,
                 dependencies=["task_003"],
                 priority=2,
-                estimated_time=15
+                estimated_time=15,
             ),
             Task(
                 id="task_011",
@@ -591,9 +586,8 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.GAMMA,
                 dependencies=["task_003"],
                 priority=2,
-                estimated_time=20
+                estimated_time=20,
             ),
-            
             # Phase 5: Documentation
             Task(
                 id="task_012",
@@ -602,7 +596,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.DELTA,
                 dependencies=["task_009", "task_010"],
                 priority=3,
-                estimated_time=15
+                estimated_time=15,
             ),
             Task(
                 id="task_013",
@@ -611,7 +605,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.DELTA,
                 dependencies=["task_009"],
                 priority=3,
-                estimated_time=20
+                estimated_time=20,
             ),
             Task(
                 id="task_014",
@@ -620,9 +614,8 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.DELTA,
                 dependencies=["task_011"],
                 priority=3,
-                estimated_time=30
+                estimated_time=30,
             ),
-            
             # Phase 6: Deployment Preparation
             Task(
                 id="task_015",
@@ -631,7 +624,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.EPSILON,
                 dependencies=["task_003", "task_004"],
                 priority=1,
-                estimated_time=15
+                estimated_time=15,
             ),
             Task(
                 id="task_016",
@@ -640,7 +633,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.EPSILON,
                 dependencies=["task_003"],
                 priority=1,
-                estimated_time=10
+                estimated_time=10,
             ),
             Task(
                 id="task_017",
@@ -649,7 +642,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.EPSILON,
                 dependencies=["task_012", "task_015", "task_016"],
                 priority=1,
-                estimated_time=20
+                estimated_time=20,
             ),
             Task(
                 id="task_018",
@@ -658,9 +651,8 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.EPSILON,
                 dependencies=["task_015", "task_016"],
                 priority=2,
-                estimated_time=25
+                estimated_time=25,
             ),
-            
             # Phase 6.5: Frontend Generation (PHI)
             Task(
                 id="task_021",
@@ -669,7 +661,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.PHI,
                 dependencies=["task_001"],
                 priority=2,
-                estimated_time=30
+                estimated_time=30,
             ),
             Task(
                 id="task_022",
@@ -678,7 +670,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.PHI,
                 dependencies=["task_021", "task_013"],
                 priority=1,
-                estimated_time=45
+                estimated_time=45,
             ),
             Task(
                 id="task_023",
@@ -687,7 +679,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.PHI,
                 dependencies=["task_022"],
                 priority=2,
-                estimated_time=40
+                estimated_time=40,
             ),
             Task(
                 id="task_024",
@@ -696,9 +688,8 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.PHI,
                 dependencies=["task_023"],
                 priority=2,
-                estimated_time=15
+                estimated_time=15,
             ),
-
             # Phase 7: Final Validation
             Task(
                 id="task_019",
@@ -707,7 +698,7 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.GAMMA,
                 dependencies=["task_005", "task_006", "task_007", "task_008"],
                 priority=1,
-                estimated_time=30
+                estimated_time=30,
             ),
             Task(
                 id="task_020",
@@ -716,40 +707,37 @@ class SwarmOrchestrator:
                 assigned_to=AgentRole.GAMMA,
                 dependencies=["task_019"],
                 priority=1,
-                estimated_time=25
+                estimated_time=25,
             ),
         ]
-        
+
         # Store tasks
         for task in tasks:
             self.tasks[task.id] = task
             self.agents[task.assigned_to].tasks.append(task)
-            
+
         # Build task graph
         self._build_task_graph()
-        
+
     def _build_task_graph(self):
         """Build task dependency graph"""
         for task_id, task in self.tasks.items():
             self.task_graph[task_id] = task.dependencies
-            
+
     def get_ready_tasks(self) -> List[Task]:
         """Get all tasks ready to execute (no pending dependencies)"""
         ready = []
         for task_id, task in self.tasks.items():
             if task.status == TaskStatus.PENDING:
                 # Check if all dependencies are completed
-                deps_completed = all(
-                    dep_id in self.completed_tasks 
-                    for dep_id in task.dependencies
-                )
+                deps_completed = all(dep_id in self.completed_tasks for dep_id in task.dependencies)
                 if deps_completed:
                     ready.append(task)
-        
+
         # Sort by priority (lower number = higher priority)
         ready.sort(key=lambda t: (t.priority, t.id))
         return ready
-    
+
     def get_status_report(self) -> Dict:
         """Generate comprehensive status report"""
         total_tasks = len(self.tasks)
@@ -757,17 +745,17 @@ class SwarmOrchestrator:
         in_progress = len([t for t in self.tasks.values() if t.status == TaskStatus.IN_PROGRESS])
         failed = len([t for t in self.tasks.values() if t.status == TaskStatus.FAILED])
         blocked = len([t for t in self.tasks.values() if t.status == TaskStatus.BLOCKED])
-        
+
         agent_stats = {}
         for role, agent in self.agents.items():
             agent_tasks = agent.tasks
             agent_stats[role.value] = {
                 "total": len(agent_tasks),
                 "completed": len([t for t in agent_tasks if t.status == TaskStatus.COMPLETED]),
-                "in_progress": len([t for t in agent_tasks if t.status == TaskStatus.IN_PROGRESS]) ,
-                "pending": len([t for t in agent_tasks if t.status == TaskStatus.PENDING])
+                "in_progress": len([t for t in agent_tasks if t.status == TaskStatus.IN_PROGRESS]),
+                "pending": len([t for t in agent_tasks if t.status == TaskStatus.PENDING]),
             }
-        
+
         return {
             "timestamp": datetime.now().isoformat(),
             "overall": {
@@ -776,47 +764,49 @@ class SwarmOrchestrator:
                 "in_progress": in_progress,
                 "failed": failed,
                 "blocked": blocked,
-                "progress_percentage": (completed / total_tasks * 100) if total_tasks > 0 else 0
+                "progress_percentage": (completed / total_tasks * 100) if total_tasks > 0 else 0,
             },
             "agents": agent_stats,
-            "ready_tasks": len(self.get_ready_tasks())
+            "ready_tasks": len(self.get_ready_tasks()),
         }
-    
+
     def print_status(self):
         """Print formatted status report"""
         status = self.get_status_report()
-        
-        print("\n" + "="*80)
+
+        print("\n" + "=" * 80)
         print("🎯 GHL PROJECT FINALIZATION - AGENT SWARM STATUS")
-        print("="*80)
+        print("=" * 80)
         print(f"\n📊 Overall Progress: {status['overall']['progress_percentage']:.1f}%")
         print(f"   ✅ Completed: {status['overall']['completed']}/{status['overall']['total_tasks']}")
         print(f"   🔄 In Progress: {status['overall']['in_progress']}")
-        print(f"   ⏳ Pending: {status['overall']['total_tasks'] - status['overall']['completed'] - status['overall']['in_progress']}")
+        print(
+            f"   ⏳ Pending: {status['overall']['total_tasks'] - status['overall']['completed'] - status['overall']['in_progress']}"
+        )
         print(f"   ❌ Failed: {status['overall']['failed']}")
         print(f"   🚫 Blocked: {status['overall']['blocked']}")
-        
+
         print("\n👥 Agent Status:")
         for agent_role, agent in self.agents.items():
-            stats = status['agents'][agent_role.value]
+            stats = status["agents"][agent_role.value]
             print(f"\n   {agent.name}:")
             print(f"      Status: {agent.status}")
             print(f"      Tasks: {stats['completed']}/{stats['total']} completed")
-            if stats['in_progress'] > 0:
+            if stats["in_progress"] > 0:
                 print(f"      Currently working on {stats['in_progress']} task(s)")
-        
+
         ready_tasks = self.get_ready_tasks()
         if ready_tasks:
             print(f"\n🚀 Next {len(ready_tasks)} task(s) ready to execute:")
             for task in ready_tasks[:5]:  # Show first 5
                 print(f"   • [{task.id}] {task.title} -> {task.assigned_to.value}")
-        
-        print("\n" + "="*80 + "\n")
-    
+
+        print("\n" + "=" * 80 + "\n")
+
     def generate_execution_plan(self) -> List[Dict]:
         """Generate execution plan showing task order"""
         # ... (keep existing implementation)
-        return [] # Placeholder as we are adding a new method below
+        return []  # Placeholder as we are adding a new method below
 
     def _calculate_complexity(self) -> float:
         """
@@ -825,9 +815,9 @@ class SwarmOrchestrator:
         """
         context = self.blackboard.get_full_context()
         context_score = min(len(context) / 10000, 1.0)
-        
+
         task_score = len(self.completed_tasks) / len(self.tasks) if self.tasks else 0
-        
+
         # Simple weighted average
         complexity = (context_score * 0.7) + (task_score * 0.3)
         return complexity
@@ -838,7 +828,7 @@ class SwarmOrchestrator:
         Dynamically adjusts concurrency based on blackboard complexity.
         """
         print("\n🚀 Starting Parallel Swarm Execution (Adaptive Scaling)...")
-        
+
         while len(self.completed_tasks) < len(self.tasks):
             ready_tasks = self.get_ready_tasks()
             if not ready_tasks:
@@ -847,33 +837,35 @@ class SwarmOrchestrator:
                     break
                 print("🏁 No more tasks ready. Swarm complete.")
                 break
-            
+
             complexity = self._calculate_complexity()
             # Adaptive Scaling: High complexity = lower concurrency to ensure stability/reasoning quality
             # Low complexity = higher concurrency for speed.
             # Limiting to 1 for free tier stability
-            max_parallel = 1 
+            max_parallel = 1
             tasks_to_run = ready_tasks[:max_parallel]
-            
-            print(f"📡 Dispatching {len(tasks_to_run)} parallel tasks (Complexity: {complexity:.2f}, Max Parallel: {max_parallel})...")
-            
+
+            print(
+                f"📡 Dispatching {len(tasks_to_run)} parallel tasks (Complexity: {complexity:.2f}, Max Parallel: {max_parallel})..."
+            )
+
             # Execute selected tasks in parallel
             await asyncio.gather(*(self.execute_task(t.id) for t in tasks_to_run))
-            
+
             # Rate limit buffer - Free tier is very restrictive
             await asyncio.sleep(10)
-            
+
             # Autonomous Conflict Resolution (Phase 6)
             resolutions = await self.conflict_resolver.resolve(self.blackboard)
             if resolutions:
                 print(f"⚖️ Autonomous Conflict Resolution applied: {len(resolutions)} keys resolved.")
-            
+
         print("\n✨ Parallel Swarm Execution Finished.")
-        
+
         # Calculate ROI (Phase 7)
         swarm_stats = {
             "tasks_completed": len(self.completed_tasks),
-            "matches_found": self.blackboard.read("property_matches_count") or 0 # Example key
+            "matches_found": self.blackboard.read("property_matches_count") or 0,  # Example key
         }
         roi_results = roi_engine.calculate_swarm_roi(swarm_stats, agent_name="SwarmOrchestrator")
         print(f"💰 ROI Generated: ${roi_results['total_value_generated']}")
@@ -885,22 +877,22 @@ def main():
     """Main execution"""
     project_root = Path(__file__).parent.parent
     orchestrator = SwarmOrchestrator(project_root)
-    
+
     print("\n🚀 GHL Project Finalization - Agent Swarm Initialized")
-    print("="*80)
-    
+    print("=" * 80)
+
     # Print initial status
     orchestrator.print_status()
-    
+
     # Generate execution plan
     plan = orchestrator.generate_execution_plan()
-    
+
     print("📋 EXECUTION PLAN")
-    print("="*80)
-    total_time = sum(task['estimated_time'] for task in plan)
-    print(f"\nTotal estimated time: {total_time} minutes ({total_time/60:.1f} hours)")
+    print("=" * 80)
+    total_time = sum(task["estimated_time"] for task in plan)
+    print(f"\nTotal estimated time: {total_time} minutes ({total_time / 60:.1f} hours)")
     print(f"Total tasks: {len(plan)}\n")
-    
+
     # Group by phase
     phases = {
         1: "Analysis & Planning",
@@ -909,9 +901,9 @@ def main():
         4: "Integration Validation",
         5: "Documentation",
         6: "Deployment Preparation",
-        7: "Final Validation"
+        7: "Final Validation",
     }
-    
+
     current_phase = 1
     for i, task in enumerate(plan, 1):
         # Detect phase changes (rough heuristic)
@@ -927,12 +919,13 @@ def main():
             current_phase = 6
         elif i > 18 and current_phase == 6:
             current_phase = 7
-        
-        if i == 1 or (i > 2 and plan[i-2].get('phase') != current_phase):
+
+        if i == 1 or (i > 2 and plan[i - 2].get("phase") != current_phase):
             phase_name = phases.get(current_phase, "Unknown")
             print(f"--- PHASE {current_phase}: {phase_name} ---")
-        
+
         print(f"{i:2}. [{task['id']}] {task['title']} ({task['assigned_to']})")
+
 
 if __name__ == "__main__":
     main()

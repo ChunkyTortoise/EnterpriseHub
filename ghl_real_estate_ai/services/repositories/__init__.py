@@ -6,56 +6,53 @@ Supports multiple data sources: JSON, MLS API, RAG/semantic search, databases.
 """
 
 # Core interfaces
+from .caching_repository import CachingRepository
+from .database_repository import DatabasePropertyRepository
 from .interfaces import (
-    IPropertyRepository,
     IPropertyQueryBuilder,
+    IPropertyRepository,
+    PaginationConfig,
     PropertyQuery,
-    RepositoryResult,
-    RepositoryError,
     QueryFilter,
+    RepositoryError,
+    RepositoryResult,
     SortOrder,
-    PaginationConfig
 )
 
 # Concrete repository implementations
 from .json_repository import JsonPropertyRepository
 from .mls_repository import MLSAPIRepository
-from .rag_repository import RAGPropertyRepository
-from .database_repository import DatabasePropertyRepository
-
-# Query and caching layer
-from .query_builder import PropertyQueryBuilder
-from .caching_repository import CachingRepository
-from .repository_factory import RepositoryFactory, create_repository
 
 # Data service integration
 from .property_data_service import PropertyDataService
 
+# Query and caching layer
+from .query_builder import PropertyQueryBuilder
+from .rag_repository import RAGPropertyRepository
+from .repository_factory import RepositoryFactory, create_repository
+
 __all__ = [
     # Core interfaces
-    'IPropertyRepository',
-    'IPropertyQueryBuilder',
-    'PropertyQuery',
-    'RepositoryResult',
-    'RepositoryError',
-    'QueryFilter',
-    'SortOrder',
-    'PaginationConfig',
-
+    "IPropertyRepository",
+    "IPropertyQueryBuilder",
+    "PropertyQuery",
+    "RepositoryResult",
+    "RepositoryError",
+    "QueryFilter",
+    "SortOrder",
+    "PaginationConfig",
     # Concrete repositories
-    'JsonPropertyRepository',
-    'MLSAPIRepository',
-    'RAGPropertyRepository',
-    'DatabasePropertyRepository',
-
+    "JsonPropertyRepository",
+    "MLSAPIRepository",
+    "RAGPropertyRepository",
+    "DatabasePropertyRepository",
     # Query and caching
-    'PropertyQueryBuilder',
-    'CachingRepository',
-    'RepositoryFactory',
-    'create_repository',
-
+    "PropertyQueryBuilder",
+    "CachingRepository",
+    "RepositoryFactory",
+    "create_repository",
     # Integration
-    'PropertyDataService'
+    "PropertyDataService",
 ]
 
 # Version info

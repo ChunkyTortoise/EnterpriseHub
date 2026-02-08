@@ -17,16 +17,16 @@ Example:
     )
     store = ProductionChromaStore(config)
     await store.initialize()
-    
+
     # Add chunks
     await store.add_chunks(chunks)
-    
+
     # Search with automatic retries
     results = await store.search(embedding, SearchOptions(top_k=5))
-    
+
     # Create backup
     await store.backup_manager.create_backup("full")
-    
+
     await store.close()
     ```
 """
@@ -272,9 +272,7 @@ class ProductionVectorStoreConfig(VectorStoreConfig):
         enable_health_check: Whether to enable health monitoring
     """
 
-    pool_config: ConnectionPoolConfig = field(
-        default_factory=ConnectionPoolConfig
-    )
+    pool_config: ConnectionPoolConfig = field(default_factory=ConnectionPoolConfig)
     retry_config: RetryConfig = field(default_factory=RetryConfig)
     backup_config: BackupConfig = field(default_factory=BackupConfig)
     migration_config: MigrationConfig = field(default_factory=MigrationConfig)
@@ -340,13 +338,9 @@ class ConnectionPool:
         """
         self.config = config
         self._connection_factory = connection_factory
-        self._pool: asyncio.Queue[PooledConnection] = asyncio.Queue(
-            maxsize=config.max_connections
-        )
+        self._pool: asyncio.Queue[PooledConnection] = asyncio.Queue(maxsize=config.max_connections)
         self._active_connections: Set[PooledConnection] = set()
-        self._semaphore: asyncio.Semaphore = asyncio.Semaphore(
-            config.max_connections
-        )
+        self._semaphore: asyncio.Semaphore = asyncio.Semaphore(config.max_connections)
         self._lock = asyncio.Lock()
         self._initialized = False
         self._health_check_task: Optional[asyncio.Task] = None
@@ -366,9 +360,7 @@ class ConnectionPool:
 
         # Start health check task
         if self.config.health_check_interval > 0:
-            self._health_check_task = asyncio.create_task(
-                self._health_check_loop()
-            )
+            self._health_check_task = asyncio.create_task(self._health_check_loop())
 
         logger.info(
             "Connection pool initialized with %d connections",
@@ -483,10 +475,8 @@ class ConnectionPool:
                 return pooled
             except Exception as e:
                 if attempt == self.config.connection_retry_attempts - 1:
-                    raise ConnectionPoolError(
-                        f"Failed to create connection after {attempt + 1} attempts: {e}"
-                    )
-                await asyncio.sleep(0.1 * (2 ** attempt))
+                    raise ConnectionPoolError(f"Failed to create connection after {attempt + 1} attempts: {e}")
+                await asyncio.sleep(0.1 * (2**attempt))
 
         raise ConnectionPoolError("Failed to create connection")
 
@@ -687,9 +677,7 @@ class RetryManager:
     def _calculate_delay(self, attempt: int) -> float:
         """Calculate delay for a retry attempt."""
         # Exponential backoff
-        delay = self.config.base_delay * (
-            self.config.exponential_base ** attempt
-        )
+        delay = self.config.base_delay * (self.config.exponential_base**attempt)
 
         # Cap at max delay
         delay = min(delay, self.config.max_delay)
@@ -819,9 +807,7 @@ class BackupManager:
             # Determine what to backup
             if backup_type == BackupType.COLLECTION:
                 if not collection_name:
-                    raise BackupError(
-                        "collection_name required for COLLECTION backup"
-                    )
+                    raise BackupError("collection_name required for COLLECTION backup")
                 collections = [collection_name]
                 source = self.persist_directory / collection_name
             else:
@@ -1003,11 +989,7 @@ class BackupManager:
         """List collections in the persist directory."""
         if not self.persist_directory.exists():
             return []
-        return [
-            d.name
-            for d in self.persist_directory.iterdir()
-            if d.is_dir()
-        ]
+        return [d.name for d in self.persist_directory.iterdir() if d.is_dir()]
 
     async def _create_compressed_backup(
         self,
@@ -1085,9 +1067,7 @@ class BackupManager:
             try:
                 with open(self._metadata_file, "r") as f:
                     data = json.load(f)
-                self._backups = {
-                    k: BackupMetadata(**v) for k, v in data.items()
-                }
+                self._backups = {k: BackupMetadata(**v) for k, v in data.items()}
             except Exception as e:
                 logger.warning("Failed to load backup metadata: %s", e)
                 self._backups = {}
@@ -1116,11 +1096,7 @@ class BackupManager:
             return
 
         cutoff = datetime.now() - timedelta(days=self.config.retention_days)
-        to_delete = [
-            bid
-            for bid, meta in self._backups.items()
-            if meta.created_at < cutoff
-        ]
+        to_delete = [bid for bid, meta in self._backups.items() if meta.created_at < cutoff]
 
         for bid in to_delete:
             logger.info("Removing old backup %s", bid)
@@ -1296,9 +1272,7 @@ class MigrationManager:
 
         # Get migrations to rollback (in reverse order)
         to_rollback = [
-            self._migrations[v]
-            for v in sorted(self._applied_migrations.keys(), reverse=True)
-            if v > target_version
+            self._migrations[v] for v in sorted(self._applied_migrations.keys(), reverse=True) if v > target_version
         ]
 
         rolled_back: List[MigrationRecord] = []
@@ -1317,12 +1291,8 @@ class MigrationManager:
         """
         pending = self._get_pending_migrations()
         return {
-            "current_version": max(self._applied_migrations.keys())
-            if self._applied_migrations
-            else 0,
-            "latest_version": max(self._migrations.keys())
-            if self._migrations
-            else 0,
+            "current_version": max(self._applied_migrations.keys()) if self._applied_migrations else 0,
+            "latest_version": max(self._migrations.keys()) if self._migrations else 0,
             "pending_count": len(pending),
             "applied_count": len(self._applied_migrations),
             "pending_versions": [m.version for m in pending],
@@ -1330,11 +1300,7 @@ class MigrationManager:
 
     def _get_pending_migrations(self) -> List[Migration]:
         """Get list of pending migrations in order."""
-        pending = [
-            m
-            for v, m in sorted(self._migrations.items())
-            if v not in self._applied_migrations
-        ]
+        pending = [m for v, m in sorted(self._migrations.items()) if v not in self._applied_migrations]
         return pending
 
     async def _apply_migration(self, migration: Migration) -> MigrationRecord:
@@ -1365,9 +1331,7 @@ class MigrationManager:
             self._applied_migrations[migration.version] = record
             await self._save_state()
 
-            logger.info(
-                "Applied migration %d in %.2fs", migration.version, record.duration_seconds
-            )
+            logger.info("Applied migration %d in %.2fs", migration.version, record.duration_seconds)
 
             return record
 
@@ -1381,9 +1345,7 @@ class MigrationManager:
 
     async def _rollback_migration(self, migration: Migration) -> MigrationRecord:
         """Rollback a single migration."""
-        logger.info(
-            "Rolling back migration %d: %s", migration.version, migration.name
-        )
+        logger.info("Rolling back migration %d: %s", migration.version, migration.name)
 
         start_time = time.time()
 
@@ -1397,9 +1359,7 @@ class MigrationManager:
                 await self._save_state()
 
             duration = time.time() - start_time
-            logger.info(
-                "Rolled back migration %d in %.2fs", migration.version, duration
-            )
+            logger.info("Rolled back migration %d in %.2fs", migration.version, duration)
 
             return MigrationRecord(
                 version=migration.version,
@@ -1606,9 +1566,7 @@ class ProductionChromaStore(ChromaVectorStore):
         """Search with retry logic and metrics."""
         start_time = time.time()
         try:
-            results = await self._execute_with_retry(
-                super().search, query_embedding, options
-            )
+            results = await self._execute_with_retry(super().search, query_embedding, options)
             self._update_metrics(success=True, latency_ms=(time.time() - start_time) * 1000)
             return results
         except Exception:
@@ -1720,9 +1678,7 @@ class ProductionChromaStore(ChromaVectorStore):
         # Update average latency
         total = self._metrics["total_operations"]
         current_avg = self._metrics["average_latency_ms"]
-        self._metrics["average_latency_ms"] = (
-            (current_avg * (total - 1)) + latency_ms
-        ) / total
+        self._metrics["average_latency_ms"] = ((current_avg * (total - 1)) + latency_ms) / total
 
     async def _health_check_loop(self) -> None:
         """Background health check loop."""

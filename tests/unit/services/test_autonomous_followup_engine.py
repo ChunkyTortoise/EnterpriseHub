@@ -12,27 +12,28 @@ Critical Test Coverage Areas:
 6. Error recovery and fallback mechanisms
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import AgentInsight, AgentType
 from ghl_real_estate_ai.services.autonomous_followup_engine import (
     AutonomousFollowUpEngine,
+    ChannelStrategistAgent,
+    ContentPersonalizerAgent,
+    EscalationManagerAgent,
     FollowUpRecommendation,
     FollowUpTask,
-    TimingOptimizerAgent,
-    ContentPersonalizerAgent,
-    ChannelStrategistAgent,
     ResponseAnalyzerAgent,
-    EscalationManagerAgent
+    TimingOptimizerAgent,
 )
-from ghl_real_estate_ai.agents.lead_intelligence_swarm import AgentType, AgentInsight
 from tests.fixtures.comprehensive_agent_fixtures import (
     LeadProfileFactory,
     MockAgentInsightFactory,
-    MockFollowUpRecommendationFactory
+    MockFollowUpRecommendationFactory,
 )
 
 
@@ -42,12 +43,15 @@ class TestAutonomousFollowUpEngine:
     @pytest.fixture
     async def engine(self):
         """Create test engine with mocked dependencies"""
-        with patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine') as mock_behavioral, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service') as mock_cache, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client') as mock_llm, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm') as mock_swarm, \
-             patch('ghl_real_estate_ai.services.autonomous_followup_engine.get_database') as mock_db:
-
+        with (
+            patch(
+                "ghl_real_estate_ai.services.autonomous_followup_engine.get_behavioral_trigger_engine"
+            ) as mock_behavioral,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_cache_service") as mock_cache,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_llm_client") as mock_llm,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_lead_intelligence_swarm") as mock_swarm,
+            patch("ghl_real_estate_ai.services.autonomous_followup_engine.get_database") as mock_db,
+        ):
             # Configure mocks with realistic responses
             mock_behavioral.return_value = AsyncMock()
             mock_cache.return_value = AsyncMock()
@@ -72,13 +76,13 @@ class TestAutonomousFollowUpEngine:
         engine.database_service.get_lead_profile_data = AsyncMock(return_value=lead_profile.demographics)
 
         # Mock swarm analysis
-        engine.lead_intelligence_swarm.analyze_lead = AsyncMock(return_value=MagicMock(
-            primary_insight=MagicMock(
-                opportunity_score=88.5,
-                urgency_level="high",
-                metadata={"behavioral_score": 91.2}
+        engine.lead_intelligence_swarm.analyze_lead = AsyncMock(
+            return_value=MagicMock(
+                primary_insight=MagicMock(
+                    opportunity_score=88.5, urgency_level="high", metadata={"behavioral_score": 91.2}
+                )
             )
-        ))
+        )
 
         # Act
         await engine._process_lead(lead_id)
@@ -108,11 +112,7 @@ class TestAutonomousFollowUpEngine:
         ]
 
         swarm_analysis = MagicMock(
-            consensus_score=0.85,
-            primary_insight=MagicMock(
-                opportunity_score=88.5,
-                urgency_level="high"
-            )
+            consensus_score=0.85, primary_insight=MagicMock(opportunity_score=88.5, urgency_level="high")
         )
 
         # Act
@@ -120,9 +120,9 @@ class TestAutonomousFollowUpEngine:
 
         # Assert
         assert consensus is not None
-        assert consensus['final_recommendation'] is not None
-        assert consensus['consensus_confidence'] >= 0.7  # Above threshold
-        assert consensus['action_priority'] in ['immediate', 'high', 'medium', 'low']
+        assert consensus["final_recommendation"] is not None
+        assert consensus["consensus_confidence"] >= 0.7  # Above threshold
+        assert consensus["action_priority"] in ["immediate", "high", "medium", "low"]
 
     @pytest.mark.asyncio
     async def test_agent_consensus_building_low_confidence_fallback(self, engine):
@@ -133,19 +133,20 @@ class TestAutonomousFollowUpEngine:
         # Create low-confidence recommendations
         agent_recommendations = [
             MockFollowUpRecommendationFactory.create_recommendation(
-                lead_profile, AgentType.TIMING_OPTIMIZER, confidence=0.45  # Below threshold
+                lead_profile,
+                AgentType.TIMING_OPTIMIZER,
+                confidence=0.45,  # Below threshold
             ),
             MockFollowUpRecommendationFactory.create_recommendation(
-                lead_profile, AgentType.CONTENT_PERSONALIZER, confidence=0.42  # Below threshold
+                lead_profile,
+                AgentType.CONTENT_PERSONALIZER,
+                confidence=0.42,  # Below threshold
             ),
         ]
 
         swarm_analysis = MagicMock(
             consensus_score=0.40,  # Low consensus
-            primary_insight=MagicMock(
-                opportunity_score=45.2,
-                urgency_level="low"
-            )
+            primary_insight=MagicMock(opportunity_score=45.2, urgency_level="low"),
         )
 
         # Act
@@ -153,9 +154,9 @@ class TestAutonomousFollowUpEngine:
 
         # Assert - Should create fallback recommendation
         assert consensus is not None
-        assert consensus['consensus_confidence'] < 0.7  # Below threshold
-        assert consensus['action_priority'] == 'low'
-        assert 'fallback_applied' in consensus
+        assert consensus["consensus_confidence"] < 0.7  # Below threshold
+        assert consensus["action_priority"] == "low"
+        assert "fallback_applied" in consensus
 
     @pytest.mark.asyncio
     async def test_database_error_handling_with_retries(self, engine):
@@ -168,12 +169,12 @@ class TestAutonomousFollowUpEngine:
             side_effect=[
                 Exception("Connection timeout"),  # First attempt fails
                 Exception("Connection timeout"),  # Second attempt fails
-                {"activity": "success"}           # Third attempt succeeds
+                {"activity": "success"},  # Third attempt succeeds
             ]
         )
 
         # Act & Assert
-        with patch('asyncio.sleep'):  # Speed up retries for testing
+        with patch("asyncio.sleep"):  # Speed up retries for testing
             result = await engine._get_lead_activity(lead_id)
 
             # Should succeed after retries
@@ -192,7 +193,7 @@ class TestAutonomousFollowUpEngine:
         )
 
         # Act & Assert
-        with patch('asyncio.sleep'):  # Speed up retries
+        with patch("asyncio.sleep"):  # Speed up retries
             with pytest.raises(Exception, match="Database permanently unavailable"):
                 await engine._get_lead_activity(lead_id)
 
@@ -204,7 +205,7 @@ class TestAutonomousFollowUpEngine:
         lead_id = lead_profile.lead_id
 
         # Mock some agents to fail, others to succeed
-        with patch.object(engine, '_deploy_followup_agents') as mock_deploy:
+        with patch.object(engine, "_deploy_followup_agents") as mock_deploy:
             mock_deploy.return_value = [
                 MockFollowUpRecommendationFactory.create_recommendation(
                     lead_profile, AgentType.TIMING_OPTIMIZER, confidence=0.85
@@ -217,13 +218,11 @@ class TestAutonomousFollowUpEngine:
             ]
 
             # Mock swarm analysis
-            engine.lead_intelligence_swarm.analyze_lead = AsyncMock(return_value=MagicMock(
-                consensus_score=0.75,
-                primary_insight=MagicMock(
-                    opportunity_score=68.3,
-                    urgency_level="medium"
+            engine.lead_intelligence_swarm.analyze_lead = AsyncMock(
+                return_value=MagicMock(
+                    consensus_score=0.75, primary_insight=MagicMock(opportunity_score=68.3, urgency_level="medium")
                 )
-            ))
+            )
 
             # Mock database responses
             engine.database_service.get_lead_activity_data = AsyncMock(return_value=lead_profile.behavioral_data)
@@ -243,15 +242,13 @@ class TestAutonomousFollowUpEngine:
         # Arrange
         lead_profile = LeadProfileFactory.investor_profile_lead()
         context = {
-            'lead_profile': lead_profile.demographics,
-            'behavioral_data': lead_profile.behavioral_data,
-            'swarm_analysis': MagicMock(
+            "lead_profile": lead_profile.demographics,
+            "behavioral_data": lead_profile.behavioral_data,
+            "swarm_analysis": MagicMock(
                 primary_insight=MagicMock(
-                    opportunity_score=87.3,
-                    urgency_level="high",
-                    profile_type="experienced_investor"
+                    opportunity_score=87.3, urgency_level="high", profile_type="experienced_investor"
                 )
-            )
+            ),
         }
 
         # Mock LLM response
@@ -274,8 +271,8 @@ class TestAutonomousFollowUpEngine:
 
         # Verify prompt contains key context
         call_args = engine.llm_client.generate.call_args[1]
-        prompt = call_args.get('prompt', call_args.get('messages', ''))
-        assert 'investor' in prompt.lower() or 'cap rate' in prompt.lower()
+        prompt = call_args.get("prompt", call_args.get("messages", ""))
+        assert "investor" in prompt.lower() or "cap rate" in prompt.lower()
 
     @pytest.mark.asyncio
     async def test_follow_up_task_generation(self, engine):
@@ -283,11 +280,11 @@ class TestAutonomousFollowUpEngine:
         # Arrange
         lead_profile = LeadProfileFactory.high_intent_lead()
         consensus = {
-            'final_recommendation': MockFollowUpRecommendationFactory.create_recommendation(
+            "final_recommendation": MockFollowUpRecommendationFactory.create_recommendation(
                 lead_profile, AgentType.CONTENT_PERSONALIZER, confidence=0.85
             ),
-            'consensus_confidence': 0.85,
-            'action_priority': 'urgent'
+            "consensus_confidence": 0.85,
+            "action_priority": "urgent",
         }
 
         # Act
@@ -309,6 +306,7 @@ class TestAutonomousFollowUpEngine:
 
         # Mock _process_lead to track calls
         process_calls = []
+
         async def mock_process_lead(lead_id):
             process_calls.append(lead_id)
 
@@ -328,9 +326,9 @@ class TestAutonomousFollowUpEngine:
         # Arrange
         lead_id = "LEAD_CACHE_TEST"
         cached_analysis = {
-            'agent_consensus': {'confidence': 0.85},
-            'swarm_analysis': {'opportunity_score': 88.5},
-            'cached_at': datetime.now().isoformat()
+            "agent_consensus": {"confidence": 0.85},
+            "swarm_analysis": {"opportunity_score": 88.5},
+            "cached_at": datetime.now().isoformat(),
         }
 
         # Mock cache hit
@@ -358,9 +356,9 @@ class TestAutonomousFollowUpEngine:
         engine.database_service.get_lead_response_data = AsyncMock(return_value={})
         engine.database_service.get_lead_profile_data = AsyncMock(return_value=lead_profile.demographics)
 
-        engine.lead_intelligence_swarm.analyze_lead = AsyncMock(return_value=MagicMock(
-            primary_insight=MagicMock(opportunity_score=68.3, urgency_level="medium")
-        ))
+        engine.lead_intelligence_swarm.analyze_lead = AsyncMock(
+            return_value=MagicMock(primary_insight=MagicMock(opportunity_score=68.3, urgency_level="medium"))
+        )
 
         # Act
         start_time = datetime.now()
@@ -390,13 +388,8 @@ class TestFollowUpAgents:
         lead_profile = LeadProfileFactory.high_intent_lead()
 
         context = {
-            'behavioral_data': lead_profile.behavioral_data,
-            'swarm_analysis': MagicMock(
-                primary_insight=MagicMock(
-                    urgency_level="urgent",
-                    opportunity_score=88.5
-                )
-            )
+            "behavioral_data": lead_profile.behavioral_data,
+            "swarm_analysis": MagicMock(primary_insight=MagicMock(urgency_level="urgent", opportunity_score=88.5)),
         }
 
         # Mock LLM response for urgent timing
@@ -424,13 +417,10 @@ class TestFollowUpAgents:
         lead_profile = LeadProfileFactory.investor_profile_lead()
 
         context = {
-            'lead_profile': lead_profile.demographics,
-            'swarm_analysis': MagicMock(
-                primary_insight=MagicMock(
-                    profile_type="experienced_investor",
-                    opportunity_score=87.3
-                )
-            )
+            "lead_profile": lead_profile.demographics,
+            "swarm_analysis": MagicMock(
+                primary_insight=MagicMock(profile_type="experienced_investor", opportunity_score=87.3)
+            ),
         }
 
         # Mock LLM response for investor-focused content
@@ -447,7 +437,7 @@ class TestFollowUpAgents:
 
         # Should include investment-focused personalization data
         personalization = result.personalization_data
-        assert 'investment' in str(personalization).lower() or 'roi' in str(personalization).lower()
+        assert "investment" in str(personalization).lower() or "roi" in str(personalization).lower()
 
     @pytest.mark.asyncio
     async def test_channel_strategist_agent_multi_channel(self, mock_llm_client):
@@ -456,10 +446,7 @@ class TestFollowUpAgents:
         agent = ChannelStrategistAgent(AgentType.CHANNEL_STRATEGIST, mock_llm_client)
         lead_profile = LeadProfileFactory.high_intent_lead()
 
-        context = {
-            'behavioral_data': lead_profile.behavioral_data,
-            'response_history': []
-        }
+        context = {"behavioral_data": lead_profile.behavioral_data, "response_history": []}
 
         # Mock LLM response for channel strategy
         mock_llm_client.generate.return_value = MagicMock(
@@ -472,7 +459,7 @@ class TestFollowUpAgents:
         # Assert
         assert isinstance(result, FollowUpRecommendation)
         assert result.agent_type == AgentType.CHANNEL_STRATEGIST
-        assert result.communication_channel in ['phone', 'sms', 'email']
+        assert result.communication_channel in ["phone", "sms", "email"]
 
     @pytest.mark.asyncio
     async def test_response_analyzer_agent_sentiment_detection(self, mock_llm_client):
@@ -482,11 +469,11 @@ class TestFollowUpAgents:
         lead_profile = LeadProfileFactory.medium_engagement_lead()
 
         context = {
-            'response_data': {
-                'recent_responses': [
-                    {'content': 'Thanks for the info, but not interested right now', 'timestamp': datetime.now()}
+            "response_data": {
+                "recent_responses": [
+                    {"content": "Thanks for the info, but not interested right now", "timestamp": datetime.now()}
                 ],
-                'negative_sentiment': 0.7
+                "negative_sentiment": 0.7,
             }
         }
 
@@ -513,10 +500,10 @@ class TestFollowUpAgents:
         lead_profile = LeadProfileFactory.high_intent_lead()
 
         context = {
-            'follow_up_history': [
-                {'timestamp': datetime.now() - timedelta(days=3), 'channel': 'email', 'response': None},
-                {'timestamp': datetime.now() - timedelta(days=2), 'channel': 'sms', 'response': None},
-                {'timestamp': datetime.now() - timedelta(days=1), 'channel': 'phone', 'response': None}
+            "follow_up_history": [
+                {"timestamp": datetime.now() - timedelta(days=3), "channel": "email", "response": None},
+                {"timestamp": datetime.now() - timedelta(days=2), "channel": "sms", "response": None},
+                {"timestamp": datetime.now() - timedelta(days=1), "channel": "phone", "response": None},
             ]
         }
 
@@ -531,7 +518,7 @@ class TestFollowUpAgents:
         # Assert
         assert isinstance(result, FollowUpRecommendation)
         assert result.agent_type == AgentType.ESCALATION_MANAGER
-        assert 'escalat' in result.recommended_action.lower()
+        assert "escalat" in result.recommended_action.lower()
 
 
 class TestFollowUpTaskManagement:
@@ -556,7 +543,7 @@ class TestFollowUpTaskManagement:
             personalization_data=recommendation.personalization_data,
             priority="urgent",
             created_from_agent=AgentType.TIMING_OPTIMIZER,
-            expected_response_rate=recommendation.expected_response_rate
+            expected_response_rate=recommendation.expected_response_rate,
         )
 
         # Assert
@@ -573,22 +560,21 @@ class TestFollowUpTaskManagement:
             lead_id="LEAD_URGENT",
             task_type="immediate_contact",
             scheduled_time=datetime.now() + timedelta(minutes=15),
-            priority="urgent"
+            priority="urgent",
         )
 
         medium_task = FollowUpTask(
             lead_id="LEAD_MEDIUM",
             task_type="standard_followup",
             scheduled_time=datetime.now() + timedelta(hours=2),
-            priority="medium"
+            priority="medium",
         )
 
         # Act - Sort tasks by priority and timing
         tasks = [medium_task, urgent_task]
-        sorted_tasks = sorted(tasks, key=lambda t: (
-            0 if t.priority == "urgent" else 1 if t.priority == "high" else 2,
-            t.scheduled_time
-        ))
+        sorted_tasks = sorted(
+            tasks, key=lambda t: (0 if t.priority == "urgent" else 1 if t.priority == "high" else 2, t.scheduled_time)
+        )
 
         # Assert
         assert sorted_tasks[0] == urgent_task
@@ -596,7 +582,7 @@ class TestFollowUpTaskManagement:
 
 
 # Test Configuration
-pytest_plugins = ['pytest_asyncio']
+pytest_plugins = ["pytest_asyncio"]
 
 
 if __name__ == "__main__":

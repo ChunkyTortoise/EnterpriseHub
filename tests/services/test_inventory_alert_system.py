@@ -12,25 +12,26 @@ Test coverage:
 - Error handling and edge cases
 """
 
-import pytest
-import pytest_asyncio
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
 import numpy as np
+import pytest
+import pytest_asyncio
 
 from ghl_real_estate_ai.services.inventory_alert_system import (
-    InventoryAlertSystem,
-    AlertRule,
-    AlertInstance,
-    MarketDataPoint,
-    AlertType,
-    AlertSeverity,
     AlertChannel,
+    AlertInstance,
+    AlertRule,
+    AlertSeverity,
     AlertStatus,
+    AlertType,
+    InventoryAlertSystem,
+    MarketDataPoint,
     TrendAnalysis,
-    get_inventory_alert_system
+    get_inventory_alert_system,
 )
 
 
@@ -44,7 +45,7 @@ class TestInventoryAlertSystem:
         system.cache = AsyncMock()
 
         # Mock background monitoring task
-        with patch.object(system, '_monitoring_loop', new_callable=AsyncMock):
+        with patch.object(system, "_monitoring_loop", new_callable=AsyncMock):
             await system.initialize()
 
         return system
@@ -65,7 +66,7 @@ class TestInventoryAlertSystem:
             delivery_channels=[AlertChannel.EMAIL, AlertChannel.WEBHOOK],
             throttle_minutes=120,
             created_by="test_user",
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
     @pytest.fixture
@@ -78,22 +79,22 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=200.0,
-                metadata={"source": "mls", "confidence": 0.95}
+                metadata={"source": "mls", "confidence": 0.95},
             ),
             MarketDataPoint(
                 timestamp=base_time - timedelta(hours=1),
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=180.0,
-                metadata={"source": "mls", "confidence": 0.95}
+                metadata={"source": "mls", "confidence": 0.95},
             ),
             MarketDataPoint(
                 timestamp=base_time,
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=150.0,  # 25% drop
-                metadata={"source": "mls", "confidence": 0.95}
-            )
+                metadata={"source": "mls", "confidence": 0.95},
+            ),
         ]
 
     @pytest.fixture
@@ -117,7 +118,7 @@ class TestInventoryAlertSystem:
             delivery_status={},
             triggered_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=24),
-            recommended_actions=["Monitor market conditions", "Prepare buyers for competition"]
+            recommended_actions=["Monitor market conditions", "Prepare buyers for competition"],
         )
 
     @pytest.mark.asyncio
@@ -127,11 +128,12 @@ class TestInventoryAlertSystem:
         system.cache = AsyncMock()
 
         # Mock dependencies
-        with patch.object(system, '_load_alert_rules', new_callable=AsyncMock), \
-             patch.object(system, '_create_default_alert_rules', new_callable=AsyncMock), \
-             patch.object(system, '_initialize_trend_analyzers', new_callable=AsyncMock), \
-             patch.object(system, '_monitoring_loop', new_callable=AsyncMock):
-
+        with (
+            patch.object(system, "_load_alert_rules", new_callable=AsyncMock),
+            patch.object(system, "_create_default_alert_rules", new_callable=AsyncMock),
+            patch.object(system, "_initialize_trend_analyzers", new_callable=AsyncMock),
+            patch.object(system, "_monitoring_loop", new_callable=AsyncMock),
+        ):
             await system.initialize()
 
             assert system.is_initialized
@@ -142,7 +144,7 @@ class TestInventoryAlertSystem:
     async def test_process_market_data(self, alert_system, sample_market_data):
         """Test market data processing."""
         # Mock alert evaluation
-        with patch.object(alert_system, '_evaluate_alert_conditions', new_callable=AsyncMock) as mock_evaluate:
+        with patch.object(alert_system, "_evaluate_alert_conditions", new_callable=AsyncMock) as mock_evaluate:
             await alert_system.process_market_data(sample_market_data)
 
             mock_evaluate.assert_called_once_with(sample_market_data)
@@ -155,7 +157,7 @@ class TestInventoryAlertSystem:
     async def test_create_alert_rule(self, alert_system, sample_alert_rule):
         """Test alert rule creation."""
         # Mock save operation
-        with patch.object(alert_system, '_save_alert_rules', new_callable=AsyncMock):
+        with patch.object(alert_system, "_save_alert_rules", new_callable=AsyncMock):
             success = await alert_system.create_alert_rule(sample_alert_rule)
 
             assert success
@@ -168,7 +170,7 @@ class TestInventoryAlertSystem:
         alert_system.alert_rules[sample_alert_rule.rule_id] = sample_alert_rule
 
         # Mock save operation
-        with patch.object(alert_system, '_save_alert_rules', new_callable=AsyncMock):
+        with patch.object(alert_system, "_save_alert_rules", new_callable=AsyncMock):
             updates = {"enabled": False, "throttle_minutes": 240}
             success = await alert_system.update_alert_rule(sample_alert_rule.rule_id, updates)
 
@@ -193,27 +195,19 @@ class TestInventoryAlertSystem:
         alert_system.active_alerts[sample_alert_instance.alert_id] = sample_alert_instance
 
         # Filter by severity
-        high_severity_alerts = await alert_system.get_active_alerts(
-            severity_filter=AlertSeverity.HIGH
-        )
+        high_severity_alerts = await alert_system.get_active_alerts(severity_filter=AlertSeverity.HIGH)
         assert len(high_severity_alerts) == 1
 
         # Filter by different severity (should return empty)
-        low_severity_alerts = await alert_system.get_active_alerts(
-            severity_filter=AlertSeverity.LOW
-        )
+        low_severity_alerts = await alert_system.get_active_alerts(severity_filter=AlertSeverity.LOW)
         assert len(low_severity_alerts) == 0
 
         # Filter by alert type
-        inventory_alerts = await alert_system.get_active_alerts(
-            type_filter=AlertType.INVENTORY_DROP
-        )
+        inventory_alerts = await alert_system.get_active_alerts(type_filter=AlertType.INVENTORY_DROP)
         assert len(inventory_alerts) == 1
 
         # Filter by area
-        area_alerts = await alert_system.get_active_alerts(
-            area_filter="test_neighborhood"
-        )
+        area_alerts = await alert_system.get_active_alerts(area_filter="test_neighborhood")
         assert len(area_alerts) == 1
 
     @pytest.mark.asyncio
@@ -221,10 +215,7 @@ class TestInventoryAlertSystem:
         """Test alert acknowledgment."""
         alert_system.active_alerts[sample_alert_instance.alert_id] = sample_alert_instance
 
-        success = await alert_system.acknowledge_alert(
-            sample_alert_instance.alert_id,
-            "test_user"
-        )
+        success = await alert_system.acknowledge_alert(sample_alert_instance.alert_id, "test_user")
 
         assert success
         assert sample_alert_instance.status == AlertStatus.ACKNOWLEDGED
@@ -237,9 +228,7 @@ class TestInventoryAlertSystem:
         alert_system.active_alerts[sample_alert_instance.alert_id] = sample_alert_instance
 
         success = await alert_system.resolve_alert(
-            sample_alert_instance.alert_id,
-            "test_user",
-            "Issue resolved - market stabilized"
+            sample_alert_instance.alert_id, "test_user", "Issue resolved - market stabilized"
         )
 
         assert success
@@ -249,7 +238,9 @@ class TestInventoryAlertSystem:
         assert len(alert_system.alert_history) > 0
 
     @pytest.mark.asyncio
-    async def test_alert_generation_percentage_change(self, alert_system, sample_alert_rule, sample_market_data, sample_alert_instance):
+    async def test_alert_generation_percentage_change(
+        self, alert_system, sample_alert_rule, sample_market_data, sample_alert_instance
+    ):
         """Test alert generation for percentage change conditions."""
         # Clear default rules and add only the test rule
         alert_system.alert_rules = {sample_alert_rule.rule_id: sample_alert_rule}
@@ -263,14 +254,15 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=200.0,
-                metadata={"source": "mls", "confidence": 0.95}
+                metadata={"source": "mls", "confidence": 0.95},
             )
             alert_system.market_data_buffer[metric_key].append(historical_point)
 
         # Mock alert generation and processing
-        with patch.object(alert_system, '_generate_alert') as mock_generate, \
-             patch.object(alert_system, '_process_new_alert', new_callable=AsyncMock) as mock_process:
-
+        with (
+            patch.object(alert_system, "_generate_alert") as mock_generate,
+            patch.object(alert_system, "_process_new_alert", new_callable=AsyncMock) as mock_process,
+        ):
             mock_alert = sample_alert_instance
             mock_generate.return_value = mock_alert
 
@@ -281,14 +273,14 @@ class TestInventoryAlertSystem:
                     neighborhood_id="test_neighborhood",
                     metric_type="active_listings",
                     value=160.0,
-                    metadata={"source": "mls", "confidence": 0.95}
+                    metadata={"source": "mls", "confidence": 0.95},
                 ),
                 MarketDataPoint(
                     timestamp=base_time,
                     neighborhood_id="test_neighborhood",
                     metric_type="active_listings",
                     value=150.0,  # 25% drop from 200 baseline
-                    metadata={"source": "mls", "confidence": 0.95}
+                    metadata={"source": "mls", "confidence": 0.95},
                 ),
             ]
             await alert_system._evaluate_alert_conditions(triggering_points)
@@ -330,7 +322,7 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=200.0,
-                metadata={"source": "mls", "confidence": 0.95}
+                metadata={"source": "mls", "confidence": 0.95},
             )
             alert_system.market_data_buffer[metric_key].append(historical_point)
 
@@ -341,20 +333,17 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=180.0,
-                metadata={"source": "mls", "confidence": 0.95}
+                metadata={"source": "mls", "confidence": 0.95},
             ),
             MarketDataPoint(
                 timestamp=base_time,
                 neighborhood_id="test_neighborhood",
                 metric_type="active_listings",
                 value=150.0,
-                metadata={"source": "mls", "confidence": 0.95}
-            )
+                metadata={"source": "mls", "confidence": 0.95},
+            ),
         ]
-        should_trigger = await alert_system._evaluate_percentage_change(
-            sample_alert_rule,
-            triggering_points
-        )
+        should_trigger = await alert_system._evaluate_percentage_change(sample_alert_rule, triggering_points)
 
         assert should_trigger  # 25% drop should trigger 20% threshold
 
@@ -371,7 +360,7 @@ class TestInventoryAlertSystem:
             conditions={"metric": "sales_velocity", "comparison": "statistical_deviation"},
             threshold_values={"deviation_threshold": 2.0},
             comparison_period="30d",
-            severity=AlertSeverity.MEDIUM
+            severity=AlertSeverity.MEDIUM,
         )
 
         # Generate historical data with normal distribution
@@ -383,7 +372,7 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="sales_velocity",
                 value=0.75 + np.random.normal(0, 0.05),  # Mean 0.75, std 0.05
-                metadata={"source": "test"}
+                metadata={"source": "test"},
             )
             normal_data.append(data_point)
 
@@ -397,13 +386,10 @@ class TestInventoryAlertSystem:
             neighborhood_id="test_neighborhood",
             metric_type="sales_velocity",
             value=0.9,  # Significantly higher than normal
-            metadata={"source": "test"}
+            metadata={"source": "test"},
         )
 
-        should_trigger = await alert_system._evaluate_statistical_deviation(
-            stats_rule,
-            [outlier_data]
-        )
+        should_trigger = await alert_system._evaluate_statistical_deviation(stats_rule, [outlier_data])
 
         assert should_trigger
 
@@ -420,7 +406,7 @@ class TestInventoryAlertSystem:
             conditions={"metric": "new_listings_daily", "comparison": "anomaly_detection"},
             threshold_values={"anomaly_threshold": 0.85},
             comparison_period="30d",
-            severity=AlertSeverity.MEDIUM
+            severity=AlertSeverity.MEDIUM,
         )
 
         # Generate normal data
@@ -435,7 +421,7 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="new_listings_daily",
                 value=float(value),
-                metadata={"source": "test"}
+                metadata={"source": "test"},
             )
             normal_data.append(data_point)
 
@@ -449,20 +435,17 @@ class TestInventoryAlertSystem:
             neighborhood_id="test_neighborhood",
             metric_type="new_listings_daily",
             value=50.0,  # Way outside normal range
-            metadata={"source": "test"}
+            metadata={"source": "test"},
         )
 
-        should_trigger = await alert_system._evaluate_anomaly_detection(
-            anomaly_rule,
-            [anomaly_data]
-        )
+        should_trigger = await alert_system._evaluate_anomaly_detection(anomaly_rule, [anomaly_data])
 
         assert should_trigger
 
     @pytest.mark.asyncio
     async def test_alert_delivery_email(self, alert_system, sample_alert_instance):
         """Test email alert delivery."""
-        with patch.object(alert_system, '_send_email_alert', new_callable=AsyncMock) as mock_send:
+        with patch.object(alert_system, "_send_email_alert", new_callable=AsyncMock) as mock_send:
             await alert_system._send_email_alert(sample_alert_instance)
             mock_send.assert_called_once_with(sample_alert_instance)
 
@@ -470,11 +453,7 @@ class TestInventoryAlertSystem:
     async def test_alert_delivery_multiple_channels(self, alert_system, sample_alert_instance):
         """Test multi-channel alert delivery."""
         # Set multiple delivery channels
-        sample_alert_instance.delivery_channels = [
-            AlertChannel.EMAIL,
-            AlertChannel.SMS,
-            AlertChannel.WEBHOOK
-        ]
+        sample_alert_instance.delivery_channels = [AlertChannel.EMAIL, AlertChannel.SMS, AlertChannel.WEBHOOK]
 
         # Mock delivery handlers in the handler dict (not just methods)
         mock_email = AsyncMock()
@@ -535,7 +514,7 @@ class TestInventoryAlertSystem:
                 delivery_status={},
                 triggered_at=base_time - timedelta(days=i),
                 acknowledged_at=base_time - timedelta(days=i, hours=1),
-                resolved_at=base_time - timedelta(days=i, hours=2) if i < 5 else None
+                resolved_at=base_time - timedelta(days=i, hours=2) if i < 5 else None,
             )
             alert_system.alert_history.append(alert)
 
@@ -553,14 +532,12 @@ class TestInventoryAlertSystem:
         alert_system.alert_rules = {}
 
         # Mock save operation
-        with patch.object(alert_system, '_save_alert_rules', new_callable=AsyncMock):
+        with patch.object(alert_system, "_save_alert_rules", new_callable=AsyncMock):
             await alert_system._create_default_alert_rules()
 
             assert len(alert_system.alert_rules) > 0
-            assert any(rule.alert_type == AlertType.INVENTORY_DROP
-                      for rule in alert_system.alert_rules.values())
-            assert any(rule.alert_type == AlertType.PRICE_SPIKE
-                      for rule in alert_system.alert_rules.values())
+            assert any(rule.alert_type == AlertType.INVENTORY_DROP for rule in alert_system.alert_rules.values())
+            assert any(rule.alert_type == AlertType.PRICE_SPIKE for rule in alert_system.alert_rules.values())
 
     @pytest.mark.asyncio
     async def test_trend_analysis(self, alert_system):
@@ -576,7 +553,7 @@ class TestInventoryAlertSystem:
                 neighborhood_id="test_neighborhood",
                 metric_type="median_price",
                 value=float(value * 1000),  # Convert to realistic price
-                metadata={"source": "test"}
+                metadata={"source": "test"},
             )
             data_points.append(data_point)
 
@@ -626,7 +603,7 @@ class TestInventoryAlertSystem:
             neighborhood_id="included_area",
             metric_type="test_metric",
             value=100.0,
-            metadata={}
+            metadata={},
         )
 
         # Test included areas filter
@@ -662,7 +639,7 @@ class TestInventoryAlertSystem:
                     neighborhood_id=f"area_{i}",
                     metric_type=data_point.metric_type,
                     value=data_point.value,
-                    metadata=data_point.metadata
+                    metadata=data_point.metadata,
                 )
                 data_batch.append(new_point)
 
@@ -688,14 +665,14 @@ class TestInventoryAlertSystem:
                 neighborhood_id="memory_test",
                 metric_type="test_metric",
                 value=float(100 + i % 50),
-                metadata={"source": "test"}
+                metadata={"source": "test"},
             )
             large_data_set.append(data_point)
 
         # Process data in batches
         batch_size = 100
         for i in range(0, len(large_data_set), batch_size):
-            batch = large_data_set[i:i + batch_size]
+            batch = large_data_set[i : i + batch_size]
             await alert_system.process_market_data(batch)
 
         # Check buffer size limit (should be maintained at 1000)

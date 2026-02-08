@@ -9,13 +9,13 @@ This module provides advanced intent classification capabilities including:
 
 from __future__ import annotations
 
-import re
 import json
-from typing import Dict, List, Optional, Set, Tuple, Any, Union
+import math
+import re
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import defaultdict
-import math
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
@@ -82,9 +82,7 @@ class IntentClassificationResult:
             "confidence": self.confidence,
             "raw_confidence": self.raw_confidence,
             "features": self.features,
-            "alternative_intents": [
-                (intent.value, score) for intent, score in self.alternative_intents
-            ],
+            "alternative_intents": [(intent.value, score) for intent, score in self.alternative_intents],
         }
 
 
@@ -104,9 +102,7 @@ class MultiLabelResult:
     primary_intent: IntentType
     confidence_scores: Dict[IntentType, float]
     coverage_score: float
-    label_correlations: Dict[Tuple[IntentType, IntentType], float] = field(
-        default_factory=dict
-    )
+    label_correlations: Dict[Tuple[IntentType, IntentType], float] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert result to dictionary."""
@@ -115,9 +111,7 @@ class MultiLabelResult:
             "primary_intent": self.primary_intent.value,
             "confidence_scores": {k.value: v for k, v in self.confidence_scores.items()},
             "coverage_score": self.coverage_score,
-            "label_correlations": {
-                f"{k[0].value},{k[1].value}": v for k, v in self.label_correlations.items()
-            },
+            "label_correlations": {f"{k[0].value},{k[1].value}": v for k, v in self.label_correlations.items()},
         }
 
 
@@ -220,9 +214,7 @@ class ConfidenceCalibrator:
         exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
         return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
 
-    def _fit_temperature_scaling(
-        self, logits: np.ndarray, labels: np.ndarray
-    ) -> float:
+    def _fit_temperature_scaling(self, logits: np.ndarray, labels: np.ndarray) -> float:
         """Fit temperature parameter for temperature scaling."""
         from scipy.optimize import minimize_scalar
 
@@ -235,11 +227,8 @@ class ConfidenceCalibrator:
         result = minimize_scalar(nll_loss, bounds=(0.1, 10.0), method="bounded")
         return result.x
 
-    def _fit_platt_scaling(
-        self, probs: np.ndarray, labels: np.ndarray
-    ) -> Tuple[float, float]:
+    def _fit_platt_scaling(self, probs: np.ndarray, labels: np.ndarray) -> Tuple[float, float]:
         """Fit Platt scaling parameters."""
-        from sklearn.linear_model import LogisticRegression
 
         # Reshape for sklearn
         X = probs.reshape(-1, 1)
@@ -293,9 +282,7 @@ class IntentClassifierV2:
         """Initialize mock classification model."""
         # In production, this would load a fine-tuned transformer or sklearn model
         self._model = None
-        self._feature_weights: Dict[IntentType, Dict[str, float]] = defaultdict(
-            lambda: defaultdict(float)
-        )
+        self._feature_weights: Dict[IntentType, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
         self._build_mock_weights()
 
     def _build_mock_weights(self) -> None:
@@ -507,21 +494,22 @@ class IntentClassifierV2:
         """Build keyword sets for intent detection."""
         return {
             IntentType.INFORMATIONAL: {
-                "what", "how", "why", "when", "where", "who", "which",
-                "information", "details", "about", "tell me"
+                "what",
+                "how",
+                "why",
+                "when",
+                "where",
+                "who",
+                "which",
+                "information",
+                "details",
+                "about",
+                "tell me",
             },
-            IntentType.NAVIGATIONAL: {
-                "go to", "find", "locate", "where is", "address", "directions"
-            },
-            IntentType.TRANSACTIONAL: {
-                "buy", "sell", "purchase", "order", "book", "schedule", "contact"
-            },
-            IntentType.COMPARISON: {
-                "compare", "versus", "vs", "difference", "better", "best", "or"
-            },
-            IntentType.EXPLORATORY: {
-                "explore", "discover", "browse", "look around", "options", "available"
-            },
+            IntentType.NAVIGATIONAL: {"go to", "find", "locate", "where is", "address", "directions"},
+            IntentType.TRANSACTIONAL: {"buy", "sell", "purchase", "order", "book", "schedule", "contact"},
+            IntentType.COMPARISON: {"compare", "versus", "vs", "difference", "better", "best", "or"},
+            IntentType.EXPLORATORY: {"explore", "discover", "browse", "look around", "options", "available"},
         }
 
     def _extract_features(self, query: str) -> Dict[str, Any]:
@@ -649,12 +637,9 @@ class IntentClassifierV2:
                 confidence = raw_confidence
 
             # Get alternative intents
-            sorted_intents = sorted(
-                scores.items(), key=lambda x: x[1], reverse=True
-            )[1:4]  # Top 3 alternatives
+            sorted_intents = sorted(scores.items(), key=lambda x: x[1], reverse=True)[1:4]  # Top 3 alternatives
             alternative_intents = [
-                (intent, min(score / max_score if max_score > 0 else 0, 1.0))
-                for intent, score in sorted_intents
+                (intent, min(score / max_score if max_score > 0 else 0, 1.0)) for intent, score in sorted_intents
             ]
 
             # Apply minimum confidence threshold
@@ -703,16 +688,14 @@ class IntentClassifierV2:
 
         # Select intents above threshold
         selected_intents = [
-            intent
-            for intent, prob in probabilities.items()
-            if prob >= self.config.multi_label_threshold
+            intent for intent, prob in probabilities.items() if prob >= self.config.multi_label_threshold
         ]
 
         # Limit to max_labels
         if len(selected_intents) > self.config.max_labels:
-            selected_intents = sorted(
-                selected_intents, key=lambda i: probabilities[i], reverse=True
-            )[: self.config.max_labels]
+            selected_intents = sorted(selected_intents, key=lambda i: probabilities[i], reverse=True)[
+                : self.config.max_labels
+            ]
 
         # Ensure at least one intent
         if not selected_intents:
@@ -740,9 +723,7 @@ class IntentClassifierV2:
             label_correlations=correlations,
         )
 
-    def _calculate_intent_correlation(
-        self, intent1: IntentType, intent2: IntentType
-    ) -> float:
+    def _calculate_intent_correlation(self, intent1: IntentType, intent2: IntentType) -> float:
         """Calculate correlation between two intents.
 
         Args:
@@ -778,9 +759,7 @@ class IntentClassifierV2:
             # Default correlation based on semantic similarity
             return 0.3
 
-    def calibrate_confidence(
-        self, validation_queries: List[str], true_labels: List[int]
-    ) -> "IntentClassifierV2":
+    def calibrate_confidence(self, validation_queries: List[str], true_labels: List[int]) -> "IntentClassifierV2":
         """Calibrate confidence scores using validation data.
 
         Args:

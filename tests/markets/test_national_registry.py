@@ -8,21 +8,22 @@ Author: EnterpriseHub AI
 Created: 2026-01-18
 """
 
-import pytest
 import asyncio
-from datetime import datetime, date, timedelta
-from unittest.mock import Mock, patch, AsyncMock, mock_open
-from typing import Dict, Any
+from datetime import date, datetime, timedelta
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, mock_open, patch
+
+import pytest
 
 from ghl_real_estate_ai.markets.national_registry import (
-    NationalMarketRegistry,
     CorporateHeadquarters,
-    MarketExpansionTarget,
-    CrossMarketInsights,
     CorporatePartnerTier,
-    get_national_market_registry,
+    CrossMarketInsights,
+    MarketExpansionTarget,
+    NationalMarketRegistry,
     get_corporate_program,
-    get_market_migration_insights
+    get_market_migration_insights,
+    get_national_market_registry,
 )
 
 
@@ -39,18 +40,14 @@ def mock_cache_service():
 def mock_base_registry():
     """Mock base market registry"""
     registry = Mock()
-    registry.list_markets.return_value = ['austin', 'denver', 'phoenix', 'seattle']
+    registry.list_markets.return_value = ["austin", "denver", "phoenix", "seattle"]
     registry.get_market_config.return_value = {
-        'market_id': 'denver',
-        'market_name': 'Denver Metropolitan Area',
-        'market_type': 'tech_hub',
-        'median_home_price': 565000,
-        'price_appreciation_1y': 8.5,
-        'demographics': {
-            'population': 2963821,
-            'median_household_income': 78285,
-            'population_growth_rate': 0.028
-        }
+        "market_id": "denver",
+        "market_name": "Denver Metropolitan Area",
+        "market_type": "tech_hub",
+        "median_home_price": 565000,
+        "price_appreciation_1y": 8.5,
+        "demographics": {"population": 2963821, "median_household_income": 78285, "population_growth_rate": 0.028},
     }
     registry.get_market_service = Mock(return_value=Mock())
     registry.service_classes = {}
@@ -68,13 +65,14 @@ def mock_claude_assistant():
 @pytest.fixture
 def national_registry(mock_cache_service, mock_base_registry, mock_claude_assistant):
     """Create national registry with mocked dependencies"""
-    with patch('ghl_real_estate_ai.markets.national_registry.get_cache_service', return_value=mock_cache_service), \
-         patch('ghl_real_estate_ai.markets.national_registry.ClaudeAssistant', return_value=mock_claude_assistant), \
-         patch('ghl_real_estate_ai.markets.national_registry.get_market_registry', return_value=mock_base_registry), \
-         patch('pathlib.Path.mkdir'), \
-         patch('pathlib.Path.exists', return_value=False), \
-         patch('builtins.open', mock_open()):
-
+    with (
+        patch("ghl_real_estate_ai.markets.national_registry.get_cache_service", return_value=mock_cache_service),
+        patch("ghl_real_estate_ai.markets.national_registry.ClaudeAssistant", return_value=mock_claude_assistant),
+        patch("ghl_real_estate_ai.markets.national_registry.get_market_registry", return_value=mock_base_registry),
+        patch("pathlib.Path.mkdir"),
+        patch("pathlib.Path.exists", return_value=False),
+        patch("builtins.open", mock_open()),
+    ):
         registry = NationalMarketRegistry(mock_base_registry)
         return registry
 
@@ -95,13 +93,9 @@ def sample_corporate_headquarters():
         preferred_markets=["denver", "austin", "seattle"],
         relocation_volume_annual=200,
         average_relocation_budget=85000.0,
-        contact_info={
-            "hr_director": "test@test.com",
-            "phone": "+1-555-0123",
-            "program_manager": "Jane Smith"
-        },
+        contact_info={"hr_director": "test@test.com", "phone": "+1-555-0123", "program_manager": "Jane Smith"},
         program_start_date=datetime(2024, 1, 1),
-        last_updated=datetime.now()
+        last_updated=datetime.now(),
     )
 
 
@@ -123,7 +117,7 @@ class TestNationalMarketRegistry:
 
         # Verify key companies are included
         company_ids = list(national_registry.corporate_headquarters.keys())
-        expected_companies = ['amazon', 'microsoft', 'google', 'boeing', 'intel']
+        expected_companies = ["amazon", "microsoft", "google", "boeing", "intel"]
 
         for expected in expected_companies:
             assert any(expected in comp_id for comp_id in company_ids)
@@ -135,7 +129,7 @@ class TestNationalMarketRegistry:
 
         # Verify target markets
         target_markets = list(national_registry.expansion_targets.keys())
-        expected_targets = ['denver', 'phoenix', 'seattle']
+        expected_targets = ["denver", "phoenix", "seattle"]
 
         for expected in expected_targets:
             assert expected in target_markets
@@ -154,24 +148,24 @@ class TestNationalMarketRegistry:
         program = await national_registry.get_corporate_relocation_program("amazon")
 
         assert program is not None
-        assert 'company_info' in program
-        assert 'headquarters' in program
-        assert 'relocation_program' in program
-        assert 'preferred_market_details' in program
-        assert 'contact_information' in program
-        assert 'service_tiers' in program
+        assert "company_info" in program
+        assert "headquarters" in program
+        assert "relocation_program" in program
+        assert "preferred_market_details" in program
+        assert "contact_information" in program
+        assert "service_tiers" in program
 
         # Verify company info
-        company_info = program['company_info']
-        assert company_info['name'] == "Amazon"
-        assert company_info['ticker'] == "AMZN"
-        assert company_info['partnership_tier'] == CorporatePartnerTier.PLATINUM.value
+        company_info = program["company_info"]
+        assert company_info["name"] == "Amazon"
+        assert company_info["ticker"] == "AMZN"
+        assert company_info["partnership_tier"] == CorporatePartnerTier.PLATINUM.value
 
         # Verify relocation program details
-        relocation_program = program['relocation_program']
-        assert relocation_program['annual_volume'] > 0
-        assert relocation_program['average_budget'] > 0
-        assert isinstance(relocation_program['preferred_markets'], list)
+        relocation_program = program["relocation_program"]
+        assert relocation_program["annual_volume"] > 0
+        assert relocation_program["average_budget"] > 0
+        assert isinstance(relocation_program["preferred_markets"], list)
 
     @pytest.mark.asyncio
     async def test_get_corporate_relocation_program_not_found(self, national_registry):
@@ -207,26 +201,26 @@ class TestNationalMarketRegistry:
         """Test service tier definitions for different partnership levels"""
         # Test Platinum tier
         platinum_tiers = national_registry._get_service_tiers_for_partnership(CorporatePartnerTier.PLATINUM)
-        assert platinum_tiers['dedicated_relocation_specialist'] is True
-        assert platinum_tiers['24_7_support'] is True
-        assert platinum_tiers['volume_discounts'] == 15
-        assert platinum_tiers['quarterly_business_reviews'] is True
+        assert platinum_tiers["dedicated_relocation_specialist"] is True
+        assert platinum_tiers["24_7_support"] is True
+        assert platinum_tiers["volume_discounts"] == 15
+        assert platinum_tiers["quarterly_business_reviews"] is True
 
         # Test Gold tier
         gold_tiers = national_registry._get_service_tiers_for_partnership(CorporatePartnerTier.GOLD)
-        assert gold_tiers['dedicated_relocation_specialist'] is True
-        assert gold_tiers['24_7_support'] is False
-        assert gold_tiers['volume_discounts'] == 10
+        assert gold_tiers["dedicated_relocation_specialist"] is True
+        assert gold_tiers["24_7_support"] is False
+        assert gold_tiers["volume_discounts"] == 10
 
         # Test Silver tier
         silver_tiers = national_registry._get_service_tiers_for_partnership(CorporatePartnerTier.SILVER)
-        assert silver_tiers['dedicated_relocation_specialist'] is False
-        assert silver_tiers['volume_discounts'] == 5
+        assert silver_tiers["dedicated_relocation_specialist"] is False
+        assert silver_tiers["volume_discounts"] == 5
 
         # Test Bronze tier
         bronze_tiers = national_registry._get_service_tiers_for_partnership(CorporatePartnerTier.BRONZE)
-        assert bronze_tiers['volume_discounts'] == 0
-        assert bronze_tiers['quarterly_business_reviews'] is False
+        assert bronze_tiers["volume_discounts"] == 0
+        assert bronze_tiers["quarterly_business_reviews"] is False
 
     @pytest.mark.asyncio
     async def test_get_cross_market_insights(self, national_registry):
@@ -274,15 +268,15 @@ class TestNationalMarketRegistry:
 
         # Should find companies like Amazon, Microsoft, Google that operate in both markets
         shared_names = [name.lower() for name in shared]
-        tech_companies = ['amazon', 'microsoft', 'google']
+        tech_companies = ["amazon", "microsoft", "google"]
 
         # At least one tech company should be in both markets
-        assert any(tech in ' '.join(shared_names) for tech in tech_companies)
+        assert any(tech in " ".join(shared_names) for tech in tech_companies)
 
     def test_calculate_salary_delta(self, national_registry):
         """Test salary delta calculation"""
-        source_config = {'demographics': {'median_household_income': 70000}}
-        target_config = {'demographics': {'median_household_income': 85000}}
+        source_config = {"demographics": {"median_household_income": 70000}}
+        target_config = {"demographics": {"median_household_income": 85000}}
 
         delta = national_registry._calculate_salary_delta(source_config, target_config)
         expected_delta = ((85000 - 70000) / 70000) * 100  # ~21.43%
@@ -290,8 +284,8 @@ class TestNationalMarketRegistry:
 
     def test_calculate_col_comparison(self, national_registry):
         """Test cost of living comparison"""
-        source_config = {'median_home_price': 400000}
-        target_config = {'median_home_price': 500000}
+        source_config = {"median_home_price": 400000}
+        target_config = {"median_home_price": 500000}
 
         col_comparison = national_registry._calculate_col_comparison(source_config, target_config)
         expected = ((500000 - 400000) / 400000) * 100  # 25%
@@ -299,10 +293,7 @@ class TestNationalMarketRegistry:
 
     def test_calculate_housing_affordability(self, national_registry):
         """Test housing affordability calculation"""
-        target_config = {
-            'median_home_price': 600000,
-            'demographics': {'median_household_income': 100000}
-        }
+        target_config = {"median_home_price": 600000, "demographics": {"median_household_income": 100000}}
 
         ratio = national_registry._calculate_housing_affordability(target_config, target_config)
         expected_ratio = 600000 / 100000  # 6.0
@@ -319,10 +310,10 @@ class TestNationalMarketRegistry:
         """Test seasonal pattern analysis"""
         patterns = national_registry._analyze_seasonal_patterns("austin", "denver")
         assert isinstance(patterns, dict)
-        assert 'Q1' in patterns
-        assert 'Q2' in patterns
-        assert 'Q3' in patterns
-        assert 'Q4' in patterns
+        assert "Q1" in patterns
+        assert "Q2" in patterns
+        assert "Q3" in patterns
+        assert "Q4" in patterns
 
         # All quarters should sum to 100 (percentages)
         total = sum(patterns.values())
@@ -331,19 +322,19 @@ class TestNationalMarketRegistry:
     def test_get_top_sectors(self, national_registry):
         """Test top employment sectors identification"""
         # Test tech hub
-        tech_config = {'market_type': 'tech_hub'}
+        tech_config = {"market_type": "tech_hub"}
         sectors = national_registry._get_top_sectors(tech_config)
-        assert 'Technology' in sectors
+        assert "Technology" in sectors
 
         # Test finance hub
-        finance_config = {'market_type': 'finance_hub'}
+        finance_config = {"market_type": "finance_hub"}
         sectors = national_registry._get_top_sectors(finance_config)
-        assert 'Financial Services' in sectors
+        assert "Financial Services" in sectors
 
         # Test unknown type defaults
-        unknown_config = {'market_type': 'unknown'}
+        unknown_config = {"market_type": "unknown"}
         sectors = national_registry._get_top_sectors(unknown_config)
-        assert 'Professional Services' in sectors
+        assert "Professional Services" in sectors
 
     def test_calculate_success_probability(self, national_registry):
         """Test success probability calculation"""
@@ -364,30 +355,31 @@ class TestNationalMarketRegistry:
             next_opp = opportunities[i + 1]
 
             # Either higher priority or equal priority with higher ROI
-            assert (current.expansion_priority >= next_opp.expansion_priority or
-                   (current.expansion_priority == next_opp.expansion_priority and
-                    current.roi_projection >= next_opp.roi_projection))
+            assert current.expansion_priority >= next_opp.expansion_priority or (
+                current.expansion_priority == next_opp.expansion_priority
+                and current.roi_projection >= next_opp.roi_projection
+            )
 
     @pytest.mark.asyncio
     async def test_get_national_market_summary(self, national_registry):
         """Test national market summary generation"""
         summary = await national_registry.get_national_market_summary()
 
-        assert 'total_markets' in summary
-        assert 'expansion_markets' in summary
-        assert 'corporate_partnerships' in summary
-        assert 'revenue_enhancement_target' in summary
-        assert 'investment_required' in summary
-        assert 'average_roi_projection' in summary
-        assert 'partnership_tiers' in summary
-        assert 'markets_by_type' in summary
-        assert 'last_updated' in summary
+        assert "total_markets" in summary
+        assert "expansion_markets" in summary
+        assert "corporate_partnerships" in summary
+        assert "revenue_enhancement_target" in summary
+        assert "investment_required" in summary
+        assert "average_roi_projection" in summary
+        assert "partnership_tiers" in summary
+        assert "markets_by_type" in summary
+        assert "last_updated" in summary
 
         # Verify data types and basic validity
-        assert isinstance(summary['total_markets'], int)
-        assert isinstance(summary['revenue_enhancement_target'], float)
-        assert isinstance(summary['partnership_tiers'], dict)
-        assert summary['total_markets'] > 0
+        assert isinstance(summary["total_markets"], int)
+        assert isinstance(summary["revenue_enhancement_target"], float)
+        assert isinstance(summary["partnership_tiers"], dict)
+        assert summary["total_markets"] > 0
 
     def test_register_corporate_partnership(self, national_registry, sample_corporate_headquarters):
         """Test registering new corporate partnership"""
@@ -407,26 +399,27 @@ class TestNationalMarketRegistry:
         """Test registry health check"""
         health = national_registry.health_check()
 
-        assert 'status' in health
-        assert 'national_registry' in health
-        assert 'base_registry' in health
-        assert 'cache_available' in health
-        assert 'last_check' in health
+        assert "status" in health
+        assert "national_registry" in health
+        assert "base_registry" in health
+        assert "cache_available" in health
+        assert "last_check" in health
 
-        assert health['status'] == 'healthy'
-        assert isinstance(health['national_registry'], dict)
-        assert 'corporate_headquarters' in health['national_registry']
-        assert 'expansion_targets' in health['national_registry']
+        assert health["status"] == "healthy"
+        assert isinstance(health["national_registry"], dict)
+        assert "corporate_headquarters" in health["national_registry"]
+        assert "expansion_targets" in health["national_registry"]
 
     def test_singleton_pattern(self):
         """Test singleton pattern for global registry instance"""
-        with patch('ghl_real_estate_ai.markets.national_registry.get_cache_service'), \
-             patch('ghl_real_estate_ai.markets.national_registry.get_market_registry'), \
-             patch('ghl_real_estate_ai.markets.national_registry.ClaudeAssistant'), \
-             patch('pathlib.Path.mkdir'), \
-             patch('pathlib.Path.exists', return_value=False), \
-             patch('builtins.open', mock_open()):
-
+        with (
+            patch("ghl_real_estate_ai.markets.national_registry.get_cache_service"),
+            patch("ghl_real_estate_ai.markets.national_registry.get_market_registry"),
+            patch("ghl_real_estate_ai.markets.national_registry.ClaudeAssistant"),
+            patch("pathlib.Path.mkdir"),
+            patch("pathlib.Path.exists", return_value=False),
+            patch("builtins.open", mock_open()),
+        ):
             registry1 = get_national_market_registry()
             registry2 = get_national_market_registry()
 
@@ -435,16 +428,16 @@ class TestNationalMarketRegistry:
     @pytest.mark.asyncio
     async def test_convenience_functions(self):
         """Test convenience functions"""
-        with patch('ghl_real_estate_ai.markets.national_registry.get_national_market_registry') as mock_registry:
+        with patch("ghl_real_estate_ai.markets.national_registry.get_national_market_registry") as mock_registry:
             mock_instance = Mock()
-            mock_instance.get_corporate_relocation_program = AsyncMock(return_value={'test': 'data'})
+            mock_instance.get_corporate_relocation_program = AsyncMock(return_value={"test": "data"})
             mock_instance.get_cross_market_insights = AsyncMock(return_value=Mock())
             mock_registry.return_value = mock_instance
 
             # Test get_corporate_program
             result = await get_corporate_program("test_company")
             mock_instance.get_corporate_relocation_program.assert_called_once_with("test_company")
-            assert result == {'test': 'data'}
+            assert result == {"test": "data"}
 
             # Test get_market_migration_insights
             insights = await get_market_migration_insights("austin", "denver")
@@ -472,7 +465,7 @@ class TestDataStructures:
             average_relocation_budget=70000.0,
             contact_info={"email": "test@test.com"},
             program_start_date=datetime(2024, 6, 1),
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         assert headquarters.company_name == "Test Corp"
@@ -496,7 +489,7 @@ class TestDataStructures:
             competitive_landscape={"competitors": ["A", "B"]},
             expansion_timeline="Q2 2026",
             investment_required=150000.0,
-            roi_projection=3.5
+            roi_projection=3.5,
         )
 
         assert target.market_id == "test_market"
@@ -516,7 +509,7 @@ class TestDataStructures:
             corporate_driving_factors=["Tech growth", "Quality of life"],
             seasonal_patterns={"Q1": 30, "Q2": 25, "Q3": 20, "Q4": 25},
             top_employment_sectors=["Technology", "Healthcare"],
-            success_probability=0.82
+            success_probability=0.82,
         )
 
         assert insights.source_market == "austin"
@@ -526,5 +519,5 @@ class TestDataStructures:
         assert len(insights.corporate_driving_factors) == 2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__])

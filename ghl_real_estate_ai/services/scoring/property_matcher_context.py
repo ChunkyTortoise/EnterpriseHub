@@ -5,14 +5,15 @@ Context class that orchestrates property scoring strategies with enterprise-grad
 features including fallback handling, performance monitoring, and batch processing.
 """
 
-from typing import Dict, List, Any, Optional, Union
-import time
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Optional, Union
+
 try:
-    from .property_scorer import PropertyScorer, ScoringResult, ScoringContext
+    from .property_scorer import PropertyScorer, ScoringContext, ScoringResult
 except ImportError:
-    from property_scorer import PropertyScorer, ScoringResult, ScoringContext
+    from property_scorer import PropertyScorer, ScoringContext, ScoringResult
 
 
 class PropertyMatcherContext:
@@ -32,7 +33,7 @@ class PropertyMatcherContext:
         strategy: PropertyScorer,
         fallback_strategy: Optional[PropertyScorer] = None,
         enable_performance_monitoring: bool = True,
-        enable_caching: bool = False
+        enable_caching: bool = False,
     ):
         """
         Initialize the property matcher context.
@@ -50,12 +51,12 @@ class PropertyMatcherContext:
 
         # Performance tracking
         self._performance_metrics = {
-            'total_scores': 0,
-            'total_time': 0.0,
-            'errors': 0,
-            'fallbacks_used': 0,
-            'cache_hits': 0,
-            'cache_misses': 0
+            "total_scores": 0,
+            "total_time": 0.0,
+            "errors": 0,
+            "fallbacks_used": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
         }
 
         # Setup logging
@@ -75,10 +76,7 @@ class PropertyMatcherContext:
         self._logger.info(f"Switched to strategy: {strategy.get_strategy_name()}")
 
     def score_property(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any],
-        context: Optional[ScoringContext] = None
+        self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any], context: Optional[ScoringContext] = None
     ) -> ScoringResult:
         """
         Score a single property using the current strategy.
@@ -99,7 +97,7 @@ class PropertyMatcherContext:
         # Check cache first
         cache_key = self._generate_cache_key(property_data, lead_preferences)
         if self._enable_caching and cache_key in self._cache:
-            self._performance_metrics['cache_hits'] += 1
+            self._performance_metrics["cache_hits"] += 1
             return self._cache[cache_key]
 
         try:
@@ -109,7 +107,7 @@ class PropertyMatcherContext:
             # Cache the result
             if self._enable_caching:
                 self._cache[cache_key] = result
-                self._performance_metrics['cache_misses'] += 1
+                self._performance_metrics["cache_misses"] += 1
 
             # Update performance metrics
             if self._enable_monitoring:
@@ -118,10 +116,8 @@ class PropertyMatcherContext:
             return result
 
         except Exception as primary_error:
-            self._logger.warning(
-                f"Primary strategy {self._strategy.get_strategy_name()} failed: {primary_error}"
-            )
-            self._performance_metrics['errors'] += 1
+            self._logger.warning(f"Primary strategy {self._strategy.get_strategy_name()} failed: {primary_error}")
+            self._performance_metrics["errors"] += 1
 
             # Attempt fallback strategy
             if self._fallback_strategy:
@@ -133,7 +129,7 @@ class PropertyMatcherContext:
                     if self._enable_caching:
                         self._cache[cache_key] = result
 
-                    self._performance_metrics['fallbacks_used'] += 1
+                    self._performance_metrics["fallbacks_used"] += 1
                     if self._enable_monitoring:
                         self._update_performance_metrics(start_time, success=True, used_fallback=True)
 
@@ -153,7 +149,7 @@ class PropertyMatcherContext:
         properties: List[Dict[str, Any]],
         lead_preferences: Dict[str, Any],
         context: Optional[ScoringContext] = None,
-        max_workers: int = 4
+        max_workers: int = 4,
     ) -> List[Dict[str, Any]]:
         """
         Score multiple properties with optimized batch processing.
@@ -175,17 +171,13 @@ class PropertyMatcherContext:
 
         if use_parallel:
             # Parallel processing for large batches
-            scored_properties = self._score_batch_parallel(
-                properties, lead_preferences, context, max_workers
-            )
+            scored_properties = self._score_batch_parallel(properties, lead_preferences, context, max_workers)
         else:
             # Sequential processing for small batches
-            scored_properties = self._score_batch_sequential(
-                properties, lead_preferences, context
-            )
+            scored_properties = self._score_batch_sequential(properties, lead_preferences, context)
 
         # Sort by overall score (highest first)
-        scored_properties.sort(key=lambda x: x.get('overall_score', 0), reverse=True)
+        scored_properties.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
 
         # Apply context filters if specified
         if context:
@@ -202,28 +194,28 @@ class PropertyMatcherContext:
         """
         metrics = self._performance_metrics.copy()
 
-        if metrics['total_scores'] > 0:
-            metrics['average_time_per_score'] = metrics['total_time'] / metrics['total_scores']
-            metrics['error_rate'] = metrics['errors'] / metrics['total_scores']
-            metrics['fallback_rate'] = metrics['fallbacks_used'] / metrics['total_scores']
+        if metrics["total_scores"] > 0:
+            metrics["average_time_per_score"] = metrics["total_time"] / metrics["total_scores"]
+            metrics["error_rate"] = metrics["errors"] / metrics["total_scores"]
+            metrics["fallback_rate"] = metrics["fallbacks_used"] / metrics["total_scores"]
 
-        if self._enable_caching and metrics['cache_hits'] + metrics['cache_misses'] > 0:
-            metrics['cache_hit_rate'] = metrics['cache_hits'] / (metrics['cache_hits'] + metrics['cache_misses'])
+        if self._enable_caching and metrics["cache_hits"] + metrics["cache_misses"] > 0:
+            metrics["cache_hit_rate"] = metrics["cache_hits"] / (metrics["cache_hits"] + metrics["cache_misses"])
 
-        metrics['current_strategy'] = self._strategy.get_strategy_name()
-        metrics['fallback_available'] = self._fallback_strategy is not None
+        metrics["current_strategy"] = self._strategy.get_strategy_name()
+        metrics["fallback_available"] = self._fallback_strategy is not None
 
         return metrics
 
     def reset_performance_metrics(self) -> None:
         """Reset performance tracking metrics"""
         self._performance_metrics = {
-            'total_scores': 0,
-            'total_time': 0.0,
-            'errors': 0,
-            'fallbacks_used': 0,
-            'cache_hits': 0,
-            'cache_misses': 0
+            "total_scores": 0,
+            "total_time": 0.0,
+            "errors": 0,
+            "fallbacks_used": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
         }
 
     def clear_cache(self) -> None:
@@ -233,10 +225,7 @@ class PropertyMatcherContext:
             self._logger.info("Scoring cache cleared")
 
     def _score_batch_sequential(
-        self,
-        properties: List[Dict[str, Any]],
-        lead_preferences: Dict[str, Any],
-        context: Optional[ScoringContext]
+        self, properties: List[Dict[str, Any]], lead_preferences: Dict[str, Any], context: Optional[ScoringContext]
     ) -> List[Dict[str, Any]]:
         """Score properties sequentially"""
         scored_properties = []
@@ -247,15 +236,17 @@ class PropertyMatcherContext:
 
                 # Merge scoring result with property data
                 scored_property = property_data.copy()
-                scored_property.update({
-                    'overall_score': scoring_result.overall_score,
-                    'confidence_level': scoring_result.confidence_level.value,
-                    'budget_match': scoring_result.budget_match > 80,
-                    'location_match': scoring_result.location_match > 80,
-                    'features_match': scoring_result.feature_match > 80,
-                    'match_reasons': scoring_result.reasoning,
-                    'scoring_metadata': scoring_result.metadata
-                })
+                scored_property.update(
+                    {
+                        "overall_score": scoring_result.overall_score,
+                        "confidence_level": scoring_result.confidence_level.value,
+                        "budget_match": scoring_result.budget_match > 80,
+                        "location_match": scoring_result.location_match > 80,
+                        "features_match": scoring_result.feature_match > 80,
+                        "match_reasons": scoring_result.reasoning,
+                        "scoring_metadata": scoring_result.metadata,
+                    }
+                )
 
                 scored_properties.append(scored_property)
 
@@ -263,15 +254,17 @@ class PropertyMatcherContext:
                 self._logger.warning(f"Failed to score property {property_data.get('id', 'unknown')}: {e}")
                 # Include property with default score for transparency
                 scored_property = property_data.copy()
-                scored_property.update({
-                    'overall_score': 0,
-                    'confidence_level': 'low',
-                    'budget_match': False,
-                    'location_match': False,
-                    'features_match': False,
-                    'match_reasons': ['Scoring temporarily unavailable'],
-                    'scoring_metadata': {'error': str(e)}
-                })
+                scored_property.update(
+                    {
+                        "overall_score": 0,
+                        "confidence_level": "low",
+                        "budget_match": False,
+                        "location_match": False,
+                        "features_match": False,
+                        "match_reasons": ["Scoring temporarily unavailable"],
+                        "scoring_metadata": {"error": str(e)},
+                    }
+                )
                 scored_properties.append(scored_property)
 
         return scored_properties
@@ -281,7 +274,7 @@ class PropertyMatcherContext:
         properties: List[Dict[str, Any]],
         lead_preferences: Dict[str, Any],
         context: Optional[ScoringContext],
-        max_workers: int
+        max_workers: int,
     ) -> List[Dict[str, Any]]:
         """Score properties in parallel using thread pool"""
         scored_properties = []
@@ -289,8 +282,7 @@ class PropertyMatcherContext:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all scoring tasks
             future_to_property = {
-                executor.submit(self.score_property, prop, lead_preferences, context): prop
-                for prop in properties
+                executor.submit(self.score_property, prop, lead_preferences, context): prop for prop in properties
             }
 
             # Collect results as they complete
@@ -302,15 +294,17 @@ class PropertyMatcherContext:
 
                     # Merge scoring result with property data
                     scored_property = property_data.copy()
-                    scored_property.update({
-                        'overall_score': scoring_result.overall_score,
-                        'confidence_level': scoring_result.confidence_level.value,
-                        'budget_match': scoring_result.budget_match > 80,
-                        'location_match': scoring_result.location_match > 80,
-                        'features_match': scoring_result.feature_match > 80,
-                        'match_reasons': scoring_result.reasoning,
-                        'scoring_metadata': scoring_result.metadata
-                    })
+                    scored_property.update(
+                        {
+                            "overall_score": scoring_result.overall_score,
+                            "confidence_level": scoring_result.confidence_level.value,
+                            "budget_match": scoring_result.budget_match > 80,
+                            "location_match": scoring_result.location_match > 80,
+                            "features_match": scoring_result.feature_match > 80,
+                            "match_reasons": scoring_result.reasoning,
+                            "scoring_metadata": scoring_result.metadata,
+                        }
+                    )
 
                     scored_properties.append(scored_property)
 
@@ -318,54 +312,45 @@ class PropertyMatcherContext:
                     self._logger.warning(f"Parallel scoring failed for property: {e}")
                     # Include property with default score
                     scored_property = property_data.copy()
-                    scored_property.update({
-                        'overall_score': 0,
-                        'confidence_level': 'low',
-                        'budget_match': False,
-                        'location_match': False,
-                        'features_match': False,
-                        'match_reasons': ['Parallel scoring failed'],
-                        'scoring_metadata': {'error': str(e)}
-                    })
+                    scored_property.update(
+                        {
+                            "overall_score": 0,
+                            "confidence_level": "low",
+                            "budget_match": False,
+                            "location_match": False,
+                            "features_match": False,
+                            "match_reasons": ["Parallel scoring failed"],
+                            "scoring_metadata": {"error": str(e)},
+                        }
+                    )
                     scored_properties.append(scored_property)
 
         return scored_properties
 
-    def _apply_context_filters(
-        self,
-        properties: List[Dict[str, Any]],
-        context: ScoringContext
-    ) -> List[Dict[str, Any]]:
+    def _apply_context_filters(self, properties: List[Dict[str, Any]], context: ScoringContext) -> List[Dict[str, Any]]:
         """Apply context-based filtering"""
         filtered = properties
 
         # Apply minimum confidence filter
         if context.min_confidence > 0:
-            filtered = [p for p in filtered if p.get('overall_score', 0) >= context.min_confidence]
+            filtered = [p for p in filtered if p.get("overall_score", 0) >= context.min_confidence]
 
         # Apply maximum properties limit
         if context.max_properties > 0:
-            filtered = filtered[:context.max_properties]
+            filtered = filtered[: context.max_properties]
 
         return filtered
 
-    def _generate_cache_key(
-        self,
-        property_data: Dict[str, Any],
-        lead_preferences: Dict[str, Any]
-    ) -> str:
+    def _generate_cache_key(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> str:
         """Generate cache key for property/preference combination"""
-        property_id = property_data.get('id', str(hash(str(property_data))))
+        property_id = property_data.get("id", str(hash(str(property_data))))
         preferences_hash = str(hash(str(sorted(lead_preferences.items()))))
         strategy_name = self._strategy.get_strategy_name()
 
         return f"{strategy_name}:{property_id}:{preferences_hash}"
 
     def _update_performance_metrics(
-        self,
-        start_time: Optional[float],
-        success: bool,
-        used_fallback: bool = False
+        self, start_time: Optional[float], success: bool, used_fallback: bool = False
     ) -> None:
         """Update performance tracking metrics"""
         if not self._enable_monitoring or start_time is None:
@@ -373,11 +358,11 @@ class PropertyMatcherContext:
 
         execution_time = time.time() - start_time
 
-        self._performance_metrics['total_scores'] += 1
-        self._performance_metrics['total_time'] += execution_time
+        self._performance_metrics["total_scores"] += 1
+        self._performance_metrics["total_time"] += execution_time
 
         if not success:
-            self._performance_metrics['errors'] += 1
+            self._performance_metrics["errors"] += 1
 
         if used_fallback:
-            self._performance_metrics['fallbacks_used'] += 1
+            self._performance_metrics["fallbacks_used"] += 1

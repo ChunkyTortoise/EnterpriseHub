@@ -8,21 +8,22 @@ Author: EnterpriseHub AI
 Created: 2026-01-18
 """
 
-import pytest
 import asyncio
-from datetime import datetime, date, timedelta
-from unittest.mock import Mock, patch, AsyncMock, mock_open
-from typing import Dict, Any
+from datetime import date, datetime, timedelta
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, mock_open, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.corporate_relocation_service import (
-    CorporateRelocationService,
-    RelocationRequest,
     CorporateContract,
-    MultiCityCoordination,
-    RelocationStatus,
-    EmployeeLevel,
     CorporatePartnerTier,
-    get_corporate_relocation_service
+    CorporateRelocationService,
+    EmployeeLevel,
+    MultiCityCoordination,
+    RelocationRequest,
+    RelocationStatus,
+    get_corporate_relocation_service,
 )
 
 
@@ -47,24 +48,36 @@ def mock_claude_assistant():
 def mock_national_registry():
     """Mock national market registry"""
     registry = Mock()
-    registry.get_corporate_relocation_program = AsyncMock(return_value={
-        'company_info': {'name': 'Test Corp', 'industry': 'Technology'},
-        'preferred_markets': ['denver', 'seattle'],
-        'relocation_program': {'annual_volume': 150, 'average_budget': 75000}
-    })
+    registry.get_corporate_relocation_program = AsyncMock(
+        return_value={
+            "company_info": {"name": "Test Corp", "industry": "Technology"},
+            "preferred_markets": ["denver", "seattle"],
+            "relocation_program": {"annual_volume": 150, "average_budget": 75000},
+        }
+    )
     return registry
 
 
 @pytest.fixture
 def relocation_service(mock_cache_service, mock_claude_assistant, mock_national_registry):
     """Create relocation service with mocked dependencies"""
-    with patch('ghl_real_estate_ai.services.corporate_relocation_service.get_cache_service', return_value=mock_cache_service), \
-         patch('ghl_real_estate_ai.services.corporate_relocation_service.ClaudeAssistant', return_value=mock_claude_assistant), \
-         patch('ghl_real_estate_ai.services.corporate_relocation_service.get_national_market_registry', return_value=mock_national_registry), \
-         patch('pathlib.Path.mkdir'), \
-         patch('pathlib.Path.exists', return_value=False), \
-         patch('builtins.open', mock_open()):
-
+    with (
+        patch(
+            "ghl_real_estate_ai.services.corporate_relocation_service.get_cache_service",
+            return_value=mock_cache_service,
+        ),
+        patch(
+            "ghl_real_estate_ai.services.corporate_relocation_service.ClaudeAssistant",
+            return_value=mock_claude_assistant,
+        ),
+        patch(
+            "ghl_real_estate_ai.services.corporate_relocation_service.get_national_market_registry",
+            return_value=mock_national_registry,
+        ),
+        patch("pathlib.Path.mkdir"),
+        patch("pathlib.Path.exists", return_value=False),
+        patch("builtins.open", mock_open()),
+    ):
         service = CorporateRelocationService()
         return service
 
@@ -73,11 +86,11 @@ def relocation_service(mock_cache_service, mock_claude_assistant, mock_national_
 def sample_employee_details():
     """Sample employee details for testing"""
     return {
-        'name': 'John Smith',
-        'email': 'john.smith@company.com',
-        'level': 'vp_director',
-        'current_location': 'Austin, TX',
-        'family_size': 3
+        "name": "John Smith",
+        "email": "john.smith@company.com",
+        "level": "vp_director",
+        "current_location": "Austin, TX",
+        "family_size": 3,
     }
 
 
@@ -85,18 +98,18 @@ def sample_employee_details():
 def sample_relocation_requirements():
     """Sample relocation requirements for testing"""
     return {
-        'target_market': 'denver',
-        'start_date': '2026-06-01',
-        'timeline_requirement': 'flexible',
-        'budget_min': 500000,
-        'budget_max': 800000,
-        'special_requirements': ['spouse_career_assistance', 'private_school_search'],
-        'housing_preferences': {
-            'property_type': 'single_family',
-            'bedrooms': 4,
-            'school_rating_min': 8.5,
-            'commute_max': 30
-        }
+        "target_market": "denver",
+        "start_date": "2026-06-01",
+        "timeline_requirement": "flexible",
+        "budget_min": 500000,
+        "budget_max": 800000,
+        "special_requirements": ["spouse_career_assistance", "private_school_search"],
+        "housing_preferences": {
+            "property_type": "single_family",
+            "bedrooms": 4,
+            "school_rating_min": 8.5,
+            "commute_max": 30,
+        },
     }
 
 
@@ -119,64 +132,66 @@ class TestCorporateRelocationService:
         tiers = relocation_service.service_tiers
 
         # Verify all expected tiers exist
-        expected_tiers = ['platinum_concierge', 'gold_executive', 'silver_professional', 'bronze_standard']
+        expected_tiers = ["platinum_concierge", "gold_executive", "silver_professional", "bronze_standard"]
         for tier in expected_tiers:
             assert tier in tiers
-            assert 'features' in tiers[tier]
-            assert 'response_time_hours' in tiers[tier]
-            assert 'employee_levels' in tiers[tier]
-            assert 'base_fee' in tiers[tier]
-            assert 'commission_rate' in tiers[tier]
+            assert "features" in tiers[tier]
+            assert "response_time_hours" in tiers[tier]
+            assert "employee_levels" in tiers[tier]
+            assert "base_fee" in tiers[tier]
+            assert "commission_rate" in tiers[tier]
 
         # Verify response times are appropriate
-        assert tiers['platinum_concierge']['response_time_hours'] == 1
-        assert tiers['gold_executive']['response_time_hours'] == 4
-        assert tiers['silver_professional']['response_time_hours'] == 8
-        assert tiers['bronze_standard']['response_time_hours'] == 24
+        assert tiers["platinum_concierge"]["response_time_hours"] == 1
+        assert tiers["gold_executive"]["response_time_hours"] == 4
+        assert tiers["silver_professional"]["response_time_hours"] == 8
+        assert tiers["bronze_standard"]["response_time_hours"] == 24
 
     def test_pricing_structure(self, relocation_service):
         """Test pricing structure configuration"""
         pricing = relocation_service.pricing_structure
 
-        assert 'base_relocation_fee' in pricing
-        assert 'volume_discounts' in pricing
-        assert 'rush_fees' in pricing
-        assert 'additional_services' in pricing
+        assert "base_relocation_fee" in pricing
+        assert "volume_discounts" in pricing
+        assert "rush_fees" in pricing
+        assert "additional_services" in pricing
 
         # Verify volume discounts are progressive
-        discounts = pricing['volume_discounts']
-        tier_discounts = [tier['discount'] for tier in discounts.values()]
+        discounts = pricing["volume_discounts"]
+        tier_discounts = [tier["discount"] for tier in discounts.values()]
         assert tier_discounts == sorted(tier_discounts)  # Should be ascending
 
     def test_determine_service_tier(self, relocation_service):
         """Test service tier determination based on employee level"""
         # Test C-suite gets platinum
         tier = relocation_service._determine_service_tier(EmployeeLevel.C_SUITE)
-        assert tier == 'platinum_concierge'
+        assert tier == "platinum_concierge"
 
         # Test VP gets gold
         tier = relocation_service._determine_service_tier(EmployeeLevel.VP_DIRECTOR)
-        assert tier == 'gold_executive'
+        assert tier == "gold_executive"
 
         # Test manager gets silver
         tier = relocation_service._determine_service_tier(EmployeeLevel.MANAGER)
-        assert tier == 'silver_professional'
+        assert tier == "silver_professional"
 
         # Test IC gets bronze
         tier = relocation_service._determine_service_tier(EmployeeLevel.INDIVIDUAL_CONTRIBUTOR)
-        assert tier == 'bronze_standard'
+        assert tier == "bronze_standard"
 
     @pytest.mark.asyncio
-    async def test_create_relocation_request(self, relocation_service, sample_employee_details, sample_relocation_requirements):
+    async def test_create_relocation_request(
+        self, relocation_service, sample_employee_details, sample_relocation_requirements
+    ):
         """Test creating a new relocation request"""
         company_name = "Test Corporation"
 
-        with patch.object(relocation_service, '_save_requests_data'), \
-             patch.object(relocation_service, '_save_contracts_data', create=True):
+        with (
+            patch.object(relocation_service, "_save_requests_data"),
+            patch.object(relocation_service, "_save_contracts_data", create=True),
+        ):
             request_id = await relocation_service.create_relocation_request(
-                company_name,
-                sample_employee_details,
-                sample_relocation_requirements
+                company_name, sample_employee_details, sample_relocation_requirements
             )
 
         # Verify request was created
@@ -187,12 +202,12 @@ class TestCorporateRelocationService:
         # Verify request details
         request = relocation_service.active_requests[request_id]
         assert request.company_name == company_name
-        assert request.employee_name == sample_employee_details['name']
-        assert request.employee_email == sample_employee_details['email']
+        assert request.employee_name == sample_employee_details["name"]
+        assert request.employee_email == sample_employee_details["email"]
         assert request.employee_level == EmployeeLevel.VP_DIRECTOR
-        assert request.target_market == sample_relocation_requirements['target_market']
+        assert request.target_market == sample_relocation_requirements["target_market"]
         assert request.status == RelocationStatus.INITIATED
-        assert request.relocation_package_tier == 'gold_executive'  # VP level
+        assert request.relocation_package_tier == "gold_executive"  # VP level
 
     @pytest.mark.asyncio
     async def test_assign_relocation_specialist(self, relocation_service):
@@ -217,7 +232,7 @@ class TestCorporateRelocationService:
             assigned_specialist=None,
             created_at=datetime.now(),
             updated_at=datetime.now(),
-            completion_target=date(2026, 5, 1)
+            completion_target=date(2026, 5, 1),
         )
 
         relocation_service.active_requests["TEST-001"] = request
@@ -229,7 +244,7 @@ class TestCorporateRelocationService:
         assert updated_request.assigned_specialist is not None
         assert "Senior Executive Specialist" in updated_request.assigned_specialist
         assert len(updated_request.notes) > 0
-        assert updated_request.notes[-1]['type'] == 'specialist_assignment'
+        assert updated_request.notes[-1]["type"] == "specialist_assignment"
 
     @pytest.mark.asyncio
     async def test_send_welcome_communication(self, relocation_service, mock_claude_assistant):
@@ -247,14 +262,14 @@ class TestCorporateRelocationService:
             timeline_requirement="urgent",
             budget_range=(400000, 600000),
             family_size=4,
-            special_requirements=['spouse_career_assistance'],
-            housing_preferences={'bedrooms': 3},
+            special_requirements=["spouse_career_assistance"],
+            housing_preferences={"bedrooms": 3},
             relocation_package_tier="silver_professional",
             status=RelocationStatus.INITIATED,
             assigned_specialist="Michael Chen (Executive Coordinator)",
             created_at=datetime.now(),
             updated_at=datetime.now(),
-            completion_target=date(2026, 7, 1)
+            completion_target=date(2026, 7, 1),
         )
 
         relocation_service.active_requests["TEST-002"] = request
@@ -268,8 +283,8 @@ class TestCorporateRelocationService:
         updated_request = relocation_service.active_requests["TEST-002"]
         assert len(updated_request.notes) > 0
         welcome_note = updated_request.notes[-1]
-        assert welcome_note['type'] == 'welcome_communication'
-        assert 'bob@test.com' in welcome_note['message']
+        assert welcome_note["type"] == "welcome_communication"
+        assert "bob@test.com" in welcome_note["message"]
 
     @pytest.mark.asyncio
     async def test_get_relocation_status(self, relocation_service):
@@ -297,12 +312,12 @@ class TestCorporateRelocationService:
             completion_target=date(2026, 7, 15),
             notes=[
                 {
-                    'timestamp': datetime.now().isoformat(),
-                    'type': 'status_update',
-                    'message': 'Market analysis completed',
-                    'author': 'System'
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "status_update",
+                    "message": "Market analysis completed",
+                    "author": "System",
                 }
-            ]
+            ],
         )
 
         relocation_service.active_requests["TEST-003"] = request
@@ -310,14 +325,14 @@ class TestCorporateRelocationService:
         status = await relocation_service.get_relocation_status("TEST-003")
 
         assert status is not None
-        assert status['request_id'] == "TEST-003"
-        assert status['status'] == RelocationStatus.MARKET_ANALYSIS.value
-        assert status['progress_percentage'] == 30  # Based on status mapping
-        assert 'employee' in status
-        assert 'relocation_details' in status
-        assert 'service_details' in status
-        assert 'budget_information' in status
-        assert 'next_steps' in status
+        assert status["request_id"] == "TEST-003"
+        assert status["status"] == RelocationStatus.MARKET_ANALYSIS.value
+        assert status["progress_percentage"] == 30  # Based on status mapping
+        assert "employee" in status
+        assert "relocation_details" in status
+        assert "service_details" in status
+        assert "budget_information" in status
+        assert "next_steps" in status
 
     def test_calculate_progress(self, relocation_service):
         """Test progress calculation"""
@@ -331,7 +346,7 @@ class TestCorporateRelocationService:
             (RelocationStatus.OFFER_NEGOTIATION, 80),
             (RelocationStatus.CLOSING_PROCESS, 95),
             (RelocationStatus.COMPLETED, 100),
-            (RelocationStatus.CANCELLED, 0)
+            (RelocationStatus.CANCELLED, 0),
         ]
 
         for status, expected_progress in test_cases:
@@ -355,14 +370,14 @@ class TestCorporateRelocationService:
             timeline_requirement="flexible",
             budget_range=(500000, 800000),
             family_size=2,
-            special_requirements=['spouse_career_assistance'],
+            special_requirements=["spouse_career_assistance"],
             housing_preferences={},
             relocation_package_tier="gold_executive",
             status=RelocationStatus.INITIATED,
             assigned_specialist=None,
             created_at=datetime.now(),
             updated_at=datetime.now(),
-            completion_target=date.today() + timedelta(days=60)
+            completion_target=date.today() + timedelta(days=60),
         )
 
         cost = relocation_service._estimate_total_cost(normal_request)
@@ -390,7 +405,7 @@ class TestCorporateRelocationService:
             assigned_specialist=None,
             created_at=datetime.now(),
             updated_at=datetime.now(),
-            completion_target=date.today() + timedelta(days=10)
+            completion_target=date.today() + timedelta(days=10),
         )
 
         urgent_cost = relocation_service._estimate_total_cost(urgent_request)
@@ -406,7 +421,7 @@ class TestCorporateRelocationService:
             RelocationStatus.NEEDS_ASSESSMENT,
             RelocationStatus.MARKET_ANALYSIS,
             RelocationStatus.PROPERTY_SEARCH,
-            RelocationStatus.COMPLETED
+            RelocationStatus.COMPLETED,
         ]
 
         for status in test_cases:
@@ -423,25 +438,22 @@ class TestCorporateRelocationService:
         """Test multi-city coordination project creation"""
         company_name = "Global Corp"
         project_details = {
-            'project_name': 'West Coast Expansion',
-            'affected_markets': ['denver', 'phoenix', 'seattle'],
-            'employee_count': 150,
-            'coordination_type': 'office_expansion',
-            'timeline': {
-                'project_start': '2026-03-01',
-                'denver_completion': '2026-06-01',
-                'phoenix_completion': '2026-07-01',
-                'seattle_completion': '2026-08-01'
+            "project_name": "West Coast Expansion",
+            "affected_markets": ["denver", "phoenix", "seattle"],
+            "employee_count": 150,
+            "coordination_type": "office_expansion",
+            "timeline": {
+                "project_start": "2026-03-01",
+                "denver_completion": "2026-06-01",
+                "phoenix_completion": "2026-07-01",
+                "seattle_completion": "2026-08-01",
             },
-            'budget_total': 15000000.0,
-            'project_manager': 'Alice Johnson'
+            "budget_total": 15000000.0,
+            "project_manager": "Alice Johnson",
         }
 
-        with patch.object(relocation_service, '_save_coordination_data'):
-            coordination_id = await relocation_service.create_multi_city_coordination(
-                company_name,
-                project_details
-            )
+        with patch.object(relocation_service, "_save_coordination_data"):
+            coordination_id = await relocation_service.create_multi_city_coordination(company_name, project_details)
 
         # Verify coordination was created
         assert coordination_id is not None
@@ -451,10 +463,10 @@ class TestCorporateRelocationService:
         # Verify coordination details
         coordination = relocation_service.multi_city_projects[coordination_id]
         assert coordination.company_name == company_name
-        assert coordination.project_name == project_details['project_name']
-        assert coordination.affected_markets == project_details['affected_markets']
-        assert coordination.employee_count == project_details['employee_count']
-        assert coordination.budget_total == project_details['budget_total']
+        assert coordination.project_name == project_details["project_name"]
+        assert coordination.affected_markets == project_details["affected_markets"]
+        assert coordination.employee_count == project_details["employee_count"]
+        assert coordination.budget_total == project_details["budget_total"]
         assert coordination.status == "initiated"
 
     @pytest.mark.asyncio
@@ -482,7 +494,7 @@ class TestCorporateRelocationService:
             assigned_specialist="Test Specialist",
             created_at=datetime.now() - timedelta(days=30),
             updated_at=datetime.now(),
-            completion_target=date.today() + timedelta(days=30)
+            completion_target=date.today() + timedelta(days=30),
         )
 
         request2 = RelocationRequest(
@@ -504,7 +516,7 @@ class TestCorporateRelocationService:
             assigned_specialist="Test Specialist",
             created_at=datetime.now() - timedelta(days=120),
             updated_at=datetime.now() - timedelta(days=1),
-            completion_target=date.today() - timedelta(days=90)
+            completion_target=date.today() - timedelta(days=90),
         )
 
         relocation_service.active_requests["DASH-001"] = request1
@@ -512,63 +524,64 @@ class TestCorporateRelocationService:
 
         dashboard = await relocation_service.get_corporate_dashboard(company_name)
 
-        assert 'company_name' in dashboard
-        assert 'contract_details' in dashboard
-        assert 'relocation_metrics' in dashboard
-        assert 'active_requests' in dashboard
-        assert 'market_utilization' in dashboard
-        assert 'cost_summary' in dashboard
+        assert "company_name" in dashboard
+        assert "contract_details" in dashboard
+        assert "relocation_metrics" in dashboard
+        assert "active_requests" in dashboard
+        assert "market_utilization" in dashboard
+        assert "cost_summary" in dashboard
 
-        metrics = dashboard['relocation_metrics']
-        assert metrics['total_relocations'] == 2
-        assert metrics['completed_relocations'] == 1
-        assert metrics['active_relocations'] == 1
-        assert metrics['success_rate'] == 50.0
+        metrics = dashboard["relocation_metrics"]
+        assert metrics["total_relocations"] == 2
+        assert metrics["completed_relocations"] == 1
+        assert metrics["active_relocations"] == 1
+        assert metrics["success_rate"] == 50.0
 
         # Verify active requests don't include completed ones
-        active_requests = dashboard['active_requests']
+        active_requests = dashboard["active_requests"]
         assert len(active_requests) == 1
-        assert active_requests[0]['request_id'] == "DASH-001"
+        assert active_requests[0]["request_id"] == "DASH-001"
 
     def test_calculate_market_utilization(self, relocation_service):
         """Test market utilization calculation"""
         requests = [
-            Mock(target_market='denver'),
-            Mock(target_market='seattle'),
-            Mock(target_market='denver'),
-            Mock(target_market='phoenix'),
-            Mock(target_market='denver')
+            Mock(target_market="denver"),
+            Mock(target_market="seattle"),
+            Mock(target_market="denver"),
+            Mock(target_market="phoenix"),
+            Mock(target_market="denver"),
         ]
 
         utilization = relocation_service._calculate_market_utilization(requests)
 
-        assert utilization['denver'] == 3
-        assert utilization['seattle'] == 1
-        assert utilization['phoenix'] == 1
+        assert utilization["denver"] == 3
+        assert utilization["seattle"] == 1
+        assert utilization["phoenix"] == 1
 
     def test_health_check(self, relocation_service):
         """Test service health check"""
         health = relocation_service.health_check()
 
-        assert 'status' in health
-        assert 'service' in health
-        assert 'metrics' in health
-        assert 'data_files' in health
-        assert 'last_check' in health
+        assert "status" in health
+        assert "service" in health
+        assert "metrics" in health
+        assert "data_files" in health
+        assert "last_check" in health
 
-        assert health['service'] == 'CorporateRelocationService'
-        assert health['status'] == 'healthy'
-        assert isinstance(health['metrics'], dict)
+        assert health["service"] == "CorporateRelocationService"
+        assert health["status"] == "healthy"
+        assert isinstance(health["metrics"], dict)
 
     def test_singleton_pattern(self):
         """Test singleton pattern for global service instance"""
-        with patch('ghl_real_estate_ai.services.corporate_relocation_service.get_cache_service'), \
-             patch('ghl_real_estate_ai.services.corporate_relocation_service.ClaudeAssistant'), \
-             patch('ghl_real_estate_ai.services.corporate_relocation_service.get_national_market_registry'), \
-             patch('pathlib.Path.mkdir'), \
-             patch('pathlib.Path.exists', return_value=False), \
-             patch('builtins.open', mock_open()):
-
+        with (
+            patch("ghl_real_estate_ai.services.corporate_relocation_service.get_cache_service"),
+            patch("ghl_real_estate_ai.services.corporate_relocation_service.ClaudeAssistant"),
+            patch("ghl_real_estate_ai.services.corporate_relocation_service.get_national_market_registry"),
+            patch("pathlib.Path.mkdir"),
+            patch("pathlib.Path.exists", return_value=False),
+            patch("builtins.open", mock_open()),
+        ):
             service1 = get_corporate_relocation_service()
             service2 = get_corporate_relocation_service()
 
@@ -591,7 +604,7 @@ class TestCorporateRelocationService:
             dedicated_specialist="Senior Coordinator",
             billing_contact={},
             performance_metrics={},
-            last_review_date=datetime.now()
+            last_review_date=datetime.now(),
         )
 
         relocation_service.corporate_contracts["CONTRACT-001"] = test_contract
@@ -613,18 +626,19 @@ class TestCorporateRelocationService:
 @pytest.mark.asyncio
 async def test_data_persistence():
     """Test data persistence and loading"""
-    with patch('ghl_real_estate_ai.services.corporate_relocation_service.get_cache_service'), \
-         patch('ghl_real_estate_ai.services.corporate_relocation_service.ClaudeAssistant'), \
-         patch('ghl_real_estate_ai.services.corporate_relocation_service.get_national_market_registry'), \
-         patch('pathlib.Path.mkdir'), \
-         patch('pathlib.Path.exists', return_value=True):
-
+    with (
+        patch("ghl_real_estate_ai.services.corporate_relocation_service.get_cache_service"),
+        patch("ghl_real_estate_ai.services.corporate_relocation_service.ClaudeAssistant"),
+        patch("ghl_real_estate_ai.services.corporate_relocation_service.get_national_market_registry"),
+        patch("pathlib.Path.mkdir"),
+        patch("pathlib.Path.exists", return_value=True),
+    ):
         # Test that service attempts to load existing data
-        with patch('builtins.open', mock_open()) as mock_file:
-            with patch('json.load', return_value={}):
+        with patch("builtins.open", mock_open()) as mock_file:
+            with patch("json.load", return_value={}):
                 service = CorporateRelocationService()
                 assert mock_file.called  # Verify files were attempted to be opened
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__])

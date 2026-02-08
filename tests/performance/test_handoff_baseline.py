@@ -19,8 +19,8 @@ from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     JorgeHandoffService,
 )
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-    PerformanceTracker,
     SLA_CONFIG,
+    PerformanceTracker,
 )
 
 BOT_NAME = "handoff"
@@ -79,9 +79,7 @@ class TestHandoffBaseline:
             await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
-        assert stats["p50"] <= P50_TARGET, (
-            f"P50 {stats['p50']:.1f}ms exceeds {P50_TARGET}ms"
-        )
+        assert stats["p50"] <= P50_TARGET, f"P50 {stats['p50']:.1f}ms exceeds {P50_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_p95_within_sla(self):
@@ -90,9 +88,7 @@ class TestHandoffBaseline:
             await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
-        assert stats["p95"] <= P95_TARGET, (
-            f"P95 {stats['p95']:.1f}ms exceeds {P95_TARGET}ms"
-        )
+        assert stats["p95"] <= P95_TARGET, f"P95 {stats['p95']:.1f}ms exceeds {P95_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_p99_within_sla(self):
@@ -101,9 +97,7 @@ class TestHandoffBaseline:
             await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
-        assert stats["p99"] <= P99_TARGET, (
-            f"P99 {stats['p99']:.1f}ms exceeds {P99_TARGET}ms"
-        )
+        assert stats["p99"] <= P99_TARGET, f"P99 {stats['p99']:.1f}ms exceeds {P99_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_concurrent_load_100_users(self):
@@ -116,10 +110,7 @@ class TestHandoffBaseline:
                 await tracker.track_operation(BOT_NAME, OPERATION, lat)
 
         batch_size = len(latencies) // 100
-        tasks = [
-            _record(latencies[i * batch_size : (i + 1) * batch_size])
-            for i in range(100)
-        ]
+        tasks = [_record(latencies[i * batch_size : (i + 1) * batch_size]) for i in range(100)]
         await asyncio.gather(*tasks)
 
         stats = await tracker.get_bot_stats(BOT_NAME)
@@ -170,9 +161,7 @@ class TestHandoffBaseline:
         await handoff_service.evaluate_handoff("lead", "contact-1", history, signals)
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        assert elapsed_ms < P50_TARGET, (
-            f"evaluate_handoff took {elapsed_ms:.1f}ms, exceeds P50 {P50_TARGET}ms"
-        )
+        assert elapsed_ms < P50_TARGET, f"evaluate_handoff took {elapsed_ms:.1f}ms, exceeds P50 {P50_TARGET}ms"
 
     @pytest.mark.asyncio
     async def test_evaluate_handoff_latency_batch(self, handoff_service):

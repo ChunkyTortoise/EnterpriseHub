@@ -8,24 +8,26 @@ usage tracking, and Stripe webhook processing.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_serializer, field_validator
-
 
 # ===================================================================
 # Enums
 # ===================================================================
 
+
 class SubscriptionTier(str, Enum):
     """Subscription tier options with usage allowances."""
-    STARTER = "starter"          # $99/month, 50 leads
+
+    STARTER = "starter"  # $99/month, 50 leads
     PROFESSIONAL = "professional"  # $249/month, 150 leads
-    ENTERPRISE = "enterprise"    # $499/month, 500 leads
+    ENTERPRISE = "enterprise"  # $499/month, 500 leads
 
 
 class SubscriptionStatus(str, Enum):
     """Stripe subscription status values."""
+
     ACTIVE = "active"
     PAST_DUE = "past_due"
     CANCELED = "canceled"
@@ -35,6 +37,7 @@ class SubscriptionStatus(str, Enum):
 
 class InvoiceStatus(str, Enum):
     """Invoice payment status."""
+
     DRAFT = "draft"
     OPEN = "open"
     PAID = "paid"
@@ -47,12 +50,14 @@ class InvoiceStatus(str, Enum):
 # Base Models
 # ===================================================================
 
+
 class BaseModelWithTimestamp(BaseModel):
     """Base model with automatic timestamp handling."""
+
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
 
-    @field_serializer('created_at', 'updated_at')
+    @field_serializer("created_at", "updated_at")
     @classmethod
     def serialize_datetime(cls, v: Optional[datetime]) -> Optional[str]:
         return v.isoformat() if v else None
@@ -62,8 +67,10 @@ class BaseModelWithTimestamp(BaseModel):
 # Subscription Models
 # ===================================================================
 
+
 class CreateSubscriptionRequest(BaseModel):
     """Request to create a new subscription."""
+
     location_id: str = Field(..., description="GHL location ID")
     tier: SubscriptionTier = Field(..., description="Subscription tier")
     payment_method_id: str = Field(..., description="Stripe payment method ID")
@@ -72,16 +79,17 @@ class CreateSubscriptionRequest(BaseModel):
     name: Optional[str] = Field(None, description="Customer name for billing")
     currency: str = Field(default="usd", description="Billing currency (usd, eur, gbp, etc.)")
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v):
-        if v and '@' not in v:
-            raise ValueError('Invalid email format')
+        if v and "@" not in v:
+            raise ValueError("Invalid email format")
         return v
 
 
 class ModifySubscriptionRequest(BaseModel):
     """Request to modify an existing subscription."""
+
     tier: Optional[SubscriptionTier] = Field(None, description="New tier (for upgrades/downgrades)")
     payment_method_id: Optional[str] = Field(None, description="New payment method")
     cancel_at_period_end: Optional[bool] = Field(None, description="Schedule cancellation")
@@ -90,6 +98,7 @@ class ModifySubscriptionRequest(BaseModel):
 
 class SubscriptionResponse(BaseModel):
     """Detailed subscription information."""
+
     id: int
     location_id: str
     stripe_subscription_id: str
@@ -110,13 +119,13 @@ class SubscriptionResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    @field_validator('usage_percentage', mode='before')
+    @field_validator("usage_percentage", mode="before")
     @classmethod
     def calculate_usage_percentage(cls, v, info: ValidationInfo):
         """Auto-calculate usage percentage from current/allowance."""
         data = info.data
-        if 'usage_allowance' in data and data['usage_allowance'] > 0:
-            return round((data.get('usage_current', 0) / data['usage_allowance']) * 100, 2)
+        if "usage_allowance" in data and data["usage_allowance"] > 0:
+            return round((data.get("usage_current", 0) / data["usage_allowance"]) * 100, 2)
         return 0.0
 
     model_config = ConfigDict(from_attributes=True)
@@ -124,6 +133,7 @@ class SubscriptionResponse(BaseModel):
 
 class SubscriptionSummary(BaseModel):
     """Lightweight subscription summary for dashboards."""
+
     id: int
     location_id: str
     tier: SubscriptionTier
@@ -140,8 +150,10 @@ class SubscriptionSummary(BaseModel):
 # Usage Tracking Models
 # ===================================================================
 
+
 class UsageRecordRequest(BaseModel):
     """Request to record lead usage."""
+
     subscription_id: int
     lead_id: str = Field(..., description="GHL lead ID")
     contact_id: str = Field(..., description="GHL contact ID")
@@ -151,16 +163,17 @@ class UsageRecordRequest(BaseModel):
     billing_period_start: datetime
     billing_period_end: datetime
 
-    @field_validator('amount')
+    @field_validator("amount")
     @classmethod
     def validate_amount(cls, v):
         if v <= 0:
-            raise ValueError('Amount must be positive')
+            raise ValueError("Amount must be positive")
         return round(v, 2)
 
 
 class UsageRecordResponse(BaseModel):
     """Usage record with billing details."""
+
     id: int
     subscription_id: int
     stripe_usage_record_id: Optional[str]
@@ -179,6 +192,7 @@ class UsageRecordResponse(BaseModel):
 
 class UsageSummary(BaseModel):
     """Current period usage summary."""
+
     subscription_id: int
     period_start: datetime
     period_end: datetime
@@ -196,8 +210,10 @@ class UsageSummary(BaseModel):
 # Invoice Models
 # ===================================================================
 
+
 class InvoiceDetails(BaseModel):
     """Invoice information for billing history."""
+
     id: int
     stripe_invoice_id: str
     subscription_id: int
@@ -217,6 +233,7 @@ class InvoiceDetails(BaseModel):
 
 class BillingHistoryResponse(BaseModel):
     """Billing history for a customer."""
+
     location_id: str
     invoices: List[InvoiceDetails]
     total_spent: Decimal
@@ -229,8 +246,10 @@ class BillingHistoryResponse(BaseModel):
 # Stripe Webhook Models
 # ===================================================================
 
+
 class StripeWebhookEvent(BaseModel):
     """Stripe webhook event payload."""
+
     id: str
     type: str
     data: Dict[str, Any]
@@ -242,6 +261,7 @@ class StripeWebhookEvent(BaseModel):
 
 class WebhookProcessingResult(BaseModel):
     """Result of webhook processing."""
+
     event_id: str
     event_type: str
     processed: bool
@@ -254,8 +274,10 @@ class WebhookProcessingResult(BaseModel):
 # Analytics Models
 # ===================================================================
 
+
 class RevenueAnalytics(BaseModel):
     """Revenue metrics for analytics dashboard."""
+
     total_arr: Decimal = Field(..., description="Annual Recurring Revenue")
     monthly_revenue: Decimal = Field(..., description="Monthly Recurring Revenue")
     average_arpu: Decimal = Field(..., description="Average Revenue Per User")
@@ -268,6 +290,7 @@ class RevenueAnalytics(BaseModel):
 
 class TierDistribution(BaseModel):
     """Subscription tier distribution analytics."""
+
     starter_count: int = 0
     professional_count: int = 0
     enterprise_count: int = 0
@@ -281,8 +304,10 @@ class TierDistribution(BaseModel):
 # Error Response Models
 # ===================================================================
 
+
 class BillingError(BaseModel):
     """Standardized billing error response."""
+
     error_code: str = Field(..., description="Machine-readable error code")
     error_message: str = Field(..., description="Human-readable error description")
     error_type: str = Field(..., description="Error category (validation, payment, stripe, etc.)")
@@ -295,8 +320,10 @@ class BillingError(BaseModel):
 # Configuration Models
 # ===================================================================
 
+
 class TierConfiguration(BaseModel):
     """Subscription tier configuration."""
+
     name: str
     price_monthly: Decimal
     usage_allowance: int
@@ -305,11 +332,11 @@ class TierConfiguration(BaseModel):
     stripe_price_id: str
     currency: str = "usd"
 
-    @field_validator('price_monthly', 'overage_rate')
+    @field_validator("price_monthly", "overage_rate")
     @classmethod
     def validate_positive_price(cls, v):
         if v <= 0:
-            raise ValueError('Price must be positive')
+            raise ValueError("Price must be positive")
         return v
 
 
@@ -321,7 +348,7 @@ SUBSCRIPTION_TIERS = {
         usage_allowance=50,
         overage_rate=Decimal("1.00"),
         features=["Basic lead scoring", "Email support", "Standard analytics"],
-        stripe_price_id="price_starter_monthly"
+        stripe_price_id="price_starter_monthly",
     ),
     SubscriptionTier.PROFESSIONAL: TierConfiguration(
         name="Professional",
@@ -329,14 +356,20 @@ SUBSCRIPTION_TIERS = {
         usage_allowance=150,
         overage_rate=Decimal("1.50"),
         features=["Advanced lead scoring", "Phone support", "Real-time analytics", "Custom integrations"],
-        stripe_price_id="price_professional_monthly"
+        stripe_price_id="price_professional_monthly",
     ),
     SubscriptionTier.ENTERPRISE: TierConfiguration(
         name="Enterprise",
         price_monthly=Decimal("499.00"),
         usage_allowance=500,
         overage_rate=Decimal("0.75"),
-        features=["Premium lead scoring", "24/7 support", "Advanced analytics", "White-label options", "Priority processing"],
-        stripe_price_id="price_enterprise_monthly"
-    )
+        features=[
+            "Premium lead scoring",
+            "24/7 support",
+            "Advanced analytics",
+            "White-label options",
+            "Priority processing",
+        ],
+        stripe_price_id="price_enterprise_monthly",
+    ),
 }

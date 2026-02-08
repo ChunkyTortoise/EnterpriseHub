@@ -4,12 +4,12 @@ This module tests the BM25Index implementation with various scenarios
 including document indexing, search ranking, and performance benchmarks.
 """
 
-import pytest
-from uuid import uuid4
 from typing import List
+from uuid import uuid4
 
+import pytest
 from src.core.types import DocumentChunk, Metadata, SearchResult
-from src.retrieval.sparse.bm25_index import BM25Index, BM25Config
+from src.retrieval.sparse.bm25_index import BM25Config, BM25Index
 
 
 class TestBM25Index:
@@ -24,25 +24,25 @@ class TestBM25Index:
                 document_id=doc_id,
                 content="The quick brown fox jumps over the lazy dog",
                 index=0,
-                metadata=Metadata(title="Sample Doc 1")
+                metadata=Metadata(title="Sample Doc 1"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Python is a powerful programming language for data science",
                 index=1,
-                metadata=Metadata(title="Sample Doc 2")
+                metadata=Metadata(title="Sample Doc 2"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Machine learning algorithms can analyze large datasets quickly",
                 index=2,
-                metadata=Metadata(title="Sample Doc 3")
+                metadata=Metadata(title="Sample Doc 3"),
             ),
             DocumentChunk(
                 document_id=doc_id,
                 content="Quick data processing with pandas and numpy libraries",
                 index=3,
-                metadata=Metadata(title="Sample Doc 4")
+                metadata=Metadata(title="Sample Doc 4"),
             ),
         ]
 
@@ -76,11 +76,7 @@ class TestBM25Index:
     def test_add_single_document(self):
         """Test adding a single document to the index."""
         index = BM25Index()
-        chunk = DocumentChunk(
-            document_id=uuid4(),
-            content="Test document content",
-            index=0
-        )
+        chunk = DocumentChunk(document_id=uuid4(), content="Test document content", index=0)
 
         index.add_documents([chunk])
 
@@ -115,9 +111,9 @@ class TestBM25Index:
 
         # Check result structure
         result = results[0]
-        assert hasattr(result, 'chunk')
-        assert hasattr(result, 'score')
-        assert hasattr(result, 'rank')
+        assert hasattr(result, "chunk")
+        assert hasattr(result, "score")
+        assert hasattr(result, "rank")
         assert result.score > 0.0
         assert result.rank >= 1
 

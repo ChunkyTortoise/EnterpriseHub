@@ -20,21 +20,23 @@ Author: EnterpriseHub AI
 Last Updated: 2026-01-19 (Enhanced for recovery tracking)
 """
 
+import json
 import logging
+import warnings
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional, Any, NamedTuple
-from dataclasses import dataclass, asdict
 from enum import Enum
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+
+import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import classification_report, roc_auc_score
-import joblib
-import json
-import warnings
-warnings.filterwarnings('ignore')
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+warnings.filterwarnings("ignore")
 
 # Internal imports
 # from .memory_service import MemoryService  # Disabled for deployment
@@ -45,43 +47,53 @@ warnings.filterwarnings('ignore')
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
 # Placeholder classes for deployment (disabled services)
 class MemoryService:
     def __init__(self):
         pass
+
     async def store_interaction(self, *args, **kwargs):
         pass
+
 
 class LeadLifecycleTracker:
     def __init__(self):
         pass
+
     async def track_lifecycle_stage(self, *args, **kwargs):
         pass
+
 
 class BehavioralTriggerEngine:
     def __init__(self):
         pass
+
     async def evaluate_triggers(self, *args, **kwargs):
         return []
+
 
 class LeadScorer:
     def __init__(self):
         pass
+
     async def calculate_lead_score(self, *args, **kwargs):
         return 0.5
 
 
-
 class ChurnRiskTier(Enum):
     """Risk tier classifications for churn prediction"""
+
     CRITICAL = "critical"  # 80-100% churn risk - immediate intervention
-    HIGH = "high"          # 60-80% churn risk - urgent follow-up
-    MEDIUM = "medium"      # 30-60% churn risk - nurture campaign
-    LOW = "low"           # 0-30% churn risk - standard engagement
+    HIGH = "high"  # 60-80% churn risk - urgent follow-up
+    MEDIUM = "medium"  # 30-60% churn risk - nurture campaign
+    LOW = "low"  # 0-30% churn risk - standard engagement
+
 
 @dataclass
 class ChurnPrediction:
     """Complete churn prediction result with multi-horizon forecasts"""
+
     lead_id: str
     prediction_timestamp: datetime
 
@@ -105,9 +117,11 @@ class ChurnPrediction:
     feature_vector: Dict[str, float]
     model_version: str
 
+
 @dataclass
 class ChurnFeatures:
     """Structured representation of extracted churn features"""
+
     # Engagement metrics
     days_since_last_interaction: float
     interaction_frequency_7d: float
@@ -155,18 +169,22 @@ class ChurnFeatures:
         """Convert features to dictionary"""
         return asdict(self)
 
+
 class ChurnFeatureExtractor:
     """Extracts comprehensive behavioral features for churn prediction"""
 
-    def __init__(self, memory_service: MemoryService,
-                 lifecycle_tracker: LeadLifecycleTracker,
-                 behavioral_engine: BehavioralTriggerEngine,
-                 lead_scorer: LeadScorer):
+    def __init__(
+        self,
+        memory_service: MemoryService,
+        lifecycle_tracker: LeadLifecycleTracker,
+        behavioral_engine: BehavioralTriggerEngine,
+        lead_scorer: LeadScorer,
+    ):
         self.memory_service = memory_service
         self.lifecycle_tracker = lifecycle_tracker
         self.behavioral_engine = behavioral_engine
         self.lead_scorer = lead_scorer
-        self.logger = logging.getLogger(__name__ + '.ChurnFeatureExtractor')
+        self.logger = logging.getLogger(__name__ + ".ChurnFeatureExtractor")
 
     async def extract_features(self, lead_id: str) -> ChurnFeatures:
         """
@@ -218,7 +236,7 @@ class ChurnFeatureExtractor:
                 # Preference stability
                 **preference_features,
                 # External indicators
-                **external_features
+                **external_features,
             )
 
             self.logger.info(f"Successfully extracted {len(features.to_dict())} features for lead {lead_id}")
@@ -235,9 +253,9 @@ class ChurnFeatureExtractor:
             lead_context = await self.memory_service.get_lead_context(lead_id)
             conversation_history = await self.memory_service.get_conversation_history(lead_id, days=30)
             return {
-                'context': lead_context,
-                'conversations': conversation_history,
-                'last_interaction': await self.memory_service.get_last_interaction(lead_id)
+                "context": lead_context,
+                "conversations": conversation_history,
+                "last_interaction": await self.memory_service.get_last_interaction(lead_id),
             }
         except Exception as e:
             self.logger.warning(f"Failed to get memory data for {lead_id}: {str(e)}")
@@ -249,9 +267,9 @@ class ChurnFeatureExtractor:
             current_stage = await self.lifecycle_tracker.get_current_stage(lead_id)
             stage_history = await self.lifecycle_tracker.get_stage_history(lead_id)
             return {
-                'current_stage': current_stage,
-                'stage_history': stage_history,
-                'progression_metrics': await self.lifecycle_tracker.get_progression_metrics(lead_id)
+                "current_stage": current_stage,
+                "stage_history": stage_history,
+                "progression_metrics": await self.lifecycle_tracker.get_progression_metrics(lead_id),
             }
         except Exception as e:
             self.logger.warning(f"Failed to get lifecycle data for {lead_id}: {str(e)}")
@@ -263,9 +281,9 @@ class ChurnFeatureExtractor:
             recent_events = await self.behavioral_engine.get_recent_events(lead_id, days=30)
             engagement_metrics = await self.behavioral_engine.calculate_engagement_metrics(lead_id)
             return {
-                'recent_events': recent_events,
-                'engagement_metrics': engagement_metrics,
-                'event_patterns': await self.behavioral_engine.analyze_patterns(lead_id)
+                "recent_events": recent_events,
+                "engagement_metrics": engagement_metrics,
+                "event_patterns": await self.behavioral_engine.analyze_patterns(lead_id),
             }
         except Exception as e:
             self.logger.warning(f"Failed to get behavioral data for {lead_id}: {str(e)}")
@@ -277,9 +295,9 @@ class ChurnFeatureExtractor:
             current_score = await self.lead_scorer.get_current_score(lead_id)
             score_history = await self.lead_scorer.get_score_history(lead_id, days=30)
             return {
-                'current_score': current_score,
-                'score_history': score_history,
-                'qualification_factors': await self.lead_scorer.get_qualification_factors(lead_id)
+                "current_score": current_score,
+                "score_history": score_history,
+                "qualification_factors": await self.lead_scorer.get_qualification_factors(lead_id),
             }
         except Exception as e:
             self.logger.warning(f"Failed to get scoring data for {lead_id}: {str(e)}")
@@ -288,24 +306,26 @@ class ChurnFeatureExtractor:
     def _extract_engagement_features(self, memory_data: Dict, behavioral_data: Dict) -> Dict[str, float]:
         """Extract engagement-related features"""
         from datetime import timezone
+
         now = datetime.now(timezone.utc)
 
         # Days since last interaction
-        last_interaction = memory_data.get('last_interaction', {})
+        last_interaction = memory_data.get("last_interaction", {})
         days_since_last = 999.0  # Default for no interaction
-        if last_interaction and 'timestamp' in last_interaction:
-            ts_str = last_interaction['timestamp']
+        if last_interaction and "timestamp" in last_interaction:
+            ts_str = last_interaction["timestamp"]
             last_time = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
             if last_time.tzinfo is None:
                 last_time = last_time.replace(tzinfo=timezone.utc)
             days_since_last = (now - last_time).days
 
         # Interaction frequencies
-        events = behavioral_data.get('recent_events', [])
-        
+        events = behavioral_data.get("recent_events", [])
+
         def get_event_ts(event):
-            ts_str = event.get('timestamp', '')
-            if not ts_str: return datetime.min.replace(tzinfo=timezone.utc)
+            ts_str = event.get("timestamp", "")
+            if not ts_str:
+                return datetime.min.replace(tzinfo=timezone.utc)
             ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
             if ts.tzinfo is None:
                 ts = ts.replace(tzinfo=timezone.utc)
@@ -316,131 +336,130 @@ class ChurnFeatureExtractor:
         interactions_30d = len(events)
 
         # Response rates
-        conversations = memory_data.get('conversations', [])
+        conversations = memory_data.get("conversations", [])
         response_rate_7d = self._calculate_response_rate(conversations, 7)
         response_rate_14d = self._calculate_response_rate(conversations, 14)
         response_rate_30d = self._calculate_response_rate(conversations, 30)
 
         return {
-            'days_since_last_interaction': min(days_since_last, 30.0),  # Cap at 30 days
-            'interaction_frequency_7d': interactions_7d,
-            'interaction_frequency_14d': interactions_14d,
-            'interaction_frequency_30d': interactions_30d,
-            'response_rate_7d': response_rate_7d,
-            'response_rate_14d': response_rate_14d,
-            'response_rate_30d': response_rate_30d
+            "days_since_last_interaction": min(days_since_last, 30.0),  # Cap at 30 days
+            "interaction_frequency_7d": interactions_7d,
+            "interaction_frequency_14d": interactions_14d,
+            "interaction_frequency_30d": interactions_30d,
+            "response_rate_7d": response_rate_7d,
+            "response_rate_14d": response_rate_14d,
+            "response_rate_30d": response_rate_30d,
         }
 
     def _extract_behavioral_patterns(self, behavioral_data: Dict) -> Dict[str, float]:
         """Extract behavioral pattern features"""
-        engagement_metrics = behavioral_data.get('engagement_metrics', {})
-        event_patterns = behavioral_data.get('event_patterns', {})
+        engagement_metrics = behavioral_data.get("engagement_metrics", {})
+        event_patterns = behavioral_data.get("event_patterns", {})
 
         return {
-            'engagement_trend': engagement_metrics.get('trend', 0.0),
-            'session_duration_avg': engagement_metrics.get('avg_session_duration', 0.0),
-            'property_views_per_session': engagement_metrics.get('views_per_session', 0.0),
-            'saved_properties_count': engagement_metrics.get('saved_properties', 0.0),
-            'search_refinements_count': engagement_metrics.get('search_refinements', 0.0)
+            "engagement_trend": engagement_metrics.get("trend", 0.0),
+            "session_duration_avg": engagement_metrics.get("avg_session_duration", 0.0),
+            "property_views_per_session": engagement_metrics.get("views_per_session", 0.0),
+            "saved_properties_count": engagement_metrics.get("saved_properties", 0.0),
+            "search_refinements_count": engagement_metrics.get("search_refinements", 0.0),
         }
 
     def _extract_lifecycle_features(self, lifecycle_data: Dict, scoring_data: Dict) -> Dict[str, float]:
         """Extract lifecycle progression features"""
-        progression_metrics = lifecycle_data.get('progression_metrics', {})
-        score_history = scoring_data.get('score_history', [])
+        progression_metrics = lifecycle_data.get("progression_metrics", {})
+        score_history = scoring_data.get("score_history", [])
 
         # Stage progression velocity
-        stage_velocity = progression_metrics.get('velocity', 0.0)
+        stage_velocity = progression_metrics.get("velocity", 0.0)
 
         # Stage stagnation
-        stage_stagnation = progression_metrics.get('stagnation_days', 0.0)
+        stage_stagnation = progression_metrics.get("stagnation_days", 0.0)
 
         # Backward transitions
-        backward_transitions = progression_metrics.get('backward_transitions', 0.0)
+        backward_transitions = progression_metrics.get("backward_transitions", 0.0)
 
         # Qualification score change
         score_change = 0.0
         if len(score_history) >= 2:
-            recent_score = score_history[0].get('score', 0.0)
-            previous_score = score_history[-1].get('score', 0.0)
+            recent_score = score_history[0].get("score", 0.0)
+            previous_score = score_history[-1].get("score", 0.0)
             score_change = recent_score - previous_score
 
         return {
-            'stage_progression_velocity': stage_velocity,
-            'stage_stagnation_days': min(stage_stagnation, 30.0),
-            'backward_stage_transitions': backward_transitions,
-            'qualification_score_change': score_change
+            "stage_progression_velocity": stage_velocity,
+            "stage_stagnation_days": min(stage_stagnation, 30.0),
+            "backward_stage_transitions": backward_transitions,
+            "qualification_score_change": score_change,
         }
 
     def _extract_communication_features(self, memory_data: Dict, behavioral_data: Dict) -> Dict[str, float]:
         """Extract communication pattern features"""
-        conversations = memory_data.get('conversations', [])
+        conversations = memory_data.get("conversations", [])
 
         # Calculate communication channel metrics
-        email_opens = sum(1 for conv in conversations if conv.get('channel') == 'email' and conv.get('opened', False))
-        email_total = sum(1 for conv in conversations if conv.get('channel') == 'email')
+        email_opens = sum(1 for conv in conversations if conv.get("channel") == "email" and conv.get("opened", False))
+        email_total = sum(1 for conv in conversations if conv.get("channel") == "email")
         email_open_rate = email_opens / email_total if email_total > 0 else 0.0
 
-        email_clicks = sum(1 for conv in conversations if conv.get('channel') == 'email' and conv.get('clicked', False))
+        email_clicks = sum(1 for conv in conversations if conv.get("channel") == "email" and conv.get("clicked", False))
         email_click_rate = email_clicks / email_total if email_total > 0 else 0.0
 
-        sms_responses = sum(1 for conv in conversations if conv.get('channel') == 'sms' and conv.get('response'))
-        sms_total = sum(1 for conv in conversations if conv.get('channel') == 'sms')
+        sms_responses = sum(1 for conv in conversations if conv.get("channel") == "sms" and conv.get("response"))
+        sms_total = sum(1 for conv in conversations if conv.get("channel") == "sms")
         sms_response_rate = sms_responses / sms_total if sms_total > 0 else 0.0
 
-        call_pickups = sum(1 for conv in conversations if conv.get('channel') == 'call' and conv.get('pickup', False))
-        call_total = sum(1 for conv in conversations if conv.get('channel') == 'call')
+        call_pickups = sum(1 for conv in conversations if conv.get("channel") == "call" and conv.get("pickup", False))
+        call_total = sum(1 for conv in conversations if conv.get("channel") == "call")
         call_pickup_rate = call_pickups / call_total if call_total > 0 else 0.0
 
         # Channel consistency
         channel_consistency = self._calculate_channel_consistency(conversations)
 
         return {
-            'email_open_rate': email_open_rate,
-            'email_click_rate': email_click_rate,
-            'sms_response_rate': sms_response_rate,
-            'call_pickup_rate': call_pickup_rate,
-            'preferred_communication_channel_consistency': channel_consistency
+            "email_open_rate": email_open_rate,
+            "email_click_rate": email_click_rate,
+            "sms_response_rate": sms_response_rate,
+            "call_pickup_rate": call_pickup_rate,
+            "preferred_communication_channel_consistency": channel_consistency,
         }
 
     def _extract_preference_features(self, memory_data: Dict, behavioral_data: Dict) -> Dict[str, float]:
         """Extract property preference stability features"""
-        context = memory_data.get('context', {})
-        preferences = context.get('preferences', {})
+        context = memory_data.get("context", {})
+        preferences = context.get("preferences", {})
 
         # Count preference changes over time
-        budget_changes = len(preferences.get('budget_history', [])) - 1
-        location_changes = len(preferences.get('location_history', [])) - 1
-        property_type_changes = len(preferences.get('property_type_history', [])) - 1
-        feature_changes = len(preferences.get('feature_history', [])) - 1
+        budget_changes = len(preferences.get("budget_history", [])) - 1
+        location_changes = len(preferences.get("location_history", [])) - 1
+        property_type_changes = len(preferences.get("property_type_history", [])) - 1
+        feature_changes = len(preferences.get("feature_history", [])) - 1
 
         return {
-            'budget_range_changes': max(0.0, budget_changes),
-            'location_preference_changes': max(0.0, location_changes),
-            'property_type_changes': max(0.0, property_type_changes),
-            'feature_requirements_changes': max(0.0, feature_changes)
+            "budget_range_changes": max(0.0, budget_changes),
+            "location_preference_changes": max(0.0, location_changes),
+            "property_type_changes": max(0.0, property_type_changes),
+            "feature_requirements_changes": max(0.0, feature_changes),
         }
 
     def _extract_external_indicators(self, lead_id: str, behavioral_data: Dict) -> Dict[str, float]:
         """Extract external market and seasonal indicators"""
         # Mock implementation - would connect to market data APIs
         return {
-            'market_activity_correlation': 0.5,  # Correlation with market activity
-            'seasonal_activity_alignment': 0.7   # Alignment with seasonal patterns
+            "market_activity_correlation": 0.5,  # Correlation with market activity
+            "seasonal_activity_alignment": 0.7,  # Alignment with seasonal patterns
         }
 
     def _calculate_response_rate(self, conversations: List[Dict], days: int) -> float:
         """Calculate response rate over specified time period"""
         cutoff_date = datetime.now() - timedelta(days=days)
         recent_conversations = [
-            conv for conv in conversations
-            if datetime.fromisoformat(conv.get('timestamp', '')) >= cutoff_date
+            conv for conv in conversations if datetime.fromisoformat(conv.get("timestamp", "")) >= cutoff_date
         ]
 
         if not recent_conversations:
             return 0.0
 
-        responses = sum(1 for conv in recent_conversations if conv.get('response'))
+        responses = sum(1 for conv in recent_conversations if conv.get("response"))
         return responses / len(recent_conversations)
 
     def _calculate_channel_consistency(self, conversations: List[Dict]) -> float:
@@ -448,7 +467,7 @@ class ChurnFeatureExtractor:
         if not conversations:
             return 0.0
 
-        channels = [conv.get('channel') for conv in conversations[-10:]]  # Last 10 interactions
+        channels = [conv.get("channel") for conv in conversations[-10:]]  # Last 10 interactions
         most_common_channel = max(set(channels), key=channels.count) if channels else None
 
         if not most_common_channel:
@@ -486,8 +505,9 @@ class ChurnFeatureExtractor:
             property_type_changes=0.0,
             feature_requirements_changes=1.0,
             market_activity_correlation=0.5,
-            seasonal_activity_alignment=0.7
+            seasonal_activity_alignment=0.7,
         )
+
 
 class ChurnRiskPredictor:
     """Machine learning model for predicting churn risk across multiple horizons"""
@@ -498,7 +518,7 @@ class ChurnRiskPredictor:
         self.scaler = StandardScaler()
         self.feature_names = []
         self.model_version = "1.0.0"
-        self.logger = logging.getLogger(__name__ + '.ChurnRiskPredictor')
+        self.logger = logging.getLogger(__name__ + ".ChurnRiskPredictor")
 
         # Initialize or load models
         if model_path:
@@ -525,14 +545,14 @@ class ChurnRiskPredictor:
             risk_scores = {}
             confidences = []
 
-            for horizon in ['7d', '14d', '30d']:
+            for horizon in ["7d", "14d", "30d"]:
                 if horizon in self.models:
                     # Get probability of churn
                     prob = self.models[horizon].predict_proba(scaled_features)[0][1]
                     risk_scores[horizon] = min(100.0, prob * 100)  # Convert to 0-100 scale
 
                     # Calculate confidence based on decision function
-                    if hasattr(self.models[horizon], 'decision_function'):
+                    if hasattr(self.models[horizon], "decision_function"):
                         decision_score = abs(self.models[horizon].decision_function(scaled_features)[0])
                         confidence = min(1.0, decision_score / 2.0)  # Normalize to 0-1
                         confidences.append(confidence)
@@ -550,7 +570,7 @@ class ChurnRiskPredictor:
         except Exception as e:
             self.logger.error(f"Error predicting churn risk: {str(e)}")
             # Return conservative fallback predictions
-            fallback_scores = {'7d': 25.0, '14d': 35.0, '30d': 45.0}
+            fallback_scores = {"7d": 25.0, "14d": 35.0, "30d": 45.0}
             return fallback_scores, 0.3
 
     def get_feature_importance(self, features: ChurnFeatures) -> List[Tuple[str, float]]:
@@ -565,8 +585,8 @@ class ChurnRiskPredictor:
         """
         try:
             # Use the 14d model for feature importance (most balanced horizon)
-            if '14d' in self.models and hasattr(self.models['14d'], 'feature_importances_'):
-                importances = self.models['14d'].feature_importances_
+            if "14d" in self.models and hasattr(self.models["14d"], "feature_importances_"):
+                importances = self.models["14d"].feature_importances_
                 feature_dict = features.to_dict()
                 feature_importance = list(zip(feature_dict.keys(), importances))
 
@@ -586,22 +606,12 @@ class ChurnRiskPredictor:
         self.logger.info("Initializing default churn prediction models")
 
         # Create ensemble models for each horizon
-        for horizon in ['7d', '14d', '30d']:
+        for horizon in ["7d", "14d", "30d"]:
             # Random Forest for stability
-            rf_model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=10,
-                random_state=42,
-                class_weight='balanced'
-            )
+            rf_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, class_weight="balanced")
 
             # Gradient Boosting for performance
-            gb_model = GradientBoostingClassifier(
-                n_estimators=100,
-                max_depth=6,
-                learning_rate=0.1,
-                random_state=42
-            )
+            gb_model = GradientBoostingClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42)
 
             # For demo purposes, use RF model
             self.models[horizon] = rf_model
@@ -652,7 +662,7 @@ class ChurnRiskPredictor:
             risk_score += X[i, 9] * 0.2
 
             # Adjust risk based on horizon
-            horizon_multiplier = {'7d': 0.8, '14d': 1.0, '30d': 1.2}
+            horizon_multiplier = {"7d": 0.8, "14d": 1.0, "30d": 1.2}
             risk_score *= horizon_multiplier.get(horizon, 1.0)
 
             # Convert to binary label
@@ -667,41 +677,41 @@ class ChurnRiskPredictor:
         risk_score = 0.0
 
         # Days since last interaction (0-30 scale)
-        risk_score += min(feature_dict['days_since_last_interaction'] / 30.0, 1.0) * 30
+        risk_score += min(feature_dict["days_since_last_interaction"] / 30.0, 1.0) * 30
 
         # Low interaction frequency
-        max_interactions = {'7d': 7, '14d': 14, '30d': 21}
-        interaction_key = f'interaction_frequency_{horizon[:-1]}d'
+        max_interactions = {"7d": 7, "14d": 14, "30d": 21}
+        interaction_key = f"interaction_frequency_{horizon[:-1]}d"
         if interaction_key in feature_dict:
             expected = max_interactions[horizon]
             actual = feature_dict[interaction_key]
             risk_score += max(0, (expected - actual) / expected) * 25
 
         # Low response rate
-        response_key = f'response_rate_{horizon[:-1]}d'
+        response_key = f"response_rate_{horizon[:-1]}d"
         if response_key in feature_dict:
             risk_score += (1 - feature_dict[response_key]) * 20
 
         # Negative engagement trend
-        if feature_dict['engagement_trend'] < 0:
-            risk_score += abs(feature_dict['engagement_trend']) * 15
+        if feature_dict["engagement_trend"] < 0:
+            risk_score += abs(feature_dict["engagement_trend"]) * 15
 
         # Stage stagnation
-        risk_score += min(feature_dict['stage_stagnation_days'] / 30.0, 1.0) * 10
+        risk_score += min(feature_dict["stage_stagnation_days"] / 30.0, 1.0) * 10
 
         return min(100.0, risk_score)
 
     def _rule_based_importance(self, features: ChurnFeatures) -> List[Tuple[str, float]]:
         """Rule-based feature importance for explainability"""
         importance_weights = {
-            'days_since_last_interaction': 0.25,
-            'response_rate_7d': 0.20,
-            'engagement_trend': 0.15,
-            'interaction_frequency_7d': 0.12,
-            'stage_stagnation_days': 0.10,
-            'email_open_rate': 0.08,
-            'call_pickup_rate': 0.05,
-            'qualification_score_change': 0.05
+            "days_since_last_interaction": 0.25,
+            "response_rate_7d": 0.20,
+            "engagement_trend": 0.15,
+            "interaction_frequency_7d": 0.12,
+            "stage_stagnation_days": 0.10,
+            "email_open_rate": 0.08,
+            "call_pickup_rate": 0.05,
+            "qualification_score_change": 0.05,
         }
 
         # Sort by importance
@@ -712,10 +722,10 @@ class ChurnRiskPredictor:
         """Save trained models and scaler to disk"""
         try:
             model_data = {
-                'models': self.models,
-                'scaler': self.scaler,
-                'feature_names': self.feature_names,
-                'model_version': self.model_version
+                "models": self.models,
+                "scaler": self.scaler,
+                "feature_names": self.feature_names,
+                "model_version": self.model_version,
             }
             joblib.dump(model_data, path)
             self.logger.info(f"Models saved to {path}")
@@ -726,31 +736,33 @@ class ChurnRiskPredictor:
         """Load trained models and scaler from disk"""
         try:
             model_data = joblib.load(self.model_path)
-            self.models = model_data['models']
-            self.scaler = model_data['scaler']
-            self.feature_names = model_data.get('feature_names', [])
-            self.model_version = model_data.get('model_version', '1.0.0')
+            self.models = model_data["models"]
+            self.scaler = model_data["scaler"]
+            self.feature_names = model_data.get("feature_names", [])
+            self.model_version = model_data.get("model_version", "1.0.0")
             self.logger.info(f"Models loaded from {self.model_path}")
         except Exception as e:
             self.logger.error(f"Error loading models: {str(e)}")
             self._initialize_default_models()
 
+
 class ChurnRiskStratifier:
     """Stratifies churn risk scores into actionable tiers with recommendations"""
 
     def __init__(self):
-        self.logger = logging.getLogger(__name__ + '.ChurnRiskStratifier')
+        self.logger = logging.getLogger(__name__ + ".ChurnRiskStratifier")
 
         # Risk tier thresholds
         self.tier_thresholds = {
             ChurnRiskTier.CRITICAL: 80.0,
             ChurnRiskTier.HIGH: 60.0,
             ChurnRiskTier.MEDIUM: 30.0,
-            ChurnRiskTier.LOW: 0.0
+            ChurnRiskTier.LOW: 0.0,
         }
 
-    def stratify_risk(self, risk_scores: Dict[str, float],
-                     top_risk_factors: List[Tuple[str, float]]) -> Tuple[ChurnRiskTier, List[str], str]:
+    def stratify_risk(
+        self, risk_scores: Dict[str, float], top_risk_factors: List[Tuple[str, float]]
+    ) -> Tuple[ChurnRiskTier, List[str], str]:
         """
         Stratify risk score into tier with actionable recommendations
 
@@ -763,9 +775,7 @@ class ChurnRiskStratifier:
         """
         # Use weighted average of multi-horizon scores (emphasize shorter terms)
         weighted_score = (
-            risk_scores.get('7d', 0) * 0.5 +
-            risk_scores.get('14d', 0) * 0.3 +
-            risk_scores.get('30d', 0) * 0.2
+            risk_scores.get("7d", 0) * 0.5 + risk_scores.get("14d", 0) * 0.3 + risk_scores.get("30d", 0) * 0.2
         )
 
         # Determine risk tier
@@ -792,8 +802,7 @@ class ChurnRiskStratifier:
         else:
             return ChurnRiskTier.LOW
 
-    def _generate_recommendations(self, tier: ChurnRiskTier,
-                                risk_factors: List[Tuple[str, float]]) -> List[str]:
+    def _generate_recommendations(self, tier: ChurnRiskTier, risk_factors: List[Tuple[str, float]]) -> List[str]:
         """Generate actionable recommendations based on risk tier and factors"""
         recommendations = []
 
@@ -803,38 +812,38 @@ class ChurnRiskStratifier:
                 "Immediate phone call required",
                 "Escalate to senior agent",
                 "Offer emergency property viewing",
-                "Consider special incentives"
+                "Consider special incentives",
             ],
             ChurnRiskTier.HIGH: [
                 "Schedule follow-up call within 24 hours",
                 "Send personalized property recommendations",
                 "Offer virtual consultation",
-                "Review and adjust communication strategy"
+                "Review and adjust communication strategy",
             ],
             ChurnRiskTier.MEDIUM: [
                 "Send re-engagement email campaign",
                 "Provide market updates",
                 "Offer additional property options",
-                "Schedule check-in call"
+                "Schedule check-in call",
             ],
             ChurnRiskTier.LOW: [
                 "Continue standard nurture sequence",
                 "Monitor engagement levels",
-                "Provide educational content"
-            ]
+                "Provide educational content",
+            ],
         }
 
         recommendations.extend(tier_recommendations[tier])
 
         # Factor-specific recommendations
         factor_recommendations = {
-            'days_since_last_interaction': "Initiate immediate outreach",
-            'response_rate_7d': "Switch communication channel",
-            'engagement_trend': "Re-evaluate content strategy",
-            'stage_stagnation_days': "Provide stage progression assistance",
-            'email_open_rate': "Improve email subject lines and timing",
-            'call_pickup_rate': "Try alternative contact methods",
-            'qualification_score_change': "Re-qualify lead and adjust approach"
+            "days_since_last_interaction": "Initiate immediate outreach",
+            "response_rate_7d": "Switch communication channel",
+            "engagement_trend": "Re-evaluate content strategy",
+            "stage_stagnation_days": "Provide stage progression assistance",
+            "email_open_rate": "Improve email subject lines and timing",
+            "call_pickup_rate": "Try alternative contact methods",
+            "qualification_score_change": "Re-qualify lead and adjust approach",
         }
 
         # Add factor-specific recommendations
@@ -847,14 +856,14 @@ class ChurnRiskStratifier:
     def _determine_urgency(self, tier: ChurnRiskTier, risk_scores: Dict[str, float]) -> str:
         """Determine intervention urgency level"""
         # Check for rapidly escalating risk
-        score_7d = risk_scores.get('7d', 0)
-        score_30d = risk_scores.get('30d', 0)
+        score_7d = risk_scores.get("7d", 0)
+        score_30d = risk_scores.get("30d", 0)
 
         urgency_map = {
             ChurnRiskTier.CRITICAL: "immediate",
             ChurnRiskTier.HIGH: "urgent",
             ChurnRiskTier.MEDIUM: "moderate",
-            ChurnRiskTier.LOW: "low"
+            ChurnRiskTier.LOW: "low",
         }
 
         base_urgency = urgency_map[tier]
@@ -865,18 +874,21 @@ class ChurnRiskStratifier:
                 "low": "moderate",
                 "moderate": "urgent",
                 "urgent": "immediate",
-                "immediate": "immediate"
+                "immediate": "immediate",
             }
             return urgency_escalation.get(base_urgency, base_urgency)
 
         return base_urgency
 
+
 # ============================================================================
 # CHURN EVENT TRACKING SYSTEM (NEW ENHANCEMENT)
 # ============================================================================
 
+
 class ChurnReason(Enum):
     """Specific reasons for lead churn"""
+
     COMPETITOR = "competitor"  # Chose another agent/company
     TIMING = "timing"  # Not ready to buy/sell (timing issue)
     BUDGET = "budget"  # Financial constraints
@@ -887,23 +899,29 @@ class ChurnReason(Enum):
     UNRESPONSIVE = "unresponsive"  # Lead became unresponsive
     OTHER = "other"  # Other reasons
 
+
 class ChurnEventType(Enum):
     """Types of churn events"""
+
     DETECTED = "detected"  # System detected potential churn
     CONFIRMED = "confirmed"  # Manual confirmation of churn
     RECOVERED = "recovered"  # Lead was successfully recovered
     PERMANENT = "permanent"  # Lead permanently lost
 
+
 class RecoveryEligibility(Enum):
     """Recovery campaign eligibility status"""
+
     ELIGIBLE = "eligible"  # Eligible for recovery campaigns
     PARTIAL = "partial"  # Eligible for limited recovery attempts
     INELIGIBLE = "ineligible"  # Not eligible (e.g., competitor, personal issues)
     EXHAUSTED = "exhausted"  # Recovery attempts exhausted
 
+
 @dataclass
 class ChurnEvent:
     """Comprehensive churn event record for tracking and analytics"""
+
     # Event identification
     event_id: str
     lead_id: str
@@ -952,6 +970,7 @@ class ChurnEvent:
                 result[field] = value
         return result
 
+
 class ChurnEventTracker:
     """
     Service for tracking actual churn events and managing recovery eligibility
@@ -962,27 +981,29 @@ class ChurnEventTracker:
 
     def __init__(self, memory_service: Optional[MemoryService] = None):
         self.memory_service = memory_service
-        self.logger = logging.getLogger(__name__ + '.ChurnEventTracker')
+        self.logger = logging.getLogger(__name__ + ".ChurnEventTracker")
 
         # In-memory storage for events (production would use persistent storage)
         self._events_cache: Dict[str, List[ChurnEvent]] = {}
 
         # Inactivity thresholds for automatic churn detection
         self.inactivity_thresholds = {
-            'warning': 14,  # 14 days = warning signal
-            'likely_churned': 30,  # 30 days = likely churned
-            'confirmed_churned': 60  # 60 days = confirmed churned
+            "warning": 14,  # 14 days = warning signal
+            "likely_churned": 30,  # 30 days = likely churned
+            "confirmed_churned": 60,  # 60 days = confirmed churned
         }
 
         self.logger.info("ChurnEventTracker initialized")
 
-    async def track_churn_event(self,
-                               lead_id: str,
-                               event_type: ChurnEventType,
-                               churn_reason: Optional[ChurnReason] = None,
-                               confidence_score: Optional[float] = None,
-                               detection_method: str = "system",
-                               notes: Optional[str] = None) -> ChurnEvent:
+    async def track_churn_event(
+        self,
+        lead_id: str,
+        event_type: ChurnEventType,
+        churn_reason: Optional[ChurnReason] = None,
+        confidence_score: Optional[float] = None,
+        detection_method: str = "system",
+        notes: Optional[str] = None,
+    ) -> ChurnEvent:
         """
         Track a new churn event
 
@@ -1020,7 +1041,7 @@ class ChurnEventTracker:
                 last_interaction_date=last_interaction,
                 inactivity_days=inactivity_days,
                 lifecycle_stage=lifecycle_stage,
-                notes=notes
+                notes=notes,
             )
 
             # Store event
@@ -1033,7 +1054,7 @@ class ChurnEventTracker:
                 await self.memory_service.store_memory(
                     f"churn_event_{event_id}",
                     churn_event.to_dict(),
-                    tags=["churn_tracking", f"lead_{lead_id}", event_type.value]
+                    tags=["churn_tracking", f"lead_{lead_id}", event_type.value],
                 )
 
             self.logger.info(f"Tracked churn event: {event_id} for lead {lead_id} ({event_type.value})")
@@ -1061,24 +1082,24 @@ class ChurnEventTracker:
                 return None  # Already tracked recently
 
             # Determine churn level based on inactivity
-            if days_since_interaction >= self.inactivity_thresholds['confirmed_churned']:
+            if days_since_interaction >= self.inactivity_thresholds["confirmed_churned"]:
                 return await self.track_churn_event(
                     lead_id=lead_id,
                     event_type=ChurnEventType.CONFIRMED,
                     churn_reason=ChurnReason.UNRESPONSIVE,
                     confidence_score=0.9,
                     detection_method="inactivity_threshold",
-                    notes=f"{days_since_interaction} days of inactivity - confirmed churn"
+                    notes=f"{days_since_interaction} days of inactivity - confirmed churn",
                 )
 
-            elif days_since_interaction >= self.inactivity_thresholds['likely_churned']:
+            elif days_since_interaction >= self.inactivity_thresholds["likely_churned"]:
                 return await self.track_churn_event(
                     lead_id=lead_id,
                     event_type=ChurnEventType.DETECTED,
                     churn_reason=ChurnReason.UNRESPONSIVE,
                     confidence_score=0.7,
                     detection_method="inactivity_threshold",
-                    notes=f"{days_since_interaction} days of inactivity - likely churned"
+                    notes=f"{days_since_interaction} days of inactivity - likely churned",
                 )
 
             return None
@@ -1096,10 +1117,7 @@ class ChurnEventTracker:
         events = await self.get_churn_events(lead_id)
         cutoff_date = datetime.now() - timedelta(days=days)
 
-        return [
-            event for event in events
-            if event.event_timestamp >= cutoff_date
-        ]
+        return [event for event in events if event.event_timestamp >= cutoff_date]
 
     async def check_recovery_eligibility(self, lead_id: str) -> Tuple[bool, RecoveryEligibility, int]:
         """
@@ -1117,10 +1135,7 @@ class ChurnEventTracker:
         latest_event = max(events, key=lambda e: e.event_timestamp)
 
         # Check eligibility
-        is_eligible = latest_event.recovery_eligibility in [
-            RecoveryEligibility.ELIGIBLE,
-            RecoveryEligibility.PARTIAL
-        ]
+        is_eligible = latest_event.recovery_eligibility in [RecoveryEligibility.ELIGIBLE, RecoveryEligibility.PARTIAL]
 
         attempts_remaining = max(0, latest_event.recovery_attempts_allowed - latest_event.recovery_attempts_used)
 
@@ -1174,7 +1189,7 @@ class ChurnEventTracker:
                 event_type=ChurnEventType.RECOVERED,
                 confidence_score=1.0,
                 detection_method="recovery_confirmation",
-                notes="Lead successfully recovered through recovery campaign"
+                notes="Lead successfully recovered through recovery campaign",
             )
 
             # Update latest churn event
@@ -1209,7 +1224,9 @@ class ChurnEventTracker:
 
             # Basic metrics
             total_events = len(all_events)
-            churn_events = [e for e in all_events if e.event_type in [ChurnEventType.DETECTED, ChurnEventType.CONFIRMED]]
+            churn_events = [
+                e for e in all_events if e.event_type in [ChurnEventType.DETECTED, ChurnEventType.CONFIRMED]
+            ]
             recovery_events = [e for e in all_events if e.event_type == ChurnEventType.RECOVERED]
 
             # Churn reasons breakdown
@@ -1236,14 +1253,16 @@ class ChurnEventTracker:
                 "churn_reasons": reason_counts,
                 "recovery_eligibility": eligibility_counts,
                 "unique_leads_affected": len(self._events_cache),
-                "analysis_timestamp": datetime.now().isoformat()
+                "analysis_timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
             self.logger.error(f"Error generating churn analytics: {str(e)}")
             return {"error": str(e)}
 
-    def _determine_recovery_eligibility(self, churn_reason: Optional[ChurnReason], event_type: ChurnEventType) -> RecoveryEligibility:
+    def _determine_recovery_eligibility(
+        self, churn_reason: Optional[ChurnReason], event_type: ChurnEventType
+    ) -> RecoveryEligibility:
         """Determine recovery eligibility based on churn reason"""
         if churn_reason in [ChurnReason.COMPETITOR, ChurnReason.PERSONAL_CHANGE]:
             return RecoveryEligibility.INELIGIBLE
@@ -1258,6 +1277,7 @@ class ChurnEventTracker:
         # For now, return placeholder data
         return None, None, None
 
+
 class ChurnPredictionEngine:
     """
     Main orchestration class for the churn prediction system
@@ -1266,18 +1286,23 @@ class ChurnPredictionEngine:
     to provide comprehensive churn risk assessment with actionable insights.
     """
 
-    def __init__(self, memory_service: Optional[MemoryService] = None,
-                 lifecycle_tracker: Optional[LeadLifecycleTracker] = None,
-                 behavioral_engine: Optional[BehavioralTriggerEngine] = None,
-                 lead_scorer: Optional[LeadScorer] = None,
-                 model_path: Optional[str] = None):
+    def __init__(
+        self,
+        memory_service: Optional[MemoryService] = None,
+        lifecycle_tracker: Optional[LeadLifecycleTracker] = None,
+        behavioral_engine: Optional[BehavioralTriggerEngine] = None,
+        lead_scorer: Optional[LeadScorer] = None,
+        model_path: Optional[str] = None,
+    ):
 
-        self.logger = logging.getLogger(__name__ + '.ChurnPredictionEngine')
+        self.logger = logging.getLogger(__name__ + ".ChurnPredictionEngine")
 
         # Initialize components with optional dependencies
-        self.feature_extractor = ChurnFeatureExtractor(
-            memory_service, lifecycle_tracker, behavioral_engine, lead_scorer
-        ) if all([memory_service, lifecycle_tracker, behavioral_engine, lead_scorer]) else None
+        self.feature_extractor = (
+            ChurnFeatureExtractor(memory_service, lifecycle_tracker, behavioral_engine, lead_scorer)
+            if all([memory_service, lifecycle_tracker, behavioral_engine, lead_scorer])
+            else None
+        )
 
         self.risk_predictor = ChurnRiskPredictor(model_path)
         self.risk_stratifier = ChurnRiskStratifier()
@@ -1290,7 +1315,9 @@ class ChurnPredictionEngine:
         self._cache_ttl = timedelta(hours=4)
 
         if not self.feature_extractor:
-            self.logger.warning("ChurnPredictionEngine initialized with missing dependencies. Features will not be extracted.")
+            self.logger.warning(
+                "ChurnPredictionEngine initialized with missing dependencies. Features will not be extracted."
+            )
 
         self.logger.info("ChurnPredictionEngine with event tracking initialized successfully")
 
@@ -1325,24 +1352,22 @@ class ChurnPredictionEngine:
             feature_importance = self.risk_predictor.get_feature_importance(features)
 
             # Step 4: Stratify risk and generate recommendations
-            risk_tier, recommendations, urgency = self.risk_stratifier.stratify_risk(
-                risk_scores, feature_importance
-            )
+            risk_tier, recommendations, urgency = self.risk_stratifier.stratify_risk(risk_scores, feature_importance)
 
             # Step 5: Create comprehensive prediction object
             prediction = ChurnPrediction(
                 lead_id=lead_id,
                 prediction_timestamp=datetime.now(),
-                risk_score_7d=risk_scores.get('7d', 0.0),
-                risk_score_14d=risk_scores.get('14d', 0.0),
-                risk_score_30d=risk_scores.get('30d', 0.0),
+                risk_score_7d=risk_scores.get("7d", 0.0),
+                risk_score_14d=risk_scores.get("14d", 0.0),
+                risk_score_30d=risk_scores.get("30d", 0.0),
                 risk_tier=risk_tier,
                 confidence=confidence,
                 top_risk_factors=feature_importance,
                 recommended_actions=recommendations,
                 intervention_urgency=urgency,
                 feature_vector=features.to_dict(),
-                model_version=self.risk_predictor.model_version
+                model_version=self.risk_predictor.model_version,
             )
 
             # Cache the prediction
@@ -1415,7 +1440,7 @@ class ChurnPredictionEngine:
             recommended_actions=["Manual review required", "Standard follow-up"],
             intervention_urgency="moderate",
             feature_vector={},
-            model_version="fallback-1.0.0"
+            model_version="fallback-1.0.0",
         )
 
     def clear_cache(self):
@@ -1438,7 +1463,7 @@ class ChurnPredictionEngine:
                 event_type=ChurnEventType.CONFIRMED,
                 confidence_score=1.0,
                 detection_method="manual_confirmation",
-                notes="Actual churn outcome confirmed for model training"
+                notes="Actual churn outcome confirmed for model training",
             )
 
         # In production, this would update the training dataset
@@ -1449,7 +1474,9 @@ class ChurnPredictionEngine:
     # ENHANCED METHODS: Integration with ChurnEventTracker
     # ============================================================================
 
-    async def predict_churn_risk_with_event_detection(self, lead_id: str, force_refresh: bool = False) -> Tuple[ChurnPrediction, Optional[ChurnEvent]]:
+    async def predict_churn_risk_with_event_detection(
+        self, lead_id: str, force_refresh: bool = False
+    ) -> Tuple[ChurnPrediction, Optional[ChurnEvent]]:
         """
         Enhanced prediction that automatically detects and tracks churn events
 
@@ -1468,13 +1495,11 @@ class ChurnPredictionEngine:
             churn_event = None
 
             # Extract days since last interaction from features
-            if 'days_since_last_interaction' in prediction.feature_vector:
-                days_since_interaction = int(prediction.feature_vector['days_since_last_interaction'])
+            if "days_since_last_interaction" in prediction.feature_vector:
+                days_since_interaction = int(prediction.feature_vector["days_since_last_interaction"])
 
                 # Attempt automatic churn event detection based on inactivity
-                churn_event = await self.event_tracker.detect_inactivity_churn(
-                    lead_id, days_since_interaction
-                )
+                churn_event = await self.event_tracker.detect_inactivity_churn(lead_id, days_since_interaction)
 
             # Track high-risk predictions as potential churn events
             if prediction.risk_tier == ChurnRiskTier.CRITICAL and not churn_event:
@@ -1486,7 +1511,7 @@ class ChurnPredictionEngine:
                         event_type=ChurnEventType.DETECTED,
                         confidence_score=prediction.confidence,
                         detection_method="ai_prediction",
-                        notes=f"Critical risk tier detected: {prediction.risk_score_14d:.1f}% risk"
+                        notes=f"Critical risk tier detected: {prediction.risk_score_14d:.1f}% risk",
                     )
 
             return prediction, churn_event
@@ -1497,7 +1522,9 @@ class ChurnPredictionEngine:
             prediction = await self.predict_churn_risk(lead_id, force_refresh)
             return prediction, None
 
-    async def get_recovery_eligible_leads(self, predictions: Dict[str, ChurnPrediction]) -> Dict[str, Tuple[ChurnPrediction, RecoveryEligibility, int]]:
+    async def get_recovery_eligible_leads(
+        self, predictions: Dict[str, ChurnPrediction]
+    ) -> Dict[str, Tuple[ChurnPrediction, RecoveryEligibility, int]]:
         """
         Get leads eligible for recovery campaigns with eligibility details
 
@@ -1511,11 +1538,16 @@ class ChurnPredictionEngine:
 
         for lead_id, prediction in predictions.items():
             # Check recovery eligibility
-            is_eligible, eligibility_status, attempts_remaining = await self.event_tracker.check_recovery_eligibility(lead_id)
+            is_eligible, eligibility_status, attempts_remaining = await self.event_tracker.check_recovery_eligibility(
+                lead_id
+            )
 
             # Include high-risk leads that are eligible for recovery
-            if (prediction.risk_tier in [ChurnRiskTier.HIGH, ChurnRiskTier.CRITICAL] and
-                is_eligible and attempts_remaining > 0):
+            if (
+                prediction.risk_tier in [ChurnRiskTier.HIGH, ChurnRiskTier.CRITICAL]
+                and is_eligible
+                and attempts_remaining > 0
+            ):
                 recovery_candidates[lead_id] = (prediction, eligibility_status, attempts_remaining)
 
         return recovery_candidates
@@ -1538,7 +1570,9 @@ class ChurnPredictionEngine:
             if success:
                 self.logger.info(f"Recovery campaign {campaign_id} initiated for lead {lead_id}")
             else:
-                self.logger.warning(f"Recovery campaign {campaign_id} could not be initiated for lead {lead_id} - not eligible or attempts exhausted")
+                self.logger.warning(
+                    f"Recovery campaign {campaign_id} could not be initiated for lead {lead_id} - not eligible or attempts exhausted"
+                )
 
             return success
 
@@ -1568,7 +1602,7 @@ class ChurnPredictionEngine:
                     event_type=ChurnEventType.PERMANENT,
                     confidence_score=0.8,
                     detection_method="recovery_failure",
-                    notes="Lead not recovered after recovery campaign attempts"
+                    notes="Lead not recovered after recovery campaign attempts",
                 )
                 success = True
                 self.logger.info(f"Recovery failure recorded for lead {lead_id}")
@@ -1593,7 +1627,7 @@ class ChurnPredictionEngine:
             # Add prediction-level analytics
             cache_stats = {
                 "cached_predictions": len(self._prediction_cache),
-                "cache_hit_potential": f"{len(self._prediction_cache)} recent predictions available"
+                "cache_hit_potential": f"{len(self._prediction_cache)} recent predictions available",
             }
 
             analytics["prediction_cache_stats"] = cache_stats
@@ -1605,8 +1639,10 @@ class ChurnPredictionEngine:
             self.logger.error(f"Error generating churn analytics: {str(e)}")
             return {"error": str(e)}
 
+
 # Example usage and testing
 if __name__ == "__main__":
+
     async def test_churn_prediction():
         """Test the churn prediction system"""
         # Mock services for testing
@@ -1618,9 +1654,7 @@ if __name__ == "__main__":
         lead_scorer = AsyncMock()
 
         # Initialize engine
-        engine = ChurnPredictionEngine(
-            memory_service, lifecycle_tracker, behavioral_engine, lead_scorer
-        )
+        engine = ChurnPredictionEngine(memory_service, lifecycle_tracker, behavioral_engine, lead_scorer)
 
         # Test single prediction
         test_lead_id = "test-lead-123"
@@ -1637,4 +1671,5 @@ if __name__ == "__main__":
         print(f"Recommendations: {prediction.recommended_actions}")
 
     import asyncio
+
     asyncio.run(test_churn_prediction())

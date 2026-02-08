@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from enum import Enum
-from typing import Dict, List, Optional, Any, Callable, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import quote
 
 import aiohttp
@@ -32,21 +32,18 @@ import asyncpg
 import redis.asyncio as redis
 from pydantic import BaseModel
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('production_monitor.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("production_monitor.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
 
 class AlertLevel(Enum):
     """Alert severity levels"""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -55,6 +52,7 @@ class AlertLevel(Enum):
 
 class MetricType(Enum):
     """Metric types for monitoring"""
+
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
@@ -64,6 +62,7 @@ class MetricType(Enum):
 @dataclass
 class Alert:
     """Alert data structure"""
+
     id: str
     level: AlertLevel
     title: str
@@ -82,6 +81,7 @@ class Alert:
 @dataclass
 class MetricDefinition:
     """Metric definition with thresholds"""
+
     name: str
     type: MetricType
     warning_threshold: Optional[float] = None
@@ -98,23 +98,23 @@ class MonitoringConfig:
     def __init__(self):
         # Collection intervals
         self.metric_collection_interval = 30  # seconds
-        self.health_check_interval = 60       # seconds
+        self.health_check_interval = 60  # seconds
         self.performance_check_interval = 15  # seconds
 
         # Alert configuration
-        self.alert_cooldown_period = 300      # 5 minutes
-        self.escalation_timeout = 900         # 15 minutes
+        self.alert_cooldown_period = 300  # 5 minutes
+        self.escalation_timeout = 900  # 15 minutes
         self.max_alerts_per_hour = 20
 
         # Performance thresholds
-        self.sla_response_time = 500.0        # ms
-        self.sla_availability = 99.9          # %
-        self.sla_error_rate = 0.1             # %
+        self.sla_response_time = 500.0  # ms
+        self.sla_availability = 99.9  # %
+        self.sla_error_rate = 0.1  # %
 
         # Business metric thresholds
-        self.min_conversion_rate = 20.0       # %
+        self.min_conversion_rate = 20.0  # %
         self.min_lead_quality_score = 70.0
-        self.max_processing_delay = 300       # seconds
+        self.max_processing_delay = 300  # seconds
 
         # Notification channels
         self.email_notifications = True
@@ -124,110 +124,108 @@ class MonitoringConfig:
         # Define all monitored metrics
         self.metrics = {
             # Performance metrics
-            'response_time_ms': MetricDefinition(
-                name='response_time_ms',
+            "response_time_ms": MetricDefinition(
+                name="response_time_ms",
                 type=MetricType.HISTOGRAM,
                 warning_threshold=400.0,
                 critical_threshold=500.0,
                 emergency_threshold=1000.0,
-                unit='ms',
-                description='Average API response time',
-                business_impact='User experience degradation'
+                unit="ms",
+                description="Average API response time",
+                business_impact="User experience degradation",
             ),
-            'requests_per_second': MetricDefinition(
-                name='requests_per_second',
+            "requests_per_second": MetricDefinition(
+                name="requests_per_second",
                 type=MetricType.GAUGE,
                 warning_threshold=150.0,
                 critical_threshold=200.0,
                 emergency_threshold=300.0,
-                unit='req/s',
-                description='Request throughput',
-                business_impact='System capacity reached'
+                unit="req/s",
+                description="Request throughput",
+                business_impact="System capacity reached",
             ),
-            'error_rate_percent': MetricDefinition(
-                name='error_rate_percent',
+            "error_rate_percent": MetricDefinition(
+                name="error_rate_percent",
                 type=MetricType.GAUGE,
                 warning_threshold=1.0,
                 critical_threshold=2.0,
                 emergency_threshold=5.0,
-                unit='%',
-                description='Overall error rate',
-                business_impact='Service reliability issues'
+                unit="%",
+                description="Overall error rate",
+                business_impact="Service reliability issues",
             ),
-
             # Business metrics
-            'lead_conversion_rate': MetricDefinition(
-                name='lead_conversion_rate',
+            "lead_conversion_rate": MetricDefinition(
+                name="lead_conversion_rate",
                 type=MetricType.GAUGE,
                 warning_threshold=18.0,  # Below 18%
                 critical_threshold=15.0,  # Below 15%
                 emergency_threshold=10.0,  # Below 10%
-                unit='%',
-                description='Lead to qualified conversion rate',
-                business_impact='Revenue impact - fewer qualified leads'
+                unit="%",
+                description="Lead to qualified conversion rate",
+                business_impact="Revenue impact - fewer qualified leads",
             ),
-            'average_lead_score': MetricDefinition(
-                name='average_lead_score',
+            "average_lead_score": MetricDefinition(
+                name="average_lead_score",
                 type=MetricType.GAUGE,
                 warning_threshold=65.0,  # Below 65
                 critical_threshold=60.0,  # Below 60
                 emergency_threshold=50.0,  # Below 50
-                unit='score',
-                description='Average AI lead scoring quality',
-                business_impact='Lead quality degradation'
+                unit="score",
+                description="Average AI lead scoring quality",
+                business_impact="Lead quality degradation",
             ),
-            'voice_analysis_accuracy': MetricDefinition(
-                name='voice_analysis_accuracy',
+            "voice_analysis_accuracy": MetricDefinition(
+                name="voice_analysis_accuracy",
                 type=MetricType.GAUGE,
                 warning_threshold=85.0,  # Below 85%
                 critical_threshold=80.0,  # Below 80%
                 emergency_threshold=70.0,  # Below 70%
-                unit='%',
-                description='Voice AI analysis accuracy',
-                business_impact='Sales coaching effectiveness reduced'
+                unit="%",
+                description="Voice AI analysis accuracy",
+                business_impact="Sales coaching effectiveness reduced",
             ),
-
             # System health metrics
-            'cpu_usage_percent': MetricDefinition(
-                name='cpu_usage_percent',
+            "cpu_usage_percent": MetricDefinition(
+                name="cpu_usage_percent",
                 type=MetricType.GAUGE,
                 warning_threshold=80.0,
                 critical_threshold=90.0,
                 emergency_threshold=95.0,
-                unit='%',
-                description='CPU utilization',
-                business_impact='Performance degradation'
+                unit="%",
+                description="CPU utilization",
+                business_impact="Performance degradation",
             ),
-            'memory_usage_percent': MetricDefinition(
-                name='memory_usage_percent',
+            "memory_usage_percent": MetricDefinition(
+                name="memory_usage_percent",
                 type=MetricType.GAUGE,
                 warning_threshold=85.0,
                 critical_threshold=90.0,
                 emergency_threshold=95.0,
-                unit='%',
-                description='Memory utilization',
-                business_impact='System stability risk'
+                unit="%",
+                description="Memory utilization",
+                business_impact="System stability risk",
             ),
-            'database_connection_count': MetricDefinition(
-                name='database_connection_count',
+            "database_connection_count": MetricDefinition(
+                name="database_connection_count",
                 type=MetricType.GAUGE,
                 warning_threshold=80.0,
                 critical_threshold=90.0,
                 emergency_threshold=95.0,
-                unit='connections',
-                description='Active database connections',
-                business_impact='Database performance impact'
+                unit="connections",
+                description="Active database connections",
+                business_impact="Database performance impact",
             ),
-            'cache_hit_rate_percent': MetricDefinition(
-                name='cache_hit_rate_percent',
+            "cache_hit_rate_percent": MetricDefinition(
+                name="cache_hit_rate_percent",
                 type=MetricType.GAUGE,
                 warning_threshold=70.0,  # Below 70%
                 critical_threshold=50.0,  # Below 50%
                 emergency_threshold=30.0,  # Below 30%
-                unit='%',
-                description='Redis cache hit rate',
-                business_impact='Increased response times'
-            )
+                unit="%",
+                description="Redis cache hit rate",
+                business_impact="Increased response times",
+            ),
         }
 
 
@@ -244,19 +242,11 @@ class MetricsCollector:
         """Initialize connections for metrics collection"""
         try:
             # Initialize Redis connection
-            self.redis_client = redis.Redis(
-                host='localhost',
-                port=6379,
-                decode_responses=True,
-                socket_timeout=5.0
-            )
+            self.redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True, socket_timeout=5.0)
 
             # Initialize database connection pool
             self.db_pool = await asyncpg.create_pool(
-                "postgresql://localhost:5432/ghl_real_estate",
-                min_size=2,
-                max_size=5,
-                command_timeout=10.0
+                "postgresql://localhost:5432/ghl_real_estate", min_size=2, max_size=5, command_timeout=10.0
             )
 
             logger.info("Metrics collector initialized successfully")
@@ -273,12 +263,7 @@ class MetricsCollector:
         try:
             # API response time metrics
             async with aiohttp.ClientSession() as session:
-                endpoints = [
-                    '/health',
-                    '/api/v1/leads/score',
-                    '/api/v1/voice/analyze',
-                    '/api/v1/analytics/predict'
-                ]
+                endpoints = ["/health", "/api/v1/leads/score", "/api/v1/voice/analyze", "/api/v1/analytics/predict"]
 
                 response_times = []
                 errors = 0
@@ -288,8 +273,7 @@ class MetricsCollector:
                     try:
                         start_time = asyncio.get_event_loop().time()
                         async with session.get(
-                            f"http://localhost:8000{endpoint}",
-                            timeout=aiohttp.ClientTimeout(total=10.0)
+                            f"http://localhost:8000{endpoint}", timeout=aiohttp.ClientTimeout(total=10.0)
                         ) as response:
                             end_time = asyncio.get_event_loop().time()
                             response_time = (end_time - start_time) * 1000
@@ -305,23 +289,20 @@ class MetricsCollector:
 
                 # Calculate aggregated metrics
                 if response_times:
-                    metrics['response_time_ms'] = statistics.mean(response_times)
-                    metrics['error_rate_percent'] = (errors / total_requests) * 100
+                    metrics["response_time_ms"] = statistics.mean(response_times)
+                    metrics["error_rate_percent"] = (errors / total_requests) * 100
                 else:
-                    metrics['response_time_ms'] = 0.0
-                    metrics['error_rate_percent'] = 100.0
+                    metrics["response_time_ms"] = 0.0
+                    metrics["error_rate_percent"] = 100.0
 
             # Simulate additional performance metrics
-            metrics['requests_per_second'] = 125.0  # Would come from load balancer
-            metrics['cpu_usage_percent'] = 72.0     # Would come from system monitoring
-            metrics['memory_usage_percent'] = 68.0   # Would come from system monitoring
+            metrics["requests_per_second"] = 125.0  # Would come from load balancer
+            metrics["cpu_usage_percent"] = 72.0  # Would come from system monitoring
+            metrics["memory_usage_percent"] = 68.0  # Would come from system monitoring
 
             # Store in history
             for metric_name, value in metrics.items():
-                self.metrics_history[metric_name].append({
-                    'value': value,
-                    'timestamp': timestamp
-                })
+                self.metrics_history[metric_name].append({"value": value, "timestamp": timestamp})
 
         except Exception as e:
             logger.error(f"Error collecting performance metrics: {e}")
@@ -346,11 +327,11 @@ class MetricsCollector:
                     WHERE created_at > NOW() - INTERVAL '1 hour'
                 """
                 result = await conn.fetchrow(conversion_query)
-                if result and result['total'] > 0:
-                    conversion_rate = (result['qualified'] / result['total']) * 100
-                    metrics['lead_conversion_rate'] = conversion_rate
+                if result and result["total"] > 0:
+                    conversion_rate = (result["qualified"] / result["total"]) * 100
+                    metrics["lead_conversion_rate"] = conversion_rate
                 else:
-                    metrics['lead_conversion_rate'] = 0.0
+                    metrics["lead_conversion_rate"] = 0.0
 
                 # Average lead score (last hour)
                 score_query = """
@@ -359,22 +340,22 @@ class MetricsCollector:
                     WHERE created_at > NOW() - INTERVAL '1 hour'
                 """
                 result = await conn.fetchval(score_query)
-                metrics['average_lead_score'] = float(result) if result else 0.0
+                metrics["average_lead_score"] = float(result) if result else 0.0
 
                 # Voice analysis accuracy (simulated)
-                metrics['voice_analysis_accuracy'] = 89.5
+                metrics["voice_analysis_accuracy"] = 89.5
 
                 # Cache metrics from Redis
                 if self.redis_client:
                     info = await self.redis_client.info()
-                    hits = info.get('keyspace_hits', 0)
-                    misses = info.get('keyspace_misses', 0)
+                    hits = info.get("keyspace_hits", 0)
+                    misses = info.get("keyspace_misses", 0)
 
                     if hits + misses > 0:
                         cache_hit_rate = (hits / (hits + misses)) * 100
-                        metrics['cache_hit_rate_percent'] = cache_hit_rate
+                        metrics["cache_hit_rate_percent"] = cache_hit_rate
                     else:
-                        metrics['cache_hit_rate_percent'] = 0.0
+                        metrics["cache_hit_rate_percent"] = 0.0
 
                 # Database connection count
                 conn_query = """
@@ -383,7 +364,7 @@ class MetricsCollector:
                     WHERE state = 'active'
                 """
                 result = await conn.fetchval(conn_query)
-                metrics['database_connection_count'] = float(result) if result else 0.0
+                metrics["database_connection_count"] = float(result) if result else 0.0
 
         except Exception as e:
             logger.error(f"Error collecting business metrics: {e}")
@@ -393,9 +374,7 @@ class MetricsCollector:
     async def collect_all_metrics(self) -> Dict[str, float]:
         """Collect all metrics from all sources"""
         performance_metrics, business_metrics = await asyncio.gather(
-            self.collect_performance_metrics(),
-            self.collect_business_metrics(),
-            return_exceptions=True
+            self.collect_performance_metrics(), self.collect_business_metrics(), return_exceptions=True
         )
 
         all_metrics = {}
@@ -407,7 +386,7 @@ class MetricsCollector:
             all_metrics.update(business_metrics)
 
         # Add timestamp
-        all_metrics['collection_timestamp'] = datetime.utcnow().timestamp()
+        all_metrics["collection_timestamp"] = datetime.utcnow().timestamp()
 
         return all_metrics
 
@@ -416,10 +395,7 @@ class MetricsCollector:
         cutoff = datetime.utcnow() - timedelta(minutes=minutes)
         history = self.metrics_history.get(metric_name, deque())
 
-        return [
-            entry for entry in history
-            if entry['timestamp'] > cutoff
-        ]
+        return [entry for entry in history if entry["timestamp"] > cutoff]
 
 
 class AlertManager:
@@ -455,7 +431,7 @@ class AlertManager:
                         metric=metric_name,
                         value=value,
                         threshold=self._get_threshold_for_level(metric_def, alert_level),
-                        timestamp=datetime.utcnow()
+                        timestamp=datetime.utcnow(),
                     )
 
                     self.active_alerts[alert_id] = alert
@@ -474,10 +450,10 @@ class AlertManager:
         """Determine alert level based on thresholds"""
         # Handle inverted thresholds (for metrics where lower is worse)
         inverted_metrics = [
-            'lead_conversion_rate',
-            'average_lead_score',
-            'voice_analysis_accuracy',
-            'cache_hit_rate_percent'
+            "lead_conversion_rate",
+            "average_lead_score",
+            "voice_analysis_accuracy",
+            "cache_hit_rate_percent",
         ]
 
         if metric_def.name in inverted_metrics:
@@ -524,7 +500,7 @@ Environment: Production
 
 Business Impact: {business_impact}
 
-Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+Time: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}
         """.strip()
 
         return message
@@ -609,30 +585,14 @@ This is an automated alert from the Service 6 Production Monitoring System.
                 {
                     "color": self._get_slack_color(alert.level),
                     "fields": [
-                        {
-                            "title": "Metric",
-                            "value": alert.metric,
-                            "short": True
-                        },
-                        {
-                            "title": "Current Value",
-                            "value": f"{alert.value:.2f}",
-                            "short": True
-                        },
-                        {
-                            "title": "Threshold",
-                            "value": f"{alert.threshold:.2f}",
-                            "short": True
-                        },
-                        {
-                            "title": "Alert Level",
-                            "value": alert.level.value.upper(),
-                            "short": True
-                        }
+                        {"title": "Metric", "value": alert.metric, "short": True},
+                        {"title": "Current Value", "value": f"{alert.value:.2f}", "short": True},
+                        {"title": "Threshold", "value": f"{alert.threshold:.2f}", "short": True},
+                        {"title": "Alert Level", "value": alert.level.value.upper(), "short": True},
                     ],
-                    "ts": alert.timestamp.timestamp()
+                    "ts": alert.timestamp.timestamp(),
                 }
-            ]
+            ],
         }
 
         # Would send to Slack webhook here
@@ -651,7 +611,7 @@ This is an automated alert from the Service 6 Production Monitoring System.
 
 {alert.title}
 Value: {alert.value:.2f}
-Time: {alert.timestamp.strftime('%H:%M:%S')}
+Time: {alert.timestamp.strftime("%H:%M:%S")}
 
 Check monitoring dashboard immediately.
         """.strip()
@@ -665,7 +625,7 @@ Check monitoring dashboard immediately.
             AlertLevel.INFO: "good",
             AlertLevel.WARNING: "warning",
             AlertLevel.CRITICAL: "danger",
-            AlertLevel.EMERGENCY: "#8B0000"  # Dark red
+            AlertLevel.EMERGENCY: "#8B0000",  # Dark red
         }
         return color_map.get(level, "good")
 
@@ -680,9 +640,9 @@ Check monitoring dashboard immediately.
             active_by_level[alert.level.value] += 1
 
         return {
-            'total_active': len(self.active_alerts),
-            'by_level': dict(active_by_level),
-            'last_updated': datetime.utcnow().isoformat()
+            "total_active": len(self.active_alerts),
+            "by_level": dict(active_by_level),
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
 
@@ -757,18 +717,11 @@ class ProductionMonitor:
 
     def _log_key_metrics(self, metrics: Dict[str, float]):
         """Log key performance indicators"""
-        key_metrics = [
-            'response_time_ms',
-            'error_rate_percent',
-            'lead_conversion_rate',
-            'average_lead_score'
-        ]
+        key_metrics = ["response_time_ms", "error_rate_percent", "lead_conversion_rate", "average_lead_score"]
 
-        metric_str = " | ".join([
-            f"{metric}: {metrics.get(metric, 0):.2f}"
-            for metric in key_metrics
-            if metric in metrics
-        ])
+        metric_str = " | ".join(
+            [f"{metric}: {metrics.get(metric, 0):.2f}" for metric in key_metrics if metric in metrics]
+        )
 
         logger.info(f"📊 METRICS: {metric_str}")
 
@@ -784,15 +737,15 @@ class ProductionMonitor:
         health_score = self._calculate_health_score(current_metrics, alert_summary)
 
         return {
-            'service': 'service6_lead_recovery_engine',
-            'version': '2.0.0',
-            'environment': 'production',
-            'status': self._determine_overall_status(health_score, alert_summary),
-            'health_score': health_score,
-            'uptime': self._get_uptime(),
-            'current_metrics': current_metrics,
-            'alerts': alert_summary,
-            'last_updated': datetime.utcnow().isoformat()
+            "service": "service6_lead_recovery_engine",
+            "version": "2.0.0",
+            "environment": "production",
+            "status": self._determine_overall_status(health_score, alert_summary),
+            "health_score": health_score,
+            "uptime": self._get_uptime(),
+            "current_metrics": current_metrics,
+            "alerts": alert_summary,
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
     def _calculate_health_score(self, metrics: Dict[str, float], alert_summary: Dict[str, Any]) -> float:
@@ -800,21 +753,21 @@ class ProductionMonitor:
         base_score = 100.0
 
         # Deduct points for active alerts
-        emergency_alerts = alert_summary.get('by_level', {}).get('emergency', 0)
-        critical_alerts = alert_summary.get('by_level', {}).get('critical', 0)
-        warning_alerts = alert_summary.get('by_level', {}).get('warning', 0)
+        emergency_alerts = alert_summary.get("by_level", {}).get("emergency", 0)
+        critical_alerts = alert_summary.get("by_level", {}).get("critical", 0)
+        warning_alerts = alert_summary.get("by_level", {}).get("warning", 0)
 
         # Heavy penalties for severe alerts
         base_score -= emergency_alerts * 50  # Emergency: -50 points each
-        base_score -= critical_alerts * 20   # Critical: -20 points each
-        base_score -= warning_alerts * 5     # Warning: -5 points each
+        base_score -= critical_alerts * 20  # Critical: -20 points each
+        base_score -= warning_alerts * 5  # Warning: -5 points each
 
         # Additional deductions based on key metrics
-        response_time = metrics.get('response_time_ms', 0)
+        response_time = metrics.get("response_time_ms", 0)
         if response_time > 500:
             base_score -= min(20, (response_time - 500) / 50)  # Up to -20 points
 
-        error_rate = metrics.get('error_rate_percent', 0)
+        error_rate = metrics.get("error_rate_percent", 0)
         if error_rate > 1.0:
             base_score -= min(30, error_rate * 10)  # Up to -30 points
 
@@ -822,8 +775,8 @@ class ProductionMonitor:
 
     def _determine_overall_status(self, health_score: float, alert_summary: Dict[str, Any]) -> str:
         """Determine overall system status"""
-        emergency_alerts = alert_summary.get('by_level', {}).get('emergency', 0)
-        critical_alerts = alert_summary.get('by_level', {}).get('critical', 0)
+        emergency_alerts = alert_summary.get("by_level", {}).get("emergency", 0)
+        critical_alerts = alert_summary.get("by_level", {}).get("critical", 0)
 
         if emergency_alerts > 0:
             return "EMERGENCY"

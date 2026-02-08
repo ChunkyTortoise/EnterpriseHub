@@ -7,16 +7,15 @@ import asyncio
 import logging
 import signal
 import sys
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .service6_metrics_collector import Service6MetricsCollector
-from .service6_alerting_engine import Service6AlertingEngine, AlertLevel
-from .service6_system_health_checker import Service6SystemHealthChecker, HealthCheckStatus
+from .service6_alerting_engine import AlertLevel, Service6AlertingEngine
 from .service6_health_dashboard import Service6HealthDashboard
-
+from .service6_metrics_collector import Service6MetricsCollector
+from .service6_system_health_checker import HealthCheckStatus, Service6SystemHealthChecker
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MonitoringConfiguration:
     """Configuration for monitoring infrastructure."""
+
     metrics_collection_enabled: bool = True
     health_checks_enabled: bool = True
     alerting_enabled: bool = True
@@ -127,10 +127,7 @@ class Service6MonitoringOrchestrator:
 
             # Wait for tasks to complete with timeout
             if self._tasks:
-                await asyncio.wait_for(
-                    asyncio.gather(*self._tasks, return_exceptions=True),
-                    timeout=30.0
-                )
+                await asyncio.wait_for(asyncio.gather(*self._tasks, return_exceptions=True), timeout=30.0)
 
             # Shutdown components
             await self._shutdown_components()
@@ -158,8 +155,8 @@ class Service6MonitoringOrchestrator:
                     "metrics_collector": "stopped",
                     "health_checker": "stopped",
                     "alerting_engine": "stopped",
-                    "dashboard": "stopped"
-                }
+                    "dashboard": "stopped",
+                },
             }
 
         uptime_seconds = (datetime.utcnow() - self._startup_time).total_seconds()
@@ -175,11 +172,11 @@ class Service6MonitoringOrchestrator:
                 "metrics_enabled": self.config.metrics_collection_enabled,
                 "health_checks_enabled": self.config.health_checks_enabled,
                 "alerting_enabled": self.config.alerting_enabled,
-                "dashboard_enabled": self.config.dashboard_enabled
+                "dashboard_enabled": self.config.dashboard_enabled,
             },
             "components": component_statuses,
             "active_tasks": len([t for t in self._tasks if not t.done()]),
-            "total_tasks": len(self._tasks)
+            "total_tasks": len(self._tasks),
         }
 
     async def trigger_comprehensive_health_check(self) -> Dict[str, Any]:
@@ -200,23 +197,15 @@ class Service6MonitoringOrchestrator:
                 "check_duration_seconds": health_report.check_duration_seconds,
                 "recovery_actions_triggered": health_report.recovery_actions_triggered,
                 "critical_issues": [
-                    {
-                        "check_name": check.check_name,
-                        "status": check.status.value,
-                        "message": check.message
-                    }
+                    {"check_name": check.check_name, "status": check.status.value, "message": check.message}
                     for check in health_report.critical_checks
                     if check.status != HealthCheckStatus.PASS
-                ]
+                ],
             }
 
         except Exception as e:
             logger.error(f"Manual health check failed: {e}")
-            return {
-                "timestamp": datetime.utcnow().isoformat(),
-                "overall_status": "error",
-                "error_message": str(e)
-            }
+            return {"timestamp": datetime.utcnow().isoformat(), "overall_status": "error", "error_message": str(e)}
 
     async def _validate_infrastructure(self) -> None:
         """Validate infrastructure prerequisites before starting monitoring."""
@@ -225,6 +214,7 @@ class Service6MonitoringOrchestrator:
         # Validate database connectivity
         try:
             from ..services.database_service import DatabaseService
+
             db_service = DatabaseService()
             async with db_service.get_connection() as conn:
                 await conn.fetchval("SELECT 1")
@@ -235,6 +225,7 @@ class Service6MonitoringOrchestrator:
         # Validate cache connectivity
         try:
             from ..services.cache_service import CacheService
+
             cache_service = CacheService()
             test_key = f"monitoring_test_{int(datetime.utcnow().timestamp())}"
             await cache_service.set(test_key, "test", ttl=10)
@@ -328,15 +319,15 @@ class Service6MonitoringOrchestrator:
                     details={
                         "failed_checks": health_report.failed_checks,
                         "warning_checks": health_report.warning_checks,
-                        "recovery_actions": health_report.recovery_actions_triggered
-                    }
+                        "recovery_actions": health_report.recovery_actions_triggered,
+                    },
                 )
             elif health_report.warning_checks > 2:
                 await self.alerting_engine.send_alert(
                     level=AlertLevel.WARNING,
                     title="Service 6 Performance Degradation",
                     message=f"Multiple system warnings detected. {health_report.warning_checks} components showing degraded performance.",
-                    details={"warning_checks": health_report.warning_checks}
+                    details={"warning_checks": health_report.warning_checks},
                 )
 
         except Exception as e:
@@ -348,19 +339,19 @@ class Service6MonitoringOrchestrator:
 
         try:
             # Check metrics collector
-            if hasattr(self.metrics_collector, '_initialized'):
+            if hasattr(self.metrics_collector, "_initialized"):
                 statuses["metrics_collector"] = "running" if self.metrics_collector._initialized else "stopped"
             else:
                 statuses["metrics_collector"] = "unknown"
 
             # Check health checker
-            if hasattr(self.health_checker, '_running'):
+            if hasattr(self.health_checker, "_running"):
                 statuses["health_checker"] = "running" if self.health_checker._running else "stopped"
             else:
                 statuses["health_checker"] = "unknown"
 
             # Check alerting engine
-            if hasattr(self.alerting_engine, '_initialized'):
+            if hasattr(self.alerting_engine, "_initialized"):
                 statuses["alerting_engine"] = "running" if self.alerting_engine._initialized else "stopped"
             else:
                 statuses["alerting_engine"] = "unknown"
@@ -374,7 +365,7 @@ class Service6MonitoringOrchestrator:
                 "metrics_collector": "error",
                 "health_checker": "error",
                 "alerting_engine": "error",
-                "dashboard": "error"
+                "dashboard": "error",
             }
 
         return statuses
@@ -385,15 +376,15 @@ class Service6MonitoringOrchestrator:
 
         try:
             # Shutdown health checker
-            if hasattr(self.health_checker, 'stop_monitoring'):
+            if hasattr(self.health_checker, "stop_monitoring"):
                 self.health_checker.stop_monitoring()
 
             # Shutdown metrics collector
-            if hasattr(self.metrics_collector, 'shutdown'):
+            if hasattr(self.metrics_collector, "shutdown"):
                 await self.metrics_collector.shutdown()
 
             # Shutdown alerting engine
-            if hasattr(self.alerting_engine, 'shutdown'):
+            if hasattr(self.alerting_engine, "shutdown"):
                 await self.alerting_engine.shutdown()
 
             logger.info("✅ Component shutdown complete")
@@ -409,10 +400,7 @@ class Service6MonitoringOrchestrator:
                     level=AlertLevel.INFO,
                     title="Service 6 Monitoring Started",
                     message="Production monitoring infrastructure has been successfully started.",
-                    details={
-                        "startup_time": self._startup_time.isoformat(),
-                        "configuration": self.config.__dict__
-                    }
+                    details={"startup_time": self._startup_time.isoformat(), "configuration": self.config.__dict__},
                 )
         except Exception as e:
             logger.error(f"Failed to send startup notification: {e}")
@@ -426,16 +414,14 @@ class Service6MonitoringOrchestrator:
                     level=AlertLevel.WARNING,
                     title="Service 6 Monitoring Shutdown",
                     message="Production monitoring infrastructure is shutting down.",
-                    details={
-                        "uptime_seconds": uptime,
-                        "shutdown_time": datetime.utcnow().isoformat()
-                    }
+                    details={"uptime_seconds": uptime, "shutdown_time": datetime.utcnow().isoformat()},
                 )
         except Exception as e:
             logger.error(f"Failed to send shutdown notification: {e}")
 
     def _setup_signal_handlers(self) -> None:
         """Setup signal handlers for graceful shutdown."""
+
         def signal_handler(signum, frame):
             logger.info(f"Received signal {signum}, initiating graceful shutdown")
             # Create shutdown task

@@ -40,22 +40,23 @@ os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-load-testing-only-m
 os.environ.setdefault("GHL_API_KEY", "test-ghl-key")
 os.environ.setdefault("GHL_LOCATION_ID", "test-location")
 
-import pytest
 import asyncio
-import time
-import psutil
-import statistics
-import random
-import uuid
 import json
+import random
+import statistics
+import time
+import uuid
 from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from httpx import AsyncClient, ASGITransport
+import psutil
+import pytest
+from httpx import ASGITransport, AsyncClient
 
 try:
     from ghl_real_estate_ai.api.routes import bot_management as _bot_management_module
+
     APP_AVAILABLE = True
 except Exception:
     _bot_management_module = None
@@ -72,6 +73,7 @@ def _create_test_app():
     intercepts test requests and returns 500 errors.
     """
     from fastapi import FastAPI
+
     test_app = FastAPI()
     test_app.include_router(_bot_management_module.router, prefix="/api")
     return test_app
@@ -152,11 +154,7 @@ class LoadTestMetrics:
                 "p90_ms": self._percentile(self.response_times, 90),
                 "p95_ms": self._percentile(self.response_times, 95),
                 "p99_ms": self._percentile(self.response_times, 99),
-                "std_dev_ms": (
-                    statistics.stdev(self.response_times)
-                    if len(self.response_times) > 1
-                    else 0.0
-                ),
+                "std_dev_ms": (statistics.stdev(self.response_times) if len(self.response_times) > 1 else 0.0),
             },
             "throughput": {
                 "requests_per_second": total_requests / duration,
@@ -434,9 +432,7 @@ def _build_seller_bot_patches():
     mock_event_publisher.publish_jorge_qualification_progress = AsyncMock()
 
     mock_ml_analytics = MagicMock()
-    mock_ml_analytics.predict_churn_risk = MagicMock(
-        return_value=MagicMock(risk_score=0.15, risk_level="low")
-    )
+    mock_ml_analytics.predict_churn_risk = MagicMock(return_value=MagicMock(risk_score=0.15, risk_level="low"))
     mock_ml_analytics.get_lead_insights = MagicMock(
         return_value={"engagement_trend": "rising", "conversion_probability": 0.72}
     )
@@ -459,10 +455,7 @@ def _make_buyer_conversation_history() -> List[Dict[str, Any]]:
         "Do you have anything with a pool and a big backyard?",
     ]
     idx = random.randint(0, len(messages) - 1)
-    return [
-        {"role": "user", "content": messages[i]}
-        for i in range(idx + 1)
-    ]
+    return [{"role": "user", "content": messages[i]} for i in range(idx + 1)]
 
 
 def _make_seller_conversation_history() -> List[Dict[str, Any]]:
@@ -475,10 +468,7 @@ def _make_seller_conversation_history() -> List[Dict[str, Any]]:
         "What do you think it's worth?",
     ]
     idx = random.randint(0, len(messages) - 1)
-    return [
-        {"role": "user", "content": messages[i]}
-        for i in range(idx + 1)
-    ]
+    return [{"role": "user", "content": messages[i]} for i in range(idx + 1)]
 
 
 def _make_seller_initial_state(lead_id: str, lead_name: str) -> Dict[str, Any]:
@@ -584,10 +574,7 @@ class TestConcurrentAPILoad:
 
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
-            tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(10)
-            ]
+            tasks = [_simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(10)]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
 
@@ -612,10 +599,7 @@ class TestConcurrentAPILoad:
 
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
-            tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(25)
-            ]
+            tasks = [_simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(25)]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
 
@@ -639,10 +623,7 @@ class TestConcurrentAPILoad:
 
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
-            tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(50)
-            ]
+            tasks = [_simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(50)]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
 
@@ -676,8 +657,7 @@ class TestConcurrentAPILoad:
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
             tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(100)
+                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(100)
             ]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
@@ -696,8 +676,7 @@ class TestConcurrentAPILoad:
             f"Error rate {report['reliability']['error_rate']:.2%} exceeds target of 5%"
         )
         assert report["throughput"]["requests_per_second"] > 1000, (
-            f"Throughput {report['throughput']['requests_per_second']:.1f} req/s "
-            f"below target of 1000 req/s"
+            f"Throughput {report['throughput']['requests_per_second']:.1f} req/s below target of 1000 req/s"
         )
 
     @pytest.mark.asyncio
@@ -717,8 +696,7 @@ class TestConcurrentAPILoad:
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
             tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(200)
+                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(200)
             ]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
@@ -734,8 +712,7 @@ class TestConcurrentAPILoad:
             f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 1000ms stress limit"
         )
         assert report["throughput"]["requests_per_second"] > 500, (
-            f"Throughput {report['throughput']['requests_per_second']:.1f} req/s "
-            f"below 500 req/s stress floor"
+            f"Throughput {report['throughput']['requests_per_second']:.1f} req/s below 500 req/s stress floor"
         )
 
 
@@ -893,21 +870,24 @@ class TestBotConcurrentProcessing:
         buyer_patches = _build_buyer_bot_patches()
         seller_patches = _build_seller_bot_patches()
 
-        with patch.multiple(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot",
-            BuyerIntentDecoder=buyer_patches["BuyerIntentDecoder"],
-            ClaudeAssistant=buyer_patches["ClaudeAssistant"],
-            get_event_publisher=buyer_patches["get_event_publisher"],
-            PropertyMatcher=buyer_patches["PropertyMatcher"],
-            get_ml_analytics_engine=buyer_patches["get_ml_analytics_engine"],
-            BOT_INTELLIGENCE_AVAILABLE=False,
-        ), patch.multiple(
-            "ghl_real_estate_ai.agents.jorge_seller_bot",
-            LeadIntentDecoder=seller_patches["LeadIntentDecoder"],
-            ClaudeAssistant=seller_patches["ClaudeAssistant"],
-            get_event_publisher=seller_patches["get_event_publisher"],
-            get_ml_analytics_engine=seller_patches["get_ml_analytics_engine"],
-            BOT_INTELLIGENCE_AVAILABLE=False,
+        with (
+            patch.multiple(
+                "ghl_real_estate_ai.agents.jorge_buyer_bot",
+                BuyerIntentDecoder=buyer_patches["BuyerIntentDecoder"],
+                ClaudeAssistant=buyer_patches["ClaudeAssistant"],
+                get_event_publisher=buyer_patches["get_event_publisher"],
+                PropertyMatcher=buyer_patches["PropertyMatcher"],
+                get_ml_analytics_engine=buyer_patches["get_ml_analytics_engine"],
+                BOT_INTELLIGENCE_AVAILABLE=False,
+            ),
+            patch.multiple(
+                "ghl_real_estate_ai.agents.jorge_seller_bot",
+                LeadIntentDecoder=seller_patches["LeadIntentDecoder"],
+                ClaudeAssistant=seller_patches["ClaudeAssistant"],
+                get_event_publisher=seller_patches["get_event_publisher"],
+                get_ml_analytics_engine=seller_patches["get_ml_analytics_engine"],
+                BOT_INTELLIGENCE_AVAILABLE=False,
+            ),
         ):
             from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
             from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
@@ -979,9 +959,7 @@ class TestBotConcurrentProcessing:
         assert report["response_times"]["p95_ms"] < 500, (
             f"Mixed bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
         )
-        assert report["total_requests"] == 60, (
-            f"Expected 60 total requests, got {report['total_requests']}"
-        )
+        assert report["total_requests"] == 60, f"Expected 60 total requests, got {report['total_requests']}"
 
 
 # ============================================================================
@@ -1035,8 +1013,7 @@ class TestResourceUtilization:
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
             tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(100)
+                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(100)
             ]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
@@ -1064,15 +1041,12 @@ class TestResourceUtilization:
         print(f"---------------------\n")
 
         # Memory must stay under 2GB
-        assert peak_memory_mb < 2048, (
-            f"Peak memory {peak_memory_mb:.1f}MB exceeds 2GB limit"
-        )
+        assert peak_memory_mb < 2048, f"Peak memory {peak_memory_mb:.1f}MB exceeds 2GB limit"
 
         # Memory growth should be bounded (no significant leaks)
         # Allow up to 500MB growth for 100 concurrent sessions
         assert memory_growth_mb < 500, (
-            f"Memory grew by {memory_growth_mb:.1f}MB during load test, "
-            f"suggesting a possible leak"
+            f"Memory grew by {memory_growth_mb:.1f}MB during load test, suggesting a possible leak"
         )
 
     @pytest.mark.asyncio
@@ -1111,8 +1085,7 @@ class TestResourceUtilization:
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             metrics.start_time = time.time()
             tasks = [
-                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5)
-                for i in range(100)
+                _simulate_user_session(client, user_id=i, metrics=metrics, requests_per_user=5) for i in range(100)
             ]
             await asyncio.gather(*tasks, return_exceptions=True)
             metrics.end_time = time.time()
@@ -1139,12 +1112,12 @@ class TestResourceUtilization:
             # with mocked I/O the load test can finish faster than the
             # 200ms sampling interval, producing unreliable data.
             if len(cpu_samples) >= 3:
-                assert avg_cpu < 80, (
-                    f"Average CPU utilization {avg_cpu:.1f}% exceeds 80% threshold"
-                )
+                assert avg_cpu < 80, f"Average CPU utilization {avg_cpu:.1f}% exceeds 80% threshold"
             else:
-                print(f"  WARNING: Only {len(cpu_samples)} CPU sample(s) collected; "
-                      f"skipping assertion (test completed too quickly)")
+                print(
+                    f"  WARNING: Only {len(cpu_samples)} CPU sample(s) collected; "
+                    f"skipping assertion (test completed too quickly)"
+                )
         else:
             # If no samples were collected (extremely fast test), skip assertion
             print("  WARNING: No CPU samples collected (test completed too quickly)")
@@ -1159,10 +1132,13 @@ pytestmark = [pytest.mark.performance]
 
 
 if __name__ == "__main__":
-    pytest.main([
-        __file__,
-        "-v",
-        "-m", "performance",
-        "--tb=short",
-        "-s",
-    ])
+    pytest.main(
+        [
+            __file__,
+            "-v",
+            "-m",
+            "performance",
+            "--tb=short",
+            "-s",
+        ]
+    )

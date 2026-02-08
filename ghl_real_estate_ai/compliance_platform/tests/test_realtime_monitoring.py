@@ -12,50 +12,55 @@ Following TDD principles: RED -> GREEN -> REFACTOR
 
 import asyncio
 import json
-import pytest
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, call, patch
 from uuid import uuid4
+
+import pytest
+
+from ghl_real_estate_ai.compliance_platform.realtime.event_publisher import (
+    ComplianceEvent,
+    ComplianceEventBus,
+    ComplianceEventPublisher,
+    ComplianceEventSubscriber,
+    ComplianceEventType,
+)
+from ghl_real_estate_ai.compliance_platform.realtime.monitoring_manager import (
+    AlertSeverity,
+    AlertStatus,
+    ComplianceAlert,
+    ComplianceMetrics,
+    MonitoringRule,
+    MonitoringThreshold,
+    RealTimeMonitoringManager,
+    ThresholdOperator,
+    create_monitoring_manager,
+)
+from ghl_real_estate_ai.compliance_platform.realtime.notification_service import (
+    ComplianceNotification,
+    DeliveryStatus,
+    EmailNotificationProvider,
+    NotificationChannel,
+    NotificationPriority,
+    NotificationRecipient,
+    NotificationService,
+    SlackNotificationProvider,
+    WebhookNotificationProvider,
+)
+from ghl_real_estate_ai.compliance_platform.realtime.websocket_server import (
+    AlertSeverity as WebSocketAlertSeverity,
+)
 
 # Import the real-time monitoring modules
 from ghl_real_estate_ai.compliance_platform.realtime.websocket_server import (
-    ConnectionManager,
-    ComplianceAlert as WebSocketComplianceAlert,
     AlertType,
-    AlertSeverity as WebSocketAlertSeverity,
     ClientConnection,
+    ConnectionManager,
 )
-from ghl_real_estate_ai.compliance_platform.realtime.event_publisher import (
-    ComplianceEventPublisher,
-    ComplianceEventSubscriber,
-    ComplianceEvent,
-    ComplianceEventType,
-    ComplianceEventBus,
+from ghl_real_estate_ai.compliance_platform.realtime.websocket_server import (
+    ComplianceAlert as WebSocketComplianceAlert,
 )
-from ghl_real_estate_ai.compliance_platform.realtime.notification_service import (
-    NotificationService,
-    EmailNotificationProvider,
-    SlackNotificationProvider,
-    WebhookNotificationProvider,
-    ComplianceNotification,
-    NotificationRecipient,
-    NotificationPriority,
-    NotificationChannel,
-    DeliveryStatus,
-)
-from ghl_real_estate_ai.compliance_platform.realtime.monitoring_manager import (
-    RealTimeMonitoringManager,
-    MonitoringRule,
-    MonitoringThreshold,
-    ComplianceMetrics,
-    ComplianceAlert,
-    ThresholdOperator,
-    AlertSeverity,
-    AlertStatus,
-    create_monitoring_manager,
-)
-
 
 # ============================================================================
 # FIXTURES - Common test data following project patterns

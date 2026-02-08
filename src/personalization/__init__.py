@@ -5,41 +5,38 @@ This package provides user profile management, personalized retrieval, feedback 
 and storage backends for building personalized experiences.
 """
 
-from src.personalization.user_profile import (
-    UserProfile,
-    Preference,
-    Interest,
-    Interaction,
-    PreferenceSource,
-    PreferenceCategory,
-    PreferenceExtractor,
-    InterestModel,
-    ProfileManager,
-)
-
-from src.personalization.profile_store import (
-    ProfileStore,
-    RedisProfileStore,
-    InMemoryProfileStore,
-    ProfileSerializer,
-)
-
-from src.personalization.personalized_retrieval import (
-    PersonalizedRetriever,
-    RankingEngine,
-    QueryExpander,
-    ContentFilter,
-    ScoredItem,
-    RankingConfig,
-)
-
 from src.personalization.feedback_collector import (
-    FeedbackCollector,
     ExplicitFeedback,
-    ImplicitFeedback,
+    FeedbackCollector,
+    FeedbackContext,
     FeedbackProcessor,
     FeedbackType,
-    FeedbackContext,
+    ImplicitFeedback,
+)
+from src.personalization.personalized_retrieval import (
+    ContentFilter,
+    PersonalizedRetriever,
+    QueryExpander,
+    RankingConfig,
+    RankingEngine,
+    ScoredItem,
+)
+from src.personalization.profile_store import (
+    InMemoryProfileStore,
+    ProfileSerializer,
+    ProfileStore,
+    RedisProfileStore,
+)
+from src.personalization.user_profile import (
+    Interaction,
+    Interest,
+    InterestModel,
+    Preference,
+    PreferenceCategory,
+    PreferenceExtractor,
+    PreferenceSource,
+    ProfileManager,
+    UserProfile,
 )
 
 __version__ = "1.0.0"

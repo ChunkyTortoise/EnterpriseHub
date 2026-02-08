@@ -6,27 +6,33 @@ action recommendations, and predictive insights through FastAPI endpoints.
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
 import json
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, field_validator
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
-    PredictiveLeadScorerV2, PredictiveScore, LeadInsights, LeadPriority
-)
-from ghl_real_estate_ai.services.action_recommendations import (
-    ActionRecommendationsEngine, ActionRecommendation, ActionSequence, TimingOptimization,
-    ActionType, CommunicationChannel
-)
-from ghl_real_estate_ai.ml.closing_probability_model import (
-    ClosingProbabilityModel, ModelPrediction, ModelMetrics
-)
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelMetrics, ModelPrediction
+from ghl_real_estate_ai.services.action_recommendations import (
+    ActionRecommendation,
+    ActionRecommendationsEngine,
+    ActionSequence,
+    ActionType,
+    CommunicationChannel,
+    TimingOptimization,
+)
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
+    LeadInsights,
+    LeadPriority,
+    PredictiveLeadScorerV2,
+    PredictiveScore,
+)
 
 logger = get_logger(__name__)
 
@@ -42,23 +48,13 @@ router = APIRouter(prefix="/api/v1/predictive", tags=["Predictive Analytics"])
 class ConversationContextRequest(BaseModel):
     """Request model for conversation context."""
 
-    conversation_history: List[Dict[str, Any]] = Field(
-        description="List of conversation messages"
-    )
-    extracted_preferences: Dict[str, Any] = Field(
-        default={}, description="Extracted lead preferences"
-    )
-    created_at: Optional[str] = Field(
-        default=None, description="Conversation start timestamp"
-    )
-    location: Optional[str] = Field(
-        default=None, description="Target location for market analysis"
-    )
-    lead_id: Optional[str] = Field(
-        default=None, description="Unique lead identifier"
-    )
+    conversation_history: List[Dict[str, Any]] = Field(description="List of conversation messages")
+    extracted_preferences: Dict[str, Any] = Field(default={}, description="Extracted lead preferences")
+    created_at: Optional[str] = Field(default=None, description="Conversation start timestamp")
+    location: Optional[str] = Field(default=None, description="Target location for market analysis")
+    lead_id: Optional[str] = Field(default=None, description="Unique lead identifier")
 
-    @field_validator('created_at')
+    @field_validator("created_at")
     @classmethod
     def validate_created_at(cls, v):
         if v is None:
@@ -75,9 +71,7 @@ class PredictiveScoreResponse(BaseModel):
 
     # ML predictions
     closing_probability: float = Field(description="Closing probability (0-1)")
-    closing_confidence_interval: List[float] = Field(
-        description="Confidence interval [lower, upper]"
-    )
+    closing_confidence_interval: List[float] = Field(description="Confidence interval [lower, upper]")
 
     # Multi-dimensional scores
     engagement_score: float = Field(description="Engagement score (0-100)")
@@ -168,11 +162,9 @@ class ModelPerformanceResponse(BaseModel):
 
 # API Endpoints
 
+
 @router.post("/score", response_model=PredictiveScoreResponse)
-async def get_predictive_score(
-    request: ConversationContextRequest,
-    current_user: dict = Depends(verify_jwt_token)
-):
+async def get_predictive_score(request: ConversationContextRequest, current_user: dict = Depends(verify_jwt_token)):
     """
     Get comprehensive predictive score for a lead.
 
@@ -186,13 +178,11 @@ async def get_predictive_score(
         context = {
             "conversation_history": request.conversation_history,
             "extracted_preferences": request.extracted_preferences,
-            "created_at": request.created_at
+            "created_at": request.created_at,
         }
 
         # Get predictive score
-        score = await predictive_scorer.calculate_predictive_score(
-            context, request.location
-        )
+        score = await predictive_scorer.calculate_predictive_score(context, request.location)
 
         # Convert to response model
         response = PredictiveScoreResponse(
@@ -213,7 +203,7 @@ async def get_predictive_score(
             effort_efficiency_score=score.effort_efficiency_score,
             time_investment_recommendation=score.time_investment_recommendation,
             model_confidence=score.model_confidence,
-            last_updated=score.last_updated.isoformat()
+            last_updated=score.last_updated.isoformat(),
         )
 
         logger.info(f"Predictive score generated: {score.overall_priority_score:.1f}% priority")
@@ -221,17 +211,11 @@ async def get_predictive_score(
 
     except Exception as e:
         logger.error(f"Error generating predictive score: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating predictive score: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error generating predictive score: {str(e)}")
 
 
 @router.post("/insights", response_model=LeadInsightsResponse)
-async def get_lead_insights(
-    request: ConversationContextRequest,
-    current_user: dict = Depends(verify_jwt_token)
-):
+async def get_lead_insights(request: ConversationContextRequest, current_user: dict = Depends(verify_jwt_token)):
     """
     Get deep insights for lead decision making.
 
@@ -245,13 +229,11 @@ async def get_lead_insights(
         context = {
             "conversation_history": request.conversation_history,
             "extracted_preferences": request.extracted_preferences,
-            "created_at": request.created_at
+            "created_at": request.created_at,
         }
 
         # Generate insights
-        insights = await predictive_scorer.generate_lead_insights(
-            context, request.location
-        )
+        insights = await predictive_scorer.generate_lead_insights(context, request.location)
 
         # Convert to response model
         response = LeadInsightsResponse(
@@ -267,24 +249,19 @@ async def get_lead_insights(
             pricing_strategy_recommendation=insights.pricing_strategy_recommendation,
             estimated_time_to_close=insights.estimated_time_to_close,
             recommended_effort_level=insights.recommended_effort_level,
-            probability_of_churn=insights.probability_of_churn
+            probability_of_churn=insights.probability_of_churn,
         )
 
         return response
 
     except Exception as e:
         logger.error(f"Error generating lead insights: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating lead insights: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error generating lead insights: {str(e)}")
 
 
 @router.post("/actions", response_model=List[ActionRecommendationResponse])
 async def get_action_recommendations(
-    request: ConversationContextRequest,
-    limit: Optional[int] = 5,
-    current_user: dict = Depends(verify_jwt_token)
+    request: ConversationContextRequest, limit: Optional[int] = 5, current_user: dict = Depends(verify_jwt_token)
 ):
     """
     Get prioritized action recommendations for a lead.
@@ -299,13 +276,11 @@ async def get_action_recommendations(
         context = {
             "conversation_history": request.conversation_history,
             "extracted_preferences": request.extracted_preferences,
-            "created_at": request.created_at
+            "created_at": request.created_at,
         }
 
         # Generate action recommendations
-        recommendations = await action_engine.generate_action_recommendations(
-            context, request.location
-        )
+        recommendations = await action_engine.generate_action_recommendations(context, request.location)
 
         # Limit results
         if limit:
@@ -314,41 +289,40 @@ async def get_action_recommendations(
         # Convert to response models
         response = []
         for rec in recommendations:
-            response.append(ActionRecommendationResponse(
-                action_type=rec.action_type.value,
-                priority_level=rec.priority_level,
-                recommended_timing=rec.recommended_timing,
-                communication_channel=rec.communication_channel.value,
-                title=rec.title,
-                description=rec.description,
-                talking_points=rec.talking_points,
-                questions_to_ask=rec.questions_to_ask,
-                materials_to_prepare=rec.materials_to_prepare,
-                success_probability=rec.success_probability,
-                expected_outcomes=rec.expected_outcomes,
-                potential_objections=rec.potential_objections,
-                objection_responses=rec.objection_responses,
-                estimated_time_investment=rec.estimated_time_investment,
-                effort_level=rec.effort_level,
-                roi_potential=rec.roi_potential
-            ))
+            response.append(
+                ActionRecommendationResponse(
+                    action_type=rec.action_type.value,
+                    priority_level=rec.priority_level,
+                    recommended_timing=rec.recommended_timing,
+                    communication_channel=rec.communication_channel.value,
+                    title=rec.title,
+                    description=rec.description,
+                    talking_points=rec.talking_points,
+                    questions_to_ask=rec.questions_to_ask,
+                    materials_to_prepare=rec.materials_to_prepare,
+                    success_probability=rec.success_probability,
+                    expected_outcomes=rec.expected_outcomes,
+                    potential_objections=rec.potential_objections,
+                    objection_responses=rec.objection_responses,
+                    estimated_time_investment=rec.estimated_time_investment,
+                    effort_level=rec.effort_level,
+                    roi_potential=rec.roi_potential,
+                )
+            )
 
         logger.info(f"Generated {len(response)} action recommendations")
         return response
 
     except Exception as e:
         logger.error(f"Error generating action recommendations: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating action recommendations: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error generating action recommendations: {str(e)}")
 
 
 @router.post("/action-sequence")
 async def get_action_sequence(
     request: ConversationContextRequest,
     sequence_type: str = "conversion_focused",
-    current_user: dict = Depends(verify_jwt_token)
+    current_user: dict = Depends(verify_jwt_token),
 ):
     """
     Get complete action sequence for lead nurturing and conversion.
@@ -363,13 +337,11 @@ async def get_action_sequence(
         context = {
             "conversation_history": request.conversation_history,
             "extracted_preferences": request.extracted_preferences,
-            "created_at": request.created_at
+            "created_at": request.created_at,
         }
 
         # Generate action sequence
-        sequence = await action_engine.generate_action_sequence(
-            context, request.location, sequence_type
-        )
+        sequence = await action_engine.generate_action_sequence(context, request.location, sequence_type)
 
         # Convert to dict for JSON response
         def action_to_dict(action: ActionRecommendation) -> Dict:
@@ -387,7 +359,7 @@ async def get_action_sequence(
                 "expected_outcomes": action.expected_outcomes,
                 "estimated_time_investment": action.estimated_time_investment,
                 "effort_level": action.effort_level,
-                "roi_potential": action.roi_potential
+                "roi_potential": action.roi_potential,
             }
 
         response = {
@@ -398,24 +370,19 @@ async def get_action_sequence(
             "immediate_actions": [action_to_dict(a) for a in sequence.immediate_actions],
             "short_term_actions": [action_to_dict(a) for a in sequence.short_term_actions],
             "medium_term_actions": [action_to_dict(a) for a in sequence.medium_term_actions],
-            "long_term_actions": [action_to_dict(a) for a in sequence.long_term_actions]
+            "long_term_actions": [action_to_dict(a) for a in sequence.long_term_actions],
         }
 
         return JSONResponse(content=response)
 
     except Exception as e:
         logger.error(f"Error generating action sequence: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating action sequence: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error generating action sequence: {str(e)}")
 
 
 @router.post("/timing-optimization")
 async def optimize_timing(
-    request: ConversationContextRequest,
-    action_type: str,
-    current_user: dict = Depends(verify_jwt_token)
+    request: ConversationContextRequest, action_type: str, current_user: dict = Depends(verify_jwt_token)
 ):
     """
     Optimize timing for specific actions based on lead behavior.
@@ -430,16 +397,13 @@ async def optimize_timing(
         try:
             action_type_enum = ActionType(action_type)
         except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid action type: {action_type}"
-            )
+            raise HTTPException(status_code=400, detail=f"Invalid action type: {action_type}")
 
         # Convert request to context dict
         context = {
             "conversation_history": request.conversation_history,
             "extracted_preferences": request.extracted_preferences,
-            "created_at": request.created_at
+            "created_at": request.created_at,
         }
 
         # Optimize timing
@@ -451,17 +415,14 @@ async def optimize_timing(
             "best_days": timing.best_days,
             "avoid_times": timing.avoid_times,
             "urgency_window": timing.urgency_window,
-            "competitive_timing": timing.competitive_timing
+            "competitive_timing": timing.competitive_timing,
         }
 
         return JSONResponse(content=response)
 
     except Exception as e:
         logger.error(f"Error optimizing timing: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error optimizing timing: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error optimizing timing: {str(e)}")
 
 
 @router.get("/model-performance", response_model=ModelPerformanceResponse)
@@ -488,7 +449,7 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
                 auc_score=0.0,
                 feature_importances={},
                 validation_date=datetime.now().isoformat(),
-                needs_retraining=True
+                needs_retraining=True,
             )
 
         # Check if retraining needed
@@ -502,24 +463,19 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
             auc_score=metrics.auc_score,
             feature_importances=metrics.feature_importances,
             validation_date=metrics.validation_date.isoformat(),
-            needs_retraining=needs_retraining
+            needs_retraining=needs_retraining,
         )
 
         return response
 
     except Exception as e:
         logger.error(f"Error retrieving model performance: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error retrieving model performance: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error retrieving model performance: {str(e)}")
 
 
 @router.post("/train-model")
 async def train_model(
-    background_tasks: BackgroundTasks,
-    use_synthetic_data: bool = True,
-    current_user: dict = Depends(verify_jwt_token)
+    background_tasks: BackgroundTasks, use_synthetic_data: bool = True, current_user: dict = Depends(verify_jwt_token)
 ):
     """
     Trigger ML model training (admin only).
@@ -530,10 +486,7 @@ async def train_model(
     try:
         # Check if user has admin permissions
         if current_user.get("role") != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Admin access required for model training"
-            )
+            raise HTTPException(status_code=403, detail="Admin access required for model training")
 
         logger.info("Starting ML model training...")
 
@@ -542,16 +495,12 @@ async def train_model(
             try:
                 if use_synthetic_data:
                     # Generate synthetic training data
-                    training_data = ml_model.generate_synthetic_training_data(
-                        num_samples=1000,
-                        positive_rate=0.3
-                    )
+                    training_data = ml_model.generate_synthetic_training_data(num_samples=1000, positive_rate=0.3)
                 else:
                     # In production, load real training data
                     # training_data = load_historical_data()
                     raise HTTPException(
-                        status_code=400,
-                        detail="Real training data not available yet. Use synthetic_data=True"
+                        status_code=400, detail="Real training data not available yet. Use synthetic_data=True"
                     )
 
                 # Train model
@@ -568,15 +517,12 @@ async def train_model(
             "status": "training_started",
             "message": "Model training initiated in background",
             "use_synthetic_data": use_synthetic_data,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error starting model training: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error starting model training: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error starting model training: {str(e)}")
 
 
 @router.get("/pipeline-status")
@@ -601,42 +547,33 @@ async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
                 "trained": model_trained,
                 "needs_retraining": needs_retraining,
                 "last_training_date": (
-                    ml_model.last_training_date.isoformat()
-                    if ml_model.last_training_date else None
+                    ml_model.last_training_date.isoformat() if ml_model.last_training_date else None
                 ),
                 "performance": {
                     "auc_score": model_metrics.auc_score if model_metrics else 0.0,
-                    "accuracy": model_metrics.accuracy if model_metrics else 0.0
-                } if model_metrics else None
+                    "accuracy": model_metrics.accuracy if model_metrics else 0.0,
+                }
+                if model_metrics
+                else None,
             },
-            "services": {
-                "predictive_scorer": "active",
-                "action_engine": "active",
-                "feature_engineer": "active"
-            },
+            "services": {"predictive_scorer": "active", "action_engine": "active", "feature_engineer": "active"},
             "cache": {
                 "enabled": True,  # Assume cache is working
-                "ttl_minutes": 30
+                "ttl_minutes": 30,
             },
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
         return JSONResponse(content=status)
 
     except Exception as e:
         logger.error(f"Error getting pipeline status: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error getting pipeline status: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting pipeline status: {str(e)}")
 
 
 # Batch operations for processing multiple leads
 @router.post("/batch-score")
-async def batch_score_leads(
-    leads: List[ConversationContextRequest],
-    current_user: dict = Depends(verify_jwt_token)
-):
+async def batch_score_leads(leads: List[ConversationContextRequest], current_user: dict = Depends(verify_jwt_token)):
     """
     Process multiple leads for batch scoring.
 
@@ -648,10 +585,7 @@ async def batch_score_leads(
 
         # Limit batch size
         if len(leads) > 50:
-            raise HTTPException(
-                status_code=400,
-                detail="Batch size limited to 50 leads per request"
-            )
+            raise HTTPException(status_code=400, detail="Batch size limited to 50 leads per request")
 
         results = []
 
@@ -661,12 +595,10 @@ async def batch_score_leads(
                 context = {
                     "conversation_history": lead_request.conversation_history,
                     "extracted_preferences": lead_request.extracted_preferences,
-                    "created_at": lead_request.created_at
+                    "created_at": lead_request.created_at,
                 }
 
-                score = await predictive_scorer.calculate_predictive_score(
-                    context, lead_request.location
-                )
+                score = await predictive_scorer.calculate_predictive_score(context, lead_request.location)
 
                 return {
                     "lead_id": lead_request.lead_id,
@@ -675,16 +607,12 @@ async def batch_score_leads(
                         "overall_priority_score": score.overall_priority_score,
                         "closing_probability": score.closing_probability,
                         "priority_level": score.priority_level.value,
-                        "estimated_revenue_potential": score.estimated_revenue_potential
-                    }
+                        "estimated_revenue_potential": score.estimated_revenue_potential,
+                    },
                 }
 
             except Exception as e:
-                return {
-                    "lead_id": lead_request.lead_id,
-                    "status": "error",
-                    "error": str(e)
-                }
+                return {"lead_id": lead_request.lead_id, "status": "error", "error": str(e)}
 
         # Process all leads concurrently
         results = await asyncio.gather(*[process_lead(lead) for lead in leads])
@@ -692,27 +620,25 @@ async def batch_score_leads(
         # Summary statistics
         successful = sum(1 for r in results if r["status"] == "success")
         failed = len(results) - successful
-        avg_score = np.mean([
-            r["score"]["overall_priority_score"]
-            for r in results if r["status"] == "success"
-        ]) if successful > 0 else 0
+        avg_score = (
+            np.mean([r["score"]["overall_priority_score"] for r in results if r["status"] == "success"])
+            if successful > 0
+            else 0
+        )
 
         response = {
             "summary": {
                 "total_processed": len(leads),
                 "successful": successful,
                 "failed": failed,
-                "average_priority_score": float(avg_score)
+                "average_priority_score": float(avg_score),
             },
             "results": results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         return JSONResponse(content=response)
 
     except Exception as e:
         logger.error(f"Error in batch scoring: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error in batch scoring: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error in batch scoring: {str(e)}")

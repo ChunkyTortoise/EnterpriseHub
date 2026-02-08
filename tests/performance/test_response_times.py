@@ -20,8 +20,8 @@ import asyncio
 import statistics
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import psutil
@@ -36,6 +36,7 @@ import pytest_asyncio
 @dataclass
 class PerformanceMeasurement:
     """A single timing measurement."""
+
     iteration: int
     elapsed_ms: float
     success: bool = True
@@ -44,6 +45,7 @@ class PerformanceMeasurement:
 @dataclass
 class PerformanceReport:
     """Aggregated performance statistics for a set of measurements."""
+
     test_name: str
     iterations: int
     avg_ms: float
@@ -89,9 +91,7 @@ class PerformanceBaseline:
             except Exception:
                 success = False
             elapsed_ms = (time.perf_counter() - start) * 1000.0
-            measurements.append(
-                PerformanceMeasurement(iteration=i, elapsed_ms=elapsed_ms, success=success)
-            )
+            measurements.append(PerformanceMeasurement(iteration=i, elapsed_ms=elapsed_ms, success=success))
         return measurements
 
     @staticmethod
@@ -145,6 +145,7 @@ class PerformanceBaseline:
 # ---------------------------------------------------------------------------
 # Shared mock helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_seller_mock_profile():
     """Return a mock LeadIntentProfile suitable for the seller bot."""
@@ -210,6 +211,7 @@ def _mock_buyer_conversation_history():
 # Seller bot mock state
 # ---------------------------------------------------------------------------
 
+
 def _make_seller_state(profile=None) -> Dict[str, Any]:
     """Build a JorgeSellerState dict with realistic data."""
     return {
@@ -239,6 +241,7 @@ def _make_seller_state(profile=None) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Buyer bot mock state
 # ---------------------------------------------------------------------------
+
 
 def _make_buyer_state(profile=None) -> Dict[str, Any]:
     """Build a BuyerBotState dict with realistic data."""
@@ -275,11 +278,14 @@ def _make_buyer_state(profile=None) -> Dict[str, Any]:
 # Async mock factory helpers with realistic simulated latency
 # ---------------------------------------------------------------------------
 
+
 def _async_return(value, delay_s: float = 0.005):
     """Return an async function that sleeps briefly then returns *value*."""
+
     async def _inner(*args, **kwargs):
         await asyncio.sleep(delay_s)
         return value
+
     return _inner
 
 
@@ -299,13 +305,17 @@ def _make_event_publisher_mock():
 def _make_claude_mock():
     """Create a mock ClaudeAssistant returning realistic data."""
     claude = MagicMock()
-    claude.analyze_with_context = AsyncMock(return_value={
-        "content": "I completely understand your timeline. Let me show you some recent comparable sales in your neighborhood.",
-        "analysis": "Warm seller, 3-month timeline, realistic pricing expectations.",
-    })
-    claude.generate_response = AsyncMock(return_value={
-        "content": "I'd love to help you find the perfect home in Victoria Gardens! Based on your budget, here are some great options.",
-    })
+    claude.analyze_with_context = AsyncMock(
+        return_value={
+            "content": "I completely understand your timeline. Let me show you some recent comparable sales in your neighborhood.",
+            "analysis": "Warm seller, 3-month timeline, realistic pricing expectations.",
+        }
+    )
+    claude.generate_response = AsyncMock(
+        return_value={
+            "content": "I'd love to help you find the perfect home in Victoria Gardens! Based on your budget, here are some great options.",
+        }
+    )
     return claude
 
 
@@ -336,6 +346,7 @@ def _make_ml_analytics_mock():
 # TEST CLASS 1: Seller Bot Performance
 # ===========================================================================
 
+
 @pytest.mark.asyncio
 @pytest.mark.performance
 class TestLeadBotPerformance:
@@ -359,7 +370,7 @@ class TestLeadBotPerformance:
             get_ml_analytics_engine=Mock(return_value=self.mock_ml_analytics),
             BOT_INTELLIGENCE_AVAILABLE=False,
         ):
-            from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot, JorgeFeatureConfig
+            from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeFeatureConfig, JorgeSellerBot
 
             config = JorgeFeatureConfig(
                 enable_progressive_skills=False,
@@ -383,12 +394,8 @@ class TestLeadBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "SellerBot.analyze_intent", measurements
-        )
-        assert report.avg_ms < 100, (
-            f"analyze_intent avg {report.avg_ms:.2f}ms exceeds 100ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("SellerBot.analyze_intent", measurements)
+        assert report.avg_ms < 100, f"analyze_intent avg {report.avg_ms:.2f}ms exceeds 100ms target"
         assert report.success_rate >= 0.90
 
     async def test_seller_bot_stall_detection_time(self):
@@ -404,12 +411,8 @@ class TestLeadBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "SellerBot.detect_stall", measurements
-        )
-        assert report.avg_ms < 50, (
-            f"detect_stall avg {report.avg_ms:.2f}ms exceeds 50ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("SellerBot.detect_stall", measurements)
+        assert report.avg_ms < 50, f"detect_stall avg {report.avg_ms:.2f}ms exceeds 50ms target"
         assert report.success_rate >= 0.90
 
     async def test_seller_bot_strategy_selection_time(self):
@@ -423,12 +426,8 @@ class TestLeadBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "SellerBot.select_strategy", measurements
-        )
-        assert report.avg_ms < 50, (
-            f"select_strategy avg {report.avg_ms:.2f}ms exceeds 50ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("SellerBot.select_strategy", measurements)
+        assert report.avg_ms < 50, f"select_strategy avg {report.avg_ms:.2f}ms exceeds 50ms target"
         assert report.success_rate >= 0.90
 
     async def test_seller_bot_response_generation_time(self):
@@ -442,12 +441,8 @@ class TestLeadBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "SellerBot.generate_jorge_response", measurements
-        )
-        assert report.avg_ms < 200, (
-            f"generate_jorge_response avg {report.avg_ms:.2f}ms exceeds 200ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("SellerBot.generate_jorge_response", measurements)
+        assert report.avg_ms < 200, f"generate_jorge_response avg {report.avg_ms:.2f}ms exceeds 200ms target"
         assert report.success_rate >= 0.90
 
     async def test_seller_bot_full_workflow_time(self):
@@ -471,18 +466,15 @@ class TestLeadBotPerformance:
             iterations=10,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "SellerBot.full_workflow", measurements
-        )
-        assert report.p95_ms < 500, (
-            f"Full seller workflow p95 {report.p95_ms:.2f}ms exceeds 500ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("SellerBot.full_workflow", measurements)
+        assert report.p95_ms < 500, f"Full seller workflow p95 {report.p95_ms:.2f}ms exceeds 500ms target"
         assert report.success_rate >= 0.90
 
 
 # ===========================================================================
 # TEST CLASS 2: Buyer Bot Performance
 # ===========================================================================
+
 
 @pytest.mark.asyncio
 @pytest.mark.performance
@@ -498,11 +490,13 @@ class TestBuyerBotPerformance:
         self.mock_claude = _make_claude_mock()
         self.mock_event_publisher = _make_event_publisher_mock()
         self.mock_property_matcher = MagicMock()
-        self.mock_property_matcher.find_matches = MagicMock(return_value=[
-            {"id": "prop_1", "address": "100 Victoria Ave", "price": 580000, "beds": 3},
-            {"id": "prop_2", "address": "200 Haven Blvd", "price": 545000, "beds": 3},
-            {"id": "prop_3", "address": "300 Etiwanda Dr", "price": 560000, "beds": 4},
-        ])
+        self.mock_property_matcher.find_matches = MagicMock(
+            return_value=[
+                {"id": "prop_1", "address": "100 Victoria Ave", "price": 580000, "beds": 3},
+                {"id": "prop_2", "address": "200 Haven Blvd", "price": 545000, "beds": 3},
+                {"id": "prop_3", "address": "300 Etiwanda Dr", "price": 560000, "beds": 4},
+            ]
+        )
         self.mock_ml_analytics = _make_ml_analytics_mock()
 
         with patch.multiple(
@@ -533,12 +527,8 @@ class TestBuyerBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "BuyerBot.analyze_buyer_intent", measurements
-        )
-        assert report.avg_ms < 100, (
-            f"analyze_buyer_intent avg {report.avg_ms:.2f}ms exceeds 100ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("BuyerBot.analyze_buyer_intent", measurements)
+        assert report.avg_ms < 100, f"analyze_buyer_intent avg {report.avg_ms:.2f}ms exceeds 100ms target"
         assert report.success_rate >= 0.90
 
     async def test_buyer_bot_financial_assessment_time(self):
@@ -550,12 +540,8 @@ class TestBuyerBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "BuyerBot.assess_financial_readiness", measurements
-        )
-        assert report.avg_ms < 150, (
-            f"assess_financial_readiness avg {report.avg_ms:.2f}ms exceeds 150ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("BuyerBot.assess_financial_readiness", measurements)
+        assert report.avg_ms < 150, f"assess_financial_readiness avg {report.avg_ms:.2f}ms exceeds 150ms target"
         assert report.success_rate >= 0.90
 
     async def test_buyer_bot_property_matching_time(self):
@@ -567,12 +553,8 @@ class TestBuyerBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "BuyerBot.match_properties", measurements
-        )
-        assert report.avg_ms < 100, (
-            f"match_properties avg {report.avg_ms:.2f}ms exceeds 100ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("BuyerBot.match_properties", measurements)
+        assert report.avg_ms < 100, f"match_properties avg {report.avg_ms:.2f}ms exceeds 100ms target"
         assert report.success_rate >= 0.90
 
     async def test_buyer_bot_response_generation_time(self):
@@ -587,12 +569,8 @@ class TestBuyerBotPerformance:
             iterations=15,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "BuyerBot.generate_buyer_response", measurements
-        )
-        assert report.avg_ms < 150, (
-            f"generate_buyer_response avg {report.avg_ms:.2f}ms exceeds 150ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("BuyerBot.generate_buyer_response", measurements)
+        assert report.avg_ms < 150, f"generate_buyer_response avg {report.avg_ms:.2f}ms exceeds 150ms target"
         assert report.success_rate >= 0.90
 
     async def test_buyer_bot_full_workflow_time(self):
@@ -618,18 +596,15 @@ class TestBuyerBotPerformance:
             iterations=10,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "BuyerBot.full_workflow", measurements
-        )
-        assert report.p95_ms < 400, (
-            f"Full buyer workflow p95 {report.p95_ms:.2f}ms exceeds 400ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("BuyerBot.full_workflow", measurements)
+        assert report.p95_ms < 400, f"Full buyer workflow p95 {report.p95_ms:.2f}ms exceeds 400ms target"
         assert report.success_rate >= 0.90
 
 
 # ===========================================================================
 # TEST CLASS 3: API Overhead
 # ===========================================================================
+
 
 @pytest.mark.asyncio
 @pytest.mark.performance
@@ -701,12 +676,8 @@ class TestAPIOverhead:
             iterations=20,
             warmup=3,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "API.health_live", measurements
-        )
-        assert report.avg_ms < 20, (
-            f"/health/live avg {report.avg_ms:.2f}ms exceeds 20ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("API.health_live", measurements)
+        assert report.avg_ms < 20, f"/health/live avg {report.avg_ms:.2f}ms exceeds 20ms target"
 
     async def test_bot_list_overhead(self):
         """GET /api/bots/health should respond in < 50 ms."""
@@ -721,12 +692,8 @@ class TestAPIOverhead:
             iterations=20,
             warmup=3,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "API.bots_health", measurements
-        )
-        assert report.avg_ms < 50, (
-            f"/api/bots/health avg {report.avg_ms:.2f}ms exceeds 50ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("API.bots_health", measurements)
+        assert report.avg_ms < 50, f"/api/bots/health avg {report.avg_ms:.2f}ms exceeds 50ms target"
 
     async def test_request_serialization_overhead(self):
         """Root endpoint GET / should measure pure serialization overhead < 20 ms."""
@@ -742,12 +709,8 @@ class TestAPIOverhead:
             iterations=20,
             warmup=3,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "API.root_serialization", measurements
-        )
-        assert report.avg_ms < 20, (
-            f"Root endpoint avg {report.avg_ms:.2f}ms exceeds 20ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("API.root_serialization", measurements)
+        assert report.avg_ms < 20, f"Root endpoint avg {report.avg_ms:.2f}ms exceeds 20ms target"
 
     async def test_total_api_overhead(self):
         """Aggregate overhead across health + root should stay < 70 ms combined."""
@@ -763,17 +726,14 @@ class TestAPIOverhead:
             iterations=15,
             warmup=3,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "API.total_overhead (root+health)", measurements
-        )
-        assert report.avg_ms < 70, (
-            f"Total API overhead avg {report.avg_ms:.2f}ms exceeds 70ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("API.total_overhead (root+health)", measurements)
+        assert report.avg_ms < 70, f"Total API overhead avg {report.avg_ms:.2f}ms exceeds 70ms target"
 
 
 # ===========================================================================
 # TEST CLASS 4: Cache Performance
 # ===========================================================================
+
 
 @pytest.mark.asyncio
 @pytest.mark.performance
@@ -840,12 +800,8 @@ class TestCachePerformance:
             iterations=20,
             warmup=3,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "Cache.L1_hit", measurements
-        )
-        assert report.avg_ms < 5, (
-            f"Cache L1 hit avg {report.avg_ms:.2f}ms exceeds 5ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("Cache.L1_hit", measurements)
+        assert report.avg_ms < 5, f"Cache L1 hit avg {report.avg_ms:.2f}ms exceeds 5ms target"
 
     async def test_cache_miss_and_populate_latency(self):
         """Cache miss + backend fetch + populate should be < 50 ms."""
@@ -863,12 +819,8 @@ class TestCachePerformance:
             iterations=20,
             warmup=2,
         )
-        report = PerformanceBaseline.print_performance_report(
-            "Cache.miss_and_populate", measurements
-        )
-        assert report.avg_ms < 50, (
-            f"Cache miss+populate avg {report.avg_ms:.2f}ms exceeds 50ms target"
-        )
+        report = PerformanceBaseline.print_performance_report("Cache.miss_and_populate", measurements)
+        assert report.avg_ms < 50, f"Cache miss+populate avg {report.avg_ms:.2f}ms exceeds 50ms target"
 
     async def test_cache_hit_rate_under_repeated_requests(self):
         """
@@ -898,30 +850,21 @@ class TestCachePerformance:
             elapsed_ms = (time.perf_counter() - start) * 1000.0
             measurements.append(PerformanceMeasurement(iteration=i, elapsed_ms=elapsed_ms))
 
-        report = PerformanceBaseline.print_performance_report(
-            "Cache.hit_rate_workload", measurements
-        )
+        report = PerformanceBaseline.print_performance_report("Cache.hit_rate_workload", measurements)
 
         total_lookups = self.stats["hits"] + self.stats["misses"]
         hit_rate = self.stats["hits"] / total_lookups if total_lookups > 0 else 0.0
 
-        print(
-            f"\n  Cache Stats: hits={self.stats['hits']}, "
-            f"misses={self.stats['misses']}, "
-            f"hit_rate={hit_rate:.1%}"
-        )
-        assert hit_rate > 0.70, (
-            f"Cache hit rate {hit_rate:.1%} is below 70% target"
-        )
+        print(f"\n  Cache Stats: hits={self.stats['hits']}, misses={self.stats['misses']}, hit_rate={hit_rate:.1%}")
+        assert hit_rate > 0.70, f"Cache hit rate {hit_rate:.1%} is below 70% target"
         # Also assert the latency is reasonable overall
-        assert report.avg_ms < 20, (
-            f"Mixed workload avg latency {report.avg_ms:.2f}ms is unexpectedly high"
-        )
+        assert report.avg_ms < 20, f"Mixed workload avg latency {report.avg_ms:.2f}ms is unexpectedly high"
 
 
 # ===========================================================================
 # Resource monitoring helper (used by multiple test classes above)
 # ===========================================================================
+
 
 def _snapshot_resources() -> Dict[str, float]:
     """Capture a snapshot of current process resource usage."""

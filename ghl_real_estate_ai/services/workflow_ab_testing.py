@@ -9,20 +9,22 @@ Provides intelligent A/B testing capabilities for workflow optimization:
 - Statistical significance analysis
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
 import json
 import logging
 import random
 import statistics
 from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+
 class TestType(Enum):
     """Types of A/B tests"""
+
     MESSAGE_CONTENT = "message_content"
     SEND_TIMING = "send_timing"
     CHANNEL_SELECTION = "channel_selection"
@@ -30,23 +32,29 @@ class TestType(Enum):
     SUBJECT_LINE = "subject_line"
     CTA_BUTTON = "cta_button"
 
+
 class TestStatus(Enum):
     """Test execution status"""
+
     DRAFT = "draft"
     ACTIVE = "active"
     PAUSED = "paused"
     COMPLETED = "completed"
     STOPPED = "stopped"
 
+
 class Significance(Enum):
     """Statistical significance levels"""
+
     LOW = 0.90
     MEDIUM = 0.95
     HIGH = 0.99
 
+
 @dataclass
 class TestVariant:
     """A/B test variant configuration"""
+
     variant_id: str
     name: str
     description: str
@@ -54,9 +62,11 @@ class TestVariant:
     traffic_split: float = 0.5  # Percentage of traffic (0.0-1.0)
     is_control: bool = False
 
+
 @dataclass
 class TestMetrics:
     """Test performance metrics"""
+
     impressions: int = 0
     opens: int = 0
     clicks: int = 0
@@ -81,9 +91,11 @@ class TestMetrics:
     def conversion_rate(self) -> float:
         return self.conversions / self.impressions if self.impressions > 0 else 0.0
 
+
 @dataclass
 class ABTest:
     """A/B test configuration and state"""
+
     test_id: str
     name: str
     description: str
@@ -98,9 +110,11 @@ class ABTest:
     ended_at: Optional[datetime] = None
     winner_variant_id: Optional[str] = None
 
+
 @dataclass
 class TestResult:
     """A/B test results and analysis"""
+
     test_id: str
     variant_results: Dict[str, TestMetrics]
     statistical_significance: float
@@ -110,6 +124,7 @@ class TestResult:
     recommendation: str
     insights: List[str]
     generated_at: datetime = field(default_factory=datetime.now)
+
 
 class WorkflowABTesting:
     """A/B Testing service for workflow optimization"""
@@ -127,72 +142,64 @@ class WorkflowABTesting:
     def _initialize_test_templates(self):
         """Initialize common test templates"""
         self.test_templates = {
-            'email_subject_line': {
-                'name': 'Email Subject Line Test',
-                'description': 'Test different subject line approaches',
-                'test_type': TestType.SUBJECT_LINE,
-                'variants': [
+            "email_subject_line": {
+                "name": "Email Subject Line Test",
+                "description": "Test different subject line approaches",
+                "test_type": TestType.SUBJECT_LINE,
+                "variants": [
                     {
-                        'name': 'Direct',
-                        'description': 'Direct, straightforward subject',
-                        'config': {'style': 'direct', 'urgency': 'low'}
+                        "name": "Direct",
+                        "description": "Direct, straightforward subject",
+                        "config": {"style": "direct", "urgency": "low"},
                     },
                     {
-                        'name': 'Question',
-                        'description': 'Question-based subject',
-                        'config': {'style': 'question', 'urgency': 'medium'}
+                        "name": "Question",
+                        "description": "Question-based subject",
+                        "config": {"style": "question", "urgency": "medium"},
                     },
                     {
-                        'name': 'Urgency',
-                        'description': 'Urgency-driven subject',
-                        'config': {'style': 'urgency', 'urgency': 'high'}
-                    }
-                ]
+                        "name": "Urgency",
+                        "description": "Urgency-driven subject",
+                        "config": {"style": "urgency", "urgency": "high"},
+                    },
+                ],
             },
-            'send_timing': {
-                'name': 'Optimal Send Time Test',
-                'description': 'Test different send times',
-                'test_type': TestType.SEND_TIMING,
-                'variants': [
+            "send_timing": {
+                "name": "Optimal Send Time Test",
+                "description": "Test different send times",
+                "test_type": TestType.SEND_TIMING,
+                "variants": [
+                    {"name": "Morning", "description": "9 AM send time", "config": {"send_hour": 9, "send_minute": 0}},
                     {
-                        'name': 'Morning',
-                        'description': '9 AM send time',
-                        'config': {'send_hour': 9, 'send_minute': 0}
+                        "name": "Afternoon",
+                        "description": "2 PM send time",
+                        "config": {"send_hour": 14, "send_minute": 0},
                     },
-                    {
-                        'name': 'Afternoon',
-                        'description': '2 PM send time',
-                        'config': {'send_hour': 14, 'send_minute': 0}
-                    },
-                    {
-                        'name': 'Evening',
-                        'description': '6 PM send time',
-                        'config': {'send_hour': 18, 'send_minute': 0}
-                    }
-                ]
+                    {"name": "Evening", "description": "6 PM send time", "config": {"send_hour": 18, "send_minute": 0}},
+                ],
             },
-            'sequence_length': {
-                'name': 'Sequence Length Test',
-                'description': 'Test different sequence lengths',
-                'test_type': TestType.SEQUENCE_FLOW,
-                'variants': [
+            "sequence_length": {
+                "name": "Sequence Length Test",
+                "description": "Test different sequence lengths",
+                "test_type": TestType.SEQUENCE_FLOW,
+                "variants": [
                     {
-                        'name': 'Short (3 steps)',
-                        'description': '3-step sequence',
-                        'config': {'sequence_length': 3, 'step_delay': 24}
+                        "name": "Short (3 steps)",
+                        "description": "3-step sequence",
+                        "config": {"sequence_length": 3, "step_delay": 24},
                     },
                     {
-                        'name': 'Medium (5 steps)',
-                        'description': '5-step sequence',
-                        'config': {'sequence_length': 5, 'step_delay': 48}
+                        "name": "Medium (5 steps)",
+                        "description": "5-step sequence",
+                        "config": {"sequence_length": 5, "step_delay": 48},
                     },
                     {
-                        'name': 'Long (7 steps)',
-                        'description': '7-step sequence',
-                        'config': {'sequence_length': 7, 'step_delay': 72}
-                    }
-                ]
-            }
+                        "name": "Long (7 steps)",
+                        "description": "7-step sequence",
+                        "config": {"sequence_length": 7, "step_delay": 72},
+                    },
+                ],
+            },
         }
 
     async def create_test(
@@ -203,7 +210,7 @@ class WorkflowABTesting:
         variants: List[Dict[str, Any]],
         primary_metric: str = "conversion_rate",
         minimum_sample_size: int = 100,
-        confidence_level: float = 0.95
+        confidence_level: float = 0.95,
     ) -> ABTest:
         """Create a new A/B test"""
 
@@ -214,11 +221,11 @@ class WorkflowABTesting:
         for i, variant_config in enumerate(variants):
             variant = TestVariant(
                 variant_id=f"{test_id}_v{i}",
-                name=variant_config['name'],
-                description=variant_config['description'],
-                config=variant_config['config'],
+                name=variant_config["name"],
+                description=variant_config["description"],
+                config=variant_config["config"],
                 traffic_split=1.0 / len(variants),  # Equal split by default
-                is_control=(i == 0)  # First variant is control
+                is_control=(i == 0),  # First variant is control
             )
             test_variants.append(variant)
 
@@ -230,7 +237,7 @@ class WorkflowABTesting:
             variants=test_variants,
             primary_metric=primary_metric,
             minimum_sample_size=minimum_sample_size,
-            confidence_level=confidence_level
+            confidence_level=confidence_level,
         )
 
         self.active_tests[test_id] = test
@@ -243,10 +250,7 @@ class WorkflowABTesting:
         return test
 
     async def create_test_from_template(
-        self,
-        template_key: str,
-        name_suffix: str = "",
-        custom_config: Optional[Dict[str, Any]] = None
+        self, template_key: str, name_suffix: str = "", custom_config: Optional[Dict[str, Any]] = None
     ) -> ABTest:
         """Create test from predefined template"""
 
@@ -256,21 +260,21 @@ class WorkflowABTesting:
         template = self.test_templates[template_key]
 
         # Apply custom configuration if provided
-        variants = template['variants'].copy()
+        variants = template["variants"].copy()
         if custom_config:
             for variant in variants:
-                variant['config'].update(custom_config.get('variant_config', {}))
+                variant["config"].update(custom_config.get("variant_config", {}))
 
-        name = template['name'] + (f" - {name_suffix}" if name_suffix else "")
+        name = template["name"] + (f" - {name_suffix}" if name_suffix else "")
 
         return await self.create_test(
             name=name,
-            description=template['description'],
-            test_type=template['test_type'],
+            description=template["description"],
+            test_type=template["test_type"],
             variants=variants,
-            primary_metric=custom_config.get('primary_metric', 'conversion_rate'),
-            minimum_sample_size=custom_config.get('minimum_sample_size', 100),
-            confidence_level=custom_config.get('confidence_level', 0.95)
+            primary_metric=custom_config.get("primary_metric", "conversion_rate"),
+            minimum_sample_size=custom_config.get("minimum_sample_size", 100),
+            confidence_level=custom_config.get("confidence_level", 0.95),
         )
 
     async def start_test(self, test_id: str) -> bool:
@@ -294,10 +298,7 @@ class WorkflowABTesting:
         return True
 
     async def assign_variant(
-        self,
-        test_id: str,
-        lead_id: str,
-        context: Optional[Dict[str, Any]] = None
+        self, test_id: str, lead_id: str, context: Optional[Dict[str, Any]] = None
     ) -> Optional[TestVariant]:
         """Assign a variant to a lead for A/B test"""
 
@@ -324,10 +325,7 @@ class WorkflowABTesting:
         return variant
 
     async def _select_variant(
-        self,
-        test: ABTest,
-        lead_id: str,
-        context: Optional[Dict[str, Any]] = None
+        self, test: ABTest, lead_id: str, context: Optional[Dict[str, Any]] = None
     ) -> Optional[TestVariant]:
         """Select variant for lead using intelligent assignment"""
 
@@ -346,12 +344,7 @@ class WorkflowABTesting:
         return next((v for v in test.variants if v.is_control), test.variants[0])
 
     async def record_event(
-        self,
-        test_id: str,
-        lead_id: str,
-        event_type: str,
-        value: float = 1.0,
-        metadata: Optional[Dict[str, Any]] = None
+        self, test_id: str, lead_id: str, event_type: str, value: float = 1.0, metadata: Optional[Dict[str, Any]] = None
     ) -> bool:
         """Record an event for A/B testing"""
 
@@ -365,19 +358,19 @@ class WorkflowABTesting:
         metrics = self.test_metrics[test_id][variant_id]
 
         # Update metrics based on event type
-        if event_type == 'impression':
+        if event_type == "impression":
             metrics.impressions += 1
-        elif event_type == 'open':
+        elif event_type == "open":
             metrics.opens += 1
-        elif event_type == 'click':
+        elif event_type == "click":
             metrics.clicks += 1
-        elif event_type == 'response':
+        elif event_type == "response":
             metrics.responses += 1
-        elif event_type == 'conversion':
+        elif event_type == "conversion":
             metrics.conversions += 1
-        elif event_type == 'revenue':
+        elif event_type == "revenue":
             metrics.revenue += value
-        elif event_type == 'unsubscribe':
+        elif event_type == "unsubscribe":
             metrics.unsubscribes += 1
 
         logger.debug(f"Recorded {event_type} for test {test_id}, variant {variant_id}")
@@ -397,22 +390,16 @@ class WorkflowABTesting:
             variant_results[variant.variant_id] = self.test_metrics[test_id][variant.variant_id]
 
         # Calculate statistical significance
-        significance = await self._calculate_significance(
-            test, variant_results
-        )
+        significance = await self._calculate_significance(test, variant_results)
 
         # Determine winner
-        winner_variant_id = await self._determine_winner(
-            test, variant_results, significance
-        )
+        winner_variant_id = await self._determine_winner(test, variant_results, significance)
 
         # Generate insights
         insights = await self._generate_insights(test, variant_results)
 
         # Create recommendation
-        recommendation = await self._generate_recommendation(
-            test, variant_results, winner_variant_id, significance
-        )
+        recommendation = await self._generate_recommendation(test, variant_results, winner_variant_id, significance)
 
         result = TestResult(
             test_id=test_id,
@@ -422,16 +409,12 @@ class WorkflowABTesting:
             winner_variant_id=winner_variant_id,
             confidence_interval={},  # Would calculate actual confidence intervals
             recommendation=recommendation,
-            insights=insights
+            insights=insights,
         )
 
         return result
 
-    async def _calculate_significance(
-        self,
-        test: ABTest,
-        variant_results: Dict[str, TestMetrics]
-    ) -> float:
+    async def _calculate_significance(self, test: ABTest, variant_results: Dict[str, TestMetrics]) -> float:
         """Calculate statistical significance (simplified)"""
 
         # Get control and treatment metrics
@@ -452,10 +435,7 @@ class WorkflowABTesting:
         return confidence
 
     async def _determine_winner(
-        self,
-        test: ABTest,
-        variant_results: Dict[str, TestMetrics],
-        significance: float
+        self, test: ABTest, variant_results: Dict[str, TestMetrics], significance: float
     ) -> Optional[str]:
         """Determine winning variant"""
 
@@ -479,11 +459,7 @@ class WorkflowABTesting:
         # Return variant with highest metric value
         return max(metric_values, key=metric_values.get)
 
-    async def _generate_insights(
-        self,
-        test: ABTest,
-        variant_results: Dict[str, TestMetrics]
-    ) -> List[str]:
+    async def _generate_insights(self, test: ABTest, variant_results: Dict[str, TestMetrics]) -> List[str]:
         """Generate insights from test results"""
 
         insights = []
@@ -527,7 +503,7 @@ class WorkflowABTesting:
         test: ABTest,
         variant_results: Dict[str, TestMetrics],
         winner_variant_id: Optional[str],
-        significance: float
+        significance: float,
     ) -> str:
         """Generate recommendation based on test results"""
 
@@ -546,11 +522,7 @@ class WorkflowABTesting:
             improvement = winner_metrics.conversion_rate * 100
             return f"Implement {winner_variant.name} - shows {improvement:.1f}% conversion rate"
 
-    async def end_test(
-        self,
-        test_id: str,
-        reason: str = "completed"
-    ) -> Optional[TestResult]:
+    async def end_test(self, test_id: str, reason: str = "completed") -> Optional[TestResult]:
         """End an A/B test and get final results"""
 
         if test_id not in self.active_tests:
@@ -573,20 +545,16 @@ class WorkflowABTesting:
         logger.info(f"Ended A/B test: {test.name} (ID: {test_id}) - {reason}")
         return result
 
-    async def _apply_winning_variant(
-        self,
-        test: ABTest,
-        winner_variant_id: str
-    ):
+    async def _apply_winning_variant(self, test: ABTest, winner_variant_id: str):
         """Apply winning variant to future workflows"""
 
         winner_variant = next(v for v in test.variants if v.variant_id == winner_variant_id)
 
         # Store winning configuration for future use
         winning_config = {
-            'test_type': test.test_type.value,
-            'winner_config': winner_variant.config,
-            'applied_at': datetime.now().isoformat()
+            "test_type": test.test_type.value,
+            "winner_config": winner_variant.config,
+            "applied_at": datetime.now().isoformat(),
         }
 
         # In production, this would update workflow templates
@@ -601,28 +569,27 @@ class WorkflowABTesting:
 
         # Calculate basic stats
         total_impressions = sum(
-            self.test_metrics.get(test_id, {}).get(v.variant_id, TestMetrics()).impressions
-            for v in test.variants
+            self.test_metrics.get(test_id, {}).get(v.variant_id, TestMetrics()).impressions for v in test.variants
         )
 
         variant_stats = {}
         for variant in test.variants:
             metrics = self.test_metrics.get(test_id, {}).get(variant.variant_id, TestMetrics())
             variant_stats[variant.name] = {
-                'impressions': metrics.impressions,
-                'conversions': metrics.conversions,
-                'conversion_rate': f"{metrics.conversion_rate:.2%}",
-                'traffic_split': f"{variant.traffic_split:.1%}"
+                "impressions": metrics.impressions,
+                "conversions": metrics.conversions,
+                "conversion_rate": f"{metrics.conversion_rate:.2%}",
+                "traffic_split": f"{variant.traffic_split:.1%}",
             }
 
         return {
-            'test_id': test_id,
-            'name': test.name,
-            'status': test.status.value,
-            'total_impressions': total_impressions,
-            'progress': min(100, (total_impressions / test.minimum_sample_size) * 100),
-            'started_at': test.started_at.isoformat() if test.started_at else None,
-            'variant_stats': variant_stats
+            "test_id": test_id,
+            "name": test.name,
+            "status": test.status.value,
+            "total_impressions": total_impressions,
+            "progress": min(100, (total_impressions / test.minimum_sample_size) * 100),
+            "started_at": test.started_at.isoformat() if test.started_at else None,
+            "variant_stats": variant_stats,
         }
 
     async def get_all_tests_summary(self) -> Dict[str, Any]:
@@ -636,17 +603,19 @@ class WorkflowABTesting:
         for test_id, test in list(self.test_history.items())[-5:]:  # Last 5 completed
             if test.winner_variant_id:
                 winner_variant = next(v for v in test.variants if v.variant_id == test.winner_variant_id)
-                recent_winners.append({
-                    'test_name': test.name,
-                    'winner': winner_variant.name,
-                    'completed_at': test.ended_at.isoformat() if test.ended_at else None
-                })
+                recent_winners.append(
+                    {
+                        "test_name": test.name,
+                        "winner": winner_variant.name,
+                        "completed_at": test.ended_at.isoformat() if test.ended_at else None,
+                    }
+                )
 
         return {
-            'active_tests': active_tests,
-            'completed_tests': completed_tests,
-            'recent_winners': recent_winners,
-            'available_templates': list(self.test_templates.keys())
+            "active_tests": active_tests,
+            "completed_tests": completed_tests,
+            "recent_winners": recent_winners,
+            "available_templates": list(self.test_templates.keys()),
         }
 
     async def _validate_test(self, test: ABTest) -> bool:
@@ -700,18 +669,18 @@ class WorkflowABTesting:
         return False
 
     def get_optimal_config_for_workflow(
-        self,
-        workflow_type: str,
-        context: Optional[Dict[str, Any]] = None
+        self, workflow_type: str, context: Optional[Dict[str, Any]] = None
     ) -> Optional[Dict[str, Any]]:
         """Get optimal configuration based on completed tests"""
 
         # Look for completed tests relevant to this workflow type
         relevant_tests = []
         for test in self.test_history.values():
-            if (test.status == TestStatus.COMPLETED and
-                test.winner_variant_id and
-                workflow_type.lower() in test.name.lower()):
+            if (
+                test.status == TestStatus.COMPLETED
+                and test.winner_variant_id
+                and workflow_type.lower() in test.name.lower()
+            ):
                 relevant_tests.append(test)
 
         if not relevant_tests:
@@ -722,7 +691,7 @@ class WorkflowABTesting:
         winner_variant = next(v for v in latest_test.variants if v.variant_id == latest_test.winner_variant_id)
 
         return {
-            'source_test': latest_test.name,
-            'config': winner_variant.config,
-            'confidence': 'high' if latest_test.confidence_level >= 0.95 else 'medium'
+            "source_test": latest_test.name,
+            "config": winner_variant.config,
+            "confidence": "high" if latest_test.confidence_level >= 0.95 else "medium",
         }

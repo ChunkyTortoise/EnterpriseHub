@@ -1,15 +1,15 @@
 """Tests for Entity Extractor module."""
 
-import pytest
 from datetime import datetime
 
+import pytest
 from src.query.entity_extractor import (
-    EntityExtractor,
     Entity,
-    EntityType,
+    EntityExtractor,
     EntityLinkingResult,
-    KnowledgeGraphPrep,
+    EntityType,
     ExtractionConfig,
+    KnowledgeGraphPrep,
 )
 
 
@@ -133,9 +133,7 @@ class TestEntityExtractor:
         """Test extraction of neighborhood names."""
         entities = extractor.extract("Homes in Victoria Gardens")
 
-        neighborhood_entities = [
-            e for e in entities if e.type == EntityType.NEIGHBORHOOD
-        ]
+        neighborhood_entities = [e for e in entities if e.type == EntityType.NEIGHBORHOOD]
         assert len(neighborhood_entities) > 0
 
     def test_extract_zip_code(self, extractor):
@@ -184,9 +182,7 @@ class TestEntityExtractor:
 
     def test_extract_multiple_entities(self, extractor):
         """Test extraction of multiple entity types."""
-        entities = extractor.extract(
-            "3 bedroom, 2 bath house in Rancho Cucamonga under $800k"
-        )
+        entities = extractor.extract("3 bedroom, 2 bath house in Rancho Cucamonga under $800k")
 
         types_found = {e.type for e in entities}
         # Check that some key entities were extracted
@@ -314,12 +310,14 @@ class TestEntityLinking:
 
     def test_link_city(self, extractor):
         """Test linking city entity."""
-        entities = [Entity(
-            text="Rancho Cucamonga",
-            type=EntityType.CITY,
-            start=0,
-            end=16,
-        )]
+        entities = [
+            Entity(
+                text="Rancho Cucamonga",
+                type=EntityType.CITY,
+                start=0,
+                end=16,
+            )
+        ]
 
         results = extractor.link_to_kb(entities)
 
@@ -329,12 +327,14 @@ class TestEntityLinking:
 
     def test_link_neighborhood(self, extractor):
         """Test linking neighborhood entity."""
-        entities = [Entity(
-            text="Victoria Gardens",
-            type=EntityType.NEIGHBORHOOD,
-            start=0,
-            end=16,
-        )]
+        entities = [
+            Entity(
+                text="Victoria Gardens",
+                type=EntityType.NEIGHBORHOOD,
+                start=0,
+                end=16,
+            )
+        ]
 
         results = extractor.link_to_kb(entities)
 
@@ -343,12 +343,14 @@ class TestEntityLinking:
 
     def test_link_school_district(self, extractor):
         """Test linking school district entity."""
-        entities = [Entity(
-            text="Etiwanda",
-            type=EntityType.SCHOOL_DISTRICT,
-            start=0,
-            end=8,
-        )]
+        entities = [
+            Entity(
+                text="Etiwanda",
+                type=EntityType.SCHOOL_DISTRICT,
+                start=0,
+                end=8,
+            )
+        ]
 
         results = extractor.link_to_kb(entities)
 
@@ -358,12 +360,14 @@ class TestEntityLinking:
 
     def test_link_unknown_entity(self, extractor):
         """Test linking unknown entity provides candidates."""
-        entities = [Entity(
-            text="UnknownPlace123",
-            type=EntityType.CITY,
-            start=0,
-            end=15,
-        )]
+        entities = [
+            Entity(
+                text="UnknownPlace123",
+                type=EntityType.CITY,
+                start=0,
+                end=15,
+            )
+        ]
 
         results = extractor.link_to_kb(entities)
 
@@ -505,12 +509,38 @@ class TestEntityTypes:
     def test_all_entity_types(self):
         """Test that all expected entity types exist."""
         expected_types = [
-            "person", "organization", "location", "date", "time", "money",
-            "percent", "email", "phone", "url", "property", "property_type",
-            "price", "price_range", "bedrooms", "bathrooms", "square_feet",
-            "lot_size", "year_built", "mls_number", "address", "city", "state",
-            "zip_code", "neighborhood", "school_district", "school", "amenity",
-            "feature", "view", "agent", "brokerage",
+            "person",
+            "organization",
+            "location",
+            "date",
+            "time",
+            "money",
+            "percent",
+            "email",
+            "phone",
+            "url",
+            "property",
+            "property_type",
+            "price",
+            "price_range",
+            "bedrooms",
+            "bathrooms",
+            "square_feet",
+            "lot_size",
+            "year_built",
+            "mls_number",
+            "address",
+            "city",
+            "state",
+            "zip_code",
+            "neighborhood",
+            "school_district",
+            "school",
+            "amenity",
+            "feature",
+            "view",
+            "agent",
+            "brokerage",
         ]
 
         actual_types = [et.value for et in EntityType]

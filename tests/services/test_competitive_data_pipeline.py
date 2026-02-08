@@ -12,21 +12,22 @@ Tests cover:
 8. Data privacy and security
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
 from decimal import Decimal
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.competitive_data_pipeline import (
     CompetitiveDataPipeline,
-    DataSource,
     CompetitorDataPoint,
+    DataQualityScore,
+    DataSource,
     MarketInsight,
     ThreatAssessment,
-    DataQualityScore,
-    get_competitive_data_pipeline
+    get_competitive_data_pipeline,
 )
 
 
@@ -68,21 +69,9 @@ class TestCompetitiveDataPipeline:
             "website": "https://eliteprops.com",
             "market_areas": ["Rancho Cucamonga", "Upland"],
             "specialties": ["luxury_homes", "investment"],
-            "pricing": {
-                "base_commission": 0.025,
-                "premium_commission": 0.03,
-                "discount_rate": 0.1
-            },
-            "social_metrics": {
-                "followers": 5500,
-                "engagement_rate": 0.045,
-                "posting_frequency": 12
-            },
-            "performance_metrics": {
-                "listings_per_month": 8,
-                "avg_days_on_market": 28,
-                "price_to_list_ratio": 0.98
-            }
+            "pricing": {"base_commission": 0.025, "premium_commission": 0.03, "discount_rate": 0.1},
+            "social_metrics": {"followers": 5500, "engagement_rate": 0.045, "posting_frequency": 12},
+            "performance_metrics": {"listings_per_month": 8, "avg_days_on_market": 28, "price_to_list_ratio": 0.98},
         }
 
     @pytest.fixture
@@ -90,21 +79,9 @@ class TestCompetitiveDataPipeline:
         """Sample market data for testing"""
         return {
             "market_area": "Rancho Cucamonga",
-            "price_trends": {
-                "median_price": 750000,
-                "price_change_30d": 0.03,
-                "price_change_90d": 0.08
-            },
-            "inventory_metrics": {
-                "total_listings": 245,
-                "new_listings_week": 18,
-                "inventory_change": -0.05
-            },
-            "activity_metrics": {
-                "sales_volume": 156,
-                "avg_days_on_market": 32,
-                "price_reductions": 0.15
-            }
+            "price_trends": {"median_price": 750000, "price_change_30d": 0.03, "price_change_90d": 0.08},
+            "inventory_metrics": {"total_listings": 245, "new_listings_week": 18, "inventory_change": -0.05},
+            "activity_metrics": {"sales_volume": 156, "avg_days_on_market": 32, "price_reductions": 0.15},
         }
 
     @pytest.mark.asyncio
@@ -115,7 +92,9 @@ class TestCompetitiveDataPipeline:
         # Verify collectors are registered
         assert len(data_pipeline.data_collectors) > 0
         assert DataSource.MLS_DATA in [collector.source_type for collector in data_pipeline.data_collectors.values()]
-        assert DataSource.SOCIAL_MEDIA in [collector.source_type for collector in data_pipeline.data_collectors.values()]
+        assert DataSource.SOCIAL_MEDIA in [
+            collector.source_type for collector in data_pipeline.data_collectors.values()
+        ]
 
     @pytest.mark.asyncio
     async def test_competitor_data_collection(self, data_pipeline, sample_competitor_data):
@@ -125,21 +104,21 @@ class TestCompetitiveDataPipeline:
         # Mock data collectors to return test data
         mock_collector = AsyncMock()
         mock_collector.source_type = DataSource.MLS_DATA
-        mock_collector.collect_data = AsyncMock(return_value=[
-            CompetitorDataPoint(
-                competitor_id=competitor_id,
-                data_source=DataSource.MLS_DATA,
-                data_type="pricing",
-                raw_data=sample_competitor_data["pricing"],
-                collected_at=datetime.now(),
-                confidence_score=0.9
-            )
-        ])
+        mock_collector.collect_data = AsyncMock(
+            return_value=[
+                CompetitorDataPoint(
+                    competitor_id=competitor_id,
+                    data_source=DataSource.MLS_DATA,
+                    data_type="pricing",
+                    raw_data=sample_competitor_data["pricing"],
+                    collected_at=datetime.now(),
+                    confidence_score=0.9,
+                )
+            ]
+        )
         data_pipeline.data_collectors = {"mls": mock_collector}
 
-        data_points = await data_pipeline.collect_competitor_data(
-            competitor_id, data_sources=[DataSource.MLS_DATA]
-        )
+        data_points = await data_pipeline.collect_competitor_data(competitor_id, data_sources=[DataSource.MLS_DATA])
 
         assert len(data_points) > 0
         assert data_points[0].competitor_id == competitor_id
@@ -150,19 +129,16 @@ class TestCompetitiveDataPipeline:
         """Test market trend analysis and insight generation"""
         market_area = "Rancho Cucamonga"
 
-        insights = await data_pipeline.analyze_market_trends(
-            market_area=market_area,
-            time_period=30
-        )
+        insights = await data_pipeline.analyze_market_trends(market_area=market_area, time_period=30)
 
         assert isinstance(insights, list)
         assert len(insights) > 0
 
         # Verify insight structure
         for insight in insights:
-            assert hasattr(insight, 'insight_type')
-            assert hasattr(insight, 'confidence_score')
-            assert hasattr(insight, 'market_area')
+            assert hasattr(insight, "insight_type")
+            assert hasattr(insight, "confidence_score")
+            assert hasattr(insight, "market_area")
             assert insight.confidence_score >= 0.0
             assert insight.confidence_score <= 1.0
 
@@ -176,7 +152,7 @@ class TestCompetitiveDataPipeline:
                 data_type="pricing_change",
                 raw_data={"price_reduction": 0.15, "urgency": "high"},
                 collected_at=datetime.now(),
-                confidence_score=0.95
+                confidence_score=0.95,
             )
         ]
 
@@ -184,10 +160,10 @@ class TestCompetitiveDataPipeline:
 
         assert isinstance(threats, list)
         for threat in threats:
-            assert hasattr(threat, 'threat_level')
-            assert hasattr(threat, 'competitor_id')
-            assert hasattr(threat, 'threat_description')
-            assert hasattr(threat, 'recommended_response')
+            assert hasattr(threat, "threat_level")
+            assert hasattr(threat, "competitor_id")
+            assert hasattr(threat, "threat_description")
+            assert hasattr(threat, "recommended_response")
 
     @pytest.mark.asyncio
     async def test_data_quality_validation(self, data_pipeline):
@@ -199,7 +175,7 @@ class TestCompetitiveDataPipeline:
             data_type="pricing",
             raw_data={"commission": 0.025, "verified": True},
             collected_at=datetime.now(),
-            confidence_score=0.95
+            confidence_score=0.95,
         )
 
         quality_score = await data_pipeline.validate_data_quality(high_quality_data)
@@ -218,13 +194,13 @@ class TestCompetitiveDataPipeline:
             data_type="social_activity",
             raw_data=sample_competitor_data["social_metrics"],
             collected_at=datetime.now(),
-            confidence_score=0.8
+            confidence_score=0.8,
         )
 
         enriched_data = await data_pipeline.enrich_data_with_ai(raw_data)
 
         assert enriched_data.competitor_id == raw_data.competitor_id
-        assert hasattr(enriched_data, 'ai_insights')
+        assert hasattr(enriched_data, "ai_insights")
         assert enriched_data.confidence_score >= raw_data.confidence_score
 
     @pytest.mark.asyncio
@@ -265,7 +241,7 @@ class TestCompetitiveDataPipeline:
                 data_type="general_info",
                 raw_data={"index": i},
                 collected_at=datetime.now(),
-                confidence_score=0.8
+                confidence_score=0.8,
             )
             for i in range(batch_size)
         ]
@@ -273,7 +249,7 @@ class TestCompetitiveDataPipeline:
         processed_results = await data_pipeline.process_data_batch(data_points)
 
         assert len(processed_results) == batch_size
-        assert all(result.get('processed', False) for result in processed_results)
+        assert all(result.get("processed", False) for result in processed_results)
 
     @pytest.mark.asyncio
     async def test_error_handling_and_recovery(self, data_pipeline):
@@ -299,9 +275,7 @@ class TestCompetitiveDataPipeline:
         time_range = timedelta(days=30)
 
         aggregated_data = await data_pipeline.aggregate_competitor_data(
-            competitor_id=competitor_id,
-            time_range=time_range,
-            aggregation_methods=["average", "trend", "variance"]
+            competitor_id=competitor_id, time_range=time_range, aggregation_methods=["average", "trend", "variance"]
         )
 
         assert "competitor_id" in aggregated_data
@@ -312,16 +286,10 @@ class TestCompetitiveDataPipeline:
     @pytest.mark.asyncio
     async def test_market_comparison_analysis(self, data_pipeline, sample_market_data):
         """Test market comparison and competitive positioning analysis"""
-        our_performance = {
-            "market_share": 0.15,
-            "avg_commission": 0.025,
-            "client_satisfaction": 0.92
-        }
+        our_performance = {"market_share": 0.15, "avg_commission": 0.025, "client_satisfaction": 0.92}
 
         comparison_analysis = await data_pipeline.compare_market_position(
-            our_metrics=our_performance,
-            market_data=sample_market_data,
-            competitors=["comp_001", "comp_002"]
+            our_metrics=our_performance, market_data=sample_market_data, competitors=["comp_001", "comp_002"]
         )
 
         assert "positioning_score" in comparison_analysis
@@ -339,10 +307,10 @@ class TestCompetitiveDataPipeline:
             raw_data={
                 "customer_email": "customer@example.com",
                 "phone_number": "+1234567890",
-                "review_content": "Great service from competitor"
+                "review_content": "Great service from competitor",
             },
             collected_at=datetime.now(),
-            confidence_score=0.9
+            confidence_score=0.9,
         )
 
         sanitized_data = await data_pipeline.sanitize_sensitive_data(sensitive_data)
@@ -364,7 +332,7 @@ class TestCompetitiveDataPipeline:
             "average_processing_time",
             "cache_hit_rate",
             "error_rate",
-            "data_quality_score"
+            "data_quality_score",
         ]
 
         for metric in expected_metrics:
@@ -377,7 +345,7 @@ class TestCompetitiveDataPipeline:
         competitors = ["comp_001", "comp_002", "comp_003", "comp_004", "comp_005"]
 
         # Mock concurrent collection
-        with patch.object(data_pipeline, 'collect_competitor_data') as mock_collect:
+        with patch.object(data_pipeline, "collect_competitor_data") as mock_collect:
             mock_collect.return_value = [
                 CompetitorDataPoint(
                     competitor_id="test",
@@ -385,15 +353,12 @@ class TestCompetitiveDataPipeline:
                     data_type="test",
                     raw_data={},
                     collected_at=datetime.now(),
-                    confidence_score=0.8
+                    confidence_score=0.8,
                 )
             ]
 
             # Run concurrent collection
-            tasks = [
-                data_pipeline.collect_competitor_data(comp_id)
-                for comp_id in competitors
-            ]
+            tasks = [data_pipeline.collect_competitor_data(comp_id) for comp_id in competitors]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -414,9 +379,7 @@ class TestCompetitiveDataPipeline:
         # Test data older than retention period
         old_timestamp = datetime.now() - timedelta(days=90)
 
-        cleanup_result = await data_pipeline.cleanup_expired_data(
-            retention_days=30
-        )
+        cleanup_result = await data_pipeline.cleanup_expired_data(retention_days=30)
 
         assert "cleaned_records" in cleanup_result
         assert "retained_records" in cleanup_result
@@ -433,10 +396,10 @@ class TestCompetitiveDataPipeline:
             raw_data={
                 "price_change": -0.25,  # 25% price drop
                 "market_impact": "high",
-                "urgency": "immediate"
+                "urgency": "immediate",
             },
             collected_at=datetime.now(),
-            confidence_score=0.98
+            confidence_score=0.98,
         )
 
         alert_triggered = await data_pipeline.check_alert_conditions(critical_data)

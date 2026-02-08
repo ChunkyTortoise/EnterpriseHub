@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -60,7 +59,7 @@ def _parse_railway_toml_vars(path: Path) -> set[str]:
             in_env_section = False
             continue
         if in_env_section and stripped and not stripped.startswith("#"):
-            match = re.match(r'^([A-Z_][A-Z0-9_]*)\s*=', stripped)
+            match = re.match(r"^([A-Z_][A-Z0-9_]*)\s*=", stripped)
             if match:
                 vars_found.add(match.group(1))
     return vars_found
@@ -101,6 +100,7 @@ def _find_all_code_env_vars() -> set[str]:
 # Deployment Readiness Tests
 # ===========================================================================
 
+
 class TestDeploymentReadiness:
     """Phase 5: Configuration validation for production deployment."""
 
@@ -121,20 +121,37 @@ class TestDeploymentReadiness:
 
         # Vars set by infrastructure, have valid defaults, or are internal tuning params
         infrastructure_vars = {
-            "PORT", "HOST", "DATABASE_URL", "REDIS_URL",
-            "PYTHONPATH", "HOME", "PATH", "USER",
-            "TEST_DATABASE_URL", "TEST_REDIS_URL",
-            "ENVIRONMENT", "ENV",
+            "PORT",
+            "HOST",
+            "DATABASE_URL",
+            "REDIS_URL",
+            "PYTHONPATH",
+            "HOME",
+            "PATH",
+            "USER",
+            "TEST_DATABASE_URL",
+            "TEST_REDIS_URL",
+            "ENVIRONMENT",
+            "ENV",
         }
 
         # Internal JorgeSellerConfig tuning parameters with hardcoded defaults
         # These are optional overrides that don't need .env.example documentation
         internal_config_vars = {
-            "ACTIVE_FOLLOWUP_DAYS", "FRIENDLY_APPROACH", "HOT_QUALITY_THRESHOLD",
-            "HOT_QUESTIONS_REQUIRED", "HOT_SELLER_THRESHOLD", "JORGE_ANALYTICS_ENABLED",
-            "JORGE_MARKET", "LONGTERM_FOLLOWUP_INTERVAL", "MAX_SMS_LENGTH",
-            "NO_HYPHENS", "USE_WARM_LANGUAGE", "WARM_QUALITY_THRESHOLD",
-            "WARM_QUESTIONS_REQUIRED", "WARM_SELLER_THRESHOLD",
+            "ACTIVE_FOLLOWUP_DAYS",
+            "FRIENDLY_APPROACH",
+            "HOT_QUALITY_THRESHOLD",
+            "HOT_QUESTIONS_REQUIRED",
+            "HOT_SELLER_THRESHOLD",
+            "JORGE_ANALYTICS_ENABLED",
+            "JORGE_MARKET",
+            "LONGTERM_FOLLOWUP_INTERVAL",
+            "MAX_SMS_LENGTH",
+            "NO_HYPHENS",
+            "USE_WARM_LANGUAGE",
+            "WARM_QUALITY_THRESHOLD",
+            "WARM_QUESTIONS_REQUIRED",
+            "WARM_SELLER_THRESHOLD",
         }
         infrastructure_vars.update(internal_config_vars)
 
@@ -169,17 +186,11 @@ class TestDeploymentReadiness:
 
         # Check critical vars are in railway.jorge.toml
         missing_in_railway = critical_vars - railway_vars
-        assert not missing_in_railway, (
-            f"Critical vars missing from railway.jorge.toml:\n"
-            f"  {sorted(missing_in_railway)}"
-        )
+        assert not missing_in_railway, f"Critical vars missing from railway.jorge.toml:\n  {sorted(missing_in_railway)}"
 
         # Check critical vars are in .env.example
         missing_in_env = critical_vars - env_example_vars
-        assert not missing_in_env, (
-            f"Critical vars missing from .env.example:\n"
-            f"  {sorted(missing_in_env)}"
-        )
+        assert not missing_in_env, f"Critical vars missing from .env.example:\n  {sorted(missing_in_env)}"
 
     def test_activation_tags_consistent(self):
         """Activation tags in jorge_config match those used in webhook routing."""
@@ -204,9 +215,7 @@ class TestDeploymentReadiness:
         # Verify deactivation tags are used consistently
         deactivation_tags = ["AI-Off", "Qualified", "Stop-Bot", "AI-Qualified"]
         for tag in deactivation_tags:
-            assert tag in webhook_content, (
-                f"Deactivation tag '{tag}' not found in webhook.py routing logic"
-            )
+            assert tag in webhook_content, f"Deactivation tag '{tag}' not found in webhook.py routing logic"
 
         # Verify seller temperature tags are consistent
         seller_temp_tags = ["Hot-Seller", "Warm-Seller", "Cold-Seller"]
@@ -214,9 +223,7 @@ class TestDeploymentReadiness:
             in_config = tag in config_content
             in_webhook = tag in webhook_content
             # Tags should appear in at least one location
-            assert in_config or in_webhook, (
-                f"Seller temperature tag '{tag}' not found in config or webhook"
-            )
+            assert in_config or in_webhook, f"Seller temperature tag '{tag}' not found in config or webhook"
 
     def test_no_placeholder_workflow_ids_in_production(self):
         """When ENVIRONMENT=production, empty workflow IDs are acceptable but

@@ -28,6 +28,19 @@ Example:
     ```
 """
 
+from .contextual_compressor import (
+    CompressedDocument,
+    CompressionConfig,
+    CompressionResult,
+    CompressionStrategy,
+    ContextualCompressor,
+    EnhancedSearcher,
+    ExtractiveCompressor,
+    RelevanceScore,
+    RelevanceScorer,
+    ScoringMethod,
+    TokenCounter,
+)
 from .self_querying import (
     DecomposedQuery,
     FilterOperator,
@@ -37,20 +50,6 @@ from .self_querying import (
     SelfQueryingResult,
     SelfQueryingSearcher,
     SubQuery,
-)
-
-from .contextual_compressor import (
-    CompressionConfig,
-    CompressionResult,
-    CompressionStrategy,
-    CompressedDocument,
-    ContextualCompressor,
-    EnhancedSearcher,
-    ExtractiveCompressor,
-    RelevanceScore,
-    RelevanceScorer,
-    ScoringMethod,
-    TokenCounter,
 )
 
 __all__ = [

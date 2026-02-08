@@ -16,22 +16,24 @@ Target: +$1.2M ARR through superior market intelligence.
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-import numpy as np
 from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+import numpy as np
+
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
 
 class MarketTrend(Enum):
     """Market trend indicators."""
+
     STRONG_APPRECIATION = "strong_appreciation"
     MODERATE_APPRECIATION = "moderate_appreciation"
     STABLE = "stable"
@@ -41,6 +43,7 @@ class MarketTrend(Enum):
 
 class InvestmentGrade(Enum):
     """Investment opportunity grades."""
+
     A_PLUS = "A+"
     A = "A"
     B_PLUS = "B+"
@@ -52,6 +55,7 @@ class InvestmentGrade(Enum):
 
 class MarketSegment(Enum):
     """Property market segments."""
+
     LUXURY = "luxury"
     MOVE_UP = "move_up"
     STARTER = "starter"
@@ -62,6 +66,7 @@ class MarketSegment(Enum):
 @dataclass
 class MarketDataSource:
     """Market data source configuration."""
+
     name: str
     api_endpoint: str
     api_key_env: str
@@ -74,6 +79,7 @@ class MarketDataSource:
 @dataclass
 class NeighborhoodMetrics:
     """Comprehensive neighborhood performance metrics."""
+
     neighborhood_id: str
     name: str
     zip_codes: List[str]
@@ -141,6 +147,7 @@ class NeighborhoodMetrics:
 @dataclass
 class MarketAlert:
     """Real-time market change alert."""
+
     alert_id: str
     alert_type: str  # price_spike, inventory_drop, new_development, etc.
     neighborhood_id: str
@@ -157,6 +164,7 @@ class MarketAlert:
 @dataclass
 class PricePrediction:
     """ML-powered price prediction with confidence intervals."""
+
     property_id: Optional[str]
     neighborhood_id: str
     property_type: str
@@ -217,10 +225,7 @@ class NeighborhoodIntelligenceService:
             raise
 
     async def get_neighborhood_intelligence(
-        self,
-        neighborhood_id: str,
-        include_predictions: bool = True,
-        include_alerts: bool = True
+        self, neighborhood_id: str, include_predictions: bool = True, include_alerts: bool = True
     ) -> Optional[Dict[str, Any]]:
         """
         Get comprehensive neighborhood intelligence report.
@@ -253,7 +258,7 @@ class NeighborhoodIntelligenceService:
     async def get_market_metrics(
         self,
         neighborhood_id: str,
-        timeframe: str = "current"  # current, 1m, 3m, 6m, 12m
+        timeframe: str = "current",  # current, 1m, 3m, 6m, 12m
     ) -> Optional[NeighborhoodMetrics]:
         """Get detailed neighborhood market metrics."""
         cache_key = f"neighborhood_metrics:{neighborhood_id}:{timeframe}"
@@ -275,7 +280,7 @@ class NeighborhoodIntelligenceService:
         self,
         neighborhood_id: str,
         property_type: Optional[str] = None,
-        custom_features: Optional[Dict[str, Any]] = None
+        custom_features: Optional[Dict[str, Any]] = None,
     ) -> Optional[PricePrediction]:
         """
         Get ML-powered price predictions with 95%+ accuracy target.
@@ -292,9 +297,7 @@ class NeighborhoodIntelligenceService:
             logger.debug(f"Cache hit for price predictions: {neighborhood_id}")
             return PricePrediction(**cached)
 
-        predictions = await self._generate_price_predictions(
-            neighborhood_id, property_type, custom_features
-        )
+        predictions = await self._generate_price_predictions(neighborhood_id, property_type, custom_features)
 
         if predictions:
             # Cache for 15 minutes (predictions update less frequently)
@@ -307,7 +310,7 @@ class NeighborhoodIntelligenceService:
         neighborhood_ids: Optional[List[str]] = None,
         alert_types: Optional[List[str]] = None,
         min_severity: str = "medium",
-        limit: int = 50
+        limit: int = 50,
     ) -> List[MarketAlert]:
         """Get active market alerts with filtering."""
         cache_key = f"market_alerts:{neighborhood_ids}:{alert_types}:{min_severity}:{limit}"
@@ -317,9 +320,7 @@ class NeighborhoodIntelligenceService:
             logger.debug("Cache hit for market alerts")
             return [MarketAlert(**alert) for alert in cached]
 
-        alerts = await self._fetch_market_alerts(
-            neighborhood_ids, alert_types, min_severity, limit
-        )
+        alerts = await self._fetch_market_alerts(neighborhood_ids, alert_types, min_severity, limit)
 
         if alerts:
             # Cache for 2 minutes (alerts are time-sensitive)
@@ -328,9 +329,7 @@ class NeighborhoodIntelligenceService:
         return alerts
 
     async def analyze_investment_opportunities(
-        self,
-        criteria: Dict[str, Any],
-        max_results: int = 20
+        self, criteria: Dict[str, Any], max_results: int = 20
     ) -> List[Dict[str, Any]]:
         """
         Identify top investment opportunities based on comprehensive analysis.
@@ -355,9 +354,7 @@ class NeighborhoodIntelligenceService:
         return opportunities
 
     async def get_micro_market_analysis(
-        self,
-        neighborhood_id: str,
-        segment: Optional[MarketSegment] = None
+        self, neighborhood_id: str, segment: Optional[MarketSegment] = None
     ) -> Dict[str, Any]:
         """Get detailed micro-market analysis for specific segments."""
         cache_key = f"micro_market:{neighborhood_id}:{segment}"
@@ -374,9 +371,7 @@ class NeighborhoodIntelligenceService:
         return analysis
 
     async def track_neighborhood_performance(
-        self,
-        neighborhood_ids: List[str],
-        timeframe: str = "30d"
+        self, neighborhood_ids: List[str], timeframe: str = "30d"
     ) -> Dict[str, Any]:
         """Track performance metrics across multiple neighborhoods."""
         cache_key = f"neighborhood_performance:{hash(str(neighborhood_ids))}:{timeframe}"
@@ -402,7 +397,7 @@ class NeighborhoodIntelligenceService:
                 refresh_interval=5,
                 reliability_score=0.98,
                 data_types=["listings", "sales", "inventory"],
-                is_active=True
+                is_active=True,
             ),
             MarketDataSource(
                 name="Census Bureau",
@@ -411,7 +406,7 @@ class NeighborhoodIntelligenceService:
                 refresh_interval=60,
                 reliability_score=0.99,
                 data_types=["demographics", "income", "housing"],
-                is_active=True
+                is_active=True,
             ),
             MarketDataSource(
                 name="Zillow Research",
@@ -420,7 +415,7 @@ class NeighborhoodIntelligenceService:
                 refresh_interval=15,
                 reliability_score=0.92,
                 data_types=["home_values", "rent_estimates", "market_trends"],
-                is_active=True
+                is_active=True,
             ),
             MarketDataSource(
                 name="Walk Score",
@@ -429,7 +424,7 @@ class NeighborhoodIntelligenceService:
                 refresh_interval=240,
                 reliability_score=0.95,
                 data_types=["walkability", "transit", "bike_score"],
-                is_active=True
+                is_active=True,
             ),
             MarketDataSource(
                 name="School Data",
@@ -438,8 +433,8 @@ class NeighborhoodIntelligenceService:
                 refresh_interval=1440,  # Daily
                 reliability_score=0.94,
                 data_types=["school_ratings", "test_scores", "demographics"],
-                is_active=True
-            )
+                is_active=True,
+            ),
         ]
 
     async def _load_ml_models(self):
@@ -452,32 +447,42 @@ class NeighborhoodIntelligenceService:
                     "model_type": "ensemble",
                     "accuracy": 0.956,
                     "features": [
-                        "neighborhood_metrics", "property_features", "market_trends",
-                        "seasonal_factors", "economic_indicators", "comparable_sales"
+                        "neighborhood_metrics",
+                        "property_features",
+                        "market_trends",
+                        "seasonal_factors",
+                        "economic_indicators",
+                        "comparable_sales",
                     ],
                     "version": "2.1.0",
-                    "last_trained": datetime.now() - timedelta(days=7)
+                    "last_trained": datetime.now() - timedelta(days=7),
                 },
                 "market_trend_classifier": {
                     "model_type": "gradient_boosting",
                     "accuracy": 0.923,
                     "features": [
-                        "inventory_levels", "price_movements", "sales_velocity",
-                        "economic_indicators", "seasonal_adjustments"
+                        "inventory_levels",
+                        "price_movements",
+                        "sales_velocity",
+                        "economic_indicators",
+                        "seasonal_adjustments",
                     ],
                     "version": "1.8.0",
-                    "last_trained": datetime.now() - timedelta(days=3)
+                    "last_trained": datetime.now() - timedelta(days=3),
                 },
                 "investment_scorer": {
                     "model_type": "neural_network",
                     "accuracy": 0.889,
                     "features": [
-                        "roi_potential", "risk_factors", "growth_indicators",
-                        "market_position", "liquidity_metrics"
+                        "roi_potential",
+                        "risk_factors",
+                        "growth_indicators",
+                        "market_position",
+                        "liquidity_metrics",
                     ],
                     "version": "1.5.0",
-                    "last_trained": datetime.now() - timedelta(days=5)
-                }
+                    "last_trained": datetime.now() - timedelta(days=5),
+                },
             }
 
             logger.info("ML models loaded successfully")
@@ -521,10 +526,7 @@ class NeighborhoodIntelligenceService:
         logger.info("- Cache optimization")
 
     async def _compile_neighborhood_intelligence(
-        self,
-        neighborhood_id: str,
-        include_predictions: bool,
-        include_alerts: bool
+        self, neighborhood_id: str, include_predictions: bool, include_alerts: bool
     ) -> Optional[Dict[str, Any]]:
         """Compile comprehensive neighborhood intelligence report."""
         try:
@@ -540,9 +542,9 @@ class NeighborhoodIntelligenceService:
                     "market_summary": self._generate_market_summary(metrics),
                     "investment_thesis": self._generate_investment_thesis(metrics),
                     "risk_assessment": self._assess_market_risks(metrics),
-                    "opportunity_score": self._calculate_opportunity_score(metrics)
+                    "opportunity_score": self._calculate_opportunity_score(metrics),
                 },
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
             # Include price predictions if requested
@@ -557,9 +559,7 @@ class NeighborhoodIntelligenceService:
                 intelligence["alerts"] = [asdict(alert) for alert in alerts]
 
             # Add comparative analysis
-            intelligence["comparative_analysis"] = await self._generate_comparative_analysis(
-                neighborhood_id, metrics
-            )
+            intelligence["comparative_analysis"] = await self._generate_comparative_analysis(neighborhood_id, metrics)
 
             return intelligence
 
@@ -567,11 +567,7 @@ class NeighborhoodIntelligenceService:
             logger.error(f"Failed to compile neighborhood intelligence for {neighborhood_id}: {e}")
             return None
 
-    async def _fetch_neighborhood_metrics(
-        self,
-        neighborhood_id: str,
-        timeframe: str
-    ) -> Optional[NeighborhoodMetrics]:
+    async def _fetch_neighborhood_metrics(self, neighborhood_id: str, timeframe: str) -> Optional[NeighborhoodMetrics]:
         """Fetch comprehensive neighborhood metrics from multiple sources."""
         try:
             # In production, aggregate data from multiple sources
@@ -583,7 +579,6 @@ class NeighborhoodIntelligenceService:
                 zip_codes=["78701", "78702"],
                 county="Travis",
                 state="TX",
-
                 # Market Performance
                 median_home_value=750000.0,
                 median_rent=3200.0,
@@ -593,7 +588,6 @@ class NeighborhoodIntelligenceService:
                 price_appreciation_3m=2.4,
                 price_appreciation_6m=5.8,
                 price_appreciation_12m=12.3,
-
                 # Inventory & Activity
                 active_listings=145,
                 new_listings_30d=89,
@@ -602,53 +596,38 @@ class NeighborhoodIntelligenceService:
                 days_on_market_median=28,
                 inventory_months=1.9,
                 absorption_rate=85.4,
-
                 # Demographics & Economics
                 population=15420,
                 median_age=34.5,
                 median_income=89500.0,
                 unemployment_rate=3.2,
                 education_bachelor_plus=67.8,
-
                 # Quality of Life
                 walk_score=78,
                 transit_score=82,
                 bike_score=71,
                 crime_score=25,  # Lower is better
                 school_rating_avg=8.4,
-
                 # Investment Metrics
                 investment_grade=InvestmentGrade.A,
                 roi_score=87.5,
                 risk_score=23.4,
                 liquidity_score=91.2,
                 growth_potential=89.6,
-
                 # Market Intelligence
                 market_trend=MarketTrend.MODERATE_APPRECIATION,
                 seasonal_factor=1.05,
                 competition_level=78.3,
                 buyer_demand_score=86.7,
                 seller_motivation_score=34.2,
-
                 # Geographic & Infrastructure
                 coordinates=(30.2672, -97.7431),
-                commute_scores={
-                    "downtown": 92.0,
-                    "tech_corridor": 88.5,
-                    "airport": 76.0
-                },
-                amenity_scores={
-                    "restaurants": 94.0,
-                    "shopping": 89.0,
-                    "parks": 83.0,
-                    "healthcare": 91.0
-                },
-
+                commute_scores={"downtown": 92.0, "tech_corridor": 88.5, "airport": 76.0},
+                amenity_scores={"restaurants": 94.0, "shopping": 89.0, "parks": 83.0, "healthcare": 91.0},
                 # Metadata
                 data_freshness=datetime.now(),
                 confidence_score=0.94,
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
 
         except Exception as e:
@@ -656,10 +635,7 @@ class NeighborhoodIntelligenceService:
             return None
 
     async def _generate_price_predictions(
-        self,
-        neighborhood_id: str,
-        property_type: Optional[str],
-        custom_features: Optional[Dict[str, Any]]
+        self, neighborhood_id: str, property_type: Optional[str], custom_features: Optional[Dict[str, Any]]
     ) -> Optional[PricePrediction]:
         """Generate ML-powered price predictions."""
         try:
@@ -676,17 +652,14 @@ class NeighborhoodIntelligenceService:
                 "predicted_1m": current_estimate * 1.008,
                 "predicted_3m": current_estimate * 1.024,
                 "predicted_6m": current_estimate * 1.058,
-                "predicted_12m": current_estimate * 1.123
+                "predicted_12m": current_estimate * 1.123,
             }
 
             # Generate confidence intervals (±5% for high-quality model)
             confidence_intervals = {}
             for timeframe, prediction in predictions.items():
                 margin = prediction * 0.05  # 5% margin
-                confidence_intervals[timeframe] = (
-                    prediction - margin,
-                    prediction + margin
-                )
+                confidence_intervals[timeframe] = (prediction - margin, prediction + margin)
 
             return PricePrediction(
                 property_id=None,
@@ -706,15 +679,15 @@ class NeighborhoodIntelligenceService:
                     "seasonal_adjustments",
                     "economic_indicators",
                     "inventory_levels",
-                    "demand_patterns"
+                    "demand_patterns",
                 ],
                 market_context={
                     "market_trend": metrics.market_trend.value,
                     "inventory_months": metrics.inventory_months,
-                    "price_appreciation_trend": metrics.price_appreciation_12m
+                    "price_appreciation_trend": metrics.price_appreciation_12m,
                 },
                 model_version=self.ml_models["price_predictor"]["version"],
-                generated_at=datetime.now()
+                generated_at=datetime.now(),
             )
 
         except Exception as e:
@@ -722,11 +695,7 @@ class NeighborhoodIntelligenceService:
             return None
 
     async def _fetch_market_alerts(
-        self,
-        neighborhood_ids: Optional[List[str]],
-        alert_types: Optional[List[str]],
-        min_severity: str,
-        limit: int
+        self, neighborhood_ids: Optional[List[str]], alert_types: Optional[List[str]], min_severity: str, limit: int
     ) -> List[MarketAlert]:
         """Fetch active market alerts with filtering."""
         # Simulate real-time alerts
@@ -740,16 +709,16 @@ class NeighborhoodIntelligenceService:
                 description="Active listings dropped 23% in the last 7 days, indicating strong buyer demand.",
                 metrics_changed={
                     "active_listings": {"from": 189, "to": 145},
-                    "absorption_rate": {"from": 72.3, "to": 85.4}
+                    "absorption_rate": {"from": 72.3, "to": 85.4},
                 },
                 impact_score=87.5,
                 recommended_actions=[
                     "Prepare for competitive bidding scenarios",
                     "Advise sellers to list quickly to capture demand",
-                    "Set buyer expectations for fast decisions"
+                    "Set buyer expectations for fast decisions",
                 ],
                 created_at=datetime.now() - timedelta(hours=2),
-                expires_at=datetime.now() + timedelta(hours=22)
+                expires_at=datetime.now() + timedelta(hours=22),
             ),
             MarketAlert(
                 alert_id="alert_002",
@@ -760,17 +729,17 @@ class NeighborhoodIntelligenceService:
                 description="Median home values increased 3.2% in the last month, above seasonal expectations.",
                 metrics_changed={
                     "median_home_value": {"from": 725000, "to": 750000},
-                    "price_appreciation_1m": {"from": 0.5, "to": 3.2}
+                    "price_appreciation_1m": {"from": 0.5, "to": 3.2},
                 },
                 impact_score=74.2,
                 recommended_actions=[
                     "Review pricing strategies for sellers",
                     "Advise buyers about market acceleration",
-                    "Monitor for continued trend"
+                    "Monitor for continued trend",
                 ],
                 created_at=datetime.now() - timedelta(minutes=45),
-                expires_at=datetime.now() + timedelta(hours=23, minutes=15)
-            )
+                expires_at=datetime.now() + timedelta(hours=23, minutes=15),
+            ),
         ]
 
         # Filter alerts based on criteria
@@ -800,9 +769,7 @@ class NeighborhoodIntelligenceService:
         return filtered_alerts
 
     async def _analyze_investment_opportunities(
-        self,
-        criteria: Dict[str, Any],
-        max_results: int
+        self, criteria: Dict[str, Any], max_results: int
     ) -> List[Dict[str, Any]]:
         """Analyze and rank investment opportunities."""
         # Simulate investment analysis
@@ -811,37 +778,24 @@ class NeighborhoodIntelligenceService:
                 "neighborhood_id": "austin_east_side",
                 "opportunity_type": "value_play",
                 "score": 94.2,
-                "roi_projection": {
-                    "1_year": 18.5,
-                    "3_year": 42.8,
-                    "5_year": 78.3
-                },
+                "roi_projection": {"1_year": 18.5, "3_year": 42.8, "5_year": 78.3},
                 "investment_thesis": "Emerging neighborhood with strong fundamentals and upcoming infrastructure improvements",
                 "key_factors": [
                     "Below-market pricing",
                     "Planned light rail extension",
                     "Growing tech employment nearby",
-                    "Historic district preservation"
+                    "Historic district preservation",
                 ],
-                "risk_factors": [
-                    "Gentrification concerns",
-                    "Construction disruption during development"
-                ],
+                "risk_factors": ["Gentrification concerns", "Construction disruption during development"],
                 "recommended_strategy": "Buy and hold for long-term appreciation",
-                "entry_budget": {
-                    "min": 450000,
-                    "optimal": 550000,
-                    "max": 650000
-                }
+                "entry_budget": {"min": 450000, "optimal": 550000, "max": 650000},
             }
         ]
 
         return opportunities[:max_results]
 
     async def _perform_micro_market_analysis(
-        self,
-        neighborhood_id: str,
-        segment: Optional[MarketSegment]
+        self, neighborhood_id: str, segment: Optional[MarketSegment]
     ) -> Dict[str, Any]:
         """Perform detailed micro-market analysis."""
         return {
@@ -854,27 +808,23 @@ class NeighborhoodIntelligenceService:
                     "price_range": "$800K - $2.5M",
                     "target_demographic": "Tech professionals, empty nesters",
                     "growth_trend": "Strong appreciation",
-                    "inventory_level": "Low"
+                    "inventory_level": "Low",
                 }
             ],
             "competitive_landscape": {
                 "primary_competitors": ["West Lake Hills", "South Lamar"],
                 "competitive_advantages": ["Transit access", "Walkability"],
-                "market_positioning": "Premium urban lifestyle"
+                "market_positioning": "Premium urban lifestyle",
             },
             "development_pipeline": {
                 "planned_projects": 12,
                 "total_units": 2450,
                 "completion_timeline": "18-36 months",
-                "impact_assessment": "Moderate supply increase"
-            }
+                "impact_assessment": "Moderate supply increase",
+            },
         }
 
-    async def _track_neighborhood_performance(
-        self,
-        neighborhood_ids: List[str],
-        timeframe: str
-    ) -> Dict[str, Any]:
+    async def _track_neighborhood_performance(self, neighborhood_ids: List[str], timeframe: str) -> Dict[str, Any]:
         """Track performance metrics across neighborhoods."""
         performance_data = {}
 
@@ -885,7 +835,7 @@ class NeighborhoodIntelligenceService:
                     "price_performance": metrics.price_appreciation_12m,
                     "market_activity": metrics.absorption_rate,
                     "investment_grade": metrics.investment_grade.value,
-                    "trend": metrics.market_trend.value
+                    "trend": metrics.market_trend.value,
                 }
 
         # Calculate comparative rankings
@@ -897,8 +847,8 @@ class NeighborhoodIntelligenceService:
             "summary": {
                 "top_performer": rankings.get("price_performance", {}).get("top"),
                 "most_active": rankings.get("market_activity", {}).get("top"),
-                "analysis_date": datetime.now().isoformat()
-            }
+                "analysis_date": datetime.now().isoformat(),
+            },
         }
 
     def _calculate_performance_rankings(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -909,27 +859,19 @@ class NeighborhoodIntelligenceService:
             return rankings
 
         # Rank by price performance
-        price_sorted = sorted(
-            performance_data.items(),
-            key=lambda x: x[1].get("price_performance", 0),
-            reverse=True
-        )
+        price_sorted = sorted(performance_data.items(), key=lambda x: x[1].get("price_performance", 0), reverse=True)
 
         rankings["price_performance"] = {
             "top": price_sorted[0][0] if price_sorted else None,
-            "ranking": [item[0] for item in price_sorted]
+            "ranking": [item[0] for item in price_sorted],
         }
 
         # Rank by market activity
-        activity_sorted = sorted(
-            performance_data.items(),
-            key=lambda x: x[1].get("market_activity", 0),
-            reverse=True
-        )
+        activity_sorted = sorted(performance_data.items(), key=lambda x: x[1].get("market_activity", 0), reverse=True)
 
         rankings["market_activity"] = {
             "top": activity_sorted[0][0] if activity_sorted else None,
-            "ranking": [item[0] for item in activity_sorted]
+            "ranking": [item[0] for item in activity_sorted],
         }
 
         return rankings
@@ -940,7 +882,7 @@ class NeighborhoodIntelligenceService:
         {metrics.name} shows {metrics.market_trend.value} market conditions with
         {metrics.price_appreciation_12m:.1f}% annual appreciation. Current inventory
         at {metrics.inventory_months:.1f} months supply indicates
-        {'strong seller' if metrics.inventory_months < 2 else 'balanced' if metrics.inventory_months < 4 else 'buyer'}
+        {"strong seller" if metrics.inventory_months < 2 else "balanced" if metrics.inventory_months < 4 else "buyer"}
         market conditions. Investment grade: {metrics.investment_grade.value}.
         """.strip()
 
@@ -980,14 +922,11 @@ class NeighborhoodIntelligenceService:
             "liquidity_score": 0.15,
             "investment_grade_score": 0.20,
             "market_trend_score": 0.10,
-            "risk_adjustment": 0.10
+            "risk_adjustment": 0.10,
         }
 
         # Convert investment grade to numeric score
-        grade_scores = {
-            "A+": 100, "A": 90, "B+": 80, "B": 70,
-            "C+": 60, "C": 50, "D": 30
-        }
+        grade_scores = {"A+": 100, "A": 90, "B+": 80, "B": 70, "C+": 60, "C": 50, "D": 30}
         investment_grade_score = grade_scores.get(metrics.investment_grade.value, 50)
 
         # Convert market trend to numeric score
@@ -996,7 +935,7 @@ class NeighborhoodIntelligenceService:
             "moderate_appreciation": 80,
             "stable": 60,
             "moderate_decline": 40,
-            "strong_decline": 20
+            "strong_decline": 20,
         }
         market_trend_score = trend_scores.get(metrics.market_trend.value, 60)
 
@@ -1005,38 +944,29 @@ class NeighborhoodIntelligenceService:
 
         # Calculate weighted score
         opportunity_score = (
-            weights["roi_score"] * metrics.roi_score +
-            weights["growth_potential"] * metrics.growth_potential +
-            weights["liquidity_score"] * metrics.liquidity_score +
-            weights["investment_grade_score"] * investment_grade_score +
-            weights["market_trend_score"] * market_trend_score +
-            weights["risk_adjustment"] * risk_adjustment
+            weights["roi_score"] * metrics.roi_score
+            + weights["growth_potential"] * metrics.growth_potential
+            + weights["liquidity_score"] * metrics.liquidity_score
+            + weights["investment_grade_score"] * investment_grade_score
+            + weights["market_trend_score"] * market_trend_score
+            + weights["risk_adjustment"] * risk_adjustment
         )
 
         return round(opportunity_score, 1)
 
     async def _generate_comparative_analysis(
-        self,
-        neighborhood_id: str,
-        metrics: NeighborhoodMetrics
+        self, neighborhood_id: str, metrics: NeighborhoodMetrics
     ) -> Dict[str, Any]:
         """Generate comparative analysis against similar neighborhoods."""
         # Simulate comparative analysis
         return {
             "peer_neighborhoods": [
                 {"name": "Similar Neighborhood A", "median_price_diff": "+5.2%"},
-                {"name": "Similar Neighborhood B", "median_price_diff": "-2.8%"}
+                {"name": "Similar Neighborhood B", "median_price_diff": "-2.8%"},
             ],
             "market_position": "Above average in price appreciation and investment metrics",
-            "competitive_advantages": [
-                "Superior school ratings",
-                "Better transit access",
-                "Lower crime rates"
-            ],
-            "areas_for_improvement": [
-                "Higher inventory turnover needed",
-                "Limited retail amenities"
-            ]
+            "competitive_advantages": ["Superior school ratings", "Better transit access", "Lower crime rates"],
+            "areas_for_improvement": ["Higher inventory turnover needed", "Limited retail amenities"],
         }
 
 

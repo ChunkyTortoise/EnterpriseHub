@@ -31,26 +31,35 @@ Author: Claude Code Enterprise Analytics
 Created: January 2026
 """
 
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
-from decimal import Decimal
-import json
 import asyncio
+import json
+from datetime import datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Union
 
-from fastapi import APIRouter, HTTPException, Query, Path, Depends, BackgroundTasks
+import pandas as pd
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
-import pandas as pd
+
+from ghl_real_estate_ai.analytics.competitive_intelligence_dashboard import (
+    CompetitiveIntelligenceDashboard,
+    MarketSegment,
+    ThreatLevel,
+)
+from ghl_real_estate_ai.analytics.customer_lifetime_analytics import (
+    ChurnRisk,
+    CLVModel,
+    CustomerLifetimeAnalytics,
+    CustomerSegment,
+)
 
 # Enterprise Analytics imports
 from ghl_real_estate_ai.analytics.revenue_attribution_engine import (
-    RevenueAttributionEngine, AttributionModel, TouchpointType, RevenueEventType
-)
-from ghl_real_estate_ai.analytics.customer_lifetime_analytics import (
-    CustomerLifetimeAnalytics, CustomerSegment, ChurnRisk, CLVModel
-)
-from ghl_real_estate_ai.analytics.competitive_intelligence_dashboard import (
-    CompetitiveIntelligenceDashboard, ThreatLevel, MarketSegment
+    AttributionModel,
+    RevenueAttributionEngine,
+    RevenueEventType,
+    TouchpointType,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
@@ -68,6 +77,8 @@ def _get_cache_service():
     if _cache_service is None:
         _cache_service = CacheService()
     return _cache_service
+
+
 revenue_attribution = RevenueAttributionEngine()
 customer_lifetime = CustomerLifetimeAnalytics()
 competitive_intelligence = CompetitiveIntelligenceDashboard()
@@ -77,8 +88,10 @@ competitive_intelligence = CompetitiveIntelligenceDashboard()
 # REQUEST/RESPONSE MODELS
 # ================================================================================================
 
+
 class TouchpointRequest(BaseModel):
     """Request model for tracking customer touchpoints."""
+
     customer_id: str = Field(..., description="Unique customer identifier")
     touchpoint_type: str = Field(..., description="Type of touchpoint")
     channel: str = Field(..., description="Marketing channel")
@@ -90,7 +103,7 @@ class TouchpointRequest(BaseModel):
     session_duration: Optional[float] = Field(None, description="Session duration in seconds")
     custom_attributes: Optional[Dict[str, Any]] = Field({}, description="Custom attributes")
 
-    @field_validator('touchpoint_type')
+    @field_validator("touchpoint_type")
     @classmethod
     def validate_touchpoint_type(cls, v):
         valid_types = [t.value for t in TouchpointType]
@@ -101,6 +114,7 @@ class TouchpointRequest(BaseModel):
 
 class RevenueEventRequest(BaseModel):
     """Request model for tracking revenue events."""
+
     customer_id: str = Field(..., description="Unique customer identifier")
     event_type: str = Field(..., description="Type of revenue event")
     revenue_amount: float = Field(..., gt=0, description="Revenue amount")
@@ -111,7 +125,7 @@ class RevenueEventRequest(BaseModel):
     commission_rate: Optional[float] = Field(None, ge=0, le=1, description="Commission rate")
     custom_attributes: Optional[Dict[str, Any]] = Field({}, description="Custom attributes")
 
-    @field_validator('event_type')
+    @field_validator("event_type")
     @classmethod
     def validate_event_type(cls, v):
         valid_types = [t.value for t in RevenueEventType]
@@ -122,13 +136,14 @@ class RevenueEventRequest(BaseModel):
 
 class AttributionReportRequest(BaseModel):
     """Request model for attribution analysis reports."""
+
     start_date: Optional[datetime] = Field(None, description="Report start date")
     end_date: Optional[datetime] = Field(None, description="Report end date")
     attribution_models: Optional[List[str]] = Field(None, description="Attribution models to include")
     channels: Optional[List[str]] = Field(None, description="Channels to analyze")
     include_customer_journeys: bool = Field(False, description="Include individual customer journeys")
 
-    @field_validator('attribution_models')
+    @field_validator("attribution_models")
     @classmethod
     def validate_attribution_models(cls, v):
         if v is not None:
@@ -141,13 +156,14 @@ class AttributionReportRequest(BaseModel):
 
 class CLVAnalysisRequest(BaseModel):
     """Request model for customer lifetime value analysis."""
+
     start_date: Optional[datetime] = Field(None, description="Analysis start date")
     end_date: Optional[datetime] = Field(None, description="Analysis end date")
     segment_filter: Optional[List[str]] = Field(None, description="Customer segments to include")
     include_predictions: bool = Field(True, description="Include ML predictions")
     prediction_horizon_days: int = Field(365, ge=30, le=1095, description="Prediction horizon in days")
 
-    @field_validator('segment_filter')
+    @field_validator("segment_filter")
     @classmethod
     def validate_segment_filter(cls, v):
         if v is not None:
@@ -160,6 +176,7 @@ class CLVAnalysisRequest(BaseModel):
 
 class CompetitiveIntelRequest(BaseModel):
     """Request model for competitive intelligence analysis."""
+
     include_threats: bool = Field(True, description="Include threat analysis")
     include_opportunities: bool = Field(True, description="Include opportunity analysis")
     include_sentiment: bool = Field(True, description="Include sentiment analysis")
@@ -168,6 +185,7 @@ class CompetitiveIntelRequest(BaseModel):
 
 class RealTimeMetricsResponse(BaseModel):
     """Response model for real-time metrics."""
+
     today: Dict[str, float]
     month_to_date: Dict[str, float]
     top_channels_7d: List[Dict[str, Any]]
@@ -176,6 +194,7 @@ class RealTimeMetricsResponse(BaseModel):
 
 class AttributionReportResponse(BaseModel):
     """Response model for attribution analysis reports."""
+
     period: Dict[str, str]
     summary_metrics: Dict[str, float]
     attribution_models: Dict[str, Dict[str, float]]
@@ -188,6 +207,7 @@ class AttributionReportResponse(BaseModel):
 
 class CLVReportResponse(BaseModel):
     """Response model for CLV analysis reports."""
+
     period: Dict[str, str]
     summary_metrics: Dict[str, float]
     churn_analysis: Dict[str, Any]
@@ -200,6 +220,7 @@ class CLVReportResponse(BaseModel):
 
 class CompetitiveIntelResponse(BaseModel):
     """Response model for competitive intelligence reports."""
+
     generated_at: str
     market_overview: Dict[str, Any]
     competitor_profiles: List[Dict[str, Any]]
@@ -213,6 +234,7 @@ class CompetitiveIntelResponse(BaseModel):
 # ================================================================================================
 # REVENUE ATTRIBUTION ENDPOINTS
 # ================================================================================================
+
 
 @router.post("/touchpoints", status_code=201, summary="Track Customer Touchpoint")
 async def track_touchpoint(touchpoint: TouchpointRequest):
@@ -235,22 +257,19 @@ async def track_touchpoint(touchpoint: TouchpointRequest):
             session_id=touchpoint.session_id,
             page_views=touchpoint.page_views,
             session_duration=touchpoint.session_duration,
-            custom_attributes=touchpoint.custom_attributes
+            custom_attributes=touchpoint.custom_attributes,
         )
 
         return {
             "touchpoint_id": touchpoint_id,
             "customer_id": touchpoint.customer_id,
             "status": "tracked",
-            "message": "Touchpoint tracked successfully"
+            "message": "Touchpoint tracked successfully",
         }
 
     except Exception as e:
         logger.error(f"Error tracking touchpoint: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to track touchpoint: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to track touchpoint: {str(e)}")
 
 
 @router.post("/revenue-events", status_code=201, summary="Track Revenue Event")
@@ -273,7 +292,7 @@ async def track_revenue_event(revenue_event: RevenueEventRequest):
             plan_type=revenue_event.plan_type,
             billing_cycle=revenue_event.billing_cycle,
             commission_rate=revenue_event.commission_rate,
-            custom_attributes=revenue_event.custom_attributes
+            custom_attributes=revenue_event.custom_attributes,
         )
 
         return {
@@ -281,15 +300,12 @@ async def track_revenue_event(revenue_event: RevenueEventRequest):
             "customer_id": revenue_event.customer_id,
             "revenue_amount": revenue_event.revenue_amount,
             "status": "tracked",
-            "message": "Revenue event tracked successfully"
+            "message": "Revenue event tracked successfully",
         }
 
     except Exception as e:
         logger.error(f"Error tracking revenue event: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to track revenue event: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to track revenue event: {str(e)}")
 
 
 @router.post("/attribution-report", response_model=AttributionReportResponse, summary="Generate Attribution Report")
@@ -311,17 +327,14 @@ async def generate_attribution_report(request: AttributionReportRequest):
             end_date=request.end_date,
             attribution_models=attribution_models,
             channels=request.channels,
-            include_customer_journeys=request.include_customer_journeys
+            include_customer_journeys=request.include_customer_journeys,
         )
 
         return AttributionReportResponse(**report)
 
     except Exception as e:
         logger.error(f"Error generating attribution report: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate attribution report: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate attribution report: {str(e)}")
 
 
 @router.get("/real-time-metrics", response_model=RealTimeMetricsResponse, summary="Get Real-Time Revenue Metrics")
@@ -338,20 +351,18 @@ async def get_real_time_metrics():
 
     except Exception as e:
         logger.error(f"Error getting real-time metrics: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get real-time metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get real-time metrics: {str(e)}")
 
 
 # ================================================================================================
 # CUSTOMER LIFETIME VALUE ENDPOINTS
 # ================================================================================================
 
+
 @router.get("/customers/{customer_id}/analysis", summary="Analyze Individual Customer")
 async def analyze_customer(
     customer_id: str = Path(..., description="Customer ID to analyze"),
-    include_predictions: bool = Query(True, description="Include ML predictions")
+    include_predictions: bool = Query(True, description="Include ML predictions"),
 ):
     """
     Perform comprehensive analysis for a single customer.
@@ -361,15 +372,11 @@ async def analyze_customer(
     """
     try:
         analysis = await customer_lifetime.analyze_customer(
-            customer_id=customer_id,
-            include_predictions=include_predictions
+            customer_id=customer_id, include_predictions=include_predictions
         )
 
         if "error" in analysis:
-            raise HTTPException(
-                status_code=404,
-                detail=analysis["error"]
-            )
+            raise HTTPException(status_code=404, detail=analysis["error"])
 
         return analysis
 
@@ -377,10 +384,7 @@ async def analyze_customer(
         raise
     except Exception as e:
         logger.error(f"Error analyzing customer {customer_id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to analyze customer: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to analyze customer: {str(e)}")
 
 
 @router.post("/clv-report", response_model=CLVReportResponse, summary="Generate CLV Analysis Report")
@@ -398,16 +402,11 @@ async def generate_clv_report(request: CLVAnalysisRequest):
             segment_filter = [CustomerSegment(segment) for segment in request.segment_filter]
 
         report = await customer_lifetime.generate_clv_report(
-            start_date=request.start_date,
-            end_date=request.end_date,
-            segment_filter=segment_filter
+            start_date=request.start_date, end_date=request.end_date, segment_filter=segment_filter
         )
 
         if "error" in report:
-            raise HTTPException(
-                status_code=500,
-                detail=report["error"]
-            )
+            raise HTTPException(status_code=500, detail=report["error"])
 
         return CLVReportResponse(**report)
 
@@ -415,10 +414,7 @@ async def generate_clv_report(request: CLVAnalysisRequest):
         raise
     except Exception as e:
         logger.error(f"Error generating CLV report: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate CLV report: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate CLV report: {str(e)}")
 
 
 @router.get("/customer-segments", summary="Get Customer Segment Profiles")
@@ -449,29 +445,31 @@ async def get_customer_segments():
                 "communication_preferences": profile.communication_preferences,
                 "total_segment_value": float(profile.total_segment_value),
                 "growth_potential": profile.growth_potential,
-                "investment_priority": profile.investment_priority
+                "investment_priority": profile.investment_priority,
             }
             serializable_profiles.append(profile_dict)
 
         return {
             "customer_segments": serializable_profiles,
             "total_segments": len(serializable_profiles),
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error getting customer segments: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get customer segments: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get customer segments: {str(e)}")
 
 
 # ================================================================================================
 # COMPETITIVE INTELLIGENCE ENDPOINTS
 # ================================================================================================
 
-@router.post("/competitive-intelligence", response_model=CompetitiveIntelResponse, summary="Generate Competitive Intelligence Report")
+
+@router.post(
+    "/competitive-intelligence",
+    response_model=CompetitiveIntelResponse,
+    summary="Generate Competitive Intelligence Report",
+)
 async def generate_competitive_intelligence(request: CompetitiveIntelRequest):
     """
     Generate comprehensive competitive intelligence report.
@@ -483,14 +481,11 @@ async def generate_competitive_intelligence(request: CompetitiveIntelRequest):
         report = await competitive_intelligence.generate_intelligence_report(
             include_threats=request.include_threats,
             include_opportunities=request.include_opportunities,
-            include_sentiment=request.include_sentiment
+            include_sentiment=request.include_sentiment,
         )
 
         if "error" in report:
-            raise HTTPException(
-                status_code=500,
-                detail=report["error"]
-            )
+            raise HTTPException(status_code=500, detail=report["error"])
 
         return CompetitiveIntelResponse(**report)
 
@@ -498,10 +493,7 @@ async def generate_competitive_intelligence(request: CompetitiveIntelRequest):
         raise
     except Exception as e:
         logger.error(f"Error generating competitive intelligence: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate competitive intelligence: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate competitive intelligence: {str(e)}")
 
 
 @router.get("/competitive-alerts", summary="Get Real-Time Competitive Alerts")
@@ -519,20 +511,18 @@ async def get_competitive_alerts():
             "alerts": alerts,
             "alert_count": len(alerts),
             "critical_alerts": len([a for a in alerts if a.get("severity") == "critical"]),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error getting competitive alerts: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get competitive alerts: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get competitive alerts: {str(e)}")
 
 
 # ================================================================================================
 # EXECUTIVE DASHBOARD ENDPOINTS
 # ================================================================================================
+
 
 @router.get("/executive-summary", summary="Get Executive Dashboard Summary")
 async def get_executive_summary():
@@ -546,10 +536,8 @@ async def get_executive_summary():
         # Gather data from all analytics engines
         tasks = [
             revenue_attribution.get_real_time_metrics(),
-            customer_lifetime.generate_clv_report(
-                start_date=datetime.utcnow() - timedelta(days=90)
-            ),
-            competitive_intelligence.get_real_time_alerts()
+            customer_lifetime.generate_clv_report(start_date=datetime.utcnow() - timedelta(days=90)),
+            competitive_intelligence.get_real_time_alerts(),
         ]
 
         revenue_metrics, clv_report, competitive_alerts = await asyncio.gather(*tasks)
@@ -563,7 +551,9 @@ async def get_executive_summary():
 
         # Calculate month-over-month growth (mock calculation)
         previous_month_revenue = mtd_revenue * 0.85  # Mock previous month
-        mom_growth = ((mtd_revenue - previous_month_revenue) / previous_month_revenue) * 100 if previous_month_revenue > 0 else 0
+        mom_growth = (
+            ((mtd_revenue - previous_month_revenue) / previous_month_revenue) * 100 if previous_month_revenue > 0 else 0
+        )
 
         # Calculate annual run rate
         daily_avg = mtd_revenue / datetime.utcnow().day
@@ -573,25 +563,31 @@ async def get_executive_summary():
         strategic_insights = []
 
         if critical_alerts > 0:
-            strategic_insights.append({
-                "type": "threat",
-                "priority": "critical",
-                "message": f"{critical_alerts} critical competitive threats require immediate attention"
-            })
+            strategic_insights.append(
+                {
+                    "type": "threat",
+                    "priority": "critical",
+                    "message": f"{critical_alerts} critical competitive threats require immediate attention",
+                }
+            )
 
         if high_risk_customers > 50:
-            strategic_insights.append({
-                "type": "churn_risk",
-                "priority": "high",
-                "message": f"{high_risk_customers} high-value customers at risk of churn"
-            })
+            strategic_insights.append(
+                {
+                    "type": "churn_risk",
+                    "priority": "high",
+                    "message": f"{high_risk_customers} high-value customers at risk of churn",
+                }
+            )
 
         if mom_growth > 20:
-            strategic_insights.append({
-                "type": "growth",
-                "priority": "positive",
-                "message": f"Strong {mom_growth:.1f}% month-over-month growth momentum"
-            })
+            strategic_insights.append(
+                {
+                    "type": "growth",
+                    "priority": "positive",
+                    "message": f"Strong {mom_growth:.1f}% month-over-month growth momentum",
+                }
+            )
 
         return {
             "executive_kpis": {
@@ -601,34 +597,29 @@ async def get_executive_summary():
                 "annual_run_rate": round(annual_run_rate, 0),
                 "avg_customer_clv": round(avg_clv, 0),
                 "customers_at_risk": high_risk_customers,
-                "competitive_threats": critical_alerts
+                "competitive_threats": critical_alerts,
             },
             "strategic_insights": strategic_insights,
             "market_position": {
                 "revenue_growth_trend": "accelerating" if mom_growth > 15 else "stable",
                 "customer_health": "good" if high_risk_customers < 100 else "needs_attention",
-                "competitive_pressure": "high" if critical_alerts > 2 else "manageable"
+                "competitive_pressure": "high" if critical_alerts > 2 else "manageable",
             },
             "recommended_actions": [
                 "Focus on churn prevention for high-risk segments",
                 "Scale top-performing revenue channels",
-                "Address competitive threats proactively"
+                "Address competitive threats proactively",
             ],
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error generating executive summary: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate executive summary: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate executive summary: {str(e)}")
 
 
 @router.get("/dashboard-data", summary="Get Complete Dashboard Data")
-async def get_dashboard_data(
-    time_range: int = Query(30, description="Time range in days", ge=1, le=365)
-):
+async def get_dashboard_data(time_range: int = Query(30, description="Time range in days", ge=1, le=365)):
     """
     Get comprehensive dashboard data for enterprise analytics interface.
 
@@ -644,7 +635,7 @@ async def get_dashboard_data(
             revenue_attribution.get_real_time_metrics(),
             revenue_attribution.generate_attribution_report(start_date=start_date, end_date=end_date),
             customer_lifetime.generate_clv_report(start_date=start_date, end_date=end_date),
-            competitive_intelligence.generate_intelligence_report()
+            competitive_intelligence.generate_intelligence_report(),
         ]
 
         real_time_metrics, attribution_report, clv_report, competitive_intel = await asyncio.gather(*tasks)
@@ -653,26 +644,24 @@ async def get_dashboard_data(
             "time_period": {
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
-                "range_days": time_range
+                "range_days": time_range,
             },
             "real_time_metrics": real_time_metrics,
             "revenue_attribution": attribution_report,
             "customer_analytics": clv_report,
             "competitive_intelligence": competitive_intel,
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error getting dashboard data: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get dashboard data: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get dashboard data: {str(e)}")
 
 
 # ================================================================================================
 # UTILITY AND HEALTH ENDPOINTS
 # ================================================================================================
+
 
 @router.get("/health", summary="Analytics Health Check")
 async def analytics_health():
@@ -683,7 +672,7 @@ async def analytics_health():
             "revenue_attribution": "healthy",
             "customer_lifetime": "healthy",
             "competitive_intelligence": "healthy",
-            "cache_service": "healthy"
+            "cache_service": "healthy",
         }
 
         # Test cache connectivity
@@ -702,7 +691,7 @@ async def analytics_health():
             "service": "enterprise-analytics",
             "components": health_checks,
             "timestamp": datetime.utcnow().isoformat(),
-            "version": "2.0.0"
+            "version": "2.0.0",
         }
 
     except Exception as e:
@@ -711,7 +700,7 @@ async def analytics_health():
             "status": "unhealthy",
             "service": "enterprise-analytics",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
 
@@ -725,27 +714,24 @@ async def get_analytics_status():
                 "touchpoints_last_processed": "2 minutes ago",
                 "revenue_events_last_processed": "1 minute ago",
                 "clv_predictions_last_updated": "15 minutes ago",
-                "competitive_data_last_updated": "30 minutes ago"
+                "competitive_data_last_updated": "30 minutes ago",
             },
             "processing_queues": {
                 "attribution_queue_size": 0,
                 "clv_analysis_queue_size": 0,
-                "competitive_monitoring_queue_size": 0
+                "competitive_monitoring_queue_size": 0,
             },
             "performance_metrics": {
                 "avg_attribution_processing_time": "250ms",
                 "avg_clv_calculation_time": "1.2s",
-                "cache_hit_rate": "87.3%"
+                "cache_hit_rate": "87.3%",
             },
             "system_status": "operational",
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
         return status
 
     except Exception as e:
         logger.error(f"Error getting analytics status: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get analytics status: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics status: {str(e)}")

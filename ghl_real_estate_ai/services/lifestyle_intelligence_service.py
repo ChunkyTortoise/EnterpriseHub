@@ -12,8 +12,8 @@ Integrates with external APIs and cached data sources.
 """
 
 import json
-import math
 import logging
+import math
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -21,10 +21,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
     CommuteScore,
+    LifestyleScores,
     SafetyScore,
     SchoolScore,
     WalkabilityScore,
-    LifestyleScores
 )
 
 logger = get_logger(__name__)
@@ -52,10 +52,7 @@ class LifestyleIntelligenceService:
         self._load_neighborhood_profiles()
 
     def calculate_lifestyle_score(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        lead_profile: Optional[Dict[str, Any]] = None
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], lead_profile: Optional[Dict[str, Any]] = None
     ) -> LifestyleScores:
         """
         Calculate comprehensive lifestyle compatibility score.
@@ -82,11 +79,11 @@ class LifestyleIntelligenceService:
 
         # Calculate weighted overall score
         overall_score = (
-            school_score.overall_score * weights.get("schools", 0.25) +
-            commute_score.overall_score * weights.get("commute", 0.25) +
-            walkability_score.overall_score * weights.get("walkability", 0.25) +
-            safety_score.overall_score * weights.get("safety", 0.15) +
-            amenities_score * weights.get("amenities", 0.10)
+            school_score.overall_score * weights.get("schools", 0.25)
+            + commute_score.overall_score * weights.get("commute", 0.25)
+            + walkability_score.overall_score * weights.get("walkability", 0.25)
+            + safety_score.overall_score * weights.get("safety", 0.15)
+            + amenities_score * weights.get("amenities", 0.10)
         )
 
         return LifestyleScores(
@@ -95,14 +92,11 @@ class LifestyleIntelligenceService:
             walkability=walkability_score,
             safety=safety_score,
             amenities_proximity=amenities_score,
-            overall_score=overall_score
+            overall_score=overall_score,
         )
 
     def calculate_school_score(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        lead_profile: Optional[Dict[str, Any]] = None
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], lead_profile: Optional[Dict[str, Any]] = None
     ) -> SchoolScore:
         """
         Calculate school quality score with distance weighting.
@@ -183,14 +177,10 @@ class LifestyleIntelligenceService:
             distance_penalty=distance_penalty,
             overall_score=overall_score,
             top_school_name=top_school_name,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
-    def calculate_commute_score(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any]
-    ) -> CommuteScore:
+    def calculate_commute_score(self, property_data: Dict[str, Any], preferences: Dict[str, Any]) -> CommuteScore:
         """
         Calculate commute convenience score.
 
@@ -207,9 +197,7 @@ class LifestyleIntelligenceService:
 
         # Estimate commute times based on neighborhood (placeholder for real API)
         to_downtown_minutes = self._estimate_downtown_commute(neighborhood, city)
-        to_workplace_minutes = self._estimate_workplace_commute(
-            neighborhood, preferences.get("workplace_location")
-        )
+        to_workplace_minutes = self._estimate_workplace_commute(neighborhood, preferences.get("workplace_location"))
 
         # Public transit access based on neighborhood
         public_transit_access = self._assess_public_transit(neighborhood, city)
@@ -245,10 +233,7 @@ class LifestyleIntelligenceService:
                 workplace_score = 0.3
             commute_factors.append(workplace_score * 0.4)
 
-        commute_factors.extend([
-            public_transit_access * 0.1,
-            highway_access * 0.1
-        ])
+        commute_factors.extend([public_transit_access * 0.1, highway_access * 0.1])
 
         overall_score = sum(commute_factors) if commute_factors else 0.5
 
@@ -271,13 +256,11 @@ class LifestyleIntelligenceService:
             public_transit_access=public_transit_access,
             highway_access=highway_access,
             overall_score=overall_score,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
     def calculate_walkability_score(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any]
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any]
     ) -> WalkabilityScore:
         """
         Calculate walkability and urban amenities score.
@@ -318,12 +301,7 @@ class LifestyleIntelligenceService:
         restaurant_factor = min(1.0, restaurant_density)
         park_factor = park_access
 
-        overall_score = (
-            base_score * 0.5 +
-            grocery_factor * 0.2 +
-            restaurant_factor * 0.2 +
-            park_factor * 0.1
-        )
+        overall_score = base_score * 0.5 + grocery_factor * 0.2 + restaurant_factor * 0.2 + park_factor * 0.1
 
         # Generate reasoning
         if walk_score:
@@ -342,14 +320,10 @@ class LifestyleIntelligenceService:
             restaurant_density=restaurant_density,
             park_access=park_access,
             overall_score=overall_score,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
-    def calculate_safety_score(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any]
-    ) -> SafetyScore:
+    def calculate_safety_score(self, property_data: Dict[str, Any], preferences: Dict[str, Any]) -> SafetyScore:
         """
         Calculate neighborhood safety score.
 
@@ -413,14 +387,10 @@ class LifestyleIntelligenceService:
             neighborhood_safety_rating=safety_rating,
             police_response_time=response_time,
             overall_score=overall_score,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
-    def calculate_amenities_proximity(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any]
-    ) -> float:
+    def calculate_amenities_proximity(self, property_data: Dict[str, Any], preferences: Dict[str, Any]) -> float:
         """
         Calculate proximity to important amenities.
 
@@ -445,12 +415,7 @@ class LifestyleIntelligenceService:
         education_score = min(1.0, amenities.get("education_count", 0) / 2)
 
         # Weighted average
-        overall_score = (
-            healthcare_score * 0.3 +
-            shopping_score * 0.3 +
-            recreation_score * 0.2 +
-            education_score * 0.2
-        )
+        overall_score = healthcare_score * 0.3 + shopping_score * 0.3 + recreation_score * 0.2 + education_score * 0.2
 
         return overall_score
 
@@ -481,36 +446,36 @@ class LifestyleIntelligenceService:
                 "safety_rating": 7.5,
                 "downtown_commute_min": 15,
                 "amenities": {"total_amenities": 25, "grocery_distance_miles": 0.3},
-                "crime_rate_per_1000": 15.2
+                "crime_rate_per_1000": 15.2,
             },
             "steiner ranch": {
                 "walk_score": 35,
                 "safety_rating": 9.0,
                 "downtown_commute_min": 35,
                 "amenities": {"total_amenities": 12, "grocery_distance_miles": 2.0},
-                "crime_rate_per_1000": 8.1
+                "crime_rate_per_1000": 8.1,
             },
             "east austin": {
                 "walk_score": 92,
                 "safety_rating": 6.8,
                 "downtown_commute_min": 8,
                 "amenities": {"total_amenities": 35, "grocery_distance_miles": 0.2},
-                "crime_rate_per_1000": 22.5
+                "crime_rate_per_1000": 22.5,
             },
             "avery ranch": {
                 "walk_score": 25,
                 "safety_rating": 8.5,
                 "downtown_commute_min": 40,
                 "amenities": {"total_amenities": 8, "grocery_distance_miles": 3.0},
-                "crime_rate_per_1000": 9.3
+                "crime_rate_per_1000": 9.3,
             },
             "west campus": {
                 "walk_score": 95,
                 "safety_rating": 7.2,
                 "downtown_commute_min": 10,
                 "amenities": {"total_amenities": 40, "grocery_distance_miles": 0.1},
-                "crime_rate_per_1000": 18.7
-            }
+                "crime_rate_per_1000": 18.7,
+            },
         }
 
     def _create_default_lifestyle_data(self) -> Dict[str, Any]:
@@ -523,8 +488,8 @@ class LifestyleIntelligenceService:
             "commute_hubs": {
                 "downtown_austin": {"lat": 30.2672, "lng": -97.7431},
                 "ut_campus": {"lat": 30.2849, "lng": -97.7341},
-                "domain": {"lat": 30.3987, "lng": -97.7262}
-            }
+                "domain": {"lat": 30.3987, "lng": -97.7262},
+            },
         }
 
     def _save_lifestyle_data(self):
@@ -555,7 +520,7 @@ class LifestyleIntelligenceService:
         workplace_commutes = {
             "domain": {"hyde park": 25, "steiner ranch": 15, "east austin": 30},
             "ut campus": {"hyde park": 10, "west campus": 5, "east austin": 15},
-            "downtown": {"hyde park": 15, "east austin": 8, "west campus": 10}
+            "downtown": {"hyde park": 15, "east austin": 8, "west campus": 10},
         }
 
         workplace_lower = workplace.lower()
@@ -599,16 +564,19 @@ class LifestyleIntelligenceService:
     def _get_neighborhood_amenities(self, neighborhood: str, city: str) -> Dict[str, Any]:
         """Get amenities data for neighborhood."""
         profile = self.neighborhood_profiles.get(neighborhood, {})
-        return profile.get("amenities", {
-            "total_amenities": 10,
-            "grocery_distance_miles": 1.5,
-            "restaurant_density": 0.5,
-            "park_access_score": 0.5,
-            "healthcare_count": 1,
-            "shopping_count": 2,
-            "recreation_score": 0.5,
-            "education_count": 1
-        })
+        return profile.get(
+            "amenities",
+            {
+                "total_amenities": 10,
+                "grocery_distance_miles": 1.5,
+                "restaurant_density": 0.5,
+                "park_access_score": 0.5,
+                "healthcare_count": 1,
+                "shopping_count": 2,
+                "recreation_score": 0.5,
+                "education_count": 1,
+            },
+        )
 
     def _get_neighborhood_safety(self, neighborhood: str, city: str, zip_code: str) -> Dict[str, Any]:
         """Get safety data for neighborhood."""
@@ -616,7 +584,7 @@ class LifestyleIntelligenceService:
         return {
             "safety_rating": profile.get("safety_rating", 6.0),
             "crime_rate_per_1000": profile.get("crime_rate_per_1000", 20.0),
-            "police_response_minutes": profile.get("police_response_minutes", 8)
+            "police_response_minutes": profile.get("police_response_minutes", 8),
         }
 
     def _walk_score_description(self, score: int) -> str:
@@ -633,41 +601,21 @@ class LifestyleIntelligenceService:
             return "Car-Dependent"
 
     def _determine_lifestyle_weights(
-        self,
-        preferences: Dict[str, Any],
-        lead_profile: Optional[Dict[str, Any]]
+        self, preferences: Dict[str, Any], lead_profile: Optional[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Determine lifestyle factor weights based on lead profile."""
 
         # Default weights
-        weights = {
-            "schools": 0.20,
-            "commute": 0.25,
-            "walkability": 0.25,
-            "safety": 0.20,
-            "amenities": 0.10
-        }
+        weights = {"schools": 0.20, "commute": 0.25, "walkability": 0.25, "safety": 0.20, "amenities": 0.10}
 
         # Adjust based on preferences
         if preferences.get("bedrooms", 0) >= 3:
             # Likely family - prioritize schools and safety
-            weights.update({
-                "schools": 0.35,
-                "safety": 0.25,
-                "commute": 0.20,
-                "walkability": 0.15,
-                "amenities": 0.05
-            })
+            weights.update({"schools": 0.35, "safety": 0.25, "commute": 0.20, "walkability": 0.15, "amenities": 0.05})
 
         elif preferences.get("property_type", "").lower() in ["condo", "townhome"]:
             # Likely young professional - prioritize walkability and commute
-            weights.update({
-                "commute": 0.35,
-                "walkability": 0.30,
-                "amenities": 0.15,
-                "safety": 0.15,
-                "schools": 0.05
-            })
+            weights.update({"commute": 0.35, "walkability": 0.30, "amenities": 0.15, "safety": 0.15, "schools": 0.05})
 
         # Adjust for workplace specified
         if preferences.get("workplace_location"):
@@ -685,7 +633,7 @@ class LifestyleIntelligenceService:
             distance_penalty=0.0,
             overall_score=0.5,  # Neutral
             top_school_name=None,
-            reasoning="School data not available for this area"
+            reasoning="School data not available for this area",
         )
 
 
@@ -703,31 +651,31 @@ def demo_lifestyle_intelligence():
             "address": {"neighborhood": "Hyde Park", "city": "Austin", "zip": "78751"},
             "schools": [
                 {"name": "Mathews Elementary", "rating": 9, "type": "Elementary"},
-                {"name": "McCallum High School", "rating": 8, "type": "High"}
+                {"name": "McCallum High School", "rating": 8, "type": "High"},
             ],
-            "features": ["Walkable neighborhood", "Family-friendly"]
+            "features": ["Walkable neighborhood", "Family-friendly"],
         },
         {
             "id": "test_2",
             "address": {"neighborhood": "Steiner Ranch", "city": "Austin", "zip": "78732"},
             "schools": [
                 {"name": "River Ridge Elementary", "rating": 9, "type": "Elementary"},
-                {"name": "Vandegrift High School", "rating": 10, "type": "High"}
+                {"name": "Vandegrift High School", "rating": 10, "type": "High"},
             ],
-            "features": ["Gated community", "Resort-style amenities"]
-        }
+            "features": ["Gated community", "Resort-style amenities"],
+        },
     ]
 
     test_preferences = [
         {"bedrooms": 3, "workplace_location": "downtown"},  # Family
-        {"bedrooms": 1, "property_type": "condo", "workplace_location": "UT Campus"}  # Young professional
+        {"bedrooms": 1, "property_type": "condo", "workplace_location": "UT Campus"},  # Young professional
     ]
 
     for i, (prop, prefs) in enumerate(zip(test_properties, test_preferences)):
-        print(f"\n{'='*60}")
-        print(f"Property {i+1}: {prop['address']['neighborhood']}")
+        print(f"\n{'=' * 60}")
+        print(f"Property {i + 1}: {prop['address']['neighborhood']}")
         print(f"Lead Profile: {prefs}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         lifestyle_scores = service.calculate_lifestyle_score(prop, prefs)
 

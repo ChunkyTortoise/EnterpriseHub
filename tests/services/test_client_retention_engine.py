@@ -2,21 +2,22 @@
 Test suite for Client Retention Engine - Comprehensive client lifecycle management system
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from dateutil.relativedelta import relativedelta
 
 from ghl_real_estate_ai.services.client_retention_engine import (
-    ClientRetentionEngine,
-    ClientProfile,
-    EngagementPlan,
-    ReferralOpportunity,
     ClientLifecycleStage,
+    ClientProfile,
+    ClientRetentionEngine,
+    EngagementPlan,
     EngagementType,
     LifeEventType,
-    get_client_retention_engine
+    ReferralOpportunity,
+    get_client_retention_engine,
 )
 
 
@@ -40,7 +41,7 @@ def sample_client_data():
         "neighborhood": "etiwanda",
         "property_type": "single_family",
         "family_size": 4,
-        "employment_industry": "logistics"
+        "employment_industry": "logistics",
     }
 
 
@@ -59,7 +60,7 @@ def sample_client_profile():
         neighborhood="etiwanda",
         property_type="single_family",
         family_size=4,
-        employment_industry="logistics"
+        employment_industry="logistics",
     )
 
 
@@ -70,10 +71,10 @@ class TestClientRetentionEngine:
     async def test_engine_initialization(self, retention_engine):
         """Test retention engine initializes correctly"""
         assert retention_engine is not None
-        assert hasattr(retention_engine, 'llm_client')
-        assert hasattr(retention_engine, 'rc_assistant')
-        assert hasattr(retention_engine, 'engagement_templates')
-        assert hasattr(retention_engine, 'lifecycle_rules')
+        assert hasattr(retention_engine, "llm_client")
+        assert hasattr(retention_engine, "rc_assistant")
+        assert hasattr(retention_engine, "engagement_templates")
+        assert hasattr(retention_engine, "lifecycle_rules")
 
     async def test_engagement_templates_loading(self, retention_engine):
         """Test engagement templates are properly loaded"""
@@ -106,7 +107,7 @@ class TestClientRetentionEngine:
 
     async def test_add_client_profile(self, retention_engine, sample_client_data):
         """Test adding new client profile"""
-        with patch.object(retention_engine, '_create_initial_engagement_plan') as mock_plan:
+        with patch.object(retention_engine, "_create_initial_engagement_plan") as mock_plan:
             mock_plan.return_value = None
 
             profile = await retention_engine.add_client_profile(sample_client_data)
@@ -179,7 +180,7 @@ class TestClientRetentionEngine:
         client_id = sample_client_profile.client_id
         retention_engine.client_profiles[client_id] = sample_client_profile
 
-        with patch.object(retention_engine, '_schedule_value_update_engagement') as mock_schedule:
+        with patch.object(retention_engine, "_schedule_value_update_engagement") as mock_schedule:
             # Significant increase (>5%)
             new_value = 825000  # 10.4% increase
             await retention_engine.update_property_value(client_id, new_value, trigger_notification=True)
@@ -192,11 +193,9 @@ class TestClientRetentionEngine:
         client_id = sample_client_profile.client_id
         retention_engine.client_profiles[client_id] = sample_client_profile
 
-        with patch.object(retention_engine, '_schedule_life_event_engagement') as mock_schedule:
+        with patch.object(retention_engine, "_schedule_life_event_engagement") as mock_schedule:
             await retention_engine.detect_life_event(
-                client_id,
-                LifeEventType.FAMILY_ADDITION,
-                {"details": "New baby born"}
+                client_id, LifeEventType.FAMILY_ADDITION, {"details": "New baby born"}
             )
 
             mock_schedule.assert_called_once()
@@ -222,13 +221,12 @@ class TestClientRetentionEngine:
         client_id = sample_client_profile.client_id
         retention_engine.client_profiles[client_id] = sample_client_profile
 
-        with patch.object(retention_engine, '_is_good_referral_timing') as mock_timing:
-            with patch.object(retention_engine, '_schedule_referral_request_engagement') as mock_schedule:
+        with patch.object(retention_engine, "_is_good_referral_timing") as mock_timing:
+            with patch.object(retention_engine, "_schedule_referral_request_engagement") as mock_schedule:
                 mock_timing.return_value = True
 
                 success = await retention_engine.request_referral(
-                    client_id,
-                    target_demographics=["logistics_workers", "healthcare_professionals"]
+                    client_id, target_demographics=["logistics_workers", "healthcare_professionals"]
                 )
 
                 assert success is True
@@ -245,10 +243,10 @@ class TestClientRetentionEngine:
             subject="Happy Anniversary!",
             message_template="anniversary_message",
             personalization_data={"anniversary_year": "1"},
-            channel="email"
+            channel="email",
         )
 
-        with patch.object(retention_engine.llm_client, 'agenerate') as mock_agenerate:
+        with patch.object(retention_engine.llm_client, "agenerate") as mock_agenerate:
             mock_agenerate.return_value = Mock(
                 content='{"subject": "Happy 1 Year Anniversary in Your Etiwanda Home!", "message": "Hi John, can you believe it\'s been 1 year since you purchased your beautiful home at 123 Oak Street?", "personal_touches": ["Referenced specific address", "Used first name"]}'
             )
@@ -273,14 +271,14 @@ class TestClientRetentionEngine:
             subject="How are you settling in?",
             message_template="check_in",
             personalization_data={},
-            channel="email"
+            channel="email",
         )
 
-        with patch.object(retention_engine, '_personalize_engagement') as mock_personalize:
-            with patch.object(retention_engine, '_send_engagement') as mock_send:
+        with patch.object(retention_engine, "_personalize_engagement") as mock_personalize:
+            with patch.object(retention_engine, "_send_engagement") as mock_send:
                 mock_personalize.return_value = {
                     "subject": "How are you settling in?",
-                    "message": "Hi John, hope you're loving your new home!"
+                    "message": "Hi John, hope you're loving your new home!",
                 }
 
                 await retention_engine._execute_engagement(engagement)
@@ -302,13 +300,13 @@ class TestClientRetentionEngine:
             subject="Market Update",
             message_template="value_update",
             personalization_data={},
-            channel="email"
+            channel="email",
         )
 
         retention_engine.engagement_plans[today_engagement.plan_id] = today_engagement
 
-        with patch.object(retention_engine, '_execute_engagement') as mock_execute:
-            with patch.object(retention_engine, '_generate_scheduled_engagements') as mock_generate:
+        with patch.object(retention_engine, "_execute_engagement") as mock_execute:
+            with patch.object(retention_engine, "_generate_scheduled_engagements") as mock_generate:
                 processed_count = await retention_engine.process_daily_engagements()
 
                 assert processed_count >= 1
@@ -320,7 +318,8 @@ class TestClientRetentionEngine:
 
         # Should have created multiple engagements
         client_engagements = [
-            plan for plan in retention_engine.engagement_plans.values()
+            plan
+            for plan in retention_engine.engagement_plans.values()
             if plan.client_id == sample_client_profile.client_id
         ]
 
@@ -335,13 +334,10 @@ class TestClientRetentionEngine:
         """Test basic template substitution as AI fallback"""
         template_data = {
             "subject_template": "Happy {anniversary_year} Year Anniversary!",
-            "message_template": "Hi {client_name}, it's been {anniversary_year} year since your purchase."
+            "message_template": "Hi {client_name}, it's been {anniversary_year} year since your purchase.",
         }
 
-        context = {
-            "client_name": "John",
-            "anniversary_year": "2"
-        }
+        context = {"client_name": "John", "anniversary_year": "2"}
 
         result = retention_engine._basic_template_substitution(template_data, context)
 
@@ -366,7 +362,7 @@ class TestClientRetentionEngine:
 
     async def test_client_profile_caching(self, retention_engine, sample_client_profile):
         """Test client profile caching functionality"""
-        with patch.object(retention_engine.cache, 'set') as mock_set:
+        with patch.object(retention_engine.cache, "set") as mock_set:
             await retention_engine._cache_client_profile(sample_client_profile)
             mock_set.assert_called_once()
 
@@ -381,10 +377,10 @@ class TestClientRetentionEngine:
             subject="Test Cache",
             message_template="market_update",
             personalization_data={},
-            channel="email"
+            channel="email",
         )
 
-        with patch.object(retention_engine.cache, 'set') as mock_set:
+        with patch.object(retention_engine.cache, "set") as mock_set:
             await retention_engine._cache_engagement_plan(engagement)
             mock_set.assert_called_once()
 
@@ -421,7 +417,7 @@ class TestClientProfile:
             purchase_price=700000,
             current_estimated_value=720000,
             neighborhood="central_rc",
-            property_type="single_family"
+            property_type="single_family",
         )
 
         assert profile.client_id == "test-123"
@@ -446,7 +442,7 @@ class TestClientProfile:
             family_size=5,
             employment_industry="healthcare",
             referrals_provided=3,
-            reviews_given=2
+            reviews_given=2,
         )
 
         assert profile.family_size == 5
@@ -470,7 +466,7 @@ class TestEngagementPlan:
             subject="Happy Anniversary!",
             message_template="anniversary_message",
             personalization_data={"year": "2"},
-            channel="email"
+            channel="email",
         )
 
         assert plan.plan_id == "plan-123"
@@ -491,7 +487,7 @@ class TestEngagementPlan:
             personalization_data={},
             channel="email",
             status="sent",
-            sent_at=datetime.now() - timedelta(hours=1)
+            sent_at=datetime.now() - timedelta(hours=1),
         )
 
         assert plan.status == "sent"
@@ -512,7 +508,7 @@ class TestReferralOpportunity:
             referral_context="Co-worker",
             property_need="buying",
             timeline="3-6 months",
-            confidence_level=0.7
+            confidence_level=0.7,
         )
 
         assert opportunity.opportunity_id == "opp-123"
@@ -530,7 +526,7 @@ class TestReferralOpportunity:
             property_need="selling",
             timeline="immediate",
             confidence_level=0.9,
-            notes=["Very interested", "Pre-approved"]
+            notes=["Very interested", "Pre-approved"],
         )
 
         assert len(opportunity.notes) == 2
@@ -556,20 +552,16 @@ class TestClientRetentionIntegration:
         assert engine.client_profiles[profile.client_id].current_estimated_value == 800000
 
         # Detect life event
-        await engine.detect_life_event(
-            profile.client_id,
-            LifeEventType.JOB_CHANGE,
-            {"new_company": "Amazon"}
-        )
+        await engine.detect_life_event(profile.client_id, LifeEventType.JOB_CHANGE, {"new_company": "Amazon"})
 
         # Request referral
-        with patch.object(engine, '_is_good_referral_timing') as mock_timing:
+        with patch.object(engine, "_is_good_referral_timing") as mock_timing:
             mock_timing.return_value = True
             success = await engine.request_referral(profile.client_id)
             assert success is True
 
         # Process engagements
-        with patch.object(engine, '_execute_engagement') as mock_execute:
+        with patch.object(engine, "_execute_engagement") as mock_execute:
             count = await engine.process_daily_engagements()
             assert count >= 0
 
@@ -590,10 +582,10 @@ class TestClientRetentionIntegration:
                 "purchase_price": 700000 + (i * 50000),
                 "current_estimated_value": 720000 + (i * 52000),
                 "neighborhood": "etiwanda",
-                "property_type": "single_family"
+                "property_type": "single_family",
             }
 
-            with patch.object(engine, '_create_initial_engagement_plan'):
+            with patch.object(engine, "_create_initial_engagement_plan"):
                 profile = await engine.add_client_profile(client_data)
                 clients.append(profile)
 
@@ -609,7 +601,7 @@ class TestClientRetentionIntegration:
         """Test complete engagement personalization pipeline"""
         engine = get_client_retention_engine()
 
-        with patch.object(engine, '_create_initial_engagement_plan'):
+        with patch.object(engine, "_create_initial_engagement_plan"):
             profile = await engine.add_client_profile(sample_client_data)
 
         # Create anniversary engagement
@@ -622,13 +614,13 @@ class TestClientRetentionIntegration:
             subject="Anniversary",
             message_template="anniversary_message",
             personalization_data={"anniversary_year": "1"},
-            channel="email"
+            channel="email",
         )
 
         engine.engagement_plans[engagement.plan_id] = engagement
 
-        with patch.object(engine.llm_client, 'agenerate') as mock_agenerate:
-            with patch.object(engine, '_send_engagement') as mock_send:
+        with patch.object(engine.llm_client, "agenerate") as mock_agenerate:
+            with patch.object(engine, "_send_engagement") as mock_send:
                 mock_agenerate.return_value = Mock(
                     content='{"subject": "Happy Anniversary!", "message": "Personalized message", "personal_touches": []}'
                 )

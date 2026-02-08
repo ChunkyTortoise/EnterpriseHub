@@ -13,10 +13,10 @@ Version: 1.0.0
 Last Updated: 2026-01-18
 """
 
-import os
 import logging
+import os
 from dataclasses import dataclass
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -34,23 +34,23 @@ class DatabasePerformanceConfig:
     """
 
     # Connection Pool Configuration
-    pool_size: int = 20               # Minimum connections
-    max_overflow: int = 80            # Additional connections when pool exhausted (total: 100)
-    pool_timeout: int = 30            # Seconds to wait for a connection from pool
-    pool_recycle: int = 1800          # Recycle connections every 30 minutes
-    pool_pre_ping: bool = True        # Enable connection health checks
+    pool_size: int = 20  # Minimum connections
+    max_overflow: int = 80  # Additional connections when pool exhausted (total: 100)
+    pool_timeout: int = 30  # Seconds to wait for a connection from pool
+    pool_recycle: int = 1800  # Recycle connections every 30 minutes
+    pool_pre_ping: bool = True  # Enable connection health checks
 
     # Query Performance
-    query_timeout: int = 10           # Maximum query execution time (seconds)
-    statement_timeout: int = 10000    # PostgreSQL statement timeout (ms)
-    lock_timeout: int = 5000          # PostgreSQL lock timeout (ms)
+    query_timeout: int = 10  # Maximum query execution time (seconds)
+    statement_timeout: int = 10000  # PostgreSQL statement timeout (ms)
+    lock_timeout: int = 5000  # PostgreSQL lock timeout (ms)
 
     # Connection Configuration
-    connect_timeout: int = 5          # Connection timeout (seconds)
-    keepalive: bool = True            # Enable TCP keepalive
-    keepalive_idle: int = 60          # TCP keepalive idle time
-    keepalive_interval: int = 15      # TCP keepalive interval
-    keepalive_count: int = 5          # TCP keepalive count
+    connect_timeout: int = 5  # Connection timeout (seconds)
+    keepalive: bool = True  # Enable TCP keepalive
+    keepalive_idle: int = 60  # TCP keepalive idle time
+    keepalive_interval: int = 15  # TCP keepalive interval
+    keepalive_count: int = 5  # TCP keepalive count
 
     # PostgreSQL-specific optimizations
     prepared_statement_cache_size: int = 100  # Cache prepared statements
@@ -102,6 +102,7 @@ class DatabasePerformanceConfig:
 # QUERY OPTIMIZATION PATTERNS
 # ============================================================================
 
+
 class QueryOptimizer:
     """
     Query optimization utilities for performance
@@ -123,7 +124,6 @@ class QueryOptimizer:
             WHERE id = $1
             LIMIT 1
         """,
-
         "get_leads_by_status": """
             SELECT id, email, name, status, score
             FROM leads
@@ -131,7 +131,6 @@ class QueryOptimizer:
             ORDER BY score DESC, created_at DESC
             LIMIT $2 OFFSET $3
         """,
-
         "get_high_risk_leads": """
             SELECT l.id, l.email, l.name, c.risk_score_14d, c.risk_tier
             FROM leads l
@@ -141,7 +140,6 @@ class QueryOptimizer:
             ORDER BY c.risk_score_14d DESC
             LIMIT $1
         """,
-
         "get_lead_with_interactions": """
             SELECT l.*,
                    COUNT(i.id) as interaction_count,
@@ -151,7 +149,6 @@ class QueryOptimizer:
             WHERE l.id = $1
             GROUP BY l.id
         """,
-
         # Churn prediction queries
         "get_latest_prediction": """
             SELECT *
@@ -160,7 +157,6 @@ class QueryOptimizer:
             ORDER BY prediction_timestamp DESC
             LIMIT 1
         """,
-
         "get_predictions_by_tier": """
             SELECT lead_id, risk_score_14d, risk_tier, confidence, prediction_timestamp
             FROM churn_predictions cp
@@ -174,7 +170,6 @@ class QueryOptimizer:
             ORDER BY cp.risk_score_14d DESC
             LIMIT $2
         """,
-
         # Recovery campaign queries
         "get_recovery_eligible_leads": """
             SELECT ce.lead_id, ce.event_type, ce.recovery_eligibility,
@@ -191,7 +186,6 @@ class QueryOptimizer:
             ORDER BY ce.event_timestamp DESC
             LIMIT $1
         """,
-
         # Analytics queries
         "get_churn_analytics_summary": """
             SELECT
@@ -202,7 +196,6 @@ class QueryOptimizer:
             FROM churn_events
             WHERE event_timestamp > NOW() - INTERVAL '$1 days'
         """,
-
         "get_intervention_effectiveness": """
             SELECT
                 intervention_type,
@@ -225,6 +218,7 @@ class QueryOptimizer:
 # ============================================================================
 # CONNECTION POOL MANAGER
 # ============================================================================
+
 
 class ConnectionPoolManager:
     """
@@ -259,10 +253,7 @@ class ConnectionPoolManager:
         try:
             import asyncpg
 
-            pool = await asyncpg.create_pool(
-                database_url,
-                **self.config.get_asyncpg_pool_options()
-            )
+            pool = await asyncpg.create_pool(database_url, **self.config.get_asyncpg_pool_options())
 
             self._pools[pool_name] = pool
             logger.info(f"Connection pool '{pool_name}' created successfully")
@@ -315,7 +306,8 @@ class ConnectionPoolManager:
             "min_size": pool.get_min_size(),
             "max_size": pool.get_max_size(),
             "utilization_percent": ((pool.get_size() - pool.get_idle_size()) / pool.get_size() * 100)
-            if pool.get_size() > 0 else 0,
+            if pool.get_size() > 0
+            else 0,
         }
 
 
@@ -375,6 +367,7 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_leads_status_score_created
 # ============================================================================
 # DEFAULT CONFIGURATION
 # ============================================================================
+
 
 def get_database_config() -> DatabasePerformanceConfig:
     """Get database performance configuration from environment or defaults"""

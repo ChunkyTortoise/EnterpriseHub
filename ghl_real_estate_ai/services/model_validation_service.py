@@ -16,51 +16,60 @@ This service enables validation of claims like "95% accuracy", "67% recovery rat
 
 import asyncio
 import json
-import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
 import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import scipy.stats as stats
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.model_selection import cross_val_score
 
-from ghl_real_estate_ai.services.database_service import get_database, DatabaseService
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.production_monitoring_service import get_monitoring_service
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.database_service import DatabaseService, get_database
+from ghl_real_estate_ai.services.production_monitoring_service import get_monitoring_service
 
 logger = get_logger(__name__)
 
+
 class TestType(Enum):
     """Types of validation tests"""
+
     ACCURACY_TEST = "accuracy_test"
     AB_TEST = "ab_test"
     REGRESSION_TEST = "regression_test"
     BASELINE_TEST = "baseline_test"
     DRIFT_TEST = "drift_test"
 
+
 class TestStatus(Enum):
     """Test execution status"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 class ModelType(Enum):
     """Types of models being validated"""
+
     CLASSIFICATION = "classification"
     REGRESSION = "regression"
     RANKING = "ranking"
     CLUSTERING = "clustering"
     RECOMMENDATION = "recommendation"
 
+
 @dataclass
 class ValidationDataset:
     """Dataset for model validation"""
+
     dataset_id: str
     name: str
     description: str
@@ -70,9 +79,11 @@ class ValidationDataset:
     created_at: datetime
     size: int
 
+
 @dataclass
 class ModelTestConfig:
     """Configuration for model testing"""
+
     test_id: str
     test_name: str
     test_type: TestType
@@ -106,9 +117,11 @@ class ModelTestConfig:
         if self.created_at is None:
             self.created_at = datetime.utcnow()
 
+
 @dataclass
 class TestResult:
     """Results from model validation test"""
+
     test_id: str
     test_config: ModelTestConfig
     status: TestStatus
@@ -146,6 +159,7 @@ class TestResult:
         if self.failure_reasons is None:
             self.failure_reasons = []
 
+
 class ModelValidationService:
     """Production model validation and A/B testing service"""
 
@@ -159,28 +173,28 @@ class ModelValidationService:
             "autonomous_followup": {
                 "objection_detection_accuracy": 0.95,
                 "response_generation_quality": 0.89,
-                "follow_up_effectiveness": 0.78
+                "follow_up_effectiveness": 0.78,
             },
             "behavioral_triggers": {
                 "intent_classification_accuracy": 0.92,
                 "signal_detection_precision": 0.87,
-                "behavioral_prediction_recall": 0.83
+                "behavioral_prediction_recall": 0.83,
             },
             "neural_property_matching": {
                 "matching_accuracy": 0.94,
                 "preference_prediction": 0.89,
-                "recommendation_precision": 0.91
+                "recommendation_precision": 0.91,
             },
             "churn_prediction": {
                 "churn_detection_accuracy": 0.88,
                 "recovery_intervention_success": 0.67,
-                "false_positive_rate": 0.15
+                "false_positive_rate": 0.15,
             },
             "pricing_intelligence": {
                 "price_prediction_accuracy": 0.95,
                 "market_analysis_precision": 0.91,
-                "valuation_confidence": 0.93
-            }
+                "valuation_confidence": 0.93,
+            },
         }
 
         # Ground truth data sources
@@ -189,7 +203,7 @@ class ModelValidationService:
             "churn_outcomes": "actual_customer_retention",
             "price_predictions": "final_sale_prices",
             "objection_detection": "human_review_labels",
-            "intent_classification": "conversion_outcomes"
+            "intent_classification": "conversion_outcomes",
         }
 
         logger.info("Initialized Model Validation Service")
@@ -214,7 +228,7 @@ class ModelValidationService:
         description: str,
         features: List[Dict[str, Any]],
         labels: List[Any],
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
     ) -> str:
         """Create a new validation dataset"""
 
@@ -226,7 +240,7 @@ class ModelValidationService:
             labels=labels,
             metadata=metadata or {},
             created_at=datetime.utcnow(),
-            size=len(features)
+            size=len(features),
         )
 
         # Validate dataset quality
@@ -275,8 +289,8 @@ class ModelValidationService:
                 issues.append("All labels are the same value")
 
         # Check temporal distribution
-        if 'timestamp' in dataset.features[0]:
-            timestamps = [f.get('timestamp') for f in dataset.features if f.get('timestamp')]
+        if "timestamp" in dataset.features[0]:
+            timestamps = [f.get("timestamp") for f in dataset.features if f.get("timestamp")]
             if timestamps:
                 time_span = max(timestamps) - min(timestamps)
                 if time_span.days > 7:  # More than a week of data
@@ -289,7 +303,7 @@ class ModelValidationService:
             "issues": issues,
             "dataset_size": dataset.size,
             "feature_completeness": 1 - (missing_features / len(dataset.features)) if dataset.features else 0,
-            "label_diversity": unique_labels if dataset.labels else 0
+            "label_diversity": unique_labels if dataset.labels else 0,
         }
 
     async def _initialize_validation_datasets(self):
@@ -300,18 +314,18 @@ class ModelValidationService:
             {
                 "name": "Property Matching Ground Truth",
                 "description": "Human-verified property matches for neural matching validation",
-                "model_type": "neural_property_matching"
+                "model_type": "neural_property_matching",
             },
             {
                 "name": "Churn Prediction Ground Truth",
                 "description": "Actual customer retention outcomes for churn model validation",
-                "model_type": "churn_prediction"
+                "model_type": "churn_prediction",
             },
             {
                 "name": "Objection Detection Ground Truth",
                 "description": "Human-labeled objections for objection detection validation",
-                "model_type": "autonomous_followup"
-            }
+                "model_type": "autonomous_followup",
+            },
         ]
 
         for dataset_config in datasets_to_create:
@@ -324,7 +338,7 @@ class ModelValidationService:
                     description=dataset_config["description"],
                     features=features,
                     labels=labels,
-                    metadata={"model_type": dataset_config["model_type"]}
+                    metadata={"model_type": dataset_config["model_type"]},
                 )
                 logger.info(f"Initialized validation dataset: {dataset_id}")
 
@@ -340,20 +354,24 @@ class ModelValidationService:
             labels = []
 
             for i in range(200):  # 200 sample property matches
-                features.append({
-                    "lead_id": f"lead_{i}",
-                    "property_id": f"prop_{i}",
-                    "price_match_score": np.random.uniform(0.6, 1.0),
-                    "location_match_score": np.random.uniform(0.5, 1.0),
-                    "feature_match_score": np.random.uniform(0.4, 1.0),
-                    "budget_alignment": np.random.uniform(0.7, 1.0),
-                    "timestamp": datetime.utcnow() - timedelta(days=np.random.randint(1, 90))
-                })
+                features.append(
+                    {
+                        "lead_id": f"lead_{i}",
+                        "property_id": f"prop_{i}",
+                        "price_match_score": np.random.uniform(0.6, 1.0),
+                        "location_match_score": np.random.uniform(0.5, 1.0),
+                        "feature_match_score": np.random.uniform(0.4, 1.0),
+                        "budget_alignment": np.random.uniform(0.7, 1.0),
+                        "timestamp": datetime.utcnow() - timedelta(days=np.random.randint(1, 90)),
+                    }
+                )
                 # Generate ground truth label (1 = good match, 0 = poor match)
-                overall_score = (features[-1]["price_match_score"] +
-                               features[-1]["location_match_score"] +
-                               features[-1]["feature_match_score"] +
-                               features[-1]["budget_alignment"]) / 4
+                overall_score = (
+                    features[-1]["price_match_score"]
+                    + features[-1]["location_match_score"]
+                    + features[-1]["feature_match_score"]
+                    + features[-1]["budget_alignment"]
+                ) / 4
                 labels.append(1 if overall_score > 0.8 else 0)
 
         elif model_type == "churn_prediction":
@@ -362,20 +380,24 @@ class ModelValidationService:
             labels = []
 
             for i in range(150):  # 150 sample churn predictions
-                features.append({
-                    "lead_id": f"lead_{i}",
-                    "days_since_last_interaction": np.random.randint(1, 60),
-                    "email_open_rate": np.random.uniform(0, 1),
-                    "response_rate": np.random.uniform(0, 0.5),
-                    "engagement_score": np.random.uniform(0, 100),
-                    "lead_score": np.random.randint(0, 100),
-                    "property_views": np.random.randint(0, 20),
-                    "timestamp": datetime.utcnow() - timedelta(days=np.random.randint(1, 30))
-                })
+                features.append(
+                    {
+                        "lead_id": f"lead_{i}",
+                        "days_since_last_interaction": np.random.randint(1, 60),
+                        "email_open_rate": np.random.uniform(0, 1),
+                        "response_rate": np.random.uniform(0, 0.5),
+                        "engagement_score": np.random.uniform(0, 100),
+                        "lead_score": np.random.randint(0, 100),
+                        "property_views": np.random.randint(0, 20),
+                        "timestamp": datetime.utcnow() - timedelta(days=np.random.randint(1, 30)),
+                    }
+                )
                 # Generate ground truth label (1 = churned, 0 = retained)
-                churn_probability = (features[-1]["days_since_last_interaction"] / 60 +
-                                   (1 - features[-1]["email_open_rate"]) +
-                                   (1 - features[-1]["response_rate"])) / 3
+                churn_probability = (
+                    features[-1]["days_since_last_interaction"] / 60
+                    + (1 - features[-1]["email_open_rate"])
+                    + (1 - features[-1]["response_rate"])
+                ) / 3
                 labels.append(1 if churn_probability > 0.6 else 0)
 
         elif model_type == "autonomous_followup":
@@ -384,8 +406,14 @@ class ModelValidationService:
             labels = []
 
             objection_phrases = [
-                "too expensive", "not interested", "wrong timing", "need to think",
-                "budget concerns", "location issues", "size problems", "already found"
+                "too expensive",
+                "not interested",
+                "wrong timing",
+                "need to think",
+                "budget concerns",
+                "location issues",
+                "size problems",
+                "already found",
             ]
 
             for i in range(100):  # 100 sample objections
@@ -396,15 +424,17 @@ class ModelValidationService:
                 else:
                     message = f"This looks interesting, can you tell me more about property {i}?"
 
-                features.append({
-                    "message_id": f"msg_{i}",
-                    "lead_id": f"lead_{i}",
-                    "message_content": message,
-                    "sentiment_score": np.random.uniform(-1, 1),
-                    "message_length": len(message),
-                    "previous_interactions": np.random.randint(1, 10),
-                    "timestamp": datetime.utcnow() - timedelta(hours=np.random.randint(1, 24))
-                })
+                features.append(
+                    {
+                        "message_id": f"msg_{i}",
+                        "lead_id": f"lead_{i}",
+                        "message_content": message,
+                        "sentiment_score": np.random.uniform(-1, 1),
+                        "message_length": len(message),
+                        "previous_interactions": np.random.randint(1, 10),
+                        "timestamp": datetime.utcnow() - timedelta(hours=np.random.randint(1, 24)),
+                    }
+                )
                 labels.append(1 if has_objection else 0)
 
         else:
@@ -424,7 +454,7 @@ class ModelValidationService:
         model_version: str,
         dataset_id: str,
         expected_metrics: Dict[str, float],
-        model_predictions: List[Any]
+        model_predictions: List[Any],
     ) -> TestResult:
         """Validate model performance against expected metrics"""
 
@@ -437,9 +467,9 @@ class ModelValidationService:
             model_type=ModelType.CLASSIFICATION,  # Assume classification for now
             dataset_id=dataset_id,
             test_metrics=list(expected_metrics.keys()),
-            expected_accuracy=expected_metrics.get('accuracy'),
-            expected_precision=expected_metrics.get('precision'),
-            expected_recall=expected_metrics.get('recall')
+            expected_accuracy=expected_metrics.get("accuracy"),
+            expected_precision=expected_metrics.get("precision"),
+            expected_recall=expected_metrics.get("recall"),
         )
 
         # Get validation dataset
@@ -448,9 +478,7 @@ class ModelValidationService:
             raise ValueError(f"Dataset {dataset_id} not found")
 
         # Run validation
-        test_result = await self._execute_performance_validation(
-            test_config, dataset, model_predictions
-        )
+        test_result = await self._execute_performance_validation(test_config, dataset, model_predictions)
 
         # Store results
         await self._store_test_result(test_result)
@@ -462,10 +490,7 @@ class ModelValidationService:
         return test_result
 
     async def _execute_performance_validation(
-        self,
-        test_config: ModelTestConfig,
-        dataset: ValidationDataset,
-        predictions: List[Any]
+        self, test_config: ModelTestConfig, dataset: ValidationDataset, predictions: List[Any]
     ) -> TestResult:
         """Execute performance validation test"""
 
@@ -474,7 +499,7 @@ class ModelValidationService:
             test_config=test_config,
             status=TestStatus.RUNNING,
             started_at=datetime.utcnow(),
-            sample_size=len(predictions)
+            sample_size=len(predictions),
         )
 
         try:
@@ -488,9 +513,9 @@ class ModelValidationService:
 
             # Classification metrics
             test_result.accuracy = accuracy_score(y_true, y_pred)
-            test_result.precision = precision_score(y_true, y_pred, average='weighted')
-            test_result.recall = recall_score(y_true, y_pred, average='weighted')
-            test_result.f1_score = f1_score(y_true, y_pred, average='weighted')
+            test_result.precision = precision_score(y_true, y_pred, average="weighted")
+            test_result.recall = recall_score(y_true, y_pred, average="weighted")
+            test_result.f1_score = f1_score(y_true, y_pred, average="weighted")
 
             # Confusion matrix
             cm = confusion_matrix(y_true, y_pred)
@@ -501,7 +526,7 @@ class ModelValidationService:
             confidence_margin = 1.96 * accuracy_std  # 95% confidence
             test_result.confidence_interval = (
                 test_result.accuracy - confidence_margin,
-                test_result.accuracy + confidence_margin
+                test_result.accuracy + confidence_margin,
             )
 
             # Validate against expected performance
@@ -554,7 +579,7 @@ class ModelValidationService:
         dataset_id: str,
         traffic_split: float = 0.5,
         test_duration_days: int = 14,
-        success_metrics: List[str] = None
+        success_metrics: List[str] = None,
     ) -> str:
         """Create A/B test comparing two model versions"""
 
@@ -572,7 +597,7 @@ class ModelValidationService:
             traffic_split=traffic_split,
             test_duration_days=test_duration_days,
             significance_level=0.05,
-            minimum_sample_size=200
+            minimum_sample_size=200,
         )
 
         # Store test configuration
@@ -591,7 +616,7 @@ class ModelValidationService:
             test_id=test_config.test_id,
             test_config=test_config,
             status=TestStatus.RUNNING,
-            started_at=datetime.utcnow()
+            started_at=datetime.utcnow(),
         )
 
         try:
@@ -608,9 +633,7 @@ class ModelValidationService:
             treatment_labels = dataset.labels[split_index:]
 
             # Generate predictions for both models (simulated for demo)
-            control_predictions = await self._simulate_model_predictions(
-                test_config.control_model, control_features
-            )
+            control_predictions = await self._simulate_model_predictions(test_config.control_model, control_features)
             treatment_predictions = await self._simulate_model_predictions(
                 test_config.treatment_model, treatment_features
             )
@@ -626,8 +649,9 @@ class ModelValidationService:
 
             # Calculate relative improvement
             relative_improvement = (
-                (treatment_performance['accuracy'] - control_performance['accuracy']) /
-                control_performance['accuracy'] * 100
+                (treatment_performance["accuracy"] - control_performance["accuracy"])
+                / control_performance["accuracy"]
+                * 100
             )
 
             # Determine statistical significance
@@ -642,9 +666,9 @@ class ModelValidationService:
 
             # Determine test outcome
             test_result.test_passed = (
-                statistical_significance and
-                relative_improvement > 0 and
-                len(dataset.labels) >= test_config.minimum_sample_size
+                statistical_significance
+                and relative_improvement > 0
+                and len(dataset.labels) >= test_config.minimum_sample_size
             )
 
             test_result.status = TestStatus.COMPLETED
@@ -662,11 +686,7 @@ class ModelValidationService:
         logger.info(f"A/B test {test_config.test_id} completed: {test_result.test_passed}")
         return test_result
 
-    async def _simulate_model_predictions(
-        self,
-        model_name: str,
-        features: List[Dict[str, Any]]
-    ) -> List[int]:
+    async def _simulate_model_predictions(self, model_name: str, features: List[Dict[str, Any]]) -> List[int]:
         """Simulate model predictions for testing"""
 
         # This would normally call the actual model
@@ -688,10 +708,10 @@ class ModelValidationService:
     def _calculate_model_performance(self, y_true: List[Any], y_pred: List[Any]) -> Dict[str, float]:
         """Calculate standard model performance metrics"""
         return {
-            'accuracy': accuracy_score(y_true, y_pred),
-            'precision': precision_score(y_true, y_pred, average='weighted'),
-            'recall': recall_score(y_true, y_pred, average='weighted'),
-            'f1_score': f1_score(y_true, y_pred, average='weighted')
+            "accuracy": accuracy_score(y_true, y_pred),
+            "precision": precision_score(y_true, y_pred, average="weighted"),
+            "recall": recall_score(y_true, y_pred, average="weighted"),
+            "f1_score": f1_score(y_true, y_pred, average="weighted"),
         }
 
     def _calculate_statistical_significance(
@@ -699,13 +719,13 @@ class ModelValidationService:
         control_metrics: Dict[str, float],
         treatment_metrics: Dict[str, float],
         control_size: int,
-        treatment_size: int
+        treatment_size: int,
     ) -> float:
         """Calculate statistical significance using t-test"""
 
         # Use accuracy for significance testing
-        control_accuracy = control_metrics['accuracy']
-        treatment_accuracy = treatment_metrics['accuracy']
+        control_accuracy = control_metrics["accuracy"]
+        treatment_accuracy = treatment_metrics["accuracy"]
 
         # Calculate standard errors
         control_se = np.sqrt(control_accuracy * (1 - control_accuracy) / control_size)
@@ -743,9 +763,7 @@ class ModelValidationService:
 
                 try:
                     # Generate test data for this claim
-                    test_result = await self._validate_specific_claim(
-                        system_name, claim_name, expected_value
-                    )
+                    test_result = await self._validate_specific_claim(system_name, claim_name, expected_value)
 
                     system_results[claim_name] = {
                         "expected_value": expected_value,
@@ -753,7 +771,7 @@ class ModelValidationService:
                         "test_passed": test_result.get("test_passed", False),
                         "confidence_interval": test_result.get("confidence_interval"),
                         "sample_size": test_result.get("sample_size"),
-                        "validation_method": test_result.get("validation_method")
+                        "validation_method": test_result.get("validation_method"),
                     }
 
                     if test_result.get("test_passed", False):
@@ -765,7 +783,7 @@ class ModelValidationService:
                         "actual_value": None,
                         "test_passed": False,
                         "error": str(e),
-                        "validation_method": "failed"
+                        "validation_method": "failed",
                     }
 
             # Calculate system validation rate
@@ -776,7 +794,7 @@ class ModelValidationService:
                 "claims": system_results,
                 "validation_rate": system_validation_rate,
                 "claims_validated": system_validation_score,
-                "total_claims": system_claims
+                "total_claims": system_claims,
             }
 
         # Calculate overall validation metrics
@@ -789,14 +807,11 @@ class ModelValidationService:
             "validation_date": datetime.utcnow().isoformat(),
             "system_validations": validation_results,
             "validation_status": "PASSED" if overall_validation_rate >= 80 else "FAILED",
-            "recommendations": self._generate_validation_recommendations(validation_results)
+            "recommendations": self._generate_validation_recommendations(validation_results),
         }
 
     async def _validate_specific_claim(
-        self,
-        system_name: str,
-        claim_name: str,
-        expected_value: float
+        self, system_name: str, claim_name: str, expected_value: float
     ) -> Dict[str, Any]:
         """Validate a specific performance claim"""
 
@@ -813,9 +828,9 @@ class ModelValidationService:
         if claim_name.endswith("_accuracy"):
             actual_value = accuracy_score(labels, predictions)
         elif claim_name.endswith("_precision"):
-            actual_value = precision_score(labels, predictions, average='weighted')
+            actual_value = precision_score(labels, predictions, average="weighted")
         elif claim_name.endswith("_recall"):
-            actual_value = recall_score(labels, predictions, average='weighted')
+            actual_value = recall_score(labels, predictions, average="weighted")
         elif "success" in claim_name:
             # Calculate success rate
             actual_value = sum(1 for p in predictions if p == 1) / len(predictions)
@@ -837,13 +852,11 @@ class ModelValidationService:
             "confidence_interval": confidence_interval,
             "sample_size": len(labels),
             "validation_method": "simulated_testing",
-            "tolerance_used": 0.05
+            "tolerance_used": 0.05,
         }
 
     async def _generate_claim_test_data(
-        self,
-        system_name: str,
-        claim_name: str
+        self, system_name: str, claim_name: str
     ) -> Tuple[List[Dict[str, Any]], List[int]]:
         """Generate test data specific to a performance claim"""
 
@@ -861,7 +874,7 @@ class ModelValidationService:
                     "message_id": f"msg_{i}",
                     "message_text": f"test message {i}",
                     "sentiment_score": np.random.uniform(-1, 1),
-                    "contains_objection_keywords": np.random.choice([True, False], p=[0.3, 0.7])
+                    "contains_objection_keywords": np.random.choice([True, False], p=[0.3, 0.7]),
                 }
                 features.append(feature)
                 # Ground truth: actual objection presence
@@ -873,7 +886,7 @@ class ModelValidationService:
                     "lead_id": f"lead_{i}",
                     "churn_risk_score": np.random.uniform(0, 1),
                     "intervention_applied": np.random.choice([True, False]),
-                    "days_since_intervention": np.random.randint(1, 30)
+                    "days_since_intervention": np.random.randint(1, 30),
                 }
                 features.append(feature)
                 # Recovery success based on intervention and risk
@@ -886,7 +899,7 @@ class ModelValidationService:
                     "item_id": f"item_{i}",
                     "feature_1": np.random.uniform(0, 1),
                     "feature_2": np.random.uniform(0, 1),
-                    "feature_3": np.random.randint(0, 10)
+                    "feature_3": np.random.randint(0, 10),
                 }
                 features.append(feature)
                 # Synthetic label based on features
@@ -896,10 +909,7 @@ class ModelValidationService:
         return features, labels
 
     async def _generate_claim_predictions(
-        self,
-        system_name: str,
-        claim_name: str,
-        features: List[Dict[str, Any]]
+        self, system_name: str, claim_name: str, features: List[Dict[str, Any]]
     ) -> List[int]:
         """Generate model predictions for claim validation"""
 
@@ -911,10 +921,7 @@ class ModelValidationService:
 
         for feature in features:
             # Generate prediction with some noise around expected performance
-            random_performance = np.random.uniform(
-                expected_performance - 0.1,
-                expected_performance + 0.05
-            )
+            random_performance = np.random.uniform(expected_performance - 0.1, expected_performance + 0.05)
             predictions.append(1 if np.random.random() < random_performance else 0)
 
         return predictions
@@ -965,8 +972,8 @@ class ModelValidationService:
                 "metadata": {
                     "dataset_id": dataset.dataset_id,
                     "dataset_size": dataset.size,
-                    "dataset_name": dataset.name
-                }
+                    "dataset_name": dataset.name,
+                },
             }
             await self.db.log_communication(comm_data)
 
@@ -1001,8 +1008,8 @@ class ModelValidationService:
                     "test_id": result.test_id,
                     "test_passed": result.test_passed,
                     "accuracy": result.accuracy,
-                    "model_name": result.test_config.model_name
-                }
+                    "model_name": result.test_config.model_name,
+                },
             }
             await self.db.log_communication(comm_data)
 
@@ -1014,14 +1021,16 @@ class ModelValidationService:
                 accuracy=result.accuracy or 0,
                 latency_ms=100,  # Placeholder
                 predictions_count=result.sample_size or 0,
-                error_count=0 if result.test_passed else 1
+                error_count=0 if result.test_passed else 1,
             )
+
 
 # ============================================================================
 # SERVICE FACTORY AND HELPERS
 # ============================================================================
 
 _validation_service: Optional[ModelValidationService] = None
+
 
 async def get_validation_service() -> ModelValidationService:
     """Get global validation service instance"""
@@ -1033,17 +1042,15 @@ async def get_validation_service() -> ModelValidationService:
 
     return _validation_service
 
+
 # Convenience functions
 async def validate_model_claims(model_name: str) -> Dict[str, Any]:
     """Convenience function to validate all claims for a model"""
     service = await get_validation_service()
     return await service.validate_all_performance_claims()
 
-async def run_ab_test(
-    control_model: str,
-    treatment_model: str,
-    test_name: str = None
-) -> str:
+
+async def run_ab_test(control_model: str, treatment_model: str, test_name: str = None) -> str:
     """Convenience function to run A/B test"""
     service = await get_validation_service()
 
@@ -1053,17 +1060,19 @@ async def run_ab_test(
         name=f"AB Test Dataset - {control_model} vs {treatment_model}",
         description="Generated dataset for A/B testing",
         features=features,
-        labels=labels
+        labels=labels,
     )
 
     return await service.create_ab_test(
         test_name=test_name or f"{control_model} vs {treatment_model}",
         control_model=control_model,
         treatment_model=treatment_model,
-        dataset_id=dataset_id
+        dataset_id=dataset_id,
     )
 
+
 if __name__ == "__main__":
+
     async def test_validation_service():
         """Test validation service functionality"""
         service = ModelValidationService()
@@ -1076,16 +1085,12 @@ if __name__ == "__main__":
         # Test individual model validation
         features, labels = await service._generate_sample_validation_data("neural_property_matching")
         dataset_id = await service.create_validation_dataset(
-            "Test Dataset",
-            "Test dataset for validation",
-            features,
-            labels
+            "Test Dataset", "Test dataset for validation", features, labels
         )
 
         predictions = await service._simulate_model_predictions("test_model", features)
         result = await service.validate_model_performance(
-            "test_model", "1.0", dataset_id,
-            {"accuracy": 0.9}, predictions
+            "test_model", "1.0", dataset_id, {"accuracy": 0.9}, predictions
         )
         print(f"Model validation: {result.test_passed} (accuracy: {result.accuracy:.3f})")
 

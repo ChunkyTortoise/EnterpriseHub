@@ -6,10 +6,11 @@
 Optimized launcher for Jorge's demo presentation with all premium features activated.
 """
 
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
+
 
 def main():
     print("🚀 Launching Jorge Demo - Premium Real Estate AI")
@@ -37,11 +38,17 @@ def main():
     try:
         # Launch Streamlit with optimal settings for demo
         cmd = [
-            "streamlit", "run", app_file,
-            "--server.port", "8501",
-            "--server.headless", "false",
-            "--browser.serverAddress", "localhost",
-            "--theme.base", "light"
+            "streamlit",
+            "run",
+            app_file,
+            "--server.port",
+            "8501",
+            "--server.headless",
+            "false",
+            "--browser.serverAddress",
+            "localhost",
+            "--theme.base",
+            "light",
         ]
 
         subprocess.run(cmd)
@@ -52,6 +59,7 @@ def main():
     except KeyboardInterrupt:
         print("\n🎯 Demo session ended. Premium features showcased successfully!")
         return True
+
 
 if __name__ == "__main__":
     success = main()

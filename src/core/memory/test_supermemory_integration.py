@@ -1,15 +1,18 @@
 import asyncio
 import os
+
 from dotenv import load_dotenv
+
 from src.core.memory.supermemory_handler import SupermemoryHandler
+
 
 async def test_supermemory():
     # Load env vars
     load_dotenv()
-    
+
     print("Initializing SupermemoryHandler...")
     handler = SupermemoryHandler()
-    
+
     if not handler.client:
         print("Error: Supermemory client not initialized. Check your SUPERMEMORY_API_KEY.")
         return
@@ -30,6 +33,7 @@ async def test_supermemory():
     print(f"Profile: {profile}")
 
     print("\nVerification complete!")
+
 
 if __name__ == "__main__":
     asyncio.run(test_supermemory())

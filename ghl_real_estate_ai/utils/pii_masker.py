@@ -9,17 +9,21 @@ _SSN_PATTERN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 
 def mask_phone(text: str) -> str:
     """Replace phone numbers with masked version (keeps last 4 digits)."""
+
     def _replace(m: re.Match) -> str:
         digits = re.sub(r"\D", "", m.group())
         return f"***-***-{digits[-4:]}" if len(digits) >= 4 else "***-***-****"
+
     return _PHONE_PATTERN.sub(_replace, text)
 
 
 def mask_email(text: str) -> str:
     """Replace email addresses with masked version (keeps domain)."""
+
     def _replace(m: re.Match) -> str:
         parts = m.group().split("@")
         return f"***@{parts[1]}" if len(parts) == 2 else "***@***.***"
+
     return _EMAIL_PATTERN.sub(_replace, text)
 
 

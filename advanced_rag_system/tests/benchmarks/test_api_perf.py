@@ -7,15 +7,16 @@ Tests end-to-end API performance according to targets:
 - Concurrent users: 100 users without degradation
 """
 
-import pytest
 import asyncio
-import time
-import numpy as np
-import aiohttp
-from typing import List, Dict, Any
 import json
-import sys
 import os
+import sys
+import time
+from typing import Any, Dict, List
+
+import aiohttp
+import numpy as np
+import pytest
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -30,14 +31,14 @@ except ImportError:
             await asyncio.sleep(0.025)  # 25ms simulation
 
             return {
-                'query': query,
-                'context': f"Mock context for {query}",
-                'metrics': {
-                    'latency_ms': 25 + np.random.normal(0, 5),
-                    'tokens': 150 + np.random.randint(-20, 20),
-                    'cost_estimate': 0.003 + np.random.normal(0, 0.001),
-                    'documents_retrieved': k
-                }
+                "query": query,
+                "context": f"Mock context for {query}",
+                "metrics": {
+                    "latency_ms": 25 + np.random.normal(0, 5),
+                    "tokens": 150 + np.random.randint(-20, 20),
+                    "cost_estimate": 0.003 + np.random.normal(0, 0.001),
+                    "documents_retrieved": k,
+                },
             }
 
 
@@ -53,17 +54,17 @@ class MockAPIClient:
             query = json_data.get("query", "")
             retrieval_config = json_data.get("retrieval_config", {})
 
-            result = await self.rag_system.query_with_metrics(
-                query=query,
-                k=retrieval_config.get("top_k", 5)
-            )
+            result = await self.rag_system.query_with_metrics(query=query, k=retrieval_config.get("top_k", 5))
 
-            return MockResponse(200, {
-                "answer": f"Generated answer for: {query}",
-                "sources": [f"Source {i}" for i in range(retrieval_config.get("top_k", 5))],
-                "metrics": result["metrics"],
-                "status": "success"
-            })
+            return MockResponse(
+                200,
+                {
+                    "answer": f"Generated answer for: {query}",
+                    "sources": [f"Source {i}" for i in range(retrieval_config.get("top_k", 5))],
+                    "metrics": result["metrics"],
+                    "status": "success",
+                },
+            )
 
         return MockResponse(404, {"error": "Endpoint not found"})
 
@@ -89,6 +90,7 @@ class TestAPIPerformance:
         # Try to use real FastAPI client first
         try:
             import httpx
+
             from ghl_real_estate_ai.api.main import app
 
             async with httpx.AsyncClient(app=app, base_url="http://test") as client:
@@ -110,7 +112,7 @@ class TestAPIPerformance:
             "What is the role of re-ranking in RAG?",
             "How to evaluate RAG system quality?",
             "Explain context window optimization",
-            "What are common RAG implementation challenges?"
+            "What are common RAG implementation challenges?",
         ]
 
     @pytest.mark.benchmark
@@ -124,19 +126,13 @@ class TestAPIPerformance:
         latencies = []
 
         # Warm up API
-        await client.post("/query", json={
-            "query": "warmup query",
-            "retrieval_config": {"top_k": 5}
-        })
+        await client.post("/query", json={"query": "warmup query", "retrieval_config": {"top_k": 5}})
 
         # Benchmark runs
         for query in test_queries * 10:  # 100 total requests
             start = time.perf_counter()
 
-            response = await client.post("/query", json={
-                "query": query,
-                "retrieval_config": {"top_k": 5}
-            })
+            response = await client.post("/query", json={"query": query, "retrieval_config": {"top_k": 5}})
 
             latency = (time.perf_counter() - start) * 1000
             latencies.append(latency)
@@ -144,7 +140,7 @@ class TestAPIPerformance:
             # Validate response
             assert response.status_code == 200, f"API returned {response.status_code}"
 
-            if hasattr(response, 'json'):
+            if hasattr(response, "json"):
                 response_data = await response.json()
             else:
                 response_data = response.body
@@ -167,12 +163,7 @@ class TestAPIPerformance:
         assert p95 < 50, f"p95 latency {p95:.1f}ms exceeds 50ms target"
         assert p99 < 100, f"p99 latency {p99:.1f}ms exceeds 100ms target"
 
-        return {
-            'p50': p50,
-            'p95': p95,
-            'p99': p99,
-            'total_requests': len(latencies)
-        }
+        return {"p50": p50, "p95": p95, "p99": p99, "total_requests": len(latencies)}
 
     @pytest.mark.benchmark
     @pytest.mark.asyncio
@@ -190,20 +181,14 @@ class TestAPIPerformance:
             # Slightly different queries to avoid caching
             query = f"{cached_query} example {i}"
             start = time.perf_counter()
-            await client.post("/query", json={
-                "query": query,
-                "retrieval_config": {"top_k": 5}
-            })
+            await client.post("/query", json={"query": query, "retrieval_config": {"top_k": 5}})
             miss_latencies.append((time.perf_counter() - start) * 1000)
 
         # Repeated requests (cache hits)
         hit_latencies = []
         for _ in range(10):
             start = time.perf_counter()
-            await client.post("/query", json={
-                "query": cached_query,
-                "retrieval_config": {"top_k": 5}
-            })
+            await client.post("/query", json={"query": cached_query, "retrieval_config": {"top_k": 5}})
             hit_latencies.append((time.perf_counter() - start) * 1000)
 
         avg_miss_latency = np.mean(miss_latencies)
@@ -223,10 +208,10 @@ class TestAPIPerformance:
 
         # Note: In production with real caching, improvement should be >70%
         return {
-            'miss_latency_ms': avg_miss_latency,
-            'hit_latency_ms': avg_hit_latency,
-            'improvement_percent': improvement,
-            'cache_effective': cache_effective
+            "miss_latency_ms": avg_miss_latency,
+            "hit_latency_ms": avg_hit_latency,
+            "improvement_percent": improvement,
+            "cache_effective": cache_effective,
         }
 
     @pytest.mark.benchmark
@@ -252,10 +237,9 @@ class TestAPIPerformance:
                     query = test_queries[request_num % len(test_queries)]
 
                     start = time.perf_counter()
-                    response = await client.post("/query", json={
-                        "query": f"{query} (user-{user_id})",
-                        "retrieval_config": {"top_k": 5}
-                    })
+                    response = await client.post(
+                        "/query", json={"query": f"{query} (user-{user_id})", "retrieval_config": {"top_k": 5}}
+                    )
                     latency = (time.perf_counter() - start) * 1000
 
                     user_latencies.append(latency)
@@ -284,11 +268,11 @@ class TestAPIPerformance:
             throughput = total_requests / total_time
 
             results[user_count] = {
-                'avg_latency_ms': avg_latency,
-                'p95_latency_ms': p95_latency,
-                'total_requests': total_requests,
-                'throughput_rps': throughput,
-                'total_time_s': total_time
+                "avg_latency_ms": avg_latency,
+                "p95_latency_ms": p95_latency,
+                "total_requests": total_requests,
+                "throughput_rps": throughput,
+                "total_time_s": total_time,
             }
 
             print(f"  Avg latency: {avg_latency:.2f}ms")
@@ -297,8 +281,8 @@ class TestAPIPerformance:
             print(f"  Total requests: {total_requests}")
 
         # Analyze performance degradation
-        baseline_latency = results[1]['avg_latency_ms']
-        max_users_latency = results[max(user_counts)]['avg_latency_ms']
+        baseline_latency = results[1]["avg_latency_ms"]
+        max_users_latency = results[max(user_counts)]["avg_latency_ms"]
         degradation_factor = max_users_latency / baseline_latency
 
         print(f"\nPerformance Degradation Analysis:")
@@ -311,7 +295,7 @@ class TestAPIPerformance:
 
         # Validate 100-user target
         if 100 in results:
-            user_100_p95 = results[100]['p95_latency_ms']
+            user_100_p95 = results[100]["p95_latency_ms"]
             assert user_100_p95 < 150, f"100-user p95 latency {user_100_p95:.1f}ms too high"
 
         return results
@@ -332,11 +316,10 @@ class TestAPIPerformance:
                 start = time.perf_counter()
 
                 # Simulate streaming request
-                response = await client.post("/query", json={
-                    "query": query,
-                    "retrieval_config": {"top_k": 5},
-                    "generation_config": {"stream": True}
-                })
+                response = await client.post(
+                    "/query",
+                    json={"query": query, "retrieval_config": {"top_k": 5}, "generation_config": {"stream": True}},
+                )
 
                 # Simulate first token time
                 first_token_time = (time.perf_counter() - start) * 1000 + 15  # Add 15ms for first token
@@ -369,12 +352,12 @@ class TestAPIPerformance:
             assert avg_first_token < 100, f"First token time {avg_first_token:.2f}ms too high"
 
             return {
-                'avg_first_token_ms': avg_first_token,
-                'avg_total_latency_ms': avg_total_latency,
-                'queries_tested': len(streaming_latencies)
+                "avg_first_token_ms": avg_first_token,
+                "avg_total_latency_ms": avg_total_latency,
+                "queries_tested": len(streaming_latencies),
             }
 
-        return {'status': 'streaming_not_available'}
+        return {"status": "streaming_not_available"}
 
     @pytest.mark.benchmark
     @pytest.mark.asyncio
@@ -400,13 +383,13 @@ class TestAPIPerformance:
                 latency = (time.perf_counter() - start) * 1000
                 error_latencies.append(latency)
 
-                print(f"Error test {i+1}: {latency:.2f}ms (status: {response.status_code})")
+                print(f"Error test {i + 1}: {latency:.2f}ms (status: {response.status_code})")
 
             except Exception as e:
                 # Handle cases where error responses vary in test environment
                 latency = (time.perf_counter() - start) * 1000
                 error_latencies.append(latency)
-                print(f"Error test {i+1}: {latency:.2f}ms (exception: {type(e).__name__})")
+                print(f"Error test {i + 1}: {latency:.2f}ms (exception: {type(e).__name__})")
 
         if error_latencies:
             avg_error_latency = np.mean(error_latencies)
@@ -420,12 +403,12 @@ class TestAPIPerformance:
             assert avg_error_latency < 10, f"Error responses too slow: {avg_error_latency:.2f}ms"
 
             return {
-                'avg_error_latency_ms': avg_error_latency,
-                'max_error_latency_ms': max_error_latency,
-                'error_cases_tested': len(error_latencies)
+                "avg_error_latency_ms": avg_error_latency,
+                "max_error_latency_ms": max_error_latency,
+                "error_cases_tested": len(error_latencies),
             }
 
-        return {'status': 'error_tests_skipped'}
+        return {"status": "error_tests_skipped"}
 
     @pytest.mark.benchmark
     @pytest.mark.asyncio
@@ -451,10 +434,7 @@ class TestAPIPerformance:
                 query = np.random.choice(test_queries)
 
                 request_start = time.perf_counter()
-                response = await client.post("/query", json={
-                    "query": query,
-                    "retrieval_config": {"top_k": 5}
-                })
+                response = await client.post("/query", json={"query": query, "retrieval_config": {"top_k": 5}})
                 request_latency = (time.perf_counter() - request_start) * 1000
 
                 if response.status_code == 200:
@@ -492,11 +472,11 @@ class TestAPIPerformance:
         print(f"  Stretch goal (>1000 req/min): {'✅ MET' if stretch_goal_met else '⚠️  NOT MET'}")
 
         return {
-            'requests_per_minute': actual_rpm,
-            'requests_completed': requests_completed,
-            'error_rate': error_rate,
-            'avg_latency_ms': np.mean(latencies) if latencies else 0,
-            'stretch_goal_met': stretch_goal_met
+            "requests_per_minute": actual_rpm,
+            "requests_completed": requests_completed,
+            "error_rate": error_rate,
+            "avg_latency_ms": np.mean(latencies) if latencies else 0,
+            "stretch_goal_met": stretch_goal_met,
         }
 
     @pytest.mark.benchmark
@@ -510,32 +490,29 @@ class TestAPIPerformance:
         response_validations = []
 
         for query in test_queries[:5]:  # Test with 5 queries
-            response = await client.post("/query", json={
-                "query": query,
-                "retrieval_config": {"top_k": 5}
-            })
+            response = await client.post("/query", json={"query": query, "retrieval_config": {"top_k": 5}})
 
             assert response.status_code == 200
 
-            if hasattr(response, 'json'):
+            if hasattr(response, "json"):
                 data = await response.json()
             else:
                 data = response.body
 
             # Validate response structure
             validation = {
-                'query': query,
-                'has_answer': 'answer' in data or 'result' in data,
-                'has_sources': 'sources' in data or 'context' in data,
-                'has_metrics': 'metrics' in data,
-                'response_size_chars': len(str(data))
+                "query": query,
+                "has_answer": "answer" in data or "result" in data,
+                "has_sources": "sources" in data or "context" in data,
+                "has_metrics": "metrics" in data,
+                "response_size_chars": len(str(data)),
             }
 
             # Additional validations
-            if 'metrics' in data:
-                metrics = data['metrics']
-                validation['has_latency_metric'] = 'latency_ms' in metrics
-                validation['has_cost_metric'] = 'cost_estimate' in metrics
+            if "metrics" in data:
+                metrics = data["metrics"]
+                validation["has_latency_metric"] = "latency_ms" in metrics
+                validation["has_cost_metric"] = "cost_estimate" in metrics
 
             response_validations.append(validation)
 
@@ -549,10 +526,7 @@ class TestAPIPerformance:
 
         # Overall validation summary
         total_responses = len(response_validations)
-        successful_validations = sum(
-            1 for v in response_validations
-            if v['has_answer'] and v['has_sources']
-        )
+        successful_validations = sum(1 for v in response_validations if v["has_answer"] and v["has_sources"])
 
         completeness_rate = successful_validations / total_responses
 
@@ -564,10 +538,10 @@ class TestAPIPerformance:
         assert completeness_rate > 0.95, f"Response completeness {completeness_rate:.1%} < 95% target"
 
         return {
-            'completeness_rate': completeness_rate,
-            'total_responses': total_responses,
-            'successful_validations': successful_validations,
-            'validation_details': response_validations
+            "completeness_rate": completeness_rate,
+            "total_responses": total_responses,
+            "successful_validations": successful_validations,
+            "validation_details": response_validations,
         }
 
 

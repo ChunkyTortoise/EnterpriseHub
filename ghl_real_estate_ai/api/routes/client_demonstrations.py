@@ -4,24 +4,23 @@ Professional client demo environment management with ROI calculations
 Version: 2.0.0
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Path
-from fastapi.responses import JSONResponse
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, ConfigDict, Field
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ...services.client_demo_service import ClientDemoService, DemoScenario, ClientProfile
-from ...services.authentication import get_current_user, verify_admin_access
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
+
 from ...middleware.rate_limiting import rate_limit
+from ...services.authentication import get_current_user, verify_admin_access
+from ...services.client_demo_service import ClientDemoService, ClientProfile, DemoScenario
 
 logger = logging.getLogger(__name__)
 
 # Initialize router with tags and metadata for OpenAPI documentation
 router = APIRouter(
-    prefix="/api/v1/client-demonstrations",
-    tags=["Client Demonstrations"],
-    dependencies=[Depends(get_current_user)]
+    prefix="/api/v1/client-demonstrations", tags=["Client Demonstrations"], dependencies=[Depends(get_current_user)]
 )
 
 # Initialize demo service
@@ -32,28 +31,30 @@ demo_service = ClientDemoService()
 # PYDANTIC MODELS FOR API
 # ================================================================
 
+
 class DemoSessionRequest(BaseModel):
     """Request model for creating a new demo session"""
+
     scenario: DemoScenario = Field(..., description="Demo scenario type")
     client_name: Optional[str] = Field(None, description="Custom client name")
     agency_name: Optional[str] = Field(None, description="Custom agency name")
     custom_params: Optional[Dict[str, Any]] = Field(None, description="Custom parameters to override defaults")
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "scenario": "luxury_agent",
                 "client_name": "Patricia Williams",
                 "agency_name": "Elite Properties Group",
-                "custom_params": {
-                    "monthly_leads": 30,
-                    "avg_deal_size": 950000
-                }
+                "custom_params": {"monthly_leads": 30, "avg_deal_size": 950000},
             }
-        })
+        }
+    )
 
 
 class DemoSessionResponse(BaseModel):
     """Response model for demo session data"""
+
     session_id: str
     client_profile: Dict[str, Any]
     demo_leads: List[Dict[str, Any]]
@@ -68,11 +69,13 @@ class DemoSessionResponse(BaseModel):
 
 class SessionExtendRequest(BaseModel):
     """Request model for extending session duration"""
+
     additional_hours: int = Field(default=1, ge=1, le=24, description="Hours to extend (1-24)")
 
 
 class ROICalculationResponse(BaseModel):
     """Response model for ROI calculations"""
+
     scenario: str
     time_horizon_months: int
     traditional_costs: Dict[str, Any]
@@ -84,6 +87,7 @@ class ROICalculationResponse(BaseModel):
 
 class PerformanceMetricsResponse(BaseModel):
     """Response model for performance metrics"""
+
     response_times: Dict[str, str]
     conversion_rates: Dict[str, str]
     accuracy_scores: Dict[str, str]
@@ -97,12 +101,10 @@ class PerformanceMetricsResponse(BaseModel):
 # DEMO SESSION MANAGEMENT ENDPOINTS
 # ================================================================
 
+
 @router.post("/sessions", response_model=DemoSessionResponse)
 @rate_limit(requests=10, window=60)  # 10 demo sessions per minute
-async def create_demo_session(
-    request: DemoSessionRequest,
-    current_user: dict = Depends(get_current_user)
-):
+async def create_demo_session(request: DemoSessionRequest, current_user: dict = Depends(get_current_user)):
     """
     Create a new client demonstration session with realistic data
 
@@ -129,7 +131,7 @@ async def create_demo_session(
             scenario=request.scenario,
             client_name=request.client_name,
             agency_name=request.agency_name,
-            custom_params=request.custom_params
+            custom_params=request.custom_params,
         )
 
         # Convert to response format
@@ -142,7 +144,7 @@ async def create_demo_session(
             roi_calculation=demo_env.roi_calculation,
             performance_metrics=demo_env.performance_metrics,
             created_at=demo_env.created_at.isoformat(),
-            expires_at=demo_env.expires_at.isoformat()
+            expires_at=demo_env.expires_at.isoformat(),
         )
 
         logger.info(
@@ -154,17 +156,13 @@ async def create_demo_session(
 
     except Exception as e:
         logger.error(f"Error creating demo session: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create demo session: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create demo session: {str(e)}")
 
 
 @router.get("/sessions/{session_id}", response_model=DemoSessionResponse)
 @rate_limit(requests=60, window=60)  # 60 requests per minute for session access
 async def get_demo_session(
-    session_id: str = Path(..., description="Demo session ID"),
-    current_user: dict = Depends(get_current_user)
+    session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
 ):
     """
     Retrieve existing demo session data
@@ -178,10 +176,7 @@ async def get_demo_session(
         demo_env = await demo_service.get_demo_session(session_id)
 
         if not demo_env:
-            raise HTTPException(
-                status_code=404,
-                detail="Demo session not found or has expired"
-            )
+            raise HTTPException(status_code=404, detail="Demo session not found or has expired")
 
         response = DemoSessionResponse(
             session_id=demo_env.session_id,
@@ -192,7 +187,7 @@ async def get_demo_session(
             roi_calculation=demo_env.roi_calculation,
             performance_metrics=demo_env.performance_metrics,
             created_at=demo_env.created_at.isoformat(),
-            expires_at=demo_env.expires_at.isoformat()
+            expires_at=demo_env.expires_at.isoformat(),
         )
 
         return response
@@ -201,10 +196,7 @@ async def get_demo_session(
         raise
     except Exception as e:
         logger.error(f"Error retrieving demo session {session_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve demo session: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve demo session: {str(e)}")
 
 
 @router.post("/sessions/{session_id}/extend")
@@ -212,7 +204,7 @@ async def get_demo_session(
 async def extend_demo_session(
     session_id: str = Path(..., description="Demo session ID"),
     request: SessionExtendRequest = SessionExtendRequest(),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Extend demo session duration
@@ -222,37 +214,30 @@ async def extend_demo_session(
     """
     try:
         await demo_service.initialize()
-        success = await demo_service.extend_demo_session(
-            session_id, request.additional_hours
-        )
+        success = await demo_service.extend_demo_session(session_id, request.additional_hours)
 
         if not success:
-            raise HTTPException(
-                status_code=404,
-                detail="Demo session not found or has expired"
-            )
+            raise HTTPException(status_code=404, detail="Demo session not found or has expired")
 
-        return JSONResponse({
-            "status": "success",
-            "message": f"Session extended by {request.additional_hours} hours",
-            "session_id": session_id
-        })
+        return JSONResponse(
+            {
+                "status": "success",
+                "message": f"Session extended by {request.additional_hours} hours",
+                "session_id": session_id,
+            }
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error extending demo session {session_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to extend session: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to extend session: {str(e)}")
 
 
 @router.post("/sessions/{session_id}/reset", response_model=DemoSessionResponse)
 @rate_limit(requests=5, window=60)
 async def reset_demo_session(
-    session_id: str = Path(..., description="Demo session ID"),
-    current_user: dict = Depends(get_current_user)
+    session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
 ):
     """
     Reset demo session with fresh data
@@ -274,7 +259,7 @@ async def reset_demo_session(
             roi_calculation=demo_env.roi_calculation,
             performance_metrics=demo_env.performance_metrics,
             created_at=demo_env.created_at.isoformat(),
-            expires_at=demo_env.expires_at.isoformat()
+            expires_at=demo_env.expires_at.isoformat(),
         )
 
         logger.info(f"Reset demo session {session_id} for user {current_user.get('id')}")
@@ -282,17 +267,13 @@ async def reset_demo_session(
 
     except Exception as e:
         logger.error(f"Error resetting demo session {session_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to reset session: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to reset session: {str(e)}")
 
 
 @router.delete("/sessions/{session_id}")
 @rate_limit(requests=20, window=60)
 async def cleanup_demo_session(
-    session_id: str = Path(..., description="Demo session ID"),
-    current_user: dict = Depends(get_current_user)
+    session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
 ):
     """
     Manually cleanup demo session
@@ -306,36 +287,28 @@ async def cleanup_demo_session(
         success = await demo_service.cleanup_demo_session(session_id)
 
         if not success:
-            raise HTTPException(
-                status_code=404,
-                detail="Demo session not found"
-            )
+            raise HTTPException(status_code=404, detail="Demo session not found")
 
-        return JSONResponse({
-            "status": "success",
-            "message": "Demo session cleaned up successfully",
-            "session_id": session_id
-        })
+        return JSONResponse(
+            {"status": "success", "message": "Demo session cleaned up successfully", "session_id": session_id}
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error cleaning up demo session {session_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to cleanup session: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to cleanup session: {str(e)}")
 
 
 # ================================================================
 # ROI AND ANALYTICS ENDPOINTS
 # ================================================================
 
+
 @router.get("/sessions/{session_id}/roi", response_model=ROICalculationResponse)
 @rate_limit(requests=60, window=60)
 async def get_roi_calculation(
-    session_id: str = Path(..., description="Demo session ID"),
-    current_user: dict = Depends(get_current_user)
+    session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
 ):
     """
     Get detailed ROI calculation for demo session
@@ -352,10 +325,7 @@ async def get_roi_calculation(
         demo_env = await demo_service.get_demo_session(session_id)
 
         if not demo_env:
-            raise HTTPException(
-                status_code=404,
-                detail="Demo session not found or has expired"
-            )
+            raise HTTPException(status_code=404, detail="Demo session not found or has expired")
 
         roi_calculation = demo_env.roi_calculation
         roi_calculation["calculation_timestamp"] = datetime.utcnow().isoformat()
@@ -366,17 +336,13 @@ async def get_roi_calculation(
         raise
     except Exception as e:
         logger.error(f"Error getting ROI calculation for {session_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve ROI calculation: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve ROI calculation: {str(e)}")
 
 
 @router.get("/sessions/{session_id}/performance", response_model=PerformanceMetricsResponse)
 @rate_limit(requests=60, window=60)
 async def get_performance_metrics(
-    session_id: str = Path(..., description="Demo session ID"),
-    current_user: dict = Depends(get_current_user)
+    session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
 ):
     """
     Get performance metrics for demo session
@@ -394,10 +360,7 @@ async def get_performance_metrics(
         demo_env = await demo_service.get_demo_session(session_id)
 
         if not demo_env:
-            raise HTTPException(
-                status_code=404,
-                detail="Demo session not found or has expired"
-            )
+            raise HTTPException(status_code=404, detail="Demo session not found or has expired")
 
         return PerformanceMetricsResponse(**demo_env.performance_metrics)
 
@@ -405,20 +368,16 @@ async def get_performance_metrics(
         raise
     except Exception as e:
         logger.error(f"Error getting performance metrics for {session_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve performance metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve performance metrics: {str(e)}")
 
 
 # ================================================================
 # DEMONSTRATION UTILITIES
 # ================================================================
 
+
 @router.get("/scenarios")
-async def get_available_scenarios(
-    current_user: dict = Depends(get_current_user)
-):
+async def get_available_scenarios(current_user: dict = Depends(get_current_user)):
     """
     Get list of available demonstration scenarios
 
@@ -432,7 +391,7 @@ async def get_available_scenarios(
             "typical_deal_size": "$850K - $3.5M",
             "monthly_leads": "20-30",
             "focus": "White-glove service, immediate response, luxury amenities",
-            "roi_highlights": "Premium service scaling, higher conversion rates"
+            "roi_highlights": "Premium service scaling, higher conversion rates",
         },
         "mid_market": {
             "name": "Mid-Market Residential Agent",
@@ -440,7 +399,7 @@ async def get_available_scenarios(
             "typical_deal_size": "$300K - $600K",
             "monthly_leads": "40-50",
             "focus": "Efficiency, consistency, good school districts",
-            "roi_highlights": "Volume scaling, process automation"
+            "roi_highlights": "Volume scaling, process automation",
         },
         "first_time_buyer": {
             "name": "First-Time Buyer Specialist",
@@ -448,7 +407,7 @@ async def get_available_scenarios(
             "typical_deal_size": "$250K - $400K",
             "monthly_leads": "50-70",
             "focus": "Education, guidance, financing assistance",
-            "roi_highlights": "Streamlined education, faster closings"
+            "roi_highlights": "Streamlined education, faster closings",
         },
         "investor_focused": {
             "name": "Investment Property Specialist",
@@ -456,7 +415,7 @@ async def get_available_scenarios(
             "typical_deal_size": "$500K - $2M",
             "monthly_leads": "25-40",
             "focus": "Market analysis, ROI calculations, portfolio growth",
-            "roi_highlights": "Instant analysis, faster deal velocity"
+            "roi_highlights": "Instant analysis, faster deal velocity",
         },
         "high_volume": {
             "name": "High-Volume Operations",
@@ -464,20 +423,17 @@ async def get_available_scenarios(
             "typical_deal_size": "$300K - $500K",
             "monthly_leads": "100-150",
             "focus": "Scale, automation, team coordination",
-            "roi_highlights": "Massive efficiency gains, quality at scale"
-        }
+            "roi_highlights": "Massive efficiency gains, quality at scale",
+        },
     }
 
-    return JSONResponse({
-        "scenarios": scenarios,
-        "total_available": len(scenarios)
-    })
+    return JSONResponse({"scenarios": scenarios, "total_available": len(scenarios)})
 
 
 @router.post("/sessions/cleanup-expired")
 @rate_limit(requests=5, window=300)  # 5 requests per 5 minutes
 async def cleanup_expired_sessions(
-    current_user: dict = Depends(verify_admin_access)  # Admin only
+    current_user: dict = Depends(verify_admin_access),  # Admin only
 ):
     """
     Cleanup all expired demo sessions
@@ -490,23 +446,23 @@ async def cleanup_expired_sessions(
         await demo_service.initialize()
         expired_count = await demo_service.cleanup_expired_sessions()
 
-        return JSONResponse({
-            "status": "success",
-            "message": f"Cleaned up {expired_count} expired sessions",
-            "expired_sessions_removed": expired_count
-        })
+        return JSONResponse(
+            {
+                "status": "success",
+                "message": f"Cleaned up {expired_count} expired sessions",
+                "expired_sessions_removed": expired_count,
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error during expired session cleanup: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to cleanup expired sessions: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to cleanup expired sessions: {str(e)}")
 
 
 # ================================================================
 # HEALTH AND STATUS ENDPOINTS
 # ================================================================
+
 
 @router.get("/health")
 async def demo_service_health():
@@ -522,12 +478,14 @@ async def demo_service_health():
         # Test Redis connectivity
         test_session = await demo_service.get_demo_session("health-check-test")
 
-        return JSONResponse({
-            "status": "healthy",
-            "service": "client_demonstrations",
-            "redis_connected": True,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        return JSONResponse(
+            {
+                "status": "healthy",
+                "service": "client_demonstrations",
+                "redis_connected": True,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
     except Exception as e:
         logger.error(f"Demo service health check failed: {str(e)}")
@@ -537,6 +495,6 @@ async def demo_service_health():
                 "status": "unhealthy",
                 "service": "client_demonstrations",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )

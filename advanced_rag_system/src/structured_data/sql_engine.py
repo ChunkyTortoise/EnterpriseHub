@@ -84,6 +84,7 @@ class SQLQueryEngine:
         """
         try:
             import duckdb
+
             return True
         except ImportError:
             return False
@@ -332,8 +333,7 @@ class SQLQueryEngine:
                 continue
 
             # Remove quotes from value
-            if (value.startswith("'") and value.endswith("'")) or \
-               (value.startswith('"') and value.endswith('"')):
+            if (value.startswith("'") and value.endswith("'")) or (value.startswith('"') and value.endswith('"')):
                 value = value[1:-1]
 
             # Apply operator

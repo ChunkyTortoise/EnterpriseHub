@@ -2,27 +2,29 @@
 Interactive Lead Management Interface - Service 6 Mobile-First Design
 Comprehensive lead management with touch-optimized controls, real-time sync, and AI-powered insights
 """
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+
 import asyncio
-from dataclasses import dataclass, asdict
 import json
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-
 
 # ============================================================================
 # PERFORMANCE OPTIMIZATION: Module-Level Cached Data Generators
 # ============================================================================
 
+
 @st.cache_data(ttl=1800)  # Cache for 30 minutes
-def _generate_sample_leads_cached() -> Dict[str, 'Lead']:
+def _generate_sample_leads_cached() -> Dict[str, "Lead"]:
     """Generate cached sample leads data for optimal demo performance."""
     from datetime import datetime, timedelta
 
@@ -47,17 +49,17 @@ def _generate_sample_leads_cached() -> Dict[str, 'Lead']:
                 "urgency_score": 9.2,
                 "buying_signals": ["Pre-approval", "Specific timeline", "Active searching"],
                 "personality_type": "Decisive",
-                "preferred_contact_time": "Evenings"
+                "preferred_contact_time": "Evenings",
             },
             interaction_history=[
                 {"date": datetime.now() - timedelta(days=1), "type": "email", "summary": "Sent property matches"},
-                {"date": datetime.now() - timedelta(hours=2), "type": "call", "summary": "Discussed showing schedule"}
+                {"date": datetime.now() - timedelta(hours=2), "type": "call", "summary": "Discussed showing schedule"},
             ],
             property_matches=["prop_001", "prop_002"],
             conversion_probability=0.87,
             estimated_value=425000,
             agent_notes="Highly motivated, ready to move quickly. Prefers newer construction.",
-            tags=["Hot", "Pre-approved", "Family"]
+            tags=["Hot", "Pre-approved", "Family"],
         ),
         "lead_002": Lead(
             id="lead_002",
@@ -79,17 +81,17 @@ def _generate_sample_leads_cached() -> Dict[str, 'Lead']:
                 "urgency_score": 6.8,
                 "buying_signals": ["Researching actively", "Comparing options"],
                 "personality_type": "Analytical",
-                "preferred_contact_time": "Mornings"
+                "preferred_contact_time": "Mornings",
             },
             interaction_history=[
                 {"date": datetime.now() - timedelta(days=3), "type": "sms", "summary": "Initial inquiry"},
-                {"date": datetime.now() - timedelta(days=1), "type": "call", "summary": "Budget discussion"}
+                {"date": datetime.now() - timedelta(days=1), "type": "call", "summary": "Budget discussion"},
             ],
             property_matches=["prop_003"],
             conversion_probability=0.64,
             estimated_value=375000,
             agent_notes="Analytical buyer, needs detailed comparisons. First-time buyer.",
-            tags=["Warm", "First-time", "Analytical"]
+            tags=["Warm", "First-time", "Analytical"],
         ),
         "lead_003": Lead(
             id="lead_003",
@@ -111,23 +113,23 @@ def _generate_sample_leads_cached() -> Dict[str, 'Lead']:
                 "urgency_score": 8.5,
                 "buying_signals": ["Under contract", "Financing approved"],
                 "personality_type": "Relationship-focused",
-                "preferred_contact_time": "Afternoons"
+                "preferred_contact_time": "Afternoons",
             },
             interaction_history=[
                 {"date": datetime.now() - timedelta(days=5), "type": "email", "summary": "Contract signed"},
-                {"date": datetime.now() - timedelta(hours=6), "type": "call", "summary": "Inspection updates"}
+                {"date": datetime.now() - timedelta(hours=6), "type": "call", "summary": "Inspection updates"},
             ],
             property_matches=["prop_004"],
             conversion_probability=0.95,
             estimated_value=500000,
             agent_notes="Under contract. Excellent communication. Referral potential high.",
-            tags=["Closing", "High-value", "Referral source"]
-        )
+            tags=["Closing", "High-value", "Referral source"],
+        ),
     }
 
 
 @st.cache_data(ttl=1800)  # Cache for 30 minutes
-def _generate_sample_properties_cached() -> Dict[str, 'Property']:
+def _generate_sample_properties_cached() -> Dict[str, "Property"]:
     """Generate cached sample properties data for optimal demo performance."""
     # Will be populated from original _generate_sample_properties method
     pass
@@ -135,8 +137,9 @@ def _generate_sample_properties_cached() -> Dict[str, 'Property']:
 
 class LeadStatus(Enum):
     """Lead status enumeration"""
+
     NEW = "new"
-    QUALIFYING = "qualifying" 
+    QUALIFYING = "qualifying"
     WARM = "warm"
     HOT = "hot"
     CLOSING = "closing"
@@ -146,6 +149,7 @@ class LeadStatus(Enum):
 
 class ContactMethod(Enum):
     """Contact method enumeration"""
+
     PHONE = "phone"
     EMAIL = "email"
     SMS = "sms"
@@ -156,6 +160,7 @@ class ContactMethod(Enum):
 @dataclass
 class Lead:
     """Lead data model"""
+
     id: str
     name: str
     email: str
@@ -183,6 +188,7 @@ class Lead:
 @dataclass
 class Property:
     """Property data model for matching"""
+
     id: str
     address: str
     price: int
@@ -224,30 +230,31 @@ class InteractiveLeadManagement:
     def _initialize_session_state(self):
         """Initialize session state variables with cached data"""
         # PERFORMANCE: Generate data once and cache in session state
-        if 'leads_data' not in st.session_state:
+        if "leads_data" not in st.session_state:
             st.session_state.leads_data = self._get_cached_sample_leads()
-        if 'properties_data' not in st.session_state:
+        if "properties_data" not in st.session_state:
             st.session_state.properties_data = self._get_cached_sample_properties()
-        if 'selected_lead' not in st.session_state:
+        if "selected_lead" not in st.session_state:
             st.session_state.selected_lead = None
-        if 'view_mode' not in st.session_state:
+        if "view_mode" not in st.session_state:
             st.session_state.view_mode = "cards"  # cards, list, kanban
-        if 'filter_status' not in st.session_state:
+        if "filter_status" not in st.session_state:
             st.session_state.filter_status = "all"
-        if 'sort_by' not in st.session_state:
+        if "sort_by" not in st.session_state:
             st.session_state.sort_by = "score"
-        if 'mobile_mode' not in st.session_state:
+        if "mobile_mode" not in st.session_state:
             st.session_state.mobile_mode = self._detect_mobile_device()
         # PERFORMANCE: Cache filtered/sorted views
-        if 'cached_filtered_leads' not in st.session_state:
+        if "cached_filtered_leads" not in st.session_state:
             st.session_state.cached_filtered_leads = {}
-        if 'last_filter_hash' not in st.session_state:
+        if "last_filter_hash" not in st.session_state:
             st.session_state.last_filter_hash = None
-    
+
     def _initialize_responsive_layout(self):
         """Initialize responsive layout settings"""
         # Detect screen size and adjust layout
-        st.markdown("""
+        st.markdown(
+            """
         <script>
         function detectScreenSize() {
             const width = window.innerWidth;
@@ -258,8 +265,10 @@ class InteractiveLeadManagement:
         detectScreenSize();
         window.addEventListener('resize', detectScreenSize);
         </script>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     def _detect_mobile_device(self) -> bool:
         """Detect if user is on mobile device"""
         # In real implementation, this would check user agent
@@ -299,17 +308,21 @@ class InteractiveLeadManagement:
                     "urgency_score": 9.2,
                     "buying_signals": ["Pre-approval", "Specific timeline", "Active searching"],
                     "personality_type": "Decisive",
-                    "preferred_contact_time": "Evenings"
+                    "preferred_contact_time": "Evenings",
                 },
                 interaction_history=[
                     {"date": datetime.now() - timedelta(days=1), "type": "email", "summary": "Sent property matches"},
-                    {"date": datetime.now() - timedelta(hours=2), "type": "call", "summary": "Discussed showing schedule"}
+                    {
+                        "date": datetime.now() - timedelta(hours=2),
+                        "type": "call",
+                        "summary": "Discussed showing schedule",
+                    },
                 ],
                 property_matches=["prop_001", "prop_002"],
                 conversion_probability=0.87,
                 estimated_value=425000,
                 agent_notes="Highly motivated, ready to move quickly. Prefers newer construction.",
-                tags=["Hot", "Pre-approved", "Family"]
+                tags=["Hot", "Pre-approved", "Family"],
             ),
             "lead_002": Lead(
                 id="lead_002",
@@ -331,17 +344,17 @@ class InteractiveLeadManagement:
                     "urgency_score": 6.8,
                     "buying_signals": ["Researching actively", "Comparing options"],
                     "personality_type": "Analytical",
-                    "preferred_contact_time": "Mornings"
+                    "preferred_contact_time": "Mornings",
                 },
                 interaction_history=[
                     {"date": datetime.now() - timedelta(days=3), "type": "sms", "summary": "Initial inquiry"},
-                    {"date": datetime.now() - timedelta(days=1), "type": "call", "summary": "Budget discussion"}
+                    {"date": datetime.now() - timedelta(days=1), "type": "call", "summary": "Budget discussion"},
                 ],
                 property_matches=["prop_003"],
                 conversion_probability=0.64,
                 estimated_value=375000,
                 agent_notes="Analytical buyer, needs detailed comparisons. First-time buyer.",
-                tags=["Warm", "First-time", "Analytical"]
+                tags=["Warm", "First-time", "Analytical"],
             ),
             "lead_003": Lead(
                 id="lead_003",
@@ -363,21 +376,21 @@ class InteractiveLeadManagement:
                     "urgency_score": 8.5,
                     "buying_signals": ["Under contract", "Financing approved"],
                     "personality_type": "Relationship-focused",
-                    "preferred_contact_time": "Afternoons"
+                    "preferred_contact_time": "Afternoons",
                 },
                 interaction_history=[
                     {"date": datetime.now() - timedelta(days=5), "type": "email", "summary": "Contract signed"},
-                    {"date": datetime.now() - timedelta(hours=6), "type": "call", "summary": "Inspection updates"}
+                    {"date": datetime.now() - timedelta(hours=6), "type": "call", "summary": "Inspection updates"},
                 ],
                 property_matches=["prop_004"],
                 conversion_probability=0.95,
                 estimated_value=500000,
                 agent_notes="Under contract. Excellent communication. Referral potential high.",
-                tags=["Closing", "High-value", "Referral source"]
-            )
+                tags=["Closing", "High-value", "Referral source"],
+            ),
         }
         return sample_leads
-    
+
     def _generate_sample_properties(self) -> Dict[str, Property]:
         """Generate sample property data"""
         return {
@@ -394,10 +407,10 @@ class InteractiveLeadManagement:
                 days_on_market=12,
                 images=["image1.jpg"],
                 features=["New Construction", "Open Floor Plan", "Large Yard"],
-                ai_description="Perfect family home with modern amenities"
+                ai_description="Perfect family home with modern amenities",
             ),
             "prop_002": Property(
-                id="prop_002", 
+                id="prop_002",
                 address="456 Pine Avenue, Pflugerville, TX",
                 price=395000,
                 bedrooms=3,
@@ -409,36 +422,40 @@ class InteractiveLeadManagement:
                 days_on_market=8,
                 images=["image2.jpg"],
                 features=["Updated Kitchen", "Hardwood Floors", "Garage"],
-                ai_description="Recently updated with great neighborhood schools"
-            )
+                ai_description="Recently updated with great neighborhood schools",
+            ),
         }
-    
+
     def render_mobile_optimized_header(self):
         """Render mobile-optimized header with touch controls"""
         if st.session_state.mobile_mode:
             # Mobile header
             col1, col2, col3 = st.columns([1, 2, 1])
-            
+
             with col1:
                 if st.button("☰", key="mobile_menu", help="Menu"):
-                    st.session_state.show_mobile_menu = not st.session_state.get('show_mobile_menu', False)
-            
+                    st.session_state.show_mobile_menu = not st.session_state.get("show_mobile_menu", False)
+
             with col2:
-                st.markdown("""
+                st.markdown(
+                    """
                 <div style='text-align: center; padding: 0.5rem 0;'>
                     <h2 style='margin: 0; color: #FFFFFF; font-size: 1.4rem;'>Lead Manager</h2>
                 </div>
-                """, unsafe_allow_html=True)
-            
+                """,
+                    unsafe_allow_html=True,
+                )
+
             with col3:
                 if st.button("🔍", key="mobile_search", help="Search"):
-                    st.session_state.show_mobile_search = not st.session_state.get('show_mobile_search', False)
+                    st.session_state.show_mobile_search = not st.session_state.get("show_mobile_search", False)
         else:
             # Desktop header
             col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-            
+
             with col1:
-                st.markdown("""
+                st.markdown(
+                    """
                 <div style='padding: 1rem 0;'>
                     <h1 style='margin: 0; font-size: 2.5rem; font-weight: 800; color: #FFFFFF;'>
                         📋 LEAD COMMAND CENTER
@@ -447,8 +464,10 @@ class InteractiveLeadManagement:
                         Interactive pipeline management with AI insights
                     </p>
                 </div>
-                """, unsafe_allow_html=True)
-            
+                """,
+                    unsafe_allow_html=True,
+                )
+
             with col2:
                 # View mode selector
                 view_modes = ["cards", "list", "kanban"]
@@ -456,10 +475,10 @@ class InteractiveLeadManagement:
                     "View Mode",
                     view_modes,
                     index=view_modes.index(st.session_state.view_mode),
-                    key="view_mode_selector"
+                    key="view_mode_selector",
                 )
                 st.session_state.view_mode = current_mode
-            
+
             with col3:
                 # Filter selector
                 filter_options = ["all", "hot", "warm", "new", "closing"]
@@ -467,36 +486,32 @@ class InteractiveLeadManagement:
                     "Filter Status",
                     filter_options,
                     index=filter_options.index(st.session_state.filter_status),
-                    key="filter_selector"
+                    key="filter_selector",
                 )
                 st.session_state.filter_status = current_filter
-            
+
             with col4:
                 # Mobile mode toggle
-                mobile_toggle = st.checkbox(
-                    "Mobile View",
-                    value=st.session_state.mobile_mode,
-                    key="mobile_toggle"
-                )
+                mobile_toggle = st.checkbox("Mobile View", value=st.session_state.mobile_mode, key="mobile_toggle")
                 st.session_state.mobile_mode = mobile_toggle
-    
+
     def render_lead_cards_view(self, filtered_leads: Dict[str, Lead]):
         """Render leads in card view optimized for touch interaction"""
         st.markdown("### 🃏 Lead Cards View")
-        
+
         if st.session_state.mobile_mode:
             # Mobile: Single column
             cols = [st.container()]
         else:
             # Desktop: Multiple columns
             cols = st.columns(3)
-        
+
         col_index = 0
         for lead_id, lead in filtered_leads.items():
             with cols[col_index % len(cols)]:
                 self._render_lead_card(lead)
             col_index += 1
-    
+
     def _render_lead_card(self, lead: Lead):
         """Render individual lead card with touch-optimized design"""
         # Status color mapping
@@ -507,18 +522,20 @@ class InteractiveLeadManagement:
             LeadStatus.HOT: "#EF4444",
             LeadStatus.CLOSING: "#8B5CF6",
             LeadStatus.CLOSED: "#059669",
-            LeadStatus.LOST: "#6B7280"
+            LeadStatus.LOST: "#6B7280",
         }
-        
+
         status_color = status_colors.get(lead.status, "#6366F1")
-        
+
         # Calculate urgency indicator
         urgency_level = "🔴" if lead.score >= 90 else "🟡" if lead.score >= 70 else "🟢"
-        
+
         # Time since last contact
         time_since_contact = datetime.now() - lead.last_contact
-        contact_indicator = f"{time_since_contact.days}d" if time_since_contact.days > 0 else f"{time_since_contact.seconds//3600}h"
-        
+        contact_indicator = (
+            f"{time_since_contact.days}d" if time_since_contact.days > 0 else f"{time_since_contact.seconds // 3600}h"
+        )
+
         card_html = f"""
         <div style='
             background: rgba(22, 27, 34, 0.8);
@@ -644,9 +661,9 @@ class InteractiveLeadManagement:
             </div>
         </div>
         """
-        
+
         st.markdown(card_html, unsafe_allow_html=True)
-        
+
         # Action buttons (Streamlit buttons for functionality)
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -658,13 +675,13 @@ class InteractiveLeadManagement:
         with col3:
             if st.button("📅", key=f"book_{lead.id}", help=f"Book with {lead.name}"):
                 self._handle_booking_action(lead)
-        
+
         st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
-    
+
     def render_kanban_board_view(self, filtered_leads: Dict[str, Lead]):
         """Render leads in kanban board view with drag-and-drop simulation"""
         st.markdown("### 📊 Kanban Pipeline View")
-        
+
         # Group leads by status
         status_groups = {}
         for lead in filtered_leads.values():
@@ -672,28 +689,29 @@ class InteractiveLeadManagement:
             if status not in status_groups:
                 status_groups[status] = []
             status_groups[status].append(lead)
-        
+
         # Define status order and colors
         status_order = ["new", "qualifying", "warm", "hot", "closing", "closed"]
         status_colors = {
             "new": "#6366F1",
-            "qualifying": "#F59E0B", 
+            "qualifying": "#F59E0B",
             "warm": "#10B981",
             "hot": "#EF4444",
             "closing": "#8B5CF6",
-            "closed": "#059669"
+            "closed": "#059669",
         }
-        
+
         # Create columns for each status
         kanban_cols = st.columns(len(status_order))
-        
+
         for i, status in enumerate(status_order):
             with kanban_cols[i]:
                 leads_in_status = status_groups.get(status, [])
                 color = status_colors.get(status, "#6366F1")
-                
+
                 # Column header
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style='
                     background: {color}20;
                     padding: 1rem;
@@ -706,15 +724,18 @@ class InteractiveLeadManagement:
                         {status} ({len(leads_in_status)})
                     </h4>
                 </div>
-                """, unsafe_allow_html=True)
-                
+                """,
+                    unsafe_allow_html=True,
+                )
+
                 # Lead cards in column
                 for lead in leads_in_status:
                     self._render_kanban_lead_card(lead, color)
-    
+
     def _render_kanban_lead_card(self, lead: Lead, status_color: str):
         """Render compact lead card for kanban view"""
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='
             background: rgba(22, 27, 34, 0.8);
             padding: 1rem;
@@ -739,34 +760,38 @@ class InteractiveLeadManagement:
                 </span>
             </div>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """,
+            unsafe_allow_html=True,
+        )
+
         # Quick action button
         if st.button("📞", key=f"kanban_call_{lead.id}", help=f"Quick call {lead.name}"):
             self._handle_call_action(lead)
-    
+
     def render_lead_list_view(self, filtered_leads: Dict[str, Lead]):
         """Render leads in optimized list view"""
         st.markdown("### 📋 List View")
-        
+
         # Create DataFrame for table display
         lead_data = []
         for lead in filtered_leads.values():
-            lead_data.append({
-                "Name": lead.name,
-                "Status": lead.status.value.title(),
-                "Score": lead.score,
-                "Budget": f"${lead.budget_min:,} - ${lead.budget_max:,}",
-                "Timeline": lead.timeline,
-                "Last Contact": f"{(datetime.now() - lead.last_contact).days}d ago",
-                "Conversion": f"{lead.conversion_probability:.0%}",
-                "Phone": lead.phone,
-                "Email": lead.email
-            })
-        
+            lead_data.append(
+                {
+                    "Name": lead.name,
+                    "Status": lead.status.value.title(),
+                    "Score": lead.score,
+                    "Budget": f"${lead.budget_min:,} - ${lead.budget_max:,}",
+                    "Timeline": lead.timeline,
+                    "Last Contact": f"{(datetime.now() - lead.last_contact).days}d ago",
+                    "Conversion": f"{lead.conversion_probability:.0%}",
+                    "Phone": lead.phone,
+                    "Email": lead.email,
+                }
+            )
+
         if lead_data:
             df = pd.DataFrame(lead_data)
-            
+
             # Display as styled table
             st.dataframe(
                 df,
@@ -784,32 +809,33 @@ class InteractiveLeadManagement:
                         help="AI-predicted conversion probability",
                         min_value=0,
                         max_value=100,
-                        format="%.0f%%"
+                        format="%.0f%%",
                     ),
-                }
+                },
             )
         else:
             st.info("No leads match the current filter criteria.")
-    
+
     def render_ai_insights_panel(self):
         """Render AI insights and recommendations panel"""
         st.markdown("### 🧠 AI Lead Intelligence")
-        
+
         leads = st.session_state.leads_data
-        
+
         # Generate AI insights
         insights = self._generate_ai_insights(leads)
-        
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             # Priority recommendations
             st.markdown("#### ⚡ Priority Actions")
-            
+
             for rec in insights["priority_actions"]:
                 urgency_color = {"high": "#EF4444", "medium": "#F59E0B", "low": "#10B981"}[rec["urgency"]]
-                
-                st.markdown(f"""
+
+                st.markdown(
+                    f"""
                 <div style='
                     background: rgba(22, 27, 34, 0.6);
                     padding: 1rem;
@@ -828,20 +854,23 @@ class InteractiveLeadManagement:
                         {rec["urgency"]} Priority
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
-        
+                """,
+                    unsafe_allow_html=True,
+                )
+
         with col2:
             # Pipeline health metrics
             st.markdown("#### 📊 Pipeline Health")
-            
+
             health_metrics = insights["pipeline_health"]
-            
+
             for metric, data in health_metrics.items():
                 color = data["color"]
                 value = data["value"]
                 trend = data["trend"]
-                
-                st.markdown(f"""
+
+                st.markdown(
+                    f"""
                 <div style='
                     background: rgba(22, 27, 34, 0.6);
                     padding: 1rem;
@@ -864,72 +893,62 @@ class InteractiveLeadManagement:
                         {value}
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
-    
+                """,
+                    unsafe_allow_html=True,
+                )
+
     def _generate_ai_insights(self, leads: Dict[str, Lead]) -> Dict[str, Any]:
         """Generate AI-powered insights for the lead pipeline"""
         priority_actions = []
-        
+
         for lead in leads.values():
             if lead.status == LeadStatus.HOT and (datetime.now() - lead.last_contact).hours > 4:
-                priority_actions.append({
-                    "lead_name": lead.name,
-                    "recommendation": "Follow up immediately - hot lead cooling down",
-                    "urgency": "high"
-                })
+                priority_actions.append(
+                    {
+                        "lead_name": lead.name,
+                        "recommendation": "Follow up immediately - hot lead cooling down",
+                        "urgency": "high",
+                    }
+                )
             elif lead.score > 70 and (datetime.now() - lead.last_contact).days > 2:
-                priority_actions.append({
-                    "lead_name": lead.name,
-                    "recommendation": "Schedule follow-up call - high potential lead",
-                    "urgency": "medium"
-                })
-        
+                priority_actions.append(
+                    {
+                        "lead_name": lead.name,
+                        "recommendation": "Schedule follow-up call - high potential lead",
+                        "urgency": "medium",
+                    }
+                )
+
         # Pipeline health calculations
         total_leads = len(leads)
         hot_leads = len([l for l in leads.values() if l.status == LeadStatus.HOT])
         avg_score = sum(l.score for l in leads.values()) / total_leads if total_leads > 0 else 0
         avg_conversion = sum(l.conversion_probability for l in leads.values()) / total_leads if total_leads > 0 else 0
-        
+
         pipeline_health = {
-            "Hot Leads": {
-                "value": str(hot_leads),
-                "trend": "+2 since yesterday",
-                "color": "#EF4444"
-            },
-            "Avg Score": {
-                "value": f"{avg_score:.0f}",
-                "trend": "+5% this week", 
-                "color": "#10B981"
-            },
-            "Conversion Rate": {
-                "value": f"{avg_conversion:.0%}",
-                "trend": "+3% improvement",
-                "color": "#6366F1"
-            },
-            "Response Time": {
-                "value": "2.3m",
-                "trend": "-15s faster",
-                "color": "#F59E0B"
-            }
+            "Hot Leads": {"value": str(hot_leads), "trend": "+2 since yesterday", "color": "#EF4444"},
+            "Avg Score": {"value": f"{avg_score:.0f}", "trend": "+5% this week", "color": "#10B981"},
+            "Conversion Rate": {"value": f"{avg_conversion:.0%}", "trend": "+3% improvement", "color": "#6366F1"},
+            "Response Time": {"value": "2.3m", "trend": "-15s faster", "color": "#F59E0B"},
         }
-        
+
         return {
             "priority_actions": priority_actions[:3],  # Top 3 recommendations
-            "pipeline_health": pipeline_health
+            "pipeline_health": pipeline_health,
         }
-    
+
     def _filter_leads(self, leads: Dict[str, Lead]) -> Dict[str, Lead]:
         """Filter leads based on current filter settings"""
         filtered = {}
-        
+
         for lead_id, lead in leads.items():
             # Apply status filter
             if st.session_state.filter_status != "all":
                 if lead.status.value != st.session_state.filter_status:
                     continue
-            
+
             filtered[lead_id] = lead
-        
+
         # Sort leads
         if st.session_state.sort_by == "score":
             filtered = dict(sorted(filtered.items(), key=lambda x: x[1].score, reverse=True))
@@ -937,66 +956,59 @@ class InteractiveLeadManagement:
             filtered = dict(sorted(filtered.items(), key=lambda x: x[1].last_contact, reverse=True))
         elif st.session_state.sort_by == "name":
             filtered = dict(sorted(filtered.items(), key=lambda x: x[1].name))
-        
+
         return filtered
-    
+
     def _handle_call_action(self, lead: Lead):
         """Handle call action for lead"""
         st.success(f"📞 Initiating call to {lead.name} at {lead.phone}")
         # Update last contact time
         lead.last_contact = datetime.now()
         # Add to interaction history
-        lead.interaction_history.append({
-            "date": datetime.now(),
-            "type": "call",
-            "summary": "Outbound call initiated"
-        })
-    
+        lead.interaction_history.append({"date": datetime.now(), "type": "call", "summary": "Outbound call initiated"})
+
     def _handle_sms_action(self, lead: Lead):
         """Handle SMS action for lead"""
         st.success(f"💬 SMS sent to {lead.name} at {lead.phone}")
         lead.last_contact = datetime.now()
-        lead.interaction_history.append({
-            "date": datetime.now(),
-            "type": "sms",
-            "summary": "SMS message sent"
-        })
-    
+        lead.interaction_history.append({"date": datetime.now(), "type": "sms", "summary": "SMS message sent"})
+
     def _handle_booking_action(self, lead: Lead):
         """Handle booking action for lead"""
         st.success(f"📅 Booking calendar opened for {lead.name}")
         # In real app, this would open calendar booking interface
-    
+
     def render_mobile_quick_actions(self):
         """Render mobile-optimized quick action bar"""
         if st.session_state.mobile_mode:
             st.markdown("### ⚡ Quick Actions")
-            
+
             col1, col2, col3 = st.columns(3)
-            
+
             with col1:
                 if st.button("📞 Batch Call", use_container_width=True):
                     st.info("Batch calling hot leads...")
-            
+
             with col2:
                 if st.button("💬 AI Follow-up", use_container_width=True):
                     st.info("AI generating personalized follow-ups...")
-            
+
             with col3:
                 if st.button("📊 Quick Report", use_container_width=True):
                     st.info("Generating pipeline report...")
-    
+
     def render_complete_lead_management_interface(self):
         """Render the complete interactive lead management interface"""
         st.set_page_config(
             page_title="Service 6 - Interactive Lead Management",
             page_icon="📋",
             layout="wide",
-            initial_sidebar_state="auto"
+            initial_sidebar_state="auto",
         )
-        
+
         # Apply responsive styling
-        st.markdown("""
+        st.markdown(
+            """
         <style>
         @media (max-width: 768px) {
             .main > div {
@@ -1027,15 +1039,17 @@ class InteractiveLeadManagement:
             background-color: rgba(22, 27, 34, 0.8);
         }
         </style>
-        """, unsafe_allow_html=True)
-        
+        """,
+            unsafe_allow_html=True,
+        )
+
         # Header
         self.render_mobile_optimized_header()
         st.markdown("---")
-        
+
         # Filter and sort leads
         filtered_leads = self._filter_leads(st.session_state.leads_data)
-        
+
         # Main content based on view mode
         if st.session_state.view_mode == "cards":
             self.render_lead_cards_view(filtered_leads)
@@ -1043,20 +1057,21 @@ class InteractiveLeadManagement:
             self.render_kanban_board_view(filtered_leads)
         else:  # list view
             self.render_lead_list_view(filtered_leads)
-        
+
         st.markdown("---")
-        
+
         # AI Insights and Quick Actions
         col1, col2 = st.columns([2, 1])
-        
+
         with col1:
             self.render_ai_insights_panel()
-        
+
         with col2:
             self.render_mobile_quick_actions()
-        
+
         # Real-time sync indicator
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='
             position: fixed;
             bottom: 20px;
@@ -1073,7 +1088,9 @@ class InteractiveLeadManagement:
         '>
             🟢 SYNCED • Real-time updates
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_interactive_lead_management():

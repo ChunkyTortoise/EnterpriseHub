@@ -2,8 +2,10 @@
 Skill Registry for Phase 2 AI Orchestration.
 Manages tool access and categorization across Discovery, Analysis, Strategy, Action, and Governance.
 """
+
 from enum import Enum
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 
 class SkillCategory(Enum):
     DISCOVERY = "Discovery"
@@ -12,11 +14,13 @@ class SkillCategory(Enum):
     ACTION = "Action"
     GOVERNANCE = "Governance"
 
+
 class SkillRegistry:
     """
     Registry that manages tool access based on 5 core skill categories.
     Used by ClaudeOrchestrator to filter and organize tools for specialist agents.
     """
+
     def __init__(self):
         self.categories: Dict[SkillCategory, List[str]] = {cat: [] for cat in SkillCategory}
         self.tool_to_server: Dict[str, str] = {}
@@ -71,6 +75,7 @@ class SkillRegistry:
     def get_all_tools(self) -> List[str]:
         """Returns all registered tool names."""
         return list(self.tool_to_server.keys())
+
 
 # Singleton instance
 skill_registry = SkillRegistry()

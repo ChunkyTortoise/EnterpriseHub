@@ -108,9 +108,7 @@ class TemplateInstallerService:
 
         return installed_workflow
 
-    def _apply_customizations(
-        self, workflow: Dict[str, Any], customizations: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _apply_customizations(self, workflow: Dict[str, Any], customizations: Dict[str, Any]) -> Dict[str, Any]:
         """
         Apply variable customizations to workflow
 
@@ -217,9 +215,7 @@ class TemplateInstallerService:
             return True
         return False
 
-    def validate_customizations(
-        self, template: Dict[str, Any], customizations: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def validate_customizations(self, template: Dict[str, Any], customizations: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate customizations before installation
 
@@ -249,9 +245,7 @@ class TemplateInstallerService:
                 # Basic type validation
                 if expected_type == "string" and not isinstance(var_value, str):
                     warnings.append(f"{var_name} should be a string")
-                elif expected_type == "number" and not isinstance(
-                    var_value, (int, float)
-                ):
+                elif expected_type == "number" and not isinstance(var_value, (int, float)):
                     warnings.append(f"{var_name} should be a number")
                 elif expected_type == "boolean" and not isinstance(var_value, bool):
                     warnings.append(f"{var_name} should be a boolean")
@@ -311,17 +305,12 @@ class TemplateInstallerService:
             template_counts[template_id] = template_counts.get(template_id, 0) + 1
 
         # Most installed templates
-        most_installed = sorted(
-            template_counts.items(), key=lambda x: x[1], reverse=True
-        )[:5]
+        most_installed = sorted(template_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
         return {
             "total_installations": total_installations,
             "unique_templates": len(template_counts),
-            "most_installed": [
-                {"template_id": tid, "installations": count}
-                for tid, count in most_installed
-            ],
+            "most_installed": [{"template_id": tid, "installations": count} for tid, count in most_installed],
         }
 
 
@@ -361,9 +350,7 @@ def demo_template_installer():
                 {
                     "action_id": "action_1",
                     "action_type": "send_sms",
-                    "config": {
-                        "message": "Hi! I'm {{agentName}} from {{companyName}}. Thanks for reaching out!"
-                    },
+                    "config": {"message": "Hi! I'm {{agentName}} from {{companyName}}. Thanks for reaching out!"},
                     "conditions": [],
                     "delay_seconds": 0,
                 }
@@ -386,9 +373,7 @@ def demo_template_installer():
     print(f"   Name: {preview['name']}")
     print(f"   Steps: {preview['steps_count']}")
     print(f"   First action: {preview['actions_preview'][0]['action_type']}")
-    print(
-        f"   Message: {preview['actions_preview'][0]['config_preview'].get('message')}"
-    )
+    print(f"   Message: {preview['actions_preview'][0]['config_preview'].get('message')}")
 
     # Install template
     print("\n3️⃣  Installing template...")

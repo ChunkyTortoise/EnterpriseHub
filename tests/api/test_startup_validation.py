@@ -191,8 +191,8 @@ class TestNeverRaises:
 def _reset_singletons():
     """Reset singleton services between tests."""
     from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
-    from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
     from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+    from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 
     BotMetricsCollector.reset()
     PerformanceTracker.reset()
@@ -296,8 +296,10 @@ class TestBuildAlertStats:
         svc = JorgeHandoffService()
         # Execute a handoff, then try the same route (should be blocked as circular)
         decision = HandoffDecision(
-            source_bot="lead", target_bot="buyer",
-            reason="buyer_intent", confidence=0.9,
+            source_bot="lead",
+            target_bot="buyer",
+            reason="buyer_intent",
+            confidence=0.9,
         )
         await svc.execute_handoff(decision, "contact-1")
         await svc.execute_handoff(decision, "contact-1")  # blocked
@@ -311,12 +313,14 @@ class TestLastInteractionTime:
 
     def test_returns_current_time_when_no_interactions(self):
         from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+
         mc = BotMetricsCollector()
         t = mc.last_interaction_time()
         assert abs(t - time.time()) < 2
 
     def test_returns_latest_interaction_timestamp(self):
         from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+
         mc = BotMetricsCollector()
         mc.record_bot_interaction("lead", duration_ms=50, success=True)
         t = mc.last_interaction_time()

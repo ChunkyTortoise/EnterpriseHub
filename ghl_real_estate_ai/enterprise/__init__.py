@@ -19,15 +19,10 @@ Key Components:
 
 from .advanced_analytics import AdvancedAnalyticsSuite
 from .custom_ai_trainer import CustomAITrainer
-from .white_label_platform import WhiteLabelPlatform
 from .enterprise_onboarding import EnterpriseOnboarding
+from .white_label_platform import WhiteLabelPlatform
 
-__all__ = [
-    "AdvancedAnalyticsSuite",
-    "CustomAITrainer",
-    "WhiteLabelPlatform", 
-    "EnterpriseOnboarding"
-]
+__all__ = ["AdvancedAnalyticsSuite", "CustomAITrainer", "WhiteLabelPlatform", "EnterpriseOnboarding"]
 
 # Enterprise upselling configuration
 ENTERPRISE_CONFIG = {
@@ -41,23 +36,23 @@ ENTERPRISE_CONFIG = {
         "dedicated_success_manager",
         "custom_integrations",
         "advanced_security",
-        "compliance_reporting"
+        "compliance_reporting",
     ],
     "pricing_tiers": {
         "enterprise_plus": {
             "monthly_cost": 4999,
             "annual_cost": 49999,
-            "features": ["advanced_analytics", "priority_support"]
+            "features": ["advanced_analytics", "priority_support"],
         },
         "enterprise_pro": {
             "monthly_cost": 9999,
             "annual_cost": 99999,
-            "features": ["custom_ai_models", "white_label_platform"]
+            "features": ["custom_ai_models", "white_label_platform"],
         },
         "enterprise_elite": {
             "monthly_cost": 19999,
             "annual_cost": 199999,
-            "features": ["all_premium_features", "dedicated_success_manager"]
-        }
-    }
+            "features": ["all_premium_features", "dedicated_success_manager"],
+        },
+    },
 }

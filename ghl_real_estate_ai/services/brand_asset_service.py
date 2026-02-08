@@ -6,25 +6,25 @@ for white-label deployments in the $500K ARR platform.
 
 import asyncio
 import hashlib
+import json
 import mimetypes
 import os
 import secrets
 import tempfile
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, IO
-from dataclasses import dataclass, asdict
-from enum import Enum
-import json
 import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import IO, Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import aiohttp
 import asyncpg
-from PIL import Image, ImageOps
 import boto3
 from botocore.exceptions import ClientError
+from PIL import Image, ImageOps
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -35,6 +35,7 @@ logger = get_logger(__name__)
 
 class AssetType(Enum):
     """Brand asset types."""
+
     LOGO = "logo"
     FAVICON = "favicon"
     BANNER = "banner"
@@ -47,6 +48,7 @@ class AssetType(Enum):
 
 class StorageProvider(Enum):
     """Asset storage providers."""
+
     S3 = "s3"
     GCS = "gcs"
     AZURE = "azure"
@@ -55,6 +57,7 @@ class StorageProvider(Enum):
 
 class ProcessingStatus(Enum):
     """Asset processing status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -64,6 +67,7 @@ class ProcessingStatus(Enum):
 @dataclass
 class AssetVariant:
     """Asset variant (different sizes/formats)."""
+
     variant_type: str  # thumbnail, medium, large, webp, avif
     width: Optional[int] = None
     height: Optional[int] = None
@@ -76,6 +80,7 @@ class AssetVariant:
 @dataclass
 class BrandAsset:
     """Complete brand asset configuration."""
+
     asset_id: str
     agency_id: str
     client_id: Optional[str]
@@ -134,6 +139,7 @@ class BrandAsset:
 @dataclass
 class AssetUploadRequest:
     """Asset upload request."""
+
     agency_id: str
     asset_type: AssetType
     asset_name: str
@@ -165,21 +171,16 @@ class BrandAssetService:
         self.s3_client = None
         if self.storage_provider == StorageProvider.S3:
             self.s3_client = boto3.client(
-                's3',
+                "s3",
                 region_name=self.s3_region,
                 aws_access_key_id=getattr(settings, "AWS_ACCESS_KEY_ID", None),
-                aws_secret_access_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None)
+                aws_secret_access_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
             )
 
         # Image processing configuration
         self.max_file_size = 50 * 1024 * 1024  # 50MB
-        self.supported_image_types = {'.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'}
-        self.variant_sizes = {
-            'thumbnail': (150, 150),
-            'small': (300, 300),
-            'medium': (600, 600),
-            'large': (1200, 1200)
-        }
+        self.supported_image_types = {".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp"}
+        self.variant_sizes = {"thumbnail": (150, 150), "small": (300, 300), "medium": (600, 600), "large": (1200, 1200)}
 
         # Create local temp directory for processing
         self.temp_dir = Path(tempfile.gettempdir()) / "brand_assets"
@@ -206,7 +207,7 @@ class BrandAssetService:
 
             # Determine file metadata
             file_extension = Path(request.file_name).suffix.lower()
-            mime_type = mimetypes.guess_type(request.file_name)[0] or 'application/octet-stream'
+            mime_type = mimetypes.guess_type(request.file_name)[0] or "application/octet-stream"
 
             # Create asset record
             asset = BrandAsset(
@@ -225,7 +226,7 @@ class BrandAssetService:
                 file_size_bytes=len(request.file_content),
                 file_hash=file_hash,
                 usage_context=request.usage_context,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
 
             # Upload to storage
@@ -282,7 +283,7 @@ class BrandAssetService:
         agency_id: str,
         asset_type: Optional[AssetType] = None,
         client_id: Optional[str] = None,
-        is_active: bool = True
+        is_active: bool = True,
     ) -> List[BrandAsset]:
         """List assets for an agency."""
 
@@ -302,7 +303,7 @@ class BrandAssetService:
                 query = f"""
                     SELECT *
                     FROM brand_assets
-                    WHERE {' AND '.join(conditions)}
+                    WHERE {" AND ".join(conditions)}
                     ORDER BY display_order, created_at DESC
                 """
 
@@ -398,7 +399,8 @@ class BrandAssetService:
                 async with self.db_pool.acquire() as conn:
                     await conn.execute(
                         "UPDATE brand_assets SET is_active = false, updated_at = $1 WHERE asset_id = $2",
-                        datetime.utcnow(), asset_id
+                        datetime.utcnow(),
+                        asset_id,
                     )
 
                 logger.info(f"Soft deleted asset {asset_id}")
@@ -422,7 +424,7 @@ class BrandAssetService:
                 "total_assets": len(assets),
                 "total_storage_bytes": 0,
                 "potential_savings_bytes": 0,
-                "recommendations": []
+                "recommendations": [],
             }
 
             for asset in assets:
@@ -436,22 +438,26 @@ class BrandAssetService:
 
                 # Check for unused assets
                 if not await self._is_asset_in_use(asset):
-                    optimization_results["recommendations"].append({
-                        "type": "unused_asset",
-                        "asset_id": asset.asset_id,
-                        "asset_name": asset.asset_name,
-                        "size_bytes": asset.file_size_bytes
-                    })
+                    optimization_results["recommendations"].append(
+                        {
+                            "type": "unused_asset",
+                            "asset_id": asset.asset_id,
+                            "asset_name": asset.asset_name,
+                            "size_bytes": asset.file_size_bytes,
+                        }
+                    )
 
                 # Check for duplicate assets
                 duplicates = await self._find_duplicate_assets(asset)
                 if duplicates:
-                    optimization_results["recommendations"].append({
-                        "type": "duplicate_assets",
-                        "asset_id": asset.asset_id,
-                        "duplicates": [d.asset_id for d in duplicates],
-                        "potential_savings": sum(d.file_size_bytes for d in duplicates)
-                    })
+                    optimization_results["recommendations"].append(
+                        {
+                            "type": "duplicate_assets",
+                            "asset_id": asset.asset_id,
+                            "duplicates": [d.asset_id for d in duplicates],
+                            "potential_savings": sum(d.file_size_bytes for d in duplicates),
+                        }
+                    )
 
             optimization_results["storage_cost_estimate"] = self._calculate_storage_cost(
                 optimization_results["total_storage_bytes"]
@@ -476,8 +482,7 @@ class BrandAssetService:
         # Check if agency exists
         async with self.db_pool.acquire() as conn:
             agency_exists = await conn.fetchval(
-                "SELECT EXISTS(SELECT 1 FROM agencies WHERE agency_id = $1)",
-                request.agency_id
+                "SELECT EXISTS(SELECT 1 FROM agencies WHERE agency_id = $1)", request.agency_id
             )
             if not agency_exists:
                 raise ValueError(f"Agency {request.agency_id} not found")
@@ -488,7 +493,8 @@ class BrandAssetService:
             async with self.db_pool.acquire() as conn:
                 row = await conn.fetchrow(
                     "SELECT * FROM brand_assets WHERE file_hash = $1 AND agency_id = $2 AND is_active = true",
-                    file_hash, agency_id
+                    file_hash,
+                    agency_id,
                 )
                 return self._row_to_brand_asset(row) if row else None
         except Exception:
@@ -523,10 +529,10 @@ class BrandAssetService:
                 ContentType=asset.mime_type,
                 CacheControl=asset.cdn_cache_control,
                 Metadata={
-                    'asset-id': asset.asset_id,
-                    'agency-id': asset.agency_id,
-                    'asset-type': asset.asset_type.value
-                }
+                    "asset-id": asset.asset_id,
+                    "agency-id": asset.agency_id,
+                    "asset-type": asset.asset_type.value,
+                },
             )
 
             # Set storage URLs
@@ -551,7 +557,7 @@ class BrandAssetService:
 
         # Save file
         file_path = storage_dir / f"{asset.asset_id}{asset.file_extension}"
-        async with aiofiles.open(file_path, 'wb') as f:
+        async with aiofiles.open(file_path, "wb") as f:
             await f.write(content)
 
         # Set storage URLs
@@ -576,16 +582,16 @@ class BrandAssetService:
             if self.storage_provider == StorageProvider.S3:
                 # Download from S3
                 response = self.s3_client.get_object(Bucket=self.s3_bucket, Key=asset.storage_path)
-                content = response['Body'].read()
+                content = response["Body"].read()
             elif self.storage_provider == StorageProvider.LOCAL:
                 # Read from local file
-                async with aiofiles.open(asset.storage_path, 'rb') as f:
+                async with aiofiles.open(asset.storage_path, "rb") as f:
                     content = await f.read()
             else:
                 return None
 
             # Save to temp file
-            async with aiofiles.open(temp_file, 'wb') as f:
+            async with aiofiles.open(temp_file, "wb") as f:
                 await f.write(content)
 
             return temp_file
@@ -619,8 +625,8 @@ class BrandAssetService:
                     img_copy.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
                     # Optimize
-                    if img_copy.mode in ('RGBA', 'P'):
-                        img_copy = img_copy.convert('RGB')
+                    if img_copy.mode in ("RGBA", "P"):
+                        img_copy = img_copy.convert("RGB")
 
                     # Save variant
                     variant_file = self.temp_dir / f"{asset.asset_id}_{variant_name}{asset.file_extension}"
@@ -631,7 +637,7 @@ class BrandAssetService:
                         variant_type=variant_name,
                         width=img_copy.width,
                         height=img_copy.height,
-                        file_size=variant_file.stat().st_size
+                        file_size=variant_file.stat().st_size,
                     )
 
                     variants[variant_name] = variant
@@ -653,10 +659,7 @@ class BrandAssetService:
                 img.save(webp_file, "WebP", optimize=True, quality=85)
 
                 variants["webp"] = AssetVariant(
-                    variant_type="webp",
-                    width=img.width,
-                    height=img.height,
-                    file_size=webp_file.stat().st_size
+                    variant_type="webp", width=img.width, height=img.height, file_size=webp_file.stat().st_size
                 )
 
                 # Generate AVIF (if supported)
@@ -665,10 +668,7 @@ class BrandAssetService:
                     img.save(avif_file, "AVIF", quality=85)
 
                     variants["avif"] = AssetVariant(
-                        variant_type="avif",
-                        width=img.width,
-                        height=img.height,
-                        file_size=avif_file.stat().st_size
+                        variant_type="avif", width=img.width, height=img.height, file_size=avif_file.stat().st_size
                     )
                 except Exception:
                     # AVIF support might not be available
@@ -685,7 +685,7 @@ class BrandAssetService:
         variant_file = self.temp_dir / f"{asset.asset_id}_{variant_name}.{variant.variant_type}"
 
         # Read variant file
-        async with aiofiles.open(variant_file, 'rb') as f:
+        async with aiofiles.open(variant_file, "rb") as f:
             content = await f.read()
 
         # Upload based on storage provider
@@ -696,7 +696,7 @@ class BrandAssetService:
                 Key=storage_path,
                 Body=content,
                 ContentType=f"image/{variant.variant_type}",
-                CacheControl=asset.cdn_cache_control
+                CacheControl=asset.cdn_cache_control,
             )
 
             variant.storage_path = storage_path
@@ -708,7 +708,9 @@ class BrandAssetService:
         if variant_file.exists():
             variant_file.unlink()
 
-    async def _update_asset_status(self, asset_id: str, status: ProcessingStatus, error_message: Optional[str] = None) -> None:
+    async def _update_asset_status(
+        self, asset_id: str, status: ProcessingStatus, error_message: Optional[str] = None
+    ) -> None:
         """Update asset processing status."""
         async with self.db_pool.acquire() as conn:
             await conn.execute(
@@ -717,7 +719,10 @@ class BrandAssetService:
                 SET processing_status = $1, processing_error = $2, updated_at = $3
                 WHERE asset_id = $4
                 """,
-                status.value, error_message, datetime.utcnow(), asset_id
+                status.value,
+                error_message,
+                datetime.utcnow(),
+                asset_id,
             )
 
         # Clear cache
@@ -741,7 +746,7 @@ class BrandAssetService:
                 asset.image_height,
                 asset.optimized_size_bytes,
                 datetime.utcnow(),
-                asset.asset_id
+                asset.asset_id,
             )
 
         # Clear cache
@@ -776,16 +781,31 @@ class BrandAssetService:
             """
             await conn.execute(
                 query,
-                asset.asset_id, asset.agency_id, asset.client_id,
-                asset.asset_type.value, asset.asset_name, asset.file_name,
-                asset.file_extension, asset.mime_type, asset.storage_provider.value,
-                asset.storage_bucket, asset.storage_path, asset.storage_url,
-                asset.cdn_url, asset.cdn_cache_control, asset.file_size_bytes,
-                asset.image_width, asset.image_height, asset.file_hash,
-                asset.processing_status.value, asset.is_active,
-                asset.usage_context, asset.display_order,
-                json.dumps(asset.asset_metadata), asset.created_at,
-                datetime.utcnow()
+                asset.asset_id,
+                asset.agency_id,
+                asset.client_id,
+                asset.asset_type.value,
+                asset.asset_name,
+                asset.file_name,
+                asset.file_extension,
+                asset.mime_type,
+                asset.storage_provider.value,
+                asset.storage_bucket,
+                asset.storage_path,
+                asset.storage_url,
+                asset.cdn_url,
+                asset.cdn_cache_control,
+                asset.file_size_bytes,
+                asset.image_width,
+                asset.image_height,
+                asset.file_hash,
+                asset.processing_status.value,
+                asset.is_active,
+                asset.usage_context,
+                asset.display_order,
+                json.dumps(asset.asset_metadata),
+                asset.created_at,
+                datetime.utcnow(),
             )
 
     def _row_to_brand_asset(self, row) -> BrandAsset:
@@ -827,7 +847,7 @@ class BrandAssetService:
             avif_variant_url=row["avif_variant_url"],
             asset_metadata=json.loads(row["asset_metadata"]) if row["asset_metadata"] else {},
             created_at=row["created_at"],
-            updated_at=row["updated_at"]
+            updated_at=row["updated_at"],
         )
 
     async def _delete_from_storage(self, asset: BrandAsset) -> None:
@@ -858,7 +878,7 @@ class BrandAssetService:
                     AND is_active = true
                 )
                 """,
-                asset.asset_id
+                asset.asset_id,
             )
             return bool(in_use)
 
@@ -870,7 +890,8 @@ class BrandAssetService:
                 SELECT * FROM brand_assets
                 WHERE file_hash = $1 AND asset_id != $2 AND is_active = true
                 """,
-                asset.file_hash, asset.asset_id
+                asset.file_hash,
+                asset.asset_id,
             )
             return [self._row_to_brand_asset(row) for row in rows]
 
@@ -878,12 +899,12 @@ class BrandAssetService:
         """Calculate estimated storage costs."""
         # AWS S3 pricing estimates (simplified)
         s3_cost_per_gb = 0.023  # $0.023 per GB per month for Standard storage
-        total_gb = total_bytes / (1024 ** 3)
+        total_gb = total_bytes / (1024**3)
 
         return {
             "total_gb": round(total_gb, 2),
             "monthly_cost_usd": round(total_gb * s3_cost_per_gb, 2),
-            "annual_cost_usd": round(total_gb * s3_cost_per_gb * 12, 2)
+            "annual_cost_usd": round(total_gb * s3_cost_per_gb * 12, 2),
         }
 
 

@@ -4,8 +4,9 @@ Provides functions for calculating RSI, MACD, Moving Averages,
 and other technical indicators with proper error handling.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from utils.config import INDICATORS
 
 
@@ -44,9 +45,7 @@ def calculate_rsi(prices: pd.Series, period: int = None) -> pd.Series:
     return rsi
 
 
-def calculate_macd(
-    prices: pd.Series, fast: int = None, slow: int = None, signal: int = None
-) -> tuple:
+def calculate_macd(prices: pd.Series, fast: int = None, slow: int = None, signal: int = None) -> tuple:
     """
     Calculate MACD (Moving Average Convergence Divergence).
 
@@ -74,9 +73,7 @@ def calculate_macd(
     return macd, signal_line
 
 
-def calculate_moving_averages(
-    prices: pd.Series, short_period: int = None, long_period: int = None
-) -> tuple:
+def calculate_moving_averages(prices: pd.Series, short_period: int = None, long_period: int = None) -> tuple:
     """
     Calculate short and long-term moving averages.
 

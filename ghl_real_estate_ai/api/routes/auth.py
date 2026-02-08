@@ -3,13 +3,13 @@ Authentication Routes
 Provides login and token management endpoints
 """
 
+import logging
 import os
 from datetime import timedelta
-import logging
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from dotenv import load_dotenv
 
 from ghl_real_estate_ai.api.middleware import (
     JWTAuth,
@@ -42,11 +42,15 @@ DEMO_USER_HASH = os.getenv("AUTH_DEMO_USER_HASH")
 ADMIN_USER_HASH = os.getenv("AUTH_ADMIN_USER_HASH")
 
 if not DEMO_USER_HASH or not ADMIN_USER_HASH:
-    logger.warning("⚠️ using default hardcoded credentials for demo/admin. Set AUTH_DEMO_USER_HASH and AUTH_ADMIN_USER_HASH in .env for production.")
+    logger.warning(
+        "⚠️ using default hardcoded credentials for demo/admin. Set AUTH_DEMO_USER_HASH and AUTH_ADMIN_USER_HASH in .env for production."
+    )
 
 USERS_DB = {
-    "demo_user": DEMO_USER_HASH or "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVLXhKvNe",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
-    "admin": ADMIN_USER_HASH or "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
+    "demo_user": DEMO_USER_HASH
+    or "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVLXhKvNe",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
+    "admin": ADMIN_USER_HASH
+    or "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
 }
 
 
@@ -67,22 +71,16 @@ async def login(credentials: LoginRequest):
         )
 
     # Verify password
-    if not JWTAuth.verify_password(
-        credentials.password, USERS_DB[credentials.username]
-    ):
+    if not JWTAuth.verify_password(credentials.password, USERS_DB[credentials.username]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
 
     # Create access token
-    access_token = JWTAuth.create_access_token(
-        data={"sub": credentials.username}, expires_delta=timedelta(minutes=30)
-    )
+    access_token = JWTAuth.create_access_token(data={"sub": credentials.username}, expires_delta=timedelta(minutes=30))
 
-    return TokenResponse(
-        access_token=access_token, token_type="bearer", expires_in=1800
-    )
+    return TokenResponse(access_token=access_token, token_type="bearer", expires_in=1800)
 
 
 @router.post("/token", response_model=TokenResponse)

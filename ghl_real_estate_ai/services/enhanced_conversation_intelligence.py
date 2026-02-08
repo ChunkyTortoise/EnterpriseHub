@@ -3,38 +3,43 @@ Enhanced Conversation Intelligence Engine - Phase 1 Advanced Features
 Adds predictive analytics, coaching effectiveness tracking, conversation pattern learning,
 and A/B testing framework for response suggestions.
 """
+
 import asyncio
 import json
+import statistics
 import time
 import uuid
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
 from collections import defaultdict, deque
-import statistics
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import streamlit as st
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 # Import existing services and base classes
 from ghl_real_estate_ai.services.claude_conversation_intelligence import (
-    ConversationIntelligenceEngine,
+    ClosingSignals,
     ConversationAnalysis,
-    IntentSignals,
+    ConversationIntelligenceEngine,
     ConversationThread,
     EmotionalState,
+    IntentSignals,
     TrustMetrics,
-    ClosingSignals
 )
 from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 # ========== PHASE 1 ENHANCED DATA STRUCTURES ==========
 
+
 @dataclass
 class ConversationOutcomePrediction:
     """Enhanced conversation outcome prediction with accuracy tracking."""
+
     prediction_id: str
     primary_outcome: str  # appointment_scheduled, follow_up_needed, objection_surfaced, etc.
     probability: float  # 0.0-1.0
@@ -49,9 +54,11 @@ class ConversationOutcomePrediction:
     accuracy_score: Optional[float] = None  # Calculated post-outcome
     prediction_model_version: str = "1.0"
 
+
 @dataclass
 class ResponseSuggestionTest:
     """A/B testing framework for response suggestions."""
+
     test_id: str
     suggestion_a: str
     suggestion_b: str
@@ -66,9 +73,11 @@ class ResponseSuggestionTest:
     effectiveness_score: Optional[float] = None  # 0.0-1.0
     test_conclusion: Optional[str] = None  # winner, no_difference, insufficient_data
 
+
 @dataclass
 class CoachingEffectiveness:
     """Coaching effectiveness measurement and learning system."""
+
     coaching_id: str
     thread_id: str
     coaching_type: str  # response_suggestion, objection_handling, closing_technique
@@ -81,9 +90,11 @@ class CoachingEffectiveness:
     recorded_at: datetime
     follow_up_period: timedelta = timedelta(hours=2)
 
+
 @dataclass
 class ConversationPattern:
     """Learned conversation patterns for success prediction."""
+
     pattern_id: str
     pattern_type: str  # successful_closing, effective_objection_handling, trust_building
     pattern_characteristics: Dict  # message_patterns, timing, emotional_progression
@@ -97,9 +108,11 @@ class ConversationPattern:
     last_updated: datetime
     pattern_strength: float = 0.5  # how strong/reliable this pattern is
 
+
 @dataclass
 class ConversationHealthTrend:
     """Advanced conversation health trend prediction."""
+
     thread_id: str
     current_health_score: float
     predicted_24h_health: float
@@ -111,9 +124,11 @@ class ConversationHealthTrend:
     predicted_outcomes: List[Dict[str, Union[str, float]]]
     trend_calculated_at: datetime
 
+
 @dataclass
 class ConversationMomentum:
     """Conversation momentum and trajectory analysis."""
+
     thread_id: str
     current_momentum: float  # 0.0-1.0, forward progress toward purchase
     velocity: float  # rate of momentum change
@@ -125,7 +140,9 @@ class ConversationMomentum:
     momentum_prediction: Dict[str, float]  # predicted momentum over time
     calculated_at: datetime
 
+
 # ========== ENHANCED CONVERSATION INTELLIGENCE ENGINE ==========
+
 
 class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
     """
@@ -164,9 +181,9 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
 
     # ========== ENHANCED CONVERSATION OUTCOME PREDICTION ==========
 
-    async def predict_conversation_outcomes_enhanced(self, thread_id: str,
-                                                   current_analysis: Dict,
-                                                   lead_context: Dict = None) -> ConversationOutcomePrediction:
+    async def predict_conversation_outcomes_enhanced(
+        self, thread_id: str, current_analysis: Dict, lead_context: Dict = None
+    ) -> ConversationOutcomePrediction:
         """
         Enhanced conversation outcome prediction with accuracy tracking.
 
@@ -188,15 +205,12 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 return self._get_fallback_outcome_prediction()
 
             # Build enhanced prediction prompt with historical patterns
-            prediction_prompt = self._build_enhanced_prediction_prompt(
-                thread, current_analysis, lead_context
-            )
+            prediction_prompt = self._build_enhanced_prediction_prompt(thread, current_analysis, lead_context)
 
             response = await self.claude_client.chat(
-                messages=[{"role": "user", "content": prediction_prompt}],
-                temperature=0.4
+                messages=[{"role": "user", "content": prediction_prompt}], temperature=0.4
             )
-            
+
             # Record usage
             await self.analytics.track_llm_usage(
                 location_id=thread.location_id,
@@ -204,7 +218,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 provider=response.provider.value,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             prediction_data = self._parse_enhanced_outcome_prediction(response.content)
@@ -221,7 +235,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 risk_factors=prediction_data.get("risk_factors", []),
                 optimization_recommendations=prediction_data.get("optimization_recommendations", []),
                 predicted_at=datetime.now(),
-                prediction_model_version="1.0"
+                prediction_model_version="1.0",
             )
 
             # Store prediction for accuracy tracking
@@ -232,7 +246,9 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
             # Learn from historical patterns if available
             self._apply_learned_patterns_to_prediction(prediction, thread, current_analysis)
 
-            logger.info(f"Enhanced outcome prediction completed for {thread_id}: {prediction.primary_outcome} ({prediction.probability:.2f})")
+            logger.info(
+                f"Enhanced outcome prediction completed for {thread_id}: {prediction.primary_outcome} ({prediction.probability:.2f})"
+            )
             return prediction
 
         except Exception as e:
@@ -270,13 +286,15 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                         accuracy_score = self._calculate_prediction_accuracy(prediction, actual_outcome)
                         prediction.accuracy_score = accuracy_score
 
-                        accuracy_results.append({
-                            "prediction_id": prediction.prediction_id,
-                            "predicted_outcome": prediction.primary_outcome,
-                            "actual_outcome": actual_outcome,
-                            "accuracy_score": accuracy_score,
-                            "confidence_score": prediction.confidence_score
-                        })
+                        accuracy_results.append(
+                            {
+                                "prediction_id": prediction.prediction_id,
+                                "predicted_outcome": prediction.primary_outcome,
+                                "actual_outcome": actual_outcome,
+                                "accuracy_score": accuracy_score,
+                                "confidence_score": prediction.confidence_score,
+                            }
+                        )
 
             # Update learning system with accuracy results
             if accuracy_results:
@@ -286,7 +304,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 "status": "tracking_completed",
                 "predictions_tracked": len(accuracy_results),
                 "accuracy_results": accuracy_results,
-                "learning_insights": await self._generate_learning_insights(accuracy_results)
+                "learning_insights": await self._generate_learning_insights(accuracy_results),
             }
 
         except Exception as e:
@@ -295,9 +313,9 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
 
     # ========== ENHANCED RESPONSE SUGGESTION SYSTEM ==========
 
-    async def generate_response_suggestions_with_ab_testing(self, thread_id: str,
-                                                          current_context: Dict,
-                                                          enable_ab_test: bool = True) -> Dict:
+    async def generate_response_suggestions_with_ab_testing(
+        self, thread_id: str, current_context: Dict, enable_ab_test: bool = True
+    ) -> Dict:
         """
         Generate response suggestions with optional A/B testing framework.
 
@@ -319,15 +337,12 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 return self._get_fallback_suggestions_with_metadata()
 
             # Generate enhanced suggestions with multiple strategies
-            suggestions_prompt = self._build_enhanced_suggestions_prompt(
-                thread, current_context
-            )
+            suggestions_prompt = self._build_enhanced_suggestions_prompt(thread, current_context)
 
             response = await self.claude_client.chat(
-                messages=[{"role": "user", "content": suggestions_prompt}],
-                temperature=0.7
+                messages=[{"role": "user", "content": suggestions_prompt}], temperature=0.7
             )
-            
+
             # Record usage
             await self.analytics.track_llm_usage(
                 location_id=thread.location_id,
@@ -335,7 +350,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 provider=response.provider.value,
                 input_tokens=response.input_tokens or 0,
                 output_tokens=response.output_tokens or 0,
-                cached=False
+                cached=False,
             )
 
             suggestions_data = self._parse_enhanced_response_suggestions(response.content)
@@ -343,9 +358,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
             # Setup A/B testing if enabled and appropriate
             ab_test_data = None
             if enable_ab_test and len(suggestions_data.get("suggestions", [])) >= 2:
-                ab_test_data = self._setup_ab_test(
-                    thread_id, suggestions_data, current_context
-                )
+                ab_test_data = self._setup_ab_test(thread_id, suggestions_data, current_context)
 
             # Apply learned patterns to improve suggestions
             optimized_suggestions = await self._optimize_suggestions_with_patterns(
@@ -358,7 +371,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 "coaching_recommendations": suggestions_data.get("coaching_recommendations", []),
                 "effectiveness_prediction": suggestions_data.get("effectiveness_prediction", {}),
                 "ab_test": ab_test_data,
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
             logger.info(f"Enhanced response suggestions generated for {thread_id}")
@@ -368,9 +381,9 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
             logger.error(f"Error generating enhanced response suggestions: {e}")
             return self._get_fallback_suggestions_with_metadata()
 
-    async def track_coaching_effectiveness(self, thread_id: str, coaching_type: str,
-                                         recommendation: str, followed: bool,
-                                         follow_up_metrics: Dict = None) -> CoachingEffectiveness:
+    async def track_coaching_effectiveness(
+        self, thread_id: str, coaching_type: str, recommendation: str, followed: bool, follow_up_metrics: Dict = None
+    ) -> CoachingEffectiveness:
         """
         Track effectiveness of coaching recommendations and learn from outcomes.
 
@@ -396,7 +409,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 outcome_improvement=0.0,  # Will be calculated
                 effectiveness_score=0.0,  # Will be calculated
                 learning_insights=[],
-                recorded_at=datetime.now()
+                recorded_at=datetime.now(),
             )
 
             # Calculate effectiveness metrics
@@ -426,7 +439,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 outcome_improvement=0.0,
                 effectiveness_score=0.0,
                 learning_insights=["Error in effectiveness calculation"],
-                recorded_at=datetime.now()
+                recorded_at=datetime.now(),
             )
 
     # ========== CONVERSATION PATTERN LEARNING SYSTEM ==========
@@ -454,16 +467,14 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 await self._update_pattern_database(thread_id, pattern_analysis)
 
             # Generate pattern-based recommendations
-            recommendations = await self._generate_pattern_based_recommendations(
-                thread, pattern_analysis
-            )
+            recommendations = await self._generate_pattern_based_recommendations(thread, pattern_analysis)
 
             return {
                 "status": "analysis_completed",
                 "detected_patterns": pattern_analysis,
                 "pattern_recommendations": recommendations,
                 "learning_confidence": self._calculate_pattern_confidence(pattern_analysis),
-                "analyzed_at": datetime.now().isoformat()
+                "analyzed_at": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -491,9 +502,11 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
             insights = {
                 "total_patterns": len(patterns),
                 "pattern_types": list(set(p.pattern_type for p in patterns.values())),
-                "high_confidence_patterns": len([p for p in patterns.values() if p.confidence_level >= self.pattern_confidence_threshold]),
+                "high_confidence_patterns": len(
+                    [p for p in patterns.values() if p.confidence_level >= self.pattern_confidence_threshold]
+                ),
                 "average_success_rate": statistics.mean([p.success_rate for p in patterns.values()]),
-                "pattern_summary": []
+                "pattern_summary": [],
             }
 
             # Generate summary for each pattern
@@ -505,7 +518,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                     "sample_size": pattern.sample_size,
                     "confidence_level": pattern.confidence_level,
                     "key_characteristics": list(pattern.pattern_characteristics.keys())[:3],
-                    "application_contexts": pattern.application_contexts
+                    "application_contexts": pattern.application_contexts,
                 }
                 insights["pattern_summary"].append(pattern_summary)
 
@@ -564,7 +577,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 acceleration_opportunities=acceleration_opportunities,
                 optimal_next_actions=optimal_actions,
                 momentum_prediction=momentum_prediction,
-                calculated_at=datetime.now()
+                calculated_at=datetime.now(),
             )
 
             # Store momentum tracking
@@ -608,9 +621,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
             )
 
             # Predict potential outcomes
-            predicted_outcomes = await self._predict_health_outcomes(
-                thread, health_trend_prediction, interventions
-            )
+            predicted_outcomes = await self._predict_health_outcomes(thread, health_trend_prediction, interventions)
 
             health_trend = ConversationHealthTrend(
                 thread_id=thread_id,
@@ -622,7 +633,7 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
                 critical_factors=critical_factors,
                 intervention_recommendations=interventions,
                 predicted_outcomes=predicted_outcomes,
-                trend_calculated_at=datetime.now()
+                trend_calculated_at=datetime.now(),
             )
 
             # Store health trend
@@ -637,8 +648,9 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
 
     # ========== ENHANCED PROMPT BUILDING METHODS ==========
 
-    def _build_enhanced_prediction_prompt(self, thread: ConversationThread,
-                                        current_analysis: Dict, lead_context: Dict = None) -> str:
+    def _build_enhanced_prediction_prompt(
+        self, thread: ConversationThread, current_analysis: Dict, lead_context: Dict = None
+    ) -> str:
         """Build enhanced prompt for conversation outcome prediction."""
 
         # Include historical patterns in prompt
@@ -648,16 +660,20 @@ class EnhancedConversationIntelligenceEngine(ConversationIntelligenceEngine):
             pattern_context = f"\\nLearned Patterns: {json.dumps(relevant_patterns, indent=2)}"
 
         # Format conversation with timeline
-        conversation_timeline = "\\n".join([
-            f"[{msg.get('timestamp', 'Unknown')}] {msg.get('role', '').upper()}: {msg.get('content', '')}"
-            for msg in thread.messages[-10:]  # Last 10 messages
-        ])
+        conversation_timeline = "\\n".join(
+            [
+                f"[{msg.get('timestamp', 'Unknown')}] {msg.get('role', '').upper()}: {msg.get('content', '')}"
+                for msg in thread.messages[-10:]  # Last 10 messages
+            ]
+        )
 
         # Include momentum and health context
         momentum_context = ""
         if thread.thread_id in self.conversation_momentum_tracker:
             momentum = self.conversation_momentum_tracker[thread.thread_id]
-            momentum_context = f"\\nCurrent Momentum: {momentum.current_momentum:.2f} (velocity: {momentum.velocity:.2f})"
+            momentum_context = (
+                f"\\nCurrent Momentum: {momentum.current_momentum:.2f} (velocity: {momentum.velocity:.2f})"
+            )
 
         return f"""
 As an advanced real estate conversation outcome prediction expert, analyze this conversation thread for detailed outcome prediction with accuracy tracking.
@@ -699,8 +715,7 @@ Provide detailed outcome prediction in JSON format:
 Focus on actionable predictions that can guide agent strategy and timing.
 """
 
-    def _build_enhanced_suggestions_prompt(self, thread: ConversationThread,
-                                         current_context: Dict) -> str:
+    def _build_enhanced_suggestions_prompt(self, thread: ConversationThread, current_context: Dict) -> str:
         """Build enhanced prompt for response suggestions with A/B testing considerations."""
 
         # Include coaching effectiveness history
@@ -715,10 +730,9 @@ Focus on actionable predictions that can guide agent strategy and timing.
         if relevant_patterns:
             pattern_context = f"\\nRelevant Success Patterns: {json.dumps(relevant_patterns, indent=2)}"
 
-        conversation_text = "\\n".join([
-            f"{msg.get('role', '').upper()}: {msg.get('content', '')}"
-            for msg in thread.messages[-8:]
-        ])
+        conversation_text = "\\n".join(
+            [f"{msg.get('role', '').upper()}: {msg.get('content', '')}" for msg in thread.messages[-8:]]
+        )
 
         return f"""
 As an advanced real estate conversation strategist, generate multiple response strategies for A/B testing and coaching effectiveness tracking.
@@ -774,7 +788,8 @@ Focus on responses that advance conversation momentum while building trust and a
         """Parse enhanced outcome prediction from Claude response."""
         try:
             import re
-            json_match = re.search(r'\\{.*\\}', response_content, re.DOTALL)
+
+            json_match = re.search(r"\\{.*\\}", response_content, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
                 return data
@@ -788,7 +803,8 @@ Focus on responses that advance conversation momentum while building trust and a
         """Parse enhanced response suggestions with A/B testing data."""
         try:
             import re
-            json_match = re.search(r'\\{.*\\}', response_content, re.DOTALL)
+
+            json_match = re.search(r"\\{.*\\}", response_content, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
                 return data
@@ -851,7 +867,7 @@ Focus on responses that advance conversation momentum while building trust and a
                         confidence_level=0.1,  # Low confidence initially
                         application_contexts=[],
                         learned_from=[thread_id],
-                        last_updated=datetime.now()
+                        last_updated=datetime.now(),
                     )
                     self.learned_patterns[pattern_key] = new_pattern
 
@@ -914,7 +930,7 @@ Focus on responses that advance conversation momentum while building trust and a
             "engagement_quality": 0.15,
             "closing_readiness": 0.20,
             "response_consistency": 0.10,
-            "conversation_health": 0.10
+            "conversation_health": 0.10,
         }
 
         total_momentum = 0.0
@@ -961,7 +977,7 @@ Focus on responses that advance conversation momentum while building trust and a
                 test_start=datetime.now(),
                 thread_id=thread_id,
                 lead_context=current_context.get("lead_context", {}),
-                conversation_state=current_context
+                conversation_state=current_context,
             )
 
             # Store test
@@ -969,24 +985,17 @@ Focus on responses that advance conversation momentum while building trust and a
 
             return {
                 "test_id": test.test_id,
-                "option_a": {
-                    "text": test.suggestion_a,
-                    "strategy": test.strategy_a
-                },
-                "option_b": {
-                    "text": test.suggestion_b,
-                    "strategy": test.strategy_b
-                },
+                "option_a": {"text": test.suggestion_a, "strategy": test.strategy_a},
+                "option_b": {"text": test.suggestion_b, "strategy": test.strategy_b},
                 "test_hypothesis": f"Testing {test.strategy_a} vs {test.strategy_b} effectiveness",
-                "tracking_metrics": ["engagement_change", "intent_progression", "response_time"]
+                "tracking_metrics": ["engagement_change", "intent_progression", "response_time"],
             }
 
         except Exception as e:
             logger.error(f"Error setting up A/B test: {e}")
             return None
 
-    async def complete_ab_test(self, test_id: str, selected_option: str,
-                             outcome_metrics: Dict) -> Dict:
+    async def complete_ab_test(self, test_id: str, selected_option: str, outcome_metrics: Dict) -> Dict:
         """Complete an A/B test and record results."""
         try:
             if test_id not in self.response_suggestion_tests:
@@ -1010,7 +1019,7 @@ Focus on responses that advance conversation momentum while building trust and a
                 "test_id": test_id,
                 "winner": test.test_conclusion,
                 "effectiveness_score": test.effectiveness_score,
-                "learning_insights": self._generate_ab_test_insights(test)
+                "learning_insights": self._generate_ab_test_insights(test),
             }
 
         except Exception as e:
@@ -1079,7 +1088,7 @@ Focus on responses that advance conversation momentum while building trust and a
             risk_factors=["Limited engagement data"],
             optimization_recommendations=["Gather more qualification information"],
             predicted_at=datetime.now(),
-            prediction_model_version="fallback"
+            prediction_model_version="fallback",
         )
 
     def _get_fallback_momentum(self) -> ConversationMomentum:
@@ -1094,7 +1103,7 @@ Focus on responses that advance conversation momentum while building trust and a
             acceleration_opportunities=["Build more engagement"],
             optimal_next_actions=["Continue conversation"],
             momentum_prediction={"1h": 0.5, "24h": 0.5},
-            calculated_at=datetime.now()
+            calculated_at=datetime.now(),
         )
 
     def _get_fallback_health_trend(self) -> ConversationHealthTrend:
@@ -1109,7 +1118,7 @@ Focus on responses that advance conversation momentum while building trust and a
             critical_factors=["Need more conversation data"],
             intervention_recommendations=["Continue building rapport"],
             predicted_outcomes=[{"outcome": "stable", "probability": 0.7}],
-            trend_calculated_at=datetime.now()
+            trend_calculated_at=datetime.now(),
         )
 
     def _get_fallback_suggestions_with_metadata(self) -> Dict:
@@ -1121,14 +1130,14 @@ Focus on responses that advance conversation momentum while building trust and a
                     "strategy_type": "information_gathering",
                     "expected_outcomes": ["Better qualification"],
                     "effectiveness_prediction": 0.6,
-                    "risk_level": "low"
+                    "risk_level": "low",
                 }
             ],
             "strategy_insights": ["Focus on qualification"],
             "coaching_recommendations": ["Ask open-ended questions"],
             "effectiveness_prediction": {"engagement_impact": 0.3},
             "ab_test": None,
-            "generated_at": datetime.now().isoformat()
+            "generated_at": datetime.now().isoformat(),
         }
 
     # ========== HELPER METHODS ==========
@@ -1138,8 +1147,7 @@ Focus on responses that advance conversation momentum while building trust and a
         # This would normally implement pattern matching logic
         return {}
 
-    def _calculate_prediction_accuracy(self, prediction: ConversationOutcomePrediction,
-                                     actual_outcome: str) -> float:
+    def _calculate_prediction_accuracy(self, prediction: ConversationOutcomePrediction, actual_outcome: str) -> float:
         """Calculate accuracy score for a prediction."""
         if prediction.primary_outcome == actual_outcome:
             return prediction.probability  # Full accuracy if correct
@@ -1194,9 +1202,9 @@ Focus on responses that advance conversation momentum while building trust and a
         """Generate learning insights from accuracy results."""
         return ["Learning insights placeholder"]
 
-    async def _optimize_suggestions_with_patterns(self, suggestions_data: Dict,
-                                                thread: ConversationThread,
-                                                context: Dict) -> List[Dict]:
+    async def _optimize_suggestions_with_patterns(
+        self, suggestions_data: Dict, thread: ConversationThread, context: Dict
+    ) -> List[Dict]:
         """Optimize suggestions using learned patterns."""
         return suggestions_data.get("suggestions", [])
 
@@ -1204,8 +1212,9 @@ Focus on responses that advance conversation momentum while building trust and a
         """Update coaching patterns from effectiveness data."""
         pass  # Placeholder
 
-    async def _generate_pattern_based_recommendations(self, thread: ConversationThread,
-                                                    pattern_analysis: Dict) -> List[str]:
+    async def _generate_pattern_based_recommendations(
+        self, thread: ConversationThread, pattern_analysis: Dict
+    ) -> List[str]:
         """Generate recommendations based on patterns."""
         return ["Pattern-based recommendation placeholder"]
 
@@ -1217,36 +1226,33 @@ Focus on responses that advance conversation momentum while building trust and a
         """Identify opportunities to accelerate momentum."""
         return ["Acceleration opportunity"]
 
-    async def _generate_momentum_optimized_actions(self, thread: ConversationThread,
-                                                 momentum_factors: Dict,
-                                                 stalling_risks: List[str],
-                                                 acceleration_opportunities: List[str]) -> List[str]:
+    async def _generate_momentum_optimized_actions(
+        self,
+        thread: ConversationThread,
+        momentum_factors: Dict,
+        stalling_risks: List[str],
+        acceleration_opportunities: List[str],
+    ) -> List[str]:
         """Generate momentum-optimized next actions."""
         return ["Momentum-optimized action"]
 
-    async def _predict_health_trends(self, thread: ConversationThread,
-                                   current_health: float) -> Dict:
+    async def _predict_health_trends(self, thread: ConversationThread, current_health: float) -> Dict:
         """Predict health trends using ML models."""
-        return {
-            "24h": current_health,
-            "week": current_health,
-            "direction": "stable",
-            "confidence": 0.6
-        }
+        return {"24h": current_health, "week": current_health, "direction": "stable", "confidence": 0.6}
 
     async def _identify_health_critical_factors(self, thread: ConversationThread) -> List[str]:
         """Identify factors critical to conversation health."""
         return ["Response engagement", "Trust building"]
 
-    async def _generate_health_interventions(self, thread: ConversationThread,
-                                           current_health: float,
-                                           trend_prediction: Dict) -> List[str]:
+    async def _generate_health_interventions(
+        self, thread: ConversationThread, current_health: float, trend_prediction: Dict
+    ) -> List[str]:
         """Generate health intervention recommendations."""
         return ["Increase engagement", "Build more rapport"]
 
-    async def _predict_health_outcomes(self, thread: ConversationThread,
-                                     trend_prediction: Dict,
-                                     interventions: List[str]) -> List[Dict]:
+    async def _predict_health_outcomes(
+        self, thread: ConversationThread, trend_prediction: Dict, interventions: List[str]
+    ) -> List[Dict]:
         """Predict health outcomes with interventions."""
         return [{"outcome": "improved_health", "probability": 0.7}]
 
@@ -1255,8 +1261,9 @@ Focus on responses that advance conversation momentum while building trust and a
         pass  # Placeholder
 
     # Additional helper methods...
-    def _predict_future_momentum(self, current_momentum: float, velocity: float,
-                               acceleration: float, factors: Dict) -> Dict:
+    def _predict_future_momentum(
+        self, current_momentum: float, velocity: float, acceleration: float, factors: Dict
+    ) -> Dict:
         """Predict future momentum values."""
         return {"1h": current_momentum, "24h": current_momentum}
 
@@ -1264,8 +1271,7 @@ Focus on responses that advance conversation momentum while building trust and a
         """Calculate confidence in detected patterns."""
         return 0.6  # Placeholder
 
-    def _calculate_ab_test_effectiveness(self, test: ResponseSuggestionTest,
-                                       outcome_metrics: Dict) -> float:
+    def _calculate_ab_test_effectiveness(self, test: ResponseSuggestionTest, outcome_metrics: Dict) -> float:
         """Calculate A/B test effectiveness score."""
         return 0.7  # Placeholder
 
@@ -1283,11 +1289,7 @@ Focus on responses that advance conversation momentum while building trust and a
 
     def _extract_fallback_prediction(self) -> Dict:
         """Extract fallback prediction data."""
-        return {
-            "primary_outcome": "information_gathering",
-            "probability": 0.6,
-            "confidence_score": 0.5
-        }
+        return {"primary_outcome": "information_gathering", "probability": 0.6, "confidence_score": 0.5}
 
     def _extract_fallback_suggestions_data(self) -> Dict:
         """Extract fallback suggestions data."""
@@ -1296,15 +1298,16 @@ Focus on responses that advance conversation momentum while building trust and a
                 {
                     "response_text": "Thank you for that information. What else would you like to know?",
                     "strategy_type": "information_gathering",
-                    "effectiveness_prediction": 0.6
+                    "effectiveness_prediction": 0.6,
                 }
             ]
         }
 
     # ========== ENHANCED UI DASHBOARD ==========
 
-    def render_enhanced_intelligence_dashboard(self, thread_id: str, messages: List[Dict],
-                                             lead_context: Dict = None) -> None:
+    def render_enhanced_intelligence_dashboard(
+        self, thread_id: str, messages: List[Dict], lead_context: Dict = None
+    ) -> None:
         """
         Render comprehensive enhanced conversation intelligence dashboard with Phase 1 features.
         """
@@ -1325,14 +1328,16 @@ Focus on responses that advance conversation momentum while building trust and a
         st.markdown("## 🧠 Enhanced Conversation Intelligence Dashboard - Phase 1")
 
         # Main analysis tabs with Phase 1 enhancements
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-            "🔮 Predictive Analytics",
-            "📊 Pattern Learning",
-            "🚀 Momentum Tracking",
-            "🧭 Coaching Effectiveness",
-            "🔬 A/B Testing",
-            "📈 Advanced Health"
-        ])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+            [
+                "🔮 Predictive Analytics",
+                "📊 Pattern Learning",
+                "🚀 Momentum Tracking",
+                "🧭 Coaching Effectiveness",
+                "🔬 A/B Testing",
+                "📈 Advanced Health",
+            ]
+        )
 
         with tab1:
             st.markdown("### 🔮 Advanced Outcome Prediction")
@@ -1345,20 +1350,22 @@ Focus on responses that advance conversation momentum while building trust and a
 
                 # Get enhanced prediction
                 prediction = loop.run_until_complete(
-                    self.predict_conversation_outcomes_enhanced(
-                        thread_id, current_analysis, lead_context
-                    )
+                    self.predict_conversation_outcomes_enhanced(thread_id, current_analysis, lead_context)
                 )
 
             # Prediction metrics
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                outcome_emoji = {"appointment_scheduled": "📅", "closing_imminent": "🔥",
-                               "follow_up_needed": "📞", "objection_surfaced": "⚠️"}.get(
-                    prediction.primary_outcome, "🔍"
+                outcome_emoji = {
+                    "appointment_scheduled": "📅",
+                    "closing_imminent": "🔥",
+                    "follow_up_needed": "📞",
+                    "objection_surfaced": "⚠️",
+                }.get(prediction.primary_outcome, "🔍")
+                st.metric(
+                    "Predicted Outcome", f"{outcome_emoji} {prediction.primary_outcome.replace('_', ' ').title()}"
                 )
-                st.metric("Predicted Outcome", f"{outcome_emoji} {prediction.primary_outcome.replace('_', ' ').title()}")
 
             with col2:
                 st.metric("Probability", f"{prediction.probability:.0%}")
@@ -1400,9 +1407,7 @@ Focus on responses that advance conversation momentum while building trust and a
             st.markdown("### 📊 Conversation Pattern Learning")
 
             with st.spinner("🧠 Analyzing conversation patterns..."):
-                pattern_analysis = loop.run_until_complete(
-                    self.analyze_conversation_patterns(thread_id)
-                )
+                pattern_analysis = loop.run_until_complete(self.analyze_conversation_patterns(thread_id))
 
             if pattern_analysis.get("status") == "analysis_completed":
                 # Pattern confidence
@@ -1444,15 +1449,19 @@ Focus on responses that advance conversation momentum while building trust and a
             st.markdown("### 🚀 Advanced Momentum Tracking")
 
             with st.spinner("🧠 Analyzing conversation momentum..."):
-                momentum = loop.run_until_complete(
-                    self.analyze_conversation_momentum(thread_id)
-                )
+                momentum = loop.run_until_complete(self.analyze_conversation_momentum(thread_id))
 
             # Momentum metrics
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                momentum_color = "green" if momentum.current_momentum >= 0.7 else "orange" if momentum.current_momentum >= 0.4 else "red"
+                momentum_color = (
+                    "green"
+                    if momentum.current_momentum >= 0.7
+                    else "orange"
+                    if momentum.current_momentum >= 0.4
+                    else "red"
+                )
                 st.metric("Current Momentum", f"{momentum.current_momentum:.0%}")
 
             with col2:
@@ -1524,11 +1533,17 @@ Focus on responses that advance conversation momentum while building trust and a
 
                 recent_coaching = coaching_history[-3:]
                 for coaching in recent_coaching:
-                    effectiveness_color = "green" if coaching.effectiveness_score >= 0.7 else "orange" if coaching.effectiveness_score >= 0.4 else "red"
+                    effectiveness_color = (
+                        "green"
+                        if coaching.effectiveness_score >= 0.7
+                        else "orange"
+                        if coaching.effectiveness_score >= 0.4
+                        else "red"
+                    )
                     st.metric(
                         f"{coaching.coaching_type.replace('_', ' ').title()}",
                         f"{coaching.effectiveness_score:.0%}",
-                        delta="Followed" if coaching.recommendation_followed else "Not Followed"
+                        delta="Followed" if coaching.recommendation_followed else "Not Followed",
                     )
 
         with tab5:
@@ -1544,12 +1559,12 @@ Focus on responses that advance conversation momentum while building trust and a
                 with col1:
                     st.markdown("**Option A**")
                     st.info(f"**Strategy:** {ab_test['option_a']['strategy']}")
-                    st.write(ab_test['option_a']['text'])
+                    st.write(ab_test["option_a"]["text"])
 
                 with col2:
                     st.markdown("**Option B**")
                     st.info(f"**Strategy:** {ab_test['option_b']['strategy']}")
-                    st.write(ab_test['option_b']['text'])
+                    st.write(ab_test["option_b"]["text"])
 
                 st.markdown(f"**Test Hypothesis:** {ab_test.get('test_hypothesis', 'Testing effectiveness')}")
 
@@ -1568,7 +1583,7 @@ Focus on responses that advance conversation momentum while building trust and a
 
                 with col3:
                     if st.button("Complete Test", key="ab_test_complete"):
-                        if hasattr(st.session_state, 'ab_test_selection'):
+                        if hasattr(st.session_state, "ab_test_selection"):
                             st.success(f"A/B test completed with Option {st.session_state.ab_test_selection}")
                         else:
                             st.warning("Please select an option first")
@@ -1584,16 +1599,14 @@ Focus on responses that advance conversation momentum while building trust and a
                         st.metric(
                             f"Test: {test.strategy_a} vs {test.strategy_b}",
                             f"{conclusion_emoji} {test.test_conclusion.replace('_', ' ').title()}",
-                            delta=f"Score: {test.effectiveness_score:.1f}" if test.effectiveness_score else ""
+                            delta=f"Score: {test.effectiveness_score:.1f}" if test.effectiveness_score else "",
                         )
 
         with tab6:
             st.markdown("### 📈 Advanced Health Trends")
 
             with st.spinner("🧠 Predicting health trends..."):
-                health_trend = loop.run_until_complete(
-                    self.predict_conversation_health_trends(thread_id)
-                )
+                health_trend = loop.run_until_complete(self.predict_conversation_health_trends(thread_id))
 
             # Health trend metrics
             col1, col2, col3, col4 = st.columns(4)
@@ -1602,7 +1615,13 @@ Focus on responses that advance conversation momentum while building trust and a
                 st.metric("Current Health", f"{health_trend.current_health_score:.0%}")
 
             with col2:
-                trend_emoji = "📈" if health_trend.trend_direction == "improving" else "📉" if health_trend.trend_direction == "declining" else "➡️"
+                trend_emoji = (
+                    "📈"
+                    if health_trend.trend_direction == "improving"
+                    else "📉"
+                    if health_trend.trend_direction == "declining"
+                    else "➡️"
+                )
                 st.metric("Trend Direction", f"{trend_emoji} {health_trend.trend_direction.title()}")
 
             with col3:
@@ -1639,18 +1658,18 @@ Focus on responses that advance conversation momentum while building trust and a
         with col2:
             if st.button("📊 Export Analytics", help="Export enhanced analytics data"):
                 analytics_data = {
-                    "prediction": asdict(prediction) if 'prediction' in locals() else {},
-                    "momentum": asdict(momentum) if 'momentum' in locals() else {},
-                    "health_trend": asdict(health_trend) if 'health_trend' in locals() else {},
+                    "prediction": asdict(prediction) if "prediction" in locals() else {},
+                    "momentum": asdict(momentum) if "momentum" in locals() else {},
+                    "health_trend": asdict(health_trend) if "health_trend" in locals() else {},
                     "coaching_suggestions": coaching_suggestions,
                     "pattern_analysis": pattern_analysis.get("detected_patterns", {}),
-                    "exported_at": datetime.now().isoformat()
+                    "exported_at": datetime.now().isoformat(),
                 }
                 st.download_button(
                     "📥 Download Analytics JSON",
                     data=json.dumps(analytics_data, indent=2, default=str),
                     file_name=f"conversation_analytics_{thread_id}_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
-                    mime="application/json"
+                    mime="application/json",
                 )
 
         with col3:
@@ -1664,6 +1683,7 @@ Focus on responses that advance conversation momentum while building trust and a
 # ========== GLOBAL INSTANCE ==========
 
 _enhanced_conversation_intelligence = None
+
 
 def get_enhanced_conversation_intelligence() -> EnhancedConversationIntelligenceEngine:
     """Get global enhanced conversation intelligence instance."""

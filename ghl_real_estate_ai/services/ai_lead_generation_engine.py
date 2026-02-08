@@ -16,25 +16,27 @@ Integrates with:
 """
 
 import asyncio
-import time
-import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, Optional, List, Union, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
 import json
 import logging
+import time
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service, TenantScopedCache
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.enhanced_lead_scoring import get_enhanced_lead_scoring, LeadSourceType
 from ghl_real_estate_ai.ml.closing_probability_model import get_ml_analytics_engine
+from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
+from ghl_real_estate_ai.services.enhanced_lead_scoring import LeadSourceType, get_enhanced_lead_scoring
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 
+
 class LeadGenerationChannel(Enum):
     """Lead generation channel types for optimization."""
+
     GOOGLE_ADS = "google_ads"
     FACEBOOK_ADS = "facebook_ads"
     SEO_ORGANIC = "seo_organic"
@@ -48,17 +50,21 @@ class LeadGenerationChannel(Enum):
     DIRECT_MAIL = "direct_mail"
     EVENTS = "events"
 
+
 class OptimizationPriority(Enum):
     """Priority levels for lead generation optimization."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
     MONITOR = "monitor"
 
+
 @dataclass
 class ChannelPerformanceMetrics:
     """Comprehensive channel performance analysis."""
+
     channel: LeadGenerationChannel
     location_id: str
 
@@ -100,9 +106,11 @@ class ChannelPerformanceMetrics:
         if self.last_updated is None:
             self.last_updated = datetime.now(timezone.utc)
 
+
 @dataclass
 class LeadGenerationRecommendation:
     """Intelligent lead generation recommendation."""
+
     recommendation_id: str
     location_id: str
     channel: LeadGenerationChannel
@@ -148,9 +156,11 @@ class LeadGenerationRecommendation:
         if self.created_at is None:
             self.created_at = datetime.now(timezone.utc)
 
+
 @dataclass
 class LeadGenerationInsights:
     """Comprehensive lead generation intelligence report."""
+
     location_id: str
     analysis_id: str
 
@@ -211,6 +221,7 @@ class LeadGenerationInsights:
         if self.generated_at is None:
             self.generated_at = datetime.now(timezone.utc)
 
+
 class AILeadGenerationEngine:
     """
     AI-Powered Lead Generation Intelligence Engine.
@@ -242,14 +253,14 @@ class AILeadGenerationEngine:
             LeadGenerationChannel.RETARGETING: 55,
             LeadGenerationChannel.INFLUENCER: 50,
             LeadGenerationChannel.COLD_OUTREACH: 40,
-            LeadGenerationChannel.DIRECT_MAIL: 35
+            LeadGenerationChannel.DIRECT_MAIL: 35,
         }
 
         # Performance thresholds for optimization recommendations
         self.performance_thresholds = {
-            'conversion_rate': {'excellent': 0.15, 'good': 0.10, 'fair': 0.05, 'poor': 0.02},
-            'cost_per_lead': {'excellent': 25, 'good': 50, 'fair': 100, 'poor': 200},
-            'roi': {'excellent': 5.0, 'good': 3.0, 'fair': 1.5, 'poor': 0.5}
+            "conversion_rate": {"excellent": 0.15, "good": 0.10, "fair": 0.05, "poor": 0.02},
+            "cost_per_lead": {"excellent": 25, "good": 50, "fair": 100, "poor": 200},
+            "roi": {"excellent": 5.0, "good": 3.0, "fair": 1.5, "poor": 0.5},
         }
 
     async def analyze_lead_generation_performance(
@@ -304,24 +315,22 @@ class AILeadGenerationEngine:
             insights = LeadGenerationInsights(
                 location_id=location_id,
                 analysis_id=analysis_id,
-                overall_performance_grade=overall_metrics['performance_grade'],
-                total_monthly_leads=overall_metrics['total_leads'],
-                total_monthly_conversions=overall_metrics['total_conversions'],
-                overall_roi=overall_metrics['overall_roi'],
-                channel_performance={
-                    channel.value: metrics for channel, metrics in channel_performance.items()
-                },
-                top_performing_channels=overall_metrics['top_channels'],
-                underperforming_channels=overall_metrics['underperforming_channels'],
+                overall_performance_grade=overall_metrics["performance_grade"],
+                total_monthly_leads=overall_metrics["total_leads"],
+                total_monthly_conversions=overall_metrics["total_conversions"],
+                overall_roi=overall_metrics["overall_roi"],
+                channel_performance={channel.value: metrics for channel, metrics in channel_performance.items()},
+                top_performing_channels=overall_metrics["top_channels"],
+                underperforming_channels=overall_metrics["underperforming_channels"],
                 immediate_opportunities=immediate_opportunities,
                 strategic_recommendations=strategic_recommendations,
                 competitive_gaps=competitive_gaps,
                 forecasted_leads=forecasted_leads,
-                performance_alerts=alerts['performance_alerts'],
-                budget_optimization_alerts=alerts['budget_alerts'],
-                competitor_activity_alerts=alerts['competitor_alerts'],
+                performance_alerts=alerts["performance_alerts"],
+                budget_optimization_alerts=alerts["budget_alerts"],
+                competitor_activity_alerts=alerts["competitor_alerts"],
                 confidence_level=self._calculate_analysis_confidence(channel_performance),
-                next_review_date=datetime.now(timezone.utc) + timedelta(days=7)
+                next_review_date=datetime.now(timezone.utc) + timedelta(days=7),
             )
 
             # 8. Cache Results (4 hour TTL for strategic insights)
@@ -350,9 +359,7 @@ class AILeadGenerationEngine:
         channel_performance = {}
 
         for channel in LeadGenerationChannel:
-            metrics = await self._analyze_channel_performance(
-                location_id, channel, analysis_period_days
-            )
+            metrics = await self._analyze_channel_performance(location_id, channel, analysis_period_days)
             channel_performance[channel] = metrics
 
         return channel_performance
@@ -365,25 +372,23 @@ class AILeadGenerationEngine:
         tenant_cache = TenantScopedCache(location_id, self.cache)
 
         # Get historical data for this channel (in production, would query database)
-        historical_data = await self._get_channel_historical_data(
-            tenant_cache, channel, analysis_period_days
-        )
+        historical_data = await self._get_channel_historical_data(tenant_cache, channel, analysis_period_days)
 
         # Calculate core metrics
-        total_leads = historical_data.get('total_leads', 0)
-        qualified_leads = historical_data.get('qualified_leads', 0)
-        converted_leads = historical_data.get('converted_leads', 0)
+        total_leads = historical_data.get("total_leads", 0)
+        qualified_leads = historical_data.get("qualified_leads", 0)
+        converted_leads = historical_data.get("converted_leads", 0)
 
         conversion_rate = converted_leads / max(1, total_leads)
         qualification_rate = qualified_leads / max(1, total_leads)
 
         # Calculate financial metrics
-        total_cost = historical_data.get('total_cost', 0)
+        total_cost = historical_data.get("total_cost", 0)
         cost_per_lead = total_cost / max(1, total_leads) if total_cost else None
         cost_per_conversion = total_cost / max(1, converted_leads) if total_cost and converted_leads else None
 
         # Estimate average deal value and ROI
-        avg_deal_value = historical_data.get('avg_deal_value', 250000)  # Real estate average
+        avg_deal_value = historical_data.get("avg_deal_value", 250000)  # Real estate average
         total_revenue = converted_leads * avg_deal_value
         roi = (total_revenue - total_cost) / max(1, total_cost) if total_cost else None
 
@@ -391,9 +396,7 @@ class AILeadGenerationEngine:
         trend_analysis = self._analyze_channel_trends(historical_data)
 
         # Generate optimization opportunities
-        opportunities = self._generate_channel_optimization_opportunities(
-            channel, conversion_rate, cost_per_lead, roi
-        )
+        opportunities = self._generate_channel_optimization_opportunities(channel, conversion_rate, cost_per_lead, roi)
 
         return ChannelPerformanceMetrics(
             channel=channel,
@@ -401,18 +404,18 @@ class AILeadGenerationEngine:
             total_leads=total_leads,
             qualified_leads=qualified_leads,
             converted_leads=converted_leads,
-            average_lead_score=historical_data.get('avg_lead_score', 50),
+            average_lead_score=historical_data.get("avg_lead_score", 50),
             conversion_rate=conversion_rate,
             qualification_rate=qualification_rate,
             cost_per_lead=cost_per_lead,
             cost_per_conversion=cost_per_conversion,
             roi=roi,
-            average_time_to_convert=historical_data.get('avg_time_to_convert'),
+            average_time_to_convert=historical_data.get("avg_time_to_convert"),
             lead_velocity=total_leads / analysis_period_days,
-            performance_trend=trend_analysis['trend'],
-            trend_confidence=trend_analysis['confidence'],
+            performance_trend=trend_analysis["trend"],
+            trend_confidence=trend_analysis["confidence"],
             optimization_opportunities=opportunities,
-            analysis_period_days=analysis_period_days
+            analysis_period_days=analysis_period_days,
         )
 
     def _calculate_overall_performance(
@@ -436,7 +439,8 @@ class AILeadGenerationEngine:
         # Identify top and underperforming channels
         channels_by_roi = sorted(
             [(channel, metrics.roi or 0) for channel, metrics in channel_performance.items()],
-            key=lambda x: x[1], reverse=True
+            key=lambda x: x[1],
+            reverse=True,
         )
 
         top_channels = [channel for channel, roi in channels_by_roi[:3] if roi > 1.0]
@@ -446,12 +450,12 @@ class AILeadGenerationEngine:
         performance_grade = self._calculate_performance_grade(overall_roi, total_conversions, total_leads)
 
         return {
-            'total_leads': total_leads,
-            'total_conversions': total_conversions,
-            'overall_roi': overall_roi,
-            'performance_grade': performance_grade,
-            'top_channels': top_channels,
-            'underperforming_channels': underperforming_channels
+            "total_leads": total_leads,
+            "total_conversions": total_conversions,
+            "overall_roi": overall_roi,
+            "performance_grade": performance_grade,
+            "top_channels": top_channels,
+            "underperforming_channels": underperforming_channels,
         }
 
     async def _identify_optimization_opportunities(
@@ -476,9 +480,7 @@ class AILeadGenerationEngine:
 
             # Strategic recommendations (long-term)
             if metrics.roi and metrics.roi > 3.0 and metrics.total_leads < 50:
-                strategic_recommendations.append(
-                    self._create_scaling_recommendation(location_id, channel, metrics)
-                )
+                strategic_recommendations.append(self._create_scaling_recommendation(location_id, channel, metrics))
 
             if metrics.performance_trend == "declining" and metrics.trend_confidence > 0.7:
                 strategic_recommendations.append(
@@ -505,15 +507,17 @@ class AILeadGenerationEngine:
 
         # Forecast periods
         forecasts = {
-            'next_7_days': total_daily_velocity * 7 * seasonal_multiplier * trend_multiplier,
-            'next_30_days': total_daily_velocity * 30 * seasonal_multiplier * trend_multiplier,
-            'next_90_days': total_daily_velocity * 90 * seasonal_multiplier * trend_multiplier,
+            "next_7_days": total_daily_velocity * 7 * seasonal_multiplier * trend_multiplier,
+            "next_30_days": total_daily_velocity * 30 * seasonal_multiplier * trend_multiplier,
+            "next_90_days": total_daily_velocity * 90 * seasonal_multiplier * trend_multiplier,
         }
 
         return {period: round(count, 1) for period, count in forecasts.items()}
 
     def _detect_performance_alerts(
-        self, channel_performance: Dict[LeadGenerationChannel, ChannelPerformanceMetrics], overall_metrics: Dict[str, Any]
+        self,
+        channel_performance: Dict[LeadGenerationChannel, ChannelPerformanceMetrics],
+        overall_metrics: Dict[str, Any],
     ) -> Dict[str, List[str]]:
         """Detect performance alerts and warnings."""
 
@@ -524,7 +528,9 @@ class AILeadGenerationEngine:
         # Performance alerts
         for channel, metrics in channel_performance.items():
             if metrics.conversion_rate < 0.02:
-                performance_alerts.append(f"⚠️ {channel.value}: Very low conversion rate ({metrics.conversion_rate:.1%})")
+                performance_alerts.append(
+                    f"⚠️ {channel.value}: Very low conversion rate ({metrics.conversion_rate:.1%})"
+                )
 
             if metrics.performance_trend == "declining" and metrics.trend_confidence > 0.8:
                 performance_alerts.append(f"📉 {channel.value}: Declining performance trend detected")
@@ -533,16 +539,16 @@ class AILeadGenerationEngine:
                 budget_alerts.append(f"💰 {channel.value}: High cost per lead (${metrics.cost_per_lead:.0f})")
 
         # Overall performance alerts
-        if overall_metrics['overall_roi'] < 1.0:
+        if overall_metrics["overall_roi"] < 1.0:
             performance_alerts.append("🚨 Overall ROI below breakeven threshold")
 
-        if len(overall_metrics['underperforming_channels']) > 3:
+        if len(overall_metrics["underperforming_channels"]) > 3:
             budget_alerts.append("🎯 Multiple underperforming channels - budget reallocation needed")
 
         return {
-            'performance_alerts': performance_alerts,
-            'budget_alerts': budget_alerts,
-            'competitor_alerts': competitor_alerts  # Would be populated by competitive intelligence
+            "performance_alerts": performance_alerts,
+            "budget_alerts": budget_alerts,
+            "competitor_alerts": competitor_alerts,  # Would be populated by competitive intelligence
         }
 
     async def _analyze_competitive_gaps(
@@ -554,7 +560,11 @@ class AILeadGenerationEngine:
 
         # Identify unused high-performing channels
         active_channels = {channel for channel, metrics in channel_performance.items() if metrics.total_leads > 0}
-        high_value_channels = {LeadGenerationChannel.REFERRAL_PROGRAM, LeadGenerationChannel.WEBINARS, LeadGenerationChannel.SEO_ORGANIC}
+        high_value_channels = {
+            LeadGenerationChannel.REFERRAL_PROGRAM,
+            LeadGenerationChannel.WEBINARS,
+            LeadGenerationChannel.SEO_ORGANIC,
+        }
 
         missing_channels = high_value_channels - active_channels
         for channel in missing_channels:
@@ -577,7 +587,7 @@ class AILeadGenerationEngine:
                 processing_time_ms=processing_time,
                 confidence_score=insights.confidence_level,
                 intent_category=insights.overall_performance_grade,
-                location_id=insights.location_id
+                location_id=insights.location_id,
             )
 
         except Exception as e:
@@ -595,20 +605,20 @@ class AILeadGenerationEngine:
         baseline_score = self.channel_baseline_scores.get(channel, 50)
 
         return {
-            'total_leads': max(0, int(baseline_score * days * 0.1)),  # Proportional to channel quality
-            'qualified_leads': max(0, int(baseline_score * days * 0.07)),
-            'converted_leads': max(0, int(baseline_score * days * 0.02)),
-            'total_cost': max(0, baseline_score * days * 2),  # $2 per point per day
-            'avg_deal_value': 250000,
-            'avg_lead_score': baseline_score,
-            'avg_time_to_convert': 45  # days
+            "total_leads": max(0, int(baseline_score * days * 0.1)),  # Proportional to channel quality
+            "qualified_leads": max(0, int(baseline_score * days * 0.07)),
+            "converted_leads": max(0, int(baseline_score * days * 0.02)),
+            "total_cost": max(0, baseline_score * days * 2),  # $2 per point per day
+            "avg_deal_value": 250000,
+            "avg_lead_score": baseline_score,
+            "avg_time_to_convert": 45,  # days
         }
 
     def _analyze_channel_trends(self, historical_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze performance trends for channel."""
 
         # Simplified trend analysis (would use statistical methods in production)
-        current_performance = historical_data.get('total_leads', 0)
+        current_performance = historical_data.get("total_leads", 0)
 
         if current_performance > 50:
             trend = "improving"
@@ -620,10 +630,14 @@ class AILeadGenerationEngine:
             trend = "stable"
             confidence = 0.6
 
-        return {'trend': trend, 'confidence': confidence}
+        return {"trend": trend, "confidence": confidence}
 
     def _generate_channel_optimization_opportunities(
-        self, channel: LeadGenerationChannel, conversion_rate: float, cost_per_lead: Optional[float], roi: Optional[float]
+        self,
+        channel: LeadGenerationChannel,
+        conversion_rate: float,
+        cost_per_lead: Optional[float],
+        roi: Optional[float],
     ) -> List[str]:
         """Generate channel-specific optimization opportunities."""
 
@@ -711,17 +725,17 @@ class AILeadGenerationEngine:
         # Real estate seasonal patterns
         seasonal_multipliers = {
             1: 0.8,  # January (slow)
-            2: 0.85, # February
+            2: 0.85,  # February
             3: 1.1,  # March (spring buying)
             4: 1.2,  # April (peak)
-            5: 1.25, # May (peak)
+            5: 1.25,  # May (peak)
             6: 1.2,  # June
             7: 1.1,  # July
             8: 1.0,  # August
-            9: 1.05, # September
-            10: 1.0, # October
-            11: 0.9, # November (slower)
-            12: 0.8  # December (holidays)
+            9: 1.05,  # September
+            10: 1.0,  # October
+            11: 0.9,  # November (slower)
+            12: 0.8,  # December (holidays)
         }
 
         return seasonal_multipliers.get(month, 1.0)
@@ -746,14 +760,14 @@ class AILeadGenerationEngine:
                 "Review and optimize lead qualification process",
                 "Implement lead scoring for better prioritization",
                 "Create targeted nurture sequences",
-                "A/B test landing pages"
+                "A/B test landing pages",
             ],
             success_metrics=[
                 "Conversion rate improvement to >8%",
                 "Increased lead quality scores",
-                "Reduced time to conversion"
+                "Reduced time to conversion",
             ],
-            confidence_score=0.85
+            confidence_score=0.85,
         )
 
     def _create_cost_reduction_recommendation(
@@ -776,14 +790,10 @@ class AILeadGenerationEngine:
                 "Audit and refine audience targeting",
                 "Pause underperforming ad sets",
                 "Optimize bidding strategies",
-                "Improve ad creative performance"
+                "Improve ad creative performance",
             ],
-            success_metrics=[
-                "Cost per lead reduced to <$75",
-                "Maintained or improved lead volume",
-                "Improved ROI"
-            ],
-            confidence_score=0.9
+            success_metrics=["Cost per lead reduced to <$75", "Maintained or improved lead volume", "Improved ROI"],
+            confidence_score=0.9,
         )
 
     def _create_scaling_recommendation(
@@ -807,14 +817,10 @@ class AILeadGenerationEngine:
                 "Increase budget allocation by 50%",
                 "Expand to similar audiences",
                 "Test additional creative variations",
-                "Monitor performance closely"
+                "Monitor performance closely",
             ],
-            success_metrics=[
-                "Maintained or improved ROI",
-                "Increased lead volume",
-                "Stable conversion rates"
-            ],
-            confidence_score=0.95
+            success_metrics=["Maintained or improved ROI", "Increased lead volume", "Stable conversion rates"],
+            confidence_score=0.95,
         )
 
     def _create_performance_recovery_recommendation(
@@ -836,15 +842,11 @@ class AILeadGenerationEngine:
                 "Conduct full channel audit",
                 "Analyze competitive changes",
                 "Test new approaches",
-                "Consider temporary budget reduction"
+                "Consider temporary budget reduction",
             ],
-            success_metrics=[
-                "Performance trend reversal",
-                "ROI improvement",
-                "Cost efficiency gains"
-            ],
+            success_metrics=["Performance trend reversal", "ROI improvement", "Cost efficiency gains"],
             confidence_score=0.75,
-            risk_factors=["May require significant changes", "Performance recovery not guaranteed"]
+            risk_factors=["May require significant changes", "Performance recovery not guaranteed"],
         )
 
     def _calculate_analysis_confidence(
@@ -872,11 +874,13 @@ class AILeadGenerationEngine:
             total_monthly_conversions=0,
             overall_roi=0.0,
             performance_alerts=["⚠️ Analysis failed - manual review required"],
-            confidence_level=0.1
+            confidence_level=0.1,
         )
+
 
 # Singleton accessor following established pattern
 _ai_lead_generation_engine = None
+
 
 def get_ai_lead_generation_engine() -> AILeadGenerationEngine:
     """Get singleton AI lead generation engine instance."""
@@ -885,14 +889,22 @@ def get_ai_lead_generation_engine() -> AILeadGenerationEngine:
         _ai_lead_generation_engine = AILeadGenerationEngine()
     return _ai_lead_generation_engine
 
+
 # Convenience functions for common operations
-async def analyze_lead_generation_performance(location_id: str, analysis_period_days: int = 30) -> LeadGenerationInsights:
+async def analyze_lead_generation_performance(
+    location_id: str, analysis_period_days: int = 30
+) -> LeadGenerationInsights:
     """Convenience function for lead generation performance analysis."""
     engine = get_ai_lead_generation_engine()
     return await engine.analyze_lead_generation_performance(location_id, analysis_period_days)
 
-async def get_channel_recommendations(location_id: str, channel: LeadGenerationChannel) -> List[LeadGenerationRecommendation]:
+
+async def get_channel_recommendations(
+    location_id: str, channel: LeadGenerationChannel
+) -> List[LeadGenerationRecommendation]:
     """Convenience function for channel-specific recommendations."""
     engine = get_ai_lead_generation_engine()
     insights = await engine.analyze_lead_generation_performance(location_id)
-    return [rec for rec in insights.immediate_opportunities + insights.strategic_recommendations if rec.channel == channel]
+    return [
+        rec for rec in insights.immediate_opportunities + insights.strategic_recommendations if rec.channel == channel
+    ]

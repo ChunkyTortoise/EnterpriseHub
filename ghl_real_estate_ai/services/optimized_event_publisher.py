@@ -15,31 +15,35 @@ Performance Impact: 90%+ latency reduction
 """
 
 import asyncio
-import time
-from typing import Dict, Any, Optional, List, Callable, Set
-from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass, field
 import json
+import time
 from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.websocket_server import get_websocket_manager, RealTimeEvent, EventType
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.auth_service import UserRole
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.websocket_server import EventType, RealTimeEvent, get_websocket_manager
 
 logger = get_logger(__name__)
 
+
 class LatencyTarget(Enum):
     """Performance target classifications."""
-    CRITICAL = 1    # <1ms - bypass all batching
-    HIGH = 5        # <5ms - micro-batch only
-    NORMAL = 10     # <10ms - standard batch
-    LOW = 50        # <50ms - large batch acceptable
+
+    CRITICAL = 1  # <1ms - bypass all batching
+    HIGH = 5  # <5ms - micro-batch only
+    NORMAL = 10  # <10ms - standard batch
+    LOW = 50  # <50ms - large batch acceptable
+
 
 @dataclass
 class LatencyMeasurement:
     """Individual event latency measurement."""
+
     event_type: str
     priority: str
     processing_start: float
@@ -49,9 +53,11 @@ class LatencyMeasurement:
     connection_count: int
     batch_size: int
 
+
 @dataclass
 class PerformanceMetrics:
     """Comprehensive performance tracking."""
+
     total_events_processed: int = 0
     events_under_10ms: int = 0
     events_under_1ms: int = 0
@@ -75,6 +81,7 @@ class PerformanceMetrics:
     latency_by_type: Dict[str, float] = field(default_factory=dict)
     throughput_by_type: Dict[str, int] = field(default_factory=dict)
 
+
 class OptimizedEventPublisher:
     """
     Ultra-High Performance Event Publisher for Enterprise Real-time AI.
@@ -88,20 +95,20 @@ class OptimizedEventPublisher:
         self.cache_service = get_cache_service()
 
         # 🚀 MICRO-BATCHING CONFIGURATION
-        self.micro_batch_interval = 0.01    # 10ms maximum delay (vs 500ms previous)
-        self.critical_bypass = True         # Critical events skip batching entirely
-        self.max_batch_size = 50           # Increased capacity for throughput
+        self.micro_batch_interval = 0.01  # 10ms maximum delay (vs 500ms previous)
+        self.critical_bypass = True  # Critical events skip batching entirely
+        self.max_batch_size = 50  # Increased capacity for throughput
 
         # 🎯 PRIORITY LANE QUEUES
-        self.critical_queue = asyncio.Queue()    # <1ms target - immediate processing
-        self.high_queue = asyncio.Queue()        # <5ms target - micro-batching
-        self.normal_queue = asyncio.Queue()      # <10ms target - standard batching
-        self.low_queue = asyncio.Queue()         # <50ms target - bulk processing
+        self.critical_queue = asyncio.Queue()  # <1ms target - immediate processing
+        self.high_queue = asyncio.Queue()  # <5ms target - micro-batching
+        self.normal_queue = asyncio.Queue()  # <10ms target - standard batching
+        self.low_queue = asyncio.Queue()  # <50ms target - bulk processing
 
         # 📊 REAL-TIME PERFORMANCE TRACKING
         self.performance_metrics = PerformanceMetrics()
         self.latency_measurements = deque(maxlen=1000)  # Ring buffer for recent measurements
-        self.throughput_window = deque(maxlen=60)       # 60-second throughput tracking
+        self.throughput_window = deque(maxlen=60)  # 60-second throughput tracking
 
         # 🔧 PROCESSING CONTROL
         self._processing_tasks = {}
@@ -123,11 +130,11 @@ class OptimizedEventPublisher:
 
         # Start priority lane processors
         self._processing_tasks = {
-            'critical': asyncio.create_task(self._process_critical_events()),
-            'high': asyncio.create_task(self._process_high_priority_events()),
-            'normal': asyncio.create_task(self._process_normal_priority_events()),
-            'low': asyncio.create_task(self._process_low_priority_events()),
-            'performance_monitor': asyncio.create_task(self._performance_monitor())
+            "critical": asyncio.create_task(self._process_critical_events()),
+            "high": asyncio.create_task(self._process_high_priority_events()),
+            "normal": asyncio.create_task(self._process_normal_priority_events()),
+            "low": asyncio.create_task(self._process_low_priority_events()),
+            "performance_monitor": asyncio.create_task(self._performance_monitor()),
         }
 
         # Start performance tracking
@@ -163,18 +170,17 @@ class OptimizedEventPublisher:
         if event.priority == "critical" or event.event_type in {
             EventType.SYSTEM_ALERT,
             EventType.SMS_COMPLIANCE,
-            EventType.SMS_OPT_OUT_PROCESSED
+            EventType.SMS_OPT_OUT_PROCESSED,
         }:
             return "critical"
 
         # High priority for AI insights and bot coordination
-        if (event.priority == "high" or
-            event.event_type in {
-                EventType.PROACTIVE_INSIGHT,
-                EventType.STRATEGY_RECOMMENDATION,
-                EventType.COACHING_OPPORTUNITY,
-                EventType.BOT_HANDOFF_REQUEST
-            }):
+        if event.priority == "high" or event.event_type in {
+            EventType.PROACTIVE_INSIGHT,
+            EventType.STRATEGY_RECOMMENDATION,
+            EventType.COACHING_OPPORTUNITY,
+            EventType.BOT_HANDOFF_REQUEST,
+        }:
             return "high"
 
         # Normal priority for standard business events
@@ -182,7 +188,7 @@ class OptimizedEventPublisher:
             EventType.LEAD_UPDATE,
             EventType.CONVERSATION_UPDATE,
             EventType.COMMISSION_UPDATE,
-            EventType.JORGE_QUALIFICATION_PROGRESS
+            EventType.JORGE_QUALIFICATION_PROGRESS,
         }:
             return "normal"
 
@@ -203,7 +209,7 @@ class OptimizedEventPublisher:
 
         try:
             # Add processing timestamp for latency tracking
-            event.data['_processing_start'] = publish_start
+            event.data["_processing_start"] = publish_start
 
             # Route to appropriate priority lane
             priority_lane = self._get_event_priority_lane(event)
@@ -232,7 +238,7 @@ class OptimizedEventPublisher:
                 # Wait for critical event with timeout
                 event = await asyncio.wait_for(
                     self.critical_queue.get(),
-                    timeout=0.1  # 100ms timeout to check shutdown
+                    timeout=0.1,  # 100ms timeout to check shutdown
                 )
 
                 processing_start = time.perf_counter()
@@ -241,9 +247,7 @@ class OptimizedEventPublisher:
                 await self.websocket_manager.publish_event(event)
 
                 # Track latency
-                await self._track_event_latency(
-                    event, processing_start, 1, LatencyTarget.CRITICAL.value
-                )
+                await self._track_event_latency(event, processing_start, 1, LatencyTarget.CRITICAL.value)
 
             except asyncio.TimeoutError:
                 continue
@@ -261,8 +265,7 @@ class OptimizedEventPublisher:
                 while time.perf_counter() < deadline and len(events) < 20:
                     try:
                         event = await asyncio.wait_for(
-                            self.high_queue.get(),
-                            timeout=max(0.001, deadline - time.perf_counter())
+                            self.high_queue.get(), timeout=max(0.001, deadline - time.perf_counter())
                         )
                         events.append(event)
                     except asyncio.TimeoutError:
@@ -272,16 +275,11 @@ class OptimizedEventPublisher:
                     processing_start = time.perf_counter()
 
                     # Process micro-batch with concurrent publishing
-                    await asyncio.gather(*[
-                        self.websocket_manager.publish_event(event)
-                        for event in events
-                    ])
+                    await asyncio.gather(*[self.websocket_manager.publish_event(event) for event in events])
 
                     # Track latency for all events in batch
                     for event in events:
-                        await self._track_event_latency(
-                            event, processing_start, len(events), LatencyTarget.HIGH.value
-                        )
+                        await self._track_event_latency(event, processing_start, len(events), LatencyTarget.HIGH.value)
 
                 else:
                     # No events available, brief pause before checking again
@@ -301,8 +299,7 @@ class OptimizedEventPublisher:
                 while time.perf_counter() < deadline and len(events) < self.max_batch_size:
                     try:
                         event = await asyncio.wait_for(
-                            self.normal_queue.get(),
-                            timeout=max(0.001, deadline - time.perf_counter())
+                            self.normal_queue.get(), timeout=max(0.001, deadline - time.perf_counter())
                         )
                         events.append(event)
                     except asyncio.TimeoutError:
@@ -315,10 +312,7 @@ class OptimizedEventPublisher:
                     aggregated_events = await self._apply_intelligent_aggregation(events)
 
                     # Concurrent publishing
-                    await asyncio.gather(*[
-                        self.websocket_manager.publish_event(event)
-                        for event in aggregated_events
-                    ])
+                    await asyncio.gather(*[self.websocket_manager.publish_event(event) for event in aggregated_events])
 
                     # Track latency
                     for event in events:
@@ -344,8 +338,7 @@ class OptimizedEventPublisher:
                 while time.perf_counter() < deadline and len(events) < 100:
                     try:
                         event = await asyncio.wait_for(
-                            self.low_queue.get(),
-                            timeout=max(0.01, deadline - time.perf_counter())
+                            self.low_queue.get(), timeout=max(0.01, deadline - time.perf_counter())
                         )
                         events.append(event)
                     except asyncio.TimeoutError:
@@ -355,24 +348,17 @@ class OptimizedEventPublisher:
                     processing_start = time.perf_counter()
 
                     # Aggressive aggregation for low-priority events
-                    aggregated_events = await self._apply_intelligent_aggregation(
-                        events, aggressive=True
-                    )
+                    aggregated_events = await self._apply_intelligent_aggregation(events, aggressive=True)
 
                     # Batch processing with smaller chunks for memory efficiency
                     chunk_size = 25
                     for i in range(0, len(aggregated_events), chunk_size):
-                        chunk = aggregated_events[i:i + chunk_size]
-                        await asyncio.gather(*[
-                            self.websocket_manager.publish_event(event)
-                            for event in chunk
-                        ])
+                        chunk = aggregated_events[i : i + chunk_size]
+                        await asyncio.gather(*[self.websocket_manager.publish_event(event) for event in chunk])
 
                     # Track latency
                     for event in events:
-                        await self._track_event_latency(
-                            event, processing_start, len(events), LatencyTarget.LOW.value
-                        )
+                        await self._track_event_latency(event, processing_start, len(events), LatencyTarget.LOW.value)
 
                 else:
                     # No events, longer pause for low priority
@@ -382,9 +368,7 @@ class OptimizedEventPublisher:
                 logger.error(f"Low priority event processing error: {e}")
 
     async def _apply_intelligent_aggregation(
-        self,
-        events: List[RealTimeEvent],
-        aggressive: bool = False
+        self, events: List[RealTimeEvent], aggressive: bool = False
     ) -> List[RealTimeEvent]:
         """
         Apply intelligent event aggregation to reduce message volume.
@@ -435,11 +419,9 @@ class OptimizedEventPublisher:
 
         # Aggressive aggregation includes more event types
         if aggressive:
-            aggregable_types.update({
-                EventType.PROACTIVE_INSIGHT,
-                EventType.STRATEGY_RECOMMENDATION,
-                EventType.AI_CONCIERGE_STATUS
-            })
+            aggregable_types.update(
+                {EventType.PROACTIVE_INSIGHT, EventType.STRATEGY_RECOMMENDATION, EventType.AI_CONCIERGE_STATUS}
+            )
 
         return event.event_type in aggregable_types
 
@@ -457,27 +439,27 @@ class OptimizedEventPublisher:
 
         # Aggregate data from all events
         aggregated_data = {
-            'aggregation_info': {
-                'event_count': len(events),
-                'time_span_ms': (
-                    max(event.timestamp for event in events) -
-                    min(event.timestamp for event in events)
-                ).total_seconds() * 1000,
-                'aggregated_at': datetime.now(timezone.utc).isoformat()
+            "aggregation_info": {
+                "event_count": len(events),
+                "time_span_ms": (
+                    max(event.timestamp for event in events) - min(event.timestamp for event in events)
+                ).total_seconds()
+                * 1000,
+                "aggregated_at": datetime.now(timezone.utc).isoformat(),
             },
-            'events': [event.data for event in events]
+            "events": [event.data for event in events],
         }
 
         # For insights, combine the most relevant data
         if base_event.event_type == EventType.PROACTIVE_INSIGHT:
-            aggregated_data.update({
-                'insight_count': len(events),
-                'max_confidence': max(
-                    event.data.get('confidence_score', 0) for event in events
-                ),
-                'priorities': list(set(event.priority for event in events)),
-                'combined_title': f"AI Insights Bundle ({len(events)} insights)"
-            })
+            aggregated_data.update(
+                {
+                    "insight_count": len(events),
+                    "max_confidence": max(event.data.get("confidence_score", 0) for event in events),
+                    "priorities": list(set(event.priority for event in events)),
+                    "combined_title": f"AI Insights Bundle ({len(events)} insights)",
+                }
+            )
 
         return RealTimeEvent(
             event_type=base_event.event_type,
@@ -485,20 +467,16 @@ class OptimizedEventPublisher:
             timestamp=latest_timestamp,
             user_id=base_event.user_id,
             location_id=base_event.location_id,
-            priority=max(events, key=lambda e: {'critical': 3, 'high': 2, 'normal': 1, 'low': 0}[e.priority]).priority
+            priority=max(events, key=lambda e: {"critical": 3, "high": 2, "normal": 1, "low": 0}[e.priority]).priority,
         )
 
     async def _track_event_latency(
-        self,
-        event: RealTimeEvent,
-        processing_start: float,
-        batch_size: int,
-        target_ms: float
+        self, event: RealTimeEvent, processing_start: float, batch_size: int, target_ms: float
     ):
         """Track individual event latency and update performance metrics."""
 
         processing_end = time.perf_counter()
-        event_start = event.data.get('_processing_start', processing_start)
+        event_start = event.data.get("_processing_start", processing_start)
 
         # Calculate end-to-end latency
         latency_ms = (processing_end - event_start) * 1000
@@ -513,7 +491,7 @@ class OptimizedEventPublisher:
             latency_ms=latency_ms,
             target_met=target_met,
             connection_count=len(self.websocket_manager.active_connections),
-            batch_size=batch_size
+            batch_size=batch_size,
         )
 
         # Add to ring buffer
@@ -531,9 +509,7 @@ class OptimizedEventPublisher:
 
             # Critical latency breach
             if latency_ms > 50:
-                logger.error(
-                    f"🚨 Critical latency breach: {latency_ms:.2f}ms for {event.event_type.value}"
-                )
+                logger.error(f"🚨 Critical latency breach: {latency_ms:.2f}ms for {event.event_type.value}")
 
     def _update_performance_metrics(self, measurement: LatencyMeasurement):
         """Update aggregate performance metrics with new measurement."""
@@ -587,13 +563,15 @@ class OptimizedEventPublisher:
 
                 if self.performance_metrics.total_events_processed > 0:
                     compliance_10ms = (
-                        self.performance_metrics.events_under_10ms /
-                        self.performance_metrics.total_events_processed * 100
+                        self.performance_metrics.events_under_10ms
+                        / self.performance_metrics.total_events_processed
+                        * 100
                     )
 
                     compliance_1ms = (
-                        self.performance_metrics.events_under_1ms /
-                        self.performance_metrics.total_events_processed * 100
+                        self.performance_metrics.events_under_1ms
+                        / self.performance_metrics.total_events_processed
+                        * 100
                     )
 
                     logger.info(
@@ -607,10 +585,7 @@ class OptimizedEventPublisher:
 
                     # Alert on poor performance
                     if compliance_10ms < 95:
-                        logger.warning(
-                            f"⚠️ Performance below target: {compliance_10ms:.1f}% events <10ms "
-                            f"(target: 95%)"
-                        )
+                        logger.warning(f"⚠️ Performance below target: {compliance_10ms:.1f}% events <10ms (target: 95%)")
 
             except Exception as e:
                 logger.error(f"Performance monitor error: {e}")
@@ -640,17 +615,14 @@ class OptimizedEventPublisher:
 
         compliance_metrics = {
             "events_under_10ms_percentage": (
-                self.performance_metrics.events_under_10ms /
-                self.performance_metrics.total_events_processed * 100
+                self.performance_metrics.events_under_10ms / self.performance_metrics.total_events_processed * 100
             ),
             "events_under_1ms_percentage": (
-                self.performance_metrics.events_under_1ms /
-                self.performance_metrics.total_events_processed * 100
+                self.performance_metrics.events_under_1ms / self.performance_metrics.total_events_processed * 100
             ),
-            "target_compliance_10ms": "✅" if (
-                self.performance_metrics.events_under_10ms /
-                self.performance_metrics.total_events_processed
-            ) >= 0.95 else "❌"
+            "target_compliance_10ms": "✅"
+            if (self.performance_metrics.events_under_10ms / self.performance_metrics.total_events_processed) >= 0.95
+            else "❌",
         }
 
         return {
@@ -661,24 +633,24 @@ class OptimizedEventPublisher:
                 "avg_latency_ms": round(self.performance_metrics.avg_latency_ms, 3),
                 "p95_latency_ms": round(self.performance_metrics.p95_latency_ms, 3),
                 "p99_latency_ms": round(self.performance_metrics.p99_latency_ms, 3),
-                "max_latency_ms": round(self.performance_metrics.max_latency_ms, 3)
+                "max_latency_ms": round(self.performance_metrics.max_latency_ms, 3),
             },
             "compliance_metrics": compliance_metrics,
             "throughput_metrics": {
                 "current_events_per_second": round(self.performance_metrics.events_per_second, 1),
                 "peak_events_per_second": round(self.performance_metrics.peak_events_per_second, 1),
-                "critical_events_bypassed": self.performance_metrics.critical_events_bypassed
+                "critical_events_bypassed": self.performance_metrics.critical_events_bypassed,
             },
             "queue_status": {
                 "critical_queue_size": self.critical_queue.qsize(),
                 "high_queue_size": self.high_queue.qsize(),
                 "normal_queue_size": self.normal_queue.qsize(),
-                "low_queue_size": self.low_queue.qsize()
+                "low_queue_size": self.low_queue.qsize(),
             },
             "recent_performance": {
                 "last_100_events_avg_latency": self._get_recent_avg_latency(),
-                "latency_trend": self._get_latency_trend()
-            }
+                "latency_trend": self._get_latency_trend(),
+            },
         }
 
     def _get_recent_avg_latency(self) -> float:
@@ -716,8 +688,10 @@ class OptimizedEventPublisher:
         """Backward compatibility method - routes to optimized publisher."""
         await self.publish_event_optimized(event)
 
+
 # Global optimized event publisher instance
 _optimized_event_publisher = None
+
 
 def get_optimized_event_publisher() -> OptimizedEventPublisher:
     """Get singleton optimized event publisher instance."""
@@ -725,6 +699,7 @@ def get_optimized_event_publisher() -> OptimizedEventPublisher:
     if _optimized_event_publisher is None:
         _optimized_event_publisher = OptimizedEventPublisher()
     return _optimized_event_publisher
+
 
 # Migration Helper Functions
 async def migrate_to_optimized_publisher():
@@ -739,6 +714,7 @@ async def migrate_to_optimized_publisher():
     logger.info("🎯 Performance target: <10ms event delivery latency")
 
     return optimized_publisher
+
 
 # Performance Monitoring API
 async def get_real_time_performance_metrics() -> Dict[str, Any]:

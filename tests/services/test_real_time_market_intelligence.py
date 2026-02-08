@@ -3,11 +3,11 @@
 import pytest
 
 from ghl_real_estate_ai.services.real_time_market_intelligence import (
-    RealTimeMarketIntelligence,
-    MarketCondition,
-    TrendDirection,
     AlertSeverity,
+    MarketCondition,
     Neighborhood,
+    RealTimeMarketIntelligence,
+    TrendDirection,
 )
 
 
@@ -19,6 +19,7 @@ def intel():
 # -------------------------------------------------------------------------
 # Market snapshots
 # -------------------------------------------------------------------------
+
 
 class TestMarketSnapshot:
     @pytest.mark.asyncio
@@ -56,6 +57,7 @@ class TestMarketSnapshot:
 # Price trends
 # -------------------------------------------------------------------------
 
+
 class TestPriceTrends:
     @pytest.mark.asyncio
     async def test_rising_trend_for_appreciating_area(self, intel):
@@ -88,6 +90,7 @@ class TestPriceTrends:
 # Opportunity detection
 # -------------------------------------------------------------------------
 
+
 class TestOpportunityDetection:
     @pytest.mark.asyncio
     async def test_detects_hot_zone(self, intel):
@@ -119,6 +122,7 @@ class TestOpportunityDetection:
 # Alerts
 # -------------------------------------------------------------------------
 
+
 class TestAlerts:
     @pytest.mark.asyncio
     async def test_low_inventory_alert(self, intel):
@@ -143,6 +147,7 @@ class TestAlerts:
 # Neighborhood comparison
 # -------------------------------------------------------------------------
 
+
 class TestComparison:
     @pytest.mark.asyncio
     async def test_comparison_returns_all_neighborhoods(self, intel):
@@ -159,6 +164,7 @@ class TestComparison:
 # -------------------------------------------------------------------------
 # Price ingestion
 # -------------------------------------------------------------------------
+
 
 class TestPriceIngestion:
     def test_ingest_adds_to_history(self, intel):

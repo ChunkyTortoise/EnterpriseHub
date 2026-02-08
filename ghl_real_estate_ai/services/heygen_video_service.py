@@ -31,8 +31,10 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class VideoTemplate(Enum):
     """Pre-built video script templates by use-case."""
+
     BUYER_WELCOME = "buyer_welcome"
     SELLER_CMA = "seller_cma"
     LISTING_TOUR = "listing_tour"
@@ -60,6 +62,7 @@ class AvatarStyle(Enum):
 @dataclass
 class VideoScript:
     """Generated script for a personalized video."""
+
     template: VideoTemplate
     personalized_text: str
     duration_estimate_sec: int
@@ -70,6 +73,7 @@ class VideoScript:
 @dataclass
 class VideoRequest:
     """Outbound video generation request."""
+
     request_id: str
     lead_id: str
     template: VideoTemplate
@@ -82,6 +86,7 @@ class VideoRequest:
 @dataclass
 class VideoResult:
     """Completed video generation result."""
+
     request_id: str
     lead_id: str
     video_url: str
@@ -98,6 +103,7 @@ class VideoResult:
 @dataclass
 class CostTracker:
     """Tracks video generation costs."""
+
     total_videos: int = 0
     total_cost: float = 0.0
     daily_budget: float = 50.0
@@ -191,6 +197,7 @@ PSYCHOGRAPHIC_HOOKS: Dict[str, List[str]] = {
 # Service
 # ---------------------------------------------------------------------------
 
+
 class HeyGenVideoService:
     """
     Personalized video generation via the HeyGen API.
@@ -232,9 +239,7 @@ class HeyGenVideoService:
         Returns a ``VideoResult`` with the video URL, cost, and status.
         """
         template_enum = self._resolve_template(template)
-        script = self._generate_script(
-            template_enum, lead_name, lead_profile, variables or {}
-        )
+        script = self._generate_script(template_enum, lead_name, lead_profile, variables or {})
 
         self._request_counter += 1
         request_id = f"vid_{lead_id}_{int(time.time())}_{self._request_counter}"
@@ -375,9 +380,7 @@ class HeyGenVideoService:
             "avg_rent": str(profile.get("avg_rent", "$2,800/mo")),
         }
 
-    def _select_psychographic_hook(
-        self, persona: str, variables: Dict[str, str]
-    ) -> str:
+    def _select_psychographic_hook(self, persona: str, variables: Dict[str, str]) -> str:
         """Choose a psychographic-driven hook based on lead persona."""
         persona_lower = persona.lower() if persona else ""
         for key, hooks in PSYCHOGRAPHIC_HOOKS.items():
@@ -448,16 +451,18 @@ class HeyGenVideoService:
             import aiohttp
 
             payload = {
-                "video_inputs": [{
-                    "character": {
-                        "type": "avatar",
-                        "avatar_id": request.avatar_id,
-                    },
-                    "voice": {
-                        "type": "text",
-                        "input_text": request.script.personalized_text,
-                    },
-                }],
+                "video_inputs": [
+                    {
+                        "character": {
+                            "type": "avatar",
+                            "avatar_id": request.avatar_id,
+                        },
+                        "voice": {
+                            "type": "text",
+                            "input_text": request.script.personalized_text,
+                        },
+                    }
+                ],
                 "dimension": {"width": 1280, "height": 720},
             }
 

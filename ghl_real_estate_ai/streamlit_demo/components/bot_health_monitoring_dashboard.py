@@ -11,38 +11,38 @@ Features:
 - Resource utilization and optimization insights
 """
 
-import streamlit as st
 import asyncio
-import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import json
 import random
 import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
 # Import existing bot services for health checks
 try:
-    from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
     from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+    from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
     from ghl_real_estate_ai.agents.lead_bot import LeadBot
     from ghl_real_estate_ai.services.cache_service import get_cache_service
     from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 except ImportError:
     st.error("Bot services not available - check backend configuration")
 
+
 @st.cache_resource
 def get_monitoring_services():
     """Get cached monitoring services."""
     try:
-        return {
-            "cache_service": get_cache_service(),
-            "event_publisher": get_event_publisher()
-        }
+        return {"cache_service": get_cache_service(), "event_publisher": get_event_publisher()}
     except Exception:
         return None
+
 
 @st.cache_data(ttl=15)  # Cache for 15 seconds for near real-time
 def get_bot_health_metrics() -> Dict[str, Any]:
@@ -66,7 +66,7 @@ def get_bot_health_metrics() -> Dict[str, Any]:
                 "avg_frs_score": round(random.uniform(65, 85), 1),
                 "avg_pcs_score": round(random.uniform(70, 88), 1),
                 "stall_detection_accuracy": round(random.uniform(91, 96), 1),
-                "last_health_check": (current_time - timedelta(seconds=random.randint(5, 45))).isoformat()
+                "last_health_check": (current_time - timedelta(seconds=random.randint(5, 45))).isoformat(),
             },
             "jorge_buyer_bot": {
                 "status": "healthy",
@@ -80,7 +80,7 @@ def get_bot_health_metrics() -> Dict[str, Any]:
                 "avg_frs_score": round(random.uniform(68, 82), 1),
                 "avg_motivation_score": round(random.uniform(72, 86), 1),
                 "property_match_accuracy": round(random.uniform(88, 94), 1),
-                "last_health_check": (current_time - timedelta(seconds=random.randint(5, 45))).isoformat()
+                "last_health_check": (current_time - timedelta(seconds=random.randint(5, 45))).isoformat(),
             },
             "lead_bot": {
                 "status": "healthy",
@@ -95,7 +95,7 @@ def get_bot_health_metrics() -> Dict[str, Any]:
                 "day_7_engagement_rate": round(random.uniform(45, 58), 1),
                 "day_30_conversion_rate": round(random.uniform(12, 18), 1),
                 "voice_call_success_rate": round(random.uniform(82, 91), 1),
-                "last_health_check": (current_time - timedelta(seconds=random.randint(5, 45))).isoformat()
+                "last_health_check": (current_time - timedelta(seconds=random.randint(5, 45))).isoformat(),
             },
             "system_metrics": {
                 "total_requests_today": random.randint(150, 280),
@@ -103,8 +103,8 @@ def get_bot_health_metrics() -> Dict[str, Any]:
                 "avg_system_latency": round(random.uniform(0.3, 0.8), 2),
                 "redis_health": "optimal",
                 "websocket_connections": random.randint(8, 15),
-                "event_queue_size": random.randint(0, 5)
-            }
+                "event_queue_size": random.randint(0, 5),
+            },
         }
 
         return metrics
@@ -112,6 +112,7 @@ def get_bot_health_metrics() -> Dict[str, Any]:
     except Exception as e:
         st.error(f"Error fetching bot metrics: {str(e)}")
         return {}
+
 
 @st.cache_data(ttl=60)  # Cache for 60 seconds
 def get_bot_performance_history() -> Dict[str, List]:
@@ -127,8 +128,9 @@ def get_bot_performance_history() -> Dict[str, List]:
         "seller_bot_success_rates": [round(random.uniform(93, 98), 1) for _ in hours],
         "buyer_bot_success_rates": [round(random.uniform(95, 99), 1) for _ in hours],
         "lead_bot_success_rates": [round(random.uniform(94, 99), 1) for _ in hours],
-        "total_requests": [random.randint(8, 35) for _ in hours]
+        "total_requests": [random.randint(8, 35) for _ in hours],
     }
+
 
 def render_bot_status_overview():
     """Render high-level status overview for all bots."""
@@ -150,7 +152,7 @@ def render_bot_status_overview():
             f"{status_icon} Jorge Seller Bot",
             f"{metrics['jorge_seller_bot']['uptime']} Uptime",
             f"{metrics['jorge_seller_bot']['avg_response_time']}s avg response",
-            help="Confrontational qualification bot status and performance"
+            help="Confrontational qualification bot status and performance",
         )
 
         # Sub-metrics
@@ -166,7 +168,7 @@ def render_bot_status_overview():
             f"{status_icon} Jorge Buyer Bot",
             f"{metrics['jorge_buyer_bot']['uptime']} Uptime",
             f"{metrics['jorge_buyer_bot']['avg_response_time']}s avg response",
-            help="Consultative qualification bot status and performance"
+            help="Consultative qualification bot status and performance",
         )
 
         # Sub-metrics
@@ -182,13 +184,14 @@ def render_bot_status_overview():
             f"{status_icon} Lead Bot (3-7-30)",
             f"{metrics['lead_bot']['uptime']} Uptime",
             f"{metrics['lead_bot']['avg_response_time']}s avg response",
-            help="Automated sequence management bot status and performance"
+            help="Automated sequence management bot status and performance",
         )
 
         # Sub-metrics
         st.write(f"🔄 **Active Sequences:** {metrics['lead_bot']['active_sequences']}")
         st.write(f"✅ **Completed Today:** {metrics['lead_bot']['sequences_completed_today']}")
         st.write(f"📞 **Voice Success:** {metrics['lead_bot']['voice_call_success_rate']}%")
+
 
 def render_performance_analytics():
     """Render detailed performance analytics and trends."""
@@ -200,10 +203,11 @@ def render_performance_analytics():
 
     # Create performance trends chart
     fig = make_subplots(
-        rows=2, cols=1,
+        rows=2,
+        cols=1,
         subplot_titles=("Response Time Trends (24 Hours)", "Success Rate Trends (24 Hours)"),
         vertical_spacing=0.1,
-        row_heights=[0.6, 0.4]
+        row_heights=[0.6, 0.4],
     )
 
     # Response time trends
@@ -211,36 +215,39 @@ def render_performance_analytics():
         go.Scatter(
             x=history["timestamps"],
             y=history["seller_bot_response_times"],
-            mode='lines+markers',
-            name='Seller Bot',
-            line=dict(color='#ff6b6b', width=2),
-            marker=dict(size=4)
+            mode="lines+markers",
+            name="Seller Bot",
+            line=dict(color="#ff6b6b", width=2),
+            marker=dict(size=4),
         ),
-        row=1, col=1
+        row=1,
+        col=1,
     )
 
     fig.add_trace(
         go.Scatter(
             x=history["timestamps"],
             y=history["buyer_bot_response_times"],
-            mode='lines+markers',
-            name='Buyer Bot',
-            line=dict(color='#4ecdc4', width=2),
-            marker=dict(size=4)
+            mode="lines+markers",
+            name="Buyer Bot",
+            line=dict(color="#4ecdc4", width=2),
+            marker=dict(size=4),
         ),
-        row=1, col=1
+        row=1,
+        col=1,
     )
 
     fig.add_trace(
         go.Scatter(
             x=history["timestamps"],
             y=history["lead_bot_response_times"],
-            mode='lines+markers',
-            name='Lead Bot',
-            line=dict(color='#45b7d1', width=2),
-            marker=dict(size=4)
+            mode="lines+markers",
+            name="Lead Bot",
+            line=dict(color="#45b7d1", width=2),
+            marker=dict(size=4),
         ),
-        row=1, col=1
+        row=1,
+        col=1,
     )
 
     # Success rate trends
@@ -248,46 +255,46 @@ def render_performance_analytics():
         go.Scatter(
             x=history["timestamps"],
             y=history["seller_bot_success_rates"],
-            mode='lines+markers',
-            name='Seller Bot Success',
-            line=dict(color='#ff6b6b', width=2, dash='dash'),
+            mode="lines+markers",
+            name="Seller Bot Success",
+            line=dict(color="#ff6b6b", width=2, dash="dash"),
             marker=dict(size=4),
-            showlegend=False
+            showlegend=False,
         ),
-        row=2, col=1
+        row=2,
+        col=1,
     )
 
     fig.add_trace(
         go.Scatter(
             x=history["timestamps"],
             y=history["buyer_bot_success_rates"],
-            mode='lines+markers',
-            name='Buyer Bot Success',
-            line=dict(color='#4ecdc4', width=2, dash='dash'),
+            mode="lines+markers",
+            name="Buyer Bot Success",
+            line=dict(color="#4ecdc4", width=2, dash="dash"),
             marker=dict(size=4),
-            showlegend=False
+            showlegend=False,
         ),
-        row=2, col=1
+        row=2,
+        col=1,
     )
 
     fig.add_trace(
         go.Scatter(
             x=history["timestamps"],
             y=history["lead_bot_success_rates"],
-            mode='lines+markers',
-            name='Lead Bot Success',
-            line=dict(color='#45b7d1', width=2, dash='dash'),
+            mode="lines+markers",
+            name="Lead Bot Success",
+            line=dict(color="#45b7d1", width=2, dash="dash"),
             marker=dict(size=4),
-            showlegend=False
+            showlegend=False,
         ),
-        row=2, col=1
+        row=2,
+        col=1,
     )
 
     fig.update_layout(
-        height=600,
-        title="🚀 Bot Performance Monitoring - 24 Hour Trends",
-        showlegend=True,
-        hovermode='x unified'
+        height=600, title="🚀 Bot Performance Monitoring - 24 Hour Trends", showlegend=True, hovermode="x unified"
     )
 
     fig.update_yaxes(title_text="Response Time (seconds)", row=1, col=1)
@@ -303,29 +310,30 @@ def render_performance_analytics():
         st.metric(
             "🏃‍♂️ System Avg Latency",
             f"{current_metrics['system_metrics']['avg_system_latency']}s",
-            help="Average system response time across all bots"
+            help="Average system response time across all bots",
         )
 
     with col2:
         st.metric(
             "📈 Total Requests Today",
             f"{current_metrics['system_metrics']['total_requests_today']:,}",
-            help="Total bot requests processed today"
+            help="Total bot requests processed today",
         )
 
     with col3:
         st.metric(
             "👥 Peak Concurrent Users",
             f"{current_metrics['system_metrics']['peak_concurrent_users']}",
-            help="Maximum concurrent users today"
+            help="Maximum concurrent users today",
         )
 
     with col4:
         st.metric(
             "🔗 Active Connections",
             f"{current_metrics['system_metrics']['websocket_connections']}",
-            help="Active WebSocket connections"
+            help="Active WebSocket connections",
         )
+
 
 def render_bot_detailed_metrics():
     """Render detailed metrics for each bot."""
@@ -356,7 +364,7 @@ def render_bot_detailed_metrics():
             st.metric("🎯 Qualifications Today", f"{metrics['jorge_seller_bot']['completed_qualifications_today']}")
 
         # Health check status
-        last_check = datetime.fromisoformat(metrics['jorge_seller_bot']['last_health_check'])
+        last_check = datetime.fromisoformat(metrics["jorge_seller_bot"]["last_health_check"])
         time_since_check = (datetime.now() - last_check).total_seconds()
         check_status = "🟢 Recent" if time_since_check < 60 else "🟡 Stale" if time_since_check < 300 else "🔴 Old"
 
@@ -380,7 +388,7 @@ def render_bot_detailed_metrics():
             st.metric("🎯 Qualifications Today", f"{metrics['jorge_buyer_bot']['completed_qualifications_today']}")
 
         # Health check status
-        last_check = datetime.fromisoformat(metrics['jorge_buyer_bot']['last_health_check'])
+        last_check = datetime.fromisoformat(metrics["jorge_buyer_bot"]["last_health_check"])
         time_since_check = (datetime.now() - last_check).total_seconds()
         check_status = "🟢 Recent" if time_since_check < 60 else "🟡 Stale" if time_since_check < 300 else "🔴 Old"
 
@@ -408,11 +416,12 @@ def render_bot_detailed_metrics():
         st.metric("✅ Completed Today", f"{metrics['lead_bot']['sequences_completed_today']}")
 
         # Health check status
-        last_check = datetime.fromisoformat(metrics['lead_bot']['last_health_check'])
+        last_check = datetime.fromisoformat(metrics["lead_bot"]["last_health_check"])
         time_since_check = (datetime.now() - last_check).total_seconds()
         check_status = "🟢 Recent" if time_since_check < 60 else "🟡 Stale" if time_since_check < 300 else "🔴 Old"
 
         st.info(f"**Last Health Check:** {check_status} - {int(time_since_check)}s ago")
+
 
 def render_system_health():
     """Render system-level health and infrastructure metrics."""
@@ -434,7 +443,13 @@ def render_system_health():
         st.write(f"**Redis Cache:** {redis_status}")
 
         # Event queue
-        queue_status = "🟢 Normal" if system["event_queue_size"] < 10 else "🟡 Elevated" if system["event_queue_size"] < 50 else "🔴 High"
+        queue_status = (
+            "🟢 Normal"
+            if system["event_queue_size"] < 10
+            else "🟡 Elevated"
+            if system["event_queue_size"] < 50
+            else "🔴 High"
+        )
         st.write(f"**Event Queue:** {queue_status} ({system['event_queue_size']} pending)")
 
         # WebSocket connections
@@ -451,8 +466,7 @@ def render_system_health():
 
         # Overall system health score
         all_bots_healthy = all(
-            metrics[bot]["status"] == "healthy"
-            for bot in ["jorge_seller_bot", "jorge_buyer_bot", "lead_bot"]
+            metrics[bot]["status"] == "healthy" for bot in ["jorge_seller_bot", "jorge_buyer_bot", "lead_bot"]
         )
 
         health_score = 100 if all_bots_healthy and system["redis_health"] == "optimal" else 95
@@ -462,12 +476,13 @@ def render_system_health():
 
         # Uptime calculation
         avg_uptime = (
-            float(metrics["jorge_seller_bot"]["uptime"].rstrip("%")) +
-            float(metrics["jorge_buyer_bot"]["uptime"].rstrip("%")) +
-            float(metrics["lead_bot"]["uptime"].rstrip("%"))
+            float(metrics["jorge_seller_bot"]["uptime"].rstrip("%"))
+            + float(metrics["jorge_buyer_bot"]["uptime"].rstrip("%"))
+            + float(metrics["lead_bot"]["uptime"].rstrip("%"))
         ) / 3
 
         st.metric("Average Bot Uptime", f"{avg_uptime:.1f}%")
+
 
 def render_alerts_and_troubleshooting():
     """Render alerts and troubleshooting information."""
@@ -483,29 +498,35 @@ def render_alerts_and_troubleshooting():
             continue
 
         if bot_metrics.get("error_rate", 0) > 5:
-            issues.append({
-                "severity": "high",
-                "bot": bot_name,
-                "issue": f"High error rate: {bot_metrics['error_rate']}%",
-                "recommendation": "Check bot logs and restart if necessary"
-            })
+            issues.append(
+                {
+                    "severity": "high",
+                    "bot": bot_name,
+                    "issue": f"High error rate: {bot_metrics['error_rate']}%",
+                    "recommendation": "Check bot logs and restart if necessary",
+                }
+            )
 
         if bot_metrics.get("avg_response_time", 0) > 3:
-            issues.append({
-                "severity": "medium",
-                "bot": bot_name,
-                "issue": f"Slow response time: {bot_metrics['avg_response_time']}s",
-                "recommendation": "Monitor system load and consider scaling"
-            })
+            issues.append(
+                {
+                    "severity": "medium",
+                    "bot": bot_name,
+                    "issue": f"Slow response time: {bot_metrics['avg_response_time']}s",
+                    "recommendation": "Monitor system load and consider scaling",
+                }
+            )
 
     # Check system issues
     if metrics["system_metrics"]["event_queue_size"] > 20:
-        issues.append({
-            "severity": "medium",
-            "bot": "system",
-            "issue": f"Event queue elevated: {metrics['system_metrics']['event_queue_size']} pending",
-            "recommendation": "Monitor event processing and check for bottlenecks"
-        })
+        issues.append(
+            {
+                "severity": "medium",
+                "bot": "system",
+                "issue": f"Event queue elevated: {metrics['system_metrics']['event_queue_size']} pending",
+                "recommendation": "Monitor event processing and check for bottlenecks",
+            }
+        )
 
     if issues:
         st.warning(f"🚨 {len(issues)} active alerts detected")
@@ -523,21 +544,17 @@ def render_alerts_and_troubleshooting():
     else:
         st.success("✅ No active alerts - all systems operating normally")
 
+
 def render_bot_coordination():
     """Render bot-to-bot coordination and handoff metrics."""
     st.subheader("🔄 Bot Coordination & Handoffs")
 
     # Sample coordination data
     coordination_data = {
-        "handoffs_today": {
-            "seller_to_buyer": 8,
-            "buyer_to_lead": 12,
-            "seller_to_lead": 5,
-            "total": 25
-        },
+        "handoffs_today": {"seller_to_buyer": 8, "buyer_to_lead": 12, "seller_to_lead": 5, "total": 25},
         "handoff_success_rate": 94.3,
         "avg_handoff_time": 1.2,
-        "coordination_accuracy": 96.8
+        "coordination_accuracy": 96.8,
     }
 
     col1, col2 = st.columns(2)
@@ -548,22 +565,19 @@ def render_bot_coordination():
         # Handoff flow visualization
         handoffs = coordination_data["handoffs_today"]
 
-        fig = go.Figure(data=[
-            go.Bar(
-                x=['Seller→Buyer', 'Buyer→Lead', 'Seller→Lead'],
-                y=[handoffs['seller_to_buyer'], handoffs['buyer_to_lead'], handoffs['seller_to_lead']],
-                marker_color=['#ff6b6b', '#4ecdc4', '#45b7d1'],
-                text=[handoffs['seller_to_buyer'], handoffs['buyer_to_lead'], handoffs['seller_to_lead']],
-                textposition='auto'
-            )
-        ])
-
-        fig.update_layout(
-            title="Bot Handoffs Today",
-            yaxis_title="Number of Handoffs",
-            showlegend=False,
-            height=300
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=["Seller→Buyer", "Buyer→Lead", "Seller→Lead"],
+                    y=[handoffs["seller_to_buyer"], handoffs["buyer_to_lead"], handoffs["seller_to_lead"]],
+                    marker_color=["#ff6b6b", "#4ecdc4", "#45b7d1"],
+                    text=[handoffs["seller_to_buyer"], handoffs["buyer_to_lead"], handoffs["seller_to_lead"]],
+                    textposition="auto",
+                )
+            ]
         )
+
+        fig.update_layout(title="Bot Handoffs Today", yaxis_title="Number of Handoffs", showlegend=False, height=300)
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -585,6 +599,7 @@ def render_bot_coordination():
 
         if st.button("📊 Generate Report", type="secondary"):
             st.info("📋 Performance report generated and saved to dashboard")
+
 
 def render_bot_health_dashboard():
     """Main function to render the complete bot health monitoring dashboard."""
@@ -647,6 +662,7 @@ def render_bot_health_dashboard():
 
     with col3:
         st.info("📊 Data Source: **Real-Time Bot Metrics**")
+
 
 # === MAIN EXECUTION ===
 

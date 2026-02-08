@@ -47,15 +47,16 @@ class CompetitiveIntelligenceService:
 
     def __init__(self):
         import warnings
+
         warnings.warn(
             "CompetitiveIntelligenceService is deprecated and will be removed in v3.0. "
             "Please migrate to CompetitiveIntelligenceHub from "
             "ghl_real_estate_ai.services.competitive_intelligence_hub. "
             "See COMPETITIVE_INTELLIGENCE_CONSOLIDATION_MIGRATION_GUIDE.md for details.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
-        
+
         self.known_competitors = self._load_competitor_database()
         self.win_loss_data = {}
 
@@ -82,9 +83,7 @@ class CompetitiveIntelligenceService:
                         competitor_name=competitor,
                         description=f"Lead mentioned {competitor} as alternative option",
                         threat_level=threat_level,
-                        recommended_response=self._get_differentiation_strategy(
-                            competitor
-                        ),
+                        recommended_response=self._get_differentiation_strategy(competitor),
                         data_source="conversation_analysis",
                     )
                 )
@@ -147,11 +146,9 @@ class CompetitiveIntelligenceService:
                 "competitor": competitor_name,
                 "wins": data.get("wins", 0),
                 "losses": data.get("losses", 0),
-                "win_rate": f"{win_rate*100:.1f}%",
+                "win_rate": f"{win_rate * 100:.1f}%",
                 "common_loss_reasons": self._get_top_reasons(data.get("reasons", [])),
-                "recommended_counter_strategies": self._get_counter_strategies(
-                    competitor_name
-                ),
+                "recommended_counter_strategies": self._get_counter_strategies(competitor_name),
             }
         else:
             # Overall report
@@ -213,9 +210,7 @@ class CompetitiveIntelligenceService:
             "Independent Agent": "Proven track record - 'We close 10x more deals per month. Experience matters.'",
         }
 
-        return strategies.get(
-            competitor, "Emphasize Jorge's unique dual-path approach and speed to close"
-        )
+        return strategies.get(competitor, "Emphasize Jorge's unique dual-path approach and speed to close")
 
     def _get_jorge_advantages(self) -> List[str]:
         """List Jorge's competitive advantages"""
@@ -253,16 +248,13 @@ class CompetitiveIntelligenceService:
     def _calculate_overall_win_rate(self) -> str:
         """Calculate overall win rate across all competitors"""
         total_wins = sum(data.get("wins", 0) for data in self.win_loss_data.values())
-        total_deals = sum(
-            data.get("wins", 0) + data.get("losses", 0)
-            for data in self.win_loss_data.values()
-        )
+        total_deals = sum(data.get("wins", 0) + data.get("losses", 0) for data in self.win_loss_data.values())
 
         if total_deals == 0:
             return "N/A"
 
         win_rate = total_wins / total_deals
-        return f"{win_rate*100:.1f}%"
+        return f"{win_rate * 100:.1f}%"
 
     def _get_top_competitors(self, limit: int) -> List[Dict]:
         """Get top competitors by deal volume"""
@@ -273,11 +265,7 @@ class CompetitiveIntelligenceService:
                 {
                     "name": name,
                     "total_deals": total,
-                    "win_rate": (
-                        f"{data.get('wins', 0) / total * 100:.1f}%"
-                        if total > 0
-                        else "N/A"
-                    ),
+                    "win_rate": (f"{data.get('wins', 0) / total * 100:.1f}%" if total > 0 else "N/A"),
                 }
             )
 

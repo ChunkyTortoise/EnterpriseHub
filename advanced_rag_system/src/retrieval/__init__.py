@@ -9,24 +9,23 @@ This module provides various retrieval strategies including:
 """
 
 # Phase 2 imports - sparse retrieval
-from .sparse import BM25Index, BM25Config, TextPreprocessor
+# Phase 2/3 imports - dense retrieval
+from .dense import DenseRetriever
 
 # Phase 2 imports - hybrid retrieval
 from .hybrid import (
-    HybridSearcher,
-    HybridSearchConfig,
     FusionConfig,
+    HybridSearchConfig,
+    HybridSearcher,
     ReciprocalRankFusion,
     WeightedScoreFusion,
     deduplicate_results,
     normalize_scores,
 )
 
-# Phase 2/3 imports - dense retrieval
-from .dense import DenseRetriever
-
 # Phase 3 imports - query enhancement
-from .query import QueryExpander, HyDEGenerator
+from .query import HyDEGenerator, QueryExpander
+from .sparse import BM25Config, BM25Index, TextPreprocessor
 
 __all__ = [
     "BM25Index",

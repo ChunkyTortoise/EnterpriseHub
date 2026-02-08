@@ -16,33 +16,34 @@ Features:
 - Executive reporting and accountability
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
-from enum import Enum
-import pandas as pd
-from decimal import Decimal
 import asyncio
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
+import pandas as pd
+
+from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.core.llm_client import LLMClient
 
 
 class ServiceTier(Enum):
-    STANDARD = "standard"          # Standard service level
-    PREMIUM = "premium"            # Premium service level
-    WHITE_GLOVE = "white_glove"    # Ultra-premium white-glove service
-    CONCIERGE = "concierge"        # Concierge-level service
+    STANDARD = "standard"  # Standard service level
+    PREMIUM = "premium"  # Premium service level
+    WHITE_GLOVE = "white_glove"  # Ultra-premium white-glove service
+    CONCIERGE = "concierge"  # Concierge-level service
 
 
 class ServiceStatus(Enum):
-    PENDING = "pending"            # Service item pending
-    IN_PROGRESS = "in_progress"    # Service item in progress
-    COMPLETED = "completed"        # Service item completed successfully
-    OVERDUE = "overdue"           # Service item overdue
-    ESCALATED = "escalated"       # Service item escalated
-    EXCEPTION = "exception"       # Service exception requiring attention
+    PENDING = "pending"  # Service item pending
+    IN_PROGRESS = "in_progress"  # Service item in progress
+    COMPLETED = "completed"  # Service item completed successfully
+    OVERDUE = "overdue"  # Service item overdue
+    ESCALATED = "escalated"  # Service item escalated
+    EXCEPTION = "exception"  # Service exception requiring attention
 
 
 class TouchpointType(Enum):
@@ -61,11 +62,12 @@ class TouchpointType(Enum):
 @dataclass
 class ServiceStandard:
     """Service standard definition for premium clients"""
+
     service_tier: ServiceTier
-    response_time_hours: float          # Maximum response time in hours
-    completion_time_hours: float        # Maximum completion time in hours
-    communication_frequency: str        # daily, weekly, bi_weekly, monthly
-    quality_threshold: float           # Minimum quality score (0-100)
+    response_time_hours: float  # Maximum response time in hours
+    completion_time_hours: float  # Maximum completion time in hours
+    communication_frequency: str  # daily, weekly, bi_weekly, monthly
+    quality_threshold: float  # Minimum quality score (0-100)
     escalation_threshold_hours: float  # Hours before auto-escalation
     client_satisfaction_target: float  # Target satisfaction score (0-100)
 
@@ -73,6 +75,7 @@ class ServiceStandard:
 @dataclass
 class ServiceDeliverable:
     """Individual service deliverable tracking"""
+
     deliverable_id: str
     client_id: str
     deliverable_type: TouchpointType
@@ -82,17 +85,17 @@ class ServiceDeliverable:
     created_date: datetime
     due_date: datetime
     completed_date: Optional[datetime] = None
-    response_time_actual: Optional[float] = None    # Actual response time in hours
+    response_time_actual: Optional[float] = None  # Actual response time in hours
 
     # Status and quality
     status: ServiceStatus = ServiceStatus.PENDING
-    quality_score: float = 0.0                     # Quality assessment 0-100
-    client_satisfaction: float = 0.0               # Client satisfaction 0-100
+    quality_score: float = 0.0  # Quality assessment 0-100
+    client_satisfaction: float = 0.0  # Client satisfaction 0-100
 
     # Details
     description: str = ""
     assigned_to: str = ""
-    priority: str = "normal"                       # low, normal, high, urgent
+    priority: str = "normal"  # low, normal, high, urgent
 
     # Tracking
     updates: List[Dict[str, Any]] = field(default_factory=list)
@@ -107,21 +110,22 @@ class ServiceDeliverable:
 @dataclass
 class ClientServiceProfile:
     """Comprehensive service profile for UHNW client"""
+
     client_id: str
     client_name: str
     service_tier: ServiceTier
     net_worth: float
-    relationship_value: float           # Total relationship value
+    relationship_value: float  # Total relationship value
 
     # Service preferences
     communication_preferences: Dict[str, Any] = field(default_factory=dict)
     service_expectations: List[str] = field(default_factory=list)
-    privacy_requirements: float = 0.0   # Privacy requirement score (0-100)
+    privacy_requirements: float = 0.0  # Privacy requirement score (0-100)
 
     # Performance tracking
-    overall_satisfaction: float = 0.0   # Overall client satisfaction (0-100)
-    service_score: float = 0.0         # Service delivery score (0-100)
-    nps_score: Optional[int] = None    # Net Promoter Score (-100 to 100)
+    overall_satisfaction: float = 0.0  # Overall client satisfaction (0-100)
+    service_score: float = 0.0  # Service delivery score (0-100)
+    nps_score: Optional[int] = None  # Net Promoter Score (-100 to 100)
 
     # Relationship metrics
     total_deliverables: int = 0
@@ -138,6 +142,7 @@ class ClientServiceProfile:
 @dataclass
 class ServiceMetrics:
     """Service delivery metrics and KPIs"""
+
     # Overall metrics
     total_active_clients: int = 0
     total_deliverables_month: int = 0
@@ -183,7 +188,7 @@ class PremiumServiceDeliveryTracker:
                 communication_frequency="weekly",
                 quality_threshold=75.0,
                 escalation_threshold_hours=48.0,
-                client_satisfaction_target=80.0
+                client_satisfaction_target=80.0,
             ),
             ServiceTier.PREMIUM: ServiceStandard(
                 service_tier=ServiceTier.PREMIUM,
@@ -192,7 +197,7 @@ class PremiumServiceDeliveryTracker:
                 communication_frequency="daily",
                 quality_threshold=85.0,
                 escalation_threshold_hours=8.0,
-                client_satisfaction_target=90.0
+                client_satisfaction_target=90.0,
             ),
             ServiceTier.WHITE_GLOVE: ServiceStandard(
                 service_tier=ServiceTier.WHITE_GLOVE,
@@ -201,7 +206,7 @@ class PremiumServiceDeliveryTracker:
                 communication_frequency="daily",
                 quality_threshold=95.0,
                 escalation_threshold_hours=2.0,
-                client_satisfaction_target=95.0
+                client_satisfaction_target=95.0,
             ),
             ServiceTier.CONCIERGE: ServiceStandard(
                 service_tier=ServiceTier.CONCIERGE,
@@ -210,8 +215,8 @@ class PremiumServiceDeliveryTracker:
                 communication_frequency="real_time",
                 quality_threshold=98.0,
                 escalation_threshold_hours=1.0,
-                client_satisfaction_target=98.0
-            )
+                client_satisfaction_target=98.0,
+            ),
         }
 
         # Premium service deliverable templates
@@ -221,29 +226,29 @@ class PremiumServiceDeliveryTracker:
                     "Comprehensive market analysis report",
                     "Personalized investment strategy presentation",
                     "Luxury property portfolio recommendations",
-                    "Executive welcome package delivery"
+                    "Executive welcome package delivery",
                 ],
                 "premium": [
                     "Market analysis overview",
                     "Investment strategy consultation",
                     "Property recommendations",
-                    "Welcome materials"
-                ]
+                    "Welcome materials",
+                ],
             },
             TouchpointType.MARKET_ANALYSIS: {
                 "white_glove": [
                     "Investment-grade market analysis",
                     "Competitive luxury market intelligence",
                     "ROI and appreciation forecasts",
-                    "Tax optimization strategies"
+                    "Tax optimization strategies",
                 ],
                 "premium": [
                     "Market trends analysis",
                     "Competitive analysis",
                     "Investment projections",
-                    "Tax considerations"
-                ]
-            }
+                    "Tax considerations",
+                ],
+            },
         }
 
     async def create_service_deliverable(
@@ -252,7 +257,7 @@ class PremiumServiceDeliveryTracker:
         deliverable_type: TouchpointType,
         service_tier: ServiceTier,
         description: str = "",
-        priority: str = "normal"
+        priority: str = "normal",
     ) -> ServiceDeliverable:
         """Create a new service deliverable with appropriate standards"""
 
@@ -273,19 +278,21 @@ class PremiumServiceDeliveryTracker:
             created_date=datetime.now(),
             due_date=due_date,
             description=description,
-            priority=priority
+            priority=priority,
         )
 
         # Auto-assign based on service tier and type
         deliverable.assigned_to = await self._auto_assign_deliverable(deliverable)
 
         # Add initial tracking entry
-        deliverable.updates.append({
-            "timestamp": datetime.now().isoformat(),
-            "status": ServiceStatus.PENDING.value,
-            "note": f"Created {deliverable_type.value} deliverable for {service_tier.value} client",
-            "automated": True
-        })
+        deliverable.updates.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "status": ServiceStatus.PENDING.value,
+                "note": f"Created {deliverable_type.value} deliverable for {service_tier.value} client",
+                "automated": True,
+            }
+        )
 
         # Schedule automated follow-ups
         await self._schedule_automated_follow_ups(deliverable)
@@ -300,7 +307,7 @@ class PremiumServiceDeliveryTracker:
             ServiceTier.CONCIERGE: "Executive Service Manager",
             ServiceTier.WHITE_GLOVE: "Senior Client Specialist",
             ServiceTier.PREMIUM: "Client Specialist",
-            ServiceTier.STANDARD: "Client Coordinator"
+            ServiceTier.STANDARD: "Client Coordinator",
         }
 
         # Special assignments for complex deliverables
@@ -325,11 +332,13 @@ class PremiumServiceDeliveryTracker:
         quality_check_time = deliverable.due_date + timedelta(hours=24)
 
         # In production, these would be scheduled as actual tasks/reminders
-        deliverable.automated_actions.extend([
-            f"Response check scheduled for {response_check_time.isoformat()}",
-            f"Escalation scheduled for {escalation_time.isoformat()}",
-            f"Quality check scheduled for {quality_check_time.isoformat()}"
-        ])
+        deliverable.automated_actions.extend(
+            [
+                f"Response check scheduled for {response_check_time.isoformat()}",
+                f"Escalation scheduled for {escalation_time.isoformat()}",
+                f"Quality check scheduled for {quality_check_time.isoformat()}",
+            ]
+        )
 
     async def update_deliverable_status(
         self,
@@ -337,7 +346,7 @@ class PremiumServiceDeliveryTracker:
         new_status: ServiceStatus,
         update_note: str = "",
         quality_score: Optional[float] = None,
-        automated: bool = False
+        automated: bool = False,
     ) -> bool:
         """Update deliverable status with tracking"""
 
@@ -349,7 +358,7 @@ class PremiumServiceDeliveryTracker:
             "status": new_status.value,
             "note": update_note,
             "quality_score": quality_score,
-            "automated": automated
+            "automated": automated,
         }
 
         # Calculate response time if moving from pending
@@ -400,7 +409,8 @@ class PremiumServiceDeliveryTracker:
             response = await self.claude.generate_claude_response(prompt, "quality_assessment")
             # Extract numeric score from response
             import re
-            score_match = re.search(r'\d{1,3}', response)
+
+            score_match = re.search(r"\d{1,3}", response)
             if score_match:
                 return min(float(score_match.group()), 100.0)
         except Exception:
@@ -408,6 +418,7 @@ class PremiumServiceDeliveryTracker:
 
         # Fallback to simulated quality assessment
         import random
+
         return random.uniform(80, 95)  # Simulate high-quality service
 
     async def _request_client_satisfaction_feedback(self, deliverable_id: str):
@@ -418,7 +429,7 @@ class PremiumServiceDeliveryTracker:
             "deliverable_id": deliverable_id,
             "request_time": datetime.now().isoformat(),
             "survey_type": "deliverable_satisfaction",
-            "channels": ["email", "sms", "portal"]
+            "channels": ["email", "sms", "portal"],
         }
 
         # Schedule follow-up if no response
@@ -432,7 +443,7 @@ class PremiumServiceDeliveryTracker:
             "reason": reason,
             "escalated_to": "Senior Management",
             "priority": "high",
-            "notification_sent": True
+            "notification_sent": True,
         }
 
         # In production, would trigger actual notifications and workflows
@@ -449,7 +460,7 @@ class PremiumServiceDeliveryTracker:
             client_name=f"UHNW Client {client_id[-3:]}",
             service_tier=ServiceTier.WHITE_GLOVE,
             net_worth=15_000_000,
-            relationship_value=250_000
+            relationship_value=250_000,
         )
 
         # Calculate service metrics (simulated)
@@ -467,7 +478,7 @@ class PremiumServiceDeliveryTracker:
             "frequency": "daily",
             "time_preference": "morning",
             "language": "english",
-            "formality": "professional"
+            "formality": "professional",
         }
 
         profile.service_expectations = [
@@ -475,7 +486,7 @@ class PremiumServiceDeliveryTracker:
             "Investment-grade market analysis",
             "White-glove transaction management",
             "Privacy and discretion",
-            "Proactive market updates"
+            "Proactive market updates",
         ]
 
         profile.privacy_requirements = 95.0
@@ -486,7 +497,7 @@ class PremiumServiceDeliveryTracker:
             "Market intelligence briefings",
             "Investment advisory",
             "Transaction coordination",
-            "Post-closing concierge"
+            "Post-closing concierge",
         ]
 
         profile.vip_benefits_enrolled = [
@@ -494,15 +505,12 @@ class PremiumServiceDeliveryTracker:
             "Exclusive market reports",
             "Dedicated transaction manager",
             "White-glove closing services",
-            "Luxury service provider network access"
+            "Luxury service provider network access",
         ]
 
         return profile
 
-    async def generate_service_excellence_report(
-        self,
-        client_profiles: List[ClientServiceProfile]
-    ) -> Dict[str, Any]:
+    async def generate_service_excellence_report(self, client_profiles: List[ClientServiceProfile]) -> Dict[str, Any]:
         """Generate comprehensive service excellence report"""
 
         if not client_profiles:
@@ -527,8 +535,7 @@ class PremiumServiceDeliveryTracker:
 
         # Clients needing attention
         attention_needed = [
-            profile for profile in client_profiles
-            if profile.overall_satisfaction < 85 or profile.service_score < 80
+            profile for profile in client_profiles if profile.overall_satisfaction < 85 or profile.service_score < 80
         ]
 
         report = {
@@ -537,7 +544,7 @@ class PremiumServiceDeliveryTracker:
                 "total_relationship_value": total_relationship_value,
                 "average_satisfaction": avg_satisfaction,
                 "average_service_score": avg_service_score,
-                "average_response_time_hours": avg_response_time
+                "average_response_time_hours": avg_response_time,
             },
             "service_tier_distribution": tier_distribution,
             "top_performing_relationships": [
@@ -546,7 +553,7 @@ class PremiumServiceDeliveryTracker:
                     "client_name": profile.client_name,
                     "satisfaction": profile.overall_satisfaction,
                     "service_score": profile.service_score,
-                    "relationship_value": profile.relationship_value
+                    "relationship_value": profile.relationship_value,
                 }
                 for profile in top_satisfaction
             ],
@@ -556,10 +563,10 @@ class PremiumServiceDeliveryTracker:
                     "client_name": profile.client_name,
                     "satisfaction": profile.overall_satisfaction,
                     "service_score": profile.service_score,
-                    "issues": self._identify_service_issues(profile)
+                    "issues": self._identify_service_issues(profile),
                 }
                 for profile in attention_needed
-            ]
+            ],
         }
 
         # Add AI-powered insights
@@ -642,13 +649,10 @@ class PremiumServiceDeliveryTracker:
             ServiceTier.STANDARD: 2_000,
             ServiceTier.PREMIUM: 5_000,
             ServiceTier.WHITE_GLOVE: 12_000,
-            ServiceTier.CONCIERGE: 20_000
+            ServiceTier.CONCIERGE: 20_000,
         }
 
-        total_service_costs = sum(
-            service_cost_per_client.get(profile.service_tier, 5_000)
-            for profile in profiles
-        )
+        total_service_costs = sum(service_cost_per_client.get(profile.service_tier, 5_000) for profile in profiles)
 
         # Calculate premium rate justification
         standard_commission_rate = 0.029
@@ -667,7 +671,7 @@ class PremiumServiceDeliveryTracker:
             "service_roi_percentage": service_roi,
             "relationship_value_protected": total_relationship_value,
             "average_client_satisfaction": sum(p.overall_satisfaction for p in profiles) / len(profiles),
-            "premium_rate_justification_score": min(service_roi / 10, 100)
+            "premium_rate_justification_score": min(service_roi / 10, 100),
         }
 
     async def create_client_service_plan(
@@ -675,7 +679,7 @@ class PremiumServiceDeliveryTracker:
         client_id: str,
         service_tier: ServiceTier,
         property_value_range: Tuple[float, float],
-        timeline_months: int = 12
+        timeline_months: int = 12,
     ) -> Dict[str, Any]:
         """Create comprehensive service plan for luxury client"""
 
@@ -691,8 +695,8 @@ class PremiumServiceDeliveryTracker:
                         "Executive welcome package",
                         "Comprehensive market analysis",
                         "Investment strategy presentation",
-                        "Dedicated service team introduction"
-                    ]
+                        "Dedicated service team introduction",
+                    ],
                 },
                 {
                     "milestone": "Market Intelligence Setup",
@@ -701,8 +705,8 @@ class PremiumServiceDeliveryTracker:
                         "Private property alerts configuration",
                         "Market intelligence dashboard access",
                         "Luxury service provider introductions",
-                        "Concierge services activation"
-                    ]
+                        "Concierge services activation",
+                    ],
                 },
                 {
                     "milestone": "Ongoing Premium Service",
@@ -711,9 +715,9 @@ class PremiumServiceDeliveryTracker:
                         "Weekly market updates",
                         "Monthly portfolio reviews",
                         "Quarterly strategy sessions",
-                        "Annual relationship review"
-                    ]
-                }
+                        "Annual relationship review",
+                    ],
+                },
             ]
 
         # Service standards for this client
@@ -728,7 +732,7 @@ class PremiumServiceDeliveryTracker:
                 "response_time_hours": standards.response_time_hours,
                 "completion_time_hours": standards.completion_time_hours,
                 "quality_threshold": standards.quality_threshold,
-                "satisfaction_target": standards.client_satisfaction_target
+                "satisfaction_target": standards.client_satisfaction_target,
             },
             "service_milestones": service_milestones,
             "premium_features": [
@@ -737,15 +741,15 @@ class PremiumServiceDeliveryTracker:
                 "Investment-grade analysis",
                 "White-glove transaction support",
                 "Luxury service provider network",
-                "Post-transaction concierge services"
+                "Post-transaction concierge services",
             ],
             "success_metrics": [
                 "Client satisfaction > 95%",
                 "Response time < 1 hour",
                 "100% on-time delivery",
                 "Premium commission rate justified",
-                "Referral generation target: 2+ per year"
-            ]
+                "Referral generation target: 2+ per year",
+            ],
         }
 
         return service_plan
@@ -770,7 +774,7 @@ class PremiumServiceDeliveryTracker:
             concierge_service_utilization=78.5,
             total_commission_protected=2_850_000,
             premium_rate_justified=94.2,
-            referral_rate=68.0
+            referral_rate=68.0,
         )
 
         return metrics
@@ -778,44 +782,49 @@ class PremiumServiceDeliveryTracker:
 
 # Example usage and testing functions
 
+
 def create_sample_client_profiles() -> List[ClientServiceProfile]:
     """Create sample client profiles for testing"""
 
     profiles = []
 
     # Ultra-premium client
-    profiles.append(ClientServiceProfile(
-        client_id="UHNW-001",
-        client_name="Executive Client Alpha",
-        service_tier=ServiceTier.WHITE_GLOVE,
-        net_worth=25_000_000,
-        relationship_value=450_000,
-        overall_satisfaction=96.5,
-        service_score=95.8,
-        nps_score=92,
-        total_deliverables=32,
-        on_time_delivery_rate=100.0,
-        quality_average=96.2,
-        response_time_average=0.3,
-        privacy_requirements=98.0
-    ))
+    profiles.append(
+        ClientServiceProfile(
+            client_id="UHNW-001",
+            client_name="Executive Client Alpha",
+            service_tier=ServiceTier.WHITE_GLOVE,
+            net_worth=25_000_000,
+            relationship_value=450_000,
+            overall_satisfaction=96.5,
+            service_score=95.8,
+            nps_score=92,
+            total_deliverables=32,
+            on_time_delivery_rate=100.0,
+            quality_average=96.2,
+            response_time_average=0.3,
+            privacy_requirements=98.0,
+        )
+    )
 
     # Premium client
-    profiles.append(ClientServiceProfile(
-        client_id="UHNW-002",
-        client_name="Investment Executive Beta",
-        service_tier=ServiceTier.PREMIUM,
-        net_worth=12_000_000,
-        relationship_value=180_000,
-        overall_satisfaction=89.2,
-        service_score=87.5,
-        nps_score=75,
-        total_deliverables=18,
-        on_time_delivery_rate=94.4,
-        quality_average=88.1,
-        response_time_average=2.1,
-        privacy_requirements=85.0
-    ))
+    profiles.append(
+        ClientServiceProfile(
+            client_id="UHNW-002",
+            client_name="Investment Executive Beta",
+            service_tier=ServiceTier.PREMIUM,
+            net_worth=12_000_000,
+            relationship_value=180_000,
+            overall_satisfaction=89.2,
+            service_score=87.5,
+            nps_score=75,
+            total_deliverables=18,
+            on_time_delivery_rate=94.4,
+            quality_average=88.1,
+            response_time_average=2.1,
+            privacy_requirements=85.0,
+        )
+    )
 
     return profiles
 
@@ -832,7 +841,7 @@ async def test_premium_service_tracker():
         deliverable_type=TouchpointType.INITIAL_CONSULTATION,
         service_tier=ServiceTier.WHITE_GLOVE,
         description="Executive consultation and market analysis",
-        priority="high"
+        priority="high",
     )
 
     print(f"Service Deliverable Created:")
@@ -847,7 +856,7 @@ async def test_premium_service_tracker():
         deliverable.deliverable_id,
         ServiceStatus.COMPLETED,
         "Consultation completed successfully with comprehensive market analysis delivered",
-        quality_score=96.5
+        quality_score=96.5,
     )
 
     # Analyze client service performance

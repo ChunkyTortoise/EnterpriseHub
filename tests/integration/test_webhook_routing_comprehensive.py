@@ -14,9 +14,10 @@ import os
 os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_fake_for_testing")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 
-import pytest
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.api.schemas.ghl import (
     ActionType,
@@ -30,10 +31,10 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_webhook_event(
     message_body: str,
@@ -74,6 +75,7 @@ def _remove_tags(response: GHLWebhookResponse) -> list[str]:
 # ---------------------------------------------------------------------------
 # Shared all-mode patch context manager
 # ---------------------------------------------------------------------------
+
 
 def _all_mode_patches(
     jorge_seller_mode: bool = True,
@@ -125,26 +127,28 @@ def _all_mode_patches(
                 side_effect=RuntimeError("Seller engine error")
             )
         else:
-            mock_seller_engine_instance.process_seller_response = AsyncMock(return_value={
-                "temperature": "warm",
-                "message": "What price would incentivize you to sell?",
-                "questions_answered": 2,
-                "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
-            })
+            mock_seller_engine_instance.process_seller_response = AsyncMock(
+                return_value={
+                    "temperature": "warm",
+                    "message": "What price would incentivize you to sell?",
+                    "questions_answered": 2,
+                    "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
+                }
+            )
 
         # --- Buyer bot ---
         mock_buyer_bot_instance = MagicMock()
         if buyer_raises:
-            mock_buyer_bot_instance.process_buyer_conversation = AsyncMock(
-                side_effect=RuntimeError("Buyer bot error")
-            )
+            mock_buyer_bot_instance.process_buyer_conversation = AsyncMock(side_effect=RuntimeError("Buyer bot error"))
         else:
-            mock_buyer_bot_instance.process_buyer_conversation = AsyncMock(return_value={
-                "buyer_temperature": "warm",
-                "is_qualified": False,
-                "financial_readiness_score": 55,
-                "response_content": "What area in Rancho Cucamonga interests you most?",
-            })
+            mock_buyer_bot_instance.process_buyer_conversation = AsyncMock(
+                return_value={
+                    "buyer_temperature": "warm",
+                    "is_qualified": False,
+                    "financial_readiness_score": 55,
+                    "response_content": "What area in Rancho Cucamonga interests you most?",
+                }
+            )
 
         # --- Lead (ConversationManager) ---
         mock_ai_response = MagicMock()
@@ -154,9 +158,7 @@ def _all_mode_patches(
 
         mock_conv_mgr = MagicMock()
         if lead_raises:
-            mock_conv_mgr.generate_response = AsyncMock(
-                side_effect=RuntimeError("Lead processing error")
-            )
+            mock_conv_mgr.generate_response = AsyncMock(side_effect=RuntimeError("Lead processing error"))
         else:
             mock_conv_mgr.generate_response = AsyncMock(return_value=mock_ai_response)
         mock_conv_mgr.get_context = AsyncMock(return_value={})
@@ -166,7 +168,11 @@ def _all_mode_patches(
         # --- Compliance ---
         mock_compliance = MagicMock()
         mock_compliance.audit_message = AsyncMock(
-            return_value=(compliance_status, "test_reason" if compliance_status == ComplianceStatus.BLOCKED else "", ["violation"] if compliance_status == ComplianceStatus.BLOCKED else [])
+            return_value=(
+                compliance_status,
+                "test_reason" if compliance_status == ComplianceStatus.BLOCKED else "",
+                ["violation"] if compliance_status == ComplianceStatus.BLOCKED else [],
+            )
         )
 
         # --- Other deps ---
@@ -185,29 +191,43 @@ def _all_mode_patches(
         )
 
         mock_lead_source_tracker = MagicMock()
-        mock_lead_source_tracker.analyze_lead_source = AsyncMock(
-            side_effect=Exception("test skip")
-        )
+        mock_lead_source_tracker.analyze_lead_source = AsyncMock(side_effect=Exception("test skip"))
 
-        with patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())), \
-             patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", mock_ghl_client), \
-             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings), \
-             patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_config_settings), \
-             patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard", mock_compliance), \
-             patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", mock_tenant), \
-             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv_mgr), \
-             patch("ghl_real_estate_ai.api.routes.webhook._get_lead_scorer", return_value=mock_lead_scorer), \
-             patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker", mock_lead_source_tracker), \
-             patch("ghl_real_estate_ai.api.routes.webhook.attribution_analytics", MagicMock(track_daily_metrics=AsyncMock())), \
-             patch("ghl_real_estate_ai.api.routes.webhook.pricing_optimizer", MagicMock(calculate_lead_price=AsyncMock())), \
-             patch("ghl_real_estate_ai.api.routes.webhook.subscription_manager", MagicMock(get_active_subscription=AsyncMock(return_value=None))), \
-             patch("ghl_real_estate_ai.api.routes.webhook.calendar_scheduler", MagicMock()), \
-             patch("ghl_real_estate_ai.api.routes.webhook.handoff_service", MagicMock(
-                 evaluate_handoff=AsyncMock(return_value=None),
-                 execute_handoff=AsyncMock(return_value=[]),
-             )), \
-             patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine", return_value=mock_seller_engine_instance), \
-             patch("ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot", return_value=mock_buyer_bot_instance):
+        with (
+            patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())),
+            patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", mock_ghl_client),
+            patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings),
+            patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_config_settings),
+            patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard", mock_compliance),
+            patch("ghl_real_estate_ai.api.routes.webhook.tenant_service", mock_tenant),
+            patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv_mgr),
+            patch("ghl_real_estate_ai.api.routes.webhook._get_lead_scorer", return_value=mock_lead_scorer),
+            patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker", mock_lead_source_tracker),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.attribution_analytics",
+                MagicMock(track_daily_metrics=AsyncMock()),
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.pricing_optimizer", MagicMock(calculate_lead_price=AsyncMock())
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.subscription_manager",
+                MagicMock(get_active_subscription=AsyncMock(return_value=None)),
+            ),
+            patch("ghl_real_estate_ai.api.routes.webhook.calendar_scheduler", MagicMock()),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.handoff_service",
+                MagicMock(
+                    evaluate_handoff=AsyncMock(return_value=None),
+                    execute_handoff=AsyncMock(return_value=[]),
+                ),
+            ),
+            patch(
+                "ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine",
+                return_value=mock_seller_engine_instance,
+            ),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot", return_value=mock_buyer_bot_instance),
+        ):
             yield {
                 "jorge_settings": mock_jorge_settings,
                 "config_settings": mock_config_settings,
@@ -226,6 +246,7 @@ def _all_mode_patches(
 # ===========================================================================
 # Comprehensive Webhook Routing Tests
 # ===========================================================================
+
 
 @pytest.mark.integration
 class TestWebhookRoutingComprehensive:
@@ -443,12 +464,9 @@ class TestWebhookRoutingComprehensive:
             # Fallback message should have been queued via background_tasks.add_task
             add_task_calls = mock_bg_tasks.add_task.call_args_list
             send_message_queued = any(
-                args and args[0] is mocks["ghl_client"].send_message
-                for args, kwargs in [c for c in add_task_calls]
+                args and args[0] is mocks["ghl_client"].send_message for args, kwargs in [c for c in add_task_calls]
             )
-            assert send_message_queued, (
-                "Expected fallback send_message to be queued in background_tasks"
-            )
+            assert send_message_queued, "Expected fallback send_message to be queued in background_tasks"
 
     @pytest.mark.asyncio
     async def test_compliance_enforced_all_modes(self):

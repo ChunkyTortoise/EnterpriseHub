@@ -8,48 +8,52 @@ Author: Claude Code Assistant
 Created: 2026-01-19
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
-from enum import Enum
-from datetime import datetime
 import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class TimelineUrgency(Enum):
     """Seller timeline urgency classifications"""
-    URGENT_30_45_DAYS = "30-45 days"      # Jorge's target timeline
-    FLEXIBLE = "flexible"                  # Somewhat open timeline
-    LONG_TERM = "long-term"               # No urgency (6+ months)
-    UNKNOWN = "unknown"                    # No timeline information
+
+    URGENT_30_45_DAYS = "30-45 days"  # Jorge's target timeline
+    FLEXIBLE = "flexible"  # Somewhat open timeline
+    LONG_TERM = "long-term"  # No urgency (6+ months)
+    UNKNOWN = "unknown"  # No timeline information
 
 
 class PropertyCondition(Enum):
     """Property condition classifications for Jorge's question 3"""
-    MOVE_IN_READY = "move-in ready"       # Perfect condition
-    NEEDS_WORK = "needs work"             # Some repairs needed
-    MAJOR_REPAIRS = "major repairs"       # Significant work required
-    UNKNOWN = "unknown"                   # Condition not specified
+
+    MOVE_IN_READY = "move-in ready"  # Perfect condition
+    NEEDS_WORK = "needs work"  # Some repairs needed
+    MAJOR_REPAIRS = "major repairs"  # Significant work required
+    UNKNOWN = "unknown"  # Condition not specified
 
 
 class MotivationType(Enum):
     """Seller motivation classifications"""
-    RELOCATION = "relocation"             # Moving to another area
-    DOWNSIZING = "downsizing"            # Smaller home needed
-    UPSIZING = "upsizing"                # Larger home needed
-    FINANCIAL = "financial"               # Need cash/debt relief
-    DIVORCE = "divorce"                  # Divorce-related sale
-    INHERITED = "inherited"              # Inherited property
-    INVESTMENT = "investment"            # Investor liquidating
-    OTHER = "other"                      # Other motivation
-    UNKNOWN = "unknown"                  # Not specified
+
+    RELOCATION = "relocation"  # Moving to another area
+    DOWNSIZING = "downsizing"  # Smaller home needed
+    UPSIZING = "upsizing"  # Larger home needed
+    FINANCIAL = "financial"  # Need cash/debt relief
+    DIVORCE = "divorce"  # Divorce-related sale
+    INHERITED = "inherited"  # Inherited property
+    INVESTMENT = "investment"  # Investor liquidating
+    OTHER = "other"  # Other motivation
+    UNKNOWN = "unknown"  # Not specified
 
 
 class PriceFlexibility(Enum):
     """Price expectation flexibility"""
-    FIRM = "firm"                        # Non-negotiable price
-    NEGOTIABLE = "negotiable"            # Open to negotiation
-    FLEXIBLE = "flexible"                # Very flexible on price
-    UNKNOWN = "unknown"                  # Price flexibility not known
+
+    FIRM = "firm"  # Non-negotiable price
+    NEGOTIABLE = "negotiable"  # Open to negotiation
+    FLEXIBLE = "flexible"  # Very flexible on price
+    UNKNOWN = "unknown"  # Price flexibility not known
 
 
 @dataclass
@@ -123,10 +127,10 @@ class SellerProfile:
     def is_hot_seller(self) -> bool:
         """Check if seller meets Jorge's hot seller criteria"""
         return (
-            self.questions_answered == 4 and
-            self.timeline_acceptable is True and
-            self.response_quality > 0.7 and
-            self.seller_temperature == "hot"
+            self.questions_answered == 4
+            and self.timeline_acceptable is True
+            and self.response_quality > 0.7
+            and self.seller_temperature == "hot"
         )
 
     @property
@@ -138,7 +142,7 @@ class SellerProfile:
             "motivation": self.motivation is not None,
             "timeline_acceptable": self.timeline_acceptable is not None,
             "property_condition": self.property_condition is not None,
-            "price_expectation": self.price_expectation is not None
+            "price_expectation": self.price_expectation is not None,
         }
 
         return SellerQuestions.get_next_question(question_data)
@@ -168,9 +172,11 @@ class SellerProfile:
             "total_interactions": self.total_interactions,
             "custom_fields": self.custom_fields,
             # Convert datetime to ISO string
-            "conversation_started_at": self.conversation_started_at.isoformat() if self.conversation_started_at else None,
+            "conversation_started_at": self.conversation_started_at.isoformat()
+            if self.conversation_started_at
+            else None,
             "last_interaction_at": self.last_interaction_at.isoformat() if self.last_interaction_at else None,
-            "last_followup_sent": self.last_followup_sent.isoformat() if self.last_followup_sent else None
+            "last_followup_sent": self.last_followup_sent.isoformat() if self.last_followup_sent else None,
         }
 
     @classmethod
@@ -255,7 +261,7 @@ class SellerProfile:
             lead_source=data.get("lead_source"),
             ghl_contact_id=data.get("ghl_contact_id"),
             ghl_location_id=data.get("ghl_location_id"),
-            custom_fields=data.get("custom_fields", {})
+            custom_fields=data.get("custom_fields", {}),
         )
 
     def update_interaction_metrics(self, response_quality: float = None):
@@ -324,11 +330,12 @@ class SellerInteraction:
             "response_quality": self.response_quality,
             "message_content": self.message_content,
             "extracted_data": self.extracted_data,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
 
 # Utility Functions for Jorge's Seller Bot
+
 
 def validate_seller_data(data: Dict[str, Any]) -> List[str]:
     """Validate seller data and return list of validation errors"""
@@ -386,7 +393,7 @@ def create_ghl_custom_fields_mapping() -> Dict[str, str]:
         "property_condition": "custom_field_property_condition",
         "price_expectation": "custom_field_price_expectation",
         "questions_answered": "custom_field_questions_answered",
-        "qualification_score": "custom_field_qualification_score"
+        "qualification_score": "custom_field_qualification_score",
     }
 
 
@@ -400,5 +407,5 @@ __all__ = [
     "PriceFlexibility",
     "validate_seller_data",
     "merge_seller_data",
-    "create_ghl_custom_fields_mapping"
+    "create_ghl_custom_fields_mapping",
 ]

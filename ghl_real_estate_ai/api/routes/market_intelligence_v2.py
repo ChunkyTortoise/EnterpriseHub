@@ -24,25 +24,25 @@ Usage:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from pydantic import BaseModel, Field
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import BaseModel, Field
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # ENHANCED: Import market registry and configuration schemas
 from ghl_real_estate_ai.markets import (
+    MarketCondition,
+    MarketConfig,
+    MarketType,
+    PropertyType,
     get_market_registry,
     get_market_service,
-    MarketConfig,
-    PropertyType,
-    MarketCondition,
-    MarketType
 )
-from ghl_real_estate_ai.services.property_alerts import (
-    get_property_alert_system, AlertType, AlertPriority
-)
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.property_alerts import AlertPriority, AlertType, get_property_alert_system
 
 logger = get_logger(__name__)
 
@@ -53,8 +53,10 @@ router = APIRouter(prefix="/api/v2/market-intelligence", tags=["Market Intellige
 # ENHANCED: Market-Agnostic Pydantic Models
 # ============================================================================
 
+
 class MarketInfoResponse(BaseModel):
     """Market information response."""
+
     market_id: str
     market_name: str
     market_type: str
@@ -66,8 +68,10 @@ class MarketInfoResponse(BaseModel):
     primary_specialization: str
     coordinates: List[float]
 
+
 class MarketMetricsResponse(BaseModel):
     """Market-agnostic metrics response model."""
+
     market_id: str
     market_name: str
     median_price: float
@@ -86,8 +90,10 @@ class MarketMetricsResponse(BaseModel):
     property_type: Optional[str] = None
     last_updated: datetime
 
+
 class NeighborhoodResponse(BaseModel):
     """Market-agnostic neighborhood response."""
+
     market_id: str
     name: str
     zone: str
@@ -101,8 +107,10 @@ class NeighborhoodResponse(BaseModel):
     demographics: Dict[str, Any]
     corporate_proximity: Dict[str, float]
 
+
 class EmployerResponse(BaseModel):
     """Market employer response."""
+
     employer_id: str
     name: str
     industry: str
@@ -114,8 +122,10 @@ class EmployerResponse(BaseModel):
     relocation_frequency: str
     hiring_seasons: List[str]
 
+
 class PropertySearchRequest(BaseModel):
     """Market-agnostic property search request."""
+
     market_id: str = Field(..., description="Market identifier")
     min_price: Optional[float] = Field(None, description="Minimum price filter")
     max_price: Optional[float] = Field(None, description="Maximum price filter")
@@ -126,11 +136,15 @@ class PropertySearchRequest(BaseModel):
     neighborhoods: Optional[List[str]] = Field(None, description="Preferred neighborhoods")
     max_commute_minutes: Optional[int] = Field(None, description="Maximum commute time to work")
     work_location: Optional[str] = Field(None, description="Work location for commute calculation")
-    appeal_preferences: Optional[List[str]] = Field(None, description="Appeal preferences (e.g., tech_appeal, family_appeal)")
+    appeal_preferences: Optional[List[str]] = Field(
+        None, description="Appeal preferences (e.g., tech_appeal, family_appeal)"
+    )
     limit: int = Field(50, description="Maximum results to return", le=100)
+
 
 class PropertyRecommendationRequest(BaseModel):
     """Market-agnostic property recommendation request."""
+
     market_id: str = Field(..., description="Market identifier")
     lead_id: str = Field(..., description="Lead identifier")
     employer: Optional[str] = Field(None, description="Lead's employer")
@@ -140,9 +154,11 @@ class PropertyRecommendationRequest(BaseModel):
     commute_requirements: Optional[str] = Field(None, description="Commute preferences")
     timeline: Optional[str] = Field(None, description="Purchase timeline")
 
+
 # ============================================================================
 # ENHANCED: Market Management Endpoints
 # ============================================================================
+
 
 @router.get("/markets", response_model=List[MarketInfoResponse])
 async def list_available_markets():
@@ -155,18 +171,20 @@ async def list_available_markets():
         for market_id in active_markets:
             config = registry.get_market_config(market_id)
             if config:
-                market_info.append(MarketInfoResponse(
-                    market_id=config.market_id,
-                    market_name=config.market_name,
-                    market_type=config.market_type.value,
-                    state=config.state,
-                    region=config.region,
-                    active=config.active,
-                    neighborhoods_count=len(config.neighborhoods),
-                    employers_count=len(config.employers),
-                    primary_specialization=config.specializations.primary_specialization,
-                    coordinates=list(config.coordinates)
-                ))
+                market_info.append(
+                    MarketInfoResponse(
+                        market_id=config.market_id,
+                        market_name=config.market_name,
+                        market_type=config.market_type.value,
+                        state=config.state,
+                        region=config.region,
+                        active=config.active,
+                        neighborhoods_count=len(config.neighborhoods),
+                        employers_count=len(config.employers),
+                        primary_specialization=config.specializations.primary_specialization,
+                        coordinates=list(config.coordinates),
+                    )
+                )
 
         logger.info(f"Listed {len(market_info)} active markets")
         return market_info
@@ -174,6 +192,7 @@ async def list_available_markets():
     except Exception as e:
         logger.error(f"Error listing markets: {e}")
         raise HTTPException(500, f"Failed to retrieve markets: {str(e)}")
+
 
 @router.get("/markets/{market_id}/info", response_model=MarketInfoResponse)
 async def get_market_info(market_id: str = Path(..., description="Market identifier")):
@@ -195,7 +214,7 @@ async def get_market_info(market_id: str = Path(..., description="Market identif
             neighborhoods_count=len(config.neighborhoods),
             employers_count=len(config.employers),
             primary_specialization=config.specializations.primary_specialization,
-            coordinates=list(config.coordinates)
+            coordinates=list(config.coordinates),
         )
 
     except HTTPException:
@@ -203,6 +222,7 @@ async def get_market_info(market_id: str = Path(..., description="Market identif
     except Exception as e:
         logger.error(f"Error getting market info for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve market info: {str(e)}")
+
 
 @router.get("/markets/{market_id}/specializations")
 async def get_market_specializations(market_id: str = Path(..., description="Market identifier")):
@@ -222,8 +242,8 @@ async def get_market_specializations(market_id: str = Path(..., description="Mar
                 "secondary_specializations": config.specializations.secondary_specializations,
                 "unique_advantages": config.specializations.unique_advantages,
                 "target_client_types": config.specializations.target_client_types,
-                "expertise_tags": config.specializations.expertise_tags
-            }
+                "expertise_tags": config.specializations.expertise_tags,
+            },
         }
 
     except HTTPException:
@@ -232,15 +252,17 @@ async def get_market_specializations(market_id: str = Path(..., description="Mar
         logger.error(f"Error getting specializations for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve specializations: {str(e)}")
 
+
 # ============================================================================
 # ENHANCED: Market Metrics Endpoints
 # ============================================================================
+
 
 @router.get("/markets/{market_id}/metrics", response_model=MarketMetricsResponse)
 async def get_market_metrics(
     market_id: str = Path(..., description="Market identifier"),
     neighborhood: Optional[str] = Query(None, description="Filter by neighborhood"),
-    property_type: Optional[str] = Query(None, description="Filter by property type")
+    property_type: Optional[str] = Query(None, description="Filter by property type"),
 ):
     """
     Get comprehensive market metrics for any supported market.
@@ -284,7 +306,7 @@ async def get_market_metrics(
             market_condition=metrics.market_condition.value,
             neighborhood=neighborhood,
             property_type=property_type,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     except ValueError as e:
@@ -296,9 +318,11 @@ async def get_market_metrics(
         logger.error(f"Error getting market metrics for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve market metrics: {str(e)}")
 
+
 # ============================================================================
 # ENHANCED: Neighborhood Endpoints
 # ============================================================================
+
 
 @router.get("/markets/{market_id}/neighborhoods", response_model=List[NeighborhoodResponse])
 async def get_market_neighborhoods(market_id: str = Path(..., description="Market identifier")):
@@ -312,20 +336,22 @@ async def get_market_neighborhoods(market_id: str = Path(..., description="Marke
 
         neighborhoods = []
         for neighborhood in config.neighborhoods:
-            neighborhoods.append(NeighborhoodResponse(
-                market_id=market_id,
-                name=neighborhood.name,
-                zone=neighborhood.zone,
-                median_price=neighborhood.median_price,
-                price_trend_3m=neighborhood.price_trend_3m,
-                school_rating=neighborhood.school_rating,
-                walkability_score=neighborhood.walkability_score,
-                coordinates=list(neighborhood.coordinates),
-                appeal_scores=neighborhood.appeal_scores,
-                amenities=neighborhood.amenities,
-                demographics=neighborhood.demographics,
-                corporate_proximity=neighborhood.corporate_proximity
-            ))
+            neighborhoods.append(
+                NeighborhoodResponse(
+                    market_id=market_id,
+                    name=neighborhood.name,
+                    zone=neighborhood.zone,
+                    median_price=neighborhood.median_price,
+                    price_trend_3m=neighborhood.price_trend_3m,
+                    school_rating=neighborhood.school_rating,
+                    walkability_score=neighborhood.walkability_score,
+                    coordinates=list(neighborhood.coordinates),
+                    appeal_scores=neighborhood.appeal_scores,
+                    amenities=neighborhood.amenities,
+                    demographics=neighborhood.demographics,
+                    corporate_proximity=neighborhood.corporate_proximity,
+                )
+            )
 
         return neighborhoods
 
@@ -335,10 +361,11 @@ async def get_market_neighborhoods(market_id: str = Path(..., description="Marke
         logger.error(f"Error getting neighborhoods for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve neighborhoods: {str(e)}")
 
+
 @router.get("/markets/{market_id}/neighborhoods/{neighborhood_name}", response_model=NeighborhoodResponse)
 async def get_neighborhood_details(
     market_id: str = Path(..., description="Market identifier"),
-    neighborhood_name: str = Path(..., description="Neighborhood name")
+    neighborhood_name: str = Path(..., description="Neighborhood name"),
 ):
     """Get detailed analysis for a specific neighborhood in a market."""
     try:
@@ -365,7 +392,7 @@ async def get_neighborhood_details(
             appeal_scores=neighborhood_config.appeal_scores,
             amenities=neighborhood_config.amenities,
             demographics=neighborhood_config.demographics,
-            corporate_proximity=neighborhood_config.corporate_proximity
+            corporate_proximity=neighborhood_config.corporate_proximity,
         )
 
     except HTTPException:
@@ -374,9 +401,11 @@ async def get_neighborhood_details(
         logger.error(f"Error getting neighborhood details for {market_id}/{neighborhood_name}: {e}")
         raise HTTPException(500, f"Failed to retrieve neighborhood details: {str(e)}")
 
+
 # ============================================================================
 # ENHANCED: Employer & Corporate Endpoints
 # ============================================================================
+
 
 @router.get("/markets/{market_id}/employers", response_model=List[EmployerResponse])
 async def get_market_employers(market_id: str = Path(..., description="Market identifier")):
@@ -390,18 +419,20 @@ async def get_market_employers(market_id: str = Path(..., description="Market id
 
         employers = []
         for employer in config.employers:
-            employers.append(EmployerResponse(
-                employer_id=employer.employer_id,
-                name=employer.name,
-                industry=employer.industry,
-                location=employer.location,
-                coordinates=list(employer.coordinates),
-                employee_count=employer.employee_count,
-                preferred_neighborhoods=employer.preferred_neighborhoods,
-                average_salary_range=list(employer.average_salary_range),
-                relocation_frequency=employer.relocation_frequency,
-                hiring_seasons=employer.hiring_seasons
-            ))
+            employers.append(
+                EmployerResponse(
+                    employer_id=employer.employer_id,
+                    name=employer.name,
+                    industry=employer.industry,
+                    location=employer.location,
+                    coordinates=list(employer.coordinates),
+                    employee_count=employer.employee_count,
+                    preferred_neighborhoods=employer.preferred_neighborhoods,
+                    average_salary_range=list(employer.average_salary_range),
+                    relocation_frequency=employer.relocation_frequency,
+                    hiring_seasons=employer.hiring_seasons,
+                )
+            )
 
         return employers
 
@@ -411,10 +442,11 @@ async def get_market_employers(market_id: str = Path(..., description="Market id
         logger.error(f"Error getting employers for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve employers: {str(e)}")
 
+
 @router.get("/markets/{market_id}/employers/{employer_id}", response_model=EmployerResponse)
 async def get_employer_details(
     market_id: str = Path(..., description="Market identifier"),
-    employer_id: str = Path(..., description="Employer identifier")
+    employer_id: str = Path(..., description="Employer identifier"),
 ):
     """Get detailed information about a specific employer."""
     try:
@@ -439,7 +471,7 @@ async def get_employer_details(
             preferred_neighborhoods=employer_config.preferred_neighborhoods,
             average_salary_range=list(employer_config.average_salary_range),
             relocation_frequency=employer_config.relocation_frequency,
-            hiring_seasons=employer_config.hiring_seasons
+            hiring_seasons=employer_config.hiring_seasons,
         )
 
     except HTTPException:
@@ -448,14 +480,15 @@ async def get_employer_details(
         logger.error(f"Error getting employer details for {market_id}/{employer_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve employer details: {str(e)}")
 
+
 # ============================================================================
 # ENHANCED: Property Search Endpoints
 # ============================================================================
 
+
 @router.post("/markets/{market_id}/properties/search")
 async def search_properties(
-    market_id: str = Path(..., description="Market identifier"),
-    search_request: PropertySearchRequest = None
+    market_id: str = Path(..., description="Market identifier"), search_request: PropertySearchRequest = None
 ):
     """
     Search for properties in a specific market with comprehensive filtering.
@@ -502,7 +535,7 @@ async def search_properties(
             "market_id": market_id,
             "search_criteria": criteria,
             "total_results": len(properties),
-            "properties": [property.__dict__ for property in properties]
+            "properties": [property.__dict__ for property in properties],
         }
 
     except ValueError as e:
@@ -513,6 +546,7 @@ async def search_properties(
     except Exception as e:
         logger.error(f"Error searching properties in {market_id}: {e}")
         raise HTTPException(500, f"Failed to search properties: {str(e)}")
+
 
 @router.post("/properties/recommendations")
 async def get_property_recommendations(request: PropertyRecommendationRequest):
@@ -561,7 +595,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
             "lead_id": request.lead_id,
             "criteria": criteria,
             "recommendations": [property.__dict__ for property in properties[:10]],
-            "total_found": len(properties)
+            "total_found": len(properties),
         }
 
     except ValueError as e:
@@ -573,9 +607,11 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
         logger.error(f"Error getting recommendations for {request.market_id}/{request.lead_id}: {e}")
         raise HTTPException(500, f"Failed to get recommendations: {str(e)}")
 
+
 # ============================================================================
 # ENHANCED: Market Analytics Endpoints
 # ============================================================================
+
 
 @router.get("/markets/{market_id}/analytics/appeal-metrics")
 async def get_appeal_metrics(market_id: str = Path(..., description="Market identifier")):
@@ -594,7 +630,7 @@ async def get_appeal_metrics(market_id: str = Path(..., description="Market iden
             "market_id": market_id,
             "market_name": config.market_name,
             "available_appeal_metrics": appeal_metrics,
-            "market_specialization": config.specializations.primary_specialization
+            "market_specialization": config.specializations.primary_specialization,
         }
 
     except HTTPException:
@@ -603,10 +639,11 @@ async def get_appeal_metrics(market_id: str = Path(..., description="Market iden
         logger.error(f"Error getting appeal metrics for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve appeal metrics: {str(e)}")
 
+
 @router.get("/markets/{market_id}/analytics/commute")
 async def get_commute_analysis(
     market_id: str = Path(..., description="Market identifier"),
-    employer_id: Optional[str] = Query(None, description="Filter by specific employer")
+    employer_id: Optional[str] = Query(None, description="Filter by specific employer"),
 ):
     """Get commute analysis for neighborhoods relative to major employers."""
     try:
@@ -630,29 +667,26 @@ async def get_commute_analysis(
                 "employer_id": employer.employer_id,
                 "employer_name": employer.name,
                 "industry": employer.industry,
-                "neighborhood_commutes": []
+                "neighborhood_commutes": [],
             }
 
             for neighborhood in config.neighborhoods:
                 commute_time = neighborhood.corporate_proximity.get(employer.employer_id, None)
                 if commute_time is not None:
-                    employer_commute["neighborhood_commutes"].append({
-                        "neighborhood": neighborhood.name,
-                        "zone": neighborhood.zone,
-                        "commute_minutes": commute_time,
-                        "median_price": neighborhood.median_price
-                    })
+                    employer_commute["neighborhood_commutes"].append(
+                        {
+                            "neighborhood": neighborhood.name,
+                            "zone": neighborhood.zone,
+                            "commute_minutes": commute_time,
+                            "median_price": neighborhood.median_price,
+                        }
+                    )
 
             # Sort by commute time
-            employer_commute["neighborhood_commutes"].sort(
-                key=lambda x: x["commute_minutes"]
-            )
+            employer_commute["neighborhood_commutes"].sort(key=lambda x: x["commute_minutes"])
             commute_data.append(employer_commute)
 
-        return {
-            "market_id": market_id,
-            "commute_analysis": commute_data
-        }
+        return {"market_id": market_id, "commute_analysis": commute_data}
 
     except HTTPException:
         raise
@@ -660,15 +694,17 @@ async def get_commute_analysis(
         logger.error(f"Error getting commute analysis for {market_id}: {e}")
         raise HTTPException(500, f"Failed to retrieve commute analysis: {str(e)}")
 
+
 # ============================================================================
 # ENHANCED: Backward Compatibility Aliases
 # ============================================================================
+
 
 @router.get("/metrics")
 async def get_metrics_legacy(
     market_id: str = Query("rancho_cucamonga", description="Market identifier for backward compatibility"),
     neighborhood: Optional[str] = Query(None, description="Filter by neighborhood"),
-    property_type: Optional[str] = Query(None, description="Filter by property type")
+    property_type: Optional[str] = Query(None, description="Filter by property type"),
 ):
     """
     LEGACY ENDPOINT: Backward compatibility with V1 API.

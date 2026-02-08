@@ -9,21 +9,22 @@ Tests comprehensive Austin real estate market functionality including:
 - Market timing recommendations
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 try:
     from ghl_real_estate_ai.services.austin_market_service import (
         AustinMarketService,
-        PropertyType,
-        MarketCondition,
-        PropertyListing,
-        MarketMetrics,
         AustinNeighborhood,
-        get_austin_market_service
+        MarketCondition,
+        MarketMetrics,
+        PropertyListing,
+        PropertyType,
+        get_austin_market_service,
     )
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
@@ -60,7 +61,7 @@ class TestAustinMarketService:
             photos=["photo1.jpg"],
             description="Modern home in South Lamar",
             listing_agent={"name": "Jorge Martinez"},
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
     @pytest.mark.asyncio
@@ -91,9 +92,7 @@ class TestAustinMarketService:
     @pytest.mark.asyncio
     async def test_get_market_metrics_property_type_filter(self, market_service):
         """Test getting market metrics filtered by property type."""
-        metrics = await market_service.get_market_metrics(
-            property_type=PropertyType.CONDO
-        )
+        metrics = await market_service.get_market_metrics(property_type=PropertyType.CONDO)
 
         assert isinstance(metrics, MarketMetrics)
         # Condo market typically has different characteristics
@@ -102,11 +101,7 @@ class TestAustinMarketService:
     @pytest.mark.asyncio
     async def test_search_properties_basic(self, market_service):
         """Test basic property search."""
-        criteria = {
-            "min_price": 300000,
-            "max_price": 800000,
-            "min_beds": 2
-        }
+        criteria = {"min_price": 300000, "max_price": 800000, "min_beds": 2}
 
         properties = await market_service.search_properties(criteria, limit=10)
 
@@ -170,8 +165,7 @@ class TestAustinMarketService:
         """Test corporate relocation insights."""
         # Test with known employer
         insights = await market_service.get_corporate_relocation_insights(
-            employer="Apple",
-            position_level="Senior Engineer"
+            employer="Apple", position_level="Senior Engineer"
         )
 
         assert isinstance(insights, dict)
@@ -195,9 +189,7 @@ class TestAustinMarketService:
         property_coords = (30.252222, -97.763889)  # South Lamar
         work_location = "Apple"
 
-        commute_data = await market_service.get_commute_analysis(
-            property_coords, work_location
-        )
+        commute_data = await market_service.get_commute_analysis(property_coords, work_location)
 
         assert isinstance(commute_data, dict)
         if "error" not in commute_data:
@@ -208,9 +200,7 @@ class TestAustinMarketService:
     @pytest.mark.asyncio
     async def test_get_market_timing_advice_buy(self, market_service):
         """Test market timing advice for buyers."""
-        timing_advice = await market_service.get_market_timing_advice(
-            "buy", PropertyType.SINGLE_FAMILY, "Round Rock"
-        )
+        timing_advice = await market_service.get_market_timing_advice("buy", PropertyType.SINGLE_FAMILY, "Round Rock")
 
         assert isinstance(timing_advice, dict)
         assert "timing_score" in timing_advice
@@ -224,9 +214,7 @@ class TestAustinMarketService:
     @pytest.mark.asyncio
     async def test_get_market_timing_advice_sell(self, market_service):
         """Test market timing advice for sellers."""
-        timing_advice = await market_service.get_market_timing_advice(
-            "sell", PropertyType.SINGLE_FAMILY
-        )
+        timing_advice = await market_service.get_market_timing_advice("sell", PropertyType.SINGLE_FAMILY)
 
         assert isinstance(timing_advice, dict)
         assert "timing_score" in timing_advice
@@ -332,7 +320,7 @@ class TestAustinMarketService:
         """Test price range validation in search."""
         criteria = {
             "min_price": 500000,
-            "max_price": 400000  # Invalid: min > max
+            "max_price": 400000,  # Invalid: min > max
         }
 
         # Should handle gracefully
@@ -357,7 +345,7 @@ class TestAustinMarketService:
             closed_sales_30d=800,
             pending_sales=600,
             absorption_rate=90.0,
-            market_condition=MarketCondition.STRONG_SELLERS
+            market_condition=MarketCondition.STRONG_SELLERS,
         )
 
         assert strong_seller_metrics.market_condition == MarketCondition.STRONG_SELLERS
@@ -383,7 +371,7 @@ class TestAustinMarketService:
             market_service.get_market_metrics("Downtown"),
             market_service.get_market_metrics("Round Rock"),
             market_service.get_neighborhood_analysis("Mueller"),
-            market_service.search_properties({"min_beds": 3}, 5)
+            market_service.search_properties({"min_beds": 3}, 5),
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -472,9 +460,7 @@ class TestAustinMarketServiceIntegration:
     async def test_corporate_relocation_complete_workflow(self, market_service):
         """Test complete corporate relocation workflow."""
         # Step 1: Get corporate insights
-        insights = await market_service.get_corporate_relocation_insights(
-            "Apple", "Senior Engineer"
-        )
+        insights = await market_service.get_corporate_relocation_insights("Apple", "Senior Engineer")
         assert isinstance(insights, dict)
 
         # Step 2: Analyze recommended neighborhoods
@@ -510,7 +496,10 @@ class TestAustinMarketServiceIntegration:
         # Check data consistency
         if neighborhood_analysis:
             # Neighborhood median should be reflected in market metrics
-            assert abs(market_metrics.median_price - neighborhood_analysis.median_price) / market_metrics.median_price < 0.5
+            assert (
+                abs(market_metrics.median_price - neighborhood_analysis.median_price) / market_metrics.median_price
+                < 0.5
+            )
 
 
 # Performance Tests

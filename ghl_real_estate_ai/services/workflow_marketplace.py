@@ -180,12 +180,7 @@ class WorkflowMarketplaceService:
                     t.is_featured,
                     t.downloads_count
                     / max(
-                        (
-                            datetime.now()
-                            - datetime.fromisoformat(
-                                t.created_at.replace("Z", "+00:00")
-                            )
-                        ).days,
+                        (datetime.now() - datetime.fromisoformat(t.created_at.replace("Z", "+00:00"))).days,
                         1,
                     ),
                 ),
@@ -202,9 +197,7 @@ class WorkflowMarketplaceService:
         """Get all reviews for a template"""
         return self.reviews.get(template_id, [])
 
-    def search_templates(
-        self, query: str, limit: int = 20
-    ) -> List[MarketplaceTemplate]:
+    def search_templates(self, query: str, limit: int = 20) -> List[MarketplaceTemplate]:
         """
         Search templates by keyword
 
@@ -249,9 +242,7 @@ class WorkflowMarketplaceService:
         """Get all templates in a category"""
         return self.browse_templates(category=category_id)
 
-    def add_review(
-        self, template_id: str, user_id: str, rating: float, comment: str
-    ) -> TemplateReview:
+    def add_review(self, template_id: str, user_id: str, rating: float, comment: str) -> TemplateReview:
         """
         Add a review for a template
 
@@ -300,9 +291,7 @@ class WorkflowMarketplaceService:
             return True
         return False
 
-    def get_similar_templates(
-        self, template_id: str, limit: int = 5
-    ) -> List[MarketplaceTemplate]:
+    def get_similar_templates(self, template_id: str, limit: int = 5) -> List[MarketplaceTemplate]:
         """
         Get similar templates based on category and tags
 
@@ -350,11 +339,7 @@ class WorkflowMarketplaceService:
         free_templates = len([t for t in self.templates.values() if not t.is_premium])
         premium_templates = len([t for t in self.templates.values() if t.is_premium])
         total_downloads = sum(t.downloads_count for t in self.templates.values())
-        avg_rating = (
-            sum(t.rating for t in self.templates.values()) / total_templates
-            if total_templates > 0
-            else 0
-        )
+        avg_rating = sum(t.rating for t in self.templates.values()) / total_templates if total_templates > 0 else 0
 
         return {
             "total_templates": total_templates,
@@ -406,9 +391,7 @@ def demo_marketplace():
     for t in popular:
         price_str = "FREE" if t.price == 0 else f"${t.price}"
         print(f"   {t.icon} {t.name}")
-        print(
-            f"      {t.rating}⭐ ({t.reviews_count} reviews) | {t.downloads_count:,} downloads | {price_str}"
-        )
+        print(f"      {t.rating}⭐ ({t.reviews_count} reviews) | {t.downloads_count:,} downloads | {price_str}")
 
     # Browse by category
     print(f"\n📱 Lead Nurturing Templates:")

@@ -6,17 +6,17 @@ This module tests the query enhancement system including:
 - Query classification for routing
 """
 
-import pytest
 from typing import List
 
-from src.retrieval.query.expansion import QueryExpander, ExpansionConfig
-from src.retrieval.query.hyde import HyDEGenerator, HyDEConfig, MockLLMProvider
+import pytest
 from src.retrieval.query.classifier import (
-    QueryClassifier,
-    ClassifierConfig,
-    QueryType,
     ClassificationResult,
+    ClassifierConfig,
+    QueryClassifier,
+    QueryType,
 )
+from src.retrieval.query.expansion import ExpansionConfig, QueryExpander
+from src.retrieval.query.hyde import HyDEConfig, HyDEGenerator, MockLLMProvider
 
 
 class TestQueryExpansion:
@@ -30,11 +30,7 @@ class TestQueryExpansion:
     @pytest.fixture
     def expansion_config(self) -> ExpansionConfig:
         """Create expansion config with custom settings."""
-        return ExpansionConfig(
-            max_expansions=3,
-            synonym_limit=2,
-            expansion_strategy="selective"
-        )
+        return ExpansionConfig(max_expansions=3, synonym_limit=2, expansion_strategy="selective")
 
     def test_expansion_config_defaults(self):
         """Test ExpansionConfig default values."""
@@ -50,11 +46,7 @@ class TestQueryExpansion:
     def test_expansion_config_custom_values(self):
         """Test ExpansionConfig with custom values."""
         config = ExpansionConfig(
-            max_expansions=10,
-            synonym_limit=5,
-            use_wordnet=False,
-            use_llm=True,
-            preserve_original=False
+            max_expansions=10, synonym_limit=5, use_wordnet=False, use_llm=True, preserve_original=False
         )
         assert config.max_expansions == 10
         assert config.synonym_limit == 5
@@ -143,21 +135,15 @@ class TestQueryExpansion:
         query = "python programming"
 
         # Selective strategy
-        selective_expander = QueryExpander(
-            ExpansionConfig(expansion_strategy="selective", max_expansions=3)
-        )
+        selective_expander = QueryExpander(ExpansionConfig(expansion_strategy="selective", max_expansions=3))
         selective = selective_expander.expand(query)
 
         # Best strategy
-        best_expander = QueryExpander(
-            ExpansionConfig(expansion_strategy="best", max_expansions=3)
-        )
+        best_expander = QueryExpander(ExpansionConfig(expansion_strategy="best", max_expansions=3))
         best = best_expander.expand(query)
 
         # All strategy
-        all_expander = QueryExpander(
-            ExpansionConfig(expansion_strategy="all", max_expansions=10)
-        )
+        all_expander = QueryExpander(ExpansionConfig(expansion_strategy="all", max_expansions=10))
         all_expansions = all_expander.expand(query)
 
         assert isinstance(selective, list)
@@ -173,16 +159,16 @@ class TestQueryExpansion:
         expander.clear_cache()
 
         stats = expander.get_stats()
-        assert stats['cache_size'] == 0
+        assert stats["cache_size"] == 0
 
     def test_expander_get_stats(self, expander: QueryExpander):
         """Test getting expander statistics."""
         stats = expander.get_stats()
 
-        assert 'cache_size' in stats
-        assert 'wordnet_available' in stats
-        assert 'max_expansions' in stats
-        assert 'synonym_limit' in stats
+        assert "cache_size" in stats
+        assert "wordnet_available" in stats
+        assert "max_expansions" in stats
+        assert "synonym_limit" in stats
 
 
 class TestHyDEGenerator:
@@ -191,12 +177,7 @@ class TestHyDEGenerator:
     @pytest.fixture
     def hyde_config(self) -> HyDEConfig:
         """Create HyDE config with test settings."""
-        return HyDEConfig(
-            num_hypotheticals=1,
-            max_length=256,
-            temperature=0.3,
-            use_caching=False
-        )
+        return HyDEConfig(num_hypotheticals=1, max_length=256, temperature=0.3, use_caching=False)
 
     @pytest.fixture
     def hyde_generator(self, hyde_config: HyDEConfig) -> HyDEGenerator:
@@ -216,13 +197,7 @@ class TestHyDEGenerator:
 
     def test_hyde_config_custom_values(self):
         """Test HyDEConfig with custom values."""
-        config = HyDEConfig(
-            num_hypotheticals=3,
-            max_length=1024,
-            temperature=0.7,
-            model="gpt-4",
-            use_caching=False
-        )
+        config = HyDEConfig(num_hypotheticals=3, max_length=1024, temperature=0.7, model="gpt-4", use_caching=False)
         assert config.num_hypotheticals == 3
         assert config.max_length == 1024
         assert config.temperature == 0.7
@@ -298,16 +273,16 @@ class TestHyDEGenerator:
         hyde_generator.clear_cache()
 
         stats = hyde_generator.get_stats()
-        assert stats['cache']['total_entries'] == 0
+        assert stats["cache"]["total_entries"] == 0
 
     def test_get_stats(self, hyde_generator: HyDEGenerator):
         """Test getting generator statistics."""
         stats = hyde_generator.get_stats()
 
-        assert 'config' in stats
-        assert 'cache' in stats
-        assert 'provider' in stats
-        assert stats['config']['num_hypotheticals'] == hyde_generator.config.num_hypotheticals
+        assert "config" in stats
+        assert "cache" in stats
+        assert "provider" in stats
+        assert stats["config"]["num_hypotheticals"] == hyde_generator.config.num_hypotheticals
 
 
 class TestMockLLMProvider:
@@ -331,12 +306,7 @@ class TestMockLLMProvider:
     @pytest.mark.asyncio
     async def test_generate_different_topics(self, mock_provider: MockLLMProvider):
         """Test generating responses for different topics."""
-        topics = [
-            "machine learning",
-            "neural networks",
-            "data science",
-            "python programming"
-        ]
+        topics = ["machine learning", "neural networks", "data science", "python programming"]
 
         for topic in topics:
             prompt = f"Query: {topic}\n\nResponse:"
@@ -364,12 +334,7 @@ class TestQueryClassifier:
     @pytest.fixture
     def classifier_config(self) -> ClassifierConfig:
         """Create classifier config with custom settings."""
-        return ClassifierConfig(
-            min_confidence=0.5,
-            use_patterns=True,
-            use_keywords=True,
-            use_length=True
-        )
+        return ClassifierConfig(min_confidence=0.5, use_patterns=True, use_keywords=True, use_length=True)
 
     def test_classifier_config_defaults(self):
         """Test ClassifierConfig default values."""
@@ -384,12 +349,7 @@ class TestQueryClassifier:
 
     def test_classifier_config_custom_values(self):
         """Test ClassifierConfig with custom values."""
-        config = ClassifierConfig(
-            min_confidence=0.8,
-            use_patterns=False,
-            use_keywords=False,
-            use_length=False
-        )
+        config = ClassifierConfig(min_confidence=0.8, use_patterns=False, use_keywords=False, use_length=False)
         assert config.min_confidence == 0.8
         assert config.use_patterns is False
         assert config.use_keywords is False
@@ -408,7 +368,7 @@ class TestQueryClassifier:
         assert isinstance(result, ClassificationResult)
         assert result.query_type == QueryType.FACTUAL
         assert result.confidence > 0
-        assert 'dense_retrieval_weight' in result.recommendations
+        assert "dense_retrieval_weight" in result.recommendations
 
     def test_classify_procedural_query(self, classifier: QueryClassifier):
         """Test classifying a procedural query."""
@@ -492,19 +452,19 @@ class TestQueryClassifier:
         """Test getting classifier statistics."""
         stats = classifier.get_stats()
 
-        assert 'config' in stats
-        assert 'patterns' in stats
-        assert 'keywords' in stats
-        assert 'query_types' in stats
+        assert "config" in stats
+        assert "patterns" in stats
+        assert "keywords" in stats
+        assert "query_types" in stats
 
         # Check config stats
-        assert 'min_confidence' in stats['config']
-        assert 'weights' in stats['config']
+        assert "min_confidence" in stats["config"]
+        assert "weights" in stats["config"]
 
         # Check pattern counts
         for qt in QueryType:
-            assert qt.value in stats['patterns']
-            assert stats['patterns'][qt.value] > 0
+            assert qt.value in stats["patterns"]
+            assert stats["patterns"][qt.value] > 0
 
     def test_query_type_enum_values(self):
         """Test QueryType enum values."""
@@ -565,12 +525,14 @@ class TestQueryEnhancementIntegration:
 
         # Factual query - should recommend more sparse retrieval
         factual = classifier.classify("What is the capital of France?")
-        assert factual.recommendations['sparse_retrieval_weight'] > factual.recommendations['dense_retrieval_weight']
+        assert factual.recommendations["sparse_retrieval_weight"] > factual.recommendations["dense_retrieval_weight"]
 
         # Conceptual query - should recommend more dense retrieval
         conceptual = classifier.classify("Explain quantum computing concepts")
-        assert conceptual.recommendations['dense_retrieval_weight'] > conceptual.recommendations['sparse_retrieval_weight']
+        assert (
+            conceptual.recommendations["dense_retrieval_weight"] > conceptual.recommendations["sparse_retrieval_weight"]
+        )
 
         # Procedural query - should recommend query expansion
         procedural = classifier.classify("How to implement quicksort algorithm")
-        assert procedural.recommendations['query_expansion'] > 0.3
+        assert procedural.recommendations["query_expansion"] > 0.3

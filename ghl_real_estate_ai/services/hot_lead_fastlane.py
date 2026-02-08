@@ -234,9 +234,7 @@ class HotLeadFastLane:
         else:
             return LeadPriority.COLD
 
-    def _determine_temperature(
-        self, engagement: float, timeline_days: int
-    ) -> LeadTemperature:
+    def _determine_temperature(self, engagement: float, timeline_days: int) -> LeadTemperature:
         """Determine lead temperature from engagement and timeline."""
         if engagement >= 80 and timeline_days <= 30:
             return LeadTemperature.BLAZING
@@ -345,9 +343,7 @@ class HotLeadFastLane:
             "manual_review": "Weekly",
         }
 
-    def _queue_notifications(
-        self, lead_data: Dict, priority: LeadPriority, routing: Dict
-    ) -> List[str]:
+    def _queue_notifications(self, lead_data: Dict, priority: LeadPriority, routing: Dict) -> List[str]:
         """Queue notifications for the lead."""
         notifications = []
 
@@ -381,11 +377,7 @@ class HotLeadFastLane:
         """
         cutoff_time = datetime.now() - timedelta(hours=hours)
 
-        fast_lane = [
-            n
-            for n in self.notification_queue
-            if datetime.fromisoformat(n["timestamp"]) > cutoff_time
-        ]
+        fast_lane = [n for n in self.notification_queue if datetime.fromisoformat(n["timestamp"]) > cutoff_time]
 
         # Sort by score descending
         fast_lane.sort(key=lambda x: x["score"], reverse=True)
@@ -418,9 +410,7 @@ class HotLeadFastLane:
                 "warm": len(warm),
                 "cold": len(cold),
             },
-            "top_priorities": sorted(
-                scored_leads, key=lambda x: x["total_score"], reverse=True
-            )[:5],
+            "top_priorities": sorted(scored_leads, key=lambda x: x["total_score"], reverse=True)[:5],
             "action_items": self._generate_action_items(urgent, hot),
             "projected_value": self._calculate_projected_value(urgent, hot, warm),
             "generated_at": datetime.now().isoformat(),
@@ -431,9 +421,7 @@ class HotLeadFastLane:
         items = []
 
         if urgent:
-            items.append(
-                f"🚨 URGENT: Contact {len(urgent)} high-priority leads within 15 minutes"
-            )
+            items.append(f"🚨 URGENT: Contact {len(urgent)} high-priority leads within 15 minutes")
 
         if hot:
             items.append(f"🔥 HOT: Follow up with {len(hot)} hot leads within 1 hour")
@@ -443,9 +431,7 @@ class HotLeadFastLane:
 
         return items
 
-    def _calculate_projected_value(
-        self, urgent: List[Dict], hot: List[Dict], warm: List[Dict]
-    ) -> Dict:
+    def _calculate_projected_value(self, urgent: List[Dict], hot: List[Dict], warm: List[Dict]) -> Dict:
         """Calculate potential revenue from lead pipeline."""
         # Avg commission: $15,000 per deal
         # Conversion rates: Urgent 40%, Hot 25%, Warm 10%

@@ -9,13 +9,13 @@ This module provides advanced entity recognition capabilities including:
 
 from __future__ import annotations
 
-import re
-from typing import Dict, List, Optional, Set, Tuple, Any, Union
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from collections import defaultdict
 import hashlib
 import json
+import re
+from collections import defaultdict
+from dataclasses import dataclass, field
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from src.core.exceptions import RetrievalError
 
@@ -162,9 +162,7 @@ class KnowledgeGraphPrep:
             "relationships": self.relationships,
             "kg_nodes": self.kg_nodes,
             "kg_edges": self.kg_edges,
-            "entity_clusters": {
-                k: [e.to_dict() for e in v] for k, v in self.entity_clusters.items()
-            },
+            "entity_clusters": {k: [e.to_dict() for e in v] for k, v in self.entity_clusters.items()},
         }
 
 
@@ -246,9 +244,11 @@ class EntityExtractor:
             ],
             EntityType.DATE: [
                 re.compile(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"),
-                re.compile(r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,\s+\d{4})?\b", re.I),
+                re.compile(
+                    r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,\s+\d{4})?\b",
+                    re.I,
+                ),
             ],
-
             # Real estate patterns
             EntityType.BEDROOMS: [
                 re.compile(r"\b(\d+)\s*(?:bed|bedroom|br)s?\b", re.I),
@@ -295,53 +295,121 @@ class EntityExtractor:
         return {
             # Property types
             EntityType.PROPERTY_TYPE: {
-                "house", "home", "condo", "condominium", "townhouse", "townhome",
-                "apartment", "duplex", "triplex", "single family", "multi-family",
-                "detached", "attached", "mobile home", "manufactured", "land",
-                "lot", "commercial", "industrial"
+                "house",
+                "home",
+                "condo",
+                "condominium",
+                "townhouse",
+                "townhome",
+                "apartment",
+                "duplex",
+                "triplex",
+                "single family",
+                "multi-family",
+                "detached",
+                "attached",
+                "mobile home",
+                "manufactured",
+                "land",
+                "lot",
+                "commercial",
+                "industrial",
             },
-
             # Cities in Rancho Cucamonga area
             EntityType.CITY: {
-                "rancho cucamonga", "ontario", "fontana", "upland", "claremont",
-                "montclair", "chino", "chino hills", "eastvale", "jurupa valley",
-                "riverside", "san bernardino", "corona", "norco", "pomona",
-                "la verne", "san dimas", "glendora", "azusa", "covina"
+                "rancho cucamonga",
+                "ontario",
+                "fontana",
+                "upland",
+                "claremont",
+                "montclair",
+                "chino",
+                "chino hills",
+                "eastvale",
+                "jurupa valley",
+                "riverside",
+                "san bernardino",
+                "corona",
+                "norco",
+                "pomona",
+                "la verne",
+                "san dimas",
+                "glendora",
+                "azusa",
+                "covina",
             },
-
             # Neighborhoods in Rancho Cucamonga
             EntityType.NEIGHBORHOOD: {
-                "victoria", "victoria gardens", "haven", "etiwanda", "terra vista",
-                "central park", "coyote canyon", "summit", "north rancho",
-                "south rancho", "west wind", "carnelian", "sapphire", "amethyst"
+                "victoria",
+                "victoria gardens",
+                "haven",
+                "etiwanda",
+                "terra vista",
+                "central park",
+                "coyote canyon",
+                "summit",
+                "north rancho",
+                "south rancho",
+                "west wind",
+                "carnelian",
+                "sapphire",
+                "amethyst",
             },
-
             # School districts
-            EntityType.SCHOOL_DISTRICT: {
-                "etiwanda", "chaffey", "alta loma", "central", " Cucamonga"
-            },
-
+            EntityType.SCHOOL_DISTRICT: {"etiwanda", "chaffey", "alta loma", "central", " Cucamonga"},
             # Amenities
             EntityType.AMENITY: {
-                "pool", "swimming pool", "garage", "two-car garage", "three-car garage",
-                "fireplace", "patio", "deck", "balcony", "yard", "backyard",
-                "garden", "gated", "community pool", "tennis court", "gym",
-                "fitness center", "clubhouse", "playground", "park"
+                "pool",
+                "swimming pool",
+                "garage",
+                "two-car garage",
+                "three-car garage",
+                "fireplace",
+                "patio",
+                "deck",
+                "balcony",
+                "yard",
+                "backyard",
+                "garden",
+                "gated",
+                "community pool",
+                "tennis court",
+                "gym",
+                "fitness center",
+                "clubhouse",
+                "playground",
+                "park",
             },
-
             # Features
             EntityType.FEATURE: {
-                "hardwood floors", "granite countertops", "stainless steel appliances",
-                "central air", "air conditioning", "heating", "fireplace",
-                "walk-in closet", "master suite", "guest house", "rv parking",
-                "solar panels", "energy efficient", "smart home", "updated",
-                "renovated", "new construction"
+                "hardwood floors",
+                "granite countertops",
+                "stainless steel appliances",
+                "central air",
+                "air conditioning",
+                "heating",
+                "fireplace",
+                "walk-in closet",
+                "master suite",
+                "guest house",
+                "rv parking",
+                "solar panels",
+                "energy efficient",
+                "smart home",
+                "updated",
+                "renovated",
+                "new construction",
             },
-
             # Views
             EntityType.VIEW: {
-                "mountain view", "city view", "valley view", "golf course view",
-                "lake view", "ocean view", "canyon view", "panoramic view"
+                "mountain view",
+                "city view",
+                "valley view",
+                "golf course view",
+                "lake view",
+                "ocean view",
+                "canyon view",
+                "panoramic view",
             },
         }
 
@@ -438,7 +506,7 @@ class EntityExtractor:
 
                     if before and after:
                         entity = Entity(
-                            text=query[idx:idx + len(term)],
+                            text=query[idx : idx + len(term)],
                             type=entity_type,
                             start=idx,
                             end=idx + len(term),
@@ -568,9 +636,7 @@ class EntityExtractor:
 
         return disambiguated
 
-    def link_to_kb(
-        self, entities: List[Entity], kb_lookup: Optional[callable] = None
-    ) -> List[EntityLinkingResult]:
+    def link_to_kb(self, entities: List[Entity], kb_lookup: Optional[callable] = None) -> List[EntityLinkingResult]:
         """Link entities to knowledge base entries.
 
         Args:
@@ -670,9 +736,7 @@ class EntityExtractor:
 
         return result
 
-    def prepare_for_knowledge_graph(
-        self, entities: List[Entity], query: str
-    ) -> KnowledgeGraphPrep:
+    def prepare_for_knowledge_graph(self, entities: List[Entity], query: str) -> KnowledgeGraphPrep:
         """Prepare entities for Knowledge Graph integration.
 
         Args:
@@ -715,9 +779,7 @@ class EntityExtractor:
 
         return kg_prep
 
-    def _detect_relationships(
-        self, entities: List[Entity], query: str
-    ) -> List[Dict[str, Any]]:
+    def _detect_relationships(self, entities: List[Entity], query: str) -> List[Dict[str, Any]]:
         """Detect relationships between entities.
 
         Args:
@@ -742,21 +804,21 @@ class EntityExtractor:
                     rel_type = self._infer_relationship_type(entity1, entity2, query)
 
                     if rel_type:
-                        relationships.append({
-                            "source": self._generate_entity_signature(entity1),
-                            "target": self._generate_entity_signature(entity2),
-                            "type": rel_type,
-                            "properties": {
-                                "distance": distance,
-                                "confidence": min(entity1.confidence, entity2.confidence),
-                            },
-                        })
+                        relationships.append(
+                            {
+                                "source": self._generate_entity_signature(entity1),
+                                "target": self._generate_entity_signature(entity2),
+                                "type": rel_type,
+                                "properties": {
+                                    "distance": distance,
+                                    "confidence": min(entity1.confidence, entity2.confidence),
+                                },
+                            }
+                        )
 
         return relationships
 
-    def _infer_relationship_type(
-        self, entity1: Entity, entity2: Entity, query: str
-    ) -> Optional[str]:
+    def _infer_relationship_type(self, entity1: Entity, entity2: Entity, query: str) -> Optional[str]:
         """Infer relationship type between two entities.
 
         Args:
@@ -768,7 +830,7 @@ class EntityExtractor:
             Relationship type or None
         """
         # Get text between entities
-        between_text = query[entity1.end:entity2.start].lower()
+        between_text = query[entity1.end : entity2.start].lower()
 
         # Location relationships
         if entity1.type == EntityType.PROPERTY and entity2.type in [

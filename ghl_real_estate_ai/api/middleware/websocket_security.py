@@ -15,13 +15,14 @@ import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
-from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
-from starlette.websockets import WebSocketState
-import jwt
-from jwt import DecodeError, ExpiredSignatureError
 
+import jwt
+from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
+from jwt import DecodeError, ExpiredSignatureError
+from starlette.websockets import WebSocketState
+
+from ghl_real_estate_ai.api.middleware.jwt_auth import ALGORITHM, SECRET_KEY, JWTAuth
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.api.middleware.jwt_auth import JWTAuth, SECRET_KEY, ALGORITHM
 
 logger = get_logger(__name__)
 
@@ -34,10 +35,10 @@ class WebSocketConnectionManager:
         self.authenticated_connections: Dict[str, Dict[str, Any]] = {}
         self.connection_metadata: Dict[str, Dict[str, Any]] = {}
         self.connection_limits = {
-            'max_connections_per_ip': 10,
-            'max_total_connections': 1000,
-            'max_message_rate': 60,  # messages per minute
-            'max_message_size': 64 * 1024,  # 64KB
+            "max_connections_per_ip": 10,
+            "max_total_connections": 1000,
+            "max_message_rate": 60,  # messages per minute
+            "max_message_size": 64 * 1024,  # 64KB
         }
         self.ip_connections: Dict[str, Set[str]] = defaultdict(set)
         self.message_rates: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
@@ -48,7 +49,7 @@ class WebSocketConnectionManager:
         connection_id: str,
         client_ip: str,
         user_agent: Optional[str] = None,
-        auth_token: Optional[str] = None
+        auth_token: Optional[str] = None,
     ) -> bool:
         """
         Establish WebSocket connection with security checks.
@@ -65,8 +66,8 @@ class WebSocketConnectionManager:
                         "security_event": "websocket_connection_denied",
                         "client_ip": client_ip,
                         "connection_id": connection_id,
-                        "reason": "connection_limits"
-                    }
+                        "reason": "connection_limits",
+                    },
                 )
                 return False
 
@@ -75,13 +76,13 @@ class WebSocketConnectionManager:
 
             # Store connection metadata
             self.connection_metadata[connection_id] = {
-                'client_ip': client_ip,
-                'user_agent': user_agent,
-                'connected_at': datetime.utcnow(),
-                'authenticated': False,
-                'user_id': None,
-                'message_count': 0,
-                'last_activity': datetime.utcnow()
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "connected_at": datetime.utcnow(),
+                "authenticated": False,
+                "user_id": None,
+                "message_count": 0,
+                "last_activity": datetime.utcnow(),
             }
 
             # Track IP connections
@@ -98,8 +99,8 @@ class WebSocketConnectionManager:
                     "websocket_event": "connection_established",
                     "connection_id": connection_id,
                     "client_ip": client_ip,
-                    "authenticated": self.connection_metadata[connection_id]['authenticated']
-                }
+                    "authenticated": self.connection_metadata[connection_id]["authenticated"],
+                },
             )
 
             return True
@@ -111,8 +112,8 @@ class WebSocketConnectionManager:
                     "websocket_event": "connection_error",
                     "connection_id": connection_id,
                     "client_ip": client_ip,
-                    "error": str(e)
-                }
+                    "error": str(e),
+                },
             )
             return False
 
@@ -135,7 +136,7 @@ class WebSocketConnectionManager:
                 del self.authenticated_connections[connection_id]
 
             if connection_id in self.connection_metadata:
-                client_ip = metadata.get('client_ip')
+                client_ip = metadata.get("client_ip")
                 if client_ip and client_ip in self.ip_connections:
                     self.ip_connections[client_ip].discard(connection_id)
                     if not self.ip_connections[client_ip]:
@@ -152,9 +153,11 @@ class WebSocketConnectionManager:
                     "websocket_event": "connection_closed",
                     "connection_id": connection_id,
                     "duration_seconds": (
-                        datetime.utcnow() - metadata.get('connected_at', datetime.utcnow())
-                    ).total_seconds() if metadata else 0
-                }
+                        datetime.utcnow() - metadata.get("connected_at", datetime.utcnow())
+                    ).total_seconds()
+                    if metadata
+                    else 0,
+                },
             )
 
     async def send_message(self, connection_id: str, message: Dict[str, Any]) -> bool:
@@ -168,7 +171,7 @@ class WebSocketConnectionManager:
 
             # Update activity tracking
             if connection_id in self.connection_metadata:
-                self.connection_metadata[connection_id]['last_activity'] = datetime.utcnow()
+                self.connection_metadata[connection_id]["last_activity"] = datetime.utcnow()
 
             return True
 
@@ -182,8 +185,7 @@ class WebSocketConnectionManager:
     async def broadcast_message(self, message: Dict[str, Any], authenticated_only: bool = True):
         """Broadcast message to all or authenticated connections."""
         target_connections = (
-            self.authenticated_connections.keys() if authenticated_only
-            else self.active_connections.keys()
+            self.authenticated_connections.keys() if authenticated_only else self.active_connections.keys()
         )
 
         disconnect_list = []
@@ -197,9 +199,7 @@ class WebSocketConnectionManager:
             await self.disconnect(connection_id)
 
     async def validate_message(
-        self,
-        connection_id: str,
-        message_data: str
+        self, connection_id: str, message_data: str
     ) -> tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
         Validate incoming WebSocket message.
@@ -213,14 +213,14 @@ class WebSocketConnectionManager:
                 return False, None, "Message rate limit exceeded"
 
             # Check message size
-            if len(message_data) > self.connection_limits['max_message_size']:
+            if len(message_data) > self.connection_limits["max_message_size"]:
                 logger.warning(
                     f"WebSocket message too large: {len(message_data)} bytes",
                     extra={
                         "security_event": "websocket_message_too_large",
                         "connection_id": connection_id,
-                        "message_size": len(message_data)
-                    }
+                        "message_size": len(message_data),
+                    },
                 )
                 return False, None, "Message too large"
 
@@ -230,11 +230,7 @@ class WebSocketConnectionManager:
             except json.JSONDecodeError as e:
                 logger.warning(
                     f"Invalid JSON in WebSocket message: {e}",
-                    extra={
-                        "security_event": "websocket_invalid_json",
-                        "connection_id": connection_id,
-                        "error": str(e)
-                    }
+                    extra={"security_event": "websocket_invalid_json", "connection_id": connection_id, "error": str(e)},
                 )
                 return False, None, "Invalid JSON format"
 
@@ -249,15 +245,15 @@ class WebSocketConnectionManager:
                     extra={
                         "security_event": "websocket_suspicious_content",
                         "connection_id": connection_id,
-                        "message_type": message.get('type', 'unknown')
-                    }
+                        "message_type": message.get("type", "unknown"),
+                    },
                 )
                 return False, None, "Message contains suspicious content"
 
             # Update message tracking
             if connection_id in self.connection_metadata:
-                self.connection_metadata[connection_id]['message_count'] += 1
-                self.connection_metadata[connection_id]['last_activity'] = datetime.utcnow()
+                self.connection_metadata[connection_id]["message_count"] += 1
+                self.connection_metadata[connection_id]["last_activity"] = datetime.utcnow()
 
             return True, message, None
 
@@ -269,11 +265,11 @@ class WebSocketConnectionManager:
         """Check if connection is within limits."""
         # Check per-IP connection limit
         ip_connection_count = len(self.ip_connections.get(client_ip, set()))
-        if ip_connection_count >= self.connection_limits['max_connections_per_ip']:
+        if ip_connection_count >= self.connection_limits["max_connections_per_ip"]:
             return False
 
         # Check total connection limit
-        if len(self.active_connections) >= self.connection_limits['max_total_connections']:
+        if len(self.active_connections) >= self.connection_limits["max_total_connections"]:
             return False
 
         return True
@@ -291,46 +287,42 @@ class WebSocketConnectionManager:
         recent_messages = [t for t in message_times if t > minute_ago]
         self.message_rates[connection_id] = deque(recent_messages, maxlen=100)
 
-        return len(recent_messages) <= self.connection_limits['max_message_rate']
+        return len(recent_messages) <= self.connection_limits["max_message_rate"]
 
     async def _authenticate_connection(self, connection_id: str, auth_token: str) -> bool:
         """Authenticate WebSocket connection using JWT token."""
         try:
             # Verify JWT token
             payload = JWTAuth.verify_token(auth_token)
-            user_id = payload.get('sub')
+            user_id = payload.get("sub")
 
             if user_id:
                 # Store authenticated connection
                 self.authenticated_connections[connection_id] = {
-                    'user_id': user_id,
-                    'authenticated_at': datetime.utcnow(),
-                    'token_payload': payload
+                    "user_id": user_id,
+                    "authenticated_at": datetime.utcnow(),
+                    "token_payload": payload,
                 }
 
                 # Update metadata
                 if connection_id in self.connection_metadata:
-                    self.connection_metadata[connection_id]['authenticated'] = True
-                    self.connection_metadata[connection_id]['user_id'] = user_id
+                    self.connection_metadata[connection_id]["authenticated"] = True
+                    self.connection_metadata[connection_id]["user_id"] = user_id
 
                 logger.info(
                     f"WebSocket connection authenticated: {connection_id}",
                     extra={
                         "websocket_event": "connection_authenticated",
                         "connection_id": connection_id,
-                        "user_id": user_id
-                    }
+                        "user_id": user_id,
+                    },
                 )
                 return True
 
         except (DecodeError, ExpiredSignatureError) as e:
             logger.warning(
                 f"WebSocket authentication failed: {e}",
-                extra={
-                    "security_event": "websocket_auth_failed",
-                    "connection_id": connection_id,
-                    "error": str(e)
-                }
+                extra={"security_event": "websocket_auth_failed", "connection_id": connection_id, "error": str(e)},
             )
 
         return False
@@ -338,9 +330,17 @@ class WebSocketConnectionManager:
     async def _contains_suspicious_content(self, message: Dict[str, Any]) -> bool:
         """Check if message contains suspicious content."""
         suspicious_patterns = [
-            'script', 'javascript', 'eval', 'function',
-            'document.', 'window.', 'alert(', 'prompt(',
-            'confirm(', 'location.', 'history.'
+            "script",
+            "javascript",
+            "eval",
+            "function",
+            "document.",
+            "window.",
+            "alert(",
+            "prompt(",
+            "confirm(",
+            "location.",
+            "history.",
         ]
 
         def check_value(value):
@@ -364,22 +364,21 @@ class WebSocketConnectionManager:
         # Calculate average connection duration
         total_duration = 0
         for metadata in self.connection_metadata.values():
-            duration = (now - metadata.get('connected_at', now)).total_seconds()
+            duration = (now - metadata.get("connected_at", now)).total_seconds()
             total_duration += duration
 
         avg_duration = total_duration / max(total_count, 1)
 
         return {
-            'total_connections': total_count,
-            'authenticated_connections': authenticated_count,
-            'unauthenticated_connections': total_count - authenticated_count,
-            'unique_ips': len(self.ip_connections),
-            'average_duration_seconds': avg_duration,
-            'connection_limits': self.connection_limits,
-            'total_messages_processed': sum(
-                metadata.get('message_count', 0)
-                for metadata in self.connection_metadata.values()
-            )
+            "total_connections": total_count,
+            "authenticated_connections": authenticated_count,
+            "unauthenticated_connections": total_count - authenticated_count,
+            "unique_ips": len(self.ip_connections),
+            "average_duration_seconds": avg_duration,
+            "connection_limits": self.connection_limits,
+            "total_messages_processed": sum(
+                metadata.get("message_count", 0) for metadata in self.connection_metadata.values()
+            ),
         }
 
 
@@ -388,10 +387,7 @@ connection_manager = WebSocketConnectionManager()
 
 
 async def secure_websocket_endpoint(
-    websocket: WebSocket,
-    connection_id: str,
-    auth_token: Optional[str] = None,
-    require_auth: bool = False
+    websocket: WebSocket, connection_id: str, auth_token: Optional[str] = None, require_auth: bool = False
 ):
     """
     Secure WebSocket endpoint decorator.
@@ -411,7 +407,7 @@ async def secure_websocket_endpoint(
         connection_id=connection_id,
         client_ip=client_ip,
         user_agent=user_agent,
-        auth_token=auth_token
+        auth_token=auth_token,
     )
 
     if not connected:
@@ -420,11 +416,7 @@ async def secure_websocket_endpoint(
 
     # Check authentication requirement
     if require_auth and connection_id not in connection_manager.authenticated_connections:
-        await websocket.send_json({
-            "type": "error",
-            "message": "Authentication required",
-            "code": "auth_required"
-        })
+        await websocket.send_json({"type": "error", "message": "Authentication required", "code": "auth_required"})
         await connection_manager.disconnect(connection_id)
         return
 
@@ -442,11 +434,9 @@ async def secure_websocket_endpoint(
             )
 
             if not is_valid:
-                await websocket.send_json({
-                    "type": "error",
-                    "message": error_reason or "Invalid message",
-                    "code": "validation_error"
-                })
+                await websocket.send_json(
+                    {"type": "error", "message": error_reason or "Invalid message", "code": "validation_error"}
+                )
                 continue
 
             # Process message (this would be handled by the specific endpoint)

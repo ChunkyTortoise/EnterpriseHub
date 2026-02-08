@@ -10,19 +10,19 @@ Validates:
 """
 
 import os
-import pytest
 from unittest.mock import patch
 
-from ghl_real_estate_ai.config.feature_config import (
-    _env_bool,
-    ProgressiveSkillsConfig,
-    AgentMeshConfig,
-    MCPConfig,
-    FeatureConfig,
-    load_feature_config_from_env,
-    feature_config_to_jorge_kwargs,
-)
+import pytest
 
+from ghl_real_estate_ai.config.feature_config import (
+    AgentMeshConfig,
+    FeatureConfig,
+    MCPConfig,
+    ProgressiveSkillsConfig,
+    _env_bool,
+    feature_config_to_jorge_kwargs,
+    load_feature_config_from_env,
+)
 
 # ─── _env_bool helper ───────────────────────────────────────────────
 

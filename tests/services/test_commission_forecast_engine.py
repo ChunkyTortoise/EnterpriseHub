@@ -3,11 +3,11 @@
 import pytest
 
 from ghl_real_estate_ai.services.commission_forecast_engine import (
+    LUXURY_COMMISSION_RATE,
+    LUXURY_THRESHOLD,
+    SEASONAL_FACTORS,
     CommissionForecastEngine,
     DealStage,
-    SEASONAL_FACTORS,
-    LUXURY_THRESHOLD,
-    LUXURY_COMMISSION_RATE,
 )
 
 
@@ -66,6 +66,7 @@ def sample_pipeline():
 # Revenue forecasting
 # -------------------------------------------------------------------------
 
+
 class TestRevenueForecast:
     @pytest.mark.asyncio
     async def test_forecast_returns_result(self, engine, sample_pipeline):
@@ -107,13 +108,15 @@ class TestRevenueForecast:
 
     @pytest.mark.asyncio
     async def test_luxury_commission_applied(self, engine):
-        luxury_pipeline = [{
-            "deal_id": "lux",
-            "contact_name": "VIP",
-            "property_value": 1_500_000,
-            "stage": "under_contract",
-            "expected_close_month": 4,
-        }]
+        luxury_pipeline = [
+            {
+                "deal_id": "lux",
+                "contact_name": "VIP",
+                "property_value": 1_500_000,
+                "stage": "under_contract",
+                "expected_close_month": 4,
+            }
+        ]
         forecast = await engine.forecast_revenue(luxury_pipeline, horizon_months=1, current_month=4)
         # Luxury rate: 3% of 1.5M = 45,000
         expected_commission = 1_500_000 * LUXURY_COMMISSION_RATE
@@ -123,6 +126,7 @@ class TestRevenueForecast:
 # -------------------------------------------------------------------------
 # Monte Carlo simulation
 # -------------------------------------------------------------------------
+
 
 class TestMonteCarlo:
     @pytest.mark.asyncio
@@ -143,9 +147,7 @@ class TestMonteCarlo:
 
     @pytest.mark.asyncio
     async def test_probability_above_target(self, engine, sample_pipeline):
-        mc = await engine.monte_carlo_simulation(
-            sample_pipeline, simulations=500, target_revenue=1000
-        )
+        mc = await engine.monte_carlo_simulation(sample_pipeline, simulations=500, target_revenue=1000)
         assert 0 <= mc.probability_above_target <= 1
 
     @pytest.mark.asyncio
@@ -162,6 +164,7 @@ class TestMonteCarlo:
 # -------------------------------------------------------------------------
 # Executive summary
 # -------------------------------------------------------------------------
+
 
 class TestExecutiveSummary:
     @pytest.mark.asyncio
@@ -182,8 +185,15 @@ class TestExecutiveSummary:
     @pytest.mark.asyncio
     async def test_risk_factors_identified(self, engine):
         # Small pipeline with low-season months
-        small = [{"deal_id": "s1", "contact_name": "Solo", "property_value": 600_000,
-                   "stage": "prospect", "expected_close_month": 12}]
+        small = [
+            {
+                "deal_id": "s1",
+                "contact_name": "Solo",
+                "property_value": 600_000,
+                "stage": "prospect",
+                "expected_close_month": 12,
+            }
+        ]
         forecast = await engine.forecast_revenue(small, horizon_months=3, current_month=11)
         summary = await engine.generate_executive_summary(forecast)
         assert len(summary.risk_factors) > 0
@@ -205,6 +215,7 @@ class TestExecutiveSummary:
 # -------------------------------------------------------------------------
 # Deal parsing
 # -------------------------------------------------------------------------
+
 
 class TestDealParsing:
     def test_unknown_stage_defaults_prospect(self, engine):

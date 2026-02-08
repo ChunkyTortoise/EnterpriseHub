@@ -4,10 +4,12 @@ Specialized in personalized outreach, campaign copy, and GHL integration.
 Built with PydanticAI and optimized for Gemini 2.0 Flash.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.gemini import GeminiModel
+
 
 # 1. Define the Marketing Result Schema
 class MarketingResult(BaseModel):
@@ -18,13 +20,15 @@ class MarketingResult(BaseModel):
     campaign_name: str = Field(description="Recommended name for this outreach campaign")
     target_audience_segment: str = Field(description="Description of the target lead segment")
 
+
 # 2. Define Dependencies
 class MarketingDeps:
     def __init__(self, ghl_service=None):
         self.ghl = ghl_service
 
+
 # 3. Initialize Gemini Model
-model = GeminiModel('gemini-2.0-flash')
+model = GeminiModel("gemini-2.0-flash")
 
 # 4. Create the Marketing Agent
 marketing_agent = Agent(
@@ -37,8 +41,9 @@ marketing_agent = Agent(
         "You use the executive narrative, property details, and lead profiles to tailor SMS, email, and ad copy. "
         "Ensure the tone matches the brand: warm, professional, authoritative, and enthusiastic. "
         "Focus on 'Benefits over Features' and include clear Calls to Action (CTAs)."
-    )
+    ),
 )
+
 
 # 5. Define Tools
 @marketing_agent.tool

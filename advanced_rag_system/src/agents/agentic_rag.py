@@ -109,11 +109,17 @@ class AgenticRAG:
         if self.config.enable_reflection:
             while iteration <= self.config.max_iterations:
                 confidence = self._confidence_scorer.calculate(
-                    all_tool_results, plan.intent_analysis.intent, iteration, answer,
+                    all_tool_results,
+                    plan.intent_analysis.intent,
+                    iteration,
+                    answer,
                 )
                 quality = self.reflection_engine.assess_quality(
-                    answer=answer, query=query_text, tool_results=all_tool_results,
-                    query_plan=plan, iteration_count=iteration,
+                    answer=answer,
+                    query=query_text,
+                    tool_results=all_tool_results,
+                    query_plan=plan,
+                    iteration_count=iteration,
                 )
                 if not self.reflection_engine.should_iterate(quality, iteration, confidence):
                     break
@@ -125,18 +131,29 @@ class AgenticRAG:
                 answer = self._synthesize_answer(query_text, all_tool_results)
                 iteration += 1
         confidence = self._confidence_scorer.calculate(
-            all_tool_results, plan.intent_analysis.intent, iteration, answer,
+            all_tool_results,
+            plan.intent_analysis.intent,
+            iteration,
+            answer,
         )
         sources = self._collect_sources(all_tool_results)
         total_duration = (time.time() - start_time) * 1000
         trace = ExecutionTrace(
-            steps=execution_steps, total_duration_ms=total_duration, iterations_used=iteration,
+            steps=execution_steps,
+            total_duration_ms=total_duration,
+            iterations_used=iteration,
         )
         return AgenticRAGResponse(
-            answer=answer, confidence=confidence, sources=sources, trace=trace, quality=quality,
+            answer=answer,
+            confidence=confidence,
+            sources=sources,
+            trace=trace,
+            quality=quality,
         )
 
-    async def _execute_plan(self, plan: QueryPlan, all_tool_results: List[ToolResult], execution_steps: List[ExecutionStep]) -> None:
+    async def _execute_plan(
+        self, plan: QueryPlan, all_tool_results: List[ToolResult], execution_steps: List[ExecutionStep]
+    ) -> None:
         while not plan.is_complete():
             ready_steps = plan.get_ready_steps()
             if not ready_steps:
@@ -155,13 +172,20 @@ class AgenticRAG:
                 all_tool_results.append(result)
                 status = StepStatus.COMPLETED if result.success else StepStatus.FAILED
                 plan.update_step_status(step.id, status, result.model_dump() if result.data else None)
-                execution_steps.append(ExecutionStep(
-                    step_number=step.step_number, description=step.description,
-                    tool_name=tool_name, tool_result=result,
-                    duration_ms=step_duration, status=status.value,
-                ))
+                execution_steps.append(
+                    ExecutionStep(
+                        step_number=step.step_number,
+                        description=step.description,
+                        tool_name=tool_name,
+                        tool_result=result,
+                        duration_ms=step_duration,
+                        status=status.value,
+                    )
+                )
 
-    async def _apply_corrections(self, query: str, corrections: List[CorrectionStrategy], execution_steps: List[ExecutionStep]) -> List[ToolResult]:
+    async def _apply_corrections(
+        self, query: str, corrections: List[CorrectionStrategy], execution_steps: List[ExecutionStep]
+    ) -> List[ToolResult]:
         new_results: List[ToolResult] = []
         for correction in corrections[:2]:
             tool_name = "vector_search"
@@ -174,13 +198,16 @@ class AgenticRAG:
             else:
                 continue
             new_results.append(result)
-            execution_steps.append(ExecutionStep(
-                step_number=len(execution_steps) + 1,
-                description=f"Correction: {correction.description[:80]}",
-                tool_name=tool_name, tool_result=result,
-                duration_ms=result.execution_time_ms,
-                status="completed" if result.success else "failed",
-            ))
+            execution_steps.append(
+                ExecutionStep(
+                    step_number=len(execution_steps) + 1,
+                    description=f"Correction: {correction.description[:80]}",
+                    tool_name=tool_name,
+                    tool_result=result,
+                    duration_ms=result.execution_time_ms,
+                    status="completed" if result.success else "failed",
+                )
+            )
         return new_results
 
     def _synthesize_answer(self, query: str, tool_results: List[ToolResult]) -> str:
@@ -217,10 +244,12 @@ class AgenticRAG:
             if isinstance(result.data, dict) and "results" in result.data:
                 for item in result.data["results"]:
                     if isinstance(item, dict):
-                        sources.append({
-                            "tool": result.tool_name,
-                            "content": item.get("content", item.get("snippet", "")),
-                            "score": item.get("score", 0),
-                            "metadata": item.get("metadata", {}),
-                        })
+                        sources.append(
+                            {
+                                "tool": result.tool_name,
+                                "content": item.get("content", item.get("snippet", "")),
+                                "score": item.get("score", 0),
+                                "metadata": item.get("metadata", {}),
+                            }
+                        )
         return sources

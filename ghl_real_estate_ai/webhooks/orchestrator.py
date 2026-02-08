@@ -16,26 +16,28 @@ import hashlib
 import hmac
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Callable, Set
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import aiohttp
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..services.claude_assistant import ClaudeAssistant
-from ..services.cache_service import CacheService
 from ..ghl_utils.jorge_config import JorgeConfig
+from ..services.cache_service import CacheService
+from ..services.claude_assistant import ClaudeAssistant
+from .cascade_manager import CrossSystemCascadeManager
 from .event_router import WebhookEventRouter
 from .signature_validator import WebhookSignatureValidator
-from .cascade_manager import CrossSystemCascadeManager
 
 logger = logging.getLogger(__name__)
 
+
 class WebhookSource(Enum):
     """Webhook source systems"""
+
     MLS_BRIGHT = "mls_bright"
     MLS_CALIFORNIA = "mls_california"
     CRM_CHIME = "crm_chime"
@@ -47,8 +49,10 @@ class WebhookSource(Enum):
     GHL_PLATFORM = "ghl_platform"
     JORGE_SYSTEM = "jorge_system"
 
+
 class EventType(Enum):
     """Webhook event types"""
+
     PROPERTY_LISTING_NEW = "property.listing.new"
     PROPERTY_LISTING_UPDATED = "property.listing.updated"
     PROPERTY_STATUS_CHANGE = "property.status.change"
@@ -76,9 +80,11 @@ class EventType(Enum):
     SYSTEM_ALERT = "system.alert"
     BOT_ESCALATION = "bot.escalation"
 
+
 @dataclass
 class WebhookEvent:
     """Webhook event structure"""
+
     event_id: str
     source: WebhookSource
     event_type: EventType
@@ -90,9 +96,11 @@ class WebhookEvent:
     correlation_id: Optional[str] = None
     priority: int = 5  # 1-10, 1 being highest priority
 
+
 @dataclass
 class ProcessingResult:
     """Webhook processing result"""
+
     success: bool
     event_id: str
     processing_time: float
@@ -101,9 +109,11 @@ class ProcessingResult:
     errors: List[str] = field(default_factory=list)
     correlation_events: List[str] = field(default_factory=list)
 
+
 @dataclass
 class OrchestrationRule:
     """Business rule for webhook orchestration"""
+
     rule_id: str
     name: str
     description: str
@@ -113,6 +123,7 @@ class OrchestrationRule:
     priority: int = 5
     enabled: bool = True
     jorge_specific: bool = False
+
 
 class WebhookOrchestrator:
     """
@@ -140,10 +151,10 @@ class WebhookOrchestrator:
 
         # Performance monitoring
         self.processing_metrics = {
-            'events_processed': 0,
-            'processing_errors': 0,
-            'average_processing_time': 0.0,
-            'last_processing_time': datetime.now()
+            "events_processed": 0,
+            "processing_errors": 0,
+            "average_processing_time": 0.0,
+            "last_processing_time": datetime.now(),
         }
 
         # Jorge-specific business rules
@@ -176,12 +187,14 @@ class WebhookOrchestrator:
             logger.error(f"Failed to initialize Webhook Orchestrator: {str(e)}")
             raise
 
-    async def process_webhook_event(self,
-                                  source: str,
-                                  event_type: str,
-                                  payload: Dict[str, Any],
-                                  headers: Optional[Dict[str, str]] = None,
-                                  signature: Optional[str] = None) -> ProcessingResult:
+    async def process_webhook_event(
+        self,
+        source: str,
+        event_type: str,
+        payload: Dict[str, Any],
+        headers: Optional[Dict[str, str]] = None,
+        signature: Optional[str] = None,
+    ) -> ProcessingResult:
         """
         Process incoming webhook event with intelligent routing and orchestration
 
@@ -198,15 +211,14 @@ class WebhookOrchestrator:
         try:
             # Generate event ID
             import uuid
+
             event_id = uuid.uuid4().hex
 
             logger.info(f"Processing webhook event: {event_id} from {source}")
 
             # Validate webhook signature
             if signature:
-                is_valid = await self.signature_validator.validate_signature(
-                    source, payload, signature, headers or {}
-                )
+                is_valid = await self.signature_validator.validate_signature(source, payload, signature, headers or {})
                 if not is_valid:
                     raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
@@ -218,7 +230,7 @@ class WebhookOrchestrator:
                 timestamp=datetime.now(),
                 payload=payload,
                 signature=signature,
-                headers=headers or {}
+                headers=headers or {},
             )
 
             # Check for event deduplication
@@ -229,8 +241,8 @@ class WebhookOrchestrator:
                     success=True,
                     event_id=event_id,
                     processing_time=0.0,
-                    actions_triggered=['deduplication_skip'],
-                    systems_updated=[]
+                    actions_triggered=["deduplication_skip"],
+                    systems_updated=[],
                 )
 
             # Add to processing queue
@@ -246,16 +258,15 @@ class WebhookOrchestrator:
                 success=True,
                 event_id=event_id,
                 processing_time=0.0,
-                actions_triggered=['queued_for_processing'],
-                systems_updated=[]
+                actions_triggered=["queued_for_processing"],
+                systems_updated=[],
             )
 
         except Exception as e:
             logger.error(f"Webhook event processing failed: {str(e)}")
             raise
 
-    async def orchestrate_cross_system_updates(self,
-                                             primary_event: WebhookEvent) -> Dict[str, Any]:
+    async def orchestrate_cross_system_updates(self, primary_event: WebhookEvent) -> Dict[str, Any]:
         """
         Orchestrate cascading updates across integrated systems
 
@@ -272,26 +283,22 @@ class WebhookOrchestrator:
             cascade_plan = await self.cascade_manager.create_cascade_plan(primary_event)
 
             # Execute cascade plan
-            cascade_result = await self.cascade_manager.execute_cascade(
-                primary_event, cascade_plan
-            )
+            cascade_result = await self.cascade_manager.execute_cascade(primary_event, cascade_plan)
 
             # Apply Jorge-specific business rules
-            jorge_actions = await self._apply_jorge_business_rules(
-                primary_event, cascade_result
-            )
+            jorge_actions = await self._apply_jorge_business_rules(primary_event, cascade_result)
 
             # Update correlation tracking
             await self._update_event_correlations(primary_event, cascade_result)
 
             orchestration_result = {
-                'primary_event_id': primary_event.event_id,
-                'cascade_plan': cascade_plan,
-                'cascade_results': cascade_result,
-                'jorge_actions': jorge_actions,
-                'systems_affected': cascade_result.get('systems_updated', []),
-                'processing_time': cascade_result.get('processing_time', 0.0),
-                'success': cascade_result.get('success', False)
+                "primary_event_id": primary_event.event_id,
+                "cascade_plan": cascade_plan,
+                "cascade_results": cascade_result,
+                "jorge_actions": jorge_actions,
+                "systems_affected": cascade_result.get("systems_updated", []),
+                "processing_time": cascade_result.get("processing_time", 0.0),
+                "success": cascade_result.get("success", False),
             }
 
             logger.info(f"Cross-system orchestration completed for {primary_event.event_id}")
@@ -301,9 +308,7 @@ class WebhookOrchestrator:
             logger.error(f"Cross-system orchestration failed: {str(e)}")
             raise
 
-    async def register_event_handler(self,
-                                   event_type: EventType,
-                                   handler: Callable[[WebhookEvent], Any]):
+    async def register_event_handler(self, event_type: EventType, handler: Callable[[WebhookEvent], Any]):
         """Register custom event handler"""
         if event_type not in self.event_handlers:
             self.event_handlers[event_type] = []
@@ -324,10 +329,10 @@ class WebhookOrchestrator:
         """Get webhook processing performance metrics"""
         return {
             **self.processing_metrics,
-            'queue_size': self.event_queue.qsize(),
-            'active_workers': len(self.processing_tasks),
-            'recent_events_count': len(self.recent_events),
-            'correlation_tracking': len(self.event_correlations)
+            "queue_size": self.event_queue.qsize(),
+            "active_workers": len(self.processing_tasks),
+            "recent_events_count": len(self.recent_events),
+            "correlation_tracking": len(self.event_correlations),
         }
 
     async def _event_processing_worker(self, worker_id: int):
@@ -373,8 +378,8 @@ class WebhookOrchestrator:
 
             # Route event to appropriate handlers
             routing_result = await self.event_router.route_event(event)
-            actions_triggered.extend(routing_result.get('actions', []))
-            systems_updated.extend(routing_result.get('systems', []))
+            actions_triggered.extend(routing_result.get("actions", []))
+            systems_updated.extend(routing_result.get("systems", []))
 
             # Execute registered event handlers
             if event.event_type in self.event_handlers:
@@ -389,15 +394,15 @@ class WebhookOrchestrator:
 
             # Apply orchestration rules
             rule_results = await self._apply_orchestration_rules(event)
-            actions_triggered.extend(rule_results.get('actions', []))
-            systems_updated.extend(rule_results.get('systems', []))
+            actions_triggered.extend(rule_results.get("actions", []))
+            systems_updated.extend(rule_results.get("systems", []))
 
             # Execute cross-system orchestration if needed
             if self._should_orchestrate_cascade(event):
                 cascade_result = await self.orchestrate_cross_system_updates(event)
-                if cascade_result['success']:
-                    systems_updated.extend(cascade_result.get('systems_affected', []))
-                    actions_triggered.append('cross_system_cascade')
+                if cascade_result["success"]:
+                    systems_updated.extend(cascade_result.get("systems_affected", []))
+                    actions_triggered.append("cross_system_cascade")
 
             # Mark event as processed
             event.processed = True
@@ -410,7 +415,7 @@ class WebhookOrchestrator:
                 processing_time=processing_time,
                 actions_triggered=actions_triggered,
                 systems_updated=list(set(systems_updated)),
-                errors=errors
+                errors=errors,
             )
 
         except Exception as e:
@@ -421,7 +426,7 @@ class WebhookOrchestrator:
                 processing_time=0.0,
                 actions_triggered=[],
                 systems_updated=[],
-                errors=[str(e)]
+                errors=[str(e)],
             )
 
     async def _apply_orchestration_rules(self, event: WebhookEvent) -> Dict[str, Any]:
@@ -443,39 +448,34 @@ class WebhookOrchestrator:
                         try:
                             action_result = await self._execute_rule_action(action, event)
                             actions_triggered.append(f"rule_{rule.rule_id}")
-                            systems_updated.extend(action_result.get('systems', []))
+                            systems_updated.extend(action_result.get("systems", []))
 
                         except Exception as e:
                             logger.error(f"Rule action failed for {rule.name}: {str(e)}")
 
-            return {
-                'actions': actions_triggered,
-                'systems': systems_updated
-            }
+            return {"actions": actions_triggered, "systems": systems_updated}
 
         except Exception as e:
             logger.error(f"Orchestration rules application failed: {str(e)}")
-            return {'actions': [], 'systems': []}
+            return {"actions": [], "systems": []}
 
-    async def _apply_jorge_business_rules(self,
-                                        event: WebhookEvent,
-                                        cascade_result: Dict[str, Any]) -> List[str]:
+    async def _apply_jorge_business_rules(self, event: WebhookEvent, cascade_result: Dict[str, Any]) -> List[str]:
         """Apply Jorge-specific business rules"""
         try:
             jorge_actions = []
 
             # Hot lead alert rule
             if event.event_type == EventType.LEAD_TEMPERATURE_CHANGE:
-                temperature = event.payload.get('temperature', 0)
+                temperature = event.payload.get("temperature", 0)
                 if temperature >= 75:  # Hot lead threshold
-                    jorge_actions.append('hot_lead_alert_sent')
+                    jorge_actions.append("hot_lead_alert_sent")
                     await self._send_hot_lead_alert(event)
 
             # Property price drop opportunity
             if event.event_type == EventType.PROPERTY_PRICE_CHANGE:
-                price_change = event.payload.get('price_change_percent', 0)
+                price_change = event.payload.get("price_change_percent", 0)
                 if price_change <= -5:  # 5% price drop
-                    jorge_actions.append('price_drop_opportunity_identified')
+                    jorge_actions.append("price_drop_opportunity_identified")
                     await self._identify_price_drop_opportunity(event)
 
             # Commission optimization
@@ -483,7 +483,7 @@ class WebhookOrchestrator:
                 jorge_actions.extend(await self._optimize_commission_opportunity(event))
 
             # Market intelligence updates
-            if event.source.value.startswith('mls_'):
+            if event.source.value.startswith("mls_"):
                 jorge_actions.extend(await self._update_market_intelligence(event))
 
             return jorge_actions
@@ -497,78 +497,57 @@ class WebhookOrchestrator:
         rules = []
 
         # Hot lead immediate response rule
-        rules.append(OrchestrationRule(
-            rule_id="jorge_hot_lead_response",
-            name="Jorge Hot Lead Immediate Response",
-            description="Immediate response system for hot leads (75%+ temperature)",
-            event_pattern={
-                "event_type": "lead.temperature.change",
-                "payload.temperature": {"$gte": 75}
-            },
-            actions=[
-                {
-                    "type": "notification",
-                    "method": "push_sms_email",
-                    "priority": "urgent",
-                    "template": "hot_lead_alert"
-                },
-                {
-                    "type": "bot_escalation",
-                    "bot": "jorge_seller_bot",
-                    "priority": "immediate"
-                }
-            ],
-            priority=1,
-            jorge_specific=True
-        ))
+        rules.append(
+            OrchestrationRule(
+                rule_id="jorge_hot_lead_response",
+                name="Jorge Hot Lead Immediate Response",
+                description="Immediate response system for hot leads (75%+ temperature)",
+                event_pattern={"event_type": "lead.temperature.change", "payload.temperature": {"$gte": 75}},
+                actions=[
+                    {
+                        "type": "notification",
+                        "method": "push_sms_email",
+                        "priority": "urgent",
+                        "template": "hot_lead_alert",
+                    },
+                    {"type": "bot_escalation", "bot": "jorge_seller_bot", "priority": "immediate"},
+                ],
+                priority=1,
+                jorge_specific=True,
+            )
+        )
 
         # Property opportunity identification
-        rules.append(OrchestrationRule(
-            rule_id="jorge_property_opportunity",
-            name="Jorge Property Investment Opportunity",
-            description="Identify undervalued properties and investment opportunities",
-            event_pattern={
-                "event_type": "property.price.change",
-                "payload.price_change_percent": {"$lte": -10}
-            },
-            actions=[
-                {
-                    "type": "opportunity_analysis",
-                    "method": "ml_investment_scoring",
-                    "notify_jorge": True
-                },
-                {
-                    "type": "client_matching",
-                    "criteria": "investment_properties"
-                }
-            ],
-            priority=2,
-            jorge_specific=True
-        ))
+        rules.append(
+            OrchestrationRule(
+                rule_id="jorge_property_opportunity",
+                name="Jorge Property Investment Opportunity",
+                description="Identify undervalued properties and investment opportunities",
+                event_pattern={"event_type": "property.price.change", "payload.price_change_percent": {"$lte": -10}},
+                actions=[
+                    {"type": "opportunity_analysis", "method": "ml_investment_scoring", "notify_jorge": True},
+                    {"type": "client_matching", "criteria": "investment_properties"},
+                ],
+                priority=2,
+                jorge_specific=True,
+            )
+        )
 
         # Commission optimization rule
-        rules.append(OrchestrationRule(
-            rule_id="jorge_commission_optimization",
-            name="Jorge Commission Optimization",
-            description="Optimize commission potential through strategic actions",
-            event_pattern={
-                "event_type": "lead.created",
-                "payload.estimated_property_value": {"$gte": 300000}
-            },
-            actions=[
-                {
-                    "type": "strategic_analysis",
-                    "method": "commission_optimization",
-                    "calculate_6_percent": True
-                },
-                {
-                    "type": "market_positioning",
-                    "method": "competitive_analysis"
-                }
-            ],
-            priority=3,
-            jorge_specific=True
-        ))
+        rules.append(
+            OrchestrationRule(
+                rule_id="jorge_commission_optimization",
+                name="Jorge Commission Optimization",
+                description="Optimize commission potential through strategic actions",
+                event_pattern={"event_type": "lead.created", "payload.estimated_property_value": {"$gte": 300000}},
+                actions=[
+                    {"type": "strategic_analysis", "method": "commission_optimization", "calculate_6_percent": True},
+                    {"type": "market_positioning", "method": "competitive_analysis"},
+                ],
+                priority=3,
+                jorge_specific=True,
+            )
+        )
 
         return rules
 
@@ -577,11 +556,11 @@ class WebhookOrchestrator:
         key_data = f"{event.source.value}_{event.event_type.value}_{event.timestamp.isoformat()}"
 
         # Add payload-specific identifiers
-        if 'property_id' in event.payload:
+        if "property_id" in event.payload:
             key_data += f"_{event.payload['property_id']}"
-        elif 'lead_id' in event.payload:
+        elif "lead_id" in event.payload:
             key_data += f"_{event.payload['lead_id']}"
-        elif 'contact_id' in event.payload:
+        elif "contact_id" in event.payload:
             key_data += f"_{event.payload['contact_id']}"
 
         return hashlib.md5(key_data.encode()).hexdigest()
@@ -625,8 +604,10 @@ class WebhookOrchestrator:
                     for key in correlation_keys_to_remove:
                         del self.event_correlations[key]
 
-                    logger.debug(f"Maintenance: Cleaned {len(keys_to_remove)} old events, "
-                               f"{len(correlation_keys_to_remove)} empty correlations")
+                    logger.debug(
+                        f"Maintenance: Cleaned {len(keys_to_remove)} old events, "
+                        f"{len(correlation_keys_to_remove)} empty correlations"
+                    )
 
                 except Exception as e:
                     logger.error(f"Background maintenance error: {str(e)}")

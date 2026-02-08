@@ -6,27 +6,28 @@ that a lead will close into a transaction based on conversation
 features and market conditions.
 """
 
-import os
-import json
-import pickle
 import asyncio
+import json
+import os
+import pickle
 import threading
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
-from sklearn.preprocessing import StandardScaler
-import joblib
 import shap
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer, MarketFeatures
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.ml.feature_engineering import FeatureEngineer, ConversationFeatures, MarketFeatures
 
 logger = get_logger(__name__)
 cache = get_cache_service()
@@ -126,7 +127,7 @@ class ClosingProbabilityModel:
 
                     metadata = {}
                     if os.path.exists(self.metadata_path):
-                        with open(self.metadata_path, 'r') as f:
+                        with open(self.metadata_path, "r") as f:
                             metadata = json.load(f)
 
                     return model, scaler, metadata
@@ -183,10 +184,10 @@ class ClosingProbabilityModel:
                 "feature_names": self.feature_names,
                 "last_training_date": self.last_training_date.isoformat(),
                 "model_type": "RandomForestClassifier",
-                "feature_count": len(self.feature_names)
+                "feature_count": len(self.feature_names),
             }
 
-            with open(self.metadata_path, 'w') as f:
+            with open(self.metadata_path, "w") as f:
                 json.dump(metadata, f, indent=2)
 
             logger.info(f"Model saved to {self.model_path}")
@@ -201,7 +202,7 @@ class ClosingProbabilityModel:
         training_data: pd.DataFrame,
         target_column: str = "closed",
         validation_split: float = 0.2,
-        random_state: int = 42
+        random_state: int = 42,
     ) -> ModelMetrics:
         """
         Train the closing probability model.
@@ -245,7 +246,7 @@ class ClosingProbabilityModel:
                 min_samples_split=5,
                 min_samples_leaf=2,
                 random_state=random_state,
-                class_weight="balanced"  # Handle class imbalance
+                class_weight="balanced",  # Handle class imbalance
             )
 
             self.model.fit(X_train_scaled, y_train)
@@ -255,7 +256,7 @@ class ClosingProbabilityModel:
             y_pred_proba = self.model.predict_proba(X_test_scaled)[:, 1]
 
             # Calculate metrics
-            from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+            from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
             accuracy = accuracy_score(y_test, y_pred)
             precision = precision_score(y_test, y_pred)
@@ -264,9 +265,7 @@ class ClosingProbabilityModel:
             auc = roc_auc_score(y_test, y_pred_proba)
 
             # Feature importances
-            feature_importance_dict = dict(
-                zip(self.feature_names, self.model.feature_importances_)
-            )
+            feature_importance_dict = dict(zip(self.feature_names, self.model.feature_importances_))
 
             # Store metrics
             self.model_metrics = ModelMetrics(
@@ -277,7 +276,7 @@ class ClosingProbabilityModel:
                 auc_score=auc,
                 feature_importances=feature_importance_dict,
                 confusion_matrix=confusion_matrix(y_test, y_pred),
-                validation_date=datetime.now()
+                validation_date=datetime.now(),
             )
 
             self.last_training_date = datetime.now()
@@ -293,9 +292,7 @@ class ClosingProbabilityModel:
             raise
 
     async def predict_closing_probability(
-        self,
-        conversation_context: Dict[str, Any],
-        location: Optional[str] = None
+        self, conversation_context: Dict[str, Any], location: Optional[str] = None
     ) -> ModelPrediction:
         """
         Predict closing probability for a lead.
@@ -319,15 +316,11 @@ class ClosingProbabilityModel:
                 return await self._baseline_prediction(conversation_context)
 
             # Extract features
-            conv_features = await self.feature_engineer.extract_conversation_features(
-                conversation_context
-            )
+            conv_features = await self.feature_engineer.extract_conversation_features(conversation_context)
             market_features = await self.feature_engineer.extract_market_features(location)
 
             # Create feature vector
-            feature_vector = self.feature_engineer.create_feature_vector(
-                conv_features, market_features
-            )
+            feature_vector = self.feature_engineer.create_feature_vector(conv_features, market_features)
 
             # Ensure feature vector matches trained model
             if len(feature_vector) != len(self.feature_names):
@@ -342,14 +335,11 @@ class ClosingProbabilityModel:
 
             # Calculate confidence interval using prediction variance
             # For Random Forest, we can use prediction variance across trees
-            tree_predictions = [
-                tree.predict_proba(feature_vector_scaled)[0][1]
-                for tree in self.model.estimators_
-            ]
+            tree_predictions = [tree.predict_proba(feature_vector_scaled)[0][1] for tree in self.model.estimators_]
             prediction_std = np.std(tree_predictions)
             confidence_interval = (
                 max(0.0, closing_probability - 1.96 * prediction_std),
-                min(1.0, closing_probability + 1.96 * prediction_std)
+                min(1.0, closing_probability + 1.96 * prediction_std),
             )
 
             # Model confidence based on prediction uncertainty
@@ -367,7 +357,7 @@ class ClosingProbabilityModel:
                 risk_factors=risk_factors,
                 positive_signals=positive_signals,
                 model_confidence=model_confidence,
-                feature_importance=feature_importance_dict
+                feature_importance=feature_importance_dict,
             )
 
             # Cache prediction for 30 minutes
@@ -378,10 +368,7 @@ class ClosingProbabilityModel:
             logger.error(f"Error predicting closing probability: {e}")
             return await self._baseline_prediction(conversation_context)
 
-    async def _baseline_prediction(
-        self,
-        conversation_context: Dict[str, Any]
-    ) -> ModelPrediction:
+    async def _baseline_prediction(self, conversation_context: Dict[str, Any]) -> ModelPrediction:
         """
         Provide baseline prediction when model is not available.
 
@@ -406,21 +393,15 @@ class ClosingProbabilityModel:
 
         return ModelPrediction(
             closing_probability=baseline_probability,
-            confidence_interval=(
-                max(0.0, baseline_probability - 0.2),
-                min(1.0, baseline_probability + 0.2)
-            ),
+            confidence_interval=(max(0.0, baseline_probability - 0.2), min(1.0, baseline_probability + 0.2)),
             risk_factors=["Limited historical data", "Model not trained"],
             positive_signals=[f"Completed {completed_fields}/{len(required_fields)} key qualifications"],
             model_confidence=0.5,
-            feature_importance={}
+            feature_importance={},
         )
 
     async def _analyze_prediction_factors(
-        self,
-        feature_vector: np.ndarray,
-        feature_importances: Dict[str, float],
-        conv_features: ConversationFeatures
+        self, feature_vector: np.ndarray, feature_importances: Dict[str, float], conv_features: ConversationFeatures
     ) -> Tuple[List[str], List[str]]:
         """
         Analyze factors contributing to prediction.
@@ -485,11 +466,7 @@ class ClosingProbabilityModel:
         """
         return self.model_metrics
 
-    async def needs_retraining(
-        self,
-        max_age_days: int = 30,
-        min_new_data_points: int = 50
-    ) -> bool:
+    async def needs_retraining(self, max_age_days: int = 30, min_new_data_points: int = 50) -> bool:
         """
         Check if model needs retraining.
 
@@ -513,11 +490,7 @@ class ClosingProbabilityModel:
         # For now, assume we don't have enough new data
         return False
 
-    def generate_synthetic_training_data(
-        self,
-        num_samples: int = 1000,
-        positive_rate: float = 0.3
-    ) -> pd.DataFrame:
+    def generate_synthetic_training_data(self, num_samples: int = 1000, positive_rate: float = 0.3) -> pd.DataFrame:
         """
         Generate synthetic training data for initial model training.
 
@@ -549,10 +522,10 @@ class ClosingProbabilityModel:
 
             # Calculate probability based on realistic patterns
             prob = (
-                qual_score * 0.4 +  # Qualification is most important
-                engagement * 0.3 +   # Engagement matters
-                urgency * 0.2 +      # Urgency helps
-                budget_ratio * 0.1   # Budget alignment
+                qual_score * 0.4  # Qualification is most important
+                + engagement * 0.3  # Engagement matters
+                + urgency * 0.2  # Urgency helps
+                + budget_ratio * 0.1  # Budget alignment
             )
 
             # Add some noise

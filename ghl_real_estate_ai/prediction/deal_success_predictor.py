@@ -12,21 +12,24 @@ This module provides:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
-from enum import Enum
-import numpy as np
+from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.cache_service import CacheService
+import numpy as np
+
 from ...ghl_utils.jorge_config import JorgeConfig
+from ...services.cache_service import CacheService
+from ...services.claude_assistant import ClaudeAssistant
 
 logger = logging.getLogger(__name__)
 
+
 class DealStage(Enum):
     """Deal progression stages"""
+
     INITIAL_CONTACT = "initial_contact"
     PROPERTY_SEARCH = "property_search"
     PROPERTY_VIEWING = "property_viewing"
@@ -38,25 +41,31 @@ class DealStage(Enum):
     CLOSING_PREPARATION = "closing_preparation"
     CLOSED = "closed"
 
+
 class RiskLevel(Enum):
     """Deal risk level classifications"""
-    VERY_LOW = "very_low"      # 95%+ closing probability
-    LOW = "low"                # 85-94% closing probability
-    MODERATE = "moderate"      # 70-84% closing probability
-    HIGH = "high"              # 50-69% closing probability
-    VERY_HIGH = "very_high"    # <50% closing probability
+
+    VERY_LOW = "very_low"  # 95%+ closing probability
+    LOW = "low"  # 85-94% closing probability
+    MODERATE = "moderate"  # 70-84% closing probability
+    HIGH = "high"  # 50-69% closing probability
+    VERY_HIGH = "very_high"  # <50% closing probability
+
 
 class NegotiationLeverage(Enum):
     """Negotiation leverage assessment"""
-    STRONG_BUYER = "strong_buyer"        # Buyer has strong leverage
-    MODERATE_BUYER = "moderate_buyer"    # Balanced negotiation
-    STRONG_SELLER = "strong_seller"      # Seller has strong leverage
-    COMPETITIVE = "competitive"          # Multiple offers situation
+
+    STRONG_BUYER = "strong_buyer"  # Buyer has strong leverage
+    MODERATE_BUYER = "moderate_buyer"  # Balanced negotiation
+    STRONG_SELLER = "strong_seller"  # Seller has strong leverage
+    COMPETITIVE = "competitive"  # Multiple offers situation
     UNIQUE_PROPERTY = "unique_property"  # Property-specific leverage
+
 
 @dataclass
 class DealMetrics:
     """Core deal metrics and KPIs"""
+
     deal_id: str
     current_stage: DealStage
     days_in_current_stage: int
@@ -69,9 +78,11 @@ class DealMetrics:
     estimated_closing_date: datetime
     risk_level: RiskLevel
 
+
 @dataclass
 class RiskFactor:
     """Individual risk factor assessment"""
+
     factor_type: str
     severity: str  # 'critical', 'high', 'medium', 'low'
     probability: float  # 0-100
@@ -80,9 +91,11 @@ class RiskFactor:
     mitigation_strategy: str
     jorge_methodology_application: str
 
+
 @dataclass
 class SuccessAccelerator:
     """Factors that can accelerate deal success"""
+
     accelerator_type: str
     impact_potential: str  # 'major', 'moderate', 'minor'
     timing_sensitivity: str  # 'immediate', 'short_term', 'flexible'
@@ -91,9 +104,11 @@ class SuccessAccelerator:
     action_plan: str
     jorge_advantage: str
 
+
 @dataclass
 class DealForecast:
     """Comprehensive deal outcome forecast"""
+
     deal_id: str
     closing_probability: float
     closing_probability_range: Dict[str, float]  # optimistic, realistic, pessimistic
@@ -105,9 +120,11 @@ class DealForecast:
     total_commission_prediction: Decimal
     confidence_level: float
 
+
 @dataclass
 class NegotiationIntelligence:
     """Negotiation strategy intelligence"""
+
     deal_id: str
     current_leverage: NegotiationLeverage
     negotiation_opportunities: List[str]
@@ -116,6 +133,7 @@ class NegotiationIntelligence:
     timing_advantages: List[str]
     competitive_intelligence: Dict[str, Any]
     jorge_negotiation_edge: List[str]
+
 
 class DealSuccessPredictor:
     """
@@ -130,41 +148,41 @@ class DealSuccessPredictor:
 
         # Deal prediction configurations
         self.prediction_config = {
-            'accuracy_target': 0.92,
-            'confidence_threshold': 0.75,
-            'update_frequency': 900,  # 15 minutes
-            'risk_factors': [
-                'financing_issues',
-                'inspection_problems',
-                'appraisal_challenges',
-                'seller_motivation',
-                'market_changes',
-                'competition_pressure'
-            ]
+            "accuracy_target": 0.92,
+            "confidence_threshold": 0.75,
+            "update_frequency": 900,  # 15 minutes
+            "risk_factors": [
+                "financing_issues",
+                "inspection_problems",
+                "appraisal_challenges",
+                "seller_motivation",
+                "market_changes",
+                "competition_pressure",
+            ],
         }
 
         # Jorge's deal methodology
         self.jorge_deal_methodology = {
-            '6_percent_commission_factors': [
-                'value_demonstration',
-                'market_expertise',
-                'negotiation_skill',
-                'deal_complexity',
-                'urgency_management',
-                'relationship_quality'
+            "6_percent_commission_factors": [
+                "value_demonstration",
+                "market_expertise",
+                "negotiation_skill",
+                "deal_complexity",
+                "urgency_management",
+                "relationship_quality",
             ],
-            'closing_optimization_strategies': {
-                'high_probability_deals': 'accelerate_and_protect',
-                'moderate_probability_deals': 'strengthen_and_secure',
-                'low_probability_deals': 'diagnose_and_rebuild'
+            "closing_optimization_strategies": {
+                "high_probability_deals": "accelerate_and_protect",
+                "moderate_probability_deals": "strengthen_and_secure",
+                "low_probability_deals": "diagnose_and_rebuild",
             },
-            'negotiation_edge_factors': [
-                'market_intelligence',
-                'timing_advantage',
-                'relationship_leverage',
-                'competitive_insight',
-                'value_positioning'
-            ]
+            "negotiation_edge_factors": [
+                "market_intelligence",
+                "timing_advantage",
+                "relationship_leverage",
+                "competitive_insight",
+                "value_positioning",
+            ],
         }
 
         # Deal prediction cache and performance tracking
@@ -172,11 +190,13 @@ class DealSuccessPredictor:
         self.prediction_accuracy = {}
         self.closing_success_rate = {}
 
-    async def predict_deal_success(self,
-                                 deal_id: str,
-                                 deal_data: Dict[str, Any],
-                                 current_stage: DealStage,
-                                 market_context: Optional[Dict[str, Any]] = None) -> DealForecast:
+    async def predict_deal_success(
+        self,
+        deal_id: str,
+        deal_data: Dict[str, Any],
+        current_stage: DealStage,
+        market_context: Optional[Dict[str, Any]] = None,
+    ) -> DealForecast:
         """
         Predict comprehensive deal success probability and timeline
         """
@@ -190,7 +210,9 @@ class DealSuccessPredictor:
                 return DealForecast(**cached_forecast)
 
             # Analyze deal success factors
-            success_analysis = await self._analyze_deal_success_factors(deal_id, deal_data, current_stage, market_context)
+            success_analysis = await self._analyze_deal_success_factors(
+                deal_id, deal_data, current_stage, market_context
+            )
 
             # Generate deal success prediction
             forecast_prompt = f"""
@@ -226,27 +248,31 @@ class DealSuccessPredictor:
             # Create deal forecast
             forecast = DealForecast(
                 deal_id=deal_id,
-                closing_probability=forecast_response.get('closing_probability', 75.0),
+                closing_probability=forecast_response.get("closing_probability", 75.0),
                 closing_probability_range={
-                    'optimistic': forecast_response.get('closing_probability_range', {}).get('optimistic', 85.0),
-                    'realistic': forecast_response.get('closing_probability_range', {}).get('realistic', 75.0),
-                    'pessimistic': forecast_response.get('closing_probability_range', {}).get('pessimistic', 65.0)
+                    "optimistic": forecast_response.get("closing_probability_range", {}).get("optimistic", 85.0),
+                    "realistic": forecast_response.get("closing_probability_range", {}).get("realistic", 75.0),
+                    "pessimistic": forecast_response.get("closing_probability_range", {}).get("pessimistic", 65.0),
                 },
-                predicted_closing_date=datetime.now() + timedelta(days=forecast_response.get('predicted_closing_days', 30)),
+                predicted_closing_date=datetime.now()
+                + timedelta(days=forecast_response.get("predicted_closing_days", 30)),
                 closing_date_range={
-                    'optimistic': datetime.now() + timedelta(days=forecast_response.get('closing_date_range', {}).get('optimistic_days', 25)),
-                    'realistic': datetime.now() + timedelta(days=forecast_response.get('closing_date_range', {}).get('realistic_days', 30)),
-                    'pessimistic': datetime.now() + timedelta(days=forecast_response.get('closing_date_range', {}).get('pessimistic_days', 45))
+                    "optimistic": datetime.now()
+                    + timedelta(days=forecast_response.get("closing_date_range", {}).get("optimistic_days", 25)),
+                    "realistic": datetime.now()
+                    + timedelta(days=forecast_response.get("closing_date_range", {}).get("realistic_days", 30)),
+                    "pessimistic": datetime.now()
+                    + timedelta(days=forecast_response.get("closing_date_range", {}).get("pessimistic_days", 45)),
                 },
-                predicted_final_price=Decimal(str(forecast_response.get('predicted_final_price', 500000))),
+                predicted_final_price=Decimal(str(forecast_response.get("predicted_final_price", 500000))),
                 price_range={
-                    'low': Decimal(str(forecast_response.get('price_range', {}).get('low', 485000))),
-                    'mid': Decimal(str(forecast_response.get('price_range', {}).get('mid', 500000))),
-                    'high': Decimal(str(forecast_response.get('price_range', {}).get('high', 515000)))
+                    "low": Decimal(str(forecast_response.get("price_range", {}).get("low", 485000))),
+                    "mid": Decimal(str(forecast_response.get("price_range", {}).get("mid", 500000))),
+                    "high": Decimal(str(forecast_response.get("price_range", {}).get("high", 515000))),
                 },
-                commission_probability_6_percent=forecast_response.get('commission_probability_6_percent', 80.0),
-                total_commission_prediction=Decimal(str(forecast_response.get('total_commission_prediction', 30000))),
-                confidence_level=forecast_response.get('confidence_level', 0.80)
+                commission_probability_6_percent=forecast_response.get("commission_probability_6_percent", 80.0),
+                total_commission_prediction=Decimal(str(forecast_response.get("total_commission_prediction", 30000))),
+                confidence_level=forecast_response.get("confidence_level", 0.80),
             )
 
             # Cache forecast
@@ -259,10 +285,9 @@ class DealSuccessPredictor:
             logger.error(f"Deal success prediction failed: {str(e)}")
             raise
 
-    async def assess_deal_risks(self,
-                              deal_id: str,
-                              deal_data: Dict[str, Any],
-                              current_stage: DealStage) -> List[RiskFactor]:
+    async def assess_deal_risks(
+        self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage
+    ) -> List[RiskFactor]:
         """
         Assess comprehensive deal risks and mitigation strategies
         """
@@ -310,17 +335,17 @@ class DealSuccessPredictor:
 
             # Create risk factors list
             risks = []
-            risk_factors_data = risk_response.get('risk_factors', [])
+            risk_factors_data = risk_response.get("risk_factors", [])
 
             for risk_data in risk_factors_data:
                 risk = RiskFactor(
-                    factor_type=risk_data.get('factor_type', 'unknown'),
-                    severity=risk_data.get('severity', 'medium'),
-                    probability=risk_data.get('probability', 50.0),
-                    impact=risk_data.get('impact', 'minor'),
-                    description=risk_data.get('description', ''),
-                    mitigation_strategy=risk_data.get('mitigation_strategy', ''),
-                    jorge_methodology_application=risk_data.get('jorge_methodology_application', '')
+                    factor_type=risk_data.get("factor_type", "unknown"),
+                    severity=risk_data.get("severity", "medium"),
+                    probability=risk_data.get("probability", 50.0),
+                    impact=risk_data.get("impact", "minor"),
+                    description=risk_data.get("description", ""),
+                    mitigation_strategy=risk_data.get("mitigation_strategy", ""),
+                    jorge_methodology_application=risk_data.get("jorge_methodology_application", ""),
                 )
                 risks.append(risk)
 
@@ -334,10 +359,9 @@ class DealSuccessPredictor:
             logger.error(f"Deal risk assessment failed: {str(e)}")
             raise
 
-    async def identify_success_accelerators(self,
-                                          deal_id: str,
-                                          deal_data: Dict[str, Any],
-                                          current_stage: DealStage) -> List[SuccessAccelerator]:
+    async def identify_success_accelerators(
+        self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage
+    ) -> List[SuccessAccelerator]:
         """
         Identify opportunities to accelerate deal success
         """
@@ -385,17 +409,17 @@ class DealSuccessPredictor:
 
             # Create success accelerators list
             accelerators = []
-            accelerator_data = accelerator_response.get('success_accelerators', [])
+            accelerator_data = accelerator_response.get("success_accelerators", [])
 
             for acc_data in accelerator_data:
                 accelerator = SuccessAccelerator(
-                    accelerator_type=acc_data.get('accelerator_type', 'unknown'),
-                    impact_potential=acc_data.get('impact_potential', 'moderate'),
-                    timing_sensitivity=acc_data.get('timing_sensitivity', 'flexible'),
-                    implementation_effort=acc_data.get('implementation_effort', 'medium'),
-                    description=acc_data.get('description', ''),
-                    action_plan=acc_data.get('action_plan', ''),
-                    jorge_advantage=acc_data.get('jorge_advantage', '')
+                    accelerator_type=acc_data.get("accelerator_type", "unknown"),
+                    impact_potential=acc_data.get("impact_potential", "moderate"),
+                    timing_sensitivity=acc_data.get("timing_sensitivity", "flexible"),
+                    implementation_effort=acc_data.get("implementation_effort", "medium"),
+                    description=acc_data.get("description", ""),
+                    action_plan=acc_data.get("action_plan", ""),
+                    jorge_advantage=acc_data.get("jorge_advantage", ""),
                 )
                 accelerators.append(accelerator)
 
@@ -409,10 +433,9 @@ class DealSuccessPredictor:
             logger.error(f"Success accelerator identification failed: {str(e)}")
             raise
 
-    async def generate_negotiation_intelligence(self,
-                                              deal_id: str,
-                                              deal_data: Dict[str, Any],
-                                              negotiation_context: Dict[str, Any]) -> NegotiationIntelligence:
+    async def generate_negotiation_intelligence(
+        self, deal_id: str, deal_data: Dict[str, Any], negotiation_context: Dict[str, Any]
+    ) -> NegotiationIntelligence:
         """
         Generate comprehensive negotiation strategy intelligence
         """
@@ -461,13 +484,13 @@ class DealSuccessPredictor:
             # Create negotiation intelligence
             intelligence = NegotiationIntelligence(
                 deal_id=deal_id,
-                current_leverage=NegotiationLeverage(negotiation_response.get('current_leverage', 'moderate_buyer')),
-                negotiation_opportunities=negotiation_response.get('negotiation_opportunities', []),
-                pressure_points=negotiation_response.get('pressure_points', []),
-                concession_strategy=negotiation_response.get('concession_strategy', {}),
-                timing_advantages=negotiation_response.get('timing_advantages', []),
-                competitive_intelligence=negotiation_response.get('competitive_intelligence', {}),
-                jorge_negotiation_edge=negotiation_response.get('jorge_negotiation_edge', [])
+                current_leverage=NegotiationLeverage(negotiation_response.get("current_leverage", "moderate_buyer")),
+                negotiation_opportunities=negotiation_response.get("negotiation_opportunities", []),
+                pressure_points=negotiation_response.get("pressure_points", []),
+                concession_strategy=negotiation_response.get("concession_strategy", {}),
+                timing_advantages=negotiation_response.get("timing_advantages", []),
+                competitive_intelligence=negotiation_response.get("competitive_intelligence", {}),
+                jorge_negotiation_edge=negotiation_response.get("jorge_negotiation_edge", []),
             )
 
             # Cache intelligence
@@ -480,10 +503,9 @@ class DealSuccessPredictor:
             logger.error(f"Negotiation intelligence generation failed: {str(e)}")
             raise
 
-    async def predict_commission_optimization(self,
-                                            deal_id: str,
-                                            deal_data: Dict[str, Any],
-                                            market_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict_commission_optimization(
+        self, deal_id: str, deal_data: Dict[str, Any], market_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Predict commission optimization opportunities and strategies
         """
@@ -525,28 +547,30 @@ class DealSuccessPredictor:
 
             # Create commission optimization prediction
             optimization = {
-                'deal_id': deal_id,
-                'six_percent_probability': commission_response.get('six_percent_probability', 80.0),
-                'value_demonstration_strategies': commission_response.get('value_demonstration_strategies', []),
-                'commission_defense_tactics': commission_response.get('commission_defense_tactics', []),
-                'client_education_approach': commission_response.get('client_education_approach', ''),
-                'competitive_positioning': commission_response.get('competitive_positioning', ''),
-                'risk_factors': commission_response.get('risk_factors', []),
-                'protection_strategies': commission_response.get('protection_strategies', []),
-                'expected_commission_amount': Decimal(str(commission_response.get('expected_commission_amount', 30000))),
-                'optimization_confidence': commission_response.get('optimization_confidence', 0.75)
+                "deal_id": deal_id,
+                "six_percent_probability": commission_response.get("six_percent_probability", 80.0),
+                "value_demonstration_strategies": commission_response.get("value_demonstration_strategies", []),
+                "commission_defense_tactics": commission_response.get("commission_defense_tactics", []),
+                "client_education_approach": commission_response.get("client_education_approach", ""),
+                "competitive_positioning": commission_response.get("competitive_positioning", ""),
+                "risk_factors": commission_response.get("risk_factors", []),
+                "protection_strategies": commission_response.get("protection_strategies", []),
+                "expected_commission_amount": Decimal(
+                    str(commission_response.get("expected_commission_amount", 30000))
+                ),
+                "optimization_confidence": commission_response.get("optimization_confidence", 0.75),
             }
 
-            logger.info(f"Commission optimization prediction completed - 6% probability: {optimization['six_percent_probability']}%")
+            logger.info(
+                f"Commission optimization prediction completed - 6% probability: {optimization['six_percent_probability']}%"
+            )
             return optimization
 
         except Exception as e:
             logger.error(f"Commission optimization prediction failed: {str(e)}")
             raise
 
-    async def monitor_deal_progress(self,
-                                  deal_id: str,
-                                  monitoring_frequency: str = "daily") -> Dict[str, Any]:
+    async def monitor_deal_progress(self, deal_id: str, monitoring_frequency: str = "daily") -> Dict[str, Any]:
         """
         Monitor deal progress and provide real-time intelligence updates
         """
@@ -561,19 +585,21 @@ class DealSuccessPredictor:
 
             # Generate progress intelligence
             progress_report = {
-                'deal_id': deal_id,
-                'current_status': current_status,
-                'progress_analysis': progress_analysis,
-                'prediction_accuracy': await self._calculate_prediction_accuracy(deal_id),
-                'updated_forecast': await self.predict_deal_success(
+                "deal_id": deal_id,
+                "current_status": current_status,
+                "progress_analysis": progress_analysis,
+                "prediction_accuracy": await self._calculate_prediction_accuracy(deal_id),
+                "updated_forecast": await self.predict_deal_success(
                     deal_id,
-                    current_status.get('deal_data', {}),
-                    DealStage(current_status.get('current_stage', 'negotiation'))
+                    current_status.get("deal_data", {}),
+                    DealStage(current_status.get("current_stage", "negotiation")),
                 ),
-                'action_recommendations': await self._generate_action_recommendations(deal_id, progress_analysis),
-                'risk_alerts': await self._check_risk_alerts(deal_id, current_status),
-                'opportunity_alerts': await self._check_opportunity_alerts(deal_id, current_status),
-                'jorge_methodology_adjustments': await self._recommend_methodology_adjustments(deal_id, progress_analysis)
+                "action_recommendations": await self._generate_action_recommendations(deal_id, progress_analysis),
+                "risk_alerts": await self._check_risk_alerts(deal_id, current_status),
+                "opportunity_alerts": await self._check_opportunity_alerts(deal_id, current_status),
+                "jorge_methodology_adjustments": await self._recommend_methodology_adjustments(
+                    deal_id, progress_analysis
+                ),
             }
 
             logger.info(f"Deal progress monitoring completed for: {deal_id}")
@@ -584,88 +610,102 @@ class DealSuccessPredictor:
             raise
 
     # Helper methods for analysis and data processing
-    async def _analyze_deal_success_factors(self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage, market_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_deal_success_factors(
+        self,
+        deal_id: str,
+        deal_data: Dict[str, Any],
+        current_stage: DealStage,
+        market_context: Optional[Dict[str, Any]],
+    ) -> Dict[str, Any]:
         """Analyze factors affecting deal success"""
         # Implement success factor analysis
         return {
-            'deal_id': deal_id,
-            'stage_analysis': {},
-            'market_factors': market_context or {},
-            'client_factors': {},
-            'property_factors': {},
-            'competitive_factors': {},
-            'timing_factors': {}
+            "deal_id": deal_id,
+            "stage_analysis": {},
+            "market_factors": market_context or {},
+            "client_factors": {},
+            "property_factors": {},
+            "competitive_factors": {},
+            "timing_factors": {},
         }
 
-    async def _analyze_deal_risks(self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage) -> Dict[str, Any]:
+    async def _analyze_deal_risks(
+        self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage
+    ) -> Dict[str, Any]:
         """Analyze potential deal risks"""
         # Implement risk analysis logic
         return {
-            'deal_id': deal_id,
-            'financing_risks': {},
-            'inspection_risks': {},
-            'appraisal_risks': {},
-            'market_risks': {},
-            'seller_risks': {},
-            'timing_risks': {}
+            "deal_id": deal_id,
+            "financing_risks": {},
+            "inspection_risks": {},
+            "appraisal_risks": {},
+            "market_risks": {},
+            "seller_risks": {},
+            "timing_risks": {},
         }
 
-    async def _analyze_success_opportunities(self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage) -> Dict[str, Any]:
+    async def _analyze_success_opportunities(
+        self, deal_id: str, deal_data: Dict[str, Any], current_stage: DealStage
+    ) -> Dict[str, Any]:
         """Analyze success acceleration opportunities"""
         # Implement success opportunity analysis
         return {
-            'deal_id': deal_id,
-            'timeline_opportunities': {},
-            'relationship_opportunities': {},
-            'process_opportunities': {},
-            'competitive_opportunities': {},
-            'value_opportunities': {}
+            "deal_id": deal_id,
+            "timeline_opportunities": {},
+            "relationship_opportunities": {},
+            "process_opportunities": {},
+            "competitive_opportunities": {},
+            "value_opportunities": {},
         }
 
-    async def _analyze_negotiation_landscape(self, deal_id: str, deal_data: Dict[str, Any], negotiation_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_negotiation_landscape(
+        self, deal_id: str, deal_data: Dict[str, Any], negotiation_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze negotiation landscape and dynamics"""
         # Implement negotiation analysis
         return {
-            'deal_id': deal_id,
-            'power_dynamics': {},
-            'pressure_points': {},
-            'concession_opportunities': {},
-            'timing_factors': {},
-            'competitive_dynamics': {}
+            "deal_id": deal_id,
+            "power_dynamics": {},
+            "pressure_points": {},
+            "concession_opportunities": {},
+            "timing_factors": {},
+            "competitive_dynamics": {},
         }
 
-    async def _analyze_commission_factors(self, deal_id: str, deal_data: Dict[str, Any], market_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_commission_factors(
+        self, deal_id: str, deal_data: Dict[str, Any], market_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze commission optimization factors"""
         # Implement commission analysis
         return {
-            'deal_id': deal_id,
-            'value_factors': {},
-            'market_factors': market_context,
-            'competitive_factors': {},
-            'client_factors': {},
-            'service_factors': {}
+            "deal_id": deal_id,
+            "value_factors": {},
+            "market_factors": market_context,
+            "competitive_factors": {},
+            "client_factors": {},
+            "service_factors": {},
         }
 
     async def _get_current_deal_status(self, deal_id: str) -> Dict[str, Any]:
         """Get current deal status and metrics"""
         # Implement current status retrieval
         return {
-            'deal_id': deal_id,
-            'current_stage': 'negotiation',
-            'deal_data': {},
-            'last_updated': datetime.now().isoformat(),
-            'status_metrics': {}
+            "deal_id": deal_id,
+            "current_stage": "negotiation",
+            "deal_data": {},
+            "last_updated": datetime.now().isoformat(),
+            "status_metrics": {},
         }
 
     async def _analyze_deal_progress(self, deal_id: str, current_status: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze deal progress vs predictions"""
         # Implement progress analysis
         return {
-            'deal_id': deal_id,
-            'progress_rate': 'on_track',
-            'variance_analysis': {},
-            'trend_indicators': {},
-            'performance_metrics': {}
+            "deal_id": deal_id,
+            "progress_rate": "on_track",
+            "variance_analysis": {},
+            "trend_indicators": {},
+            "performance_metrics": {},
         }
 
     async def _calculate_prediction_accuracy(self, deal_id: str) -> float:
@@ -679,7 +719,7 @@ class DealSuccessPredictor:
         return [
             "Follow up with lender on financing status",
             "Schedule property inspection",
-            "Prepare negotiation strategy for seller response"
+            "Prepare negotiation strategy for seller response",
         ]
 
     async def _check_risk_alerts(self, deal_id: str, current_status: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -695,10 +735,7 @@ class DealSuccessPredictor:
     async def _recommend_methodology_adjustments(self, deal_id: str, progress_analysis: Dict[str, Any]) -> List[str]:
         """Recommend Jorge methodology adjustments"""
         # Implement methodology adjustment recommendations
-        return [
-            "Increase pressure on timeline acceleration",
-            "Emphasize value proposition for commission protection"
-        ]
+        return ["Increase pressure on timeline acceleration", "Emphasize value proposition for commission protection"]
 
     async def cleanup(self):
         """Clean up deal success predictor resources"""

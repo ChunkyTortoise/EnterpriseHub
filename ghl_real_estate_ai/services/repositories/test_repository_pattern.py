@@ -5,28 +5,35 @@ Tests all repository implementations, factory methods, caching, and Strategy Pat
 Validates SOLID principles, performance, and error handling.
 """
 
-import pytest
 import asyncio
 import json
 import tempfile
-from pathlib import Path
-from typing import Dict, List, Any
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
+from pathlib import Path
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+from .caching_repository import CachingRepository, MemoryCacheBackend
+from .database_repository import DatabasePropertyRepository
 
 # Import repository components
 from .interfaces import (
-    IPropertyRepository, PropertyQuery, RepositoryResult, QueryOperator,
-    SortOrder, PaginationConfig, RepositoryError
+    IPropertyRepository,
+    PaginationConfig,
+    PropertyQuery,
+    QueryOperator,
+    RepositoryError,
+    RepositoryResult,
+    SortOrder,
 )
 from .json_repository import JsonPropertyRepository
 from .mls_repository import MLSAPIRepository
-from .rag_repository import RAGPropertyRepository
-from .database_repository import DatabasePropertyRepository
-from .caching_repository import CachingRepository, MemoryCacheBackend
-from .repository_factory import RepositoryFactory, RepositoryBuilder
 from .property_data_service import PropertyDataService, PropertyDataServiceFactory
-from .query_builder import PropertyQueryBuilder, FluentPropertyQuery
+from .query_builder import FluentPropertyQuery, PropertyQueryBuilder
+from .rag_repository import RAGPropertyRepository
+from .repository_factory import RepositoryBuilder, RepositoryFactory
 from .strategy_integration import RepositoryPropertyMatcher, enhanced_generate_property_matches
 
 
@@ -94,13 +101,15 @@ class TestPropertyQueryBuilder:
 
     def test_query_builder_fluent_interface(self):
         """Test method chaining in query builder"""
-        query = (PropertyQueryBuilder()
-                 .filter_by_price(min_price=400000, max_price=800000)
-                 .filter_by_bedrooms(min_beds=2, max_beds=4)
-                 .filter_by_location(location="Austin")
-                 .sort_by("price", SortOrder.ASC)
-                 .paginate(page=1, limit=20)
-                 .build())
+        query = (
+            PropertyQueryBuilder()
+            .filter_by_price(min_price=400000, max_price=800000)
+            .filter_by_bedrooms(min_beds=2, max_beds=4)
+            .filter_by_location(location="Austin")
+            .sort_by("price", SortOrder.ASC)
+            .paginate(page=1, limit=20)
+            .build()
+        )
 
         assert query.min_price == 400000
         assert query.max_price == 800000
@@ -157,7 +166,7 @@ class TestJsonPropertyRepository:
                 "sqft": 2000,
                 "neighborhood": "TestTown",
                 "property_type": "Single Family",
-                "amenities": ["garage", "pool"]
+                "amenities": ["garage", "pool"],
             },
             {
                 "id": "prop-002",
@@ -168,14 +177,14 @@ class TestJsonPropertyRepository:
                 "sqft": 2800,
                 "neighborhood": "DemoDistrict",
                 "property_type": "Single Family",
-                "amenities": ["garage", "fireplace"]
-            }
+                "amenities": ["garage", "fireplace"],
+            },
         ]
 
     @pytest.fixture
     async def temp_json_file(self):
         """Create temporary JSON file for testing"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(self.test_properties, f)
             yield f.name
         Path(f.name).unlink()
@@ -271,10 +280,7 @@ class TestCachingRepository:
         mock_repo.is_connected = True
 
         # Mock find_properties response
-        mock_result = RepositoryResult(
-            data=[{"id": "prop-001", "price": 500000}],
-            total_count=1
-        )
+        mock_result = RepositoryResult(data=[{"id": "prop-001", "price": 500000}], total_count=1)
         mock_repo.find_properties.return_value = mock_result
 
         # Create caching repository
@@ -349,10 +355,9 @@ class TestRepositoryFactory:
     async def test_repository_builder_pattern(self):
         """Test repository builder pattern"""
         builder = RepositoryBuilder()
-        repo = await (builder
-                      .json_source(data_paths=[], cache_ttl=300)
-                      .with_memory_cache(max_size=500, ttl_minutes=10)
-                      .build())
+        repo = await (
+            builder.json_source(data_paths=[], cache_ttl=300).with_memory_cache(max_size=500, ttl_minutes=10).build()
+        )
 
         assert isinstance(repo, CachingRepository)
 
@@ -377,7 +382,7 @@ class TestPropertyDataService:
                 "config": {"data_paths": []},
                 "priority": 1,
                 "fallback": False,
-                "caching": {"enabled": False}
+                "caching": {"enabled": False},
             },
             {
                 "name": "fallback_json",
@@ -385,8 +390,8 @@ class TestPropertyDataService:
                 "config": {"data_paths": []},
                 "priority": 0,
                 "fallback": True,
-                "caching": {"enabled": False}
-            }
+                "caching": {"enabled": False},
+            },
         ]
 
     @pytest.mark.asyncio
@@ -395,7 +400,7 @@ class TestPropertyDataService:
         service = PropertyDataService()
 
         # Mock repository creation
-        with patch.object(service, '_create_repository_from_config') as mock_create:
+        with patch.object(service, "_create_repository_from_config") as mock_create:
             mock_repo1 = AsyncMock(spec=IPropertyRepository)
             mock_repo1.name = "primary_json"
             mock_repo1.connect.return_value = True
@@ -428,11 +433,7 @@ class TestPropertyDataService:
         service._fallback_repositories = [mock_fallback]
 
         # Primary repository returns successful result
-        mock_result = RepositoryResult(
-            data=[{"id": "prop-001"}],
-            total_count=1,
-            success=True
-        )
+        mock_result = RepositoryResult(data=[{"id": "prop-001"}], total_count=1, success=True)
         mock_primary.find_properties.return_value = mock_result
 
         query = PropertyQuery()
@@ -459,9 +460,7 @@ class TestPropertyDataService:
 
         # Primary fails, fallback succeeds
         mock_primary.find_properties.return_value = RepositoryResult(success=False, errors=["Primary failed"])
-        mock_fallback.find_properties.return_value = RepositoryResult(
-            data=[{"id": "fallback-prop"}], success=True
-        )
+        mock_fallback.find_properties.return_value = RepositoryResult(data=[{"id": "fallback-prop"}], success=True)
 
         query = PropertyQuery()
         result = await service.find_properties(query)
@@ -479,20 +478,20 @@ class TestStrategyIntegration:
     def mock_lead_context(self):
         """Mock lead context for testing"""
         return {
-            'lead_id': 'test-lead-123',
-            'agent_id': 'agent-456',
-            'extracted_preferences': {
-                'budget': 750000,
-                'location': 'Austin',
-                'bedrooms': 3,
-                'bathrooms': 2,
-                'property_type': 'Single Family',
-                'must_haves': ['garage', 'pool'],
-                'nice_to_haves': ['fireplace'],
-                'work_location': 'downtown',
-                'has_children': True,
-                'min_sqft': 1800
-            }
+            "lead_id": "test-lead-123",
+            "agent_id": "agent-456",
+            "extracted_preferences": {
+                "budget": 750000,
+                "location": "Austin",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "property_type": "Single Family",
+                "must_haves": ["garage", "pool"],
+                "nice_to_haves": ["fireplace"],
+                "work_location": "downtown",
+                "has_children": True,
+                "min_sqft": 1800,
+            },
         }
 
     @pytest.mark.asyncio
@@ -505,9 +504,7 @@ class TestStrategyIntegration:
         ]
 
         matcher = RepositoryPropertyMatcher(
-            property_data_service=mock_service,
-            strategy_name="enhanced",
-            fallback_strategy="basic"
+            property_data_service=mock_service, strategy_name="enhanced", fallback_strategy="basic"
         )
 
         assert matcher.data_service == mock_service
@@ -516,35 +513,31 @@ class TestStrategyIntegration:
     @pytest.mark.asyncio
     async def test_enhanced_generate_property_matches(self, mock_lead_context):
         """Test enhanced property matching function"""
-        config = {
-            "type": "demo",
-            "json_data_dir": "/tmp/test_data"
-        }
+        config = {"type": "demo", "json_data_dir": "/tmp/test_data"}
 
         # Mock the repository creation
-        with patch('services.repositories.strategy_integration.create_repository_property_matcher') as mock_create:
+        with patch("services.repositories.strategy_integration.create_repository_property_matcher") as mock_create:
             mock_matcher = AsyncMock()
             mock_matcher.score_properties_with_repository.return_value = [
                 {
-                    'address': '123 Test Street',
-                    'price': 500000,
-                    'beds': 3,
-                    'baths': 2.5,
-                    'sqft': 2000,
-                    'match_score': 92,
-                    'match_reasons': ['Within budget', 'Perfect location']
+                    "address": "123 Test Street",
+                    "price": 500000,
+                    "beds": 3,
+                    "baths": 2.5,
+                    "sqft": 2000,
+                    "match_score": 92,
+                    "match_reasons": ["Within budget", "Perfect location"],
                 }
             ]
             mock_create.return_value = mock_matcher
 
             results = await enhanced_generate_property_matches(
-                lead_context=mock_lead_context,
-                data_sources_config=config
+                lead_context=mock_lead_context, data_sources_config=config
             )
 
             assert len(results) == 1
-            assert results[0]['address'] == '123 Test Street'
-            assert results[0]['match_score'] == 92
+            assert results[0]["address"] == "123 Test Street"
+            assert results[0]["match_score"] == 92
 
 
 class TestErrorHandling:
@@ -595,10 +588,7 @@ class TestErrorHandling:
         # This would typically timeout in real scenario
         # For test, we just verify the mock behavior
         query = PropertyQuery()
-        result = await asyncio.wait_for(
-            mock_repo.find_properties(query),
-            timeout=1.0
-        )
+        result = await asyncio.wait_for(mock_repo.find_properties(query), timeout=1.0)
         # This should raise asyncio.TimeoutError in real scenario
 
 
@@ -609,23 +599,24 @@ class TestPerformanceAndSOLIDPrinciples:
         """Verify each class has single responsibility"""
         # PropertyQuery: Query specification only
         query = PropertyQuery()
-        assert hasattr(query, 'min_price')
-        assert not hasattr(query, 'execute')  # No execution logic
+        assert hasattr(query, "min_price")
+        assert not hasattr(query, "execute")  # No execution logic
 
         # QueryBuilder: Query construction only
         builder = PropertyQueryBuilder()
-        assert hasattr(builder, 'filter_by_price')
-        assert hasattr(builder, 'build')
-        assert not hasattr(builder, 'find_properties')  # No repository logic
+        assert hasattr(builder, "filter_by_price")
+        assert hasattr(builder, "build")
+        assert not hasattr(builder, "find_properties")  # No repository logic
 
         # Repository: Data access only
         config = {"data_paths": []}
         repo = JsonPropertyRepository(config)
-        assert hasattr(repo, 'find_properties')
-        assert not hasattr(repo, 'calculate_score')  # No scoring logic
+        assert hasattr(repo, "find_properties")
+        assert not hasattr(repo, "calculate_score")  # No scoring logic
 
     def test_open_closed_principle(self):
         """Verify classes are open for extension, closed for modification"""
+
         # Can create new repository types without modifying existing code
         class CustomPropertyRepository(IPropertyRepository):
             async def connect(self) -> bool:
@@ -661,13 +652,13 @@ class TestPerformanceAndSOLIDPrinciples:
         """Verify high-level modules don't depend on low-level modules"""
         # PropertyDataService depends on IPropertyRepository abstraction
         service = PropertyDataService()
-        assert not hasattr(service, 'json_repository')  # No concrete dependency
+        assert not hasattr(service, "json_repository")  # No concrete dependency
 
         # CachingRepository depends on IPropertyRepository abstraction
         mock_repo = Mock(spec=IPropertyRepository)
         cache_backend = MemoryCacheBackend()
         caching_repo = CachingRepository(mock_repo, cache_backend)
-        assert hasattr(caching_repo, 'wrapped_repository')  # Uses abstraction
+        assert hasattr(caching_repo, "wrapped_repository")  # Uses abstraction
 
 
 class TestRealWorldScenarios:
@@ -677,14 +668,15 @@ class TestRealWorldScenarios:
     async def test_complete_property_search_workflow(self):
         """Test complete property search from query building to results"""
         # 1. Build query using fluent interface
-        query = (FluentPropertyQuery
-                 .by_price_range(400000, 800000)
-                 .filter_by_bedrooms(min_beds=2, max_beds=4)
-                 .filter_by_location(location="Austin")
-                 .filter_by_amenities(required=["garage"])
-                 .sort_by("price", SortOrder.ASC)
-                 .paginate(page=1, limit=10)
-                 .build())
+        query = (
+            FluentPropertyQuery.by_price_range(400000, 800000)
+            .filter_by_bedrooms(min_beds=2, max_beds=4)
+            .filter_by_location(location="Austin")
+            .filter_by_amenities(required=["garage"])
+            .sort_by("price", SortOrder.ASC)
+            .paginate(page=1, limit=10)
+            .build()
+        )
 
         # 2. Create repository with test data
         test_data = [
@@ -695,11 +687,11 @@ class TestRealWorldScenarios:
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "neighborhood": "Austin",
-                "amenities": ["garage", "pool"]
+                "amenities": ["garage", "pool"],
             }
         ]
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(test_data, f)
             temp_file = f.name
 
@@ -734,8 +726,7 @@ class TestRealWorldScenarios:
         success_repo = AsyncMock(spec=IPropertyRepository)
         success_repo.name = "success_repo"
         success_repo.find_properties.return_value = RepositoryResult(
-            data=[{"id": "fallback-prop", "price": 500000}],
-            success=True
+            data=[{"id": "fallback-prop", "price": 500000}], success=True
         )
 
         service._repositories = [failing_repo, success_repo]
@@ -764,12 +755,12 @@ class TestPerformanceBenchmarks:
                 "price": 400000 + (i * 1000),
                 "bedrooms": (i % 4) + 1,
                 "bathrooms": ((i % 3) + 1) + 0.5,
-                "address": f"{i} Test Street"
+                "address": f"{i} Test Street",
             }
             for i in range(1000)
         ]
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(large_dataset, f)
             temp_file = f.name
 

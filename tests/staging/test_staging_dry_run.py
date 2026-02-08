@@ -15,7 +15,7 @@ import json
 import os
 import re
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -32,21 +32,18 @@ from ghl_real_estate_ai.api.schemas.ghl import (
     MessageDirection,
     MessageType,
 )
+from ghl_real_estate_ai.ghl_utils.config import settings as app_settings
 from ghl_real_estate_ai.services.compliance_guard import (
     ComplianceGuard,
     ComplianceStatus,
     compliance_guard,
 )
-from ghl_real_estate_ai.ghl_utils.config import settings as app_settings
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
-PHASE1_ENV_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "deploy", "phase1_seller_only.env"
-)
+PHASE1_ENV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "deploy", "phase1_seller_only.env")
 
 
 def _load_phase1_env() -> Dict[str, str]:
@@ -282,9 +279,7 @@ class TestGHLClientOperations:
                 location_id=phase1_env["GHL_LOCATION_ID"],
             )
             field_id = phase1_env["CUSTOM_FIELD_SELLER_TEMPERATURE"]
-            result = await client.update_custom_field(
-                "test_contact_001", field_id, "hot"
-            )
+            result = await client.update_custom_field("test_contact_001", field_id, "hot")
             assert result["status"] == "mocked"
             assert result["field_id"] == field_id
             assert result["value"] == "hot"
@@ -399,8 +394,13 @@ class TestWebhookEndpoint:
     def test_opt_out_detection(self):
         """Verify opt-out phrases are detected."""
         opt_out_phrases = [
-            "stop", "unsubscribe", "don't contact", "remove me",
-            "not interested", "opt out", "leave me alone",
+            "stop",
+            "unsubscribe",
+            "don't contact",
+            "remove me",
+            "not interested",
+            "opt out",
+            "leave me alone",
         ]
         for phrase in opt_out_phrases:
             assert phrase in phrase.lower()  # Sanity check
@@ -477,9 +477,7 @@ class TestComplianceGuardIntegration:
         ]
         for msg in steering_messages:
             status, reason, violations = await compliance_guard.audit_message(msg)
-            assert status == ComplianceStatus.BLOCKED, (
-                f"Expected BLOCKED for: '{msg}', got {status.value}"
-            )
+            assert status == ComplianceStatus.BLOCKED, f"Expected BLOCKED for: '{msg}', got {status.value}"
             assert len(violations) > 0
 
     @pytest.mark.asyncio
@@ -532,9 +530,7 @@ class TestComplianceGuardIntegration:
         assert status == ComplianceStatus.BLOCKED
 
         # Simulate the webhook handler's replacement logic
-        safe_seller_default = (
-            "Let's stick to the facts about your property. What price are you looking to get?"
-        )
+        safe_seller_default = "Let's stick to the facts about your property. What price are you looking to get?"
         final_msg = safe_seller_default if status == ComplianceStatus.BLOCKED else bad_msg
         assert final_msg == safe_seller_default
 
@@ -550,8 +546,8 @@ class TestSellerBotFlow:
     @pytest.mark.asyncio
     async def test_seller_engine_processes_message(self):
         """JorgeSellerEngine processes a seller message and returns structured result."""
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from ghl_real_estate_ai.core.conversation_manager import ConversationManager
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         conv_manager = ConversationManager()
         mock_ghl_client = MagicMock()
@@ -788,9 +784,7 @@ class TestJorgeConfigRouting:
         deactivation_tags = ["AI-Off", "Qualified", "Stop-Bot"]
         should_deactivate = any(tag in tags for tag in deactivation_tags)
 
-        should_route_to_seller = (
-            has_needs_qualifying and jorge_seller_mode_env and not should_deactivate
-        )
+        should_route_to_seller = has_needs_qualifying and jorge_seller_mode_env and not should_deactivate
         assert should_route_to_seller is True
 
     def test_buyer_mode_disabled_in_phase1(self, buyer_webhook_payload):
@@ -867,9 +861,7 @@ class TestWebhookResponseSchema:
                 channel=MessageType.SMS,
             ),
         ]
-        response = GHLWebhookResponse(
-            success=True, message="test", actions=actions
-        )
+        response = GHLWebhookResponse(success=True, message="test", actions=actions)
         data = response.model_dump()
         assert len(data["actions"]) == 5
 

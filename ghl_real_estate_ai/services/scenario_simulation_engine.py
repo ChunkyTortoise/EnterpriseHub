@@ -10,23 +10,26 @@ Author: Enhanced from research recommendations - January 2026
 """
 
 import asyncio
+import json
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-import json
 from scipy import stats
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 class ScenarioType(Enum):
     """Types of business scenarios to simulate."""
+
     COMMISSION_ADJUSTMENT = "commission_adjustment"
     QUALIFICATION_THRESHOLD = "qualification_threshold"
     PRICING_STRATEGY = "pricing_strategy"
@@ -35,9 +38,11 @@ class ScenarioType(Enum):
     MARKET_CONDITIONS = "market_conditions"
     COMPETITION_RESPONSE = "competition_response"
 
+
 @dataclass
 class ScenarioInput:
     """Input parameters for scenario simulation."""
+
     scenario_type: ScenarioType
     base_period: str  # "12M", "6M", "3M"
     adjustments: Dict[str, Any]  # Specific changes to simulate
@@ -45,9 +50,11 @@ class ScenarioInput:
     simulation_runs: int = 10000
     time_horizon_months: int = 12
 
+
 @dataclass
 class ScenarioOutcome:
     """Single outcome from Monte Carlo simulation."""
+
     revenue: float
     deals_closed: int
     avg_deal_value: float
@@ -57,9 +64,11 @@ class ScenarioOutcome:
     agent_satisfaction: float  # 0-100
     market_share_change: float  # %
 
+
 @dataclass
 class ScenarioResults:
     """Complete results from scenario simulation."""
+
     scenario_name: str
     input_params: ScenarioInput
 
@@ -80,6 +89,7 @@ class ScenarioResults:
 
     calculation_time_ms: float
     generated_at: datetime
+
 
 class ScenarioSimulationEngine:
     """
@@ -151,7 +161,7 @@ class ScenarioSimulationEngine:
             recommended_actions=recommendations,
             risk_factors=risk_factors,
             calculation_time_ms=calc_time,
-            generated_at=datetime.now()
+            generated_at=datetime.now(),
         )
 
     async def _load_historical_data(self):
@@ -163,9 +173,9 @@ class ScenarioSimulationEngine:
 
             if cached_data:
                 data = json.loads(cached_data)
-                self.historical_deals = data['deals']
-                self.market_conditions = data['market']
-                self.agent_performance = data['agents']
+                self.historical_deals = data["deals"]
+                self.market_conditions = data["market"]
+                self.agent_performance = data["agents"]
                 return
 
             # Load from analytics service
@@ -175,11 +185,13 @@ class ScenarioSimulationEngine:
             self.agent_performance = await self._generate_agent_performance_data()
 
             # Cache for 24 hours
-            await self.cache.set(cache_key, json.dumps({
-                'deals': self.historical_deals,
-                'market': self.market_conditions,
-                'agents': self.agent_performance
-            }), expire=86400)
+            await self.cache.set(
+                cache_key,
+                json.dumps(
+                    {"deals": self.historical_deals, "market": self.market_conditions, "agents": self.agent_performance}
+                ),
+                expire=86400,
+            )
 
         except Exception as e:
             logger.error(f"Error loading historical data: {e}")
@@ -198,55 +210,52 @@ class ScenarioSimulationEngine:
             price_base = np.random.lognormal(12.9, 0.3)  # ~$400K average
             price = max(250000, min(2000000, price_base))
 
-            deals.append({
-                'id': f"deal_{i}",
-                'close_date': deal_date.isoformat(),
-                'sale_price': price,
-                'commission_rate': np.random.normal(0.06, 0.005),  # 6% ± 0.5%
-                'days_to_close': int(np.random.gamma(2, 10)),  # ~20 days average
-                'lead_score_at_qualification': np.random.beta(3, 2) * 100,  # Skewed toward higher scores
-                'agent_id': f"agent_{np.random.randint(1, 6)}",
-                'property_type': np.random.choice(['single_family', 'condo', 'townhome'], p=[0.7, 0.2, 0.1]),
-                'buyer_type': np.random.choice(['first_time', 'investor', 'relocating', 'upgrading'], p=[0.3, 0.15, 0.25, 0.3]),
-                'fell_through': np.random.random() < 0.08  # 8% fallthrough rate
-            })
+            deals.append(
+                {
+                    "id": f"deal_{i}",
+                    "close_date": deal_date.isoformat(),
+                    "sale_price": price,
+                    "commission_rate": np.random.normal(0.06, 0.005),  # 6% ± 0.5%
+                    "days_to_close": int(np.random.gamma(2, 10)),  # ~20 days average
+                    "lead_score_at_qualification": np.random.beta(3, 2) * 100,  # Skewed toward higher scores
+                    "agent_id": f"agent_{np.random.randint(1, 6)}",
+                    "property_type": np.random.choice(["single_family", "condo", "townhome"], p=[0.7, 0.2, 0.1]),
+                    "buyer_type": np.random.choice(
+                        ["first_time", "investor", "relocating", "upgrading"], p=[0.3, 0.15, 0.25, 0.3]
+                    ),
+                    "fell_through": np.random.random() < 0.08,  # 8% fallthrough rate
+                }
+            )
 
         return deals
 
     async def _generate_market_conditions(self) -> Dict[str, Any]:
         """Generate current market condition parameters."""
         return {
-            'mortgage_rates': 6.3,
-            'inventory_months': 2.1,
-            'price_appreciation_yoy': 0.045,  # 4.5%
-            'competing_agents_local': 450,
-            'average_marketing_cost_per_listing': 1200,
-            'buyer_sentiment_index': 0.72,  # 72% positive
-            'seller_sentiment_index': 0.68   # 68% positive
+            "mortgage_rates": 6.3,
+            "inventory_months": 2.1,
+            "price_appreciation_yoy": 0.045,  # 4.5%
+            "competing_agents_local": 450,
+            "average_marketing_cost_per_listing": 1200,
+            "buyer_sentiment_index": 0.72,  # 72% positive
+            "seller_sentiment_index": 0.68,  # 68% positive
         }
 
     async def _generate_agent_performance_data(self) -> Dict[str, Any]:
         """Generate agent performance metrics."""
         return {
-            'jorge_efficiency_multiplier': 1.35,  # 35% above average
-            'team_collaboration_bonus': 0.15,     # 15% bonus from team coordination
-            'ai_automation_time_savings': 0.42,   # 42% time savings from AI
-            'client_satisfaction_score': 4.7,     # /5.0
-            'referral_rate': 0.31                 # 31% of clients refer others
+            "jorge_efficiency_multiplier": 1.35,  # 35% above average
+            "team_collaboration_bonus": 0.15,  # 15% bonus from team coordination
+            "ai_automation_time_savings": 0.42,  # 42% time savings from AI
+            "client_satisfaction_score": 4.7,  # /5.0
+            "referral_rate": 0.31,  # 31% of clients refer others
         }
 
     async def _load_fallback_data(self):
         """Load fallback data if analytics unavailable."""
         self.historical_deals = []
-        self.market_conditions = {
-            'mortgage_rates': 6.5,
-            'inventory_months': 2.0,
-            'price_appreciation_yoy': 0.04
-        }
-        self.agent_performance = {
-            'jorge_efficiency_multiplier': 1.2,
-            'ai_automation_time_savings': 0.3
-        }
+        self.market_conditions = {"mortgage_rates": 6.5, "inventory_months": 2.0, "price_appreciation_yoy": 0.04}
+        self.agent_performance = {"jorge_efficiency_multiplier": 1.2, "ai_automation_time_savings": 0.3}
 
     async def _generate_baseline_outcomes(self, scenario_input: ScenarioInput) -> ScenarioOutcome:
         """Generate baseline scenario for comparison."""
@@ -254,8 +263,10 @@ class ScenarioSimulationEngine:
             await self._load_historical_data()
 
         # Calculate baseline metrics from historical data
-        total_deals = len([d for d in self.historical_deals if not d['fell_through']])
-        total_revenue = sum(d['sale_price'] * d['commission_rate'] for d in self.historical_deals if not d['fell_through'])
+        total_deals = len([d for d in self.historical_deals if not d["fell_through"]])
+        total_revenue = sum(
+            d["sale_price"] * d["commission_rate"] for d in self.historical_deals if not d["fell_through"]
+        )
         avg_deal_value = total_revenue / total_deals if total_deals > 0 else 0
 
         # Project forward based on historical performance
@@ -269,16 +280,18 @@ class ScenarioSimulationEngine:
             avg_deal_value=avg_deal_value,
             close_rate=0.92,  # 92% of qualified leads close
             cost_structure={
-                'marketing': projected_revenue * 0.03,
-                'operations': projected_revenue * 0.12,
-                'agent_comp': projected_revenue * 0.65
+                "marketing": projected_revenue * 0.03,
+                "operations": projected_revenue * 0.12,
+                "agent_comp": projected_revenue * 0.65,
             },
             net_profit=projected_revenue * 0.20,
             agent_satisfaction=78.0,
-            market_share_change=0.0
+            market_share_change=0.0,
         )
 
-    async def _monte_carlo_simulation(self, scenario_input: ScenarioInput, baseline: ScenarioOutcome) -> List[ScenarioOutcome]:
+    async def _monte_carlo_simulation(
+        self, scenario_input: ScenarioInput, baseline: ScenarioOutcome
+    ) -> List[ScenarioOutcome]:
         """Run Monte Carlo simulation with scenario adjustments."""
         outcomes = []
 
@@ -288,7 +301,9 @@ class ScenarioSimulationEngine:
 
         return outcomes
 
-    async def _simulate_single_run(self, scenario_input: ScenarioInput, baseline: ScenarioOutcome, run_id: int) -> ScenarioOutcome:
+    async def _simulate_single_run(
+        self, scenario_input: ScenarioInput, baseline: ScenarioOutcome, run_id: int
+    ) -> ScenarioOutcome:
         """Simulate a single scenario outcome with random variations."""
 
         # Apply scenario-specific adjustments
@@ -300,9 +315,11 @@ class ScenarioSimulationEngine:
             # Default simulation with random variations
             return await self._simulate_baseline_variation(baseline)
 
-    async def _simulate_commission_adjustment(self, scenario_input: ScenarioInput, baseline: ScenarioOutcome) -> ScenarioOutcome:
+    async def _simulate_commission_adjustment(
+        self, scenario_input: ScenarioInput, baseline: ScenarioOutcome
+    ) -> ScenarioOutcome:
         """Simulate commission rate adjustment scenario."""
-        commission_change = scenario_input.adjustments.get('commission_rate_change', 0.0)
+        commission_change = scenario_input.adjustments.get("commission_rate_change", 0.0)
 
         # Model buyer agent response to commission changes
         if commission_change < -0.005:  # Reducing commission by >0.5%
@@ -328,18 +345,20 @@ class ScenarioSimulationEngine:
             avg_deal_value=new_avg_value,
             close_rate=baseline.close_rate * deal_flow_impact,
             cost_structure={
-                'marketing': new_revenue * 0.03,
-                'operations': new_revenue * 0.12,
-                'agent_comp': new_revenue * 0.65
+                "marketing": new_revenue * 0.03,
+                "operations": new_revenue * 0.12,
+                "agent_comp": new_revenue * 0.65,
             },
             net_profit=new_revenue * 0.20,
             agent_satisfaction=new_satisfaction,
-            market_share_change=(deal_flow_impact - 1.0) * 100
+            market_share_change=(deal_flow_impact - 1.0) * 100,
         )
 
-    async def _simulate_qualification_threshold(self, scenario_input: ScenarioInput, baseline: ScenarioOutcome) -> ScenarioOutcome:
+    async def _simulate_qualification_threshold(
+        self, scenario_input: ScenarioInput, baseline: ScenarioOutcome
+    ) -> ScenarioOutcome:
         """Simulate lead qualification threshold adjustment."""
-        threshold_change = scenario_input.adjustments.get('threshold_change', 0)  # Points (e.g., 50 -> 60)
+        threshold_change = scenario_input.adjustments.get("threshold_change", 0)  # Points (e.g., 50 -> 60)
 
         # Model impact on lead volume and quality
         if threshold_change > 0:  # Raising threshold
@@ -361,13 +380,14 @@ class ScenarioSimulationEngine:
             avg_deal_value=new_avg_value,
             close_rate=new_close_rate,
             cost_structure={
-                'marketing': (new_deals * new_avg_value) * 0.03,
-                'operations': (new_deals * new_avg_value) * 0.10,  # Slightly lower ops cost per deal
-                'agent_comp': (new_deals * new_avg_value) * 0.65
+                "marketing": (new_deals * new_avg_value) * 0.03,
+                "operations": (new_deals * new_avg_value) * 0.10,  # Slightly lower ops cost per deal
+                "agent_comp": (new_deals * new_avg_value) * 0.65,
             },
             net_profit=(new_deals * new_avg_value) * 0.22,  # Higher margin from better leads
-            agent_satisfaction=baseline.agent_satisfaction + (threshold_change * 0.5),  # Agents like higher quality leads
-            market_share_change=0.0
+            agent_satisfaction=baseline.agent_satisfaction
+            + (threshold_change * 0.5),  # Agents like higher quality leads
+            market_share_change=0.0,
         )
 
     async def _simulate_baseline_variation(self, baseline: ScenarioOutcome) -> ScenarioOutcome:
@@ -380,7 +400,7 @@ class ScenarioSimulationEngine:
             cost_structure={k: v * np.random.normal(1.0, 0.04) for k, v in baseline.cost_structure.items()},
             net_profit=baseline.net_profit * np.random.normal(1.0, 0.12),
             agent_satisfaction=max(0, min(100, baseline.agent_satisfaction * np.random.normal(1.0, 0.02))),
-            market_share_change=np.random.normal(0.0, 2.0)
+            market_share_change=np.random.normal(0.0, 2.0),
         )
 
     def _calculate_mean_outcome(self, outcomes: List[ScenarioOutcome]) -> ScenarioOutcome:
@@ -391,30 +411,32 @@ class ScenarioSimulationEngine:
             avg_deal_value=np.mean([o.avg_deal_value for o in outcomes]),
             close_rate=np.mean([o.close_rate for o in outcomes]),
             cost_structure={
-                'marketing': np.mean([o.cost_structure['marketing'] for o in outcomes]),
-                'operations': np.mean([o.cost_structure['operations'] for o in outcomes]),
-                'agent_comp': np.mean([o.cost_structure['agent_comp'] for o in outcomes])
+                "marketing": np.mean([o.cost_structure["marketing"] for o in outcomes]),
+                "operations": np.mean([o.cost_structure["operations"] for o in outcomes]),
+                "agent_comp": np.mean([o.cost_structure["agent_comp"] for o in outcomes]),
             },
             net_profit=np.mean([o.net_profit for o in outcomes]),
             agent_satisfaction=np.mean([o.agent_satisfaction for o in outcomes]),
-            market_share_change=np.mean([o.market_share_change for o in outcomes])
+            market_share_change=np.mean([o.market_share_change for o in outcomes]),
         )
 
-    def _calculate_confidence_intervals(self, outcomes: List[ScenarioOutcome], confidence_level: float) -> Dict[str, Tuple[float, float]]:
+    def _calculate_confidence_intervals(
+        self, outcomes: List[ScenarioOutcome], confidence_level: float
+    ) -> Dict[str, Tuple[float, float]]:
         """Calculate confidence intervals for key metrics."""
         alpha = 1 - confidence_level
 
         metrics = {
-            'revenue': [o.revenue for o in outcomes],
-            'deals_closed': [o.deals_closed for o in outcomes],
-            'net_profit': [o.net_profit for o in outcomes],
-            'close_rate': [o.close_rate for o in outcomes]
+            "revenue": [o.revenue for o in outcomes],
+            "deals_closed": [o.deals_closed for o in outcomes],
+            "net_profit": [o.net_profit for o in outcomes],
+            "close_rate": [o.close_rate for o in outcomes],
         }
 
         intervals = {}
         for metric, values in metrics.items():
-            lower = np.percentile(values, (alpha/2) * 100)
-            upper = np.percentile(values, (1 - alpha/2) * 100)
+            lower = np.percentile(values, (alpha / 2) * 100)
+            upper = np.percentile(values, (1 - alpha / 2) * 100)
             intervals[metric] = (lower, upper)
 
         return intervals
@@ -422,19 +444,21 @@ class ScenarioSimulationEngine:
     def _extract_distributions(self, outcomes: List[ScenarioOutcome]) -> Dict[str, List[float]]:
         """Extract probability distributions for visualization."""
         return {
-            'revenue': [o.revenue for o in outcomes],
-            'deals_closed': [float(o.deals_closed) for o in outcomes],
-            'net_profit': [o.net_profit for o in outcomes],
-            'agent_satisfaction': [o.agent_satisfaction for o in outcomes]
+            "revenue": [o.revenue for o in outcomes],
+            "deals_closed": [float(o.deals_closed) for o in outcomes],
+            "net_profit": [o.net_profit for o in outcomes],
+            "agent_satisfaction": [o.agent_satisfaction for o in outcomes],
         }
 
-    def _calculate_baseline_comparison(self, mean_outcome: ScenarioOutcome, baseline: ScenarioOutcome) -> Dict[str, float]:
+    def _calculate_baseline_comparison(
+        self, mean_outcome: ScenarioOutcome, baseline: ScenarioOutcome
+    ) -> Dict[str, float]:
         """Calculate percentage changes from baseline."""
         return {
-            'revenue_change': ((mean_outcome.revenue - baseline.revenue) / baseline.revenue) * 100,
-            'deals_change': ((mean_outcome.deals_closed - baseline.deals_closed) / baseline.deals_closed) * 100,
-            'profit_change': ((mean_outcome.net_profit - baseline.net_profit) / baseline.net_profit) * 100,
-            'satisfaction_change': mean_outcome.agent_satisfaction - baseline.agent_satisfaction
+            "revenue_change": ((mean_outcome.revenue - baseline.revenue) / baseline.revenue) * 100,
+            "deals_change": ((mean_outcome.deals_closed - baseline.deals_closed) / baseline.deals_closed) * 100,
+            "profit_change": ((mean_outcome.net_profit - baseline.net_profit) / baseline.net_profit) * 100,
+            "satisfaction_change": mean_outcome.agent_satisfaction - baseline.agent_satisfaction,
         }
 
     def _calculate_risk_metrics(self, outcomes: List[ScenarioOutcome], baseline: ScenarioOutcome) -> Dict[str, float]:
@@ -443,11 +467,11 @@ class ScenarioSimulationEngine:
         profits = [o.net_profit for o in outcomes]
 
         return {
-            'revenue_volatility': np.std(revenues) / np.mean(revenues),  # Coefficient of variation
-            'profit_volatility': np.std(profits) / np.mean(profits),
-            'downside_risk': len([r for r in revenues if r < baseline.revenue]) / len(revenues),
-            'value_at_risk_95': np.percentile(revenues, 5),  # 5th percentile
-            'expected_shortfall': np.mean([r for r in revenues if r < np.percentile(revenues, 5)])
+            "revenue_volatility": np.std(revenues) / np.mean(revenues),  # Coefficient of variation
+            "profit_volatility": np.std(profits) / np.mean(profits),
+            "downside_risk": len([r for r in revenues if r < baseline.revenue]) / len(revenues),
+            "value_at_risk_95": np.percentile(revenues, 5),  # 5th percentile
+            "expected_shortfall": np.mean([r for r in revenues if r < np.percentile(revenues, 5)]),
         }
 
     def _calculate_success_probability(self, outcomes: List[ScenarioOutcome], baseline: ScenarioOutcome) -> float:
@@ -455,7 +479,9 @@ class ScenarioSimulationEngine:
         successes = len([o for o in outcomes if o.revenue > baseline.revenue])
         return successes / len(outcomes)
 
-    async def _generate_insights(self, scenario_input: ScenarioInput, outcomes: List[ScenarioOutcome], baseline: ScenarioOutcome) -> List[str]:
+    async def _generate_insights(
+        self, scenario_input: ScenarioInput, outcomes: List[ScenarioOutcome], baseline: ScenarioOutcome
+    ) -> List[str]:
         """Generate AI-powered insights about scenario results."""
         mean_outcome = self._calculate_mean_outcome(outcomes)
 
@@ -465,12 +491,16 @@ class ScenarioSimulationEngine:
         revenue_change = ((mean_outcome.revenue - baseline.revenue) / baseline.revenue) * 100
         if abs(revenue_change) > 5:
             direction = "increase" if revenue_change > 0 else "decrease"
-            insights.append(f"Expected {direction} in annual revenue of {abs(revenue_change):.1f}% ({revenue_change:+.0f}K)")
+            insights.append(
+                f"Expected {direction} in annual revenue of {abs(revenue_change):.1f}% ({revenue_change:+.0f}K)"
+            )
 
         # Risk assessment
         volatility = np.std([o.revenue for o in outcomes]) / np.mean([o.revenue for o in outcomes])
         if volatility > 0.15:
-            insights.append(f"Higher revenue volatility detected ({volatility:.1%}), suggesting increased business risk")
+            insights.append(
+                f"Higher revenue volatility detected ({volatility:.1%}), suggesting increased business risk"
+            )
         elif volatility < 0.08:
             insights.append(f"Lower revenue volatility ({volatility:.1%}), indicating more predictable outcomes")
 
@@ -478,11 +508,15 @@ class ScenarioSimulationEngine:
         satisfaction_change = mean_outcome.agent_satisfaction - baseline.agent_satisfaction
         if abs(satisfaction_change) > 5:
             direction = "improve" if satisfaction_change > 0 else "reduce"
-            insights.append(f"Scenario likely to {direction} agent satisfaction by {abs(satisfaction_change):.1f} points")
+            insights.append(
+                f"Scenario likely to {direction} agent satisfaction by {abs(satisfaction_change):.1f} points"
+            )
 
         return insights
 
-    async def _generate_recommendations(self, scenario_input: ScenarioInput, outcomes: List[ScenarioOutcome]) -> List[str]:
+    async def _generate_recommendations(
+        self, scenario_input: ScenarioInput, outcomes: List[ScenarioOutcome]
+    ) -> List[str]:
         """Generate strategic recommendations based on simulation results."""
         recommendations = []
 
@@ -497,7 +531,7 @@ class ScenarioSimulationEngine:
 
         # Scenario-specific recommendations
         if scenario_input.scenario_type == ScenarioType.COMMISSION_ADJUSTMENT:
-            commission_change = scenario_input.adjustments.get('commission_rate_change', 0)
+            commission_change = scenario_input.adjustments.get("commission_rate_change", 0)
             if commission_change < -0.005:
                 recommendations.append("Consider gradual implementation to minimize buyer agent resistance")
 
@@ -515,7 +549,7 @@ class ScenarioSimulationEngine:
         # Check for negative outcomes
         negative_outcomes = len([o for o in outcomes if o.net_profit < 0])
         if negative_outcomes > len(outcomes) * 0.1:
-            risk_factors.append(f"{negative_outcomes/len(outcomes):.1%} probability of negative profit outcomes")
+            risk_factors.append(f"{negative_outcomes / len(outcomes):.1%} probability of negative profit outcomes")
 
         # Check for deal volume risks
         deal_counts = [o.deals_closed for o in outcomes]
@@ -526,21 +560,23 @@ class ScenarioSimulationEngine:
 
     def _generate_scenario_name(self, scenario_input: ScenarioInput) -> str:
         """Generate human-readable scenario name."""
-        base_name = scenario_input.scenario_type.value.replace('_', ' ').title()
+        base_name = scenario_input.scenario_type.value.replace("_", " ").title()
 
         if scenario_input.scenario_type == ScenarioType.COMMISSION_ADJUSTMENT:
-            rate_change = scenario_input.adjustments.get('commission_rate_change', 0)
+            rate_change = scenario_input.adjustments.get("commission_rate_change", 0)
             direction = "Increase" if rate_change > 0 else "Decrease"
-            return f"{direction} Commission by {abs(rate_change*100):.1f}%"
+            return f"{direction} Commission by {abs(rate_change * 100):.1f}%"
         elif scenario_input.scenario_type == ScenarioType.QUALIFICATION_THRESHOLD:
-            threshold_change = scenario_input.adjustments.get('threshold_change', 0)
+            threshold_change = scenario_input.adjustments.get("threshold_change", 0)
             direction = "Raise" if threshold_change > 0 else "Lower"
             return f"{direction} Qualification Threshold by {abs(threshold_change)} points"
         else:
             return base_name
 
+
 # Singleton instance
 _scenario_engine = None
+
 
 async def get_scenario_simulation_engine() -> ScenarioSimulationEngine:
     """Get singleton scenario simulation engine."""

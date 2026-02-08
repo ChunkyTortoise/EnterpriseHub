@@ -18,14 +18,15 @@ Dependencies:
     - axe-playwright: Integrates axe-core with Playwright
     - axe-core: Industry-standard accessibility testing engine
 """
-import pytest
-from playwright.sync_api import Page
-from axe_playwright import run_axe
 
+import pytest
+from axe_playwright import run_axe
+from playwright.sync_api import Page
 
 # ============================================================================
 # WCAG 2.1 AA Compliance Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_property_card_accessibility(streamlit_app: Page):
@@ -54,10 +55,7 @@ async def test_property_card_accessibility(streamlit_app: Page):
     results = await run_axe(streamlit_app)
 
     # Filter for critical and serious violations only
-    critical_violations = [
-        v for v in results.get('violations', [])
-        if v['impact'] in ['critical', 'serious']
-    ]
+    critical_violations = [v for v in results.get("violations", []) if v["impact"] in ["critical", "serious"]]
 
     # Build detailed error message if violations found
     if critical_violations:
@@ -85,10 +83,7 @@ async def test_lead_intelligence_hub_accessibility(streamlit_app: Page):
 
     results = await run_axe(streamlit_app)
 
-    critical_violations = [
-        v for v in results.get('violations', [])
-        if v['impact'] in ['critical', 'serious']
-    ]
+    critical_violations = [v for v in results.get("violations", []) if v["impact"] in ["critical", "serious"]]
 
     assert len(critical_violations) == 0, (
         f"Lead Intelligence Hub has {len(critical_violations)} accessibility violations: "
@@ -111,20 +106,15 @@ async def test_executive_dashboard_accessibility(streamlit_app: Page):
 
     results = await run_axe(streamlit_app)
 
-    critical_violations = [
-        v for v in results.get('violations', [])
-        if v['impact'] in ['critical', 'serious']
-    ]
+    critical_violations = [v for v in results.get("violations", []) if v["impact"] in ["critical", "serious"]]
 
-    assert len(critical_violations) == 0, (
-        f"Executive Dashboard has accessibility violations: "
-        f"{critical_violations}"
-    )
+    assert len(critical_violations) == 0, f"Executive Dashboard has accessibility violations: {critical_violations}"
 
 
 # ============================================================================
 # Specific Accessibility Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_color_contrast(streamlit_app: Page):
@@ -150,15 +140,12 @@ async def test_color_contrast(streamlit_app: Page):
     results = await run_axe(streamlit_app)
 
     # Filter for color contrast violations
-    contrast_violations = [
-        v for v in results.get('violations', [])
-        if v['id'] == 'color-contrast'
-    ]
+    contrast_violations = [v for v in results.get("violations", []) if v["id"] == "color-contrast"]
 
     if contrast_violations:
         error_msg = "Color contrast violations found:\n\n"
         for violation in contrast_violations:
-            for node in violation['nodes']:
+            for node in violation["nodes"]:
                 error_msg += f"- Element: {node['html']}\n"
                 error_msg += f"  Issue: {node['failureSummary']}\n\n"
 
@@ -185,20 +172,21 @@ async def test_aria_labels(streamlit_app: Page):
     results = await run_axe(streamlit_app)
 
     aria_violations = [
-        v for v in results.get('violations', [])
-        if v['id'] in [
-            'button-name',
-            'link-name',
-            'label',
-            'image-alt',
-            'aria-required-attr',
-            'aria-valid-attr-value',
+        v
+        for v in results.get("violations", [])
+        if v["id"]
+        in [
+            "button-name",
+            "link-name",
+            "label",
+            "image-alt",
+            "aria-required-attr",
+            "aria-valid-attr-value",
         ]
     ]
 
     assert len(aria_violations) == 0, (
-        f"Found {len(aria_violations)} ARIA violations: "
-        f"{[v['id'] for v in aria_violations]}"
+        f"Found {len(aria_violations)} ARIA violations: {[v['id'] for v in aria_violations]}"
     )
 
 
@@ -222,11 +210,11 @@ async def test_keyboard_navigation(streamlit_app: Page):
         streamlit_app: Loaded Streamlit app fixture
     """
     # Test tab navigation through buttons
-    await streamlit_app.keyboard.press('Tab')
-    focused_element = await streamlit_app.evaluate('document.activeElement.tagName')
+    await streamlit_app.keyboard.press("Tab")
+    focused_element = await streamlit_app.evaluate("document.activeElement.tagName")
 
     # Verify focus moved to an interactive element
-    assert focused_element in ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA'], (
+    assert focused_element in ["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA"], (
         f"Tab navigation failed - focused element: {focused_element}"
     )
 
@@ -234,17 +222,17 @@ async def test_keyboard_navigation(streamlit_app: Page):
     results = await run_axe(streamlit_app)
 
     keyboard_violations = [
-        v for v in results.get('violations', [])
-        if v['id'] in [
-            'focus-order-semantics',
-            'tabindex',
-            'accesskeys',
+        v
+        for v in results.get("violations", [])
+        if v["id"]
+        in [
+            "focus-order-semantics",
+            "tabindex",
+            "accesskeys",
         ]
     ]
 
-    assert len(keyboard_violations) == 0, (
-        f"Keyboard navigation violations: {keyboard_violations}"
-    )
+    assert len(keyboard_violations) == 0, f"Keyboard navigation violations: {keyboard_violations}"
 
 
 @pytest.mark.asyncio
@@ -266,14 +254,9 @@ async def test_heading_structure(streamlit_app: Page):
     """
     results = await run_axe(streamlit_app)
 
-    heading_violations = [
-        v for v in results.get('violations', [])
-        if v['id'] in ['heading-order', 'empty-heading']
-    ]
+    heading_violations = [v for v in results.get("violations", []) if v["id"] in ["heading-order", "empty-heading"]]
 
-    assert len(heading_violations) == 0, (
-        f"Heading structure violations: {heading_violations}"
-    )
+    assert len(heading_violations) == 0, f"Heading structure violations: {heading_violations}"
 
 
 @pytest.mark.asyncio
@@ -292,17 +275,17 @@ async def test_form_labels(streamlit_app: Page):
     results = await run_axe(streamlit_app)
 
     form_violations = [
-        v for v in results.get('violations', [])
-        if v['id'] in [
-            'label',
-            'label-title-only',
-            'form-field-multiple-labels',
+        v
+        for v in results.get("violations", [])
+        if v["id"]
+        in [
+            "label",
+            "label-title-only",
+            "form-field-multiple-labels",
         ]
     ]
 
-    assert len(form_violations) == 0, (
-        f"Form label violations: {form_violations}"
-    )
+    assert len(form_violations) == 0, f"Form label violations: {form_violations}"
 
 
 # ============================================================================
@@ -310,18 +293,18 @@ async def test_form_labels(streamlit_app: Page):
 # ============================================================================
 
 CRITICAL_COMPONENTS = [
-    'property_card',
-    'lead_intelligence_hub',
-    'executive_dashboard',
-    'property_matcher_ai_enhanced',
-    'chat_interface',
-    'lead_dashboard',
-    'sales_copilot',
+    "property_card",
+    "lead_intelligence_hub",
+    "executive_dashboard",
+    "property_matcher_ai_enhanced",
+    "chat_interface",
+    "lead_dashboard",
+    "sales_copilot",
 ]
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('component_id', CRITICAL_COMPONENTS)
+@pytest.mark.parametrize("component_id", CRITICAL_COMPONENTS)
 async def test_critical_components_accessibility(streamlit_app: Page, component_id: str):
     """
     Test all critical components for WCAG 2.1 AA compliance.
@@ -349,10 +332,7 @@ async def test_critical_components_accessibility(streamlit_app: Page, component_
     # Filter violations for this specific component
     # Note: axe scans entire page, so we check all violations
     # In production, you might want to scope axe to specific components
-    critical_violations = [
-        v for v in results.get('violations', [])
-        if v['impact'] in ['critical', 'serious']
-    ]
+    critical_violations = [v for v in results.get("violations", []) if v["impact"] in ["critical", "serious"]]
 
     assert len(critical_violations) == 0, (
         f"Component {component_id} has {len(critical_violations)} accessibility violations: "
@@ -363,6 +343,7 @@ async def test_critical_components_accessibility(streamlit_app: Page, component_
 # ============================================================================
 # Mobile Accessibility Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_mobile_accessibility(browser):
@@ -380,7 +361,7 @@ async def test_mobile_accessibility(browser):
     """
     # Create mobile context (iPhone SE)
     context = await browser.new_context(
-        viewport={'width': 375, 'height': 667},
+        viewport={"width": 375, "height": 667},
         device_scale_factor=2,
         is_mobile=True,
         has_touch=True,
@@ -395,14 +376,9 @@ async def test_mobile_accessibility(browser):
         results = await run_axe(page)
 
         # Check for mobile-specific issues
-        mobile_violations = [
-            v for v in results.get('violations', [])
-            if v['impact'] in ['critical', 'serious']
-        ]
+        mobile_violations = [v for v in results.get("violations", []) if v["impact"] in ["critical", "serious"]]
 
-        assert len(mobile_violations) == 0, (
-            f"Mobile accessibility violations: {mobile_violations}"
-        )
+        assert len(mobile_violations) == 0, f"Mobile accessibility violations: {mobile_violations}"
 
     finally:
         await context.close()

@@ -2,32 +2,37 @@
 Claude Platform Companion - Intelligent Platform-Wide Assistant
 Provides personalized greetings, context awareness, and cross-platform intelligence.
 """
+
 import asyncio
 import json
-import time
 import re
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
+
 import streamlit as st
+
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import existing services
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
+from ghl_real_estate_ai.services.claude_executive_intelligence import get_executive_intelligence_service
 from ghl_real_estate_ai.services.claude_lead_qualification import get_claude_qualification_engine
 from ghl_real_estate_ai.services.claude_semantic_property_matcher import get_semantic_property_matcher
-from ghl_real_estate_ai.services.voice_service import VoiceService
-from ghl_real_estate_ai.services.proactive_intelligence_engine import get_proactive_intelligence_engine
-from ghl_real_estate_ai.services.claude_executive_intelligence import get_executive_intelligence_service
 from ghl_real_estate_ai.services.lead_swarm_service import get_lead_swarm_service
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.memory_service import MemoryService
+from ghl_real_estate_ai.services.proactive_intelligence_engine import get_proactive_intelligence_engine
+from ghl_real_estate_ai.services.voice_service import VoiceService
 
 logger = get_logger(__name__)
+
 
 @dataclass
 class PlatformContext:
     """Complete platform context for Claude awareness."""
+
     user_name: str
     session_start_time: datetime
     current_page: str
@@ -39,9 +44,11 @@ class PlatformContext:
     last_login: datetime
     session_goals: List[str]
 
+
 @dataclass
 class ClaudeGreeting:
     """Personalized greeting from Claude."""
+
     greeting_text: str
     key_insights: List[str]
     recommended_actions: List[str]
@@ -49,9 +56,11 @@ class ClaudeGreeting:
     daily_summary: Dict[str, Any]
     motivational_insight: str
 
+
 @dataclass
 class ContextualInsight:
     """Context-aware insight for current activity."""
+
     insight_type: str  # "opportunity", "warning", "suggestion", "achievement"
     title: str
     description: str
@@ -59,9 +68,11 @@ class ContextualInsight:
     confidence: float  # 0.0-1.0
     priority: str  # "high", "medium", "low"
 
+
 @dataclass
 class ProjectGuidance:
     """Claude's guidance for the current project section."""
+
     hub_name: str
     purpose: str
     key_features: List[str]
@@ -69,23 +80,28 @@ class ProjectGuidance:
     pro_tips: List[str]
     next_steps: List[str]
 
+
 @dataclass
 class VoiceCommand:
     """Voice command from user."""
+
     command_text: str
     timestamp: datetime
     confidence: float
     intent: str  # "navigation", "query", "action", "general"
     parameters: Dict[str, Any]
 
+
 @dataclass
 class VoiceResponse:
     """Claude's voice response."""
+
     response_text: str
     audio_data: Optional[bytes]
     action_taken: Optional[str]
     follow_up_needed: bool
     context_updated: bool
+
 
 class ClaudePlatformCompanion:
     """
@@ -103,8 +119,9 @@ class ClaudePlatformCompanion:
     def __init__(self):
         # Import orchestrator here to avoid circular dependencies
         from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+
         self.orchestrator = get_claude_orchestrator()
-        
+
         self.claude_assistant = ClaudeAssistant()
         self.memory_service = MemoryService()
         self.conversation_intelligence = get_conversation_intelligence()
@@ -155,9 +172,7 @@ class ClaudePlatformCompanion:
             business_metrics = await self._get_business_metrics(user_name, market)
 
             # Generate intelligent greeting
-            greeting = await self._generate_personalized_greeting(
-                user_name, market, recent_activity, business_metrics
-            )
+            greeting = await self._generate_personalized_greeting(user_name, market, recent_activity, business_metrics)
 
             # Store session context
             self.current_context = PlatformContext(
@@ -170,16 +185,19 @@ class ClaudePlatformCompanion:
                 agent_performance=recent_activity.get("performance", {}),
                 market_context=market,
                 last_login=recent_activity.get("last_login", datetime.now() - timedelta(days=1)),
-                session_goals=[]
+                session_goals=[],
             )
 
             # Log session start
-            await self._log_activity("session_start", {
-                "user": user_name,
-                "market": market,
-                "greeting_insights": len(greeting.key_insights),
-                "priority_alerts": len(greeting.priority_alerts)
-            })
+            await self._log_activity(
+                "session_start",
+                {
+                    "user": user_name,
+                    "market": market,
+                    "greeting_insights": len(greeting.key_insights),
+                    "priority_alerts": len(greeting.priority_alerts),
+                },
+            )
 
             logger.info(f"Claude session initialized for {user_name} in {market}")
             return greeting
@@ -212,23 +230,20 @@ class ClaudePlatformCompanion:
                 "timestamp": datetime.now().isoformat(),
                 "page": page,
                 "activity_data": activity_data or {},
-                "duration_on_previous_page": self._calculate_page_duration()
+                "duration_on_previous_page": self._calculate_page_duration(),
             }
             self.activity_log.append(activity_log_entry)
 
             # Generate contextual insight if relevant
             insight = await self._generate_contextual_insight(page, activity_data)
-            
+
             # Generate dynamic counsel message
             counsel = await self._generate_dynamic_counsel(page, activity_data)
 
             # Store updated context
             await self._store_context_update(page, activity_data)
 
-            return {
-                "insight": insight,
-                "counsel": counsel
-            }
+            return {"insight": insight, "counsel": counsel}
 
         except Exception as e:
             logger.error(f"Error updating Claude context: {e}")
@@ -275,10 +290,7 @@ class ClaudePlatformCompanion:
             suggestions.extend(alerts)
 
             # Sort by priority and confidence
-            suggestions.sort(key=lambda x: (
-                {"high": 3, "medium": 2, "low": 1}[x.priority],
-                x.confidence
-            ), reverse=True)
+            suggestions.sort(key=lambda x: ({"high": 3, "medium": 2, "low": 1}[x.priority], x.confidence), reverse=True)
 
             return suggestions[:5]  # Return top 5 suggestions
 
@@ -310,16 +322,19 @@ class ClaudePlatformCompanion:
                 "potential_risks": action_analysis.get("risks", []),
                 "optimization_tips": action_analysis.get("optimizations", []),
                 "next_best_actions": action_analysis.get("next_actions", []),
-                "confidence_score": action_analysis.get("confidence", 0.7)
+                "confidence_score": action_analysis.get("confidence", 0.7),
             }
 
             # Log real-time guidance
-            await self._log_activity("real_time_guidance", {
-                "lead": current_lead,
-                "action": current_action,
-                "suggestions_count": len(guidance["immediate_suggestions"]),
-                "confidence": guidance["confidence_score"]
-            })
+            await self._log_activity(
+                "real_time_guidance",
+                {
+                    "lead": current_lead,
+                    "action": current_action,
+                    "suggestions_count": len(guidance["immediate_suggestions"]),
+                    "confidence": guidance["confidence_score"],
+                },
+            )
 
             return guidance
 
@@ -338,25 +353,25 @@ class ClaudePlatformCompanion:
             
             Return a JSON object matching the ProjectGuidance dataclass structure.
             """
-            
+
             response = await self.claude_assistant.get_response(prompt)
             data = response.get("content", "{}")
-            
+
             # Extract JSON from markdown if needed
             if "```json" in data:
                 data = data.split("```json")[1].split("```")[0].strip()
             elif "```" in data:
                 data = data.split("```")[1].split("```")[0].strip()
-                
+
             guidance_dict = json.loads(data)
-            
+
             return ProjectGuidance(
                 hub_name=hub_name,
                 purpose=guidance_dict.get("purpose", ""),
                 key_features=guidance_dict.get("key_features", []),
                 recommended_workflow=guidance_dict.get("recommended_workflow", []),
                 pro_tips=guidance_dict.get("pro_tips", []),
-                next_steps=guidance_dict.get("next_steps", [])
+                next_steps=guidance_dict.get("next_steps", []),
             )
         except Exception as e:
             logger.error(f"Error getting project guidance: {e}")
@@ -376,7 +391,7 @@ class ClaudePlatformCompanion:
             key_features=["Intelligent Dashboard", "Data-Driven Insights", "AI Assistance"],
             recommended_workflow=["Review metrics", "Identify opportunities", "Take action"],
             pro_tips=["Use Claude's suggestions for faster results", "Keep your data updated"],
-            next_steps=["Explore the dashboard", "Run your first analysis"]
+            next_steps=["Explore the dashboard", "Run your first analysis"],
         )
 
     def render_platform_greeting(self, greeting: ClaudeGreeting) -> None:
@@ -387,7 +402,8 @@ class ClaudePlatformCompanion:
             greeting: Personalized greeting to display
         """
         # Main greeting with Claude branding
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     padding: 2rem; border-radius: 15px; margin-bottom: 2rem; color: white;'>
             <div style='display: flex; align-items: center; margin-bottom: 1rem;'>
@@ -402,7 +418,9 @@ class ClaudePlatformCompanion:
                 <em>{greeting.motivational_insight}</em>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Key insights and recommendations
         if greeting.key_insights or greeting.recommended_actions:
@@ -492,14 +510,10 @@ class ClaudePlatformCompanion:
             "activities": [
                 {"type": "lead_analysis", "time": "2 hours ago", "outcome": "positive"},
                 {"type": "property_match", "time": "4 hours ago", "outcome": "successful"},
-                {"type": "conversation", "time": "1 day ago", "outcome": "scheduled_viewing"}
+                {"type": "conversation", "time": "1 day ago", "outcome": "scheduled_viewing"},
             ],
-            "performance": {
-                "leads_contacted": 8,
-                "viewings_scheduled": 3,
-                "conversions": 1
-            },
-            "last_login": datetime.now() - timedelta(hours=8)
+            "performance": {"leads_contacted": 8, "viewings_scheduled": 3, "conversions": 1},
+            "last_login": datetime.now() - timedelta(hours=8),
         }
 
     async def _get_business_metrics(self, user_name: str, market: str) -> Dict:
@@ -509,15 +523,18 @@ class ClaudePlatformCompanion:
             "Active Leads": 47,
             "Conversion Rate": "23.5%",
             "Avg Response Time": "12 min",
-            "Pipeline Value": "$2.8M"
+            "Pipeline Value": "$2.8M",
         }
 
-    async def _generate_personalized_greeting(self, user_name: str, market: str,
-                                            recent_activity: Dict, metrics: Dict) -> ClaudeGreeting:
+    async def _generate_personalized_greeting(
+        self, user_name: str, market: str, recent_activity: Dict, metrics: Dict
+    ) -> ClaudeGreeting:
         """Generate personalized greeting using Claude AI."""
         try:
             current_hour = datetime.now().hour
-            time_greeting = "Good morning" if current_hour < 12 else "Good afternoon" if current_hour < 17 else "Good evening"
+            time_greeting = (
+                "Good morning" if current_hour < 12 else "Good afternoon" if current_hour < 17 else "Good evening"
+            )
 
             # Generate dynamic greeting based on activity and performance
             greeting_text = f"{time_greeting}, {user_name}! Ready to make today exceptional in the {market} market?"
@@ -526,14 +543,14 @@ class ClaudePlatformCompanion:
             key_insights = [
                 f"Your response time of {metrics.get('Avg Response Time', '12 min')} is 40% faster than market average",
                 f"{len(recent_activity.get('active_leads', []))} high-priority leads need attention today",
-                f"Pipeline value of {metrics.get('Pipeline Value', '$2.8M')} shows strong momentum"
+                f"Pipeline value of {metrics.get('Pipeline Value', '$2.8M')} shows strong momentum",
             ]
 
             # Generate recommendations
             recommended_actions = [
                 "Follow up with Sarah Chen - she's showing high buying signals",
                 "Review David Kim's investment criteria - potential quick close",
-                "Schedule team sync for tomorrow's property showings"
+                "Schedule team sync for tomorrow's property showings",
             ]
 
             # Check for priority alerts
@@ -555,7 +572,7 @@ class ClaudePlatformCompanion:
                 recommended_actions=recommended_actions,
                 priority_alerts=priority_alerts,
                 daily_summary=metrics,
-                motivational_insight=motivational_insight
+                motivational_insight=motivational_insight,
             )
 
         except Exception as e:
@@ -565,7 +582,9 @@ class ClaudePlatformCompanion:
     def _get_fallback_greeting(self, user_name: str, market: str) -> ClaudeGreeting:
         """Fallback greeting when AI generation fails."""
         current_hour = datetime.now().hour
-        time_greeting = "Good morning" if current_hour < 12 else "Good afternoon" if current_hour < 17 else "Good evening"
+        time_greeting = (
+            "Good morning" if current_hour < 12 else "Good afternoon" if current_hour < 17 else "Good evening"
+        )
 
         return ClaudeGreeting(
             greeting_text=f"{time_greeting}, {user_name}! Welcome back to your {market} real estate command center.",
@@ -573,7 +592,7 @@ class ClaudePlatformCompanion:
             recommended_actions=["Review active leads", "Check market updates"],
             priority_alerts=[],
             daily_summary={"Active Leads": "Loading...", "Status": "Ready"},
-            motivational_insight="Success comes from consistent action and genuine care for your clients! 🌟"
+            motivational_insight="Success comes from consistent action and genuine care for your clients! 🌟",
         )
 
     async def _generate_contextual_insight(self, page: str, activity_data: Dict) -> Optional[ContextualInsight]:
@@ -586,7 +605,7 @@ class ClaudePlatformCompanion:
                 description="Consider using the enhanced 25+ factor qualification for deeper insights",
                 action_items=["Run comprehensive analysis", "Check emotional state trends"],
                 confidence=0.8,
-                priority="medium"
+                priority="medium",
             ),
             "property_matching": ContextualInsight(
                 insight_type="opportunity",
@@ -594,8 +613,8 @@ class ClaudePlatformCompanion:
                 description="New 16+ lifestyle dimensions can improve match accuracy by 35%",
                 action_items=["Try lifestyle-based matching", "Review psychological compatibility"],
                 confidence=0.9,
-                priority="high"
-            )
+                priority="high",
+            ),
         }
 
         return insights_map.get(page)
@@ -604,8 +623,11 @@ class ClaudePlatformCompanion:
         """Analyze current activity for suggestions."""
         return {
             "patterns": ["High engagement with analytical leads", "Strong performance in luxury segment"],
-            "optimization_opportunities": ["Increase response speed for hot leads", "Use more data-driven presentations"],
-            "performance_trends": ["Conversion rate improving", "Lead quality increasing"]
+            "optimization_opportunities": [
+                "Increase response speed for hot leads",
+                "Use more data-driven presentations",
+            ],
+            "performance_trends": ["Conversion rate improving", "Lead quality increasing"],
         }
 
     async def _identify_opportunities(self, current_activity: Dict, analysis: Dict) -> List[ContextualInsight]:
@@ -617,7 +639,7 @@ class ClaudePlatformCompanion:
                 description="Sarah Chen shows 95% closing probability - consider immediate follow-up",
                 action_items=["Schedule viewing today", "Prepare market data presentation"],
                 confidence=0.95,
-                priority="high"
+                priority="high",
             )
         ]
 
@@ -630,7 +652,7 @@ class ClaudePlatformCompanion:
                 description="Your average response time improved 40% this week",
                 action_items=["Maintain current response strategy", "Share best practices with team"],
                 confidence=0.9,
-                priority="medium"
+                priority="medium",
             )
         ]
 
@@ -643,7 +665,7 @@ class ClaudePlatformCompanion:
                 description="David Kim hasn't responded in 3 days - risk of going cold",
                 action_items=["Send value-add content", "Try different communication channel"],
                 confidence=0.7,
-                priority="medium"
+                priority="medium",
             )
         ]
 
@@ -662,10 +684,10 @@ class ClaudePlatformCompanion:
             success = await self.proactive_intelligence.start_background_monitoring()
             if success:
                 logger.info("Proactive intelligence enabled for Claude companion")
-                await self._log_activity("proactive_intelligence_enabled", {
-                    "timestamp": datetime.now().isoformat(),
-                    "monitoring_active": True
-                })
+                await self._log_activity(
+                    "proactive_intelligence_enabled",
+                    {"timestamp": datetime.now().isoformat(), "monitoring_active": True},
+                )
             return success
         except Exception as e:
             logger.error(f"Failed to enable proactive intelligence: {e}")
@@ -703,10 +725,12 @@ class ClaudePlatformCompanion:
                 "predictions": predictions,
                 "coaching_tips": coaching_tips,
                 "monitoring_status": self.proactive_intelligence.monitoring_active,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-            logger.info(f"Generated proactive insights: {len(alerts)} alerts, {len(predictions)} predictions, {len(coaching_tips)} tips")
+            logger.info(
+                f"Generated proactive insights: {len(alerts)} alerts, {len(predictions)} predictions, {len(coaching_tips)} tips"
+            )
             return insights
 
         except Exception as e:
@@ -717,7 +741,7 @@ class ClaudePlatformCompanion:
                 "predictions": [],
                 "coaching_tips": [],
                 "monitoring_status": False,
-                "error": str(e)
+                "error": str(e),
             }
 
     async def get_intelligent_summary(self) -> str:
@@ -746,7 +770,9 @@ class ClaudePlatformCompanion:
             predictions = insights.get("predictions", [])
             if predictions:
                 best_prediction = max(predictions, key=lambda p: p.confidence)
-                summary_parts.append(f"🔮 Key insight: {best_prediction.insight_type.replace('_', ' ')} - {best_prediction.reasoning[:60]}...")
+                summary_parts.append(
+                    f"🔮 Key insight: {best_prediction.insight_type.replace('_', ' ')} - {best_prediction.reasoning[:60]}..."
+                )
 
             # Coaching summary
             coaching_tips = insights.get("coaching_tips", [])
@@ -790,17 +816,12 @@ class ClaudePlatformCompanion:
                 success = False
 
             if success:
-                await self._log_activity("proactive_action_taken", {
-                    "alert_id": alert_id,
-                    "action_type": action_type,
-                    "timestamp": datetime.now().isoformat()
-                })
+                await self._log_activity(
+                    "proactive_action_taken",
+                    {"alert_id": alert_id, "action_type": action_type, "timestamp": datetime.now().isoformat()},
+                )
 
-            return {
-                "success": success,
-                "action_type": action_type,
-                "alert_id": alert_id
-            }
+            return {"success": success, "action_type": action_type, "alert_id": alert_id}
 
         except Exception as e:
             logger.error(f"Error processing proactive action: {e}")
@@ -814,10 +835,10 @@ class ClaudePlatformCompanion:
         return {
             "leads": [
                 {
-                    "id": f"lead_{i+1}",
+                    "id": f"lead_{i + 1}",
                     "name": lead,
                     "last_contact_hours": 24 + (i * 12),
-                    "engagement_score": 0.7 + (i * 0.1)
+                    "engagement_score": 0.7 + (i * 0.1),
                 }
                 for i, lead in enumerate(self.current_context.active_leads[:3])
             ],
@@ -825,16 +846,13 @@ class ClaudePlatformCompanion:
                 "conversion_rate": self.current_context.agent_performance.get("conversion_rate", 0.15),
                 "avg_response_time_hours": 3.2,
                 "closing_rate": 0.16,
-                "followup_completion_rate": 0.75
+                "followup_completion_rate": 0.75,
             },
-            "market": {
-                "interest_rate_trend": "stable",
-                "buyer_activity": "moderate"
-            },
+            "market": {"interest_rate_trend": "stable", "buyer_activity": "moderate"},
             "pipeline_value": self.current_context.business_metrics.get("pipeline_value", 85000),
             "monthly_target": self.current_context.business_metrics.get("monthly_target", 150000),
             "current_page": self.current_context.current_page,
-            "session_duration_minutes": (datetime.now() - self.current_context.session_start_time).total_seconds() / 60
+            "session_duration_minutes": (datetime.now() - self.current_context.session_start_time).total_seconds() / 60,
         }
 
     async def _extract_performance_data(self) -> Dict[str, Any]:
@@ -845,7 +863,7 @@ class ClaudePlatformCompanion:
                 "closing_rate": 0.16,
                 "followup_completion_rate": 0.73,
                 "calls_per_day": 8,
-                "meetings_scheduled": 3
+                "meetings_scheduled": 3,
             }
 
         return {
@@ -855,7 +873,7 @@ class ClaudePlatformCompanion:
             "calls_per_day": self.current_context.agent_performance.get("calls_per_day", 8),
             "meetings_scheduled": self.current_context.agent_performance.get("meetings_scheduled", 3),
             "lead_count": len(self.current_context.active_leads),
-            "session_activities": len(self.activity_log)
+            "session_activities": len(self.activity_log),
         }
 
     # =======================
@@ -892,14 +910,13 @@ class ClaudePlatformCompanion:
             "Executive Hub": "High-level KPIs and Multi-Market Expansion logic.",
             "Lead Intelligence Hub": "25+ Factor scoring and Swarm Intelligence analysis.",
             "Voice Claude": "Live call coaching and Real-time DNA Radar.",
-            "Ops & Optimization": "Model retraining and system governance."
+            "Ops & Optimization": "Model retraining and system governance.",
         }
         desc = hub_descriptions.get(hub_name, "this section of the platform.")
-        
+
         prompt = f"Explain the strategic value of the {hub_name} to Jorge. It focuses on {desc}. Keep it brief and actionable."
         response = await self.orchestrator.chat_query(prompt, context={"task": "guidance"})
         return response.content
-
 
     async def process_voice_command(self, audio_input: str) -> VoiceResponse:
         """
@@ -919,10 +936,7 @@ class ClaudePlatformCompanion:
             response_text = await self._generate_voice_response(command)
 
             # Convert to speech
-            audio_data = await self.voice_service.synthesize_speech(
-                response_text,
-                voice_id="jorge"
-            )
+            audio_data = await self.voice_service.synthesize_speech(response_text, voice_id="jorge")
 
             # Take any required actions
             action_taken = await self._execute_voice_action(command)
@@ -933,22 +947,19 @@ class ClaudePlatformCompanion:
                 audio_data=audio_data,
                 action_taken=action_taken,
                 follow_up_needed=command.intent in ["query", "general"],
-                context_updated=action_taken is not None
+                context_updated=action_taken is not None,
             )
 
             # Store in history
-            self.voice_command_history.append({
-                "command": command,
-                "response": voice_response,
-                "timestamp": datetime.now()
-            })
+            self.voice_command_history.append(
+                {"command": command, "response": voice_response, "timestamp": datetime.now()}
+            )
 
             # Update activity
-            await self._log_activity("voice_command_processed", {
-                "intent": command.intent,
-                "confidence": command.confidence,
-                "action_taken": action_taken
-            })
+            await self._log_activity(
+                "voice_command_processed",
+                {"intent": command.intent, "confidence": command.confidence, "action_taken": action_taken},
+            )
 
             return voice_response
 
@@ -1013,7 +1024,7 @@ class ClaudePlatformCompanion:
             "wake_word_active": self.wake_word_active,
             "response_style": self.voice_response_style,
             "commands_processed": len(self.voice_command_history),
-            "last_command": self.voice_command_history[-1] if self.voice_command_history else None
+            "last_command": self.voice_command_history[-1] if self.voice_command_history else None,
         }
 
     async def _parse_voice_command(self, audio_input: str) -> VoiceCommand:
@@ -1064,17 +1075,13 @@ class ClaudePlatformCompanion:
                 timestamp=datetime.now(),
                 confidence=confidence,
                 intent=intent,
-                parameters=parameters
+                parameters=parameters,
             )
 
         except Exception as e:
             logger.error(f"Error parsing voice command: {e}")
             return VoiceCommand(
-                command_text=audio_input,
-                timestamp=datetime.now(),
-                confidence=0.3,
-                intent="general",
-                parameters={}
+                command_text=audio_input, timestamp=datetime.now(), confidence=0.3, intent="general", parameters={}
             )
 
     async def _generate_voice_response(self, command: VoiceCommand) -> str:
@@ -1163,7 +1170,7 @@ class ClaudePlatformCompanion:
             audio_data=audio_data,
             action_taken=None,
             follow_up_needed=True,
-            context_updated=False
+            context_updated=False,
         )
 
     # =======================
@@ -1176,7 +1183,7 @@ class ClaudePlatformCompanion:
             await self.memory_service.store_conversation_memory(
                 conversation_id=f"platform_activity_{int(time.time())}",
                 content={"type": activity_type, "data": data, "timestamp": datetime.now().isoformat()},
-                ttl_hours=24 * 7  # Keep for 1 week
+                ttl_hours=24 * 7,  # Keep for 1 week
             )
         except Exception as e:
             logger.warning(f"Failed to log activity: {e}")
@@ -1192,13 +1199,11 @@ class ClaudePlatformCompanion:
                 "page": page,
                 "activity_data": activity_data,
                 "timestamp": datetime.now().isoformat(),
-                "session_duration": (datetime.now() - self.session_start).total_seconds()
+                "session_duration": (datetime.now() - self.session_start).total_seconds(),
             }
 
             await self.memory_service.store_conversation_memory(
-                conversation_id=f"context_update_{int(time.time())}",
-                content=context_data,
-                ttl_hours=24
+                conversation_id=f"context_update_{int(time.time())}", content=context_data, ttl_hours=24
             )
         except Exception as e:
             logger.warning(f"Failed to store context update: {e}")
@@ -1210,7 +1215,7 @@ class ClaudePlatformCompanion:
             "qualification_score": 0.85,
             "last_interaction": "2 hours ago",
             "emotional_state": "analytical",
-            "closing_readiness": 0.7
+            "closing_readiness": 0.7,
         }
 
     async def _analyze_current_action(self, lead: str, action: str, context: Dict) -> Dict:
@@ -1220,7 +1225,7 @@ class ClaudePlatformCompanion:
             "risks": ["May need more technical details", "Consider financial timeline"],
             "optimizations": ["Use visual presentations", "Emphasize ROI potential"],
             "next_actions": ["Schedule property viewing", "Discuss financing options"],
-            "confidence": 0.8
+            "confidence": 0.8,
         }
 
     def _get_fallback_guidance(self) -> Dict:
@@ -1230,11 +1235,13 @@ class ClaudePlatformCompanion:
             "potential_risks": ["Don't oversell", "Listen more than you speak"],
             "optimization_tips": ["Be authentic", "Focus on their needs"],
             "next_best_actions": ["Schedule follow-up", "Provide value"],
-            "confidence_score": 0.6
+            "confidence_score": 0.6,
         }
+
 
 # Global companion instance
 _companion_instance = None
+
 
 def get_claude_platform_companion() -> ClaudePlatformCompanion:
     """Get global Claude platform companion instance."""

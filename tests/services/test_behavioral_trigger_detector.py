@@ -14,17 +14,18 @@ Covers:
 """
 
 import os
+
 os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_fake_for_testing")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 
 import pytest
 
 from ghl_real_estate_ai.services.behavioral_trigger_detector import (
-    BehavioralTriggerDetector,
     BehavioralAnalysis,
-    TriggerType,
-    NegotiationTechnique,
+    BehavioralTriggerDetector,
     DriftDirection,
+    NegotiationTechnique,
+    TriggerType,
 )
 
 
@@ -36,6 +37,7 @@ def detector():
 # ---------------------------------------------------------------------------
 # Hedging Detection
 # ---------------------------------------------------------------------------
+
 
 class TestHedgingDetection:
     """Messages with hedging language produce a positive hedging score."""
@@ -71,6 +73,7 @@ class TestHedgingDetection:
 # Commitment Detection
 # ---------------------------------------------------------------------------
 
+
 class TestCommitmentDetection:
     """Messages with commitment language produce a positive commitment score."""
 
@@ -105,6 +108,7 @@ class TestCommitmentDetection:
 # Urgency Detection
 # ---------------------------------------------------------------------------
 
+
 class TestUrgencyDetection:
     """Messages expressing urgency produce a positive urgency score."""
 
@@ -131,8 +135,8 @@ class TestUrgencyDetection:
 # Stall & Objection Detection
 # ---------------------------------------------------------------------------
 
-class TestStallObjectionDetection:
 
+class TestStallObjectionDetection:
     @pytest.mark.asyncio
     async def test_stall_detected(self, detector):
         result = await detector.analyze_message(
@@ -165,8 +169,8 @@ class TestStallObjectionDetection:
 # Latency Analysis
 # ---------------------------------------------------------------------------
 
-class TestLatencyAnalysis:
 
+class TestLatencyAnalysis:
     @pytest.mark.asyncio
     async def test_fast_response_low_factor(self, detector):
         result = await detector.analyze_message(
@@ -209,14 +213,16 @@ class TestLatencyAnalysis:
 # Engagement Drop
 # ---------------------------------------------------------------------------
 
-class TestEngagementDrop:
 
+class TestEngagementDrop:
     @pytest.mark.asyncio
     async def test_engagement_drop_detected(self, detector):
         """Short message after long history → engagement drop trigger."""
         history = [
             {"message": "I've been thinking about selling my house in the Victoria area, it's a 4 bedroom with a pool"},
-            {"message": "The market has been great lately and I think it could fetch around 800k based on recent sales"},
+            {
+                "message": "The market has been great lately and I think it could fetch around 800k based on recent sales"
+            },
             {"message": "We're relocating because of a job change, need to move within 60 days ideally"},
         ]
         result = await detector.analyze_message(
@@ -246,8 +252,8 @@ class TestEngagementDrop:
 # Composite Scoring
 # ---------------------------------------------------------------------------
 
-class TestCompositeScoring:
 
+class TestCompositeScoring:
     @pytest.mark.asyncio
     async def test_committed_urgent_message_high_score(self, detector):
         result = await detector.analyze_message(
@@ -278,8 +284,8 @@ class TestCompositeScoring:
 # Drift Direction
 # ---------------------------------------------------------------------------
 
-class TestDriftDirection:
 
+class TestDriftDirection:
     @pytest.mark.asyncio
     async def test_warming_drift(self, detector):
         result = await detector.analyze_message(
@@ -309,8 +315,8 @@ class TestDriftDirection:
 # Technique Recommendation
 # ---------------------------------------------------------------------------
 
-class TestTechniqueRecommendation:
 
+class TestTechniqueRecommendation:
     @pytest.mark.asyncio
     async def test_stall_recommends_direct_challenge(self, detector):
         result = await detector.analyze_message(

@@ -8,17 +8,19 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import List, Optional, Dict, Any, Tuple
 import warnings
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult
+
 from .base import BaseReRanker, ReRankingConfig, ReRankingResult
 
 # Optional imports for cross-encoder functionality
 try:
-    from sentence_transformers import CrossEncoder
     import torch
+    from sentence_transformers import CrossEncoder
+
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
@@ -51,10 +53,10 @@ class CrossEncoderReRanker(BaseReRanker):
 
     def __init__(
         self,
-        model_name: str = 'cross-encoder/ms-marco-MiniLM-L-6-v2',
+        model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2",
         config: Optional[ReRankingConfig] = None,
         device: Optional[str] = None,
-        max_length: int = 512
+        max_length: int = 512,
     ):
         """Initialize cross-encoder re-ranker.
 
@@ -76,7 +78,7 @@ class CrossEncoderReRanker(BaseReRanker):
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             warnings.warn(
                 "sentence-transformers not available. CrossEncoderReRanker will use fallback implementation.",
-                UserWarning
+                UserWarning,
             )
 
     def _get_device(self) -> str:
@@ -86,14 +88,14 @@ class CrossEncoderReRanker(BaseReRanker):
             Device string ('cpu', 'cuda', or specific GPU)
         """
         if not SENTENCE_TRANSFORMERS_AVAILABLE or torch is None:
-            return 'cpu'
+            return "cpu"
 
         if torch.cuda.is_available():
-            return 'cuda'
-        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-            return 'mps'  # Apple Silicon
+            return "cuda"
+        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"  # Apple Silicon
         else:
-            return 'cpu'
+            return "cpu"
 
     async def initialize(self) -> None:
         """Initialize the cross-encoder model.
@@ -108,10 +110,7 @@ class CrossEncoderReRanker(BaseReRanker):
             if SENTENCE_TRANSFORMERS_AVAILABLE:
                 # Load model in executor to avoid blocking
                 loop = asyncio.get_event_loop()
-                self.model = await loop.run_in_executor(
-                    None,
-                    self._load_model
-                )
+                self.model = await loop.run_in_executor(None, self._load_model)
             else:
                 # Fallback to mock implementation
                 self.model = None
@@ -131,11 +130,7 @@ class CrossEncoderReRanker(BaseReRanker):
             return None
 
         try:
-            model = CrossEncoder(
-                self.model_name,
-                max_length=self.max_length,
-                device=self.device
-            )
+            model = CrossEncoder(self.model_name, max_length=self.max_length, device=self.device)
             return model
         except Exception as e:
             warnings.warn(f"Failed to load CrossEncoder model {self.model_name}: {e}")
@@ -143,9 +138,9 @@ class CrossEncoderReRanker(BaseReRanker):
 
     async def close(self) -> None:
         """Clean up resources."""
-        if self.model is not None and hasattr(self.model, 'to'):
+        if self.model is not None and hasattr(self.model, "to"):
             # Move model to CPU to free GPU memory
-            self.model.to('cpu')
+            self.model.to("cpu")
 
         self.model = None
         self._initialized = False
@@ -161,20 +156,22 @@ class CrossEncoderReRanker(BaseReRanker):
             Dictionary with model information
         """
         info = {
-            'name': self.model_name,
-            'type': 'cross-encoder',
-            'max_length': self.max_length,
-            'device': self.device,
-            'initialized': self._initialized,
-            'sentence_transformers_available': SENTENCE_TRANSFORMERS_AVAILABLE
+            "name": self.model_name,
+            "type": "cross-encoder",
+            "max_length": self.max_length,
+            "device": self.device,
+            "initialized": self._initialized,
+            "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE,
         }
 
-        if self.model is not None and hasattr(self.model, 'config'):
+        if self.model is not None and hasattr(self.model, "config"):
             try:
-                info.update({
-                    'model_config': str(self.model.config),
-                    'tokenizer_vocab_size': getattr(self.model.config, 'vocab_size', 'unknown')
-                })
+                info.update(
+                    {
+                        "model_config": str(self.model.config),
+                        "tokenizer_vocab_size": getattr(self.model.config, "vocab_size", "unknown"),
+                    }
+                )
             except Exception:
                 pass
 
@@ -205,7 +202,7 @@ class CrossEncoderReRanker(BaseReRanker):
                 reranked_count=0,
                 processing_time_ms=0.0,
                 model_info=self.get_model_info(),
-                scores_changed=False
+                scores_changed=False,
             )
 
         original_count = len(results)
@@ -222,7 +219,7 @@ class CrossEncoderReRanker(BaseReRanker):
                     reranked_count=0,
                     processing_time_ms=(time.time() - start_time) * 1000,
                     model_info=self.get_model_info(),
-                    scores_changed=False
+                    scores_changed=False,
                 )
 
             # Get relevance scores
@@ -239,7 +236,7 @@ class CrossEncoderReRanker(BaseReRanker):
 
             # Add back any results that were filtered out
             if len(filtered_results) < len(results):
-                remaining_results = results[len(filtered_results):]
+                remaining_results = results[len(filtered_results) :]
                 final_results.extend(remaining_results)
 
             processing_time = (time.time() - start_time) * 1000
@@ -250,7 +247,7 @@ class CrossEncoderReRanker(BaseReRanker):
                 reranked_count=working_count,
                 processing_time_ms=processing_time,
                 model_info=self.get_model_info(),
-                scores_changed=working_count > 0
+                scores_changed=working_count > 0,
             )
 
         except Exception as e:
@@ -289,15 +286,11 @@ class CrossEncoderReRanker(BaseReRanker):
             batch_size = self.config.batch_size
 
             for i in range(0, len(pairs), batch_size):
-                batch_pairs = pairs[i:i + batch_size]
+                batch_pairs = pairs[i : i + batch_size]
 
                 # Run scoring in executor to avoid blocking
                 loop = asyncio.get_event_loop()
-                batch_scores = await loop.run_in_executor(
-                    None,
-                    self._score_batch,
-                    batch_pairs
-                )
+                batch_scores = await loop.run_in_executor(None, self._score_batch, batch_pairs)
 
                 all_scores.extend(batch_scores)
 
@@ -325,11 +318,12 @@ class CrossEncoderReRanker(BaseReRanker):
             scores = self.model.predict(pairs)
 
             # Convert to list and ensure scores are in reasonable range
-            if hasattr(scores, 'tolist'):
+            if hasattr(scores, "tolist"):
                 scores = scores.tolist()
 
             # Normalize scores to [0, 1] range using sigmoid
             import math
+
             normalized_scores = []
             for score in scores:
                 # Apply sigmoid to normalize to [0, 1]
@@ -388,9 +382,9 @@ class CrossEncoderReRanker(BaseReRanker):
         Returns:
             Recommended batch size
         """
-        if self.device == 'cpu':
+        if self.device == "cpu":
             return min(16, num_results)
-        elif 'cuda' in self.device:
+        elif "cuda" in self.device:
             return min(32, num_results)
         else:
             return min(24, num_results)

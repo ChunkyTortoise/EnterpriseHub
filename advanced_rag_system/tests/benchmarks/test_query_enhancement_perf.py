@@ -8,23 +8,22 @@ Validates latency and throughput targets for query enhancement components:
 - Throughput: >100 queries/second for classification
 """
 
-import pytest
 import asyncio
-import time
 import statistics
-from typing import List, Dict
+import time
+from typing import Dict, List
 
+import pytest
 from src.retrieval.query import (
-    QueryExpander,
+    ClassifierConfig,
     ExpansionConfig,
-    HyDEGenerator,
     HyDEConfig,
+    HyDEGenerator,
     MockLLMProvider,
     QueryClassifier,
-    ClassifierConfig,
+    QueryExpander,
     QueryType,
 )
-
 
 # ============================================================================
 # Test Data
@@ -82,6 +81,7 @@ ALL_QUERIES = [q for queries in BENCHMARK_QUERIES.values() for q in queries]
 # Query Expansion Benchmarks
 # ============================================================================
 
+
 class TestQueryExpansionPerformance:
     """Benchmark query expansion latency and quality."""
 
@@ -120,9 +120,7 @@ class TestQueryExpansionPerformance:
         elapsed = time.perf_counter() - start
 
         throughput = count / elapsed
-        assert throughput > 200, (
-            f"Expansion throughput {throughput:.0f}/s below 200/s target"
-        )
+        assert throughput > 200, f"Expansion throughput {throughput:.0f}/s below 200/s target"
 
     def test_expansion_cache_speedup(self):
         """Repeated queries should benefit from synonym cache."""
@@ -146,6 +144,7 @@ class TestQueryExpansionPerformance:
 # ============================================================================
 # HyDE Generation Benchmarks
 # ============================================================================
+
 
 class TestHyDEPerformance:
     """Benchmark HyDE generation latency and quality."""
@@ -183,9 +182,7 @@ class TestHyDEPerformance:
         """Enhanced query should be at least as long as original."""
         for query in ["machine learning", "neural networks", "data science"]:
             enhanced = await hyde.generate_enhanced_query(query)
-            assert len(enhanced) >= len(query), (
-                f"Enhanced query shorter than original for '{query}'"
-            )
+            assert len(enhanced) >= len(query), f"Enhanced query shorter than original for '{query}'"
 
     @pytest.mark.asyncio
     async def test_hyde_multiple_hypotheticals(self):
@@ -216,6 +213,7 @@ class TestHyDEPerformance:
 # ============================================================================
 # Query Classification Benchmarks
 # ============================================================================
+
 
 class TestClassificationPerformance:
     """Benchmark query classification latency and accuracy."""
@@ -249,9 +247,7 @@ class TestClassificationPerformance:
         elapsed = time.perf_counter() - start
 
         throughput = count / elapsed
-        assert throughput > 100, (
-            f"Classification throughput {throughput:.0f}/s below 100/s target"
-        )
+        assert throughput > 100, f"Classification throughput {throughput:.0f}/s below 100/s target"
 
     def test_classification_accuracy_per_type(self, classifier):
         """Classification accuracy should be >80% per query type."""
@@ -263,39 +259,34 @@ class TestClassificationPerformance:
                     correct += 1
 
             accuracy = correct / len(queries)
-            assert accuracy >= 0.6, (
-                f"Accuracy for {query_type.value}: {accuracy:.0%} below 60% threshold"
-            )
+            assert accuracy >= 0.6, f"Accuracy for {query_type.value}: {accuracy:.0%} below 60% threshold"
 
     def test_classification_confidence_range(self, classifier):
         """All classifications should have valid confidence scores."""
         for query in ALL_QUERIES:
             result = classifier.classify(query)
-            assert 0.0 <= result.confidence <= 1.0, (
-                f"Invalid confidence {result.confidence} for '{query}'"
-            )
+            assert 0.0 <= result.confidence <= 1.0, f"Invalid confidence {result.confidence} for '{query}'"
 
     def test_classification_recommendations_completeness(self, classifier):
         """All classifications should include routing recommendations."""
         required_keys = [
-            'dense_retrieval_weight',
-            'sparse_retrieval_weight',
-            'query_expansion',
-            'hyde_generation',
-            'reranking',
+            "dense_retrieval_weight",
+            "sparse_retrieval_weight",
+            "query_expansion",
+            "hyde_generation",
+            "reranking",
         ]
 
         for query in ALL_QUERIES[:10]:
             result = classifier.classify(query)
             for key in required_keys:
-                assert key in result.recommendations, (
-                    f"Missing '{key}' in recommendations for '{query}'"
-                )
+                assert key in result.recommendations, f"Missing '{key}' in recommendations for '{query}'"
 
 
 # ============================================================================
 # Combined Pipeline Benchmarks
 # ============================================================================
+
 
 class TestCombinedEnhancementPerformance:
     """Benchmark the full enhancement pipeline."""

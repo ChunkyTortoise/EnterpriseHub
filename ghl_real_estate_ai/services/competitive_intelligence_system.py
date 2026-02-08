@@ -16,19 +16,20 @@ Provides 30-50% competitive advantage through superior market intelligence.
 Date: January 17, 2026
 Status: Advanced Agent-Driven Competitive Intelligence Platform
 """
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import logging
-import json
-from collections import defaultdict
-import hashlib
 
-from ghl_real_estate_ai.services.cache_service import get_cache_service
+import asyncio
+import hashlib
+import json
+import logging
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
@@ -159,10 +160,7 @@ class IntelligenceAgent:
         self.llm_client = llm_client
 
     async def gather_intelligence(
-        self,
-        market_data: Dict[str, Any],
-        competitors: List[CompetitorProfile],
-        analysis_context: Dict[str, Any]
+        self, market_data: Dict[str, Any], competitors: List[CompetitorProfile], analysis_context: Dict[str, Any]
     ) -> List[IntelligenceInsight]:
         """Gather intelligence insights."""
         raise NotImplementedError
@@ -175,10 +173,7 @@ class MarketAnalyzerAgent(IntelligenceAgent):
         super().__init__(IntelligenceAgentType.MARKET_ANALYZER, llm_client)
 
     async def gather_intelligence(
-        self,
-        market_data: Dict[str, Any],
-        competitors: List[CompetitorProfile],
-        analysis_context: Dict[str, Any]
+        self, market_data: Dict[str, Any], competitors: List[CompetitorProfile], analysis_context: Dict[str, Any]
     ) -> List[IntelligenceInsight]:
         """Analyze market trends and competitive positioning."""
         try:
@@ -214,8 +209,8 @@ class MarketAnalyzerAgent(IntelligenceAgent):
             Analyze the current real estate market trends and competitive implications.
 
             Market Data: {market_data}
-            Analysis Period: {context.get('analysis_period', '30 days')}
-            Geographic Focus: {context.get('market_areas', ['general'])}
+            Analysis Period: {context.get("analysis_period", "30 days")}
+            Geographic Focus: {context.get("market_areas", ["general"])}
 
             Analyze:
             1. Price trend patterns and velocity
@@ -227,9 +222,7 @@ class MarketAnalyzerAgent(IntelligenceAgent):
             Provide strategic analysis focusing on actionable insights.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=500, temperature=0.4
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=500, temperature=0.4)
 
             analysis = response.content if response.content else "Market trends analysis unavailable"
 
@@ -254,7 +247,11 @@ class MarketAnalyzerAgent(IntelligenceAgent):
                 urgency="short_term",
                 data_sources=[IntelligenceSource.MLS_DATA, IntelligenceSource.INDUSTRY_REPORTS],
                 strategic_implications=["Market positioning adjustment needed", "Timing strategy optimization"],
-                recommended_actions=["Adjust pricing strategy", "Modify marketing messaging", "Review market positioning"]
+                recommended_actions=[
+                    "Adjust pricing strategy",
+                    "Modify marketing messaging",
+                    "Review market positioning",
+                ],
             )
 
         except Exception as e:
@@ -267,8 +264,8 @@ class MarketAnalyzerAgent(IntelligenceAgent):
         """Analyze competitive pricing dynamics."""
         try:
             # Extract pricing data
-            avg_pricing = market_data.get('avg_pricing', {})
-            competitor_pricing = market_data.get('competitor_pricing', {})
+            avg_pricing = market_data.get("avg_pricing", {})
+            competitor_pricing = market_data.get("competitor_pricing", {})
 
             prompt = f"""
             Analyze competitive pricing dynamics in the real estate market.
@@ -287,9 +284,7 @@ class MarketAnalyzerAgent(IntelligenceAgent):
             Focus on strategic pricing advantages and vulnerabilities.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=400, temperature=0.3
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=400, temperature=0.3)
 
             analysis = response.content if response.content else "Pricing analysis unavailable"
 
@@ -305,7 +300,11 @@ class MarketAnalyzerAgent(IntelligenceAgent):
                 urgency="immediate",
                 data_sources=[IntelligenceSource.MLS_DATA, IntelligenceSource.PUBLIC_RECORDS],
                 affected_competitors=[c.competitor_id for c in competitors[:5]],
-                recommended_actions=["Review pricing strategy", "Analyze value proposition", "Adjust commission structure"]
+                recommended_actions=[
+                    "Review pricing strategy",
+                    "Analyze value proposition",
+                    "Adjust commission structure",
+                ],
             )
 
         except Exception as e:
@@ -317,11 +316,13 @@ class MarketAnalyzerAgent(IntelligenceAgent):
     ) -> Optional[IntelligenceInsight]:
         """Analyze market share dynamics."""
         try:
-            market_share_data = market_data.get('market_share', {})
+            market_share_data = market_data.get("market_share", {})
 
             # Calculate market concentration
             total_competitors = len(competitors)
-            high_threat_competitors = [c for c in competitors if c.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]]
+            high_threat_competitors = [
+                c for c in competitors if c.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]
+            ]
 
             threat_level = ThreatLevel.LOW if len(high_threat_competitors) < 3 else ThreatLevel.HIGH
             opportunity_level = OpportunityLevel.SIGNIFICANT if total_competitors > 10 else OpportunityLevel.MODERATE
@@ -330,13 +331,13 @@ class MarketAnalyzerAgent(IntelligenceAgent):
             Market Share Analysis Summary:
             - Total active competitors: {total_competitors}
             - High-threat competitors: {len(high_threat_competitors)}
-            - Market concentration: {'High' if len(high_threat_competitors) > 5 else 'Moderate'}
+            - Market concentration: {"High" if len(high_threat_competitors) > 5 else "Moderate"}
             - Competitive pressure level: {threat_level.value}
             - Market fragmentation opportunity: {opportunity_level.value}
 
             Strategic Implications:
-            - {'Market consolidation opportunities exist' if total_competitors > 8 else 'Highly competitive market requires differentiation'}
-            - {'Focus on niche specialization' if len(high_threat_competitors) > 3 else 'Opportunity for market leadership'}
+            - {"Market consolidation opportunities exist" if total_competitors > 8 else "Highly competitive market requires differentiation"}
+            - {"Focus on niche specialization" if len(high_threat_competitors) > 3 else "Opportunity for market leadership"}
             """
 
             return IntelligenceInsight(
@@ -351,7 +352,11 @@ class MarketAnalyzerAgent(IntelligenceAgent):
                 urgency="long_term",
                 data_sources=[IntelligenceSource.MLS_DATA, IntelligenceSource.INDUSTRY_REPORTS],
                 strategic_implications=["Market positioning strategy", "Competitive differentiation focus"],
-                recommended_actions=["Develop niche specialization", "Strengthen market presence", "Monitor competitor activities"]
+                recommended_actions=[
+                    "Develop niche specialization",
+                    "Strengthen market presence",
+                    "Monitor competitor activities",
+                ],
             )
 
         except Exception as e:
@@ -366,21 +371,16 @@ class CompetitorTrackerAgent(IntelligenceAgent):
         super().__init__(IntelligenceAgentType.COMPETITOR_TRACKER, llm_client)
 
     async def gather_intelligence(
-        self,
-        market_data: Dict[str, Any],
-        competitors: List[CompetitorProfile],
-        analysis_context: Dict[str, Any]
+        self, market_data: Dict[str, Any], competitors: List[CompetitorProfile], analysis_context: Dict[str, Any]
     ) -> List[IntelligenceInsight]:
         """Track competitor activities and strategic changes."""
         try:
             insights = []
 
             # Monitor top competitors
-            top_competitors = sorted(
-                competitors,
-                key=lambda c: c.threat_level.value,
-                reverse=True
-            )[:5]  # Focus on top 5 competitors
+            top_competitors = sorted(competitors, key=lambda c: c.threat_level.value, reverse=True)[
+                :5
+            ]  # Focus on top 5 competitors
 
             for competitor in top_competitors:
                 activity_insight = await self._analyze_competitor_activity(competitor, analysis_context)
@@ -404,7 +404,7 @@ class CompetitorTrackerAgent(IntelligenceAgent):
         """Analyze individual competitor activity."""
         try:
             # Simulate competitor activity analysis
-            activity_data = context.get('competitor_activities', {}).get(competitor.competitor_id, {})
+            activity_data = context.get("competitor_activities", {}).get(competitor.competitor_id, {})
 
             prompt = f"""
             Analyze recent competitive activity for this real estate competitor.
@@ -427,9 +427,7 @@ class CompetitorTrackerAgent(IntelligenceAgent):
             Focus on competitive threats and strategic implications.
             """
 
-            response = await self.llm_client.generate(
-                prompt=prompt, max_tokens=400, temperature=0.5
-            )
+            response = await self.llm_client.generate(prompt=prompt, max_tokens=400, temperature=0.5)
 
             analysis = response.content if response.content else f"Monitoring {competitor.name} competitive activities"
 
@@ -450,7 +448,7 @@ class CompetitorTrackerAgent(IntelligenceAgent):
                 urgency="short_term" if current_threat == ThreatLevel.HIGH else "long_term",
                 data_sources=[IntelligenceSource.WEBSITE_MONITORING, IntelligenceSource.SOCIAL_MEDIA],
                 affected_competitors=[competitor.competitor_id],
-                recommended_actions=["Monitor closely", "Defensive positioning", "Counter-strategy development"]
+                recommended_actions=["Monitor closely", "Defensive positioning", "Counter-strategy development"],
             )
 
         except Exception as e:
@@ -501,7 +499,11 @@ class CompetitorTrackerAgent(IntelligenceAgent):
                 urgency="immediate" if overall_threat == ThreatLevel.HIGH else "short_term",
                 data_sources=[IntelligenceSource.COMPETITOR_MONITORING],
                 strategic_implications=["Competitive strategy revision", "Market positioning adjustment"],
-                recommended_actions=["Strengthen competitive advantages", "Monitor threat escalation", "Develop counter-strategies"]
+                recommended_actions=[
+                    "Strengthen competitive advantages",
+                    "Monitor threat escalation",
+                    "Develop counter-strategies",
+                ],
             )
 
         except Exception as e:
@@ -516,10 +518,7 @@ class SocialMonitorAgent(IntelligenceAgent):
         super().__init__(IntelligenceAgentType.SOCIAL_MONITOR, llm_client)
 
     async def gather_intelligence(
-        self,
-        market_data: Dict[str, Any],
-        competitors: List[CompetitorProfile],
-        analysis_context: Dict[str, Any]
+        self, market_data: Dict[str, Any], competitors: List[CompetitorProfile], analysis_context: Dict[str, Any]
     ) -> List[IntelligenceInsight]:
         """Monitor social media and digital presence intelligence."""
         try:
@@ -551,7 +550,7 @@ class SocialMonitorAgent(IntelligenceAgent):
     ) -> Optional[IntelligenceInsight]:
         """Analyze social media sentiment around competitors."""
         try:
-            social_data = context.get('social_media_data', {})
+            social_data = context.get("social_media_data", {})
 
             sentiment_summary = """
             Social Media Sentiment Analysis:
@@ -584,7 +583,11 @@ class SocialMonitorAgent(IntelligenceAgent):
                 urgency="short_term",
                 data_sources=[IntelligenceSource.SOCIAL_MEDIA, IntelligenceSource.REVIEW_PLATFORMS],
                 strategic_implications=["Social media strategy enhancement", "Content marketing optimization"],
-                recommended_actions=["Improve social media presence", "Create video content", "Gather client testimonials"]
+                recommended_actions=[
+                    "Improve social media presence",
+                    "Create video content",
+                    "Gather client testimonials",
+                ],
             )
 
         except Exception as e:
@@ -630,7 +633,7 @@ class SocialMonitorAgent(IntelligenceAgent):
                 urgency="immediate",
                 data_sources=[IntelligenceSource.SOCIAL_MEDIA],
                 strategic_implications=["Content strategy optimization", "Engagement timing optimization"],
-                recommended_actions=["Increase video content", "Improve response times", "Focus on local engagement"]
+                recommended_actions=["Increase video content", "Improve response times", "Focus on local engagement"],
             )
 
         except Exception as e:
@@ -677,7 +680,11 @@ class SocialMonitorAgent(IntelligenceAgent):
                 urgency="short_term",
                 data_sources=[IntelligenceSource.SOCIAL_MEDIA, IntelligenceSource.MARKETING_CHANNELS],
                 strategic_implications=["Content differentiation opportunity", "Market education leadership potential"],
-                recommended_actions=["Develop interactive content", "Implement live streaming", "Create educational content series"]
+                recommended_actions=[
+                    "Develop interactive content",
+                    "Implement live streaming",
+                    "Create educational content series",
+                ],
             )
 
         except Exception as e:
@@ -692,15 +699,12 @@ class StrategicSynthesizerAgent(IntelligenceAgent):
         super().__init__(IntelligenceAgentType.STRATEGIC_SYNTHESIZER, llm_client)
 
     async def gather_intelligence(
-        self,
-        market_data: Dict[str, Any],
-        competitors: List[CompetitorProfile],
-        analysis_context: Dict[str, Any]
+        self, market_data: Dict[str, Any], competitors: List[CompetitorProfile], analysis_context: Dict[str, Any]
     ) -> List[IntelligenceInsight]:
         """Synthesize cross-agent intelligence into strategic insights."""
         try:
             # Get insights from other agents (would be passed in production)
-            all_insights = analysis_context.get('collected_insights', [])
+            all_insights = analysis_context.get("collected_insights", [])
 
             if not all_insights:
                 return [await self._create_strategic_overview(market_data, competitors)]
@@ -722,8 +726,17 @@ class StrategicSynthesizerAgent(IntelligenceAgent):
             opportunity_levels = [insight.opportunity_level for insight in insights]
 
             # Calculate aggregated threat/opportunity
-            avg_threat = len([t for t in threat_levels if t in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]]) / len(threat_levels) if threat_levels else 0
-            avg_opportunity = len([o for o in opportunity_levels if o in [OpportunityLevel.SIGNIFICANT, OpportunityLevel.MAJOR]]) / len(opportunity_levels) if opportunity_levels else 0
+            avg_threat = (
+                len([t for t in threat_levels if t in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]]) / len(threat_levels)
+                if threat_levels
+                else 0
+            )
+            avg_opportunity = (
+                len([o for o in opportunity_levels if o in [OpportunityLevel.SIGNIFICANT, OpportunityLevel.MAJOR]])
+                / len(opportunity_levels)
+                if opportunity_levels
+                else 0
+            )
 
             synthesis = f"""
             Strategic Intelligence Synthesis Report:
@@ -769,7 +782,11 @@ class StrategicSynthesizerAgent(IntelligenceAgent):
                 urgency="immediate",
                 data_sources=[source for insight in insights for source in insight.data_sources],
                 strategic_implications=["Strategic planning revision required", "Competitive advantage development"],
-                recommended_actions=["Execute strategic plan", "Monitor implementation", "Adjust tactics based on results"]
+                recommended_actions=[
+                    "Execute strategic plan",
+                    "Monitor implementation",
+                    "Adjust tactics based on results",
+                ],
             )
 
         except Exception as e:
@@ -786,7 +803,7 @@ class StrategicSynthesizerAgent(IntelligenceAgent):
         Market Landscape:
         - Active competitors: {len(competitors)}
         - Market data coverage: {len(market_data)} data points
-        - Competitive intensity: {'High' if len(competitors) > 10 else 'Moderate'}
+        - Competitive intensity: {"High" if len(competitors) > 10 else "Moderate"}
 
         Strategic Priorities:
         1. Establish competitive intelligence systems
@@ -814,7 +831,11 @@ class StrategicSynthesizerAgent(IntelligenceAgent):
             urgency="short_term",
             data_sources=[IntelligenceSource.MARKET_ANALYSIS],
             strategic_implications=["Intelligence infrastructure needed"],
-            recommended_actions=["Deploy intelligence agents", "Establish monitoring systems", "Create strategic plans"]
+            recommended_actions=[
+                "Deploy intelligence agents",
+                "Establish monitoring systems",
+                "Create strategic plans",
+            ],
         )
 
 
@@ -847,9 +868,7 @@ class CompetitiveIntelligenceSystem:
         self.last_update: Optional[datetime] = None
 
     async def generate_intelligence_report(
-        self,
-        market_areas: List[str],
-        analysis_period: str = "30_days"
+        self, market_areas: List[str], analysis_period: str = "30_days"
     ) -> IntelligenceReport:
         """
         Generate comprehensive competitive intelligence report.
@@ -870,10 +889,10 @@ class CompetitiveIntelligenceSystem:
 
             # Prepare analysis context
             analysis_context = {
-                'market_areas': market_areas,
-                'analysis_period': analysis_period,
-                'timestamp': datetime.now(),
-                'competitor_count': len(competitors)
+                "market_areas": market_areas,
+                "analysis_period": analysis_period,
+                "timestamp": datetime.now(),
+                "competitor_count": len(competitors),
             }
 
             # Deploy intelligence agents in parallel
@@ -898,7 +917,7 @@ class CompetitiveIntelligenceSystem:
                 return self._create_fallback_report(market_areas, competitors)
 
             # Add insights to context for strategic synthesis
-            analysis_context['collected_insights'] = all_insights
+            analysis_context["collected_insights"] = all_insights
 
             # Get strategic synthesis
             strategic_insights = await self.strategic_synthesizer.gather_intelligence(
@@ -931,22 +950,22 @@ class CompetitiveIntelligenceSystem:
         market_areas: List[str],
         insights: List[IntelligenceInsight],
         competitors: List[CompetitorProfile],
-        market_data: Dict[str, Any]
+        market_data: Dict[str, Any],
     ) -> IntelligenceReport:
         """Build comprehensive intelligence report from insights."""
         try:
-            report_id = hashlib.md5(
-                f"{'-'.join(market_areas)}{datetime.now().isoformat()}".encode()
-            ).hexdigest()[:12]
+            report_id = hashlib.md5(f"{'-'.join(market_areas)}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
 
             # Analyze insights for executive summary
             high_priority_insights = [i for i in insights if i.action_required and i.urgency == "immediate"]
             threat_insights = [i for i in insights if i.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]]
-            opportunity_insights = [i for i in insights if i.opportunity_level in [OpportunityLevel.SIGNIFICANT, OpportunityLevel.MAJOR]]
+            opportunity_insights = [
+                i for i in insights if i.opportunity_level in [OpportunityLevel.SIGNIFICANT, OpportunityLevel.MAJOR]
+            ]
 
             # Create executive summary
             executive_summary = f"""
-            Competitive Intelligence Report for {', '.join(market_areas)}
+            Competitive Intelligence Report for {", ".join(market_areas)}
 
             Key Findings:
             - {len(insights)} intelligence insights gathered across {len(set(i.agent_type for i in insights))} analysis domains
@@ -954,24 +973,28 @@ class CompetitiveIntelligenceSystem:
             - {len(threat_insights)} high-priority competitive threats detected
             - {len(opportunity_insights)} significant market opportunities discovered
 
-            Strategic Status: {'URGENT ACTION REQUIRED' if len(high_priority_insights) > 2 else 'STRATEGIC MONITORING RECOMMENDED'}
-            Market Position: {'DEFENSIVE POSTURE' if len(threat_insights) > len(opportunity_insights) else 'GROWTH OPPORTUNITY'}
+            Strategic Status: {"URGENT ACTION REQUIRED" if len(high_priority_insights) > 2 else "STRATEGIC MONITORING RECOMMENDED"}
+            Market Position: {"DEFENSIVE POSTURE" if len(threat_insights) > len(opportunity_insights) else "GROWTH OPPORTUNITY"}
             """
 
             # Threat assessment
             threat_assessment = {
-                'overall_threat_level': max((i.threat_level.value for i in insights), default='low'),
-                'immediate_threats': len(threat_insights),
-                'threat_categories': list(set(i.insight_type.value for i in threat_insights)),
-                'threat_summary': 'Multiple competitive pressures requiring strategic response' if len(threat_insights) > 2 else 'Manageable competitive landscape'
+                "overall_threat_level": max((i.threat_level.value for i in insights), default="low"),
+                "immediate_threats": len(threat_insights),
+                "threat_categories": list(set(i.insight_type.value for i in threat_insights)),
+                "threat_summary": "Multiple competitive pressures requiring strategic response"
+                if len(threat_insights) > 2
+                else "Manageable competitive landscape",
             }
 
             # Opportunity analysis
             opportunity_analysis = {
-                'overall_opportunity_level': max((i.opportunity_level.value for i in insights), default='minor'),
-                'significant_opportunities': len(opportunity_insights),
-                'opportunity_categories': list(set(i.insight_type.value for i in opportunity_insights)),
-                'opportunity_summary': 'Multiple growth opportunities available' if len(opportunity_insights) > 2 else 'Limited growth opportunities identified'
+                "overall_opportunity_level": max((i.opportunity_level.value for i in insights), default="minor"),
+                "significant_opportunities": len(opportunity_insights),
+                "opportunity_categories": list(set(i.insight_type.value for i in opportunity_insights)),
+                "opportunity_summary": "Multiple growth opportunities available"
+                if len(opportunity_insights) > 2
+                else "Limited growth opportunities identified",
             }
 
             # Strategic recommendations
@@ -989,11 +1012,12 @@ class CompetitiveIntelligenceSystem:
             advantages = [
                 "Strong market intelligence capabilities",
                 "Proactive competitive monitoring",
-                "Data-driven strategic planning"
+                "Data-driven strategic planning",
             ]
 
             vulnerabilities = [
-                insight.title for insight in threat_insights[:3]  # Top 3 threats as vulnerabilities
+                insight.title
+                for insight in threat_insights[:3]  # Top 3 threats as vulnerabilities
             ]
 
             # Calculate confidence score
@@ -1014,10 +1038,12 @@ class CompetitiveIntelligenceSystem:
                 confidence_score=confidence_score,
                 next_update_due=datetime.now() + timedelta(days=7),  # Weekly updates
                 metadata={
-                    'market_areas_analyzed': market_areas,
-                    'competitors_monitored': len(competitors),
-                    'data_sources_used': list(set(source.value for insight in insights for source in insight.data_sources))
-                }
+                    "market_areas_analyzed": market_areas,
+                    "competitors_monitored": len(competitors),
+                    "data_sources_used": list(
+                        set(source.value for insight in insights for source in insight.data_sources)
+                    ),
+                },
             )
 
         except Exception as e:
@@ -1054,47 +1080,47 @@ class CompetitiveIntelligenceSystem:
         """Get market data for analysis from database."""
         try:
             db = await get_database()
-            
+
             # Aggregate data for multiple market areas
             aggregated_data = {
-                'market_areas': market_areas,
-                'analysis_period': analysis_period,
-                'avg_pricing': {'low': 0, 'avg': 0, 'high': 0},
-                'market_velocity': 'unknown',
-                'inventory_levels': 'unknown',
-                'market_share': {},
-                'competitor_pricing': {}
+                "market_areas": market_areas,
+                "analysis_period": analysis_period,
+                "avg_pricing": {"low": 0, "avg": 0, "high": 0},
+                "market_velocity": "unknown",
+                "inventory_levels": "unknown",
+                "market_share": {},
+                "competitor_pricing": {},
             }
-            
+
             count = 0
             for area in market_areas:
                 area_data = await db.get_market_data(area, analysis_period)
                 if area_data:
                     # Basic aggregation logic
-                    pricing = area_data.get('avg_pricing', {})
-                    aggregated_data['avg_pricing']['low'] += pricing.get('low', 0)
-                    aggregated_data['avg_pricing']['avg'] += pricing.get('avg', 0)
-                    aggregated_data['avg_pricing']['high'] += pricing.get('high', 0)
-                    
-                    aggregated_data['market_velocity'] = area_data.get('market_velocity')
-                    aggregated_data['inventory_levels'] = area_data.get('inventory_levels')
+                    pricing = area_data.get("avg_pricing", {})
+                    aggregated_data["avg_pricing"]["low"] += pricing.get("low", 0)
+                    aggregated_data["avg_pricing"]["avg"] += pricing.get("avg", 0)
+                    aggregated_data["avg_pricing"]["high"] += pricing.get("high", 0)
+
+                    aggregated_data["market_velocity"] = area_data.get("market_velocity")
+                    aggregated_data["inventory_levels"] = area_data.get("inventory_levels")
                     count += 1
-            
+
             if count > 0:
-                aggregated_data['avg_pricing']['low'] /= count
-                aggregated_data['avg_pricing']['avg'] /= count
-                aggregated_data['avg_pricing']['high'] /= count
-                
+                aggregated_data["avg_pricing"]["low"] /= count
+                aggregated_data["avg_pricing"]["avg"] /= count
+                aggregated_data["avg_pricing"]["high"] /= count
+
             return aggregated_data
-            
+
         except Exception as e:
             logger.error(f"Error retrieving market data: {e}")
             return {
-                'market_areas': market_areas,
-                'analysis_period': analysis_period,
-                'avg_pricing': {'low': 300000, 'avg': 450000, 'high': 750000},
-                'market_velocity': 'moderate',
-                'inventory_levels': 'balanced'
+                "market_areas": market_areas,
+                "analysis_period": analysis_period,
+                "avg_pricing": {"low": 300000, "avg": 450000, "high": 750000},
+                "market_velocity": "moderate",
+                "inventory_levels": "balanced",
             }
 
     async def _get_competitor_profiles(self, market_areas: List[str]) -> List[CompetitorProfile]:
@@ -1102,23 +1128,25 @@ class CompetitiveIntelligenceSystem:
         try:
             db = await get_database()
             profiles_data = await db.get_competitor_profiles(market_areas)
-            
+
             profiles = []
             for data in profiles_data:
-                profiles.append(CompetitorProfile(
-                    competitor_id=data['competitor_id'],
-                    name=data['name'],
-                    website=data.get('website', ''),
-                    market_areas=data.get('market_areas', []),
-                    specialties=data.get('specialties', []),
-                    team_size=data.get('team_size', 0),
-                    threat_level=ThreatLevel(data.get('threat_level', 'moderate')),
-                    social_media_handles=data.get('social_media_handles', {}),
-                    metadata=data.get('metadata', {})
-                ))
-                
+                profiles.append(
+                    CompetitorProfile(
+                        competitor_id=data["competitor_id"],
+                        name=data["name"],
+                        website=data.get("website", ""),
+                        market_areas=data.get("market_areas", []),
+                        specialties=data.get("specialties", []),
+                        team_size=data.get("team_size", 0),
+                        threat_level=ThreatLevel(data.get("threat_level", "moderate")),
+                        social_media_handles=data.get("social_media_handles", {}),
+                        metadata=data.get("metadata", {}),
+                    )
+                )
+
             return profiles
-            
+
         except Exception as e:
             logger.error(f"Error retrieving competitor profiles: {e}")
             return []
@@ -1132,16 +1160,20 @@ class CompetitiveIntelligenceSystem:
             title=f"Basic Intelligence Report - {', '.join(market_areas)}",
             executive_summary="Limited intelligence data available. Recommend deploying comprehensive monitoring systems.",
             key_insights=[],
-            threat_assessment={'overall_threat_level': 'unknown'},
-            opportunity_analysis={'overall_opportunity_level': 'unknown'},
-            strategic_recommendations=["Deploy intelligence gathering systems", "Monitor competitor activities", "Analyze market trends"],
+            threat_assessment={"overall_threat_level": "unknown"},
+            opportunity_analysis={"overall_opportunity_level": "unknown"},
+            strategic_recommendations=[
+                "Deploy intelligence gathering systems",
+                "Monitor competitor activities",
+                "Analyze market trends",
+            ],
             market_positioning_score=50.0,
             competitive_advantage_areas=["Market intelligence system deployment"],
             vulnerability_areas=["Limited competitive visibility"],
             participating_agents=[],
             confidence_score=0.3,
             next_update_due=datetime.now() + timedelta(days=1),
-            metadata={'is_fallback': True}
+            metadata={"is_fallback": True},
         )
 
     async def _cache_intelligence_report(self, report: IntelligenceReport):
@@ -1149,13 +1181,13 @@ class CompetitiveIntelligenceSystem:
         try:
             cache_key = f"intelligence_report:{report.report_id}"
             report_data = {
-                'title': report.title,
-                'executive_summary': report.executive_summary,
-                'insights_count': len(report.key_insights),
-                'positioning_score': report.market_positioning_score,
-                'confidence_score': report.confidence_score,
-                'created_at': report.created_at.isoformat(),
-                'next_update_due': report.next_update_due.isoformat()
+                "title": report.title,
+                "executive_summary": report.executive_summary,
+                "insights_count": len(report.key_insights),
+                "positioning_score": report.market_positioning_score,
+                "confidence_score": report.confidence_score,
+                "created_at": report.created_at.isoformat(),
+                "next_update_due": report.next_update_due.isoformat(),
             }
 
             await self.cache.set(cache_key, report_data, ttl=86400 * self.intelligence_retention_days)
@@ -1176,7 +1208,7 @@ class CompetitiveIntelligenceSystem:
             "competitor_profiles_cached": len(self.competitor_profiles),
             "last_update": self.last_update.isoformat() if self.last_update else None,
             "threat_levels": [t.value for t in ThreatLevel],
-            "opportunity_levels": [o.value for o in OpportunityLevel]
+            "opportunity_levels": [o.value for o in OpportunityLevel],
         }
 
 

@@ -1,8 +1,10 @@
 """Unit tests for the data_source_faker utility."""
 
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
+
 from utils.data_source_faker import generate_campaign_data
 
 
@@ -88,9 +90,7 @@ def test_generate_campaign_data_values_plausibility():
     # Spend = Clicks * CPC, allowing for some floating point
     assert np.allclose(df["Spend"], df["Clicks"] * df["CPC"], rtol=0.1)
     # Revenue = Conversions * Conversion_Value (approx)
-    assert np.allclose(
-        df["Revenue"], df["Conversions"] * 10.0, rtol=0.2
-    )  # rtol higher due to noise
+    assert np.allclose(df["Revenue"], df["Conversions"] * 10.0, rtol=0.2)  # rtol higher due to noise
 
 
 def test_generate_campaign_data_output_length():

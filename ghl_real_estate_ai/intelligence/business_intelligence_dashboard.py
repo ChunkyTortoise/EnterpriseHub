@@ -9,26 +9,25 @@ Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 import json
-from dataclasses import dataclass
-from enum import Enum
+import logging
 import uuid
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
+import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from ghl_real_estate_ai.intelligence.revenue_forecasting_engine import EnhancedRevenueForecastingEngine
 from ghl_real_estate_ai.intelligence.conversation_analytics_service import AdvancedConversationAnalyticsService
 from ghl_real_estate_ai.intelligence.market_intelligence_automation import EnhancedMarketIntelligenceAutomation
+from ghl_real_estate_ai.intelligence.revenue_forecasting_engine import EnhancedRevenueForecastingEngine
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.event_publisher import EventPublisher
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +52,7 @@ class AlertSeverity(Enum):
 @dataclass
 class BusinessIntelligenceAlert:
     """Business intelligence alert for executive attention"""
+
     alert_id: str
     alert_type: DashboardMetricType
     severity: AlertSeverity
@@ -68,6 +68,7 @@ class BusinessIntelligenceAlert:
 @dataclass
 class ExecutiveSummary:
     """Executive summary for business intelligence dashboard"""
+
     period: str
     revenue_summary: Dict[str, Any]
     conversation_summary: Dict[str, Any]
@@ -102,18 +103,18 @@ class BusinessIntelligenceDashboard:
 
         # Phase 7 configuration
         self.phase7_config = {
-            'dashboard_refresh_interval': 300,  # 5 minutes
-            'executive_summary_window': 30,  # 30 days
-            'alert_retention_days': 7,
-            'performance_benchmark_targets': {
-                'revenue_growth': 0.15,  # 15% growth target
-                'conversion_rate': 0.25,  # 25% conversion target
-                'commission_defense': 0.95,  # 95% commission defense target
-                'client_satisfaction': 0.90,  # 90% satisfaction target
+            "dashboard_refresh_interval": 300,  # 5 minutes
+            "executive_summary_window": 30,  # 30 days
+            "alert_retention_days": 7,
+            "performance_benchmark_targets": {
+                "revenue_growth": 0.15,  # 15% growth target
+                "conversion_rate": 0.25,  # 25% conversion target
+                "commission_defense": 0.95,  # 95% commission defense target
+                "client_satisfaction": 0.90,  # 90% satisfaction target
             },
-            'jorge_commission_rate': 0.06,
-            'real_time_updates': True,
-            'claude_insights_integration': True
+            "jorge_commission_rate": 0.06,
+            "real_time_updates": True,
+            "claude_insights_integration": True,
         }
 
         # Dashboard state
@@ -128,13 +129,17 @@ class BusinessIntelligenceDashboard:
         try:
             # Initialize revenue forecasting engine
             from ghl_real_estate_ai.intelligence.revenue_forecasting_engine import create_revenue_forecasting_engine
+
             self.revenue_engine = await create_revenue_forecasting_engine()
 
             # Initialize conversation analytics
             self.conversation_analytics = AdvancedConversationAnalyticsService()
 
             # Initialize market intelligence
-            from ghl_real_estate_ai.intelligence.market_intelligence_automation import create_market_intelligence_automation
+            from ghl_real_estate_ai.intelligence.market_intelligence_automation import (
+                create_market_intelligence_automation,
+            )
+
             self.market_intelligence = await create_market_intelligence_automation()
 
             logger.info("All Phase 7 components initialized successfully")
@@ -151,18 +156,18 @@ class BusinessIntelligenceDashboard:
 
             # Collect data from all Phase 7 components
             dashboard_data = {
-                'executive_summary': await self._generate_executive_summary(),
-                'revenue_intelligence': await self._get_revenue_intelligence_data(),
-                'conversation_analytics': await self._get_conversation_analytics_data(),
-                'market_intelligence': await self._get_market_intelligence_data(),
-                'competitive_analysis': await self._get_competitive_analysis_data(),
-                'performance_metrics': await self._get_performance_metrics(),
-                'strategic_alerts': await self._get_strategic_alerts(),
-                'real_time_metrics': await self._get_real_time_metrics(),
-                'jorge_kpis': await self._get_jorge_kpis(),
-                'action_dashboard': await self._get_action_dashboard(),
-                'last_updated': datetime.now().isoformat(),
-                'phase': '7_business_intelligence'
+                "executive_summary": await self._generate_executive_summary(),
+                "revenue_intelligence": await self._get_revenue_intelligence_data(),
+                "conversation_analytics": await self._get_conversation_analytics_data(),
+                "market_intelligence": await self._get_market_intelligence_data(),
+                "competitive_analysis": await self._get_competitive_analysis_data(),
+                "performance_metrics": await self._get_performance_metrics(),
+                "strategic_alerts": await self._get_strategic_alerts(),
+                "real_time_metrics": await self._get_real_time_metrics(),
+                "jorge_kpis": await self._get_jorge_kpis(),
+                "action_dashboard": await self._get_action_dashboard(),
+                "last_updated": datetime.now().isoformat(),
+                "phase": "7_business_intelligence",
             }
 
             # Cache dashboard data
@@ -172,7 +177,7 @@ class BusinessIntelligenceDashboard:
 
         except Exception as e:
             logger.error(f"Error generating executive dashboard data: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _generate_executive_summary(self) -> ExecutiveSummary:
         """Generate executive summary for the dashboard"""
@@ -180,36 +185,47 @@ class BusinessIntelligenceDashboard:
             # Revenue summary
             revenue_forecast = await self.revenue_engine.generate_revenue_forecast()
             revenue_summary = {
-                'current_month_projection': revenue_forecast.get('monthly_forecast', {}).get('total_projection', 0),
-                'quarter_projection': revenue_forecast.get('quarterly_forecast', {}).get('total_projection', 0),
-                'growth_rate': revenue_forecast.get('growth_metrics', {}).get('month_over_month', 0),
-                'commission_total': revenue_forecast.get('monthly_forecast', {}).get('total_projection', 0) * self.phase7_config['jorge_commission_rate']
+                "current_month_projection": revenue_forecast.get("monthly_forecast", {}).get("total_projection", 0),
+                "quarter_projection": revenue_forecast.get("quarterly_forecast", {}).get("total_projection", 0),
+                "growth_rate": revenue_forecast.get("growth_metrics", {}).get("month_over_month", 0),
+                "commission_total": revenue_forecast.get("monthly_forecast", {}).get("total_projection", 0)
+                * self.phase7_config["jorge_commission_rate"],
             }
 
             # Conversation summary
             conversation_metrics = await self.conversation_analytics.get_unified_analytics()
             conversation_summary = {
-                'total_conversations': conversation_metrics.get('conversation_metrics', {}).get('total_conversations', 0),
-                'conversion_rate': conversation_metrics.get('conversion_metrics', {}).get('overall_conversion_rate', 0),
-                'avg_sentiment': conversation_metrics.get('sentiment_analysis', {}).get('average_sentiment_score', 0),
-                'jorge_methodology_performance': conversation_metrics.get('jorge_methodology_analysis', {}).get('effectiveness_score', 0)
+                "total_conversations": conversation_metrics.get("conversation_metrics", {}).get(
+                    "total_conversations", 0
+                ),
+                "conversion_rate": conversation_metrics.get("conversion_metrics", {}).get("overall_conversion_rate", 0),
+                "avg_sentiment": conversation_metrics.get("sentiment_analysis", {}).get("average_sentiment_score", 0),
+                "jorge_methodology_performance": conversation_metrics.get("jorge_methodology_analysis", {}).get(
+                    "effectiveness_score", 0
+                ),
             }
 
             # Market summary
             market_data = await self.market_intelligence.get_market_intelligence_dashboard_data()
             market_summary = {
-                'market_health_score': market_data.get('market_summary', {}).get('market_health_score', 0.85),
-                'active_trends': market_data.get('market_summary', {}).get('total_active_alerts', 0),
-                'critical_alerts': market_data.get('market_summary', {}).get('critical_trends', 0),
-                'opportunities_identified': len(market_data.get('market_opportunities', []))
+                "market_health_score": market_data.get("market_summary", {}).get("market_health_score", 0.85),
+                "active_trends": market_data.get("market_summary", {}).get("total_active_alerts", 0),
+                "critical_alerts": market_data.get("market_summary", {}).get("critical_trends", 0),
+                "opportunities_identified": len(market_data.get("market_opportunities", [])),
             }
 
             # Competitive summary
             competitive_summary = {
-                'commission_defense_rate': market_data.get('jorge_performance_metrics', {}).get('commission_rate_defense', 0.95),
-                'competitive_advantage_score': market_data.get('jorge_performance_metrics', {}).get('competitive_advantage_score', 0.88),
-                'market_share_growth': market_data.get('jorge_performance_metrics', {}).get('market_share_growth', 0.15),
-                'threat_level': 'low'  # Would be calculated from competitive alerts
+                "commission_defense_rate": market_data.get("jorge_performance_metrics", {}).get(
+                    "commission_rate_defense", 0.95
+                ),
+                "competitive_advantage_score": market_data.get("jorge_performance_metrics", {}).get(
+                    "competitive_advantage_score", 0.88
+                ),
+                "market_share_growth": market_data.get("jorge_performance_metrics", {}).get(
+                    "market_share_growth", 0.15
+                ),
+                "threat_level": "low",  # Would be calculated from competitive alerts
             }
 
             # Generate key insights
@@ -217,24 +233,37 @@ class BusinessIntelligenceDashboard:
                 f"Revenue projection up {revenue_summary['growth_rate']:.1%} month-over-month",
                 f"Conversion rate at {conversation_summary['conversion_rate']:.1%} - {'above' if conversation_summary['conversion_rate'] > 0.25 else 'below'} target",
                 f"Market health score: {market_summary['market_health_score']:.1%}",
-                f"Commission defense rate: {competitive_summary['commission_defense_rate']:.1%}"
+                f"Commission defense rate: {competitive_summary['commission_defense_rate']:.1%}",
             ]
 
             # Generate action items
             action_items = []
-            if revenue_summary['growth_rate'] < self.phase7_config['performance_benchmark_targets']['revenue_growth']:
+            if revenue_summary["growth_rate"] < self.phase7_config["performance_benchmark_targets"]["revenue_growth"]:
                 action_items.append("Focus on revenue acceleration strategies")
-            if conversation_summary['conversion_rate'] < self.phase7_config['performance_benchmark_targets']['conversion_rate']:
+            if (
+                conversation_summary["conversion_rate"]
+                < self.phase7_config["performance_benchmark_targets"]["conversion_rate"]
+            ):
                 action_items.append("Optimize Jorge's qualification methodology")
-            if market_summary['critical_alerts'] > 0:
+            if market_summary["critical_alerts"] > 0:
                 action_items.append(f"Address {market_summary['critical_alerts']} critical market trends")
 
             # Calculate overall performance score
             performance_score = (
-                min(revenue_summary['growth_rate'] / self.phase7_config['performance_benchmark_targets']['revenue_growth'], 1.0) * 0.3 +
-                min(conversation_summary['conversion_rate'] / self.phase7_config['performance_benchmark_targets']['conversion_rate'], 1.0) * 0.3 +
-                market_summary['market_health_score'] * 0.2 +
-                competitive_summary['commission_defense_rate'] * 0.2
+                min(
+                    revenue_summary["growth_rate"]
+                    / self.phase7_config["performance_benchmark_targets"]["revenue_growth"],
+                    1.0,
+                )
+                * 0.3
+                + min(
+                    conversation_summary["conversion_rate"]
+                    / self.phase7_config["performance_benchmark_targets"]["conversion_rate"],
+                    1.0,
+                )
+                * 0.3
+                + market_summary["market_health_score"] * 0.2
+                + competitive_summary["commission_defense_rate"] * 0.2
             )
 
             return ExecutiveSummary(
@@ -247,11 +276,11 @@ class BusinessIntelligenceDashboard:
                 action_items=action_items,
                 performance_score=performance_score,
                 trend_indicators={
-                    'revenue': 'up' if revenue_summary['growth_rate'] > 0 else 'down',
-                    'conversations': 'up' if conversation_summary['conversion_rate'] > 0.25 else 'stable',
-                    'market': 'stable' if market_summary['critical_alerts'] == 0 else 'declining',
-                    'competitive': 'strong' if competitive_summary['commission_defense_rate'] > 0.9 else 'pressured'
-                }
+                    "revenue": "up" if revenue_summary["growth_rate"] > 0 else "down",
+                    "conversations": "up" if conversation_summary["conversion_rate"] > 0.25 else "stable",
+                    "market": "stable" if market_summary["critical_alerts"] == 0 else "declining",
+                    "competitive": "strong" if competitive_summary["commission_defense_rate"] > 0.9 else "pressured",
+                },
             )
 
         except Exception as e:
@@ -271,21 +300,21 @@ class BusinessIntelligenceDashboard:
             commission_data = await self.revenue_engine.analyze_commission_opportunities()
 
             return {
-                'revenue_forecast': forecast_data,
-                'deal_pipeline': deal_analysis,
-                'commission_analysis': commission_data,
-                'trends': {
-                    'monthly_growth': forecast_data.get('growth_metrics', {}).get('month_over_month', 0),
-                    'quarterly_trend': forecast_data.get('growth_metrics', {}).get('quarter_over_quarter', 0),
-                    'deal_velocity': deal_analysis.get('metrics', {}).get('average_close_time', 0),
-                    'commission_per_deal': commission_data.get('metrics', {}).get('average_commission', 0)
+                "revenue_forecast": forecast_data,
+                "deal_pipeline": deal_analysis,
+                "commission_analysis": commission_data,
+                "trends": {
+                    "monthly_growth": forecast_data.get("growth_metrics", {}).get("month_over_month", 0),
+                    "quarterly_trend": forecast_data.get("growth_metrics", {}).get("quarter_over_quarter", 0),
+                    "deal_velocity": deal_analysis.get("metrics", {}).get("average_close_time", 0),
+                    "commission_per_deal": commission_data.get("metrics", {}).get("average_commission", 0),
                 },
-                'visualizations': await self._generate_revenue_charts(forecast_data, deal_analysis)
+                "visualizations": await self._generate_revenue_charts(forecast_data, deal_analysis),
             }
 
         except Exception as e:
             logger.error(f"Error getting revenue intelligence data: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_conversation_analytics_data(self) -> Dict[str, Any]:
         """Get conversation analytics data from Phase 7 conversation engine"""
@@ -300,22 +329,24 @@ class BusinessIntelligenceDashboard:
             ab_results = await self.conversation_analytics.get_ab_test_summary()
 
             return {
-                'conversation_metrics': analytics_data.get('conversation_metrics', {}),
-                'sentiment_analysis': analytics_data.get('sentiment_analysis', {}),
-                'conversion_analysis': analytics_data.get('conversion_metrics', {}),
-                'jorge_methodology': jorge_analysis,
-                'ab_testing': ab_results,
-                'performance_trends': {
-                    'conversation_quality_score': analytics_data.get('conversation_metrics', {}).get('quality_score', 0),
-                    'sentiment_trend': analytics_data.get('sentiment_analysis', {}).get('trend_direction', 'stable'),
-                    'conversion_improvement': analytics_data.get('conversion_metrics', {}).get('improvement_rate', 0)
+                "conversation_metrics": analytics_data.get("conversation_metrics", {}),
+                "sentiment_analysis": analytics_data.get("sentiment_analysis", {}),
+                "conversion_analysis": analytics_data.get("conversion_metrics", {}),
+                "jorge_methodology": jorge_analysis,
+                "ab_testing": ab_results,
+                "performance_trends": {
+                    "conversation_quality_score": analytics_data.get("conversation_metrics", {}).get(
+                        "quality_score", 0
+                    ),
+                    "sentiment_trend": analytics_data.get("sentiment_analysis", {}).get("trend_direction", "stable"),
+                    "conversion_improvement": analytics_data.get("conversion_metrics", {}).get("improvement_rate", 0),
                 },
-                'visualizations': await self._generate_conversation_charts(analytics_data)
+                "visualizations": await self._generate_conversation_charts(analytics_data),
             }
 
         except Exception as e:
             logger.error(f"Error getting conversation analytics data: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_market_intelligence_data(self) -> Dict[str, Any]:
         """Get market intelligence data from Phase 7 market engine"""
@@ -327,22 +358,22 @@ class BusinessIntelligenceDashboard:
             strategic_insights = await self.market_intelligence.generate_strategic_market_insights()
 
             return {
-                'market_trends': market_data.get('market_trends', []),
-                'market_summary': market_data.get('market_summary', {}),
-                'strategic_insights': strategic_insights,
-                'market_opportunities': market_data.get('market_opportunities', []),
-                'trend_analysis': {
-                    'price_momentum': 'stable',  # Would be calculated from trends
-                    'inventory_status': 'balanced',
-                    'demand_strength': 'strong',
-                    'seasonal_factors': 'normal'
+                "market_trends": market_data.get("market_trends", []),
+                "market_summary": market_data.get("market_summary", {}),
+                "strategic_insights": strategic_insights,
+                "market_opportunities": market_data.get("market_opportunities", []),
+                "trend_analysis": {
+                    "price_momentum": "stable",  # Would be calculated from trends
+                    "inventory_status": "balanced",
+                    "demand_strength": "strong",
+                    "seasonal_factors": "normal",
                 },
-                'visualizations': await self._generate_market_charts(market_data)
+                "visualizations": await self._generate_market_charts(market_data),
             }
 
         except Exception as e:
             logger.error(f"Error getting market intelligence data: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_competitive_analysis_data(self) -> Dict[str, Any]:
         """Get competitive analysis data from Phase 7 market intelligence"""
@@ -352,53 +383,53 @@ class BusinessIntelligenceDashboard:
 
             # Performance comparison
             performance_data = await self.market_intelligence.get_market_intelligence_dashboard_data()
-            jorge_metrics = performance_data.get('jorge_performance_metrics', {})
+            jorge_metrics = performance_data.get("jorge_performance_metrics", {})
 
             return {
-                'competitive_alerts': [
+                "competitive_alerts": [
                     {
-                        'competitor': alert.competitor_name,
-                        'threat_level': alert.threat_level.value,
-                        'change': alert.positioning_change,
-                        'response_strategy': alert.jorge_response_strategy[:2]  # Top 2 strategies
+                        "competitor": alert.competitor_name,
+                        "threat_level": alert.threat_level.value,
+                        "change": alert.positioning_change,
+                        "response_strategy": alert.jorge_response_strategy[:2],  # Top 2 strategies
                     }
                     for alert in competitive_alerts
                 ],
-                'jorge_positioning': {
-                    'commission_defense_rate': jorge_metrics.get('commission_rate_defense', 0.95),
-                    'competitive_advantage_score': jorge_metrics.get('competitive_advantage_score', 0.88),
-                    'market_share_growth': jorge_metrics.get('market_share_growth', 0.15),
-                    'client_satisfaction': jorge_metrics.get('client_satisfaction', 0.92)
+                "jorge_positioning": {
+                    "commission_defense_rate": jorge_metrics.get("commission_rate_defense", 0.95),
+                    "competitive_advantage_score": jorge_metrics.get("competitive_advantage_score", 0.88),
+                    "market_share_growth": jorge_metrics.get("market_share_growth", 0.15),
+                    "client_satisfaction": jorge_metrics.get("client_satisfaction", 0.92),
                 },
-                'market_comparison': {
-                    'jorge_commission_rate': self.phase7_config['jorge_commission_rate'],
-                    'market_average_rate': 0.055,
-                    'premium_justification': 'Superior AI-powered service and results',
-                    'competitive_moat': 'Jorge\'s confrontational methodology + AI intelligence'
+                "market_comparison": {
+                    "jorge_commission_rate": self.phase7_config["jorge_commission_rate"],
+                    "market_average_rate": 0.055,
+                    "premium_justification": "Superior AI-powered service and results",
+                    "competitive_moat": "Jorge's confrontational methodology + AI intelligence",
                 },
-                'visualizations': await self._generate_competitive_charts(jorge_metrics)
+                "visualizations": await self._generate_competitive_charts(jorge_metrics),
             }
 
         except Exception as e:
             logger.error(f"Error getting competitive analysis data: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_performance_metrics(self) -> Dict[str, Any]:
         """Get comprehensive performance metrics"""
         try:
             # Aggregate performance from all components
-            targets = self.phase7_config['performance_benchmark_targets']
+            targets = self.phase7_config["performance_benchmark_targets"]
 
             # Actual performance metrics (would be calculated from real data)
             performance = {
-                'revenue_growth': 0.18,  # 18% actual vs 15% target
-                'conversion_rate': 0.28,  # 28% actual vs 25% target
-                'commission_defense': 0.96,  # 96% actual vs 95% target
-                'client_satisfaction': 0.94,  # 94% actual vs 90% target
-                'market_share_growth': 0.17,  # 17% growth
-                'deal_velocity': 24,  # Days average close time
-                'lead_quality_score': 0.87,  # Lead quality assessment
-                'jorge_methodology_effectiveness': 0.91  # Jorge's confrontational approach effectiveness
+                "revenue_growth": 0.18,  # 18% actual vs 15% target
+                "conversion_rate": 0.28,  # 28% actual vs 25% target
+                "commission_defense": 0.96,  # 96% actual vs 95% target
+                "client_satisfaction": 0.94,  # 94% actual vs 90% target
+                "market_share_growth": 0.17,  # 17% growth
+                "deal_velocity": 24,  # Days average close time
+                "lead_quality_score": 0.87,  # Lead quality assessment
+                "jorge_methodology_effectiveness": 0.91,  # Jorge's confrontational approach effectiveness
             }
 
             # Performance analysis
@@ -407,29 +438,32 @@ class BusinessIntelligenceDashboard:
                 if metric in targets:
                     target = targets[metric]
                     performance_analysis[metric] = {
-                        'actual': actual,
-                        'target': target,
-                        'variance': (actual - target) / target,
-                        'status': 'exceeds' if actual > target else 'meets' if actual >= target * 0.9 else 'below'
+                        "actual": actual,
+                        "target": target,
+                        "variance": (actual - target) / target,
+                        "status": "exceeds" if actual > target else "meets" if actual >= target * 0.9 else "below",
                     }
 
             return {
-                'current_performance': performance,
-                'target_comparison': performance_analysis,
-                'performance_score': sum(min(actual / targets.get(metric, 1), 1.5) for metric, actual in performance.items() if metric in targets) / len(targets),
-                'top_performers': [
-                    metric for metric, analysis in performance_analysis.items()
-                    if analysis['status'] == 'exceeds'
+                "current_performance": performance,
+                "target_comparison": performance_analysis,
+                "performance_score": sum(
+                    min(actual / targets.get(metric, 1), 1.5)
+                    for metric, actual in performance.items()
+                    if metric in targets
+                )
+                / len(targets),
+                "top_performers": [
+                    metric for metric, analysis in performance_analysis.items() if analysis["status"] == "exceeds"
                 ],
-                'improvement_areas': [
-                    metric for metric, analysis in performance_analysis.items()
-                    if analysis['status'] == 'below'
-                ]
+                "improvement_areas": [
+                    metric for metric, analysis in performance_analysis.items() if analysis["status"] == "below"
+                ],
             }
 
         except Exception as e:
             logger.error(f"Error getting performance metrics: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_strategic_alerts(self) -> List[BusinessIntelligenceAlert]:
         """Get strategic alerts requiring executive attention"""
@@ -438,65 +472,73 @@ class BusinessIntelligenceDashboard:
 
             # Revenue alerts
             revenue_data = await self.revenue_engine.generate_revenue_forecast()
-            if revenue_data.get('growth_metrics', {}).get('month_over_month', 0) < 0:
-                alerts.append(BusinessIntelligenceAlert(
-                    alert_id=str(uuid.uuid4()),
-                    alert_type=DashboardMetricType.REVENUE,
-                    severity=AlertSeverity.HIGH,
-                    title="Revenue Growth Declining",
-                    description="Month-over-month revenue growth is negative",
-                    recommended_actions=[
-                        "Review deal pipeline for bottlenecks",
-                        "Intensify prospecting activities",
-                        "Analyze conversion rate optimization"
-                    ],
-                    metric_values={'growth_rate': revenue_data.get('growth_metrics', {}).get('month_over_month', 0)},
-                    trend_direction="down",
-                    created_at=datetime.now(),
-                    expires_at=datetime.now() + timedelta(days=7)
-                ))
+            if revenue_data.get("growth_metrics", {}).get("month_over_month", 0) < 0:
+                alerts.append(
+                    BusinessIntelligenceAlert(
+                        alert_id=str(uuid.uuid4()),
+                        alert_type=DashboardMetricType.REVENUE,
+                        severity=AlertSeverity.HIGH,
+                        title="Revenue Growth Declining",
+                        description="Month-over-month revenue growth is negative",
+                        recommended_actions=[
+                            "Review deal pipeline for bottlenecks",
+                            "Intensify prospecting activities",
+                            "Analyze conversion rate optimization",
+                        ],
+                        metric_values={
+                            "growth_rate": revenue_data.get("growth_metrics", {}).get("month_over_month", 0)
+                        },
+                        trend_direction="down",
+                        created_at=datetime.now(),
+                        expires_at=datetime.now() + timedelta(days=7),
+                    )
+                )
 
             # Conversation alerts
             conv_data = await self.conversation_analytics.get_unified_analytics()
-            conversion_rate = conv_data.get('conversion_metrics', {}).get('overall_conversion_rate', 0)
-            if conversion_rate < self.phase7_config['performance_benchmark_targets']['conversion_rate']:
-                alerts.append(BusinessIntelligenceAlert(
-                    alert_id=str(uuid.uuid4()),
-                    alert_type=DashboardMetricType.CONVERSATION,
-                    severity=AlertSeverity.MEDIUM,
-                    title="Conversion Rate Below Target",
-                    description=f"Current conversion rate {conversion_rate:.1%} below {self.phase7_config['performance_benchmark_targets']['conversion_rate']:.1%} target",
-                    recommended_actions=[
-                        "Optimize Jorge's qualification methodology",
-                        "Review conversation scripts and training",
-                        "Analyze drop-off points in buyer journey"
-                    ],
-                    metric_values={'conversion_rate': conversion_rate},
-                    trend_direction="stable",
-                    created_at=datetime.now(),
-                    expires_at=datetime.now() + timedelta(days=5)
-                ))
+            conversion_rate = conv_data.get("conversion_metrics", {}).get("overall_conversion_rate", 0)
+            if conversion_rate < self.phase7_config["performance_benchmark_targets"]["conversion_rate"]:
+                alerts.append(
+                    BusinessIntelligenceAlert(
+                        alert_id=str(uuid.uuid4()),
+                        alert_type=DashboardMetricType.CONVERSATION,
+                        severity=AlertSeverity.MEDIUM,
+                        title="Conversion Rate Below Target",
+                        description=f"Current conversion rate {conversion_rate:.1%} below {self.phase7_config['performance_benchmark_targets']['conversion_rate']:.1%} target",
+                        recommended_actions=[
+                            "Optimize Jorge's qualification methodology",
+                            "Review conversation scripts and training",
+                            "Analyze drop-off points in buyer journey",
+                        ],
+                        metric_values={"conversion_rate": conversion_rate},
+                        trend_direction="stable",
+                        created_at=datetime.now(),
+                        expires_at=datetime.now() + timedelta(days=5),
+                    )
+                )
 
             # Market alerts
             market_data = await self.market_intelligence.get_market_intelligence_dashboard_data()
-            critical_trends = market_data.get('market_summary', {}).get('critical_trends', 0)
+            critical_trends = market_data.get("market_summary", {}).get("critical_trends", 0)
             if critical_trends > 0:
-                alerts.append(BusinessIntelligenceAlert(
-                    alert_id=str(uuid.uuid4()),
-                    alert_type=DashboardMetricType.MARKET,
-                    severity=AlertSeverity.CRITICAL,
-                    title="Critical Market Trends Detected",
-                    description=f"{critical_trends} critical market trends require immediate attention",
-                    recommended_actions=[
-                        "Review market trend analysis",
-                        "Adjust pricing and marketing strategies",
-                        "Prepare competitive response plan"
-                    ],
-                    metric_values={'critical_trends': critical_trends},
-                    trend_direction="volatile",
-                    created_at=datetime.now(),
-                    expires_at=datetime.now() + timedelta(days=1)
-                ))
+                alerts.append(
+                    BusinessIntelligenceAlert(
+                        alert_id=str(uuid.uuid4()),
+                        alert_type=DashboardMetricType.MARKET,
+                        severity=AlertSeverity.CRITICAL,
+                        title="Critical Market Trends Detected",
+                        description=f"{critical_trends} critical market trends require immediate attention",
+                        recommended_actions=[
+                            "Review market trend analysis",
+                            "Adjust pricing and marketing strategies",
+                            "Prepare competitive response plan",
+                        ],
+                        metric_values={"critical_trends": critical_trends},
+                        trend_direction="volatile",
+                        created_at=datetime.now(),
+                        expires_at=datetime.now() + timedelta(days=1),
+                    )
+                )
 
             return alerts
 
@@ -508,173 +550,169 @@ class BusinessIntelligenceDashboard:
         """Get real-time metrics for live dashboard updates"""
         try:
             return {
-                'active_conversations': 12,  # Would be from live conversation tracking
-                'deals_in_pipeline': 45,  # Active deals
-                'revenue_today': 8500,  # Today's revenue
-                'new_leads_today': 23,  # New leads today
-                'jorge_availability': 'active',  # Jorge's current status
-                'system_health': {
-                    'revenue_engine': 'operational',
-                    'conversation_analytics': 'operational',
-                    'market_intelligence': 'operational',
-                    'dashboard': 'operational'
+                "active_conversations": 12,  # Would be from live conversation tracking
+                "deals_in_pipeline": 45,  # Active deals
+                "revenue_today": 8500,  # Today's revenue
+                "new_leads_today": 23,  # New leads today
+                "jorge_availability": "active",  # Jorge's current status
+                "system_health": {
+                    "revenue_engine": "operational",
+                    "conversation_analytics": "operational",
+                    "market_intelligence": "operational",
+                    "dashboard": "operational",
                 },
-                'live_alerts': len(self.active_alerts),
-                'last_update': datetime.now().isoformat()
+                "live_alerts": len(self.active_alerts),
+                "last_update": datetime.now().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Error getting real-time metrics: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_jorge_kpis(self) -> Dict[str, Any]:
         """Get Jorge-specific KPIs and performance indicators"""
         try:
             return {
-                'jorge_signature_metrics': {
-                    'confrontational_qualification_success': 0.89,  # Success rate of Jorge's approach
-                    'objection_handling_effectiveness': 0.92,  # How well objections are handled
-                    'commission_defense_rate': 0.96,  # Rate of maintaining 6% commission
-                    'client_referral_rate': 0.67,  # Client referral percentage
-                    'deal_acceleration_factor': 1.35  # How much faster Jorge closes deals vs market
+                "jorge_signature_metrics": {
+                    "confrontational_qualification_success": 0.89,  # Success rate of Jorge's approach
+                    "objection_handling_effectiveness": 0.92,  # How well objections are handled
+                    "commission_defense_rate": 0.96,  # Rate of maintaining 6% commission
+                    "client_referral_rate": 0.67,  # Client referral percentage
+                    "deal_acceleration_factor": 1.35,  # How much faster Jorge closes deals vs market
                 },
-                'jorge_methodology_performance': {
-                    'qualification_accuracy': 0.88,  # Accuracy of initial qualification
-                    'seller_motivation_detection': 0.91,  # Ability to detect motivated sellers
-                    'price_negotiation_success': 0.84,  # Success in price negotiations
-                    'timeline_adherence': 0.93,  # Adherence to promised timelines
-                    'competitive_win_rate': 0.77  # Rate of winning against competitors
+                "jorge_methodology_performance": {
+                    "qualification_accuracy": 0.88,  # Accuracy of initial qualification
+                    "seller_motivation_detection": 0.91,  # Ability to detect motivated sellers
+                    "price_negotiation_success": 0.84,  # Success in price negotiations
+                    "timeline_adherence": 0.93,  # Adherence to promised timelines
+                    "competitive_win_rate": 0.77,  # Rate of winning against competitors
                 },
-                'jorge_market_position': {
-                    'brand_recognition': 0.82,  # Market brand recognition
-                    'expertise_reputation': 0.94,  # Reputation for real estate expertise
-                    'technology_leadership': 0.96,  # Leadership in AI-powered real estate
-                    'client_loyalty_index': 0.89  # Client loyalty and retention
+                "jorge_market_position": {
+                    "brand_recognition": 0.82,  # Market brand recognition
+                    "expertise_reputation": 0.94,  # Reputation for real estate expertise
+                    "technology_leadership": 0.96,  # Leadership in AI-powered real estate
+                    "client_loyalty_index": 0.89,  # Client loyalty and retention
                 },
-                'jorge_growth_trajectory': {
-                    'market_share_growth': 0.15,  # 15% market share growth
-                    'revenue_compound_growth': 0.22,  # 22% compound annual growth
-                    'team_productivity_improvement': 0.18,  # Team productivity gains
-                    'technology_roi': 3.4  # Return on technology investment
-                }
+                "jorge_growth_trajectory": {
+                    "market_share_growth": 0.15,  # 15% market share growth
+                    "revenue_compound_growth": 0.22,  # 22% compound annual growth
+                    "team_productivity_improvement": 0.18,  # Team productivity gains
+                    "technology_roi": 3.4,  # Return on technology investment
+                },
             }
 
         except Exception as e:
             logger.error(f"Error getting Jorge KPIs: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _get_action_dashboard(self) -> Dict[str, Any]:
         """Get actionable insights and recommended actions"""
         try:
             # Analyze all components for actionable insights
             actions = {
-                'immediate_actions': [
+                "immediate_actions": [
                     {
-                        'priority': 'high',
-                        'action': 'Review 3 critical market trends affecting pricing strategy',
-                        'deadline': (datetime.now() + timedelta(hours=24)).isoformat(),
-                        'owner': 'Jorge',
-                        'category': 'market_intelligence'
+                        "priority": "high",
+                        "action": "Review 3 critical market trends affecting pricing strategy",
+                        "deadline": (datetime.now() + timedelta(hours=24)).isoformat(),
+                        "owner": "Jorge",
+                        "category": "market_intelligence",
                     },
                     {
-                        'priority': 'medium',
-                        'action': 'Optimize conversation scripts based on analytics insights',
-                        'deadline': (datetime.now() + timedelta(days=3)).isoformat(),
-                        'owner': 'Jorge',
-                        'category': 'conversation_optimization'
-                    }
+                        "priority": "medium",
+                        "action": "Optimize conversation scripts based on analytics insights",
+                        "deadline": (datetime.now() + timedelta(days=3)).isoformat(),
+                        "owner": "Jorge",
+                        "category": "conversation_optimization",
+                    },
                 ],
-                'weekly_actions': [
+                "weekly_actions": [
                     {
-                        'priority': 'medium',
-                        'action': 'Conduct A/B testing on new qualification approach',
-                        'deadline': (datetime.now() + timedelta(days=7)).isoformat(),
-                        'owner': 'Jorge',
-                        'category': 'methodology_optimization'
+                        "priority": "medium",
+                        "action": "Conduct A/B testing on new qualification approach",
+                        "deadline": (datetime.now() + timedelta(days=7)).isoformat(),
+                        "owner": "Jorge",
+                        "category": "methodology_optimization",
                     },
                     {
-                        'priority': 'low',
-                        'action': 'Review competitive positioning and commission defense strategies',
-                        'deadline': (datetime.now() + timedelta(days=10)).isoformat(),
-                        'owner': 'Jorge',
-                        'category': 'competitive_analysis'
-                    }
+                        "priority": "low",
+                        "action": "Review competitive positioning and commission defense strategies",
+                        "deadline": (datetime.now() + timedelta(days=10)).isoformat(),
+                        "owner": "Jorge",
+                        "category": "competitive_analysis",
+                    },
                 ],
-                'strategic_initiatives': [
+                "strategic_initiatives": [
                     {
-                        'priority': 'high',
-                        'initiative': 'Expand Jorge\'s AI-powered methodology to new market segments',
-                        'timeline': '30-60 days',
-                        'owner': 'Jorge',
-                        'expected_impact': 'revenue_growth'
+                        "priority": "high",
+                        "initiative": "Expand Jorge's AI-powered methodology to new market segments",
+                        "timeline": "30-60 days",
+                        "owner": "Jorge",
+                        "expected_impact": "revenue_growth",
                     },
                     {
-                        'priority': 'medium',
-                        'initiative': 'Implement advanced predictive analytics for deal forecasting',
-                        'timeline': '45-90 days',
-                        'owner': 'Jorge',
-                        'expected_impact': 'conversion_improvement'
-                    }
+                        "priority": "medium",
+                        "initiative": "Implement advanced predictive analytics for deal forecasting",
+                        "timeline": "45-90 days",
+                        "owner": "Jorge",
+                        "expected_impact": "conversion_improvement",
+                    },
                 ],
-                'performance_optimizations': [
+                "performance_optimizations": [
                     {
-                        'area': 'Revenue Forecasting',
-                        'current_accuracy': 0.89,
-                        'target_accuracy': 0.95,
-                        'optimization': 'Enhance ML models with additional market data'
+                        "area": "Revenue Forecasting",
+                        "current_accuracy": 0.89,
+                        "target_accuracy": 0.95,
+                        "optimization": "Enhance ML models with additional market data",
                     },
                     {
-                        'area': 'Conversation Analytics',
-                        'current_accuracy': 0.92,
-                        'target_accuracy': 0.96,
-                        'optimization': 'Integrate advanced NLP sentiment analysis'
-                    }
-                ]
+                        "area": "Conversation Analytics",
+                        "current_accuracy": 0.92,
+                        "target_accuracy": 0.96,
+                        "optimization": "Integrate advanced NLP sentiment analysis",
+                    },
+                ],
             }
 
             return actions
 
         except Exception as e:
             logger.error(f"Error getting action dashboard: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def _generate_revenue_charts(self, forecast_data: Dict, deal_data: Dict) -> Dict[str, Any]:
         """Generate revenue visualization charts"""
         try:
             # Revenue trend chart
-            months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+            months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
             revenue = [350000, 375000, 390000, 420000, 445000, 465000]  # Sample data
 
             revenue_chart = {
-                'type': 'line',
-                'title': 'Revenue Trend (6 Months)',
-                'data': {
-                    'x': months,
-                    'y': revenue,
-                    'trend': 'upward'
-                }
+                "type": "line",
+                "title": "Revenue Trend (6 Months)",
+                "data": {"x": months, "y": revenue, "trend": "upward"},
             }
 
             # Commission analysis chart
             commission_chart = {
-                'type': 'bar',
-                'title': 'Commission by Deal Type',
-                'data': {
-                    'categories': ['Buyer', 'Seller', 'Dual Agency'],
-                    'values': [28000, 32000, 45000],
-                    'percentages': [0.06, 0.06, 0.06]
-                }
+                "type": "bar",
+                "title": "Commission by Deal Type",
+                "data": {
+                    "categories": ["Buyer", "Seller", "Dual Agency"],
+                    "values": [28000, 32000, 45000],
+                    "percentages": [0.06, 0.06, 0.06],
+                },
             }
 
             return {
-                'revenue_trend': revenue_chart,
-                'commission_analysis': commission_chart,
-                'deal_pipeline': {
-                    'type': 'funnel',
-                    'title': 'Deal Pipeline',
-                    'stages': ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed'],
-                    'values': [150, 89, 45, 23, 18]
-                }
+                "revenue_trend": revenue_chart,
+                "commission_analysis": commission_chart,
+                "deal_pipeline": {
+                    "type": "funnel",
+                    "title": "Deal Pipeline",
+                    "stages": ["Lead", "Qualified", "Proposal", "Negotiation", "Closed"],
+                    "values": [150, 89, 45, 23, 18],
+                },
             }
 
         except Exception as e:
@@ -686,35 +724,31 @@ class BusinessIntelligenceDashboard:
         try:
             # Sentiment trend chart
             sentiment_chart = {
-                'type': 'line',
-                'title': 'Conversation Sentiment Trend',
-                'data': {
-                    'x': ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                    'y': [0.72, 0.76, 0.81, 0.84],
-                    'target': 0.80
-                }
+                "type": "line",
+                "title": "Conversation Sentiment Trend",
+                "data": {"x": ["Week 1", "Week 2", "Week 3", "Week 4"], "y": [0.72, 0.76, 0.81, 0.84], "target": 0.80},
             }
 
             # Conversion funnel
             conversion_chart = {
-                'type': 'funnel',
-                'title': 'Jorge\'s Qualification Funnel',
-                'data': {
-                    'stages': ['Initial Contact', 'Qualification', 'Motivated', 'Agreement', 'Closed'],
-                    'values': [100, 78, 45, 32, 25],
-                    'conversion_rates': [1.0, 0.78, 0.58, 0.71, 0.78]
-                }
+                "type": "funnel",
+                "title": "Jorge's Qualification Funnel",
+                "data": {
+                    "stages": ["Initial Contact", "Qualification", "Motivated", "Agreement", "Closed"],
+                    "values": [100, 78, 45, 32, 25],
+                    "conversion_rates": [1.0, 0.78, 0.58, 0.71, 0.78],
+                },
             }
 
             return {
-                'sentiment_trend': sentiment_chart,
-                'conversion_funnel': conversion_chart,
-                'jorge_methodology': {
-                    'type': 'gauge',
-                    'title': 'Jorge Methodology Effectiveness',
-                    'value': 0.91,
-                    'target': 0.85
-                }
+                "sentiment_trend": sentiment_chart,
+                "conversion_funnel": conversion_chart,
+                "jorge_methodology": {
+                    "type": "gauge",
+                    "title": "Jorge Methodology Effectiveness",
+                    "value": 0.91,
+                    "target": 0.85,
+                },
             }
 
         except Exception as e:
@@ -726,37 +760,43 @@ class BusinessIntelligenceDashboard:
         try:
             # Market health score
             health_chart = {
-                'type': 'gauge',
-                'title': 'Market Health Score',
-                'value': 0.85,
-                'ranges': {'healthy': 0.8, 'stable': 0.6, 'declining': 0.4}
+                "type": "gauge",
+                "title": "Market Health Score",
+                "value": 0.85,
+                "ranges": {"healthy": 0.8, "stable": 0.6, "declining": 0.4},
             }
 
             # Competitive positioning
             competitive_chart = {
-                'type': 'radar',
-                'title': 'Jorge vs Competition',
-                'data': {
-                    'categories': ['Commission Rate', 'Service Quality', 'Technology', 'Results', 'Client Satisfaction'],
-                    'jorge_scores': [0.95, 0.92, 0.98, 0.89, 0.94],
-                    'market_average': [0.85, 0.78, 0.65, 0.72, 0.81]
-                }
+                "type": "radar",
+                "title": "Jorge vs Competition",
+                "data": {
+                    "categories": [
+                        "Commission Rate",
+                        "Service Quality",
+                        "Technology",
+                        "Results",
+                        "Client Satisfaction",
+                    ],
+                    "jorge_scores": [0.95, 0.92, 0.98, 0.89, 0.94],
+                    "market_average": [0.85, 0.78, 0.65, 0.72, 0.81],
+                },
             }
 
             return {
-                'market_health': health_chart,
-                'competitive_positioning': competitive_chart,
-                'market_opportunities': {
-                    'type': 'scatter',
-                    'title': 'Market Opportunities Matrix',
-                    'x_label': 'Opportunity Value',
-                    'y_label': 'Success Probability',
-                    'data': [
-                        {'x': 45000, 'y': 0.85, 'label': 'Luxury Segment'},
-                        {'x': 32000, 'y': 0.92, 'label': 'First-Time Buyers'},
-                        {'x': 58000, 'y': 0.76, 'label': 'Investment Properties'}
-                    ]
-                }
+                "market_health": health_chart,
+                "competitive_positioning": competitive_chart,
+                "market_opportunities": {
+                    "type": "scatter",
+                    "title": "Market Opportunities Matrix",
+                    "x_label": "Opportunity Value",
+                    "y_label": "Success Probability",
+                    "data": [
+                        {"x": 45000, "y": 0.85, "label": "Luxury Segment"},
+                        {"x": 32000, "y": 0.92, "label": "First-Time Buyers"},
+                        {"x": 58000, "y": 0.76, "label": "Investment Properties"},
+                    ],
+                },
             }
 
         except Exception as e:
@@ -768,34 +808,30 @@ class BusinessIntelligenceDashboard:
         try:
             # Commission defense chart
             defense_chart = {
-                'type': 'gauge',
-                'title': 'Commission Defense Rate',
-                'value': jorge_metrics.get('commission_rate_defense', 0.95),
-                'target': 0.95
+                "type": "gauge",
+                "title": "Commission Defense Rate",
+                "value": jorge_metrics.get("commission_rate_defense", 0.95),
+                "target": 0.95,
             }
 
             # Market share growth
             growth_chart = {
-                'type': 'line',
-                'title': 'Market Share Growth',
-                'data': {
-                    'x': ['Q1', 'Q2', 'Q3', 'Q4'],
-                    'y': [0.08, 0.10, 0.13, 0.15],
-                    'trend': 'upward'
-                }
+                "type": "line",
+                "title": "Market Share Growth",
+                "data": {"x": ["Q1", "Q2", "Q3", "Q4"], "y": [0.08, 0.10, 0.13, 0.15], "trend": "upward"},
             }
 
             return {
-                'commission_defense': defense_chart,
-                'market_share_growth': growth_chart,
-                'competitive_advantage': {
-                    'type': 'bar',
-                    'title': 'Competitive Advantages',
-                    'data': {
-                        'categories': ['AI Technology', 'Jorge Method', 'Results', 'Service'],
-                        'scores': [0.98, 0.94, 0.89, 0.92]
-                    }
-                }
+                "commission_defense": defense_chart,
+                "market_share_growth": growth_chart,
+                "competitive_advantage": {
+                    "type": "bar",
+                    "title": "Competitive Advantages",
+                    "data": {
+                        "categories": ["AI Technology", "Jorge Method", "Results", "Service"],
+                        "scores": [0.98, 0.94, 0.89, 0.92],
+                    },
+                },
             }
 
         except Exception as e:
@@ -821,14 +857,15 @@ class BusinessIntelligenceDashboard:
                 # Clean up expired alerts
                 current_time = datetime.now()
                 expired_alerts = [
-                    alert_id for alert_id, alert in self.active_alerts.items()
+                    alert_id
+                    for alert_id, alert in self.active_alerts.items()
                     if alert.expires_at and alert.expires_at < current_time
                 ]
                 for alert_id in expired_alerts:
                     del self.active_alerts[alert_id]
 
                 # Wait before next update
-                await asyncio.sleep(self.phase7_config['dashboard_refresh_interval'])
+                await asyncio.sleep(self.phase7_config["dashboard_refresh_interval"])
 
             except Exception as e:
                 logger.error(f"Error in real-time monitoring: {e}")
@@ -840,13 +877,13 @@ class BusinessIntelligenceDashboard:
             await self.event_publisher.publish_business_intelligence_event(
                 event_type="strategic_alert",
                 data={
-                    'alert_id': alert.alert_id,
-                    'type': alert.alert_type.value,
-                    'severity': alert.severity.value,
-                    'title': alert.title,
-                    'description': alert.description,
-                    'actions': alert.recommended_actions
-                }
+                    "alert_id": alert.alert_id,
+                    "type": alert.alert_type.value,
+                    "severity": alert.severity.value,
+                    "title": alert.title,
+                    "description": alert.description,
+                    "actions": alert.recommended_actions,
+                },
             )
         except Exception as e:
             logger.error(f"Error publishing alert: {e}")
@@ -862,6 +899,7 @@ async def create_business_intelligence_dashboard() -> BusinessIntelligenceDashbo
 
 # Example usage
 if __name__ == "__main__":
+
     async def main():
         # Initialize the dashboard
         dashboard = await create_business_intelligence_dashboard()

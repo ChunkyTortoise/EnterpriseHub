@@ -6,15 +6,17 @@ Provides executive-level interface for portfolio analysis, performance tracking,
 and strategic decision-making for ultra-high-net-worth clients.
 """
 
-import streamlit as st
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
+
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 try:
     from ghl_real_estate_ai.services.executive_portfolio_manager import (
@@ -26,12 +28,12 @@ except ImportError:
 # Stub types for interface compatibility when full service is not available
 try:
     from ghl_real_estate_ai.services.executive_portfolio_manager import (
-        UHNWClient,
-        PortfolioProperty,
-        create_sample_uhnw_client,
-        create_sample_portfolio,
-        PropertyType,
         InvestmentStrategy,
+        PortfolioProperty,
+        PropertyType,
+        UHNWClient,
+        create_sample_portfolio,
+        create_sample_uhnw_client,
     )
 except ImportError:
     from dataclasses import dataclass, field
@@ -73,11 +75,11 @@ class ExecutivePortfolioInterface:
         self.portfolio_manager = ExecutivePortfolioManager()
 
         # Initialize session state
-        if 'selected_client' not in st.session_state:
+        if "selected_client" not in st.session_state:
             st.session_state.selected_client = None
-        if 'portfolio_data' not in st.session_state:
+        if "portfolio_data" not in st.session_state:
             st.session_state.portfolio_data = None
-        if 'portfolio_analysis' not in st.session_state:
+        if "portfolio_analysis" not in st.session_state:
             st.session_state.portfolio_analysis = None
 
     @st.cache_data(ttl=600)
@@ -97,7 +99,7 @@ class ExecutivePortfolioInterface:
                 tax_bracket=0.37,
                 preferred_locations=["West Lake Hills", "Rollingwood"],
                 property_types_interest=[PropertyType.ESTATE, PropertyType.COMMERCIAL],
-                timeline_horizons={"short_term": 1, "medium_term": 3, "long_term": 7}
+                timeline_horizons={"short_term": 1, "medium_term": 3, "long_term": 7},
             ),
             UHNWClient(
                 client_id="UHNW-003",
@@ -110,8 +112,8 @@ class ExecutivePortfolioInterface:
                 tax_bracket=0.32,
                 preferred_locations=["Hyde Park", "Clarksville"],
                 property_types_interest=[PropertyType.LUXURY_CONDO, PropertyType.INVESTMENT_PROPERTY],
-                timeline_horizons={"short_term": 3, "medium_term": 7, "long_term": 15}
-            )
+                timeline_horizons={"short_term": 3, "medium_term": 7, "long_term": 15},
+            ),
         ]
         return clients
 
@@ -128,9 +130,7 @@ class ExecutivePortfolioInterface:
         client_options = {f"{client.client_name} (${client.net_worth:,.0f} NW)": client for client in clients}
 
         selected_client_name = st.selectbox(
-            "Select UHNW Client",
-            options=list(client_options.keys()),
-            key="client_selector"
+            "Select UHNW Client", options=list(client_options.keys()), key="client_selector"
         )
 
         if selected_client_name:
@@ -186,14 +186,14 @@ class ExecutivePortfolioInterface:
             # Value by property type
             type_values = {}
             for prop in properties:
-                prop_type = prop.property_type.value.replace('_', ' ').title()
+                prop_type = prop.property_type.value.replace("_", " ").title()
                 type_values[prop_type] = type_values.get(prop_type, 0) + prop.current_value
 
             if type_values:
                 fig_types = px.pie(
                     values=list(type_values.values()),
                     names=list(type_values.keys()),
-                    title="Portfolio by Property Type"
+                    title="Portfolio by Property Type",
                 )
                 st.plotly_chart(fig_types, use_container_width=True)
 
@@ -207,7 +207,7 @@ class ExecutivePortfolioInterface:
                 fig_locations = px.pie(
                     values=list(location_values.values()),
                     names=list(location_values.keys()),
-                    title="Portfolio by Location"
+                    title="Portfolio by Location",
                 )
                 st.plotly_chart(fig_locations, use_container_width=True)
 
@@ -222,29 +222,17 @@ class ExecutivePortfolioInterface:
             st.metric(
                 "Portfolio IRR",
                 f"{analysis.portfolio_irr:.1%}",
-                delta=f"+{(analysis.portfolio_irr - 0.08):.1%} vs target"
+                delta=f"+{(analysis.portfolio_irr - 0.08):.1%} vs target",
             )
 
         with col2:
-            st.metric(
-                "YTD Return",
-                f"{analysis.portfolio_roi_ytd:.1%}",
-                delta=f"+{analysis.portfolio_roi_ytd:.1%}"
-            )
+            st.metric("YTD Return", f"{analysis.portfolio_roi_ytd:.1%}", delta=f"+{analysis.portfolio_roi_ytd:.1%}")
 
         with col3:
-            st.metric(
-                "Lifetime Return",
-                f"{analysis.portfolio_roi_lifetime:.1%}",
-                delta="Cumulative"
-            )
+            st.metric("Lifetime Return", f"{analysis.portfolio_roi_lifetime:.1%}", delta="Cumulative")
 
         with col4:
-            st.metric(
-                "Tax Savings",
-                f"${analysis.total_tax_optimization:,.0f}",
-                delta="Annual"
-            )
+            st.metric("Tax Savings", f"${analysis.total_tax_optimization:,.0f}", delta="Annual")
 
         # Performance charts
         st.markdown("### Performance Breakdown")
@@ -256,7 +244,7 @@ class ExecutivePortfolioInterface:
             diversification_data = {
                 "Geographic": analysis.geographic_diversification,
                 "Property Type": analysis.property_type_diversification,
-                "Risk": analysis.risk_diversification
+                "Risk": analysis.risk_diversification,
             }
 
             fig_div = px.bar(
@@ -264,7 +252,7 @@ class ExecutivePortfolioInterface:
                 y=list(diversification_data.values()),
                 title="Diversification Scores (0-100)",
                 color=list(diversification_data.values()),
-                color_continuous_scale="Viridis"
+                color_continuous_scale="Viridis",
             )
             fig_div.update_layout(yaxis_range=[0, 100])
             st.plotly_chart(fig_div, use_container_width=True)
@@ -274,20 +262,12 @@ class ExecutivePortfolioInterface:
             risk_return_data = []
             # Simulated risk-return data for visualization
             for i in range(10):
-                risk_return_data.append({
-                    "Risk": 20 + i * 6,
-                    "Return": 0.05 + i * 0.01,
-                    "Asset": f"Asset {i+1}"
-                })
+                risk_return_data.append({"Risk": 20 + i * 6, "Return": 0.05 + i * 0.01, "Asset": f"Asset {i + 1}"})
 
             if risk_return_data:
                 df_risk_return = pd.DataFrame(risk_return_data)
                 fig_risk_return = px.scatter(
-                    df_risk_return,
-                    x="Risk",
-                    y="Return",
-                    title="Risk-Return Profile",
-                    hover_data=["Asset"]
+                    df_risk_return, x="Risk", y="Return", title="Risk-Return Profile", hover_data=["Asset"]
                 )
                 fig_risk_return.update_yaxis(tickformat=".1%")
                 st.plotly_chart(fig_risk_return, use_container_width=True)
@@ -297,15 +277,10 @@ class ExecutivePortfolioInterface:
         st.markdown("## 🏡 Property Details")
 
         # Property selection
-        property_options = {
-            f"{prop.address} (${prop.current_value:,.0f})": prop
-            for prop in properties
-        }
+        property_options = {f"{prop.address} (${prop.current_value:,.0f})": prop for prop in properties}
 
         selected_property_name = st.selectbox(
-            "Select Property for Details",
-            options=list(property_options.keys()),
-            key="property_selector"
+            "Select Property for Details", options=list(property_options.keys()), key="property_selector"
         )
 
         if selected_property_name:
@@ -361,7 +336,9 @@ class ExecutivePortfolioInterface:
         st.markdown("## 🎯 Strategic Recommendations")
 
         # Recommendations tabs
-        rec_tab1, rec_tab2, rec_tab3 = st.tabs(["Portfolio Rebalancing", "Acquisition Opportunities", "Disposition Candidates"])
+        rec_tab1, rec_tab2, rec_tab3 = st.tabs(
+            ["Portfolio Rebalancing", "Acquisition Opportunities", "Disposition Candidates"]
+        )
 
         with rec_tab1:
             st.markdown("### Portfolio Rebalancing Recommendations")
@@ -398,16 +375,22 @@ class ExecutivePortfolioInterface:
             st.markdown("### 🔄 1031 Exchange Opportunities")
 
             exchange_df = pd.DataFrame(exchange_opportunities)
-            exchange_df['capital_gain'] = exchange_df['capital_gain'].apply(lambda x: f"${x:,.0f}")
-            exchange_df['potential_tax_savings'] = exchange_df['potential_tax_savings'].apply(lambda x: f"${x:,.0f}")
-            exchange_df['current_value'] = exchange_df['current_value'].apply(lambda x: f"${x:,.0f}")
+            exchange_df["capital_gain"] = exchange_df["capital_gain"].apply(lambda x: f"${x:,.0f}")
+            exchange_df["potential_tax_savings"] = exchange_df["potential_tax_savings"].apply(lambda x: f"${x:,.0f}")
+            exchange_df["current_value"] = exchange_df["current_value"].apply(lambda x: f"${x:,.0f}")
 
             st.dataframe(
-                exchange_df[['address', 'current_value', 'capital_gain', 'potential_tax_savings', 'recommended_action']],
-                use_container_width=True
+                exchange_df[
+                    ["address", "current_value", "capital_gain", "potential_tax_savings", "recommended_action"]
+                ],
+                use_container_width=True,
             )
 
-            total_tax_savings = sum(opp['potential_tax_savings'] for opp in exchange_opportunities if isinstance(opp['potential_tax_savings'], (int, float)))
+            total_tax_savings = sum(
+                opp["potential_tax_savings"]
+                for opp in exchange_opportunities
+                if isinstance(opp["potential_tax_savings"], (int, float))
+            )
             st.success(f"💡 Total potential tax savings through 1031 exchanges: ${total_tax_savings:,.0f}")
         else:
             st.info("No 1031 exchange opportunities currently available.")
@@ -457,10 +440,7 @@ class ExecutivePortfolioInterface:
     def render(self):
         """Main render method for the interface"""
         st.set_page_config(
-            page_title="Executive Portfolio Manager",
-            page_icon="👑",
-            layout="wide",
-            initial_sidebar_state="expanded"
+            page_title="Executive Portfolio Manager", page_icon="👑", layout="wide", initial_sidebar_state="expanded"
         )
 
         # Header
