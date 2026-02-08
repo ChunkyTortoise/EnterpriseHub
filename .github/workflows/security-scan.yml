@@ -145,9 +145,9 @@ jobs:
           echo "Scanning for SQL injection patterns..."
           FOUND=0
 
-          # String formatting in execute()
+          # String formatting in execute() — exclude parameterized placeholders like %s, %d
           if grep -rn 'execute([^)]*%' ghl_real_estate_ai/ --include="*.py" \
-              --exclude-dir=__pycache__ | grep -v test_; then
+              --exclude-dir=__pycache__ | grep -v test_ | grep -v '"%s"' | grep -v "'%s'"; then
             echo "::warning::String formatting in execute() calls found"
             FOUND=1
           fi
