@@ -1280,3 +1280,108 @@ class TestBuyerBotAffordability:
         state = self._make_state(objection_detected=False, next_action="respond")
         result = bot._route_after_matching(state)
         assert result == "respond"
+
+
+# ---------------------------------------------------------------------------
+# TCPA SMS Opt-Out Handling Tests
+# ---------------------------------------------------------------------------
+
+
+class TestBuyerBotOptOut:
+    """Tests for TCPA opt-out detection in process_buyer_conversation."""
+
+    @pytest.fixture
+    def mock_deps(self):
+        with patch.multiple(
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
+            BuyerIntentDecoder=AsyncMock,
+            ClaudeAssistant=AsyncMock,
+            get_event_publisher=Mock,
+            PropertyMatcher=AsyncMock,
+            get_ml_analytics_engine=Mock,
+        ):
+            yield
+
+    @pytest.mark.asyncio
+    async def test_buyer_opt_out_stop_keyword(self, mock_deps):
+        """'stop' triggers opt-out response and skips AI processing."""
+        bot = JorgeBuyerBot()
+        bot.workflow.ainvoke = AsyncMock()
+
+        result = await bot.process_buyer_conversation(
+            conversation_id="buyer_opt_1",
+            user_message="stop",
+        )
+
+        assert result["opt_out_detected"] is True
+        assert result["buyer_id"] == "buyer_opt_1"
+        bot.workflow.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_buyer_opt_out_unsubscribe(self, mock_deps):
+        """'unsubscribe' triggers opt-out response and skips AI processing."""
+        bot = JorgeBuyerBot()
+        bot.workflow.ainvoke = AsyncMock()
+
+        result = await bot.process_buyer_conversation(
+            conversation_id="buyer_opt_2",
+            user_message="Unsubscribe",
+        )
+
+        assert result["opt_out_detected"] is True
+        bot.workflow.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_buyer_opt_out_adds_ai_off_tag(self, mock_deps):
+        """Opt-out response actions include an 'AI-Off' tag."""
+        bot = JorgeBuyerBot()
+        bot.workflow.ainvoke = AsyncMock()
+
+        result = await bot.process_buyer_conversation(
+            conversation_id="buyer_opt_3",
+            user_message="remove me",
+        )
+
+        assert result["opt_out_detected"] is True
+        assert any(
+            action.get("tag") == "AI-Off"
+            for action in result.get("actions", [])
+        )
+
+    @pytest.mark.asyncio
+    async def test_buyer_opt_out_sends_confirmation(self, mock_deps):
+        """Opt-out returns the standard unsubscribe confirmation message."""
+        bot = JorgeBuyerBot()
+        bot.workflow.ainvoke = AsyncMock()
+
+        result = await bot.process_buyer_conversation(
+            conversation_id="buyer_opt_4",
+            user_message="opt out",
+        )
+
+        assert "unsubscribed" in result["response_content"].lower()
+        assert len(result["response_content"]) <= 160  # SMS length
+
+    @pytest.mark.asyncio
+    async def test_buyer_normal_message_not_opt_out(self, mock_deps):
+        """A regular buyer message does NOT trigger opt-out."""
+        bot = JorgeBuyerBot()
+        # Mock the workflow to return a normal response
+        bot.workflow.ainvoke = AsyncMock(return_value={
+            "buyer_id": "buyer_normal",
+            "response_content": "Let me help you find a home!",
+            "financial_readiness_score": 50.0,
+            "buying_motivation_score": 50.0,
+            "matched_properties": [],
+            "current_qualification_step": "budget",
+        })
+        bot.event_publisher.publish_bot_status_update = AsyncMock()
+        bot.event_publisher.publish_buyer_qualification_complete = AsyncMock()
+
+        result = await bot.process_buyer_conversation(
+            conversation_id="buyer_normal",
+            user_message="I want to buy a house",
+        )
+
+        assert result.get("opt_out_detected") is not True
+        bot.workflow.ainvoke.assert_called_once()
