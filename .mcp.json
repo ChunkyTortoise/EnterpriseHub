@@ -1,18 +1,1 @@
-{
-  "mcpServers": {
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ]
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
-    }
-  }
-}
+{"mcpServers":{"memory":{"command":"npx","args":["-y","@modelcontextprotocol/server-memory"]},"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"alwaysAllow":["browser_click","browser_navigate","browser_type"]}}}
