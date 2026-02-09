@@ -211,7 +211,7 @@ class JorgeBuyerBot:
 
         self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
 
-        self.intent_decoder = BuyerIntentDecoder()
+        self.intent_decoder = BuyerIntentDecoder(industry_config=self.industry_config)
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()

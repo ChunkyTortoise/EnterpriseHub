@@ -648,10 +648,21 @@ class LeadBotWorkflow:
     MAX_CONVERSATION_HISTORY = 50
     SMS_MAX_LENGTH = 160
 
-    def __init__(self, ghl_client=None, config: Optional[LeadBotConfig] = None, sendgrid_client=None):
+    def __init__(
+        self,
+        ghl_client=None,
+        config: Optional[LeadBotConfig] = None,
+        sendgrid_client=None,
+        industry_config: Optional["IndustryConfig"] = None,
+    ):
+        # Industry-agnostic configuration layer (backward compatible)
+        from ghl_real_estate_ai.config.industry_config import IndustryConfig
+
+        self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
+
         # Core components (always initialized)
         self.config = config or LeadBotConfig()
-        self.intent_decoder = LeadIntentDecoder()
+        self.intent_decoder = LeadIntentDecoder(industry_config=self.industry_config)
         self.retell_client = RetellClient()
         self.cma_generator = CMAGenerator()
         self.ghost_engine = get_ghost_followup_engine()

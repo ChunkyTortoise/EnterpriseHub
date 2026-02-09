@@ -1,0 +1,117 @@
+# Dental Practice — Industry Config
+# Example non-real-estate vertical: friendly dental assistant bot
+industry: dental_practice
+
+market:
+  name: SmileBright Dental
+  state: CA
+  regulatory_authority: Dental Board of California
+  service_areas:
+    - Rancho Cucamonga
+    - Upland
+    - Ontario
+    - Fontana
+  neighborhoods: []
+  price_ranges:
+    cleaning: {min: 100, max: 300, description: Standard cleaning and exam}
+    filling: {min: 150, max: 500, description: Cavity fillings}
+    crown: {min: 800, max: 1500, description: Dental crowns}
+    implant: {min: 3000, max: 6000, description: Dental implants}
+  compliance_notes:
+    - HIPAA patient privacy compliance
+    - California Dental Board licensing
+    - Informed consent required for all procedures
+    - Emergency protocols posted
+
+personality:
+  name: Mia
+  role: Dental Care Coordinator
+  approach: FRIENDLY, INFORMATIVE, and REASSURING
+  core_values:
+    - Patient comfort is the top priority
+    - Clear communication about procedures and costs
+    - Reduce dental anxiety through education
+    - Respect patient time and schedule
+  system_prompt_template: |
+    You are {{ name }}, a friendly dental care coordinator at SmileBright Dental.
+    Your approach is: {{ approach }}.
+    You help patients schedule appointments and answer common questions.
+
+    CORE VALUES:
+    {% for value in core_values %}- {{ value }}
+    {% endfor %}
+    CURRENT CONTEXT:
+    Patient: {{ lead_name }}
+    Concern: {{ concern_type }}
+  tone_instructions:
+    reassuring: Be calming, use simple language, minimize medical jargon
+    informative: Be thorough, explain procedures step by step
+    urgent: Prioritize same-day scheduling, express concern
+  phrases:
+    greeting: ["Hi! I'm Mia from SmileBright Dental. How can I help you today?"]
+    closing: ["We'll take great care of you! See you at your appointment."]
+
+intents:
+  motivation:
+    high: [toothache, pain, broken tooth, emergency, swelling, bleeding]
+    medium: [cleaning due, checkup, haven't been in a while, insurance question]
+    low: [just curious, thinking about whitening, cosmetic question]
+  timeline:
+    high: [today, right now, asap, emergency, can't wait]
+    medium: [this week, soon, next available]
+    low: [sometime, whenever, no rush, next month]
+  condition:
+    high: [severe pain, infection, abscess, can't eat, broken]
+    medium: [sensitive tooth, mild discomfort, cavity]
+    low: [cosmetic, whitening, straightening]
+  price:
+    high: [how much, cost, insurance covers, payment plan, affordable]
+    medium: [estimate, ballpark, rough cost]
+    low: []
+  buyer_patterns: []
+  seller_patterns: []
+  scoring_weights:
+    motivation: 0.40
+    timeline: 0.30
+    condition: 0.20
+    price: 0.10
+  temperature_thresholds:
+    hot: 70
+    warm: 45
+    lukewarm: 20
+
+questions:
+  questions:
+    - {id: 1, text: "What brings you in today — are you experiencing any pain or discomfort?"}
+    - {id: 2, text: "When was your last dental visit?"}
+    - {id: 3, text: "Do you have dental insurance we should verify?"}
+    - {id: 4, text: "What day and time works best for your appointment?"}
+  follow_ups:
+    pain:
+      - "I'm sorry you're in pain! Let me check our earliest available slot for you."
+    insurance:
+      - "No problem — we accept most major insurance plans. Can you share your provider?"
+    anxiety:
+      - "We completely understand dental anxiety. We offer sedation options for your comfort."
+  accelerators:
+    - "It sounds like we should get you in right away. Does today or tomorrow morning work?"
+    - "Let's get this taken care of! I have an opening this afternoon."
+
+handoff:
+  thresholds:
+    default: 0.6
+    triage_to_hygienist: 0.5
+    triage_to_dentist: 0.7
+  rate_limits:
+    per_hour: 5
+    per_day: 20
+  circular_prevention_window: 900
+  buyer_intent_patterns: []
+  seller_intent_patterns: []
+
+business_rules:
+  appointment_duration_minutes: 60
+  cancellation_policy_hours: 24
+  emergency_slots_per_day: 2
+  sms_max_length: 160
+  new_patient_discount_percent: 15

@@ -1,0 +1,119 @@
+# HVAC Services — Industry Config
+# Example non-real-estate vertical: HVAC service coordinator bot
+industry: hvac_services
+
+market:
+  name: CoolBreeze HVAC
+  state: CA
+  regulatory_authority: Contractors State License Board (CSLB)
+  service_areas:
+    - Rancho Cucamonga
+    - Upland
+    - Ontario
+    - Fontana
+    - Claremont
+  neighborhoods: []
+  price_ranges:
+    diagnostic: {min: 75, max: 150, description: Service call and diagnosis}
+    repair: {min: 150, max: 1200, description: Common repairs}
+    replacement: {min: 4000, max: 15000, description: Full system replacement}
+    maintenance: {min: 100, max: 250, description: Seasonal maintenance plan}
+  compliance_notes:
+    - CSLB C-20 HVAC contractor license required
+    - EPA Section 608 certification for refrigerants
+    - California Title 24 energy efficiency standards
+    - Permit required for system replacements
+
+personality:
+  name: Alex
+  role: HVAC Service Coordinator
+  approach: RESPONSIVE, KNOWLEDGEABLE, and SOLUTION-ORIENTED
+  core_values:
+    - Respond quickly — comfort emergencies matter
+    - Honest diagnostics and transparent pricing
+    - Educate customers on maintenance and efficiency
+    - Stand behind every repair with a warranty
+  system_prompt_template: |
+    You are {{ name }}, a knowledgeable HVAC service coordinator at CoolBreeze HVAC.
+    Your approach is: {{ approach }}.
+    You help customers diagnose issues and schedule service calls.
+
+    CORE VALUES:
+    {% for value in core_values %}- {{ value }}
+    {% endfor %}
+    CURRENT CONTEXT:
+    Customer: {{ lead_name }}
+    Issue Type: {{ issue_type }}
+  tone_instructions:
+    urgent: Prioritize same-day dispatch, express concern for comfort/safety
+    consultative: Explain options clearly, compare repair vs replace
+    seasonal: Promote maintenance plans, discuss energy savings
+  phrases:
+    greeting: ["Hi! I'm Alex from CoolBreeze HVAC. How can I help keep you comfortable?"]
+    closing: ["We'll get your system running right — guaranteed!"]
+
+intents:
+  motivation:
+    high: [no AC, no heat, broken, not working, emergency, smoke, burning smell, leak]
+    medium: [running loud, not cooling well, high energy bill, strange noise, weak airflow]
+    low: [maintenance, tune-up, thinking about upgrading, efficiency question]
+  timeline:
+    high: [today, right now, asap, emergency, it's 100 degrees, freezing]
+    medium: [this week, soon, before summer, before winter]
+    low: [sometime, when convenient, no rush, next season]
+  condition:
+    high: [completely broken, no power, won't turn on, flooding, gas smell]
+    medium: [intermittent, sometimes works, short cycling, ice buildup]
+    low: [old unit, considering upgrade, cosmetic, ductwork]
+  price:
+    high: [how much, estimate, cost to replace, financing, payment plan]
+    medium: [ballpark, rough cost, compare prices]
+    low: []
+  buyer_patterns: []
+  seller_patterns: []
+  scoring_weights:
+    motivation: 0.40
+    timeline: 0.35
+    condition: 0.15
+    price: 0.10
+  temperature_thresholds:
+    hot: 70
+    warm: 45
+    lukewarm: 20
+
+questions:
+  questions:
+    - {id: 1, text: "What's going on with your system — heating, cooling, or both?"}
+    - {id: 2, text: "When did you first notice the problem?"}
+    - {id: 3, text: "How old is your current system?"}
+    - {id: 4, text: "What day and time works best for a technician visit?"}
+  follow_ups:
+    no_ac:
+      - "I know being without AC is miserable, especially here! Let me check our first available slot."
+    high_bill:
+      - "High energy bills often point to an efficiency issue. A tune-up might save you hundreds."
+    old_system:
+      - "Systems over 15 years old often cost more to repair than replace. Want a free estimate?"
+  accelerators:
+    - "This sounds like it needs attention today. I can dispatch a tech within 2 hours."
+    - "Let's get you comfortable again! We have an opening this afternoon."
+
+handoff:
+  thresholds:
+    default: 0.6
+    triage_to_tech: 0.5
+    triage_to_sales: 0.7
+  rate_limits:
+    per_hour: 5
+    per_day: 20
+  circular_prevention_window: 900
+  buyer_intent_patterns: []
+  seller_intent_patterns: []
+
+business_rules:
+  service_call_fee: 89
+  warranty_years: 2
+  emergency_dispatch_hours: 2
+  sms_max_length: 160
+  maintenance_plan_discount_percent: 10
+  financing_available: true

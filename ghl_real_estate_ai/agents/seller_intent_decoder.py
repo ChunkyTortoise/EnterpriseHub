@@ -26,8 +26,13 @@ class SellerIntentDecoder:
     Implements seller-specific scoring for listing qualification.
     """
 
-    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None):
+    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None, industry_config: Optional["IndustryConfig"] = None):
         self.ghl_client = ghl_client
+
+        # Load industry config for config-first marker initialization
+        from ghl_real_estate_ai.config.industry_config import IndustryConfig
+
+        cfg = industry_config
 
         # Condition Anxiety Markers
         self.high_condition_anxiety = [
@@ -93,28 +98,37 @@ class SellerIntentDecoder:
             "hoarder",
         ]
 
-        # Listing Urgency Markers
-        self.immediate_urgency = [
-            "need to sell now",
-            "relocating",
-            "divorce",
-            "foreclosure",
-            "job transfer",
-            "asap",
-        ]
-        self.medium_urgency = [
-            "want to sell",
-            "thinking of selling",
-            "this year",
-            "next few months",
-        ]
-        self.low_urgency = [
-            "just curious",
-            "no rush",
-            "exploring options",
-            "maybe someday",
-            "testing the market",
-        ]
+        # Listing Urgency Markers (config-first, hardcoded fallback)
+        self.immediate_urgency = (
+            cfg.intents.timeline.high if cfg and cfg.intents.timeline.high
+            else [
+                "need to sell now",
+                "relocating",
+                "divorce",
+                "foreclosure",
+                "job transfer",
+                "asap",
+            ]
+        )
+        self.medium_urgency = (
+            cfg.intents.timeline.medium if cfg and cfg.intents.timeline.medium
+            else [
+                "want to sell",
+                "thinking of selling",
+                "this year",
+                "next few months",
+            ]
+        )
+        self.low_urgency = (
+            cfg.intents.motivation.low if cfg and cfg.intents.motivation.low
+            else [
+                "just curious",
+                "no rush",
+                "exploring options",
+                "maybe someday",
+                "testing the market",
+            ]
+        )
 
         # Price Flexibility Markers
         self.high_flexibility = [
@@ -137,26 +151,35 @@ class SellerIntentDecoder:
             "not a penny less",
         ]
 
-        # Motivation Markers
-        self.high_motivation = [
-            "must sell",
-            "have to move",
-            "already bought",
-            "relocating for work",
-            "divorce settlement",
-            "estate sale",
-        ]
-        self.medium_motivation = [
-            "want to upgrade",
-            "downsizing",
-            "empty nesters",
-            "outgrown",
-        ]
-        self.low_motivation = [
-            "just seeing what it's worth",
-            "curious about the market",
-            "no pressure",
-        ]
+        # Motivation Markers (config-first, hardcoded fallback)
+        self.high_motivation = (
+            cfg.intents.motivation.high if cfg and cfg.intents.motivation.high
+            else [
+                "must sell",
+                "have to move",
+                "already bought",
+                "relocating for work",
+                "divorce settlement",
+                "estate sale",
+            ]
+        )
+        self.medium_motivation = (
+            cfg.intents.motivation.medium if cfg and cfg.intents.motivation.medium
+            else [
+                "want to upgrade",
+                "downsizing",
+                "empty nesters",
+                "outgrown",
+            ]
+        )
+        self.low_motivation = (
+            cfg.intents.motivation.low if cfg and cfg.intents.motivation.low
+            else [
+                "just seeing what it\'s worth",
+                "curious about the market",
+                "no pressure",
+            ]
+        )
 
     def analyze_seller(
         self, seller_id: str, conversation_history: List[Dict[str, str]]
