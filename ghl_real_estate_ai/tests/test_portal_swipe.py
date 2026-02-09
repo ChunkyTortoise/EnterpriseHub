@@ -36,9 +36,20 @@ def temp_interactions_file(tmp_path):
 
 
 @pytest.fixture
-def swipe_manager(temp_interactions_file):
+def mock_ghl_client():
+    """Mock GHL client to avoid real API calls in tests."""
+    from unittest.mock import Mock, AsyncMock
+    mock = Mock()
+    mock.add_tags = AsyncMock(return_value={"status": "success"})
+    return mock
+
+
+@pytest.fixture
+def swipe_manager(temp_interactions_file, mock_ghl_client):
     """Create a PortalSwipeManager instance for testing."""
-    return PortalSwipeManager(interactions_path=temp_interactions_file)
+    manager = PortalSwipeManager(interactions_path=temp_interactions_file)
+    manager.ghl_client = mock_ghl_client
+    return manager
 
 
 @pytest.mark.asyncio
