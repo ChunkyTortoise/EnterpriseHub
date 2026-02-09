@@ -9,16 +9,14 @@ Extends the base conversation manager with:
 5. Austin market intelligence integration
 """
 
-import asyncio
-import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.conversation_manager import AIResponse, ConversationManager
 from ghl_real_estate_ai.data.austin_market_data import get_austin_market_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.prompts.competitive_responses import LeadProfile, ResponseType, get_competitive_response_system
+from ghl_real_estate_ai.prompts.competitive_responses import LeadProfile, get_competitive_response_system
 from ghl_real_estate_ai.services.competitive_alert_system import get_competitive_alert_system
 from ghl_real_estate_ai.services.competitor_intelligence import (
     CompetitiveAnalysis,

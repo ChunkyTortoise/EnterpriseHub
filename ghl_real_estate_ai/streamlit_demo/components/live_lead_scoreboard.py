@@ -8,16 +8,13 @@ Real-time animated lead scoring dashboard with:
 - Interactive drill-down capabilities
 """
 
-import math
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 
 def render_live_scoreboard_css():
@@ -301,7 +298,6 @@ if __name__ == "__main__":
     class MockRealtimeService:
         @st.cache_data(ttl=300)
         def get_recent_events(self, event_type=None, limit=50, since=None):
-            from ghl_real_estate_ai.services.realtime_data_service import DemoDataGenerator
 
             return []
 

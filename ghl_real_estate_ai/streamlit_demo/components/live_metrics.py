@@ -13,14 +13,10 @@ Features:
 """
 
 import asyncio
-import json
-import threading
-import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 

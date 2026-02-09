@@ -17,7 +17,6 @@ Targets:
 import json
 import random
 import time
-from typing import Dict, List
 
 from locust import HttpUser, between, events, task
 

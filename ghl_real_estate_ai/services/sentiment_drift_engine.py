@@ -4,11 +4,9 @@ Analyzes conversation sentiment over time to detect declining engagement and tri
 """
 
 import json
-import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, LLMResponse, TaskComplexity
+from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

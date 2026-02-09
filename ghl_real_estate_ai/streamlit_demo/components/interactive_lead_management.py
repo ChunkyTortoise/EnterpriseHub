@@ -3,16 +3,12 @@ Interactive Lead Management Interface - Service 6 Mobile-First Design
 Comprehensive lead management with touch-optimized controls, real-time sync, and AI-powered insights
 """
 
-import asyncio
-import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service

@@ -30,19 +30,14 @@ Created: January 2026
 import asyncio
 import heapq
 import json
-import logging
-import pickle
-import threading
 import time
-import traceback
 import uuid
-import weakref
-from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
+from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum
 from functools import wraps
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

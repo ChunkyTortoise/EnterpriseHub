@@ -3,23 +3,16 @@ Service 6 Enhanced Lead Recovery Engine - Production Health Dashboard
 Enterprise-grade monitoring dashboard with real-time system health visualization.
 """
 
-import asyncio
-import json
-import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
 
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
 from ..services.cache_service import CacheService
 from ..services.database_service import DatabaseService
-from .service6_alerting_engine import AlertLevel, Service6AlertingEngine
+from .service6_alerting_engine import Service6AlertingEngine
 from .service6_metrics_collector import MetricType, Service6MetricsCollector
 
 

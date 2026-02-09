@@ -8,7 +8,7 @@ appointment scheduling, follow-up enrollment, and real-time events.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, confloat, conint
+from pydantic import BaseModel, Field, conint
 
 
 class MotivationSignals(BaseModel):

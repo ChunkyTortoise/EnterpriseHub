@@ -8,13 +8,13 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...middleware.rate_limiting import rate_limit
 from ...services.authentication import get_current_user, verify_admin_access
-from ...services.client_demo_service import ClientDemoService, ClientProfile, DemoScenario
+from ...services.client_demo_service import ClientDemoService, DemoScenario
 
 logger = logging.getLogger(__name__)
 

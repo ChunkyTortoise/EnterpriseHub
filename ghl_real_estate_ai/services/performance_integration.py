@@ -26,23 +26,17 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar
 from .ai_request_batcher import (
     AIRequestBatcher,
     RequestPriority,
-    batched_ai_call,
     get_ai_request_batcher,
 )
 
 # Import optimized services
 from .optimized_cache_service import (
-    CachePriority,
     EnhancedCacheService,
-    cached,
     get_enhanced_cache_service,
 )
 from .performance_monitor import (
     PerformanceMonitor,
-    PerformanceThresholds,
     get_performance_monitor,
-    monitor_api_latency,
-    monitor_db_query,
 )
 
 logger = logging.getLogger(__name__)

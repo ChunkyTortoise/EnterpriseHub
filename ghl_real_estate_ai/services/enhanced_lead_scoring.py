@@ -16,13 +16,11 @@ Following established architecture patterns:
 """
 
 import asyncio
-import logging
 import time
-import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

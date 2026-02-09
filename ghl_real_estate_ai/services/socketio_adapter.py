@@ -12,11 +12,8 @@ This adapter ensures horizontal scalability by:
 - Preserving enterprise authentication and event broadcasting
 """
 
-import asyncio
-import json
-import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 import socketio
 from socketio import AsyncNamespace
@@ -26,10 +23,8 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.websocket_server import (
-    ConnectionStatus,
     EventType,
     RealTimeEvent,
-    WebSocketClient,
     get_websocket_manager,
 )
 

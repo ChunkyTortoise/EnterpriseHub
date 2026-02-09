@@ -7,15 +7,11 @@ Provides user-aware result ranking, content filtering, and adaptive query expans
 from __future__ import annotations
 
 import asyncio
-import math
-import re
-from abc import ABC, abstractmethod
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
 
-from src.personalization.user_profile import Interest, Preference, PreferenceCategory, UserProfile
+from src.personalization.user_profile import PreferenceCategory, UserProfile
 
 T = TypeVar("T")
 

@@ -4,7 +4,7 @@ Enables agents to process voice transcripts, extract intent, and bridge to other
 """
 
 import base64
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.voice_ai_service import VoiceInteractionType, get_voice_ai_service

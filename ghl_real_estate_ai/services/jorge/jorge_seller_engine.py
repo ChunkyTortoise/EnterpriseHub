@@ -10,16 +10,14 @@ Created: 2026-01-19
 """
 
 import asyncio
-import json
 import logging
-import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
-from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
+from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
 # Lazy import to avoid circular dependency - imported where used
 

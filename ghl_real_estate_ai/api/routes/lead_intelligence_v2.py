@@ -15,7 +15,6 @@ Follows established architecture patterns:
 - Event publishing and caching integration
 """
 
-import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

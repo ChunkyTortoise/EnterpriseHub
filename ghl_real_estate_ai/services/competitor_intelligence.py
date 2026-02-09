@@ -8,13 +8,12 @@ This service provides:
 4. Integration with alert and response systems
 """
 
-import asyncio
 import logging
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 # Temporarily disable spacy due to Python 3.14 compatibility issues
 # try:
@@ -37,7 +36,6 @@ try:
 except ImportError:
     HAS_TEXTBLOB = False
     TextBlob = None
-import pandas as pd
 
 from ghl_real_estate_ai.services.cache_service import CacheService
 

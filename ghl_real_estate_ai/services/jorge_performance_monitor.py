@@ -28,7 +28,6 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import logging
 import statistics
 import threading

@@ -12,7 +12,7 @@ from typing import List
 from uuid import uuid4
 
 import pytest
-from src.core.types import DocumentChunk, Metadata, SearchResult
+from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.advanced import (
     CompressedDocument,
     # Contextual compression
@@ -28,7 +28,6 @@ from src.retrieval.advanced import (
     MetadataFilter,
     QueryDecomposer,
     QueryOperator,
-    RelevanceScore,
     RelevanceScorer,
     ScoringMethod,
     SelfQueryingResult,

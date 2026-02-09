@@ -12,19 +12,14 @@ Complete property matching system integrating:
 Built specifically for Jorge's GHL Real Estate AI system.
 """
 
-import asyncio
-import json
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-import numpy as np
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 

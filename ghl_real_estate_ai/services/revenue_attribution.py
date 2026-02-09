@@ -5,7 +5,6 @@ Tracks leads through entire lifecycle and attributes revenue accurately
 """
 
 import json
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional

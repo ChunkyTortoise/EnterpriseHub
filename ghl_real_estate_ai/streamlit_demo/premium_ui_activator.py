@@ -21,7 +21,7 @@ Date: 2026-01-09
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 
 def analyze_component_integration() -> List[Tuple[str, str, bool]]:

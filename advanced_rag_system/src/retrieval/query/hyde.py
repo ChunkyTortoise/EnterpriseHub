@@ -7,7 +7,6 @@ This often improves semantic matching compared to query-only embeddings.
 
 from __future__ import annotations
 
-import asyncio
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable

@@ -7,7 +7,6 @@ and returns AI-generated responses.
 
 # Fix for Python 3.10+ union syntax compatibility with FastAPI/Pydantic
 import os
-import sys
 
 # Set environment variable to disable response model generation for union types
 os.environ["FASTAPI_DISABLE_RESPONSE_MODEL_VALIDATION"] = "true"
@@ -27,9 +26,8 @@ try:
 except ImportError:
     pass
 
-from typing import Any, Callable
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -46,7 +44,6 @@ class UnionCompatibleRoute(APIRoute):
 
 
 import asyncio
-import logging
 import os
 import time
 from contextlib import asynccontextmanager
@@ -116,15 +113,12 @@ from ghl_real_estate_ai.api.routes import (
 )
 
 # Import WebSocket and Socket.IO integration services
-from ghl_real_estate_ai.api.socketio_app import integrate_socketio_with_fastapi
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.observability import setup_observability
-from ghl_real_estate_ai.services.coordination_engine import get_coordination_engine
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.system_health_monitor import (
     start_system_health_monitoring,
-    stop_system_health_monitoring,
 )
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
 

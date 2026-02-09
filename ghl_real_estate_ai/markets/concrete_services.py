@@ -2,8 +2,7 @@
 Concrete market service implementations for multi-market expansion
 """
 
-import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from .base_market_service import BaseMarketService
 

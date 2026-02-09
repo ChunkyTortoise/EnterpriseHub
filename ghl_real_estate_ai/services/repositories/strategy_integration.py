@@ -5,7 +5,6 @@ Provides seamless integration between Repository Pattern and existing Strategy P
 Replaces hardcoded data loading with flexible repository-based data access.
 """
 
-import asyncio
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -48,9 +47,7 @@ try:
     from .property_data_service import PropertyDataService, PropertyDataServiceFactory
     from .query_builder import PropertyQueryBuilder
 except ImportError:
-    from interfaces import PropertyQuery, SortOrder
     from property_data_service import PropertyDataService, PropertyDataServiceFactory
-    from query_builder import PropertyQueryBuilder
 
 
 class RepositoryPropertyMatcher:

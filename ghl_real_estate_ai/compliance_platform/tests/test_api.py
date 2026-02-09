@@ -11,21 +11,16 @@ Tests cover:
 Following TDD principles: RED -> GREEN -> REFACTOR
 """
 
-import asyncio
 import hashlib
 import hmac
 import json
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
-from fastapi import FastAPI, HTTPException
-from fastapi.testclient import TestClient
-from httpx import AsyncClient
-from pydantic import BaseModel
 
 from ghl_real_estate_ai.compliance_platform.models.compliance_models import (
     AIModelRegistration,

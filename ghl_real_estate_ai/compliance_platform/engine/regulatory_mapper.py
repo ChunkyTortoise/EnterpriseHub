@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional, Set
 
 from ..models.compliance_models import (
     AIModelRegistration,
-    ComplianceStatus,
     RegulationType,
     RiskLevel,
 )

@@ -7,7 +7,7 @@ different parts of the application.
 
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ..interfaces import BehavioralEvent, EventType, IBehaviorTracker

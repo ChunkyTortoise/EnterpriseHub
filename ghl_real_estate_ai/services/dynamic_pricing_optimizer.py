@@ -8,12 +8,11 @@ Created: 2026-01-17
 """
 
 import asyncio
-import json
 import logging
 import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.cache_service import CacheService

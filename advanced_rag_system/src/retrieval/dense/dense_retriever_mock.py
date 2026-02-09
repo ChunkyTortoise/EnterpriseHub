@@ -6,9 +6,8 @@ production DenseRetriever but uses simple similarity calculations without Chroma
 
 from __future__ import annotations
 
-import asyncio
 import time
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 

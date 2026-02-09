@@ -11,11 +11,9 @@ predictions of closing probability. Provides multi-dimensional scoring:
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
 
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

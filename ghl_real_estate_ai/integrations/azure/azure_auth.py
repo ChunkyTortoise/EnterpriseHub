@@ -24,15 +24,13 @@ Key Features:
 
 import asyncio
 import base64
-import hashlib
-import json
 import logging
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import parse_qs, urlencode
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlencode
 
 import jwt
 

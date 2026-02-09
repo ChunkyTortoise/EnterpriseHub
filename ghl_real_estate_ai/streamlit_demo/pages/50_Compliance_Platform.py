@@ -5,10 +5,9 @@ Production-grade compliance management dashboard for EU AI Act, SEC, HIPAA.
 Designed for C-suite presentations and client acquisition.
 """
 
-import asyncio
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Union
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 import pandas as pd
 import plotly.express as px

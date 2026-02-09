@@ -3,9 +3,8 @@ Negotiation Intelligence MCP Server
 Exposes specialized negotiation tools for real estate deal orchestration.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from fastmcp import FastMCP
 

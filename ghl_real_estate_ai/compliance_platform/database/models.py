@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum

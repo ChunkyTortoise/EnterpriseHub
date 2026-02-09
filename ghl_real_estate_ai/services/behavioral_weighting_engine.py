@@ -11,12 +11,11 @@ Analyzes lead behavioral patterns to dynamically adjust matching weights:
 """
 
 import json
-import logging
 import statistics
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (

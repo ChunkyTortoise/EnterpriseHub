@@ -9,8 +9,8 @@ Features:
 - Mobile-responsive white-labeled experience
 """
 
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 
 class BrandedClientPortal:

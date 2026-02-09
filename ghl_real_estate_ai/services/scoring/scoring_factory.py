@@ -6,7 +6,7 @@ dynamic registration, configuration management, and performance optimization.
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 try:
     from .basic_scorer import BasicPropertyScorer

@@ -7,12 +7,10 @@ Implements high-performance optimizations for the Streamlit application:
 - Resource pre-allocation for smooth user experience
 """
 
-import asyncio
-import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import streamlit as st
 

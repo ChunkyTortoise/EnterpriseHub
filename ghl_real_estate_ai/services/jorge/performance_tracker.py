@@ -30,7 +30,6 @@ SLA Targets (Phase 4 Audit Spec):
 
 import asyncio
 import logging
-import math
 import statistics
 import threading
 import time
@@ -38,7 +37,7 @@ from collections import deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 

@@ -5,12 +5,9 @@ ML-powered prediction of offer acceptance probability based on negotiation intel
 market factors, and historical outcome patterns.
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
 import numpy as np
 
@@ -21,7 +18,6 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
     NegotiationTactic,
     SellerMotivationType,
     SellerPsychologyProfile,
-    UrgencyLevel,
     WinProbabilityAnalysis,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service

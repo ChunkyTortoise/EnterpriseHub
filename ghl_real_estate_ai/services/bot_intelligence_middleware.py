@@ -22,12 +22,11 @@ Author: Jorge's Real Estate AI Platform - Phase 3.3 Bot Workflow Integration
 
 import asyncio
 import hashlib
-import json
 import statistics
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Phase 2 service imports (lazy loading to avoid circular imports)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

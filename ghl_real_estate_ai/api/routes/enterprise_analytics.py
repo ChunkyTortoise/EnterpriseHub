@@ -32,24 +32,16 @@ Created: January 2026
 """
 
 import asyncio
-import json
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-import pandas as pd
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.analytics.competitive_intelligence_dashboard import (
     CompetitiveIntelligenceDashboard,
-    MarketSegment,
-    ThreatLevel,
 )
 from ghl_real_estate_ai.analytics.customer_lifetime_analytics import (
-    ChurnRisk,
-    CLVModel,
     CustomerLifetimeAnalytics,
     CustomerSegment,
 )

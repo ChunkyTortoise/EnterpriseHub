@@ -4,9 +4,8 @@ Fetches real-time comps and market trends to inject into bot conversations.
 """
 
 import json
-import logging
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

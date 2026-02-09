@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import uvicorn
 from dotenv import load_dotenv

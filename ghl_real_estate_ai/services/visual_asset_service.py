@@ -4,7 +4,7 @@ Simulates high-fidelity AI staging (Midjourney/Flux) for real estate listings.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 

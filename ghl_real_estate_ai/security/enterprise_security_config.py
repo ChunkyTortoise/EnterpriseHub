@@ -12,11 +12,10 @@ SECURITY STANDARDS:
 """
 
 import os
-import secrets
 import ssl
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

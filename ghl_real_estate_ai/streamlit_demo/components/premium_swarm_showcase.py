@@ -10,10 +10,7 @@ Demonstrates $25K-$100K value through sophisticated AI orchestration:
 Showcases the transformational AI capabilities that justify premium consulting fees.
 """
 
-import asyncio
-import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -21,12 +18,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 # Import existing swarm services
-from ghl_real_estate_ai.agents.lead_intelligence_swarm import AgentInsight, LeadIntelligenceSwarm, SwarmConsensus
-from ghl_real_estate_ai.services.content_personalization_swarm import ContentPersonalizationSwarm
-from ghl_real_estate_ai.services.lead_swarm_service import LeadSwarmService
+from ghl_real_estate_ai.agents.lead_intelligence_swarm import LeadIntelligenceSwarm
 
 # ============================================================================
 # Data Models for Premium Showcase

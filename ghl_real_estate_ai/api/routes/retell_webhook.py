@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Request
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

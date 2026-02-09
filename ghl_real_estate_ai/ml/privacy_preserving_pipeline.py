@@ -20,39 +20,23 @@ Created: 2026-01-18
 
 import asyncio
 import base64
-import copy
-import hashlib
-import json
-import logging
-import pickle
-import secrets
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
-import cryptography
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from sklearn.preprocessing import StandardScaler
-from torch.utils.data import DataLoader, Dataset
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import existing services
 from ghl_real_estate_ai.ml.neural_property_matcher import (
-    ClientEmbedding,
     NeuralMatchingConfig,
     NeuralMatchingNetwork,
-    PropertyEmbedding,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

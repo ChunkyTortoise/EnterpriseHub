@@ -5,12 +5,11 @@ Provides caching capabilities for any property repository using the Decorator pa
 Supports multiple cache backends and configurable TTL.
 """
 
-import asyncio
 import hashlib
 import json
 import pickle
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 try:
     import redis
@@ -22,7 +21,7 @@ except ImportError:
 try:
     from .interfaces import IPropertyRepository, PropertyQuery, RepositoryError, RepositoryMetadata, RepositoryResult
 except ImportError:
-    from interfaces import IPropertyRepository, PropertyQuery, RepositoryError, RepositoryMetadata, RepositoryResult
+    from interfaces import IPropertyRepository, PropertyQuery, RepositoryError, RepositoryResult
 
 
 class CacheBackend:

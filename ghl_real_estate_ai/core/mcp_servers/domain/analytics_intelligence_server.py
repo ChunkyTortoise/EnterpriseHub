@@ -3,9 +3,7 @@ Analytics Intelligence MCP Server
 Exposes specialized analytics and ROI tracking tools for the AI platform.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 

@@ -3,9 +3,8 @@ Lead Intelligence MCP Server
 Exposes specialized lead analysis tools for the real estate domain.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastmcp import FastMCP
 

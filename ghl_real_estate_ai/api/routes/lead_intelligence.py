@@ -3,7 +3,7 @@ Lead Intelligence Middleware Endpoints.
 Provides advanced behavioral forecasting and agentic re-engagement triggers.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 

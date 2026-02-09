@@ -5,11 +5,9 @@ Analyzes market conditions, inventory levels, competitive pressure, and buyer po
 to quantify negotiating leverage and optimal offer positioning.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory, MarketCondition, MarketLeverage
 from ghl_real_estate_ai.services.austin_market_service import AustinMarketService

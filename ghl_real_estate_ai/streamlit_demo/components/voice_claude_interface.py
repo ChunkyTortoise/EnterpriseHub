@@ -3,15 +3,10 @@ Voice Claude Interface - Voice-Activated Claude Assistant UI
 Provides hands-free interaction with Claude through voice commands.
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime
-from typing import Any, Dict, Optional
 
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 

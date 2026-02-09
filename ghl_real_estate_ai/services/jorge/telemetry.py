@@ -31,7 +31,6 @@ Attributes automatically captured on each span:
     - jorge.duration_ms: Wall-clock duration in milliseconds
 """
 
-import asyncio
 import functools
 import inspect
 import logging

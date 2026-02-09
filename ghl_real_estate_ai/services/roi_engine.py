@@ -3,7 +3,6 @@ ROIEngine Service for GHL Real Estate AI.
 Calculates "Value Generated" for swarm executions and logs ROI milestones.
 """
 
-import asyncio
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

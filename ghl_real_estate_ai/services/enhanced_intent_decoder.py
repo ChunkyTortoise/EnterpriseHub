@@ -4,16 +4,14 @@ Multi-Modal Conversation Intelligence Engine for Real Estate AI Platform
 """
 
 import asyncio
-import json
 import logging
 import re
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.models.intelligence_context import ConversationContext, CustomerProfile, IntentClassification
+from ghl_real_estate_ai.models.intelligence_context import CustomerProfile
 
 logger = logging.getLogger(__name__)
 

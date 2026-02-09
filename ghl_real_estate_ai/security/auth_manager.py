@@ -4,7 +4,6 @@ Provides comprehensive authentication, session management, and security features
 """
 
 import asyncio
-import hashlib
 import json
 import secrets
 import time
@@ -13,16 +12,14 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional, Set
 
-import bcrypt
 import redis.asyncio as redis
 from fastapi import HTTPException, status
 from jose import JWTError, jwt
-from pydantic import BaseModel, EmailStr
 
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 from .audit_logger import AuditLogger
-from .rbac import Permission, Role
+from .rbac import Role
 
 
 class AuthProvider(str, Enum):

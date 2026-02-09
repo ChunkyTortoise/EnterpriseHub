@@ -9,10 +9,7 @@ Provides comprehensive behavioral insights and analytics for leads including:
 - Urgency indicators
 """
 
-from datetime import datetime, timedelta
 
-import numpy as np
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st

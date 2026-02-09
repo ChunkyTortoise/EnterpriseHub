@@ -9,23 +9,14 @@ Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 """
 
 import asyncio
-import json
 import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.intelligence.conversation_analytics_service import AdvancedConversationAnalyticsService
-from ghl_real_estate_ai.intelligence.market_intelligence_automation import EnhancedMarketIntelligenceAutomation
-from ghl_real_estate_ai.intelligence.revenue_forecasting_engine import EnhancedRevenueForecastingEngine
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.event_publisher import EventPublisher
 

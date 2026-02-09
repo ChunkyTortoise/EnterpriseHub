@@ -22,7 +22,7 @@ Agent Coordination: Architecture Sentinel + UI Specialist + Context Memory
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Dict
 
 
 class JorgeDemoPremiumActivator:

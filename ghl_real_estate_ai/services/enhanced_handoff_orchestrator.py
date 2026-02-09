@@ -4,14 +4,12 @@ Intelligent Agent Transition & Context Management System
 """
 
 import asyncio
-import json
 import logging
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.models.intelligence_context import ConversationContext, CustomerProfile
 from ghl_real_estate_ai.services.enhanced_intent_decoder import IntentAnalysisResult, IntentCategory, UrgencyLevel

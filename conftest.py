@@ -20,11 +20,8 @@ import asyncio
 import logging
 import os
 import sys
-from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Dict, Optional
 from unittest.mock import AsyncMock, MagicMock
 
-import psycopg2
 import pytest
 import redis.asyncio as redis
 

@@ -7,11 +7,9 @@ Author: EnterpriseHub AI
 
 import json
 import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -91,7 +89,6 @@ class AutomationStudioHub:
 
     def render_hub(self):
         """Render the overhauled complete Automation Studio interface - Obsidian Command Edition"""
-        from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
 
         st.markdown(
             """
@@ -272,7 +269,6 @@ class AutomationStudioHub:
 
 
 def run_async(coro):
-    import asyncio
 
     return run_async(coro)
 
@@ -389,7 +385,6 @@ def run_async(coro):
             if st.button("🪄 Claude: Optimize Persona", use_container_width=True, type="primary"):
                 with st.spinner("Claude is optimizing neural weights and persona instructions..."):
                     try:
-                        import asyncio
 
                         # Build optimization context
                         opt_context = {

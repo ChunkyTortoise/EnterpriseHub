@@ -4,13 +4,11 @@ Handles domain-based tenant resolution and routing for white-label deployments
 in the $500K ARR platform.
 """
 
-import asyncio
 import json
 import time
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
-from urllib.parse import urlparse
 
 import asyncpg
 from fastapi import HTTPException, Request, Response

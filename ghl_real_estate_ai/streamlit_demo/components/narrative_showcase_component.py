@@ -7,7 +7,7 @@ property matching workflows for enhanced user experience.
 
 import asyncio
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import streamlit as st
 
@@ -15,7 +15,6 @@ from ghl_real_estate_ai.models.matching_models import LifestyleScores
 from ghl_real_estate_ai.services.personalized_narrative_engine import (
     NarrativeLength,
     NarrativeStyle,
-    PersonalizedNarrative,
     PersonalizedNarrativeEngine,
 )
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async

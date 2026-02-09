@@ -8,9 +8,7 @@ Tasks:
 - Suggest "Equity Swap" opportunities between different markets.
 """
 
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

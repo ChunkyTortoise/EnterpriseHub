@@ -8,18 +8,15 @@ Provides an intuitive Streamlit interface for Jorge's Voice AI capabilities:
 - Session management and history
 """
 
-import asyncio
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.voice_ai_service import (
-    VoiceAnalyticsType,
     VoiceInteractionType,
     get_cached_voice_service,
 )

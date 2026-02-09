@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 from ghl_real_estate_ai.services.agent_state_sync import sync_service

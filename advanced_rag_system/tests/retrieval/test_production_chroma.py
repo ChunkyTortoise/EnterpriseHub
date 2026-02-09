@@ -3,10 +3,8 @@
 Tests to verify that ChromaDB integration works without falling back to mock/InMemory store.
 """
 
-import asyncio
 import time
-from typing import List
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from src.core.exceptions import RetrievalError

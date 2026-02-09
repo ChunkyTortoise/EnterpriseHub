@@ -4,11 +4,9 @@ Provides comprehensive monitoring for Service 6 scalability targets
 """
 
 import asyncio
-import json
 import logging
-import threading
 import time
-from collections import defaultdict, deque
+from collections import deque
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta

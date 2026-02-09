@@ -23,15 +23,13 @@ Version: 1.0.0
 
 import asyncio
 import json
-import math
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import redis
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class LeadSegment(str, Enum):

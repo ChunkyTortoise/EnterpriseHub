@@ -10,28 +10,22 @@ Provides endpoints for the four advanced AI modules:
 These endpoints expose the advanced functionality through the dashboard interface.
 """
 
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.automated_marketing_engine import (
     AutomatedMarketingEngine,
     CampaignBrief,
-    CampaignStatus,
     CampaignTrigger,
     ContentFormat,
-    GeneratedContent,
 )
 from ghl_real_estate_ai.services.client_retention_engine import (
-    ClientProfile,
     ClientRetentionEngine,
-    EngagementPlan,
     LifeEventType,
-    ReferralOpportunity,
 )
 from ghl_real_estate_ai.services.jorge_advanced_integration import (
     EventType,
@@ -39,8 +33,6 @@ from ghl_real_estate_ai.services.jorge_advanced_integration import (
     JorgeAdvancedIntegration,
 )
 from ghl_real_estate_ai.services.market_prediction_engine import (
-    InvestmentAnalysis,
-    MarketOpportunity,
     MarketPredictionEngine,
     PredictionResult,
     TimeHorizon,
@@ -48,8 +40,6 @@ from ghl_real_estate_ai.services.market_prediction_engine import (
 from ghl_real_estate_ai.services.voice_ai_handler import (
     CallPriority,
     CallType,
-    ConversationStage,
-    VoiceCallContext,
     VoiceResponse,
     get_voice_ai_handler,
 )

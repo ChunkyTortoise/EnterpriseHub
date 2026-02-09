@@ -10,7 +10,6 @@ This module provides:
 - Market opportunity identification and strategic planning
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

@@ -27,13 +27,12 @@ Status: Production-Ready Intelligent Communication Orchestration
 """
 
 import asyncio
-import json
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant

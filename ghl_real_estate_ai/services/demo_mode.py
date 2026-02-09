@@ -4,10 +4,8 @@ Live Demo Mode - Data Generator
 Generates realistic demo data for impressive client demos
 """
 
-import json
 import random
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any, Dict, List
 
 

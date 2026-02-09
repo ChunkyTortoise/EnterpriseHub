@@ -5,10 +5,8 @@ Analyzes seller behavior, motivation patterns, and psychological indicators
 to understand negotiation positioning and emotional state.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.api.schemas.negotiation import (

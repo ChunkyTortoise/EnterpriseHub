@@ -11,7 +11,7 @@ import logging
 import os
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 try:
     import redis

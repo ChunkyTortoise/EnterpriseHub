@@ -19,21 +19,15 @@ Integration:
 - Integrates with existing cache service
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.ml_lead_analyzer import get_ml_enhanced_lead_analyzer_async
 from ghl_real_estate_ai.services.shap_explainer_service import (
-    SHAPExplainerService,
     SHAPExplanation,
     get_shap_explainer_service,
 )

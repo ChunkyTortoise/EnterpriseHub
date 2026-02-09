@@ -5,7 +5,6 @@ Exposes behavioral analysis capabilities for negotiation pattern detection,
 hedging/commitment scoring, and Voss technique recommendations.
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException

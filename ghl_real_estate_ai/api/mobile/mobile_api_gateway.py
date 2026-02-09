@@ -9,14 +9,11 @@ Provides mobile-specific optimizations:
 - Device authentication
 """
 
-import asyncio
-import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user

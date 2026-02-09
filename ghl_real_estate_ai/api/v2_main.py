@@ -3,7 +3,6 @@ FastAPI V2 Main Application (Modular Agentic Powerhouse)
 This version implements the 'Elite Stack' as defined in the Jan 2026 roadmap.
 """
 
-import os
 import time
 from contextlib import asynccontextmanager
 

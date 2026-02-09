@@ -15,43 +15,34 @@ Author: Claude Code Agent - API Integration Specialist
 Created: 2026-01-18
 """
 
-import asyncio
-import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 # Import existing dependencies
 from ghl_real_estate_ai.api.auth import verify_jwt_token
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ml.ml_pipeline_orchestrator import (
-    MLPipelineOrchestrator,
-    ModelMetrics,
     ModelType,
     TrainingJob,
     create_ml_pipeline_orchestrator,
 )
 from ghl_real_estate_ai.services.automated_revenue_optimizer import (
-    AutomatedRevenueOptimizer,
     CampaignType,
-    InterventionExecution,
     OptimizationCampaign,
     create_automated_revenue_optimizer,
 )
 from ghl_real_estate_ai.services.competitive_intelligence_system_v2 import (
-    CompetitiveAlert,
-    CompetitiveIntelligenceSystemV2,
     create_competitive_intelligence_system_v2,
 )
 
 # Import revenue optimization services
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer_v2 import (
-    DynamicPricingOptimizerV2,
     EnhancedPricingResult,
     PricingStrategy,
     create_dynamic_pricing_optimizer_v2,

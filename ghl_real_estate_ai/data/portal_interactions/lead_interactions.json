@@ -2119,6 +2119,1046 @@
       "meta_data": {
         "time_on_card": null
       }
+    },
+    {
+      "interaction_id": "0ba43116-a6ec-4c94-a5a4-13611a075447",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_001",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:15.803607",
+      "meta_data": {
+        "time_on_card": 15.3
+      }
+    },
+    {
+      "interaction_id": "2ec8ee5c-8ca5-4233-a02b-8cc815172087",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_002",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:51:18.283242",
+      "meta_data": {
+        "time_on_card": 8.5,
+        "feedback_category": "price_too_high",
+        "feedback_text": "Over budget"
+      }
+    },
+    {
+      "interaction_id": "2f5e613a-672f-477a-a9c5-de30623929c3",
+      "lead_id": "test_stats_api",
+      "property_id": "mls_stats_001",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:19.031107",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "bc6dcd2d-637e-4a71-ab20-b18059856646",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:21.378823",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1833b519-1cc6-4016-b0df-4b60ae0f900d",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_1",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:51:23.557052",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "6ff2e429-2cb6-4838-85e3-73c74a0f47ad",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:23.565708",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "f0923a05-076b-4a7e-ae9e-38a689a10329",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:25.676322",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "dae93ba1-8c3b-4808-b47e-aabd99381eca",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_1",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:27.847552",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "612001fe-4a74-4fb8-a332-5a9d95a9e715",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:30.024451",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "74d29124-099c-4cbb-89e0-c02022f53523",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_3",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:32.198093",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "5291432d-1cac-4ad4-a284-e326efdc015a",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_4",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:34.242802",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "5b68582c-490a-4880-b80b-d2bbb0b96d0b",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_5",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:36.535216",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "78ddec0f-8adb-4bbf-9801-45d11920f079",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_6",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:38.693296",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "73bd5981-64a7-499f-9712-65b8a76e139d",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_7",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:40.785445",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "b0dfd3d3-c2fa-47e2-98da-93c916df8ab0",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_8",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:43.034378",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "0aa613ba-8566-48ef-a2d8-06b5a9359468",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_9",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:45.135655",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "ee1231b8-bfff-40c4-bb66-aedf0233c28b",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:47.248984",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "4cb023aa-fd03-47e2-8c82-79393bb52599",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_1",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:49.296430",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "2bea0db3-84a5-403e-9c6a-7de9df0591cf",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:51:51.409798",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "259ee4cd-2d5d-442a-b94e-087d2d3f2205",
+      "lead_id": "test_no_feedback_v2",
+      "property_id": "mls_no_feedback_v2",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:51:53.475752",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "e24d52bc-91e2-4c1c-afc9-07f14b7ca7e6",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_001",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:04.058916",
+      "meta_data": {
+        "time_on_card": 15.3
+      }
+    },
+    {
+      "interaction_id": "3e053681-4784-46dc-982a-ffd826dc305c",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_002",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:53:06.274599",
+      "meta_data": {
+        "time_on_card": 8.5,
+        "feedback_category": "price_too_high",
+        "feedback_text": "Over budget"
+      }
+    },
+    {
+      "interaction_id": "09546a15-a840-4b62-ae8d-89153f601a15",
+      "lead_id": "test_stats_api",
+      "property_id": "mls_stats_001",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:06.381423",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "b4928076-1387-45a1-a9f5-b32641265768",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:08.503781",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "83b6f875-7fd2-4991-a26d-8ff7d49b698a",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_1",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:53:10.719362",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1c1a0a30-ca25-492f-94df-93fd9d7b4364",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:10.723036",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "14a2cff9-20e8-4afa-8de1-54daeb63566e",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:12.887915",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "7aa9bf5e-829d-4db5-abfb-b2a3d112c2a8",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_1",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:14.948573",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "07685bee-a3c6-4a0a-8acc-2802d20c8da7",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:17.011162",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "c6c22d56-e737-4f26-b5be-ec7a59fa2c59",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_3",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:19.103764",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1ce59dfe-fc0c-455c-849f-a31238afc050",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_4",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:21.178338",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1d160007-6ccc-48e9-9e80-34b6de6e2938",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_5",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:23.239589",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "b149c2cb-fe86-4e3d-acb3-7aaa3446c073",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_6",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:25.357945",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "e9d11831-f2c5-45b8-ba5f-6cf92375e3ba",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_7",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:27.530923",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "490cf244-98e2-4de5-9ad3-811f04da90c7",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_8",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:29.653336",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "9da9d51b-092b-411a-8920-a51c0eea9519",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_9",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:31.840574",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "55a4b1d9-1a0e-43e3-8cf6-b2f0d3aeaf71",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:34.009454",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "a326a1a2-ba24-45a9-8a46-692cb92cc606",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_1",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:36.071101",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "a7cd55d6-a0d7-4ee7-b4a0-a24a6bb326b5",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:53:38.158486",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "595a97fd-18d5-41f2-a58e-09387cc1be1b",
+      "lead_id": "test_no_feedback_v2",
+      "property_id": "mls_no_feedback_v2",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:53:40.325034",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "14cf4468-6a25-4122-93ff-9b7936c06345",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_001",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:27.293016",
+      "meta_data": {
+        "time_on_card": 15.3
+      }
+    },
+    {
+      "interaction_id": "476dedd7-3fde-42a9-a73c-1afddf971ad9",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_002",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:57:29.785670",
+      "meta_data": {
+        "time_on_card": 8.5,
+        "feedback_category": "price_too_high",
+        "feedback_text": "Over budget"
+      }
+    },
+    {
+      "interaction_id": "787f9d6f-f391-44ea-8a10-730479cd6e88",
+      "lead_id": "test_stats_api",
+      "property_id": "mls_stats_001",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:30.605662",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "72243d39-8054-4721-beaa-c08142499450",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:32.689571",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "c74466d7-8889-48ce-b4d4-5bc5c4b8483f",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_1",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:57:34.759908",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "7d6f8036-7aa8-4c54-a1d0-d8af388f81e2",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:34.763943",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "f20d66d0-411d-4822-a199-5fe3e72d9840",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:37.509061",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "0f95f3db-26ed-4124-a413-9dd390e3ef7e",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_1",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:39.632869",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "061e289b-861d-48a0-b8c0-2051a54df85e",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:41.867010",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "03afbbf7-ded0-4fdb-9cb6-990e4f7606a0",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_3",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:44.412675",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "493d425f-d491-4f7f-817c-685412d806b8",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_4",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:46.659318",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "fddee92b-0b80-40dd-adec-917368acf8e0",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_5",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:48.793017",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "505d8c9f-1818-47e0-b194-89e1092c1e43",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_6",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:52.274021",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "4f94b7a8-440f-4adf-aaae-2a391ed2a794",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_7",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:56.505425",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "8240f29d-7afa-4d1a-bb87-169ac824cb80",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_8",
+      "action": "like",
+      "timestamp": "2026-02-09T02:57:58.729979",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "785ac1f2-28de-486a-870d-f9a0cbde3f4c",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_9",
+      "action": "like",
+      "timestamp": "2026-02-09T02:58:00.795796",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "d765aaf8-7b38-45c5-9862-df4788c0f559",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_0",
+      "action": "like",
+      "timestamp": "2026-02-09T02:58:02.900767",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "e3258afe-fa08-4e94-b7ab-57d1a6acffaa",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_1",
+      "action": "like",
+      "timestamp": "2026-02-09T02:58:05.721097",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "314d62e2-75ad-4c89-8e83-800da7a7252e",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_2",
+      "action": "like",
+      "timestamp": "2026-02-09T02:58:07.820563",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "c5c33f5a-ada1-4d83-936c-48e68e829a3b",
+      "lead_id": "test_no_feedback_v2",
+      "property_id": "mls_no_feedback_v2",
+      "action": "pass",
+      "timestamp": "2026-02-09T02:58:10.053385",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "51d05d52-02ae-449a-af79-52445365c81f",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:01:57.804679",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "61681cab-0e2a-4d1d-9571-01e1a2f95e73",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_1",
+      "action": "like",
+      "timestamp": "2026-02-09T03:02:00.404714",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1b81b6f0-32ce-4da6-9da8-4d0f4bda3923",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:02:02.525086",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1d6729ef-daff-4953-a946-e3cdc69857b0",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_001",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:30.261592",
+      "meta_data": {
+        "time_on_card": 15.3
+      }
+    },
+    {
+      "interaction_id": "1e8ab6a4-fe43-4778-9832-e32d5b7a32a6",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_002",
+      "action": "pass",
+      "timestamp": "2026-02-09T03:08:32.437461",
+      "meta_data": {
+        "time_on_card": 8.5,
+        "feedback_category": "price_too_high",
+        "feedback_text": "Over budget"
+      }
+    },
+    {
+      "interaction_id": "a46e2d82-283c-461d-95dc-3e3cbd8a5253",
+      "lead_id": "test_stats_api",
+      "property_id": "mls_stats_001",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:32.557669",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "400031a9-50d3-415b-86e8-96d44330589e",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:34.608145",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "6f15a2c4-cffa-45bf-9eb0-8d898bbe0ee8",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_1",
+      "action": "pass",
+      "timestamp": "2026-02-09T03:08:36.660370",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "90efaf4c-2054-4e90-9f49-4758d3228bde",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:36.665236",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "6474ae7c-b486-476e-a05c-f9fc083cd7a1",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:38.820214",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "534c1b5f-9214-475c-9b01-51a1f1b0947a",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_1",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:41.137064",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "2b9fa4d0-b9ab-4359-9ca2-a1755ff92b29",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:43.470561",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "e057bac8-1fe1-4d06-b807-c999c0668799",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_3",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:45.518688",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "c7989555-1096-4963-a621-9399fb0abf47",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_4",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:47.614070",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "f9e351ff-5db6-4154-89d1-f561ba2c2ae0",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_5",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:49.928145",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "4957ea7f-2087-40af-b0bd-9aebfd381391",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_6",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:52.142909",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "2c5d466d-6399-431f-95ff-da5c8c30ffe7",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_7",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:54.257493",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "bb39b645-74d9-49cd-bac6-81a1ee61954c",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_8",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:56.291573",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "6c93aa4d-28d3-402f-952a-1cf4d68a79c6",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_9",
+      "action": "like",
+      "timestamp": "2026-02-09T03:08:58.348120",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "2f7de057-71f9-4b38-901c-d077bff7c17c",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:09:00.434185",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "5ffba0a6-54af-40a2-bc59-4f003fe08a3c",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_1",
+      "action": "like",
+      "timestamp": "2026-02-09T03:09:03.536363",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "0cd607af-449f-4b53-a873-cbfaee44b537",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:09:05.790634",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "e0b865ab-85ba-4a66-bf9f-7aa6fd8803c6",
+      "lead_id": "test_no_feedback_v2",
+      "property_id": "mls_no_feedback_v2",
+      "action": "pass",
+      "timestamp": "2026-02-09T03:09:08.525697",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1d87f544-9d45-4f43-b14e-2ea8b1c5d2b8",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_001",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:29.763713",
+      "meta_data": {
+        "time_on_card": 15.3
+      }
+    },
+    {
+      "interaction_id": "aa964bbb-a7f5-4a58-819c-87f304910814",
+      "lead_id": "test_contact_api",
+      "property_id": "mls_api_002",
+      "action": "pass",
+      "timestamp": "2026-02-09T03:10:31.844409",
+      "meta_data": {
+        "time_on_card": 8.5,
+        "feedback_category": "price_too_high",
+        "feedback_text": "Over budget"
+      }
+    },
+    {
+      "interaction_id": "2ea4bd19-aab1-442e-bf35-278fd290eb43",
+      "lead_id": "test_stats_api",
+      "property_id": "mls_stats_001",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:31.912408",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "89a4d43f-be85-471c-836d-ee896349b40a",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:34.069990",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "9bf10162-7ee4-4a4b-ad7c-51e55f0bbba1",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_1",
+      "action": "pass",
+      "timestamp": "2026-02-09T03:10:36.123618",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "6d28468c-ee40-49cb-ae1d-3804e95d32c9",
+      "lead_id": "test_interactions_api",
+      "property_id": "mls_int_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:36.128017",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "d5c2f499-eab8-417c-b466-31bee2a9cc21",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:38.306309",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "f8c84db2-e5f0-4843-b705-8d44d4c1a3d2",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_1",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:40.351405",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "346c245b-d2a0-44b7-9963-8622bdd99234",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:43.096201",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "686e3cd0-bd79-4cda-8f8b-996d28394fcf",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_3",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:45.157458",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "1c3cce78-70fc-4739-8018-d01491a3b976",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_4",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:47.179526",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "c0669d5b-baa0-4739-ae57-98e7aacce0ab",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_5",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:49.316322",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "910482d8-ed8c-47e4-9224-c3a42625d857",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_6",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:51.784902",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "d96f61ba-23d5-4c18-afa1-6821739977e2",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_7",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:54.099235",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "708b12b8-d6a8-4363-b454-d8e835923de5",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_8",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:56.194934",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "07d7cb63-9678-4211-a9bb-372e9fdd57d8",
+      "lead_id": "test_limit_api_v3",
+      "property_id": "mls_limit_v3_9",
+      "action": "like",
+      "timestamp": "2026-02-09T03:10:58.586801",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "29f30a7e-c414-4e52-98e0-05153c4f3406",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_0",
+      "action": "like",
+      "timestamp": "2026-02-09T03:11:00.756855",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "9d64d18d-f40a-4a82-a2f2-dfc66a041319",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_1",
+      "action": "like",
+      "timestamp": "2026-02-09T03:11:03.017654",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "af14fe08-896c-4a56-9e10-0cfd9e8c63c2",
+      "lead_id": "test_high_intent_api_v2",
+      "property_id": "mls_intent_v2_2",
+      "action": "like",
+      "timestamp": "2026-02-09T03:11:05.259534",
+      "meta_data": {
+        "time_on_card": null
+      }
+    },
+    {
+      "interaction_id": "2a54f068-809a-4c7b-8208-78a597dc08ca",
+      "lead_id": "test_no_feedback_v2",
+      "property_id": "mls_no_feedback_v2",
+      "action": "pass",
+      "timestamp": "2026-02-09T03:11:07.316462",
+      "meta_data": {
+        "time_on_card": null
+      }
     }
   ],
   "metadata": {

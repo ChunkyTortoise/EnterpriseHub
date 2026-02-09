@@ -64,11 +64,8 @@ def test_interfaces():
 
     try:
         from interfaces import (
-            IPropertyRepository,
-            PropertyQuery,
             QueryFilter,
             QueryOperator,
-            RepositoryResult,
             SortOrder,
         )
 
@@ -134,7 +131,6 @@ def test_query_builder():
     print("\n🔨 Testing Query Builder...")
 
     try:
-        from interfaces import QueryOperator
         from query_builder import PropertyQueryBuilder
 
         # Test fluent interface

@@ -6,7 +6,7 @@ Aggregates lead intent, property interest, and geographic clustering for market 
 import logging
 import random
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import List
 
 from pydantic import BaseModel
 

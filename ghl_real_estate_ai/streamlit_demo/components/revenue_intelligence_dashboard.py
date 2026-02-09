@@ -16,23 +16,18 @@ Features:
 This dashboard provides comprehensive business intelligence for Phase 7 advanced AI capabilities.
 """
 
-import asyncio
-import json
 import logging
 
 # Custom styling and layout
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-import requests
 import streamlit as st
-from plotly.subplots import make_subplots
 
 logger = logging.getLogger(__name__)
 

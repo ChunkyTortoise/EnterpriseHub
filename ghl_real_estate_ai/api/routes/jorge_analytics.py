@@ -13,31 +13,27 @@ Provides endpoints for comprehensive business intelligence and forecasting:
 Supports real-time analytics with <2s response time SLA.
 """
 
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.auth import User, get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.analytics_models import (
     AnalyticsRequest,
-    AnalyticsResponse,
     CompetitiveIntel,
     ExecutiveSummary,
-    ForecastHorizon,
     FunnelAnalysis,
     GeographicAnalysis,
     LeadQualityMetrics,
-    LeadQualityTrend,
     MarketTimingInsight,
     MetricCategory,
     PerformanceGoal,
     PerformanceSummary,
     RevenueForecast,
     SourceROI,
-    TimeSeriesAnalysis,
 )
 from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
 

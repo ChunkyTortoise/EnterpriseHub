@@ -1,7 +1,5 @@
 import asyncio
-import json
 import random
-import traceback
 from datetime import datetime
 
 import pandas as pd
@@ -25,7 +23,6 @@ def get_dashboard_status():
 
 def render_realtime_intelligence_dashboard():
     """Render the Real-Time Intelligence Dashboard with all components - Obsidian Edition"""
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
 
     # Dashboard header with status indicator - Obsidian Style
     st.markdown(
@@ -218,7 +215,6 @@ def render_realtime_intelligence_dashboard():
     except ImportError as e:
         render_fallback_dashboard(f"Component import error: {str(e)}")
     except Exception as e:
-        import sys
         import traceback
 
         error_details = traceback.format_exc()

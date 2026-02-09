@@ -5,7 +5,6 @@ Exposes the compliance enforcement layer for message auditing,
 violation scanning, and RESPA disclosure checks.
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException

@@ -16,13 +16,12 @@ Expected cost savings: 40-60% on multi-turn conversations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import tiktoken
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

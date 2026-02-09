@@ -5,9 +5,9 @@ Combines quantitative scoring with Claude AI reasoning for comprehensive lead an
 
 import asyncio
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.memory_service import MemoryService
 

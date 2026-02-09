@@ -14,17 +14,15 @@ Integration Points:
 - Client Preference Learning Engine (Phase 2.4)
 """
 
-import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.deps import get_current_user, get_location_access
-from ghl_real_estate_ai.ghl_utils.jorge_config import get_jorge_config
 from ghl_real_estate_ai.services.advanced_property_matching_engine import get_advanced_property_matching_engine
 from ghl_real_estate_ai.services.client_preference_learning_engine import get_client_preference_learning_engine
 from ghl_real_estate_ai.services.conversation_intelligence_service import get_conversation_intelligence_service

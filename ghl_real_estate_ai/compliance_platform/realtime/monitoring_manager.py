@@ -13,10 +13,9 @@ Supports EU AI Act, SEC AI Guidance, HIPAA, and GDPR monitoring.
 
 import asyncio
 import json
-import logging
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional
 from uuid import uuid4
 
 import redis.asyncio as redis

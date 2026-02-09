@@ -6,7 +6,6 @@ Unified production monitoring infrastructure orchestration and management.
 import asyncio
 import logging
 import signal
-import sys
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime

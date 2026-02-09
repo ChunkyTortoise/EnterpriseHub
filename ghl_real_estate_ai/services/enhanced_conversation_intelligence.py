@@ -9,10 +9,9 @@ import json
 import statistics
 import time
 import uuid
-from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import streamlit as st
 
@@ -21,15 +20,9 @@ from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
 # Import existing services and base classes
 from ghl_real_estate_ai.services.claude_conversation_intelligence import (
-    ClosingSignals,
-    ConversationAnalysis,
     ConversationIntelligenceEngine,
     ConversationThread,
-    EmotionalState,
-    IntentSignals,
-    TrustMetrics,
 )
-from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 

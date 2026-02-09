@@ -439,5 +439,12 @@
     "message": "api_response_time_ms = 600 (threshold: 500)",
     "timestamp": "2026-02-03T07:46:14.070961",
     "location_id": "test_monitor"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-02-08T18:47:46.548320",
+    "location_id": "test_monitor"
   }
 ]

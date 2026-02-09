@@ -70,12 +70,12 @@ class TestFetchRules:
 
     def test_fetch_rules_timeout_falls_back_to_demo(self):
         """Falls back to demo data on API timeout."""
+        import requests
+
         from ghl_real_estate_ai.streamlit_demo.components.jorge_alert_rules_panel import (
             _DEMO_RULES,
             _fetch_rules,
         )
-
-        import requests
 
         with patch("requests.get", side_effect=requests.Timeout("timeout")):
             rules = _fetch_rules()

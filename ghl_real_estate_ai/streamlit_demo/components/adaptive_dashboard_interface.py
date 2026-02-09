@@ -3,15 +3,10 @@ AI-Powered Adaptive Dashboard Interface - Service 6 UX Enhancement
 Comprehensive dashboard that learns and adapts to user behavior, providing personalized experiences
 """
 
-import asyncio
-import json
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Tuple
 
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service

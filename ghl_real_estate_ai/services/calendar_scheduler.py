@@ -23,9 +23,8 @@ Security Features:
 - Fallback to manual scheduling if API fails
 """
 
-import asyncio
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 

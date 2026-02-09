@@ -21,15 +21,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from uuid import UUID, uuid4
 
-from src.core.config import get_settings
-from src.core.exceptions import EmbeddingError, RetrievalError
+from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.embeddings.clip_provider import CLIPEmbeddingConfig, CLIPEmbeddingProvider
 from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig
 from src.vector_store.chroma_store import ChromaVectorStore
 
 if TYPE_CHECKING:
-    import numpy as np
+    pass
 
 logger = logging.getLogger(__name__)
 

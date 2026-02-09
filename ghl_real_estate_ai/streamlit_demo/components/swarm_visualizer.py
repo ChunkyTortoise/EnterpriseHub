@@ -1,7 +1,6 @@
 import random
 import time
 from pathlib import Path
-from typing import Dict, List
 
 import networkx as nx
 import pandas as pd

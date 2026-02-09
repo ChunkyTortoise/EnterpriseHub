@@ -3,7 +3,7 @@ Lead Intelligence Skills.
 Provides predictive intelligence via public records and life event analysis.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

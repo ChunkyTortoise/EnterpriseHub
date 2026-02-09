@@ -35,7 +35,7 @@ from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 # Redis imports
 try:

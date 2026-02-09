@@ -6,7 +6,6 @@
 Optimized launcher for Jorge's demo presentation with all premium features activated.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path

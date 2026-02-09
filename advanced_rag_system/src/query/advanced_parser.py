@@ -7,13 +7,11 @@ into a unified query understanding pipeline.
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.core.exceptions import RetrievalError
 from src.query.entity_extractor import (
@@ -32,7 +30,6 @@ from src.query.intent_classifier_v2 import (
 )
 from src.query.temporal_processor import (
     RecencyBoostConfig,
-    TemporalConstraint,
     TemporalContext,
     TemporalProcessor,
     TimeAwareRetriever,

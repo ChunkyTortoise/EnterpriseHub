@@ -10,7 +10,7 @@ import signal
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -358,7 +358,6 @@ def visual_qa(action: str, jsx: str = "", spec: str = "", image_url: Optional[st
         # Specifically check if the "Feedback" buttons are reachable
         # In a production CI, this runs against the live dev server
         try:
-            from playwright.sync_api import sync_playwright
             # This is a simulation of what the Playwright loop does
             # In real execution, it would use page.query_selector_all("button")
 

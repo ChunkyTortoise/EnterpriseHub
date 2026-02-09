@@ -12,10 +12,9 @@ Features:
 """
 
 import asyncio
-import json
 import time
 import warnings
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -28,8 +27,7 @@ warnings.filterwarnings("ignore")
 import scipy.stats as stats
 import xgboost as xgb
 from scipy.signal import find_peaks
-from sklearn.cluster import DBSCAN
-from sklearn.ensemble import IsolationForest, RandomForestRegressor
+from sklearn.ensemble import IsolationForest
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler

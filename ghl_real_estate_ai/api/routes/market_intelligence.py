@@ -9,19 +9,15 @@ Provides comprehensive API endpoints for:
 - Neighborhood intelligence
 """
 
-import asyncio
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.property_alerts import AlertPriority, AlertType, get_property_alert_system
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
+from ghl_real_estate_ai.services.property_alerts import get_property_alert_system
 from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
-    MarketCondition,
     PropertyType,
     get_rancho_cucamonga_market_service,
 )

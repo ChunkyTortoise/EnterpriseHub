@@ -8,7 +8,7 @@ Each extractor focuses on a specific domain of features.
 import logging
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 

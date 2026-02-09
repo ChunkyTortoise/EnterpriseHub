@@ -10,17 +10,14 @@ Generates human-readable explanations for property match scores:
 - Concern identification and mitigation strategies
 """
 
-import json
-import random
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
     BehavioralProfile,
     MatchReasoning,
     MatchScoreBreakdown,
-    PropertyMatch,
 )
 
 logger = get_logger(__name__)

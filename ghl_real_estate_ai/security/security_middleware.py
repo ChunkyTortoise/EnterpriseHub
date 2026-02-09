@@ -6,7 +6,6 @@ Comprehensive security middleware integrating authentication, authorization, rat
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Dict, List, Optional, Set
 
 import redis.asyncio as redis
@@ -17,7 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .audit_logger import AuditLogger, AuditSeverity
 from .auth_manager import AuthManager, SecurityConfig
 from .input_validator import InputValidator
-from .rate_limiter import RateLimiter, RateLimitMiddleware
+from .rate_limiter import RateLimiter
 from .rbac import PermissionType, ResourceType, RoleManager
 
 

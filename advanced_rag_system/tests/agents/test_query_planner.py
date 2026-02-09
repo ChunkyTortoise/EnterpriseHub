@@ -6,7 +6,6 @@ import pytest
 from src.agents.query_planner import (
     IntentAnalysis,
     QueryIntent,
-    QueryPlan,
     QueryPlanner,
     QueryPlannerConfig,
     QueryStep,

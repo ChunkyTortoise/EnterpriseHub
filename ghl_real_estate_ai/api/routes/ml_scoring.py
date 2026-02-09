@@ -18,17 +18,14 @@ Integrates with:
 """
 
 import asyncio
-import logging
 import time
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
-from fastapi.responses import JSONResponse
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
-from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimitMiddleware
 
 # Internal imports
 from ghl_real_estate_ai.api.schemas.ml_scoring import (
@@ -36,20 +33,17 @@ from ghl_real_estate_ai.api.schemas.ml_scoring import (
     BatchScoringRequest,
     BatchScoringResponse,
     ConfidenceLevel,
-    ErrorResponse,
     HealthCheckResponse,
     LeadClassification,
     LeadScoredEvent,
-    LeadScoreHistoryResponse,
     LeadScoringRequest,
     LeadScoringResponse,
     MLFeatureExplanation,
     MLModelStatus,
-    ModelStatusEvent,
     ScoreSource,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.cache_service_optimized import get_optimized_cache_service
 from ghl_real_estate_ai.services.database_optimizer import get_ml_scoring_optimizer
 from ghl_real_estate_ai.services.performance_optimizer import get_performance_optimizer

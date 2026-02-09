@@ -1,6 +1,3 @@
-import asyncio
-import json
-import time
 
 import pandas as pd
 import plotly.express as px
@@ -655,7 +652,6 @@ def render_buyer_journey_hub(
     render_neighborhood_explorer,
 ):
     """Render the complete buyer journey experience - Obsidian Command Edition"""
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
 
     # Setup Omnipresent Claude for buyer coaching
     if OMNIPRESENT_CLAUDE_AVAILABLE:

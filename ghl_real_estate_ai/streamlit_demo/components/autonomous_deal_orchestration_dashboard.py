@@ -19,9 +19,7 @@ Date: January 18, 2026
 Status: Production-Ready Autonomous Deal Monitoring Dashboard
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import plotly.express as px

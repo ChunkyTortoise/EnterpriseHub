@@ -19,10 +19,9 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics, AttributionModel, ReportPeriod
-from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker, SourceQuality
+from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics, AttributionModel
+from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/attribution", tags=["attribution"])

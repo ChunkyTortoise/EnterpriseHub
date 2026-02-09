@@ -8,9 +8,8 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 

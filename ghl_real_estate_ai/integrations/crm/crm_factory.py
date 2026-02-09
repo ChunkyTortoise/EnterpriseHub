@@ -19,7 +19,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
 import aiohttp
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...ghl_utils.jorge_config import JorgeConfig
 from ...services.cache_service import CacheService

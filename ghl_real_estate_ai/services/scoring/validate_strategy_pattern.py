@@ -16,7 +16,7 @@ sys.path.append(str(Path(__file__).parent))
 from basic_scorer import BasicPropertyScorer
 from enhanced_scorer import EnhancedPropertyScorer
 from property_matcher_context import PropertyMatcherContext
-from property_scorer import ConfidenceLevel, PropertyScorer, ScoringContext, ScoringResult
+from property_scorer import ScoringContext
 from scoring_factory import ScoringFactory
 
 

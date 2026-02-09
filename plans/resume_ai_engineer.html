@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cayman Roden - AI Engineer Resume</title>
+<style>
+  @page { margin: 0.5in 0.6in; size: letter; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10.5pt; line-height: 1.4; color: #1a1a1a; max-width: 7.5in; margin: 0 auto; padding: 0.5in 0.6in; }
+  h1 { font-size: 20pt; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .contact { font-size: 9.5pt; color: #444; margin-bottom: 12px; }
+  .contact a { color: #444; text-decoration: none; }
+  h2 { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid #1a1a1a; padding-bottom: 2px; margin: 14px 0 6px; }
+  h3 { font-size: 10.5pt; font-weight: 700; margin-bottom: 1px; }
+  .role-line { display: flex; justify-content: space-between; align-items: baseline; }
+  .date { font-size: 9.5pt; color: #555; font-style: italic; white-space: nowrap; }
+  .subtitle { font-size: 9.5pt; color: #555; margin-bottom: 3px; }
+  ul { padding-left: 16px; margin-bottom: 6px; }
+  li { margin-bottom: 2px; font-size: 10pt; }
+  .skills-grid { display: grid; grid-template-columns: 120px 1fr; gap: 2px 8px; font-size: 10pt; }
+  .skills-grid dt { font-weight: 600; }
+  .skills-grid dd { margin: 0; }
+  .project-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .project-link { font-size: 9pt; color: #555; }
+  p.summary { font-size: 10pt; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Cayman Roden</h1>
+<div class="contact">
+  Palm Springs, CA &nbsp;|&nbsp; (310) 982-0492 &nbsp;|&nbsp; caymanroden@gmail.com &nbsp;|&nbsp;
+  <a href="https://github.com/ChunkyTortoise">github.com/ChunkyTortoise</a> &nbsp;|&nbsp;
+  <a href="https://linkedin.com/in/caymanroden">linkedin.com/in/caymanroden</a>
+</div>
+
+<h2>Summary</h2>
+<p class="summary">AI Engineer specializing in production LLM orchestration, multi-agent systems, and RAG pipelines. Built and deployed a multi-agent AI platform with three specialized chatbots, cross-bot handoff orchestration, and a three-tier caching architecture that reduced token costs by 89%. 750+ automated tests across seven open-source repositories, all CI green. Full-stack Python: FastAPI, PostgreSQL, Redis, Docker, GitHub Actions.</p>
+
+<h2>Technical Skills</h2>
+<dl class="skills-grid">
+  <dt>AI / ML</dt>
+  <dd>LLM Orchestration (Claude, Gemini, GPT, Perplexity), RAG Pipelines, NLP/Intent Classification, Multi-Agent Systems, A/B Testing, Prompt Engineering, BM25 + Dense Hybrid Retrieval, LLM Evaluation</dd>
+  <dt>Languages</dt>
+  <dd>Python (3.9+), JavaScript/TypeScript, SQL, HTML/CSS, Bash</dd>
+  <dt>Frameworks</dt>
+  <dd>FastAPI, Streamlit, SQLAlchemy, Alembic, Pydantic, scikit-learn, XGBoost, NumPy, Pandas</dd>
+  <dt>Infrastructure</dt>
+  <dd>PostgreSQL, Redis, Docker, Docker Compose, GitHub Actions CI/CD, AWS (EC2, S3, RDS), Nginx</dd>
+  <dt>Tools</dt>
+  <dd>Git, Ruff, Pytest, Plotly, SHAP, BeautifulSoup, httpx, PyPDF2</dd>
+</dl>
+
+<h2>Projects</h2>
+
+<div class="project-header">
+  <h3>EnterpriseHub &mdash; Real Estate AI &amp; BI Platform</h3>
+  <span class="project-link">github.com/ChunkyTortoise/EnterpriseHub</span>
+</div>
+<div class="subtitle">FastAPI + Streamlit + PostgreSQL + Redis + Multi-LLM AI | 11 CI workflows | 200+ tests</div>
+<ul>
+  <li>Architected LLM orchestration layer routing across Claude, Gemini, GPT, and Perplexity with &lt;200ms added latency and three-tier caching (memory, Redis, PostgreSQL) reducing token costs from 93K to 7.8K per workflow (89% reduction)</li>
+  <li>Built multi-agent chatbot system with three specialized bots (lead qualification, buyer readiness, seller engagement) coordinated through a handoff service with 0.7 confidence threshold, circular prevention, rate limiting, and pattern learning</li>
+  <li>Developed NLP intent decoding pipeline with confidence scoring, real-time CRM enrichment via GoHighLevel API, and temperature-based lead classification triggering automated workflows</li>
+  <li>Implemented production monitoring: alerting service with 7 configurable rules and cooldowns, P50/P95/P99 latency tracker with SLA compliance, A/B testing framework with z-test significance analysis</li>
+  <li>Built Streamlit BI dashboards with Monte Carlo simulation, sentiment analysis, and churn detection</li>
+</ul>
+
+<div class="project-header">
+  <h3>DocQA Engine &mdash; RAG Document Q&amp;A Platform</h3>
+  <span class="project-link">github.com/ChunkyTortoise/docqa-engine</span>
+</div>
+<div class="subtitle">BM25 + Dense Hybrid Retrieval + Prompt Engineering Lab | 94 tests</div>
+<ul>
+  <li>Built hybrid retrieval pipeline combining BM25 keyword search with TF-IDF dense embeddings for document Q&A, with configurable chunk strategies and relevance scoring</li>
+  <li>Developed prompt engineering lab for systematic prompt optimization with cost tracking and response quality evaluation across multiple LLM providers</li>
+  <li>Implemented document ingestion pipeline supporting PDF, DOCX, and plain text with automatic chunking and metadata extraction</li>
+</ul>
+
+<div class="project-header">
+  <h3>AgentForge &mdash; Unified Async LLM Interface</h3>
+  <span class="project-link">github.com/ChunkyTortoise/ai-orchestrator</span>
+</div>
+<div class="subtitle">Claude + Gemini + OpenAI + Perplexity + Mock Provider | 27 tests</div>
+<ul>
+  <li>Created unified async Python interface for multi-provider LLM orchestration with automatic failover, response normalization, and provider-agnostic benchmarking</li>
+  <li>Built CLI tool with provider comparison benchmarks measuring latency, token usage, and cost across all supported providers</li>
+</ul>
+
+<div class="project-header">
+  <h3>Revenue Sprint &mdash; AI Security &amp; Optimization Suite</h3>
+  <span class="project-link">github.com/ChunkyTortoise/Revenue-Sprint</span>
+</div>
+<div class="subtitle">3 Products: Injection Tester + RAG Cost Optimizer + Agent Orchestrator | 240 tests</div>
+<ul>
+  <li>Built prompt injection testing framework that identifies LLM vulnerabilities across multiple attack vectors</li>
+  <li>Developed RAG cost optimization pipeline analyzing token usage patterns and recommending caching strategies</li>
+</ul>
+
+<div class="project-header">
+  <h3>Insight Engine &mdash; Data Analytics Platform</h3>
+  <span class="project-link">github.com/ChunkyTortoise/insight-engine</span>
+</div>
+<div class="subtitle">Auto-Profiler + Dashboard Gen + Attribution + Predictor | 63 tests</div>
+<ul>
+  <li>Built automated data profiling, marketing attribution modeling, predictive analytics (XGBoost + SHAP), and Streamlit dashboard generation from raw datasets</li>
+</ul>
+
+<h2>Experience</h2>
+
+<div class="role-line">
+  <h3>AI Engineer &mdash; Independent</h3>
+  <span class="date">January 2025 &ndash; Present</span>
+</div>
+<div class="subtitle">Full-Stack AI Development | Remote</div>
+<ul>
+  <li>Designed and built seven production-grade open-source AI repositories totaling 750+ automated tests with full CI/CD pipelines</li>
+  <li>Delivered AI automation solutions for clients including chatbot systems, RAG pipelines, and data analytics dashboards</li>
+  <li>Maintained 100% CI green status across all repositories with comprehensive test coverage and automated linting</li>
+</ul>
+
+<div class="role-line">
+  <h3>Software Engineer &mdash; Self-Directed Training</h3>
+  <span class="date">January 2023 &ndash; December 2024</span>
+</div>
+<div class="subtitle">AI/ML Engineering Focus | Coursework + Independent Projects</div>
+<ul>
+  <li>Completed 19 professional certifications in AI/ML, Python, cloud computing, and software engineering</li>
+  <li>Built foundational skills in Python, SQL, data structures, algorithms, and machine learning through structured coursework and hands-on projects</li>
+</ul>
+
+<h2>Certifications</h2>
+<ul>
+  <li>AWS Cloud Practitioner &bull; Google IT Automation with Python &bull; IBM AI Engineering &bull; Meta Back-End Developer</li>
+  <li>DeepLearning.AI: ML Specialization, TensorFlow Developer &bull; IBM: Data Science, Full Stack Development</li>
+  <li>Google Data Analytics &bull; Google Advanced Data Analytics &bull; HarvardX CS50 Python</li>
+</ul>
+
+</body>
+</html>

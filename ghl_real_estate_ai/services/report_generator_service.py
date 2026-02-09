@@ -1,4 +1,3 @@
-import asyncio
 import io
 from datetime import datetime
 from typing import Any, Dict
@@ -10,7 +9,7 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.agent_state_sync import sync_service

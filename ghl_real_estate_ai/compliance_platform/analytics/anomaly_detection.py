@@ -6,7 +6,7 @@ IQR bounds, and trend analysis. No heavy ML dependencies.
 """
 
 import statistics
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4

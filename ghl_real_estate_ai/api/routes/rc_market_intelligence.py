@@ -5,8 +5,7 @@ Exposes live market data, price trends, opportunity detection, alerts,
 and neighborhood comparisons for the five core RC neighborhoods.
 """
 
-import logging
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field

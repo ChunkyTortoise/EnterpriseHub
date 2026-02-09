@@ -16,22 +16,16 @@ Author: EnterpriseHub AI
 Created: 2026-01-18
 """
 
-import asyncio
 import json
-import logging
-import os
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type
-
-import yaml
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..ghl_utils.logger import get_logger
 from ..services.cache_service import get_cache_service
-from .base_market_service import BaseMarketService, ConfigDrivenMarketService
-from .config_schemas import MarketConfig
+from .base_market_service import ConfigDrivenMarketService
 from .registry import MarketRegistry, get_market_registry
 
 logger = get_logger(__name__)

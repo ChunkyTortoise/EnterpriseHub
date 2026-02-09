@@ -10,8 +10,6 @@ Provides intelligent property alerts including:
 """
 
 import asyncio
-import json
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
@@ -19,7 +17,6 @@ from typing import Any, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.austin_market_service import (
-    MarketCondition,
     PropertyListing,
     PropertyType,
     get_austin_market_service,

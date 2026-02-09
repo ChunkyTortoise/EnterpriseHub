@@ -8,7 +8,6 @@ Author: Claude Code Assistant
 Created: 2026-01-19
 """
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

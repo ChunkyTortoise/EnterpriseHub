@@ -4,7 +4,6 @@ Send and receive messages through GHL
 """
 
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from .ghl_api_client import GHLAPIClient

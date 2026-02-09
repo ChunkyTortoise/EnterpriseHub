@@ -4,9 +4,9 @@ Specialized in visual staging, UI components, and property presentation aestheti
 Built with PydanticAI and optimized for Gemini 1.5 Pro.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.gemini import GeminiModel
 

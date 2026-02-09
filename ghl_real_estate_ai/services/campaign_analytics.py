@@ -7,9 +7,9 @@ Provides comprehensive campaign tracking, ROI analysis, and conversion funnel in
 import json
 import statistics
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class CampaignTracker:

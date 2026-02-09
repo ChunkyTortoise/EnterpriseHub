@@ -23,26 +23,20 @@ Usage:
     GET /api/v2/market-intelligence/neighborhoods?market_id=houston
 """
 
-import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # ENHANCED: Import market registry and configuration schemas
 from ghl_real_estate_ai.markets import (
-    MarketCondition,
-    MarketConfig,
-    MarketType,
     PropertyType,
     get_market_registry,
     get_market_service,
 )
-from ghl_real_estate_ai.services.property_alerts import AlertPriority, AlertType, get_property_alert_system
 
 logger = get_logger(__name__)
 

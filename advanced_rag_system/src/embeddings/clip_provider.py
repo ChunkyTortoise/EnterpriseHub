@@ -9,17 +9,13 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from src.core.exceptions import EmbeddingError
 from src.embeddings.base import EmbeddingConfig, EmbeddingProvider
 
 if TYPE_CHECKING:
-    import numpy as np
-    import torch
     from PIL import Image
-    from transformers import CLIPModel, CLIPProcessor
 
 
 @dataclass

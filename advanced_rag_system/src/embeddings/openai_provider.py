@@ -178,7 +178,6 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
             EmbeddingError: If all retries fail
             RateLimitError: If rate limited and retries exhausted
         """
-        import time
 
         if self._semaphore is None or self._client is None:
             raise EmbeddingError(

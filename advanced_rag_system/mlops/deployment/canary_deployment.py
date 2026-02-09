@@ -5,14 +5,12 @@ Demonstrates advanced MLOps deployment strategies and risk management
 
 import asyncio
 import hashlib
-import json
 import logging
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import numpy as np

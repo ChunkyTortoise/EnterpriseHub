@@ -18,20 +18,17 @@ This builds upon existing conversation intelligence engines with Phase 7 enhance
 for advanced business intelligence and conversation optimization.
 """
 
-import asyncio
 import json
 import logging
 import statistics
 import uuid
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 # Advanced NLP and analytics libraries
 try:
@@ -52,16 +49,9 @@ from ..ghl_utils.jorge_config import JorgeConfig
 from ..services.analytics_service import AnalyticsService
 from ..services.cache_service import CacheService
 from ..services.claude_assistant import ClaudeAssistant
-from ..services.claude_conversation_intelligence import ConversationAnalysis, ConversationThread, IntentSignals
 from ..services.claude_conversation_intelligence import ConversationIntelligenceEngine as ClaudeConversationEngine
 from ..services.conversation_intelligence_engine import (
-    BuyingIntentProfile,
-    BuyingSignal,
-    BuyingSignalType,
     ConversationIntelligenceEngine,
-    ConversationQuality,
-    EmotionalJourney,
-    EmotionalState,
 )
 from ..services.event_streaming_service import EventStreamingService
 

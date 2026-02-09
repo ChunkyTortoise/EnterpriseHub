@@ -14,12 +14,10 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-
-from src.core.exceptions import RetrievalError
 
 
 class TemporalConstraintType(Enum):

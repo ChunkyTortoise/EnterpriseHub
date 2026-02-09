@@ -4,7 +4,6 @@ API Key Authentication Middleware
 
 import hashlib
 import hmac
-import os
 import secrets
 from typing import Optional
 

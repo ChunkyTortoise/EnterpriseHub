@@ -3,11 +3,10 @@ Role-Based Access Control (RBAC) System
 Provides comprehensive permission management with hierarchical roles and fine-grained permissions
 """
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional
 
 from .audit_logger import AuditLogger
 

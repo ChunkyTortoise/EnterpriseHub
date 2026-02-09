@@ -5,12 +5,9 @@ Enhances the existing ClaudeAssistant with Rancho Cucamonga/Inland Empire-specif
 logistics/healthcare relocation expertise, and neighborhood insights for Jorge's lead bot.
 """
 
-import asyncio
 import json
-import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # from ghl_real_estate_ai.services.property_alerts import get_property_alert_system  # Optional import
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

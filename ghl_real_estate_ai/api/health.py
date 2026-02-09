@@ -15,13 +15,12 @@ Status: Production Health Check System
 import asyncio
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import asyncpg
 import redis.asyncio as redis
-from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 # Configure logging

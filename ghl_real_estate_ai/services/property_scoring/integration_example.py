@@ -6,11 +6,10 @@ property scoring system with the existing PropertyMatcher implementation.
 """
 
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 # Import the new strategy pattern components
-from . import EnhancedPropertyScorer, LeadPreferences, PropertyMatcherContext, ScoringContext, ScoringFactory
+from . import PropertyMatcherContext, ScoringContext, ScoringFactory
 
 logger = logging.getLogger(__name__)
 

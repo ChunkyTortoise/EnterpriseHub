@@ -3,9 +3,8 @@ Conversation Session Manager
 Manages persistent conversation state across chat interactions
 """
 
-import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

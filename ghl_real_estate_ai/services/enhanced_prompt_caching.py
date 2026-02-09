@@ -21,11 +21,9 @@ Expected Savings:
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

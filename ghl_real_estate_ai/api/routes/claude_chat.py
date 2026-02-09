@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from ghl_real_estate_ai.core.service_registry import get_service_registry
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, get_claude_orchestrator
 from ghl_real_estate_ai.services.memory_service import MemoryService
 

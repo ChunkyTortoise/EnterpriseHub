@@ -5,7 +5,7 @@ Reduces input token count for large documents/code.
 
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict
 
 from fastmcp import FastMCP
 

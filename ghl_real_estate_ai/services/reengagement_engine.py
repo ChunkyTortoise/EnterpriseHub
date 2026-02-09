@@ -38,10 +38,10 @@ Usage:
 import asyncio
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.core.llm_client import LLMClient
@@ -53,9 +53,7 @@ from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 # ENHANCED: Import ChurnEventTracker for recovery workflow integration
 from ghl_real_estate_ai.services.churn_prediction_engine import (
     ChurnEventTracker,
-    ChurnEventType,
     ChurnReason,
-    RecoveryEligibility,
 )
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.memory_service import MemoryService

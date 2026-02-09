@@ -20,16 +20,16 @@ import json
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiohttp
 from aiohttp import ClientTimeout
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.enhanced_ghl_client import GHLConfig, GHLContact
+from ghl_real_estate_ai.services.enhanced_ghl_client import GHLConfig
 
 logger = get_logger(__name__)
 

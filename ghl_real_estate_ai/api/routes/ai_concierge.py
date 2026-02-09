@@ -29,34 +29,25 @@ import asyncio
 import json
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict
 
-from ghl_real_estate_ai.api.middleware.auth import get_current_user, verify_concierge_permission
+from ghl_real_estate_ai.api.middleware.auth import get_current_user
 from ghl_real_estate_ai.api.middleware.rate_limiting import rate_limit
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import AI Concierge models and services
 from ghl_real_estate_ai.models.ai_concierge_models import (
-    CoachingCategory,
-    CoachingOpportunity,
-    ConversationIntelligenceSummary,
-    ConversationQualityScore,
-    ConversationTrajectory,
     InsightAcceptance,
     InsightPriority,
     # Enums
     InsightType,
     # Event and Tracking Models
-    ProactiveEvent,
-    # Core Models
     ProactiveInsight,
-    StrategyRecommendation,
-    StrategyType,
 )
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.proactive_conversation_intelligence import get_proactive_conversation_intelligence

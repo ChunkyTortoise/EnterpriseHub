@@ -28,12 +28,10 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBearer
-from pydantic import ValidationError
 
 from ghl_real_estate_ai.api.middleware import get_current_user
 
 # from ghl_real_estate_ai.api.middleware.enhanced_auth import verify_analytics_permission  # TODO: Fix this import
-from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimitMiddleware
 from ghl_real_estate_ai.api.schemas.analytics import (
     AnalyticsError,
     # WebSocket Event Models
@@ -41,15 +39,12 @@ from ghl_real_estate_ai.api.schemas.analytics import (
     EventPriority,
     EventType,
     FeatureTrendResponse,
-    HotZoneDetectionEvent,
-    MarketChangeEvent,
     MarketHeatmapRequest,
     MarketHeatmapResponse,
     MarketMetricsResponse,
     PerformanceMetrics,
     # Request/Response Models
     SHAPAnalyticsRequest,
-    SHAPUpdateEvent,
     SHAPWaterfallResponse,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

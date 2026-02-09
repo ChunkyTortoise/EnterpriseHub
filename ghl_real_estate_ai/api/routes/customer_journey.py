@@ -6,12 +6,11 @@ Matches frontend CustomerJourneyAPI.ts expectations.
 
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from ghl_real_estate_ai.agents.customer_journey_orchestrator import get_customer_journey_orchestrator
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher

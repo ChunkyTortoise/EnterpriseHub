@@ -4,7 +4,6 @@ Implements high-performance semantic + keyword search for property matching.
 Enables the "Data Moat" by combining multi-modal embeddings with metadata filtering.
 """
 
-import logging
 import os
 from typing import Any, Dict, List, Optional
 

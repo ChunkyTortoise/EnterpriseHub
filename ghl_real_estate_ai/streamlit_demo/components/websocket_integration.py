@@ -7,10 +7,6 @@ uses JavaScript injection for WebSocket communication and session state updates
 for dashboard reactivity.
 """
 
-import asyncio
-import json
-import time
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import streamlit as st

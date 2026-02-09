@@ -4,9 +4,8 @@ Generates high-ticket, academic-style PDF reports for elite real estate leads.
 """
 
 import logging
-import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

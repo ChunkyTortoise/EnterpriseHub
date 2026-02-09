@@ -6,13 +6,8 @@ Usage:
     python mcp_server.py
 """
 
-import asyncio
 
 # Import skill modules to trigger @skill registration
-import ghl_real_estate_ai.agent_system.skills.codebase
-import ghl_real_estate_ai.agent_system.skills.lead_intelligence
-import ghl_real_estate_ai.agent_system.skills.monitoring
-import ghl_real_estate_ai.agent_system.skills.real_estate
 from ghl_real_estate_ai.agent_system.skills.base import registry
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

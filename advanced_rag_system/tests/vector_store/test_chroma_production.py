@@ -1,6 +1,5 @@
 """Tests for production ChromaDB vector store."""
 
-import asyncio
 import shutil
 import tempfile
 from pathlib import Path
@@ -9,11 +8,10 @@ from uuid import uuid4
 import pytest
 from src.core.exceptions import NotFoundError, VectorStoreError
 from src.core.types import DocumentChunk, Metadata
-from src.vector_store.base import SearchOptions, VectorStoreConfig
+from src.vector_store.base import SearchOptions
 from src.vector_store.chroma_production import (
     BackupConfig,
     BackupManager,
-    BackupMetadata,
     BackupType,
     ConnectionPool,
     ConnectionPoolConfig,
@@ -21,7 +19,6 @@ from src.vector_store.chroma_production import (
     Migration,
     MigrationConfig,
     MigrationManager,
-    MigrationRecord,
     MigrationStatus,
     ProductionChromaStore,
     ProductionVectorStoreConfig,

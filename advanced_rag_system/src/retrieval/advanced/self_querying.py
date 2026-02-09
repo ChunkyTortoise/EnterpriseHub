@@ -38,11 +38,10 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import UUID
 
-from src.core.exceptions import RetrievalError
-from src.core.types import DocumentChunk, Metadata, SearchResult
+from src.core.types import SearchResult
 from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher
 
 logger = logging.getLogger(__name__)

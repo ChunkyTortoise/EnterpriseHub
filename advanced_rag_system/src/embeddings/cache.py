@@ -7,9 +7,8 @@ and latency. Supports both in-memory (L1) and Redis (L2) caching.
 from __future__ import annotations
 
 import hashlib
-import json
 import pickle
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Protocol
 

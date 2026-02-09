@@ -10,16 +10,13 @@ SECURITY FIXES:
 4. Circuit breaker pattern for API resilience
 """
 
-import asyncio
-import time
 import uuid
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
 import httpx
 
-from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
+from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

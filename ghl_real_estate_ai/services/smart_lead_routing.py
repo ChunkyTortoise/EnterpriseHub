@@ -6,11 +6,10 @@ Feature 14: Smart Lead Routing & Assignment
 ML-powered lead routing based on expertise, performance, and lead characteristics.
 """
 
-import random
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class RoutingStrategy(Enum):

@@ -6,7 +6,7 @@ Demonstrates 3-5x chart rendering improvements and 80%+ cache hit rates.
 import hashlib
 import time
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 import pandas as pd
 import plotly.express as px

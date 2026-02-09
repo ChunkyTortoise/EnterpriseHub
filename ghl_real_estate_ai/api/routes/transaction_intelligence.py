@@ -21,22 +21,18 @@ Business Impact:
 - Automated workflow triggers
 """
 
-import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
-from uuid import UUID
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ghl_real_estate_ai.database.transaction_schema import MilestoneStatus, MilestoneType, TransactionStatus
-from ghl_real_estate_ai.services.celebration_engine import CelebrationEngine, CelebrationTrigger, CelebrationType
-from ghl_real_estate_ai.services.transaction_event_bus import EventType, TransactionEvent, TransactionEventBus
+from ghl_real_estate_ai.services.celebration_engine import CelebrationEngine, CelebrationType
+from ghl_real_estate_ai.services.transaction_event_bus import TransactionEventBus
 from ghl_real_estate_ai.services.transaction_intelligence_engine import (
-    PredictionResult,
     RiskLevel,
     TransactionIntelligenceEngine,
 )

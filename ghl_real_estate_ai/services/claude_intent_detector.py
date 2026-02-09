@@ -3,9 +3,7 @@ Claude Intent Detector - Deep Behavioral Intent Analysis
 Provides high-fidelity intent detection using Claude's conversation understanding.
 """
 
-import asyncio
 import json
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

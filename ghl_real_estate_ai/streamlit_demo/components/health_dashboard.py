@@ -407,7 +407,6 @@ __all__ = ["render_health_dashboard", "HealthDashboard", "EndpointHealth"]
 import os as _os
 import time as _time
 from dataclasses import dataclass as _dataclass
-from dataclasses import field as _field
 from typing import Optional as _Optional
 
 _DEMO_MODE = _os.getenv("DEMO_MODE", "").lower() in ("true", "1")

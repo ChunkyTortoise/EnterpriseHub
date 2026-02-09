@@ -6,7 +6,7 @@ Provides the core intelligence tools for the Model Context Protocol server.
 import logging
 import random
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

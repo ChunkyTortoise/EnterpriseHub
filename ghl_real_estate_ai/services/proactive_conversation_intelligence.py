@@ -30,30 +30,22 @@ Architecture Integration:
 import asyncio
 import hashlib
 import json
-import statistics
 import time
-import uuid
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
-import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.ai_concierge_models import (
     CoachingCategory,
     CoachingOpportunity,
-    ConversationQualityScore,
     ConversationStage,
-    ConversationTone,
-    ConversationTrajectory,
     InsightPriority,
     # Enums
     InsightType,
     # Event Models
-    ProactiveEvent,
-    # Core Models
     ProactiveInsight,
     StrategyRecommendation,
     StrategyType,

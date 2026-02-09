@@ -13,13 +13,11 @@ This module provides comprehensive MLS integration including:
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import aiohttp
-from sqlalchemy import delete, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...ghl_utils.jorge_config import JorgeConfig
 from ...services.cache_service import CacheService

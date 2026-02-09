@@ -12,7 +12,7 @@ Analyzes market conditions and timing opportunities:
 
 import json
 import statistics
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 

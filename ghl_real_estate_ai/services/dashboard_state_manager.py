@@ -6,7 +6,6 @@ Provides persistent storage and intelligent defaults.
 """
 
 import json
-import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum

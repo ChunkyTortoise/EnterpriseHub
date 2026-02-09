@@ -12,14 +12,8 @@ Validates all optimization components work together to meet performance targets:
 import asyncio
 import logging
 import time
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
-
-import psycopg2
-import redis
-import streamlit as st
-from anthropic import AsyncAnthropic
 
 from .advanced_cache_service import EnterpriseRedisCache
 from .advanced_db_optimizer import DatabaseOptimizer

@@ -5,7 +5,6 @@ Provides error tracking, performance monitoring, and alerting capabilities.
 """
 
 import json
-import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from enum import Enum

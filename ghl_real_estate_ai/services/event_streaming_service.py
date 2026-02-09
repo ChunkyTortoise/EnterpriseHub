@@ -7,7 +7,7 @@ import asyncio
 import json
 import logging
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
@@ -96,7 +96,6 @@ class EventStreamingService:
         """Initialize Kafka producer and consumer with optimal settings"""
         try:
             from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-            from aiokafka.errors import KafkaError
 
             # Producer optimized for high throughput
             self.producer = AIOKafkaProducer(

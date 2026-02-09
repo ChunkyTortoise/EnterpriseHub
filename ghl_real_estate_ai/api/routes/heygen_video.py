@@ -5,8 +5,7 @@ Exposes video generation, delivery tracking, cost management, and
 engagement analytics for HeyGen avatar videos.
 """
 
-import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field

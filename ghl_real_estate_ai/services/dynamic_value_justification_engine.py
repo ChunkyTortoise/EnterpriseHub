@@ -30,23 +30,22 @@ Created: 2026-01-18
 """
 
 import asyncio
-import json
 import logging
 import math
 import statistics
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from .analytics_service import AnalyticsService
 from .cache_service import CacheService
 from .claude_assistant import ClaudeAssistant
-from .client_outcome_verification_service import ClientOutcomeVerificationService, TransactionVerification
-from .client_success_scoring_service import AgentPerformanceReport, ClientSuccessScoringService
-from .roi_calculator_service import ClientROIReport, ROICalculatorService
-from .value_justification_calculator import ValueJustificationCalculator, ValueJustificationReport
+from .client_outcome_verification_service import ClientOutcomeVerificationService
+from .client_success_scoring_service import ClientSuccessScoringService
+from .roi_calculator_service import ROICalculatorService
+from .value_justification_calculator import ValueJustificationCalculator
 
 logger = logging.getLogger(__name__)
 

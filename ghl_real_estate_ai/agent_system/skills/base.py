@@ -4,7 +4,7 @@ Provides a standardized interface for agent capabilities (Skills).
 """
 
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field, create_model

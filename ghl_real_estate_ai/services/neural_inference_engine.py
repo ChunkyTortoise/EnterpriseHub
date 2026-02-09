@@ -19,11 +19,8 @@ Created: 2026-01-18
 """
 
 import asyncio
-import concurrent.futures
 import gc
 import json
-import logging
-import queue
 import threading
 import time
 from collections import defaultdict, deque
@@ -33,22 +30,18 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import onnxruntime as ort
-import pandas as pd
 import psutil
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import uvloop  # For faster async event loop
-from torch.utils.data import DataLoader
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ml.neural_feature_engineer import (
     ExtractedFeatures,
-    FeatureExtractionConfig,
     NeuralFeatureEngineer,
 )
 

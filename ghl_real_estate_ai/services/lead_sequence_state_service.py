@@ -5,8 +5,6 @@ Manages sequence progression state in Redis to ensure continuity across conversa
 Tracks which day each lead is on, completion status, and next scheduled actions.
 """
 
-import asyncio
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum

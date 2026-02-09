@@ -4,7 +4,6 @@ Advanced rule-based scoring with sophisticated algorithms and market context
 """
 
 import logging
-import math
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

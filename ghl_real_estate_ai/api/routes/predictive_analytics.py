@@ -6,32 +6,24 @@ action recommendations, and predictive insights through FastAPI endpoints.
 """
 
 import asyncio
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelMetrics, ModelPrediction
+from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel
 from ghl_real_estate_ai.services.action_recommendations import (
     ActionRecommendation,
     ActionRecommendationsEngine,
-    ActionSequence,
     ActionType,
-    CommunicationChannel,
-    TimingOptimization,
 )
 from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
-    LeadInsights,
-    LeadPriority,
     PredictiveLeadScorerV2,
-    PredictiveScore,
 )
 
 logger = get_logger(__name__)

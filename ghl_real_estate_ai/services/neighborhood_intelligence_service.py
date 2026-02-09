@@ -14,17 +14,12 @@ Target: +$1.2M ARR through superior market intelligence.
 """
 
 import asyncio
-import json
-import logging
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

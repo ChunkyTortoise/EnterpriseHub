@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
-from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import BuyingStage, LeadPriority, LeadScoreBreakdown
+from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
 
 
 class ConfidenceLevel(Enum):

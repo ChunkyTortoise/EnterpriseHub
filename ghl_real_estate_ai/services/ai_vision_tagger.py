@@ -7,12 +7,11 @@ and architectural features.
 
 import base64
 import os
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import requests
 from anthropic import Anthropic
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

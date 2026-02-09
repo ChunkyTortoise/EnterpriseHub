@@ -5,10 +5,9 @@ High-level subscription management service that orchestrates billing operations,
 usage tracking, and integrates with the DynamicPricingOptimizer for usage-based billing.
 """
 
-import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.api.schemas.billing import (
     SUBSCRIPTION_TIERS,
@@ -21,7 +20,6 @@ from ghl_real_estate_ai.api.schemas.billing import (
     UsageRecordRequest,
     UsageSummary,
 )
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
 

@@ -13,22 +13,18 @@ Features:
 """
 
 import asyncio
-import json
 import statistics
 import time
 from collections import defaultdict, deque
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import numpy as np
-import pandas as pd
-
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine, ConversationMetrics
+from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.predictive_scoring import PredictiveLeadScorer
-from ghl_real_estate_ai.services.proactive_intelligence_engine import ProactiveAlert, ProactiveIntelligenceEngine
+from ghl_real_estate_ai.services.proactive_intelligence_engine import ProactiveIntelligenceEngine
 from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
 
 logger = get_logger(__name__)

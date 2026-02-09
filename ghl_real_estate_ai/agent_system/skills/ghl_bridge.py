@@ -3,7 +3,6 @@ GHL Bridge Skill.
 Allows the swarm to interact with GoHighLevel API to push workflows and configurations.
 """
 
-import json
 from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.agent_system.skills.base import skill

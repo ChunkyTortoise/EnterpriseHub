@@ -3,19 +3,13 @@ Voice Claude Service - Speech-enabled AI Assistant
 Extends the Claude assistant with voice interaction capabilities for mobile apps.
 """
 
-import asyncio
 import base64
-import io
-import json
-import logging
 import tempfile
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
-import aiofiles
-import aiohttp
 import speech_recognition as sr
 from pydantic import BaseModel, ConfigDict, Field
 

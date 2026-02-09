@@ -29,20 +29,16 @@ Created: January 2026
 """
 
 import asyncio
-import concurrent.futures
 import csv
 import json
-import logging
 import random
 import statistics
-import threading
 import time
 import uuid
-from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
 

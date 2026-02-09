@@ -1,10 +1,6 @@
-import asyncio
-import json
 import sys
-from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
 import streamlit as st
 
 # Add project root to sys.path
@@ -12,7 +8,6 @@ project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
 from ghl_real_estate_ai.services.demo_state import DemoStateManager
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.telemetry_service import TelemetryService

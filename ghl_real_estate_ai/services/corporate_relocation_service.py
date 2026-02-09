@@ -17,9 +17,7 @@ Author: EnterpriseHub AI
 Created: 2026-01-18
 """
 
-import asyncio
 import json
-import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -28,7 +26,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..ghl_utils.logger import get_logger
-from ..markets.national_registry import CorporateHeadquarters, CorporatePartnerTier, get_national_market_registry
+from ..markets.national_registry import CorporatePartnerTier, get_national_market_registry
 from ..services.cache_service import get_cache_service
 from ..services.claude_assistant import ClaudeAssistant
 

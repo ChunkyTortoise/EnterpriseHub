@@ -10,15 +10,13 @@ Provides comprehensive offline data synchronization with:
 - Progressive data sync
 """
 
-import asyncio
 import hashlib
 import json
-import logging
 from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

@@ -9,10 +9,9 @@ This service uses AI to create compelling listing descriptions that:
 - Match the target buyer persona
 """
 
-import json
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class ListingStyle(Enum):

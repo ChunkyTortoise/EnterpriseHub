@@ -1,5 +1,3 @@
-import os
-from typing import Optional
 
 from github import Auth, Github
 

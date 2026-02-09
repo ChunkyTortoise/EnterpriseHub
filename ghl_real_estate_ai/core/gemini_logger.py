@@ -1,8 +1,7 @@
 import csv
-import json
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

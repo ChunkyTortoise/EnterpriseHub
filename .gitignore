@@ -205,3 +205,6 @@ multi_market_*.json
 *_deployment_*.json
 *_tuning_*.json
 *_readiness_*.json
+
+# Added by deep clean
+.hypothesis/

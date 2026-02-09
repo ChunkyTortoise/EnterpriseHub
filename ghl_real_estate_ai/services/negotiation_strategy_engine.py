@@ -6,9 +6,8 @@ negotiation strategies with specific tactics and talking points.
 """
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.api.schemas.negotiation import (
     MarketCondition,

@@ -18,28 +18,21 @@ This provides the API layer for Phase 7 advanced AI intelligence capabilities.
 import asyncio
 import json
 import logging
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from ...ghl_utils.jorge_config import JorgeConfig
-
 # Internal dependencies
 from ...intelligence.revenue_forecasting_engine import (
     AdvancedRevenueForecast,
-    DealProbabilityScore,
     EnhancedRevenueForecastingEngine,
-    ForecastAccuracy,
     ForecastModelType,
     RevenueStreamType,
 )
 from ...prediction.business_forecasting_engine import ForecastTimeframe
-from ...services.cache_service import CacheService
-from ...services.claude_assistant import ClaudeAssistant
-from ...services.event_streaming_service import EventStreamingService
 
 logger = logging.getLogger(__name__)
 

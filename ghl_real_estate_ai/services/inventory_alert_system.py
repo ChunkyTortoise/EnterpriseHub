@@ -16,20 +16,15 @@ Integration: GHL webhooks, email, SMS delivery
 """
 
 import asyncio
-import hashlib
-import json
-import logging
 import statistics
 from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

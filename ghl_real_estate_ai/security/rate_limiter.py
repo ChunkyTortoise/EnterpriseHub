@@ -3,17 +3,15 @@ Enterprise Rate Limiting System
 Provides comprehensive rate limiting with Redis backend, multiple strategies, and intelligent monitoring
 """
 
-import asyncio
-import hashlib
 import time
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 
 import redis.asyncio as redis
-from fastapi import HTTPException, Request, status
+from fastapi import Request, status
 
 from .audit_logger import AuditLogger
 
@@ -584,7 +582,7 @@ class RateLimiter:
 
 
 # FastAPI middleware integration
-from fastapi import Request, Response
+from fastapi import Request
 from fastapi.responses import JSONResponse
 
 

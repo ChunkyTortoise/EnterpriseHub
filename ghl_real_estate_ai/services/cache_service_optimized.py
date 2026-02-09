@@ -20,7 +20,6 @@ TARGET PERFORMANCE IMPROVEMENT:
 """
 
 import asyncio
-import logging
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -31,9 +30,8 @@ from ghl_real_estate_ai.services.cache_service import (
     CacheService,
     MemoryCache,
     RedisCache,
-    get_cache_service,
 )
-from ghl_real_estate_ai.services.performance_optimizer import FastSerializer, get_performance_optimizer
+from ghl_real_estate_ai.services.performance_optimizer import get_performance_optimizer
 
 logger = get_logger(__name__)
 

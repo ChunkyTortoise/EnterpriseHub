@@ -4,8 +4,7 @@ AI Smart Segmentation Service
 Automatically segments leads based on behavior, demographics, and AI insights
 """
 
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 

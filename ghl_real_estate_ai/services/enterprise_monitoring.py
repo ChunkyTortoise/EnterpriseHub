@@ -30,24 +30,20 @@ Created: January 2026
 """
 
 import asyncio
-import json
-import logging
 import smtplib
 import statistics
-import threading
 import time
 from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from email.mime.multipart import MimeMultipart
 from email.mime.text import MimeText
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import httpx
 import psutil
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

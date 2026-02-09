@@ -6,9 +6,8 @@ Implements a simplified version of RFC 6902 (JSON Patch) for State Deltas.
 
 import asyncio
 import copy
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

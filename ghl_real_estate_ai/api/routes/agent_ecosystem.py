@@ -4,29 +4,20 @@ Provides REST endpoints for the 43+ agent ecosystem dashboard integration.
 Matches frontend integration layer expectations.
 """
 
-import asyncio
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-
-from ghl_real_estate_ai.agents.claude_concierge_agent import get_claude_concierge
-from ghl_real_estate_ai.agents.customer_journey_orchestrator import get_customer_journey_orchestrator
-from ghl_real_estate_ai.agents.property_intelligence_agent import get_property_intelligence_agent
+from pydantic import BaseModel
 
 try:
     from ghl_real_estate_ai.agents.adaptive_jorge_seller_bot import get_adaptive_jorge_bot
 except ImportError:
     get_adaptive_jorge_bot = None
-import time
 
-from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 
 # Import unified agents for real status collection
-from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
-from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

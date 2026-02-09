@@ -7,10 +7,8 @@ Handles incoming webhooks from:
 - Apollo (Data enrichment events)
 """
 
-from typing import Any, Dict, List
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Request, status
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.security_framework import verify_webhook

@@ -4,7 +4,7 @@ Drag-and-drop workflow creation interface
 """
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import streamlit as st
 

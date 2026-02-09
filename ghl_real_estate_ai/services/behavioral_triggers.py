@@ -6,11 +6,10 @@ Feature 11: Behavioral Trigger Engine
 Real-time behavior monitoring with AI-powered pattern detection.
 """
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class BehaviorType(Enum):

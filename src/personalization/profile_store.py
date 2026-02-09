@@ -7,16 +7,14 @@ Provides abstract storage interface with Redis and in-memory implementations.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import pickle
 import time
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
-from src.personalization.user_profile import Interest, Preference, UserProfile
+from src.personalization.user_profile import UserProfile
 
 
 class StorageError(Exception):

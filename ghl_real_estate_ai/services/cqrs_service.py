@@ -3,18 +3,16 @@ CQRS (Command Query Responsibility Segregation) Service
 Separates read and write operations for optimal performance and scalability
 """
 
-import asyncio
 import logging
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.event_streaming_service import (
     EventType,
     Priority,
-    StreamEvent,
     get_event_streaming_service,
 )
 

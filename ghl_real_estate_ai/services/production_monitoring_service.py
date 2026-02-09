@@ -16,11 +16,9 @@ This service enables validation of 99.9% uptime and performance claims.
 """
 
 import asyncio
-import json
-import logging
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union

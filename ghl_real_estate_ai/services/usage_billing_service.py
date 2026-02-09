@@ -8,7 +8,7 @@ and PostgreSQL for persistent billing records.
 import asyncio
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.core.hooks import HookContext, HookEvent, hooks
 from ghl_real_estate_ai.ghl_utils.config import settings

@@ -18,20 +18,17 @@ Features:
 """
 
 import asyncio
-import hashlib
-import json
-import logging
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import MatchingContext, PropertyMatch
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
-from ghl_real_estate_ai.services.event_publisher import EventType, RealTimeEvent, get_event_publisher
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 

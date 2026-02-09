@@ -9,10 +9,9 @@ Integrates with existing Jorge architectural patterns:
 - Channel-based routing for scalability
 """
 
-import json
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 from uuid import uuid4
 
 from pydantic import BaseModel, Field

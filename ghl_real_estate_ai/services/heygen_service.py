@@ -3,7 +3,6 @@ HeyGen Service - Personalized Video Generation
 Integrates with HeyGen API to create AI avatar videos presenting market reports.
 """
 
-import json
 import logging
 import os
 from typing import Any, Dict, Optional

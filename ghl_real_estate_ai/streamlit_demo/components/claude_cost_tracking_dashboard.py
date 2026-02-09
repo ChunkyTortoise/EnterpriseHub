@@ -8,11 +8,9 @@ Author: Claude Code Agent Swarm (Optimization Phase)
 Created: 2026-01-23
 """
 
-import asyncio
-import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd

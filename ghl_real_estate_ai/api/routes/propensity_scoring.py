@@ -5,7 +5,6 @@ Exposes life-event propensity scoring, model training, and feature importance
 for lead conversion prediction.
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException

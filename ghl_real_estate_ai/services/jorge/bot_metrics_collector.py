@@ -28,7 +28,7 @@ import asyncio
 import logging
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation

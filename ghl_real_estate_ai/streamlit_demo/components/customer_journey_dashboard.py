@@ -20,17 +20,13 @@ Author: Claude Code Customer Intelligence
 Created: January 2026
 """
 
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List
 
-import networkx as nx
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 
 class CustomerJourneyDashboard:

@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 from src.core.config import Settings, get_settings
-from src.core.exceptions import ConfigurationError
 
 
 class TestSettings:

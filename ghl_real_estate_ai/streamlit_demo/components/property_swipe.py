@@ -1,4 +1,3 @@
-import time
 
 import streamlit as st
 
@@ -63,7 +62,6 @@ def render_property_swipe(services, lead_name: str = "Client"):
             from ghl_real_estate_ai.services.enhanced_lead_intelligence import get_enhanced_lead_intelligence
 
             eli = get_enhanced_lead_intelligence()
-            import asyncio
 
             commentary = run_async(eli.get_swipe_commentary(prop["raw_data"], lead_name))
         except Exception:

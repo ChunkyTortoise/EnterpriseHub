@@ -17,9 +17,6 @@ Author: Eta ML Implementer Agent
 Date: 2026-01-05
 """
 
-import asyncio
-import json
-import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple

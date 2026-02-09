@@ -6,8 +6,7 @@ Implements Collaborative Filtering and Content-Based models for real estate pers
 import json
 import os
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -15,7 +14,6 @@ from .interfaces import (
     ConfidenceLevel,
     FeatureVector,
     ILearningModel,
-    LearningMode,
     ModelPrediction,
     ModelType,
     TrainingResult,

@@ -14,16 +14,11 @@ Created: 2026-01-18
 """
 
 import asyncio
-import json
-import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -35,9 +30,7 @@ from ghl_real_estate_ai.services.competitive_intelligence_system import (
 # Import existing services
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import (
     DynamicPricingOptimizer,
-    LeadPricingResult,
     PricingConfiguration,
-    PricingTier,
 )
 from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2, PredictiveScore
 

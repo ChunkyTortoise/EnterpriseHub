@@ -3,7 +3,6 @@ System Monitoring and Health Skills.
 Allows agents to audit system performance and health.
 """
 
-import os
 import time
 from typing import Any, Dict, List
 

@@ -11,9 +11,8 @@ Provides real Apollo.io API integration for lead enrichment:
 """
 
 import asyncio
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 from aiohttp import ClientTimeout

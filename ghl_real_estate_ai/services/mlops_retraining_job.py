@@ -15,19 +15,15 @@ Date: 2026-01-25
 
 import asyncio
 import json
-import logging
 import os
 from dataclasses import asdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import numpy as np
 import pandas as pd
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import (
     AdvancedMLLeadScoringEngine,
-    MLFeatureVector,
     create_advanced_ml_scoring_engine,
 )
 from ghl_real_estate_ai.services.memory_service import MemoryService

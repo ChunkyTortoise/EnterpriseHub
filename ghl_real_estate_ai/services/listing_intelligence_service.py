@@ -9,13 +9,11 @@ Provides comprehensive listing analysis and optimization capabilities:
 - Visual marketing content suggestions
 """
 
-import asyncio
 import json
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

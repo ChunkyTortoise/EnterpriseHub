@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import json
 
 import pandas as pd
 import plotly.express as px
@@ -9,7 +8,7 @@ import streamlit as st
 
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 analytics_service = AnalyticsService()
 

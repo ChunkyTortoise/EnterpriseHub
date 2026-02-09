@@ -13,26 +13,19 @@ Following TDD principles: RED -> GREEN -> REFACTOR
 import math
 import statistics
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from typing import Any, Dict, List, Tuple
 
 import pytest
 
 from ghl_real_estate_ai.compliance_platform.models.compliance_models import (
     AIModelRegistration,
-    ComplianceScore,
     ComplianceStatus,
-    PolicyViolation,
     RegulationType,
-    RiskAssessment,
     RiskLevel,
-    ViolationSeverity,
 )
 from ghl_real_estate_ai.compliance_platform.models.risk_models import (
     RiskCategory,
     RiskIndicator,
-    RiskTrend,
 )
 
 # ============================================================================

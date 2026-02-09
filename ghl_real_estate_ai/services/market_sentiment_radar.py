@@ -10,16 +10,11 @@ Builds on existing sentiment analysis with external data sources for competitive
 Author: Enhanced from research recommendations - January 2026
 """
 
-import asyncio
 import json
-import re
-from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import aiohttp
 import numpy as np
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -33,7 +28,6 @@ from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEng
 from ghl_real_estate_ai.services.sentiment_types import (
     AlertPriority,
     DataSourceInterface,
-    MarketSentiment,
     SentimentSignal,
     SentimentTriggerType,
 )

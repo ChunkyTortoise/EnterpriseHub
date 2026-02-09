@@ -14,15 +14,13 @@ connection pooling, and comprehensive error handling.
 
 import asyncio
 import json
-import logging
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
-import websockets
-from fastapi import HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import WebSocket
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import UserRole, get_auth_service

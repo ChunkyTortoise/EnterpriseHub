@@ -4,21 +4,16 @@ Unifies and optimizes all revenue streams for maximum value extraction.
 Creates comprehensive revenue intelligence and growth optimization.
 """
 
-import asyncio
-import json
 import logging
 import uuid
-from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional
 
 from ..core.llm_client import LLMClient
-from ..platform.api_monetization import APIMonetization, PricingTier
+from ..platform.api_monetization import APIMonetization
 from ..platform.developer_ecosystem import DeveloperEcosystem
 from ..services.cache_service import CacheService
 from ..services.database_service import DatabaseService

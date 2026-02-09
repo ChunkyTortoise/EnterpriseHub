@@ -7,10 +7,10 @@ and strategy optimization with GHL webhook integration.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.middleware.rate_limiter import rate_limit

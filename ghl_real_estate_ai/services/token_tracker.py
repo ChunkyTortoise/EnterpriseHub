@@ -3,7 +3,6 @@ Token Tracker - Monitor Progressive Skills Performance
 Tracks token usage, cost savings, and efficiency improvements.
 """
 
-import asyncio
 import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional

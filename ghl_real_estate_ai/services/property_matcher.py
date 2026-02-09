@@ -7,10 +7,9 @@ Matches lead preferences to available property listings.
 import asyncio
 import json
 import os
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 
 import aiofiles
 
@@ -84,7 +83,6 @@ class PropertyMatcher:
 
         try:
             # 2026 Pattern: Discover services via MCP Registry
-            from ghl_real_estate_ai.core.mcp_servers.context_compressor import discover_services
 
             # Simulate service discovery
             # In a real 2026 environment, this would call the MCP tool

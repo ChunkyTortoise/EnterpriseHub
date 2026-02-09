@@ -9,9 +9,8 @@ Features:
 - ROI and Yield analysis
 """
 
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.enterprise_tenant_service import get_enterprise_tenant_service

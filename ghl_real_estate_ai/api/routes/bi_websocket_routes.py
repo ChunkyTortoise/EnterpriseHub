@@ -21,15 +21,12 @@ Date: 2026-01-25
 Performance: <10ms WebSocket latency, 1000+ concurrent connections
 """
 
-import asyncio
-import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Path, Query, WebSocket, WebSocketDisconnect
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

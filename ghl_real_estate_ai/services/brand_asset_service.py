@@ -8,23 +8,19 @@ import asyncio
 import hashlib
 import json
 import mimetypes
-import os
 import secrets
 import tempfile
 import time
-import uuid
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import IO, Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import aiofiles
-import aiohttp
 import asyncpg
 import boto3
-from botocore.exceptions import ClientError
-from PIL import Image, ImageOps
+from PIL import Image
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

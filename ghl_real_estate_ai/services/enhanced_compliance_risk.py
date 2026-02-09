@@ -5,14 +5,11 @@ Automated Compliance Monitoring & Risk Assessment System
 
 import asyncio
 import hashlib
-import json
 import logging
-import re
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

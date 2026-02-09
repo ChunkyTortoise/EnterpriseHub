@@ -6,7 +6,6 @@ Author: Claude Code Assistant
 Created: 2026-01-25
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 import pandas as pd

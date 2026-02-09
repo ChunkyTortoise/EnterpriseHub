@@ -3,9 +3,8 @@ Swarm Synthesis Service - Strategic Advisor Agent
 Aggregates and synthesizes specialized swarm insights into a single executive action plan.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 

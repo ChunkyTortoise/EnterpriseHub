@@ -7,7 +7,7 @@ Creates beautiful PDF reports and handles email delivery
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class ReportGenerator:

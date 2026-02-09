@@ -11,15 +11,11 @@ Features:
 - Resource utilization and optimization insights
 """
 
-import asyncio
-import json
 import random
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots

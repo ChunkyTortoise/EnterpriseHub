@@ -140,7 +140,6 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                     st.markdown("---")
                     st.markdown("#### 🧠 Claude's Social/Cultural Fit Analysis")
                     with st.spinner("Analyzing social alignment..."):
-                        import asyncio
 
                         neighborhood_data = {"name": target_address or "Selected Area"}
                         compatibility = run_async(

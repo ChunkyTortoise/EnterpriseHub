@@ -9,7 +9,6 @@ This service generates comprehensive CMA reports including:
 - Beautiful PDF exports for client presentations
 """
 
-import json
 import statistics
 from dataclasses import dataclass
 from datetime import datetime, timedelta

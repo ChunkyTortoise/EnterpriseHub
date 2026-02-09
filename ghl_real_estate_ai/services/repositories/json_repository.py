@@ -5,12 +5,11 @@ Handles property data stored in JSON files. Supports multiple JSON sources
 and provides efficient filtering and querying capabilities.
 """
 
-import asyncio
 import json
 import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 try:
     from .interfaces import (

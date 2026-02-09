@@ -2,10 +2,10 @@
 CRM API Routes for GHL Real Estate AI.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.crm_service import CRMService

@@ -13,12 +13,10 @@ Features:
 - Market intelligence integration
 """
 
-import asyncio
 import json
 import time
-from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ml.neural_property_matcher import NeuralPropertyMatcher
@@ -29,7 +27,6 @@ from ghl_real_estate_ai.models.jorge_property_models import (
     MatchingPerformanceMetrics,
     MatchReasoning,
     Property,
-    PropertyFilters,
     PropertyMatch,
     PropertyMatchRequest,
     PropertyMatchResponse,

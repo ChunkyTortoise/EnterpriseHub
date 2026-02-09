@@ -25,17 +25,11 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import hashlib
-import json
-import pickle
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import numpy as np
-import pandas as pd
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.ai_predictive_lead_scoring import LeadScore

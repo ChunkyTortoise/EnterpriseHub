@@ -5,12 +5,11 @@ Enterprise-grade interfaces for AI-powered behavioral learning and personalizati
 Supports multiple ML strategies, online learning, and real-time personalization.
 """
 
-import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class EventType(Enum):

@@ -6,12 +6,11 @@ Uses machine learning to predict optimal send times per lead and channel.
 """
 
 import asyncio
-import json
 import logging
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 

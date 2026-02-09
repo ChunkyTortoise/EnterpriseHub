@@ -3,11 +3,7 @@ Adaptive Model Retraining Service - Phase 7
 Handles the feedback loop from GHL outcomes to update AI scoring weights.
 """
 
-import asyncio
-import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

@@ -6,9 +6,8 @@ Orchestrates a swarm of specialized agents for executive-level business intellig
 import asyncio
 import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 from ghl_real_estate_ai.services.lead_swarm_service import BaseSwarmAgent
 
 

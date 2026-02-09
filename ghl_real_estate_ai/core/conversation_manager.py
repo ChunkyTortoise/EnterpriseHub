@@ -22,7 +22,6 @@ from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPLATES
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
@@ -855,7 +854,7 @@ Count questions_answered based on how many of the 4 main categories have data.
             predictive_score=None,  # Will be updated in context via background task
         )
 
-    async def extract_data(self, contact_id: str, location_id: Optional[str] = None) -> int:
+    async def calculate_lead_score(self, contact_id: str, location_id: Optional[str] = None) -> int:
         """
         Calculate lead score for a contact.
 

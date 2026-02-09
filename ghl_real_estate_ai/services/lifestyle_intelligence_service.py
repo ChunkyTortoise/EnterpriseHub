@@ -12,11 +12,9 @@ Integrates with external APIs and cached data sources.
 """
 
 import json
-import logging
-import math
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (

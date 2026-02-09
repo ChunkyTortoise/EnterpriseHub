@@ -5,12 +5,11 @@ Handles persistence, recovery, and state management for workflow executions.
 Supports resume functionality, state snapshots, and execution history.
 """
 
-import asyncio
 import json
 import logging
 import os
 import sqlite3
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

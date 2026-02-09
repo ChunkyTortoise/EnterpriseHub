@@ -11,8 +11,8 @@ This module tests the complete Phase 3 Advanced RAG System integration including
 
 import asyncio
 import time
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import List
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -21,21 +21,17 @@ from src.core.types import DocumentChunk, Metadata, SearchResult
 
 # Re-ranking imports
 from src.reranking.base import (
-    BaseReRanker,
     MockReRanker,
     ReRankingConfig,
-    ReRankingResult,
     ReRankingStrategy,
 )
 from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
 
 # Retrieval imports
-from src.retrieval.hybrid import HybridSearchConfig, HybridSearcher
+from src.retrieval.hybrid import HybridSearchConfig
 
 # Query enhancement imports
 from src.retrieval.query import (
-    ClassificationResult,
-    ClassifierConfig,
     ExpansionConfig,
     HyDEConfig,
     HyDEGenerator,

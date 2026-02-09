@@ -7,7 +7,6 @@ Ensures SOLID compliance and enterprise-grade functionality.
 
 import time
 import unittest
-from typing import Any, Dict
 
 from .basic_scorer import BasicPropertyScorer
 from .enhanced_scorer import EnhancedPropertyScorer

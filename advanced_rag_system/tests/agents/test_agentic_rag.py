@@ -400,9 +400,6 @@ class TestFullPipeline:
         from src.agents import (
             AgenticRAG,
             AgenticRAGConfig,
-            AgenticRAGResponse,
-            ExecutionStep,
-            ExecutionTrace,
         )
 
         assert AgenticRAG is not None

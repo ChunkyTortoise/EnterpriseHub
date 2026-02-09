@@ -12,13 +12,9 @@ Features:
 """
 
 import asyncio
-import json
-import smtplib
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from email.mime.multipart import MimeMultipart
-from email.mime.text import MimeText
 from typing import Any, Dict, List, Optional
 
 import aiohttp

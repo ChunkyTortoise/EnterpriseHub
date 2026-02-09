@@ -3,14 +3,13 @@ Claude Concierge Orchestrator - Platform-Wide Intelligence Integration
 Provides omnipresent AI guidance across entire EnterpriseHub platform with Jorge-specific intelligence.
 """
 
-import asyncio
 import json
 import re
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -18,10 +17,9 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_orchestrator import (
     ClaudeOrchestrator,
     ClaudeRequest,
-    ClaudeResponse,
     ClaudeTaskType,
 )
-from ghl_real_estate_ai.services.ghl_live_data_service import GHLLiveDataService, get_ghl_live_data_service
+from ghl_real_estate_ai.services.ghl_live_data_service import get_ghl_live_data_service
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)

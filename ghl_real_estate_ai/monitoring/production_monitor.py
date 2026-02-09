@@ -17,20 +17,16 @@ Status: Production Monitoring System
 import asyncio
 import json
 import logging
-import smtplib
 import statistics
 from collections import defaultdict, deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from email.mime.text import MIMEText
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
-from urllib.parse import quote
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import asyncpg
 import redis.asyncio as redis
-from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(

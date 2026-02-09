@@ -30,7 +30,6 @@ class SellerIntentDecoder:
         self.ghl_client = ghl_client
 
         # Load industry config for config-first marker initialization
-        from ghl_real_estate_ai.config.industry_config import IndustryConfig
 
         cfg = industry_config
 

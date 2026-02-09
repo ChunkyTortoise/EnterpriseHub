@@ -6,8 +6,6 @@ Shared state between Admin Dashboard and Buyer Portal for the live demo.
 import json
 from pathlib import Path
 
-import streamlit as st
-
 
 class DemoStateManager:
     def __init__(self):

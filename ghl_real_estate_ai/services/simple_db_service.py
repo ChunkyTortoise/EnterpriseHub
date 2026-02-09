@@ -3,10 +3,8 @@ Simple Database Service for BI Operations
 Provides basic database connectivity without the complex configuration
 """
 
-import asyncio
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import asyncpg

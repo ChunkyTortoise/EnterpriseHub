@@ -6,7 +6,6 @@ This module tests the query enhancement system including:
 - Query classification for routing
 """
 
-from typing import List
 
 import pytest
 from src.retrieval.query.classifier import (

@@ -3,13 +3,12 @@ Ghost-in-the-Machine Follow-Up Engine - Section 2 of 2026 Strategic Roadmap
 Autonomous multi-channel re-engagement using stall-breaking logic and FRS-driven branching.
 """
 
-import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder

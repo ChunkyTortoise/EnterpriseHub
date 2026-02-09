@@ -10,13 +10,11 @@ This module provides:
 - Automated tenant provisioning and deployment
 """
 
-import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

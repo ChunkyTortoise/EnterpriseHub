@@ -1,6 +1,5 @@
-import asyncio
 from typing import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
@@ -12,9 +11,7 @@ from ghl_real_estate_ai.compliance_platform.api.router import router
 from ghl_real_estate_ai.compliance_platform.database.database import get_db
 from ghl_real_estate_ai.compliance_platform.database.models import Base
 from ghl_real_estate_ai.compliance_platform.models.compliance_models import (
-    ComplianceStatus,
     RiskLevel,
-    ViolationSeverity,
 )
 
 # Setup Test DB

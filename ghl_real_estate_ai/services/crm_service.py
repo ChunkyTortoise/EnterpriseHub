@@ -7,11 +7,8 @@ Handles synchronization of leads and opportunities with external CRMs:
 """
 
 import json
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-import httpx
+from typing import Any, Dict
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

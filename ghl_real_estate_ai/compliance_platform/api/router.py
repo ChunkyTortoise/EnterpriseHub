@@ -11,9 +11,8 @@ FastAPI router providing comprehensive compliance management endpoints:
 
 import csv
 import io
-import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
@@ -25,12 +24,8 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 from ..database.database import AsyncSessionLocal, get_db
 from ..models.compliance_models import (
-    AIModelRegistration,
-    ComplianceScore,
     ComplianceStatus,
-    PolicyViolation,
     RegulationType,
-    RiskAssessment,
     RiskLevel,
     ViolationSeverity,
 )

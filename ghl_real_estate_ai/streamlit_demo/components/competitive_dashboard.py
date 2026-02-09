@@ -26,27 +26,17 @@ Created: 2026-01-18
 Integration: Seamlessly integrates with competitive intelligence pipeline
 """
 
-import asyncio
-import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import competitive intelligence services
-from ghl_real_estate_ai.services.competitive_data_pipeline import DataSource, ThreatLevel, get_competitive_data_pipeline
-from ghl_real_estate_ai.services.competitive_intelligence_system import get_competitive_intelligence_system
-from ghl_real_estate_ai.services.competitive_response_automation import (
-    ResponseStatus,
-    ResponseType,
-    get_competitive_response_engine,
-)
 
 logger = get_logger(__name__)
 

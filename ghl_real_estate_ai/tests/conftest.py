@@ -16,3 +16,17 @@ for _k, _v in _test_env_defaults.items():
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
+import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def force_austin_market():
+    """Force Austin market for property matcher tests to ensure consistent test data."""
+    original = os.environ.get("JORGE_MARKET")
+    os.environ["JORGE_MARKET"] = "austin"
+    yield
+    if original:
+        os.environ["JORGE_MARKET"] = original
+    else:
+        os.environ.pop("JORGE_MARKET", None)

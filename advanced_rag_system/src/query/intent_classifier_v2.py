@@ -9,18 +9,15 @@ This module provides advanced intent classification capabilities including:
 
 from __future__ import annotations
 
-import json
-import math
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.linear_model import LogisticRegression
-from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from src.core.exceptions import RetrievalError

@@ -6,7 +6,7 @@ Handles pre-MLS data intelligence including Probate, Tax Liens, and Divorce reco
 import logging
 import math
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

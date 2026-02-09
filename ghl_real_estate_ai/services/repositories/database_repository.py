@@ -5,10 +5,8 @@ Handles property data from SQL databases using async database connections.
 Supports PostgreSQL, MySQL, SQLite with connection pooling and query optimization.
 """
 
-import asyncio
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 try:
     import aiomysql  # MySQL
@@ -22,7 +20,6 @@ except ImportError:
 from .interfaces import (
     IPropertyRepository,
     PropertyQuery,
-    QueryOperator,
     RepositoryError,
     RepositoryMetadata,
     RepositoryResult,
@@ -283,7 +280,6 @@ class DatabasePropertyRepository(IPropertyRepository):
 
     async def _connect_sqlite(self):
         """Connect to SQLite database"""
-        import aiosqlite
 
         # SQLite doesn't use connection pooling in the same way
         # We'll create a simple connection manager

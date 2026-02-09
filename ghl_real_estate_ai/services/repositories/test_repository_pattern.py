@@ -16,7 +16,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from .caching_repository import CachingRepository, MemoryCacheBackend
-from .database_repository import DatabasePropertyRepository
 
 # Import repository components
 from .interfaces import (
@@ -29,10 +28,8 @@ from .interfaces import (
     SortOrder,
 )
 from .json_repository import JsonPropertyRepository
-from .mls_repository import MLSAPIRepository
-from .property_data_service import PropertyDataService, PropertyDataServiceFactory
+from .property_data_service import PropertyDataService
 from .query_builder import FluentPropertyQuery, PropertyQueryBuilder
-from .rag_repository import RAGPropertyRepository
 from .repository_factory import RepositoryBuilder, RepositoryFactory
 from .strategy_integration import RepositoryPropertyMatcher, enhanced_generate_property_matches
 

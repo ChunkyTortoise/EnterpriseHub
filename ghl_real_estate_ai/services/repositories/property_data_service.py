@@ -6,9 +6,9 @@ Provides unified property data access with intelligent repository selection.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 try:
     from .interfaces import (
@@ -28,16 +28,14 @@ except ImportError:
     from interfaces import (
         IPropertyRepository,
         PropertyQuery,
-        QueryOperator,
         RepositoryError,
         RepositoryResult,
         SortOrder,
     )
-    from json_repository import JsonPropertyRepository
     from mls_repository import MLSAPIRepository
     from query_builder import FluentPropertyQuery, PropertyQueryBuilder
     from rag_repository import RAGPropertyRepository
-    from repository_factory import ConfiguredFactories, RepositoryFactory
+    from repository_factory import RepositoryFactory
 
 
 class PropertyDataService:

@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.middleware.websocket_security import get_websocket_manager
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.security_monitor import EventType, SecurityEvent, ThreatLevel, get_security_monitor
+from ghl_real_estate_ai.services.security_monitor import EventType, ThreatLevel, get_security_monitor
 
 logger = get_logger(__name__)
 security = HTTPBearer()

@@ -15,12 +15,11 @@ import asyncio
 import hashlib
 import hmac
 import json
-import logging
 import time
 from datetime import datetime, timedelta
 from enum import Enum
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Union
 
 import jwt
 import redis.asyncio as aioredis

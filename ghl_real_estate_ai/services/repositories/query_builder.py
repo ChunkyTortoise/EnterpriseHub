@@ -5,7 +5,7 @@ Provides a fluent interface for building complex property queries.
 Supports method chaining and validation for building PropertyQuery objects.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 try:
     from .interfaces import (
@@ -17,7 +17,7 @@ try:
         SortOrder,
     )
 except ImportError:
-    from interfaces import IPropertyQueryBuilder, PaginationConfig, PropertyQuery, QueryFilter, QueryOperator, SortOrder
+    from interfaces import IPropertyQueryBuilder, PaginationConfig, PropertyQuery, QueryOperator, SortOrder
 
 
 class PropertyQueryBuilder(IPropertyQueryBuilder):

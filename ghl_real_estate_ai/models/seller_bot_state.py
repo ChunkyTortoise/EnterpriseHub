@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, TypedDict
 
-from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile, SellerIntentProfile
+from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 
 
 class JorgeSellerState(TypedDict):

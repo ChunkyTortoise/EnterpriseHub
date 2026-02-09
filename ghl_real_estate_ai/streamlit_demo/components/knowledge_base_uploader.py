@@ -3,8 +3,7 @@ RAG Knowledge Base Uploader - Allow AI to reference specific documents
 """
 
 import hashlib
-from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import streamlit as st
 

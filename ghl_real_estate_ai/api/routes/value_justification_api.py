@@ -26,20 +26,16 @@ Created: 2026-01-18
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.services.dynamic_value_justification_engine import (
-    DynamicPricingRecommendation,
-    PricingTier,
     RealTimeROICalculation,
-    ValueCommunicationPackage,
-    ValueDimension,
     ValueTrackingStatus,
     get_dynamic_value_justification_engine,
 )

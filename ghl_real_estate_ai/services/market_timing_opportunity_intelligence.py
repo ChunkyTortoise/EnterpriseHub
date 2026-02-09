@@ -42,18 +42,12 @@ Created: 2026-01-18
 
 import asyncio
 import json
-import logging
 import statistics
-import uuid
 import warnings
-from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple
 
 # ML and statistical analysis imports
 try:

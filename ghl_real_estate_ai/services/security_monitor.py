@@ -18,9 +18,7 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-
-import redis.asyncio as redis
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService

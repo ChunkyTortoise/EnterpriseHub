@@ -7,8 +7,6 @@ Demonstrates:
 - Document management
 """
 
-import os
-import shutil
 import uuid
 from dataclasses import dataclass
 from datetime import datetime

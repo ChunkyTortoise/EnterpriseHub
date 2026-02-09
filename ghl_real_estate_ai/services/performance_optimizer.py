@@ -18,14 +18,13 @@ Created: 2026-01-17
 
 import asyncio
 import json
-import logging
 import statistics
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 
@@ -37,7 +36,7 @@ except ImportError:
     MSGPACK_AVAILABLE = False
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
 
 logger = get_logger(__name__)

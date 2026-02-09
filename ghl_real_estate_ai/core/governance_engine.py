@@ -11,7 +11,7 @@ Rules:
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
 

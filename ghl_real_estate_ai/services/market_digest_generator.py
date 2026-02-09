@@ -4,7 +4,6 @@ Generates narrative summaries of market trends for automated client outreach.
 """
 
 import json
-import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

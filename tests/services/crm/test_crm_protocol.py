@@ -8,7 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.services.crm import CRMContact, CRMProtocol
 
-
 # ---------------------------------------------------------------------------
 # CRMContact model tests
 # ---------------------------------------------------------------------------

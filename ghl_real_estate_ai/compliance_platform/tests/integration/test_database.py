@@ -1,10 +1,9 @@
-import asyncio
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from ghl_real_estate_ai.compliance_platform.database.models import Base, DBModelRegistration
+from ghl_real_estate_ai.compliance_platform.database.models import Base
 from ghl_real_estate_ai.compliance_platform.database.repository import ModelRepository
 from ghl_real_estate_ai.compliance_platform.models.compliance_models import ComplianceStatus, RiskLevel
 

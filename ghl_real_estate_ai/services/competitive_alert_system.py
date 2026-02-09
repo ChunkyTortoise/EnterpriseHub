@@ -9,14 +9,9 @@ This system provides:
 5. Priority routing for immediate human intervention
 """
 
-import asyncio
-import json
 import logging
-import smtplib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from email.mime.multipart import MimeMultipart
-from email.mime.text import MimeText
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -24,7 +19,7 @@ import httpx
 
 from ghl_real_estate_ai.core.config import get_settings
 from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.competitor_intelligence import CompetitiveAnalysis, CompetitorMention, RiskLevel
+from ghl_real_estate_ai.services.competitor_intelligence import CompetitiveAnalysis, RiskLevel
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
 logger = logging.getLogger(__name__)

@@ -19,30 +19,21 @@ Business Impact:
 - 25% faster resolution of identified issues
 """
 
-import asyncio
 import json
 import logging
-import statistics
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import joblib
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from ghl_real_estate_ai.database.transaction_schema import (
     MilestoneStatus,
     RealEstateTransaction,
     TransactionMilestone,
-    TransactionPrediction,
-    TransactionStatus,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant

@@ -27,30 +27,23 @@ Status: Production-Ready Omnichannel Communication Platform
 """
 
 import asyncio
-import hashlib
 import json
-import logging
 import threading
 import time
 import uuid
 from abc import ABC, abstractmethod
-from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-import aiohttp
-import websockets
+from typing import Any, Dict, List, Optional
 
 # Core services
-from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, get_llm_client
+from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_orchestrator import (
     ClaudeRequest,
-    ClaudeResponse,
     ClaudeTaskType,
     get_claude_orchestrator,
 )

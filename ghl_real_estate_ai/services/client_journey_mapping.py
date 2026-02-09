@@ -15,15 +15,11 @@ Integrates with:
 - Enhanced Lead Scoring for qualification handoff
 """
 
-import asyncio
-import json
-import logging
 import time
-import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service

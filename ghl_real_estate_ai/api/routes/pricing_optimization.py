@@ -8,18 +8,17 @@ Created: 2026-01-17
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user, require_auth
-from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer, LeadPricingResult
-from ghl_real_estate_ai.services.roi_calculator_service import ClientROIReport, ROICalculatorService
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
+from ghl_real_estate_ai.services.roi_calculator_service import ROICalculatorService
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = logging.getLogger(__name__)

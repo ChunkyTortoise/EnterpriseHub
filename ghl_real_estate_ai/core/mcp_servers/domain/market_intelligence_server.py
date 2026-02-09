@@ -3,9 +3,8 @@ Market Intelligence MCP Server
 Exposes specialized market analysis tools for national and local real estate markets.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from fastmcp import FastMCP
 

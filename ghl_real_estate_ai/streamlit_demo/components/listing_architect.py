@@ -1,5 +1,4 @@
 import asyncio
-import time
 
 import streamlit as st
 

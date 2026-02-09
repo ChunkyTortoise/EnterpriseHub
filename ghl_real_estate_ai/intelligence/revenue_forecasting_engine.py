@@ -21,18 +21,15 @@ This builds upon the existing business_forecasting_engine.py with enhanced capab
 for Phase 7 advanced AI intelligence and global scaling preparation.
 """
 
-import asyncio
-import json
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 # ML and time series libraries
 try:
@@ -50,8 +47,6 @@ except ImportError:
 
 # Internal dependencies
 from ..ghl_utils.jorge_config import JorgeConfig
-from ..models.analytics_models import ExecutiveSummary, ForecastHorizon, MarketTemperature
-from ..models.analytics_models import RevenueForecast as AnalyticsRevenueForecast
 from ..prediction.business_forecasting_engine import BusinessForecastingEngine, ForecastTimeframe, RevenueForecast
 from ..services.analytics_service import AnalyticsService
 from ..services.cache_service import CacheService

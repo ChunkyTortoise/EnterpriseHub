@@ -6,7 +6,7 @@ Connects to the Claude Orchestrator via API for intelligent responses
 import json
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import requests
 import streamlit as st

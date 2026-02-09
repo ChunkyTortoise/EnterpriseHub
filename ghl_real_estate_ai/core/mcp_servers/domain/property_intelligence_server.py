@@ -3,9 +3,8 @@ Property Intelligence MCP Server
 Exposes specialized property matching and analysis tools using Claude Semantic Matching.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastmcp import FastMCP
 

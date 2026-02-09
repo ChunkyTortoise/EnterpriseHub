@@ -6,7 +6,6 @@ Feature 10: AI Context-Aware Auto-Responder
 Intelligent 24/7 response system with context understanding and personality matching.
 """
 
-import json
 import re
 from dataclasses import dataclass
 from datetime import datetime

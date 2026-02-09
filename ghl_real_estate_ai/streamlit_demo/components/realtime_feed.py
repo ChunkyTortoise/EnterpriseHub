@@ -16,18 +16,15 @@ Features:
 
 import asyncio
 import json
-import queue
 import threading
 import time
-from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
 import websockets
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.auth_service import UserRole, get_auth_service
 
 logger = get_logger(__name__)
 

@@ -5,7 +5,6 @@ Exposes voice call processing, transcript analysis, and voice-to-qualification
 pipeline via REST and webhook endpoints.
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request

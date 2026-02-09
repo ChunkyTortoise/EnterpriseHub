@@ -11,12 +11,10 @@ This integration allows the frontend to use Socket.IO while preserving
 the enterprise WebSocket manager for backend services.
 """
 
-import asyncio
 import os
 
 import socketio
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.socketio_adapter import get_socketio_manager

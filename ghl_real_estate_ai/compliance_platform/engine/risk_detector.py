@@ -7,16 +7,13 @@ analysis aligned to EU AI Act, SEC, and HIPAA requirements.
 
 import asyncio
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
-from uuid import uuid4
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ..models.compliance_models import (
     AIModelRegistration,
-    ComplianceStatus,
     RegulationType,
     RiskAssessment,
     RiskLevel,
-    ViolationSeverity,
 )
 from ..models.risk_models import (
     RiskCategory,

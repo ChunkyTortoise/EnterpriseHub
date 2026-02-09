@@ -5,15 +5,13 @@ Provides comprehensive white-labeling capabilities for high-ticket consulting en
 Enables custom branding, domain management, and client-specific platform deployments.
 """
 
-import asyncio
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

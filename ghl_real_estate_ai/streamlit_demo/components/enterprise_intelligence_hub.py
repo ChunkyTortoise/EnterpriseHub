@@ -11,17 +11,12 @@ Executive-grade dashboard designed for $25K-$100K consulting platform:
 Provides C-suite level intelligence to justify premium consulting fees.
 """
 
-import asyncio
-import base64
-import json
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
@@ -30,8 +25,6 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import get_enterprise
 
 # Import our strategic services
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
-    ConsultingTier,
-    StrategicPriority,
     get_strategic_claude_consultant,
 )
 

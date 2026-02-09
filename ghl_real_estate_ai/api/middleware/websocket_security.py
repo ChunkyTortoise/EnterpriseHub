@@ -9,19 +9,17 @@ Features:
 - Secure WebSocket session management
 """
 
-import asyncio
 import json
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
+from datetime import datetime
+from typing import Any, Dict, Optional, Set
 
-import jwt
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
 from jwt import DecodeError, ExpiredSignatureError
 from starlette.websockets import WebSocketState
 
-from ghl_real_estate_ai.api.middleware.jwt_auth import ALGORITHM, SECRET_KEY, JWTAuth
+from ghl_real_estate_ai.api.middleware.jwt_auth import JWTAuth
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

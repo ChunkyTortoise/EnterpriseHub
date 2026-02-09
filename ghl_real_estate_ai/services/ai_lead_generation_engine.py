@@ -15,20 +15,16 @@ Integrates with:
 - Cache Service for performance optimization
 """
 
-import asyncio
-import json
-import logging
 import time
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ml.closing_probability_model import get_ml_analytics_engine
 from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
-from ghl_real_estate_ai.services.enhanced_lead_scoring import LeadSourceType, get_enhanced_lead_scoring
+from ghl_real_estate_ai.services.enhanced_lead_scoring import get_enhanced_lead_scoring
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)

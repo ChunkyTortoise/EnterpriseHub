@@ -5,14 +5,12 @@ Extracts advanced features from conversation data, market conditions,
 and historical patterns to predict closing probability.
 """
 
-import asyncio
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 from textblob import TextBlob
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

@@ -16,13 +16,12 @@ Author: Jorge's Real Estate AI Platform - Phase 2.3 Implementation
 """
 
 import asyncio
-import json
 import re
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Deque, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional
 
 from ghl_real_estate_ai.agents.intent_decoder import get_intent_decoder
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

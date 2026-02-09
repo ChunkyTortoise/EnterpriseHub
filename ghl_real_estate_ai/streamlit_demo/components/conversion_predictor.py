@@ -1,9 +1,6 @@
-import asyncio
 import datetime
 import random
 
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -62,7 +59,6 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
             if hasattr(scorer, "score_lead_with_intent"):
                 try:
                     # Try async intent scoring
-                    import asyncio
 
                     # Mock conversation history for demo
                     history = [

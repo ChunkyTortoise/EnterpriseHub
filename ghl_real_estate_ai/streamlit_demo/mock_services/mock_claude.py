@@ -3,7 +3,7 @@ Mock Claude Service - Pre-crafted responses for demo.
 """
 
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 
 
 class MockClaudeService:

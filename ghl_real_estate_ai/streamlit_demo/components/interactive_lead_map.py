@@ -3,10 +3,8 @@ Interactive Lead Map Component
 Clickable geographic visualization with lead-specific AI analysis
 """
 
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 

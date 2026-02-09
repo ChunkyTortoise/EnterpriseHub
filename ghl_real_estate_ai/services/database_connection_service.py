@@ -22,18 +22,14 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
-import sqlalchemy
 from sqlalchemy import event, text
-from sqlalchemy.events import PoolEvents
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

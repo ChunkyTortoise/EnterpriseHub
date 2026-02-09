@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import functools
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from src.core.config import Settings, get_settings
 from src.utils.logging import get_logger

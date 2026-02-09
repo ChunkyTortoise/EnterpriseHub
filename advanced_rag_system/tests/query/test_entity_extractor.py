@@ -1,15 +1,12 @@
 """Tests for Entity Extractor module."""
 
-from datetime import datetime
 
 import pytest
 from src.query.entity_extractor import (
     Entity,
     EntityExtractor,
-    EntityLinkingResult,
     EntityType,
     ExtractionConfig,
-    KnowledgeGraphPrep,
 )
 
 

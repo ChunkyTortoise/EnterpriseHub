@@ -10,12 +10,10 @@ Builds on existing churn prediction with emergency intervention automation.
 Author: Enhanced from research recommendations - January 2026
 """
 
-import asyncio
-import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 

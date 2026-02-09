@@ -3,10 +3,7 @@ Dojo Runner: Executes sparring matches between Trainee and Simulator.
 Reference: CONTINUOUS_IMPROVEMENT_DOJO.md
 """
 
-import asyncio
 import logging
-from pathlib import Path
-from typing import Any, Dict, List
 
 from ghl_real_estate_ai.agent_system.governance.guardrails import check_limits
 from ghl_real_estate_ai.core.llm_client import LLMClient
