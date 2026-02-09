@@ -209,3 +209,6 @@ multi_market_*.json
 
 # Added by deep clean
 .hypothesis/
+
+# Playwright MCP screenshots
+.playwright-mcp/
