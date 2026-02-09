@@ -11,11 +11,14 @@ Analyzes lead behavioral patterns to dynamically adjust matching weights:
 """
 
 import json
+import asyncio
 import statistics
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import aiofiles
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
@@ -51,10 +54,10 @@ class BehavioralWeightingEngine:
         self.interaction_data_path = interaction_data_path or str(
             Path(__file__).parent.parent / "data" / "portal_interactions" / "lead_interactions.json"
         )
-        self._load_interaction_data()
-        self._load_property_listings()
+        self.interaction_data = {}
+        self.property_lookup = {}
 
-    def analyze_behavioral_profile(self, lead_id: str, stated_preferences: Dict[str, Any]) -> BehavioralProfile:
+    async def analyze_behavioral_profile(self, lead_id: str, stated_preferences: Dict[str, Any]) -> BehavioralProfile:
         """
         Analyze lead's behavioral patterns to create comprehensive profile.
 
@@ -65,6 +68,13 @@ class BehavioralWeightingEngine:
         Returns:
             BehavioralProfile with segment, patterns, and deviations
         """
+        # Ensure data is loaded
+        if not self.interaction_data:
+            await self._load_interaction_data()
+        
+        if not self.property_lookup:
+            await self._load_property_listings()
+
         logger.info(f"Analyzing behavioral profile for lead {lead_id}")
 
         # Get lead's interaction history
@@ -261,7 +271,7 @@ class BehavioralWeightingEngine:
             try:
                 timestamp = datetime.fromisoformat(interaction["timestamp"].replace("Z", "+00:00"))
                 interaction_times.append(timestamp)
-            except:
+            except (ValueError, TypeError, KeyError):
                 continue
 
         # Session analysis
@@ -633,21 +643,31 @@ class BehavioralWeightingEngine:
 
     # Data loading and utility methods
 
-    def _load_interaction_data(self):
+    async def _load_interaction_data(self):
         """Load lead interaction history data."""
         try:
-            with open(self.interaction_data_path, "r") as f:
-                self.interaction_data = json.load(f)
+            if not Path(self.interaction_data_path).exists():
+                self.interaction_data = {"interactions": []}
+                return
+
+            async with aiofiles.open(self.interaction_data_path, "r") as f:
+                content = await f.read()
+                self.interaction_data = json.loads(content)
         except Exception as e:
             logger.error(f"Failed to load interaction data: {e}")
             self.interaction_data = {"interactions": []}
 
-    def _load_property_listings(self):
+    async def _load_property_listings(self):
         """Load property listings for cross-referencing."""
         try:
             listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / "property_listings.json"
-            with open(listings_path, "r") as f:
-                listings_data = json.load(f)
+            if not listings_path.exists():
+                self.property_lookup = {}
+                return
+
+            async with aiofiles.open(listings_path, "r") as f:
+                content = await f.read()
+                listings_data = json.loads(content)
                 # Create lookup dict for faster access
                 self.property_lookup = {prop["id"]: prop for prop in listings_data.get("listings", [])}
         except Exception as e:
