@@ -666,6 +666,49 @@ class BuyerBudgetConfig:
         return "end"
 
 
+# ========== SELLER BOT CONFIGURATION ==========
+
+
+@dataclass
+class SellerBotConfig:
+    """Centralized configuration for seller bot feature flags and thresholds.
+
+    Follows BuyerBudgetConfig pattern with environment-based overrides.
+    """
+
+    # Feature flags
+    enable_cma_generation: bool = True
+    enable_market_intelligence: bool = True
+    enable_listing_prep: bool = True
+    enable_valuation_defense: bool = True
+    enable_seller_intent_decoder: bool = True
+
+    # CMA thresholds
+    cma_confidence_threshold: float = 70.0
+    listing_prep_qualification_threshold: float = 0.75
+
+    # Temperature thresholds for seller FRS
+    hot_frs_threshold: float = 75.0
+    warm_frs_threshold: float = 50.0
+
+    @classmethod
+    def from_environment(cls) -> "SellerBotConfig":
+        """Create SellerBotConfig with environment variable overrides."""
+        return cls(
+            enable_cma_generation=os.getenv("SELLER_ENABLE_CMA", "true").lower() == "true",
+            enable_market_intelligence=os.getenv("SELLER_ENABLE_MARKET_INTEL", "true").lower() == "true",
+            enable_listing_prep=os.getenv("SELLER_ENABLE_LISTING_PREP", "true").lower() == "true",
+            enable_valuation_defense=os.getenv("SELLER_ENABLE_VALUATION_DEFENSE", "true").lower() == "true",
+            enable_seller_intent_decoder=os.getenv("SELLER_ENABLE_INTENT_DECODER", "true").lower() == "true",
+            cma_confidence_threshold=float(os.getenv("SELLER_CMA_CONFIDENCE_THRESHOLD", "70.0")),
+            listing_prep_qualification_threshold=float(
+                os.getenv("SELLER_LISTING_PREP_THRESHOLD", "0.75")
+            ),
+            hot_frs_threshold=float(os.getenv("SELLER_HOT_FRS_THRESHOLD", "75.0")),
+            warm_frs_threshold=float(os.getenv("SELLER_WARM_FRS_THRESHOLD", "50.0")),
+        )
+
+
 # ========== EXPORTS ==========
 
 # Create global settings instance
@@ -688,6 +731,7 @@ __all__ = [
     "JorgeEnvironmentSettings",
     "JorgeMarketManager",
     "BuyerBudgetConfig",
+    "SellerBotConfig",
     "settings",
     "market_manager",
     "JORGE_SELLER_MODE",

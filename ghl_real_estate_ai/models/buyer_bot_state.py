@@ -57,3 +57,9 @@ class BuyerBotState(TypedDict):
     current_journey_stage: str  # "discovery", "qualification", "property_search", "offer_prep", "under_contract"
     properties_viewed_count: int
     last_action_timestamp: Optional[datetime]
+
+    # Affordability & Objection Handling fields
+    affordability_analysis: Optional[Dict[str, Any]]  # monthly_payment, down_payment, total_cost
+    mortgage_details: Optional[Dict[str, Any]]  # rate, term, type
+    max_monthly_payment: Optional[float]
+    objection_history: Optional[List[Dict[str, Any]]]  # tracked objections + resolutions

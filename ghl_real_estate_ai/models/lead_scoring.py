@@ -77,6 +77,29 @@ class LeadIntentProfile(BaseModel):
     stall_breaker_suggested: Optional[str] = None
 
 
+class SellerIntentProfile(BaseModel):
+    """Seller intent analysis results. Mirrors BuyerIntentProfile structure for sellers."""
+
+    # Condition & Valuation Scores (0-100)
+    condition_anxiety: float = Field(0.0, description="Worry about property condition affecting sale")
+    valuation_confidence: float = Field(50.0, description="Confidence in property value understanding")
+    prep_readiness: float = Field(50.0, description="Readiness to prepare property for listing")
+
+    # Urgency & Flexibility (0-100)
+    listing_urgency: float = Field(25.0, description="Urgency to list the property")
+    price_flexibility: float = Field(50.0, description="Willingness to adjust price expectations")
+    motivation_strength: float = Field(25.0, description="Overall motivation to sell")
+
+    # Overall Classification
+    seller_temperature: str = Field("cold", description="hot/warm/lukewarm/cold/ice_cold")
+    confidence_level: float = Field(10.0, description="Confidence in the analysis")
+
+    # Analysis Context
+    conversation_turns: int = Field(0, description="Number of conversation turns analyzed")
+    key_insights: Dict[str, Any] = Field(default_factory=dict, description="Key seller insights")
+    next_qualification_step: str = Field("motivation", description="Next step in qualification process")
+
+
 class BuyerIntentProfile(BaseModel):
     """Buyer intent analysis results. Mirrors LeadIntentProfile structure for buyers."""
 

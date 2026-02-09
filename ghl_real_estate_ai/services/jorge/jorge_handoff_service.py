@@ -25,6 +25,24 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class EnrichedHandoffContext:
+    """Carries richer data during cross-bot transitions.
+
+    The source bot populates this before handoff so the receiving bot
+    can skip re-qualification and continue the conversation seamlessly.
+    """
+
+    source_qualification_score: float = 0.0
+    source_temperature: str = "cold"
+    budget_range: Optional[Dict[str, Any]] = None
+    property_address: Optional[str] = None
+    cma_summary: Optional[Dict[str, Any]] = None
+    conversation_summary: str = ""
+    key_insights: Dict[str, Any] = field(default_factory=dict)
+    urgency_level: str = "browsing"
+
+
+@dataclass
 class HandoffDecision:
     """Encapsulates a bot-to-bot handoff decision."""
 
@@ -33,6 +51,7 @@ class HandoffDecision:
     reason: str  # "buyer_intent_detected", "seller_intent_detected", etc.
     confidence: float  # 0.0-1.0
     context: Dict[str, Any] = field(default_factory=dict)
+    enriched_context: Optional[EnrichedHandoffContext] = None
 
 
 class JorgeHandoffService:
@@ -620,6 +639,19 @@ class JorgeHandoffService:
             return None
 
         reason = f"{target}_intent_detected"
+
+        # Build enriched handoff context from intent signals
+        enriched = EnrichedHandoffContext(
+            source_qualification_score=intent_signals.get("qualification_score", 0.0),
+            source_temperature=intent_signals.get("temperature", "cold"),
+            budget_range=intent_signals.get("budget_range"),
+            property_address=intent_signals.get("property_address"),
+            cma_summary=intent_signals.get("cma_summary"),
+            conversation_summary=intent_signals.get("conversation_summary", ""),
+            key_insights=intent_signals.get("key_insights", {}),
+            urgency_level=intent_signals.get("urgency_level", "browsing"),
+        )
+
         return HandoffDecision(
             source_bot=current_bot,
             target_bot=target,
@@ -634,6 +666,7 @@ class JorgeHandoffService:
                 "learned_sample_size": learned["sample_size"],
                 "history_signals": history_signals,
             },
+            enriched_context=enriched,
         )
 
     @trace_operation("jorge.handoff", "execute_handoff")
