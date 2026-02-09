@@ -98,8 +98,6 @@ class DatabaseConnectionManager:
             "server_settings": {
                 "application_name": "service6-enterprise",
                 "jit": "off",
-                "log_statement": "all",
-                "log_min_duration_statement": "1000",  # Log queries > 1s
             },
         }
 
@@ -199,6 +197,8 @@ class DatabaseConnectionManager:
         query_exec = QueryExecution(sql=sql, params=args)
 
         try:
+            # SECURITY FIX: Log query fingerprint at DEBUG level
+            logger.debug(f"Executing query: {sql[:50]}...")
             async with self.get_connection() as conn:
                 result = await conn.fetch(sql, *args, timeout=timeout)
 
@@ -358,8 +358,8 @@ class DatabaseConnectionManager:
                         LIMIT 5
                     """)
                     health["slow_queries"] = [dict(row) for row in slow_queries]
-                except:
-                    # pg_stat_statements not available
+                except asyncpg.PostgresError:
+                    # pg_stat_statements not available or permission denied
                     pass
 
             # Calculate response time
