@@ -1,0 +1,175 @@
+# Rancho Cucamonga Real Estate — Industry Config
+# Extracted from: intent_decoder.py, jorge_seller_bot.py, jorge_rancho_config.py, jorge_handoff_service.py
+industry: real_estate
+
+market:
+  name: Rancho Cucamonga
+  state: CA
+  regulatory_authority: California Department of Real Estate
+  service_areas:
+    - Rancho Cucamonga
+    - Alta Loma
+    - Etiwanda
+    - Victoria Gardens
+    - Terra Vista
+    - Day Creek
+  neighborhoods:
+    - name: Alta Loma
+      median_price: 1150000
+      characteristics: [Mountain views, Excellent schools, Large lots]
+    - name: Central RC
+      median_price: 850000
+      characteristics: [Established community, Shopping centers, Family-friendly]
+    - name: Etiwanda
+      median_price: 925000
+      characteristics: [Newer developments, Award-winning schools]
+    - name: Victoria Gardens
+      median_price: 750000
+      characteristics: [Walkable lifestyle, Shopping/dining, Condos]
+    - name: Terra Vista
+      median_price: 875000
+      characteristics: [Family-oriented, Parks and recreation]
+    - name: Day Creek
+      median_price: 825000
+      characteristics: [Master-planned, Golf course community]
+  price_ranges:
+    entry_level: {min: 700000, max: 700000, description: Starter homes and condos}
+    mid_market: {min: 700000, max: 1200000, description: Family homes}
+    luxury: {min: 1200000, max: 7000000, description: Premium homes with views}
+  compliance_notes:
+    - Licensed by the California Department of Real Estate
+    - Equal Housing Opportunity
+    - California Fair Employment and Housing Act (FEHA)
+    - Natural Hazard Disclosure Statement required
+    - Transfer Disclosure Statement required
+
+personality:
+  name: Jorge Salas
+  role: Real Estate Professional
+  approach: HELPFUL, CONSULTATIVE, and RELATIONSHIP-FOCUSED
+  core_values:
+    - Put the seller's success first
+    - Build trust through expertise and care
+    - Provide valuable insights and education
+    - Be patient and understanding
+    - Focus on long-term relationships
+  system_prompt_template: |
+    You are {{ name }}, a caring and knowledgeable real estate professional.
+    Your approach is: {{ approach }}.
+    You genuinely want to help sellers achieve their goals.
+
+    CORE VALUES:
+    {% for value in core_values %}- {{ value }}
+    {% endfor %}
+    CURRENT CONTEXT:
+    Lead: {{ lead_name }}
+    Tone Mode: {{ tone_mode }}
+  tone_instructions:
+    empathetic: Be warm, caring, and understanding
+    professional: Be direct, efficient, and knowledgeable
+    casual: Be friendly, relaxed, and approachable
+  phrases:
+    greeting: ["Hi! I'm Jorge — happy to help with your home goals."]
+    closing: ["Looking forward to helping you succeed!"]
+
+intents:
+  motivation:
+    high: [need to sell fast, relocating in 30 days, behind on payments, divorce, estate, probate]
+    medium: [thinking about it, might sell next year, curious about value]
+    low: [just browsing, not sure, what if rates drop]
+  timeline:
+    high: [asap, 30 days, this month, immediately]
+    medium: [soon, this year, flexible]
+    low: [eventually, when the time is right, maybe later]
+  condition:
+    high: [as-is, needs work, fixer, defect, discount]
+    medium: [minor fixes, flexible on condition]
+    low: [perfect, turnkey, premium pricing]
+  price:
+    high: [zestimate, comps, comparable, market value]
+    medium: [range, open to expectations, negotiable]
+    low: []
+  buyer_patterns:
+    - looking for
+    - want to buy
+    - searching for
+    - need a home
+    - bedroom
+    - pre-approved
+    - mortgage
+    - first time buyer
+    - house hunting
+    - looking to purchase
+    - budget
+  seller_patterns:
+    - want to sell
+    - selling my
+    - sell my
+    - list my
+    - home value
+    - "what's my home worth"
+    - thinking about selling
+    - need to sell
+    - put my house on the market
+  scoring_weights:
+    motivation: 0.35
+    timeline: 0.30
+    condition: 0.20
+    price: 0.15
+  temperature_thresholds:
+    hot: 75
+    warm: 50
+    lukewarm: 25
+
+questions:
+  questions:
+    - {id: 1, text: "What's your timeline for selling?"}
+    - {id: 2, text: "What's driving you to sell the property?"}
+    - {id: 3, text: "What's your bottom-line number?"}
+    - {id: 4, text: "Are you flexible on the closing date?"}
+  follow_ups:
+    zestimate:
+      - "Online estimates are a great starting point! I'd love to show you what similar homes have actually sold for."
+    thinking:
+      - "I completely understand you need time. What questions can I help answer?"
+    agent:
+      - "That's great you're working with someone! I'm happy to share additional market insights."
+  accelerators:
+    - "It sounds like you're ready to move forward! Would tomorrow afternoon work for a visit?"
+    - "Based on what you've shared, we have a great opportunity. Want to schedule time to discuss?"
+    - "I'm excited to help! What timeline would work best for you?"
+
+handoff:
+  thresholds:
+    default: 0.7
+    lead_to_buyer: 0.7
+    lead_to_seller: 0.7
+  rate_limits:
+    per_hour: 3
+    per_day: 10
+  circular_prevention_window: 1800
+  buyer_intent_patterns:
+    - \bi\s+want\s+to\s+buy\b
+    - \blooking\s+to\s+buy\b
+    - \bbudget\b.*\$
+    - \bpre[- ]?approv
+    - \bpre[- ]?qualif
+    - \bdown\s+payment\b
+    - \bfha\b|\bva\s+loan\b|\bconventional\b
+    - \bfind\s+(a|my)\s+(new\s+)?(home|house|place|property)\b
+  seller_intent_patterns:
+    - \bsell\s+my\s+(home|house|property)\b
+    - \bwhat'?s\s+my\s+home\s+worth\b
+    - \bhome\s+valu
+    - \bcma\b
+    - \blist(ing)?\s+my\s+(home|house|property)\b
+    - \bneed\s+to\s+sell\b
+
+business_rules:
+  commission_standard: 0.06
+  commission_minimum: 0.04
+  preferred_timeline_days: 45
+  sms_max_length: 160
+  hot_seller_tag: Hot-Seller
+  warm_seller_tag: Warm-Seller
+  cold_seller_tag: Cold-Seller

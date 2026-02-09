@@ -1,46 +1,333 @@
-# Continuation Prompt — February 9, 2026
+# Continuation Prompt — February 9, 2026 (Service Catalog Sprint 2)
 
 ## Session Recovery
-Run `bd prime` first, then read this file.
+Run `bd prime` first, then read this file and `plans/SERVICE_CATALOG_DEV_SPEC.md`.
 
 ---
 
-## Current State
+## What Happened Last Session
 
-**Branch**: `main`
-**README**: Test badge updated to 5,354+ (from 4,500+)
-**Link audit**: All 23 internal links across README/CLAUDE/AGENTS/INDEX verified — zero broken
-**Beads**: EH-230 closed (verification badge confirmed active)
+### Sprint 1 COMPLETED (3 parallel agents)
+
+| Bead | Agent | Deliverable | Status |
+|------|-------|-------------|--------|
+| `ruy` | A: Vector DB adapter | `docqa-engine/docqa_engine/vector_store.py` — VectorStoreBase ABC + InMemory/ChromaDB/Pinecone implementations, 14 new tests, sidebar selector in app.py | **CLOSED** (committed: `4632146`, `ded0ddf`) |
+| `cnq` | B: Industry config | `ghl_real_estate_ai/config/industry_config.py` — 7 dataclasses, 4 YAML configs (real_estate_rancho, real_estate_dallas, dental_practice, hvac_services), 44 tests, bot constructors wired | **CLOSED** |
+| `ia3` | C: RAG case study | `plans/case-study-rag-system.md` — 2,200 words, Mermaid diagram, code samples from docqa-engine | **CLOSED** |
+
+### Uncommitted Changes
+
+**docqa-engine** (`/Users/cave/Documents/GitHub/docqa-engine`):
+- `app.py` — Vector store sidebar selector (39 insertions)
+- All other Sprint 1 changes already committed (`4632146`, `ded0ddf`)
+
+**EnterpriseHub** (this repo):
+Modified:
+- `ghl_real_estate_ai/agents/jorge_buyer_bot.py` — industry_config param in __init__
+- `ghl_real_estate_ai/agents/jorge_seller_bot.py` — industry_config param in __init__
+- `ghl_real_estate_ai/agents/lead_bot.py` — industry_config param in __init__
+- `ghl_real_estate_ai/agents/buyer_intent_decoder.py` — config integration
+- `ghl_real_estate_ai/agents/intent_decoder.py` — config integration
+- `ghl_real_estate_ai/agents/seller_intent_decoder.py` — config integration
+- `ghl_real_estate_ai/services/jorge/jorge_handoff_service.py` — config integration
+- `requirements.txt` — Added Jinja2>=3.1.0
+
+New:
+- `ghl_real_estate_ai/config/__init__.py` — IndustryConfig exports
+- `ghl_real_estate_ai/config/industry_config.py` — 7 dataclasses, from_yaml(), default_real_estate()
+- `ghl_real_estate_ai/config/industries/real_estate_rancho.yaml` — 175 lines
+- `ghl_real_estate_ai/config/industries/real_estate_dallas.yaml` — 147 lines
+- `ghl_real_estate_ai/config/industries/dental_practice.yaml` — 117 lines
+- `ghl_real_estate_ai/config/industries/hvac_services.yaml` — 119 lines
+- `ghl_real_estate_ai/agents/bot_personality.py` — personality types
+- `ghl_real_estate_ai/agents/personalities/` — personality data
+- `ghl_real_estate_ai/agents/personality_config.py` — personality config
+- `tests/test_industry_config.py` — 44 tests
+- `plans/case-study-rag-system.md` — RAG case study
+- `plans/SERVICE_CATALOG_DEV_SPEC.md` — Full execution spec
 
 ---
 
-## What Got Done This Session (Feb 8 Evening — $0 Budget Sprint)
+## Step 1: Commit Sprint 1 Changes
 
-### Track A: Browser Tasks
-1. **A1: LinkedIn Profile Overhaul** — ALREADY COMPLETE from prior session
-   - Headline, About, Experience (2 roles), Featured (5), Projects (7), Skills (35), Education (5) all match deliverable
-   - Open to Work: 5 titles (LinkedIn max), All LinkedIn Members visibility, Immediately, Full-time + Contract, Remote + On-site + Hybrid
-   - Verification badge active
-2. **A2: Upwork Messages** — DONE
-   - Kialash Persad: Confirmed Tuesday 4 PM EST call (replied at 5:05 PM)
-   - Chase Ashley / FloPro Jamaica: Already replied with availability (Thu Feb 12 10am-2pm). One message was blocked (referenced external platform), follow-up went through
-   - Jorge Salas: 13 days old ("trying to get a hold of you") — needs user decision on whether to reply
-3. **A3: Concourse YC Application** — PARTIALLY DONE
-   - Signup form filled: Cayman Roden, caymanroden@gmail.com, username caymanroden, LinkedIn URL
-   - **NEEDS**: User to enter password, sign up, then fill application (cover letter in `plans/COVER_LETTERS_FEB7.md` section 2, resume PDF in `plans/`)
-4. **A4: Upwork Profile Improvements** — PARTIALLY DONE
-   - Experience level: Expert ✅
-   - Project preference: "Both short-term and long-term" ✅ (no separate contract-to-hire toggle)
-   - **NEEDS**: User to manually connect GitHub (OAuth popup), reorder skill tags (drag-and-drop)
-5. **A5: LinkedIn Recommendations** — NOT DONE (manual — templates ready in `plans/LINKEDIN_RECOMMENDATION_REQUESTS.md`)
-6. **A6: LinkedIn Verification Badge** — ALREADY DONE (confirmed active)
+```bash
+# 1. docqa-engine — commit remaining app.py change
+cd /Users/cave/Documents/GitHub/docqa-engine
+git add app.py
+git commit -m "feat: add vector store selector to Streamlit sidebar"
+git push
 
-### Track B: Agent Tasks
-1. **B1: README Stats** — DONE. Test count badge 4,500+ → 5,354+, screenshots verified
-2. **B2: Documentation Link Audit** — DONE. Zero broken links across all 4 files. Minor findings:
-   - AGENTS.md is a duplicate of CLAUDE.md (not critical)
-   - docs/INDEX.md references `scenarios/` but files are in `_archive/scenarios/`
-3. **B3: Beads Sync** — DONE. 5 open beads confirmed, EH-cpw verified closed
+# 2. EnterpriseHub — commit industry config layer + case study
+cd /Users/cave/Documents/GitHub/EnterpriseHub
+git add ghl_real_estate_ai/config/ \
+        ghl_real_estate_ai/agents/jorge_buyer_bot.py \
+        ghl_real_estate_ai/agents/jorge_seller_bot.py \
+        ghl_real_estate_ai/agents/lead_bot.py \
+        ghl_real_estate_ai/agents/buyer_intent_decoder.py \
+        ghl_real_estate_ai/agents/intent_decoder.py \
+        ghl_real_estate_ai/agents/seller_intent_decoder.py \
+        ghl_real_estate_ai/agents/bot_personality.py \
+        ghl_real_estate_ai/agents/personality_config.py \
+        ghl_real_estate_ai/agents/personalities/ \
+        ghl_real_estate_ai/services/jorge/jorge_handoff_service.py \
+        requirements.txt \
+        tests/test_industry_config.py \
+        plans/case-study-rag-system.md \
+        plans/SERVICE_CATALOG_DEV_SPEC.md
+git commit -m "feat: industry-agnostic bot config layer + RAG case study (Sprint 1)"
+git push
+
+# 3. Sync beads
+bd sync
+```
+
+---
+
+## Step 2: Clean Up Stale WS Beads
+
+These in-progress beads are from a prior WS plan and overlap with Sprint 1 work:
+
+| Bead | Description | Overlap | Action |
+|------|-------------|---------|--------|
+| `hji` | WS1.5: Bot personality tests | Covered by cnq (44 tests) | Close |
+| `irr` | WS1.4: Dental vertical | Covered by cnq (dental_practice.yaml) | Close |
+| `ach` | WS2.4: docqa-engine client demo tests | Partially done, Sprint 2 lcx will cover | Close |
+
+```bash
+bd close hji irr ach --reason="Superseded by Sprint 1 service catalog beads (cnq, ruy)"
+```
+
+---
+
+## Step 3: Launch Sprint 2 (3 Parallel Agents)
+
+Sprint 2 is now **unblocked** — `ruy` and `cnq` are both CLOSED.
+
+### Agent D: Client Demo Mode (bead `lcx`)
+
+```
+Launch with: Task subagent_type=general-purpose run_in_background=true
+
+PROMPT:
+You are adding a client demo mode to the docqa-engine Streamlit app.
+
+REPO: /Users/cave/Documents/GitHub/docqa-engine
+BEAD: lcx — "docqa-engine: Client demo mode — upload & query flow"
+DEPENDS ON: bead ruy (vector_store.py with VectorStoreBase already exists)
+
+CONTEXT:
+- app.py has 5 tabs: Documents, Ask Questions, Prompt Lab, Chunking Lab, Stats
+- Plus a new vector store sidebar selector (just committed)
+- DocQAPipeline in pipeline.py orchestrates the full RAG flow
+- Pipeline stored in st.session_state
+- run_async() helper wraps asyncio for Streamlit
+- Demo docs in demo_docs/ (python_guide.md, etc.)
+- VectorStoreBase ABC in docqa_engine/vector_store.py
+- InMemoryVectorStore, ChromaDBVectorStore, PineconeVectorStore available
+
+IMPLEMENTATION:
+1. Add a new "Try It" tab as the FIRST tab in app.py:
+   - st.file_uploader for PDF/DOCX/TXT/CSV (max 10MB)
+   - Chunking strategy dropdown (default: semantic_tfidf)
+   - Vector store selector (In-Memory / ChromaDB)
+   - After upload: auto-ingest, show chunk count + processing time
+   - Question input with st.text_input
+   - Answer display with citations (source doc, chunk text, relevance score)
+   - Expandable "Debug" section showing retrieved chunks, scores, timing
+2. Add a sidebar "Quick Start" guide with 3 sample questions
+3. Add progress indicators during ingestion and search
+4. Write 10-15 tests in tests/test_demo_mode.py
+
+CONSTRAINTS:
+- Must work without API keys (use mock LLM in demo mode)
+- File uploads stored in st.session_state (no disk persistence)
+- Max 10MB per file, max 5 files
+- Show processing time for each step
+- Follow existing Streamlit patterns in app.py
+- Run tests after to verify: pytest tests/ -v
+```
+
+### Agent E: Interactive Chatbot Widget (bead `s7y`)
+
+```
+Launch with: Task subagent_type=general-purpose run_in_background=true
+
+PROMPT:
+You are building an interactive chatbot demo widget for EnterpriseHub's Streamlit demo.
+
+REPO: /Users/cave/Documents/GitHub/EnterpriseHub
+BEAD: s7y — "EnterpriseHub: Interactive chatbot demo widget"
+DEPENDS ON: bead cnq (IndustryConfig in ghl_real_estate_ai/config/industry_config.py)
+
+CONTEXT:
+- Streamlit demo at ghl_real_estate_ai/streamlit_demo/
+- Admin dashboard at ghl_real_estate_ai/streamlit_demo/admin_dashboard.py
+- Bot classes: LeadBotWorkflow, JorgeBuyerBot, JorgeSellerBot
+- Bots return dicts with: response, temperature, handoff_signals, scores
+- IndustryConfig loads from YAML, provides personality, intents, questions
+- IndustryConfig dataclass in ghl_real_estate_ai/config/industry_config.py
+- 4 YAML configs in ghl_real_estate_ai/config/industries/ (rancho, dallas, dental, hvac)
+- Demo mode uses mock LLM (no API keys required)
+
+IMPLEMENTATION:
+1. Create ghl_real_estate_ai/streamlit_demo/components/chatbot_widget.py:
+   - render_chatbot_widget(industry_config: IndustryConfig) function
+   - st.chat_message for bot/user messages
+   - st.chat_input for user text
+   - Sidebar: industry selector, intent scores, temperature gauge
+   - Conversation history in st.session_state
+   - Process messages through LeadBotWorkflow (mock mode)
+   - Show real-time: FRS score, PCS score, temperature tag
+   - Highlight handoff triggers when detected
+2. Add "Talk to the Bot" as first tab in admin_dashboard.py
+3. Pre-seed with 3 example conversations (buyer, seller, cold lead)
+4. Write 10-15 tests in tests/test_chatbot_widget.py
+
+CONSTRAINTS:
+- Must work in demo mode (USE_MOCK_LLM=true)
+- No API keys required
+- Use st.chat_message (Streamlit native chat UI)
+- Show processing time per response
+- Follow existing component patterns in streamlit_demo/components/
+- Run tests after: python -m pytest tests/test_chatbot_widget.py -v
+```
+
+### Agent F: Agent Flow Visualizer (bead `tml`)
+
+```
+Launch with: Task subagent_type=general-purpose run_in_background=true
+
+PROMPT:
+You are building a Streamlit agent flow visualizer for the ai-orchestrator (AgentForge) project.
+
+REPO: /Users/cave/Documents/GitHub/ai-orchestrator
+BEAD: tml — "ai-orchestrator: Streamlit agent flow visualizer demo"
+
+CONTEXT:
+- AIOrchestrator is the core class (orchestrator.py): chat(), stream(), compare()
+- ProviderBase ABC (providers/base.py): chat(), stream(), is_configured()
+- 5 providers: Claude, OpenAI, Gemini, Perplexity, Mock
+- MockProvider returns canned responses (no API keys needed)
+- AIResponse dataclass: content, provider, model, elapsed_ms, metadata
+- ToolRegistry + ToolExecutor for tool chaining
+- TemplateRegistry for prompt templates
+- CLI via Click: agentforge "prompt" --provider mock
+- Dependencies: httpx, python-dotenv (minimal)
+
+IMPLEMENTATION:
+1. Create app.py at repo root with 4 tabs:
+   Tab 1 "Dashboard": Provider status grid (configured vs not), rate limiter status
+   Tab 2 "Chat": Prompt input + provider dropdown + execute → show AIResponse
+     - Streaming mode toggle (word-by-word display)
+     - Show elapsed_ms, model, metadata
+   Tab 3 "Compare": Run same prompt across selected providers
+     - Side-by-side results table
+     - Latency bar chart (st.bar_chart)
+     - Cost comparison if available
+   Tab 4 "Tool Chain": Visual tool chain builder
+     - Tool list from ToolRegistry
+     - Drag-and-drop chain builder (simplified: ordered list)
+     - Execute chain → show step-by-step results
+     - Generate Mermaid flow diagram of execution
+2. Create requirements-demo.txt: streamlit>=1.31.0
+3. Create .streamlit/config.toml (port 8505, dark theme)
+4. Add Makefile target: demo: streamlit run app.py
+5. Write 10-15 tests in tests/test_app.py
+
+CONSTRAINTS:
+- Must work with MockProvider only (no API keys required)
+- Use AIOrchestrator as the main interface (don't bypass to providers)
+- Follow existing code patterns (async, dataclasses, type hints)
+- Streamlit chat UI for the Chat tab
+- Show real-time streaming with st.write_stream
+- Run tests after: pytest tests/test_app.py -v
+```
+
+---
+
+## Step 4: Post-Sprint 2 Verification & Commit
+
+After all 3 agents complete:
+
+```bash
+# Verify tests
+cd /Users/cave/Documents/GitHub/docqa-engine && pytest tests/ -v
+cd /Users/cave/Documents/GitHub/EnterpriseHub && python -m pytest tests/test_chatbot_widget.py -v
+cd /Users/cave/Documents/GitHub/ai-orchestrator && pytest tests/test_app.py -v
+
+# Commit per repo
+cd /Users/cave/Documents/GitHub/docqa-engine
+git add app.py tests/test_demo_mode.py
+git commit -m "feat: client demo mode with upload & query flow"
+git push
+
+cd /Users/cave/Documents/GitHub/EnterpriseHub
+git add ghl_real_estate_ai/streamlit_demo/components/chatbot_widget.py tests/test_chatbot_widget.py
+git commit -m "feat: interactive chatbot demo widget with industry selector"
+git push
+
+cd /Users/cave/Documents/GitHub/ai-orchestrator
+git add app.py requirements-demo.txt .streamlit/ tests/test_app.py Makefile
+git commit -m "feat: Streamlit agent flow visualizer with 4 tabs"
+git push
+
+# Close beads
+bd close lcx s7y tml
+bd sync
+```
+
+---
+
+## Sprint 3 Reference
+
+After Sprint 2, launch Sprint 3 (beads `58t`, `gwn`, `hfi`). Full agent prompts are in `plans/SERVICE_CATALOG_DEV_SPEC.md` lines 731-849.
+
+| Bead | Description | Repo |
+|------|-------------|------|
+| `58t` | REST API + auth for docqa-engine | docqa-engine |
+| `gwn` | HubSpot CRM adapter | EnterpriseHub |
+| `hfi` | Agent templates + REST API | ai-orchestrator |
+
+---
+
+## Current Bead State
+
+### Closed (Sprint 1)
+- `ruy` — Vector DB adapter (docqa-engine)
+- `cnq` — Industry config layer (EnterpriseHub)
+- `ia3` — RAG case study (portfolio)
+
+### Open — Sprint 2 (ready to launch)
+- `lcx` (P1) — Client demo mode (docqa-engine) — was blocked by ruy, NOW UNBLOCKED
+- `s7y` (P1) — Chatbot widget (EnterpriseHub) — was blocked by cnq, NOW UNBLOCKED
+- `tml` (P2) — Agent visualizer (ai-orchestrator) — no blockers
+
+### Open — Sprint 3 (blocked by Sprint 2)
+- `58t` (P2) — REST API + auth (docqa-engine) — blocked by ruy (CLOSED, ready when Sprint 2 done)
+- `gwn` (P2) — HubSpot adapter (EnterpriseHub) — no blockers (can start anytime)
+- `hfi` (P2) — Agent templates (ai-orchestrator) — blocked by tml
+
+### Open — Non-dev (human action required)
+- `4j2` (P2) — Upwork: Buy connects + proposals
+- `9je` (P2) — LinkedIn: Recommendation requests
+- `pbz` (P3) — LinkedIn: Content cadence
+- `vp9` (P3) — Upwork: Profile improvements
+
+### Stale — Close these first
+- `hji` — WS1.5: Bot personality tests (superseded by cnq)
+- `irr` — WS1.4: Dental vertical (superseded by cnq)
+- `ach` — WS2.4: Demo tests (superseded by lcx)
+
+---
+
+## Key Reference Files
+
+| File | Purpose |
+|------|---------|
+| `plans/SERVICE_CATALOG_DEV_SPEC.md` | Full 9-bead execution spec with all agent prompts |
+| `plans/case-study-rag-system.md` | RAG case study (Sprint 1 output) |
+| `ghl_real_estate_ai/config/industry_config.py` | IndustryConfig dataclass (Sprint 1 output) |
+| `ghl_real_estate_ai/config/industries/*.yaml` | 4 industry YAML configs (Sprint 1 output) |
 
 ---
 
@@ -56,84 +343,9 @@ Run `bd prime` first, then read this file.
 | 6 | Kialash Persad | Sr AI Agent Eng | Upwork | **Active — call Tue 4 PM EST** | -- |
 | 7 | Prompt Health | Sr AI Engineer | Ashby | Submitted (listing active) | $160K-$220K |
 | 8 | Rula | Principal AI Eng | Ashby | Submitted (listing active) | $229K-$284K |
-| 9 | Concourse | Founding AI/ML | YC/WAAS | **Signup form filled — needs password + submit** | $150K-$250K |
+| 9 | Concourse | Founding AI/ML | YC/WAAS | **Signup form filled — needs password** | $150K-$250K |
 | 10-14 | Round 2 (5 jobs) | RAG/AI roles | Upwork | **BLOCKED ($12 Connects)** | $55-65/hr |
 
 **Key dates:**
 - **Tue Feb 10, 4 PM EST**: Call with Kialash Persad (confirmed)
 - **Thu Feb 12**: Availability offered to Chase Ashley
-
----
-
-## Open Beads (4 remaining)
-
-| Priority | ID | Description | Next Action |
-|----------|----|-------------|-------------|
-| P2 | `4j2` | Upwork: Buy Connects + proposals | Purchase $12 connects, submit 5 proposals |
-| P2 | `9je` | LinkedIn: Recommendation requests | Browse connections, personalize+send 3-5 templates |
-| P3 | `pbz` | LinkedIn: Content cadence | Posts 1-8 done; posts 9-11 for Feb 17-19 |
-| P3 | `vp9` | Upwork: Profile improvements | Connect GitHub, reorder skills, video intro |
-
----
-
-## Next Session Priorities
-
-### P1 — Time-Sensitive
-1. **Prepare for Kialash call** (Tue 4 PM EST): Review his job requirements, prepare architecture walkthrough
-2. **Complete Concourse application**: Enter password on YC signup, fill profile, paste cover letter, attach resume
-3. **Monitor Chase Ashley**: Check if he responded with a call time
-
-### P2 — When Budget Allows
-4. **Buy 80 Connects ($12)**: Then submit 5 Round 2 proposals from `plans/UPWORK_PROPOSALS_FEB8_ROUND2.md`
-5. **LinkedIn recommendations**: Send 3-5 personalized requests
-
-### P3 — Ongoing
-6. **LinkedIn posts**: Week 3 posts (9-11) ready for Feb 17-19
-7. **Upwork profile**: Connect GitHub, reorder skills
-8. **Jorge Salas**: Decide whether to re-engage (13 days no reply)
-
----
-
-## Browser Lessons Learned (Updated)
-
-- **Ashby has NO applicant dashboard** — don't waste time checking. Email only.
-- **LinkedIn profile was already complete** — prior session applied all deliverable content. Always verify before re-doing.
-- **Upwork SPA routing is unreliable** — clicking sidebar items doesn't always update the main panel. Navigate directly to room URLs instead.
-- **Upwork blocks messages referencing external platforms** — never mention Zoom, Google Meet, email, etc. before contract.
-- **GitHub connection on Upwork requires OAuth popup** — can't be automated via extension. User must click manually.
-- **LinkedIn "Contract-to-hire"** is not a separate Upwork profile setting — it's in job search filters.
-- **YC Work at a Startup signup** requires password entry — can't be automated for security reasons.
-- **LinkedIn caps Open to Work job titles at 5** — deliverable wanted 8, but 5 is the platform maximum.
-
----
-
-## Key Reference Files
-
-| File | Purpose |
-|------|---------|
-| `plans/UPWORK_PROPOSALS_FEB8_ROUND2.md` | 5 drafted Upwork proposals |
-| `plans/COVER_LETTERS_FEB7.md` | Cover letters (Concourse sec 2, Prompt Health, Rula) |
-| `plans/LINKEDIN_DELIVERABLE.md` | Full LinkedIn profile content (already applied) |
-| `plans/LINKEDIN_RECOMMENDATION_REQUESTS.md` | 5 recommendation request templates |
-| `plans/LINKEDIN_POSTS_DRAFT.md` | Posts 9-11 for Week 3 (Feb 17-19) |
-| `plans/Cayman_Roden_AI_Engineer_Resume.pdf` | PDF resume for applications |
-| `plans/resume_ai_engineer.html` | HTML resume |
-
----
-
-## Portfolio Stats
-
-**11 repos, all CI green, 5,354+ tests (measured via pytest --co)**
-
-| Repo | Tests | Streamlit Demo |
-|------|-------|----------------|
-| EnterpriseHub | 3,577 | ct-enterprise-ai.streamlit.app |
-| jorge_real_estate_bots | 279 | -- |
-| ai-orchestrator | 171 | -- |
-| Revenue-Sprint | 240 | -- |
-| insight-engine | 313 | ct-insight-engine.streamlit.app |
-| docqa-engine | 236 | ct-document-engine.streamlit.app |
-| scrape-and-serve | 236 | ct-scrape-and-serve.streamlit.app |
-| mcp-toolkit | 70 | ct-mcp-toolkit.streamlit.app |
-| prompt-engineering-lab | 127 | -- (pending) |
-| llm-integration-starter | 105 | -- (pending) |

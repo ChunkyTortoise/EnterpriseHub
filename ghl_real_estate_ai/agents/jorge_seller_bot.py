@@ -167,23 +167,29 @@ class ConversationMemory:
 class AdaptiveQuestionEngine:
     """Manages dynamic question selection and adaptation (Adaptive Feature)"""
 
-    def __init__(self):
-        # Core Jorge questions (unchanged foundation)
-        self.jorge_core_questions = [
-            "What's your timeline for selling?",
-            "What's driving you to sell the property?",
-            "What's your bottom-line number?",
-            "Are you flexible on the closing date?",
-        ]
+    def __init__(self, questions_config=None):
+        # Core questions (config-first, hardcoded fallback)
+        if questions_config and questions_config.questions:
+            self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions]
+        else:
+            self.jorge_core_questions = [
+                "What's your timeline for selling?",
+                "What's driving you to sell the property?",
+                "What's your bottom-line number?",
+                "Are you flexible on the closing date?",
+            ]
 
-        # Friendly questions for high-intent leads
-        self.high_intent_accelerators = [
-            "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
-            "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
-            "I'm excited to help you with this! What timeline would work best for your situation?",
-            "You seem ready to take the next step - that's wonderful! When would be a good time to meet and go over your options?",
-            "I can see this is important to you. Let's find a time to sit down and create a plan that works for your situation.",
-        ]
+        # Friendly questions for high-intent leads (config-first, hardcoded fallback)
+        if questions_config and questions_config.accelerators:
+            self.high_intent_accelerators = questions_config.accelerators
+        else:
+            self.high_intent_accelerators = [
+                "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
+                "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
+                "I'm excited to help you with this! What timeline would work best for your situation?",
+                "You seem ready to take the next step - that's wonderful! When would be a good time to meet and go over your options?",
+                "I can see this is important to you. Let's find a time to sit down and create a plan that works for your situation.",
+            ]
 
         self.supportive_clarifiers = {
             "zestimate": [
@@ -286,8 +292,8 @@ class JorgeSellerBot:
         # Core components (always initialized)
         self.tenant_id = tenant_id
         self.config = config or JorgeFeatureConfig()
-        self.intent_decoder = LeadIntentDecoder()
-        self.seller_intent_decoder = SellerIntentDecoder()
+        self.intent_decoder = LeadIntentDecoder(industry_config=self.industry_config)
+        self.seller_intent_decoder = SellerIntentDecoder(industry_config=self.industry_config)
         self.cma_generator = CMAGenerator()
         self.market_intelligence = get_market_intelligence()
         self.claude = ClaudeAssistant()
@@ -330,7 +336,7 @@ class JorgeSellerBot:
         self.question_engine = None
         if self.config.enable_adaptive_questioning:
             self.conversation_memory = ConversationMemory()
-            self.question_engine = AdaptiveQuestionEngine()
+            self.question_engine = AdaptiveQuestionEngine(questions_config=self.industry_config.questions)
             logger.info("Jorge bot: Adaptive questioning enabled")
 
         # Phase 3.3 Bot Intelligence Middleware (optional)
