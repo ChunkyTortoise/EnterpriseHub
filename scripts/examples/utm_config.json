@@ -1,0 +1,72 @@
+[
+  {
+    "name": "email_signature",
+    "source": "email",
+    "medium": "signature",
+    "campaign": "feb-2026-outreach",
+    "content": "email_sig"
+  },
+  {
+    "name": "linkedin_profile",
+    "source": "linkedin",
+    "medium": "profile",
+    "campaign": "feb-2026-outreach",
+    "content": "profile_link"
+  },
+  {
+    "name": "linkedin_post_1",
+    "source": "linkedin",
+    "medium": "social",
+    "campaign": "feb-2026-outreach",
+    "content": "post_feb17"
+  },
+  {
+    "name": "linkedin_post_2",
+    "source": "linkedin",
+    "medium": "social",
+    "campaign": "feb-2026-outreach",
+    "content": "post_feb19"
+  },
+  {
+    "name": "linkedin_post_3",
+    "source": "linkedin",
+    "medium": "social",
+    "campaign": "feb-2026-outreach",
+    "content": "post_feb21"
+  },
+  {
+    "name": "reddit_comment",
+    "source": "reddit",
+    "medium": "social",
+    "campaign": "feb-2026-outreach",
+    "content": "comment"
+  },
+  {
+    "name": "hackernews_show",
+    "source": "hackernews",
+    "medium": "social",
+    "campaign": "feb-2026-outreach",
+    "content": "show_hn"
+  },
+  {
+    "name": "devto_article",
+    "source": "devto",
+    "medium": "article",
+    "campaign": "feb-2026-outreach",
+    "content": "devto_feb"
+  },
+  {
+    "name": "github_profile",
+    "source": "github",
+    "medium": "profile",
+    "campaign": "feb-2026-outreach",
+    "content": "gh_profile"
+  },
+  {
+    "name": "portfolio_site",
+    "source": "portfolio",
+    "medium": "website",
+    "campaign": "feb-2026-outreach",
+    "content": "chunkytortoise"
+  }
+]
