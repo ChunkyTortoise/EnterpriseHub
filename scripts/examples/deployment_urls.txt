@@ -1,0 +1,10 @@
+# Deployment URLs for verification
+# Usage: ./scripts/streamlit_deploy_helper.sh verify --urls scripts/examples/deployment_urls.txt
+
+https://agentforge.streamlit.app
+https://promptlab.streamlit.app
+https://llmstarter.streamlit.app
+https://docqa-engine.streamlit.app
+https://insight-engine.streamlit.app
+https://scrape-serve.streamlit.app
+https://chunkytortoise.github.io
