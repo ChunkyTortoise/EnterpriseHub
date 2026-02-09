@@ -2695,7 +2695,7 @@ st.markdown(
 
     <div style='margin-top: 1rem; color: #8B949E; font-size: 0.85rem;'>
 
-        Consolidated Hub Union[Architecture, Path] B Union[Backend, 522]+ Tests Passing
+        Consolidated Hub Architecture | Backend | 4,937+ Tests Passing
 
     </div>
 
