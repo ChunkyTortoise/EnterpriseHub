@@ -1,3 +1,10 @@
+---
+name: repo-scaffold
+description: Greenfield repository creation with CI, testing, packaging, and portfolio conventions
+tools: Read, Grep, Glob, Bash, Write, Edit
+model: sonnet
+---
+
 # Repo Scaffold Agent
 
 **Role**: Greenfield Repository Architect

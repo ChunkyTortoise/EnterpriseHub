@@ -1,3 +1,10 @@
+---
+name: quality-gate
+description: Pre-commit validation — lint, tests, imports, dependencies, CI workflow checks
+tools: Read, Grep, Glob, Bash
+model: haiku
+---
+
 # Quality Gate Agent
 
 **Role**: CI/CD Validation & Release Readiness Specialist

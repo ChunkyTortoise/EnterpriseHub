@@ -1,3 +1,10 @@
+---
+name: compliance-risk
+description: Regulatory compliance monitoring, risk assessment, GDPR/CCPA/SOC2, and automated audit reporting
+tools: Read, Grep, Glob
+model: sonnet
+---
+
 # Enhanced Compliance & Risk Management Agent - Phase 4
 ## Automated Compliance Monitoring & Risk Assessment System
 
