@@ -87,12 +87,14 @@ class HubSpotAdapter(CRMProtocol):
         path: str,
         *,
         json_body: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> httpx.Response:
         """Execute an HTTP request and raise on failure."""
         url = f"{self._base_url}{path}"
         async with httpx.AsyncClient() as client:
             resp = await client.request(
-                method, url, headers=self._headers(), json=json_body
+                method, url, headers=self._headers(), json=json_body,
+                params=params,
             )
         if resp.status_code == 401:
             raise HubSpotError(401, "Authentication failed")
@@ -220,3 +222,60 @@ class HubSpotAdapter(CRMProtocol):
         except HubSpotError:
             logger.exception("Failed to sync lead %s", contact.id)
             return False
+
+    # ------------------------------------------------------------------
+    # Extended operations (beyond CRMProtocol)
+    # ------------------------------------------------------------------
+
+    async def delete_contact(self, contact_id: str) -> bool:
+        """Delete a HubSpot contact by ID.
+
+        Returns True on success, False if not found.
+        """
+        try:
+            await self._request(
+                "DELETE", f"/crm/v3/objects/contacts/{contact_id}"
+            )
+            logger.info("Deleted HubSpot contact %s", contact_id)
+            return True
+        except HubSpotError as exc:
+            if exc.status_code == 404:
+                logger.warning(
+                    "Cannot delete HubSpot contact %s: not found", contact_id
+                )
+                return False
+            raise
+
+    async def list_contacts(
+        self,
+        limit: int = 10,
+        after: str | None = None,
+    ) -> tuple[list[CRMContact], str | None]:
+        """List HubSpot contacts with cursor-based pagination.
+
+        Args:
+            limit: Maximum number of contacts per page (max 100).
+            after: Cursor token for the next page.
+
+        Returns:
+            Tuple of (contacts, next_cursor). next_cursor is None when
+            there are no more pages.
+        """
+        params: dict[str, Any] = {"limit": min(limit, 100)}
+        if after:
+            params["after"] = after
+
+        resp = await self._request(
+            "GET", "/crm/v3/objects/contacts", params=params
+        )
+        data = resp.json()
+        contacts: list[CRMContact] = []
+        for item in data.get("results", []):
+            contacts.append(
+                self._properties_to_contact(
+                    item["id"], item.get("properties", {})
+                )
+            )
+        paging = data.get("paging", {})
+        next_cursor = paging.get("next", {}).get("after")
+        return contacts, next_cursor
