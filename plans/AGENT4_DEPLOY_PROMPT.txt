@@ -1,0 +1,221 @@
+## Agent 4: Portal API High-Intent Detection Fix
+
+**Bead**: EnterpriseHub-qu7 (P0 - In Progress)
+**Mission**: Fix production bug where high-intent lead detection is blocked by GHL API failures
+
+---
+
+### CRITICAL ISSUE
+
+The `_process_like()` method in portal_swipe_manager.py exits early when GHL API fails (401 Unauthorized), preventing high-intent detection logic from running. This breaks lead scoring in production.
+
+**Current Flow (BROKEN)**:
+```
+1. Try GHL API tagging → FAILS with 401
+2. Exception caught → return early
+3. High-intent detection code → NEVER REACHED
+```
+
+**Required Flow (FIX)**:
+```
+1. Count recent likes (local, no API)
+2. Detect high-intent (local logic) → SET FLAG
+3. Update memory (local)
+4. Try GHL tagging (can fail gracefully, flag already set)
+```
+
+---
+
+### FILES TO MODIFY
+
+**File 1**: `/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/services/portal_swipe_manager.py`
+
+**Task 1.1** - Refactor `_process_like()` method (lines 148-194):
+- Move high-intent detection logic BEFORE GHL API calls
+- Wrap GHL calls in nested try/except
+- Ensure `result["high_intent"]` is set regardless of GHL success/failure
+
+**Task 1.2** - Fix deprecated datetime (lines 367, 384):
+- Replace `datetime.utcnow()` with `datetime.now(datetime.UTC)`
+
+**File 2**: `/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/tests/test_portal_swipe.py`
+
+**Task 2.1** - Add GHL client mocking (after line 42):
+```python
+@pytest.fixture
+def mock_ghl_client():
+    """Mock GHL client to avoid real API calls in tests."""
+    from unittest.mock import Mock, AsyncMock
+    mock = Mock()
+    mock.add_tags = AsyncMock(return_value={"status": "success"})
+    return mock
+
+@pytest.fixture
+def swipe_manager(temp_interactions_file, mock_ghl_client):
+    """Create PortalSwipeManager with mocked GHL client."""
+    manager = PortalSwipeManager(interactions_path=temp_interactions_file)
+    manager.ghl_client = mock_ghl_client
+    return manager
+```
+
+**File 3**: `/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/tests/test_portal_api.py`
+
+**Task 3.1** - Add GHL client mocking for API tests:
+```python
+@pytest.fixture
+def mock_ghl_for_api_tests(mocker):
+    """Mock GHL client for API-level tests."""
+    from unittest.mock import Mock, AsyncMock
+    mock_client = Mock()
+    mock_client.add_tags = AsyncMock(return_value={"status": "success"})
+    mocker.patch(
+        "ghl_real_estate_ai.services.portal_swipe_manager.EnhancedGHLClient",
+        return_value=mock_client
+    )
+    return mock_client
+```
+
+**Task 3.2** - Update test signature (line 196):
+```python
+async def test_high_intent_detection_via_api(client, mock_ghl_for_api_tests):
+```
+
+---
+
+### DETAILED REFACTOR CODE
+
+For `portal_swipe_manager.py` lines 148-194, replace entire `_process_like()` method with:
+
+```python
+async def _process_like(self, lead_id: str, property_id: str, location_id: str) -> Dict[str, Any]:
+    """Process a 'like' action with high-intent detection BEFORE GHL API calls."""
+    result = {"status": "logged", "trigger_sms": False, "high_intent": False}
+
+    try:
+        # STEP 1: Count recent likes (local operation, no external dependencies)
+        recent_likes = self._count_recent_likes(lead_id, minutes=10)
+        logger.info(f"Lead {lead_id} has {recent_likes} likes in last 10 minutes")
+
+        # STEP 2: Detect high-intent behavior FIRST (before any API calls)
+        if recent_likes >= 3:
+            result["high_intent"] = True
+            result["trigger_sms"] = True
+            result["message"] = f"High intent detected: {recent_likes} likes in 10 minutes"
+            logger.warning(f"⚡ HIGH INTENT DETECTED for {lead_id} - {recent_likes} likes")
+
+        # STEP 3: Update memory (local operation)
+        await self._update_liked_properties(lead_id, location_id, property_id)
+
+        # STEP 4: Try GHL API calls (can fail without breaking high-intent flag)
+        try:
+            tags = ["portal_liked_property", "hot_lead"]
+            if result["high_intent"]:
+                tags.extend(["super_hot_lead", "immediate_followup"])
+
+            await self.ghl_client.add_tags(lead_id, tags)
+            logger.info(f"✅ Successfully tagged lead {lead_id} in GHL with {tags}")
+            result["ghl_tagged"] = True
+
+        except Exception as ghl_error:
+            # Log but don't fail - high-intent flag already set
+            logger.error(f"Failed to tag lead {lead_id} in GHL: {ghl_error}")
+            result["ghl_tagged"] = False
+            result["ghl_error"] = str(ghl_error)
+            # Continue execution - high-intent detection already complete
+
+    except Exception as e:
+        logger.error(f"Error processing like: {e}")
+        result["error"] = str(e)
+
+    return result
+```
+
+---
+
+### VERIFICATION COMMANDS
+
+**Test 1** - Direct service test:
+```bash
+source .venv/bin/activate
+pytest ghl_real_estate_ai/tests/test_portal_swipe.py::test_high_intent_detection -v --tb=short
+```
+**Expected**: PASSED ✅
+
+**Test 2** - API endpoint test:
+```bash
+pytest ghl_real_estate_ai/tests/test_portal_api.py::test_high_intent_detection_via_api -v --tb=short
+```
+**Expected**: PASSED ✅
+
+**Test 3** - All portal tests:
+```bash
+pytest ghl_real_estate_ai/tests/test_portal_api.py ghl_real_estate_ai/tests/test_portal_swipe.py -v
+```
+**Expected**: 20+ tests PASSED, 0 FAILED
+
+---
+
+### SUCCESS CRITERIA
+
+- [ ] High-intent detection logic runs BEFORE GHL API calls
+- [ ] GHL failures don't prevent high_intent flag from being set
+- [ ] Tests use mocked GHL client (no real HTTP calls)
+- [ ] `datetime.utcnow()` replaced with `datetime.now(datetime.UTC)`
+- [ ] `test_high_intent_detection` PASSES
+- [ ] `test_high_intent_detection_via_api` PASSES
+- [ ] No new test failures introduced
+
+---
+
+### ON COMPLETION
+
+**If all tests pass**:
+
+1. Stage files:
+```bash
+git add ghl_real_estate_ai/services/portal_swipe_manager.py
+git add ghl_real_estate_ai/tests/test_portal_swipe.py
+git add ghl_real_estate_ai/tests/test_portal_api.py
+```
+
+2. Commit:
+```bash
+git commit -m "fix: portal API high-intent detection blocked by GHL failures
+
+Reorder _process_like() logic to run high-intent detection BEFORE GHL API
+calls. This ensures lead scoring works even when GHL is unavailable.
+
+- High-intent detection now runs first (local, no dependencies)
+- GHL tagging wrapped in nested try/except (fails gracefully)
+- Add GHL client mocking in tests (no real API calls)
+- Fix deprecated datetime.utcnow() calls
+
+Fixes EnterpriseHub-qu7
+
+Production Impact: Critical - High-intent leads now properly flagged
+Test Results: 2 tests fixed (high_intent_detection variants)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+3. Update bead:
+```bash
+bd close EnterpriseHub-qu7 --reason="Portal API refactored, high-intent detection fixed, all tests passing"
+```
+
+4. Sync:
+```bash
+bd sync
+```
+
+**Report completion**: "Wave 2 Complete ✅ - Portal API fixed, X tests passing"
+
+---
+
+### REFERENCE
+
+Full specification: `/Users/cave/Documents/GitHub/EnterpriseHub/plans/WAVE2_PORTAL_API_FIX_PROMPT.md`
+
+### KEY PRINCIPLE
+
+High-intent detection is BUSINESS LOGIC that must run regardless of external API availability. GHL tagging is a "nice to have" enhancement that should fail gracefully.
