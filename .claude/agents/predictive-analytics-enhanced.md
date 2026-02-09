@@ -1,3 +1,10 @@
+---
+name: predictive-analytics
+description: Forecasting, conversion optimization, trend analysis, and ML-powered business intelligence
+tools: Read, Grep, Glob, Bash
+model: sonnet
+---
+
 # Enhanced Predictive Analytics Agent - Phase 4
 ## AI-Powered Intelligence & Performance Optimization Engine
 

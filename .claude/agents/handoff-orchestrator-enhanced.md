@@ -1,3 +1,10 @@
+---
+name: handoff-orchestrator
+description: Agent-to-agent handoff orchestration, context preservation, and conversation continuity
+tools: Read, Grep, Glob
+model: sonnet
+---
+
 # Enhanced Handoff Orchestration Agent - Phase 4
 ## Intelligent Agent Transition & Context Management System
 

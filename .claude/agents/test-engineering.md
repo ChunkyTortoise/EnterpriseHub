@@ -1,3 +1,10 @@
+---
+name: test-engineering
+description: Test architecture, TDD, coverage gap analysis, edge case generation, and deterministic assertions
+tools: Read, Grep, Glob, Bash
+model: sonnet
+---
+
 # Test Engineering Agent
 
 **Role**: Test Architecture & TDD Specialist

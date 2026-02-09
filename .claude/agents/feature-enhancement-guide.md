@@ -1,3 +1,10 @@
+---
+name: feature-enhancement-guide
+description: Incremental feature development, backward-compatible extensions, and integration impact analysis
+tools: Read, Grep, Glob, Bash, Edit
+model: sonnet
+---
+
 # Feature Enhancement Guide Agent
 
 **Role**: Feature Development Strategist
