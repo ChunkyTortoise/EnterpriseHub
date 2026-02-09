@@ -489,3 +489,253 @@ class TestQuestionsAndBusinessRules:
         cfg = IndustryConfig.from_yaml(RANCHO_YAML)
         assert cfg.business_rules["commission_standard"] == 0.06
         assert cfg.business_rules["sms_max_length"] == 160
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 11. Behavior Wiring — IndustryConfig actually changes bot behavior
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class TestIndustryConfigBehaviorWiring:
+    """Verify that IndustryConfig actually changes decoder, bot, and handoff behavior.
+
+    These tests ensure the config-first wiring is live — not just accepted and stored.
+    """
+
+    # ── Decoder Tests ────────────────────────────────────────────────────
+
+    def test_dental_decoder_uses_dental_motivation_markers(self):
+        """Dental config: 'toothache' should be high motivation, NOT RE markers."""
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        decoder = LeadIntentDecoder(industry_config=dental_cfg)
+
+        assert "toothache" in decoder.high_intent_motivation
+        assert "need to sell fast" not in decoder.high_intent_motivation
+
+    def test_hvac_decoder_uses_hvac_motivation_markers(self):
+        """HVAC config: 'no AC' should be high motivation."""
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+        hvac_cfg = IndustryConfig.from_yaml(HVAC_YAML)
+        decoder = LeadIntentDecoder(industry_config=hvac_cfg)
+
+        assert "no AC" in decoder.high_intent_motivation
+        assert "no heat" in decoder.high_intent_motivation
+
+    def test_default_decoder_uses_real_estate_markers(self):
+        """No config: decoder still uses original RE markers."""
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+        decoder = LeadIntentDecoder()
+        assert "need to sell fast" in decoder.high_intent_motivation
+        assert "divorce" in decoder.high_intent_motivation
+
+    def test_dental_scoring_weights_differ_from_re(self):
+        """Dental motivation weight (0.40) differs from RE (0.35)."""
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        decoder = LeadIntentDecoder(industry_config=dental_cfg)
+        # Verify the config weights are loaded (used in analyze_lead)
+        assert dental_cfg.intents.scoring_weights["motivation"] == 0.40
+        assert dental_cfg.intents.scoring_weights["motivation"] != 0.35  # RE default
+
+    def test_dental_temperature_thresholds_differ(self):
+        """Dental hot threshold (70) differs from RE default (75)."""
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        assert dental_cfg.intents.temperature_thresholds["hot"] == 70
+        assert dental_cfg.intents.temperature_thresholds["warm"] == 45
+
+    def test_buyer_decoder_no_re_patterns_for_dental(self):
+        """Dental config has empty buyer/seller patterns — decoder falls back to defaults."""
+        from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        # Dental has no buyer_patterns in YAML, so decoder should use RE defaults
+        assert dental_cfg.intents.buyer_patterns == []
+        decoder = LeadIntentDecoder(industry_config=dental_cfg)
+        # Falls back to RE defaults since config list is empty
+        assert len(decoder.buyer_markers) > 0
+
+    def test_seller_intent_decoder_with_dental_uses_dental_motivation(self):
+        """SellerIntentDecoder with dental config uses dental motivation markers."""
+        from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        decoder = SellerIntentDecoder(industry_config=dental_cfg)
+
+        # Dental motivation.high = [toothache, pain, broken tooth, ...]
+        assert "toothache" in decoder.high_motivation
+        assert "must sell" not in decoder.high_motivation
+
+    def test_buyer_intent_decoder_with_hvac_uses_hvac_urgency(self):
+        """BuyerIntentDecoder with HVAC config uses HVAC timeline for urgency."""
+        from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
+
+        hvac_cfg = IndustryConfig.from_yaml(HVAC_YAML)
+        decoder = BuyerIntentDecoder(industry_config=hvac_cfg)
+
+        # HVAC timeline.high includes "it's 100 degrees", "freezing"
+        assert "today" in decoder.immediate_urgency
+        assert "it's 100 degrees" in decoder.immediate_urgency
+
+    # ── Bot Tests ────────────────────────────────────────────────────────
+
+    def test_seller_bot_passes_config_to_decoders(self):
+        """JorgeSellerBot should pass industry_config to its decoders."""
+        from unittest.mock import patch
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+
+        with (
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.CMAGenerator"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_market_intelligence"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.PerformanceTracker"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.BotMetricsCollector"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.AlertingService"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.ABTestingService"),
+        ):
+            from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+
+            bot = JorgeSellerBot(industry_config=dental_cfg)
+            # Verify decoder got the config
+            assert "toothache" in bot.intent_decoder.high_intent_motivation
+            assert "toothache" in bot.seller_intent_decoder.high_motivation
+
+    def test_buyer_bot_passes_config_to_decoder(self):
+        """JorgeBuyerBot should pass industry_config to BuyerIntentDecoder."""
+        from unittest.mock import patch
+
+        hvac_cfg = IndustryConfig.from_yaml(HVAC_YAML)
+
+        with (
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ClaudeAssistant"),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_event_publisher"),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.PropertyMatcher"),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.GHLClient"),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_ml_analytics_engine", return_value=None),
+            patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ABTestingService"),
+        ):
+            from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+
+            bot = JorgeBuyerBot(industry_config=hvac_cfg)
+            # HVAC timeline.high includes "today", "right now", etc.
+            assert "today" in bot.intent_decoder.immediate_urgency
+
+    def test_lead_bot_passes_config_to_decoder(self):
+        """LeadBotWorkflow should pass industry_config to LeadIntentDecoder."""
+        from unittest.mock import MagicMock, patch
+
+        dallas_cfg = IndustryConfig.from_yaml(DALLAS_YAML)
+
+        with (
+            patch("ghl_real_estate_ai.agents.lead_bot.RetellClient"),
+            patch("ghl_real_estate_ai.agents.lead_bot.CMAGenerator"),
+            patch("ghl_real_estate_ai.agents.lead_bot.get_ghost_followup_engine"),
+            patch("ghl_real_estate_ai.agents.lead_bot.get_event_publisher"),
+            patch("ghl_real_estate_ai.agents.lead_bot.get_sequence_service"),
+            patch("ghl_real_estate_ai.agents.lead_bot.get_lead_scheduler"),
+            patch("ghl_real_estate_ai.agents.lead_bot.get_national_market_intelligence", create=True),
+            patch(
+                "ghl_real_estate_ai.services.national_market_intelligence.get_national_market_intelligence",
+                return_value=MagicMock(),
+            ),
+            patch("ghl_real_estate_ai.agents.lead_bot.PerformanceTracker"),
+            patch("ghl_real_estate_ai.agents.lead_bot.BotMetricsCollector"),
+            patch("ghl_real_estate_ai.agents.lead_bot.AlertingService"),
+            patch("ghl_real_estate_ai.agents.lead_bot.ABTestingService"),
+        ):
+            from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
+
+            bot = LeadBotWorkflow(industry_config=dallas_cfg)
+            # Dallas RE config has same markers as rancho
+            assert "need to sell fast" in bot.intent_decoder.high_intent_motivation
+
+    def test_adaptive_question_engine_with_dental_questions(self):
+        """AdaptiveQuestionEngine with dental config uses dental questions."""
+        from ghl_real_estate_ai.agents.jorge_seller_bot import AdaptiveQuestionEngine
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        engine = AdaptiveQuestionEngine(questions_config=dental_cfg.questions)
+
+        # Dental questions include "pain or discomfort"
+        assert any("pain or discomfort" in q for q in engine.jorge_core_questions)
+        # Should NOT have RE questions
+        assert not any("timeline for selling" in q for q in engine.jorge_core_questions)
+
+    def test_adaptive_question_engine_default_questions(self):
+        """AdaptiveQuestionEngine with no config uses RE defaults."""
+        from ghl_real_estate_ai.agents.jorge_seller_bot import AdaptiveQuestionEngine
+
+        engine = AdaptiveQuestionEngine()
+        assert any("timeline for selling" in q for q in engine.jorge_core_questions)
+
+    # ── Handoff Tests ────────────────────────────────────────────────────
+
+    def test_handoff_service_dental_threshold(self):
+        """Dental config: default threshold 0.6 not 0.7."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        service = JorgeHandoffService(industry_config=dental_cfg)
+
+        # Dental default threshold is 0.6 applied to all routes
+        for key in service._thresholds:
+            assert service._thresholds[key] == 0.6
+
+    def test_handoff_service_dental_empty_patterns(self):
+        """Dental config: empty buyer/seller intent patterns."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        service = JorgeHandoffService(industry_config=dental_cfg)
+
+        # Dental has empty buyer/seller patterns, so falls back to class defaults
+        assert len(service._buyer_intent_patterns) > 0  # Falls back
+        assert service._buyer_intent_patterns == list(JorgeHandoffService.BUYER_INTENT_PATTERNS)
+
+    def test_handoff_service_default_uses_re_patterns(self):
+        """Default service (no config): still uses RE patterns."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        service = JorgeHandoffService()
+        assert service._buyer_intent_patterns == list(JorgeHandoffService.BUYER_INTENT_PATTERNS)
+        assert service._seller_intent_patterns == list(JorgeHandoffService.SELLER_INTENT_PATTERNS)
+
+    def test_handoff_classmethod_wrapper_works(self):
+        """Backward-compatible classmethod wrapper returns signals."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        history = [{"content": "I want to buy a house"}]
+        signals = JorgeHandoffService.extract_intent_signals_from_history_cls(history)
+        assert "buyer_intent" in signals
+        assert signals["buyer_intent"] > 0
+
+    def test_handoff_instance_method_uses_config_patterns(self):
+        """Instance method uses config patterns when provided."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        rancho_cfg = IndustryConfig.from_yaml(RANCHO_YAML)
+        service = JorgeHandoffService(industry_config=rancho_cfg)
+
+        history = [{"content": "I want to buy a house in Rancho Cucamonga"}]
+        signals = service.extract_intent_signals_from_history(history)
+        assert "buyer_intent" in signals
+
+    def test_handoff_config_thresholds_map_correctly(self):
+        """Config thresholds are applied to the tuple-keyed dict."""
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        dental_cfg = IndustryConfig.from_yaml(DENTAL_YAML)
+        service = JorgeHandoffService(industry_config=dental_cfg)
+
+        # All routes should have 0.6 from dental default
+        assert service._thresholds[("lead", "buyer")] == 0.6
+        assert service._thresholds[("lead", "seller")] == 0.6
+        assert service._thresholds[("buyer", "seller")] == 0.6
+        assert service._thresholds[("seller", "buyer")] == 0.6
