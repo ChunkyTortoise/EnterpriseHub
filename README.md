@@ -23,7 +23,7 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-5,354+_passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-4,500+_passing-brightgreen)](tests/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
@@ -121,7 +121,7 @@ graph TB
 
 | Metric | Value |
 |--------|-------|
-| Test Suite | 4,992+ automated tests |
+| Test Suite | 4,500+ automated tests |
 | LLM Cost Reduction | 89% via 3-tier Redis caching |
 | Orchestration Overhead | <200ms per request |
 | API P95 Latency | <300ms under 10 req/sec |
@@ -177,11 +177,17 @@ EnterpriseHub/
 │   ├── services/                 # Business logic layer
 │   │   ├── claude_orchestrator.py    # Multi-LLM coordination + caching
 │   │   ├── agent_mesh_coordinator.py # Agent fleet management
-│   │   └── enhanced_ghl_client.py    # CRM integration (rate-limited)
+│   │   ├── llm_observability.py      # LLM cost tracking + tracing
+│   │   ├── enhanced_ghl_client.py    # CRM integration (rate-limited)
+│   │   └── jorge/                    # Bot services (handoff, A/B, metrics)
 │   ├── models/                   # SQLAlchemy models, Pydantic schemas
 │   └── streamlit_demo/           # Dashboard UI components
 ├── advanced_rag_system/          # RAG pipeline (BM25, dense search, ChromaDB)
-├── tests/                        # Test suite
+├── benchmarks/                   # Synthetic performance benchmarks
+├── docs/                         # Documentation
+│   ├── adr/                      # Architecture Decision Records
+│   └── templates/                # Reusable templates for other repos
+├── tests/                        # 4,500+ automated tests
 ├── app.py                        # FastAPI entry point
 ├── admin_dashboard.py            # Streamlit BI dashboard
 └── docker-compose.yml            # Container orchestration
@@ -228,12 +234,42 @@ Production-ready infrastructure with observability built in:
 | **Per-Bot Metrics** | `BotMetricsCollector` — throughput, cache hits, error categorization | 87% cache hit rate |
 | **Health Checks** | `/health/aggregate` endpoint checks all services | Bot + DB + Redis + CRM status |
 
+## Architecture Decisions
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-0001](docs/adr/0001-three-tier-redis-caching.md) | Three-Tier Redis Caching Strategy | Accepted |
+| [ADR-0002](docs/adr/0002-multi-crm-protocol-pattern.md) | Multi-CRM Protocol Pattern | Accepted |
+| [ADR-0003](docs/adr/0003-jorge-handoff-architecture.md) | Jorge Handoff Architecture | Accepted |
+| [ADR-0004](docs/adr/0004-agent-mesh-coordinator.md) | Agent Mesh Coordinator | Accepted |
+| [ADR-0005](docs/adr/0005-pydantic-v2-migration.md) | Pydantic V2 Migration | Accepted |
+
+## Benchmarks
+
+Synthetic benchmarks measuring platform overhead (no external API keys required).
+
+```bash
+python -m benchmarks.run_all
+```
+
+See [BENCHMARKS.md](BENCHMARKS.md) for full methodology and results.
+
+## Observability
+
+Full LLM observability stack: cost tracking, latency histograms, conversation analytics, and alerting.
+
+See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for details.
+
 ## Testing
 
 ```bash
 python -m pytest tests/ -v
 python -m pytest --cov=ghl_real_estate_ai --cov-report=term-missing
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Related Projects
 

@@ -66,8 +66,8 @@ We only support the latest version. Please update to the most recent release.
    - Streamlit Cloud provides this by default
 
 4. **Validate inputs**
-   - Be cautious with ticker symbols from untrusted sources
-   - The app validates user inputs, but always verify data
+   - Be cautious with data from untrusted sources
+   - The app validates user inputs, but always verify external data
 
 ### For Contributors
 
@@ -87,30 +87,16 @@ We only support the latest version. Please update to the most recent release.
    - Never expose sensitive information in error messages
    - Log errors securely
 
-## 🚨 Known Security Considerations
+## Security Architecture
 
 ### Current Implementation
 
-1. **API Rate Limiting**
-   - Yahoo Finance API has rate limits
-   - Consider implementing client-side rate limiting
-
-2. **Data Caching**
-   - Cached data is stored in memory
-   - No sensitive data is cached permanently
-
-3. **External Dependencies**
-   - Relies on third-party APIs (yfinance)
-   - API responses are not validated beyond basic checks
-
-### Future Improvements
-
-- [ ] Implement rate limiting
-- [ ] Add request timeout handlers
-- [ ] Implement Content Security Policy (CSP)
-- [ ] Add input sanitization middleware
-- [ ] Implement API response validation
-- [ ] Add security headers
+1. **API Rate Limiting** -- 100 req/min per client, 10 req/s for CRM sync
+2. **Authentication** -- JWT tokens (1-hour expiry), API key validation
+3. **Data Protection** -- PII encrypted at rest (Fernet), parameterized queries only
+4. **Caching** -- 3-tier cache (L1 memory, L2 Redis, L3 PostgreSQL), no PII in cache keys
+5. **Input Validation** -- Pydantic V2 strict validation at all API boundaries
+6. **Compliance** -- DRE, Fair Housing, CCPA, CAN-SPAM adherence
 
 ## 📝 Security Updates
 
