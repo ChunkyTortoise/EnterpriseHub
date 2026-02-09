@@ -18,6 +18,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.caching.analytics import (
+
+@pytest.mark.integration
     CacheAnalytics,
     CacheMetrics,
     CostAnalysis,

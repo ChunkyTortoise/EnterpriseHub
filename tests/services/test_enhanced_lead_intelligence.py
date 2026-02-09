@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Enhanced Lead Intelligence Service - Core AI Intelligence Service
 
@@ -14,6 +17,8 @@ import pytest
 
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import (
+
+@pytest.mark.integration
     EnhancedLeadIntelligence,
     get_enhanced_lead_intelligence,
 )

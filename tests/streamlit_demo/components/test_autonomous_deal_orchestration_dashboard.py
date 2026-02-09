@@ -12,6 +12,8 @@ import plotly.graph_objects as go
 import pytest
 import streamlit as st
 
+@pytest.mark.integration
+
 # Import the dashboard component
 try:
     from ghl_real_estate_ai.streamlit_demo.components.autonomous_deal_orchestration_dashboard import (

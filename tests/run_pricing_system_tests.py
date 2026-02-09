@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive test runner for Jorge's Pricing System.
 

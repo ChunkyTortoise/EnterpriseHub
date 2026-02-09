@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Phase 4: Real MLS Data Integration.
 
 Validates that JorgeSellerEngine uses real MLS data when available
@@ -12,6 +15,8 @@ import pytest
 
 from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
 from ghl_real_estate_ai.services.mls_client import MLSClient
+
+@pytest.mark.integration
 
 
 def _mock_swarm_module():

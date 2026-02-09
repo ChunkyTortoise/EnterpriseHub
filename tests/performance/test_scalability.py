@@ -14,6 +14,8 @@ from typing import Any, Dict, List
 import aiohttp
 import pytest
 
+@pytest.mark.integration
+
 logger = logging.getLogger(__name__)
 
 

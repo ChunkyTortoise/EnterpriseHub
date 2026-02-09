@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 End-to-End Integration Tests for Week 5-8 API Routes
 
@@ -13,6 +16,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+
+@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Fixtures

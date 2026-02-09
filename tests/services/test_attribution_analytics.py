@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for AttributionAnalytics service.
 
@@ -21,6 +24,8 @@ from ghl_real_estate_ai.services.attribution_analytics import (
     ReportPeriod,
 )
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourcePerformance
+
+@pytest.mark.unit
 
 
 class TestAttributionAnalytics:

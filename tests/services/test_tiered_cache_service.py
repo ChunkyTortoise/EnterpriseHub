@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for TieredCacheService - Comprehensive Test Suite
 
@@ -23,6 +26,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.tiered_cache_service import (
+
+@pytest.mark.integration
     CacheItem,
     CacheMetrics,
     LRUCache,

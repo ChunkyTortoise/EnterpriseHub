@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """Simple import test to validate content_engine improvements."""
 

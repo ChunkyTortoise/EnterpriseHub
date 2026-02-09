@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration Test for Compliance Healing Loop.
 Verifies that FHA violations are detected and self-healed via the DojoEvaluator.
@@ -8,6 +11,8 @@ import asyncio
 import pytest
 
 from ghl_real_estate_ai.agent_system.compliance_loop import run_guarded_generation
+
+@pytest.mark.integration
 
 
 @pytest.mark.asyncio

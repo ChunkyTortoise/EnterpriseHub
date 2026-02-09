@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Behavioral Trigger Detector.
 
@@ -21,6 +24,8 @@ os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 import pytest
 
 from ghl_real_estate_ai.services.behavioral_trigger_detector import (
+
+@pytest.mark.unit
     BehavioralAnalysis,
     BehavioralTriggerDetector,
     DriftDirection,

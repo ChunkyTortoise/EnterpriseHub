@@ -13,6 +13,8 @@ import pytest
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.components.premium_swarm_showcase import (
+
+@pytest.mark.integration
     AgentReasoningStep,
     ConsensusVisualization,
     PremiumSwarmMetrics,

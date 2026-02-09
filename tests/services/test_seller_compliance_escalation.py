@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for structured compliance escalation service (seller bot integration)."""
 
 from unittest.mock import AsyncMock, Mock
@@ -5,6 +8,8 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from ghl_real_estate_ai.services.compliance_escalation import (
+
+@pytest.mark.integration
     ComplianceEscalationService,
     ViolationSeverity,
     ViolationType,

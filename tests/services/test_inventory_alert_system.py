@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Inventory Alert System.
 
@@ -22,6 +25,8 @@ import pytest
 import pytest_asyncio
 
 from ghl_real_estate_ai.services.inventory_alert_system import (
+
+@pytest.mark.unit
     AlertChannel,
     AlertInstance,
     AlertRule,

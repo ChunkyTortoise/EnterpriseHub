@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for Voice AI Handler - Advanced voice AI phone integration system
 """

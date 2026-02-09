@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Dynamic Valuation Engine - AI-Powered Property Valuation
 
@@ -17,6 +20,8 @@ import pytest
 
 from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
+
+@pytest.mark.integration
     DynamicValuationEngine,
     MarketComparable,
     ValuationComponents,

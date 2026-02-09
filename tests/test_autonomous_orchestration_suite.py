@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive test suite for the Autonomous Deal Orchestration system.
 Runs all orchestration tests and provides detailed reporting.
@@ -12,6 +15,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
+
+@pytest.mark.integration
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent

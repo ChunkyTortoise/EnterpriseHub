@@ -2,6 +2,8 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
+@pytest.mark.unit
+
 
 @pytest.fixture
 def tone_engine():

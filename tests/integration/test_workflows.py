@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Integration tests for complete workflow execution.
 
 Tests the orchestrator's ability to execute multi-stage workflows with
@@ -16,6 +19,8 @@ from utils.agent_handlers import AGENT_HANDLERS
 from utils.agent_registry import ALL_AGENTS
 from utils.exceptions import InvalidTickerError
 from utils.orchestrator import (
+
+@pytest.mark.integration
     AgentRegistry,
     AgentStatus,
     Orchestrator,

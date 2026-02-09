@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for SMS truncation logic used in webhook handlers.
 
@@ -11,6 +14,8 @@ same algorithm:
 """
 
 import pytest
+
+@pytest.mark.unit
 
 SMS_MAX_CHARS = 320
 

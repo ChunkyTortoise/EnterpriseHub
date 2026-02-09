@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for AlertingService.
 
 Covers default rule loading, rule management, alert checking with cooldown,
@@ -12,6 +15,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.jorge.alerting_service import (
+
+@pytest.mark.integration
     Alert,
     AlertChannelConfig,
     AlertingService,

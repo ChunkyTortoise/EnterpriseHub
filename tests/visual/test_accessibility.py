@@ -23,6 +23,8 @@ import pytest
 from axe_playwright import run_axe
 from playwright.sync_api import Page
 
+@pytest.mark.unit
+
 # ============================================================================
 # WCAG 2.1 AA Compliance Tests
 # ============================================================================

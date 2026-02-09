@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 """Unit tests for the API documentation schemas and OpenAPI spec.
 
 Tests OpenAPI spec generation, tag presence, response schema validation,
@@ -13,6 +16,8 @@ shap = pytest.importorskip("shap", reason="shap not installed")
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.schemas.api_docs import (
+
+@pytest.mark.integration
     OPENAPI_TAGS,
     BotStatusItem,
     BotStatusResponse,

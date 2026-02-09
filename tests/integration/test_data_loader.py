@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for data_loader module."""
 
 from unittest.mock import patch
@@ -7,6 +10,8 @@ import pytest
 
 from utils.data_loader import calculate_indicators, get_stock_data
 from utils.exceptions import DataFetchError, DataProcessingError, InvalidTickerError
+
+@pytest.mark.integration
 
 
 class TestGetStockData:

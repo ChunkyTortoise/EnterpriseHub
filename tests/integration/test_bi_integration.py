@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 BI Backend Integration Test Suite.
 
@@ -33,6 +36,8 @@ from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.bi_cache_service import get_bi_cache_service
 from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_processor
 from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
+
+@pytest.mark.integration
 
 
 class TestBIIntegration:

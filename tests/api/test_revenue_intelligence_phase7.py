@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for Phase 7 Revenue Intelligence API Routes.
 
@@ -23,6 +26,8 @@ from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     import time

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
@@ -6,6 +9,8 @@ import pytest
 from ghl_real_estate_ai.core.llm_client import LLMProvider, LLMResponse
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeRequest, ClaudeTaskType
 from ghl_real_estate_ai.services.skill_registry import SkillCategory
+
+@pytest.mark.integration
 
 
 @pytest.mark.asyncio

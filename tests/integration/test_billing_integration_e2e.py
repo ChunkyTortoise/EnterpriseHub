@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 End-to-End Billing Integration Test
 
@@ -23,6 +26,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+
+@pytest.mark.integration
 
 # Import the billing components
 try:

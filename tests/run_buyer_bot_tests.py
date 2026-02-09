@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Buyer Bot Test Suite Runner

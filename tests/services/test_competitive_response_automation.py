@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive Tests for Competitive Response Automation Engine
 
@@ -27,6 +30,8 @@ from ghl_real_estate_ai.services.competitive_data_pipeline import (
     ThreatLevel,
 )
 from ghl_real_estate_ai.services.competitive_response_automation import (
+
+@pytest.mark.integration
     ApprovalLevel,
     CompetitiveResponseEngine,
     EmailMarketingExecutor,

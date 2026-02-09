@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Comprehensive tests for Database Service.
@@ -43,6 +46,8 @@ except (ImportError, TypeError, AttributeError):
 # Import test utilities
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockDatabaseService
+
+@pytest.mark.integration
 
 
 def _make_transaction_context_manager(mock_conn):

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for the interactive chatbot demo widget."""
 
 from __future__ import annotations
@@ -5,6 +8,8 @@ from __future__ import annotations
 import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.interactive_chatbot_demo import (
+
+@pytest.mark.unit
     BOT_TYPES,
     CANNED_RESPONSES,
     DEFAULT_RESPONSE,

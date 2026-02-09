@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Security Tests for Jorge's GHL Webhook Integration.
 
@@ -27,6 +30,8 @@ from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLWebhookEvent, Mess
 from ghl_real_estate_ai.ghl_utils.config import Settings
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
 from ghl_real_estate_ai.services.tenant_service import TenantService
+
+@pytest.mark.integration
 
 
 class TestJorgeWebhookSecurity:

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive Test Suite for Client Success Scoring & Accountability System
 
@@ -23,6 +26,8 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.client_outcome_verification_service import (

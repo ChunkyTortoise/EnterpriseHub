@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Service 6 Webhook Security Validation Tests
@@ -39,6 +42,8 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 # Import security components
 try:

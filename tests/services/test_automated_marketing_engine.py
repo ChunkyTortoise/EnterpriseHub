@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for Automated Marketing Engine - AI-powered marketing campaign generator
 """

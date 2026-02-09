@@ -32,6 +32,8 @@ from hypothesis.stateful import Bundle, RuleBasedStateMachine, initialize, invar
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadIntelligence
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
+@pytest.mark.integration
+
 
 class TestLeadScoringInvariants:
     """Property-based tests for lead scoring invariants"""

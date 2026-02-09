@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Unified Channel Router."""
 
 from unittest.mock import AsyncMock, patch
@@ -5,6 +8,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.unified_channel_router import (
+
+@pytest.mark.unit
     ChannelType,
     DeliveryResult,
     DeliveryStatus,

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for NeighborhoodIntelligenceService.
 
@@ -22,6 +25,8 @@ import pytest
 import pytest_asyncio
 
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
+
+@pytest.mark.integration
     InvestmentGrade,
     MarketAlert,
     MarketDataSource,

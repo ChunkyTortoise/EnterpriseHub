@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for XGBoost Life-Event Propensity Engine."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -5,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.xgboost_propensity_engine import (
+
+@pytest.mark.integration
     LIFE_EVENT_CONVERSION_RATES,
     LifeEventSignal,
     LifeEventType,

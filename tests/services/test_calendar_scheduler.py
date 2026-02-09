@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Calendar Scheduler Service.
 
@@ -20,6 +23,8 @@ import pytz
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.calendar_scheduler import (
+
+@pytest.mark.integration
     AUSTIN_TZ,
     AppointmentBooking,
     AppointmentDuration,

@@ -272,7 +272,8 @@ class JorgeFollowUpEngine:
 
             adapted = response.content.strip()
             return self.tone_engine._ensure_sms_compliance(adapted)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Follow-up variant adaptation failed: {e}")
             return message
 
     def _create_qualification_retry_message(
@@ -510,7 +511,7 @@ class JorgeFollowUpEngine:
             await self.conversation_manager.save_context(contact_id, context, location_id)
 
         except Exception as e:
-            self.logger.error(f"Failed to update follow-up context: {e}")
+            logger.error(f"Failed to update follow-up context for {contact_id}: {e}")
 
     def _calculate_days_since_contact(self, last_contact_date: Optional[str]) -> int:
         """Calculate days since last contact"""
@@ -520,7 +521,8 @@ class JorgeFollowUpEngine:
         try:
             last_contact = datetime.fromisoformat(last_contact_date.replace("Z", "+00:00"))
             return (datetime.now() - last_contact).days
-        except Exception:
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Failed to parse last_contact_date '{last_contact_date}': {e}")
             return 0
 
     def _get_initial_sequence_position(self, days_since_contact: int) -> int:

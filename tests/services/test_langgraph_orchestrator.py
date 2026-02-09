@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for LangGraph Lead Qualification Orchestrator.
 
@@ -20,6 +23,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.langgraph_orchestrator import (
+
+@pytest.mark.integration
     LeadQualificationOrchestrator,
     LeadType,
     QualificationResult,

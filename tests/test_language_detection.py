@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for the bilingual language detection service and pipeline stage."""
 
 import pytest
@@ -16,6 +19,8 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
     ProcessingContext,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror import (
+
+@pytest.mark.unit
     LanguageMirrorProcessor,
 )
 

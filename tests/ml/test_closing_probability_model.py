@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for closing probability ML model.
 """
@@ -15,6 +18,8 @@ import pytest
 from sklearn.metrics import accuracy_score
 
 from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelMetrics, ModelPrediction
+
+@pytest.mark.unit
 
 
 class TestClosingProbabilityModel:

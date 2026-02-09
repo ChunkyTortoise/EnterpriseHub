@@ -1,8 +1,13 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Multi-Channel Sentiment Analysis Engine."""
 
 import pytest
 
 from ghl_real_estate_ai.services.sentiment_analysis_engine import (
+
+@pytest.mark.unit
     Channel,
     Emotion,
     SentimentAnalysisEngine,

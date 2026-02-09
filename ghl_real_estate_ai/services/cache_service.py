@@ -112,8 +112,8 @@ class MemoryCache(AbstractCache):
                 self._current_memory += value_size
 
                 return True
-            except Exception as e:
-                logger.error(f"MemoryCache set error: {e}", exc_info=True)
+            except (TypeError, ValueError) as e:
+                logger.error(f"MemoryCache set error for {key}: {str(e)}")
                 return False
 
     async def delete(self, key: str) -> bool:
@@ -201,8 +201,8 @@ class FileCache(AbstractCache):
                 return None
 
             return data["value"]
-        except Exception as e:
-            logger.warning(f"FileCache read error for {key}: {e}")
+        except (IOError, pickle.PickleError, EOFError, AttributeError, ImportError) as e:
+            logger.warning(f"FileCache read error for {key}: {str(e)}")
             return None
 
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
@@ -213,8 +213,8 @@ class FileCache(AbstractCache):
                 with open(path, "wb") as f:
                     pickle.dump(data, f)
             return True
-        except Exception as e:
-            logger.error(f"FileCache write error for {key}: {e}", exc_info=True)
+        except (IOError, pickle.PickleError, TypeError) as e:
+            logger.error(f"FileCache write error for {key}: {str(e)}")
             return False
 
     async def delete(self, key: str) -> bool:
@@ -233,8 +233,8 @@ class FileCache(AbstractCache):
                 if f.endswith(".pickle"):
                     os.remove(os.path.join(self.cache_dir, f))
             return True
-        except Exception as e:
-            logger.error(f"FileCache clear error: {e}", exc_info=True)
+        except OSError as e:
+            logger.error(f"FileCache clear error: {str(e)}")
             return False
 
 
@@ -292,8 +292,12 @@ class RedisCache(AbstractCache):
             else:
                 self.metrics["misses"] += 1
                 return None
+        except (pickle.PickleError, AttributeError, EOFError, ImportError) as e:
+            logger.error(f"Redis get deserialization error for key {key}: {str(e)}")
+            self.metrics["misses"] += 1
+            return None
         except Exception as e:
-            logger.error(f"Redis get error for key {key}: {e}", exc_info=True)
+            logger.error(f"Redis get error for key {key}: {str(e)}")
             self.metrics["misses"] += 1
             return None
         finally:
@@ -313,8 +317,11 @@ class RedisCache(AbstractCache):
             await self.redis.set(key, data, ex=int(ttl))
             self.metrics["sets"] += 1
             return True
+        except (pickle.PickleError, TypeError) as e:
+            logger.error(f"Redis set serialization error for key {key}: {str(e)}")
+            return False
         except Exception as e:
-            logger.error(f"Redis set error for key {key}: {e}", exc_info=True)
+            logger.error(f"Redis set error for key {key}: {str(e)}")
             return False
         finally:
             self.metrics["total_time_ms"] += (time.time() - start_time) * 1000
@@ -346,7 +353,7 @@ class RedisCache(AbstractCache):
             await self.redis.flushdb()
             return True
         except Exception as e:
-            logger.error(f"Redis clear error: {e}", exc_info=True)
+            logger.error(f"Redis clear error: {str(e)}")
             return False
 
     async def close(self):
@@ -715,8 +722,8 @@ class CacheService:
         if result and self.fallback_backend and not self.circuit_breaker["open"]:
             try:
                 await self.fallback_backend.set(key, value, ttl)
-            except Exception:
-                pass  # Fallback failures are not critical
+            except Exception as e:
+                logger.debug(f"Secondary failure in fallback cache set for {key}: {str(e)}")
 
         return bool(result)
 
@@ -728,8 +735,8 @@ class CacheService:
         if self.fallback_backend:
             try:
                 await self.fallback_backend.delete(key)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Secondary failure in fallback cache delete for {key}: {str(e)}")
 
         return bool(result)
 
@@ -741,8 +748,8 @@ class CacheService:
         if self.fallback_backend:
             try:
                 await self.fallback_backend.clear()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Secondary failure in fallback cache clear: {str(e)}")
 
         return bool(result)
 

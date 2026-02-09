@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Service 6 End-to-End Integration Tests
@@ -54,6 +57,8 @@ except (ImportError, TypeError, AttributeError, Exception):
 # Import test utilities
 from tests.fixtures.sample_data import AnalyticsData, LeadProfiles
 from tests.mocks.external_services import (
+
+@pytest.mark.integration
     MockApolloClient,
     MockClaudeClient,
     MockDatabaseService,

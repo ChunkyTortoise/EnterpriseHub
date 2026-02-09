@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Tests for Real-time Behavioral Network - Including 5 TODO methods implementation
@@ -23,6 +26,8 @@ import pytest
 import pytest_asyncio
 
 from ghl_real_estate_ai.services.realtime_behavioral_network import (
+
+@pytest.mark.integration
     BehavioralAnalysisAgentType,
     BehavioralInsight,
     BehavioralPattern,

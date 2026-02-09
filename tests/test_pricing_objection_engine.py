@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for the pricing objection engine.
 
 Covers detection of all five objection types, graduated response escalation,
@@ -6,6 +9,8 @@ template filling, edge cases, and state management.
 import pytest
 
 from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
+
+@pytest.mark.unit
     ObjectionDetection,
     ObjectionType,
     PricingObjectionEngine,

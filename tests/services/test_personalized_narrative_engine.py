@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Unit tests for PersonalizedNarrativeEngine.
 
@@ -21,6 +24,8 @@ from ghl_real_estate_ai.models.matching_models import (
     WalkabilityScore,
 )
 from ghl_real_estate_ai.services.personalized_narrative_engine import (
+
+@pytest.mark.integration
     NarrativeComponent,
     NarrativeLength,
     NarrativeStyle,

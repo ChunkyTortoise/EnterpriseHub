@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration tests for Lead Attribution System.
 
@@ -16,6 +19,8 @@ from fastapi.testclient import TestClient
 from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.api.schemas.ghl import GHLContact, GHLMessage, GHLWebhookEvent, MessageDirection, MessageType
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourceAttribution, SourceQuality
+
+@pytest.mark.integration
 
 
 class TestLeadAttributionIntegration:

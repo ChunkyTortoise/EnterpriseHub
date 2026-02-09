@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive Security Hardening Tests
 
@@ -25,6 +28,8 @@ from ghl_real_estate_ai.api.middleware.rate_limiter import EnhancedRateLimitMidd
 from ghl_real_estate_ai.api.middleware.security_headers import SecurityHeadersMiddleware
 from ghl_real_estate_ai.api.middleware.websocket_security import WebSocketConnectionManager
 from ghl_real_estate_ai.services.security_monitor import EventType, SecurityMonitor, ThreatLevel
+
+@pytest.mark.integration
 
 
 class TestRateLimiting:

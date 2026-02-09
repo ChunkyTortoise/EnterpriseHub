@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 🧪 Comprehensive Test Suite - Autonomous Follow-Up System
 
@@ -22,6 +25,8 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.advanced_analytics_engine import (

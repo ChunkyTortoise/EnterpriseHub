@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for Consulting Delivery Service.
 
@@ -13,6 +16,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.consulting_delivery_service import (

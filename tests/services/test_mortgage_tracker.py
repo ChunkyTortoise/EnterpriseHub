@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for MortgageTracker — mortgage pre-qualification tracking service.
 
 Covers readiness assessment, referral creation, CRM tag updates,
@@ -9,6 +12,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from ghl_real_estate_ai.services.mortgage_tracker import (
+
+@pytest.mark.integration
     MortgageReadiness,
     MortgageTracker,
     Referral,

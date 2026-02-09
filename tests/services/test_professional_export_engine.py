@@ -1,8 +1,13 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Professional Export Engine."""
 
 import pytest
 
 from ghl_real_estate_ai.services.professional_export_engine import (
+
+@pytest.mark.integration
     BrandingConfig,
     ProfessionalExportEngine,
     ReportFormat,

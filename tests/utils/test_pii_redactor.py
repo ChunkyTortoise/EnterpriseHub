@@ -4,6 +4,8 @@ import pytest
 
 from ghl_real_estate_ai.utils.pii_redactor import PIIRedactor
 
+@pytest.mark.unit
+
 
 class TestPIIRedactor:
     """Tests for the PIIRedactor class."""

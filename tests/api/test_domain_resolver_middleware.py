@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Domain Resolver Middleware
 Validates multi-tenant routing and domain resolution functionality
@@ -27,6 +30,8 @@ from ghl_real_estate_ai.api.middleware.domain_resolver_middleware import (
     require_client_context,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
+
+@pytest.mark.integration
 
 
 @pytest.fixture

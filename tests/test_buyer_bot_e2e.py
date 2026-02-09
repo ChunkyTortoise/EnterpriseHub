@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 B2: End-to-end test for Jorge Buyer Bot 6-node workflow.
 Tests that the buyer bot can process a conversation without errors.
@@ -8,6 +11,8 @@ import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 
 def create_mock_buyer_intent_profile():

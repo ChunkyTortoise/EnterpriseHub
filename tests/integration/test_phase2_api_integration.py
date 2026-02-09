@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration Tests for Phase 2 Intelligence Layer API
 Tests API routes with schema models, performance validation, and Jorge methodology integration.
@@ -13,6 +16,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+@pytest.mark.integration
 
 # Import Phase 2 API components
 try:

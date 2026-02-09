@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for the ML ensemble lead scoring pipeline."""
 from datetime import datetime, timedelta
 
@@ -17,6 +20,8 @@ from ghl_real_estate_ai.ml.ensemble_scorer import (
     get_ensemble_scorer,
 )
 from ghl_real_estate_ai.ml.training_pipeline import TrainingPipeline, TrainingResult
+
+@pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------

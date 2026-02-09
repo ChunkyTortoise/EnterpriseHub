@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Comprehensive tests for Apollo Client.
@@ -40,6 +43,8 @@ except (ImportError, TypeError, AttributeError):
 # Import test utilities
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockApolloClient
+
+@pytest.mark.integration
 
 
 class TestApolloConfig:

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for competitive alert system
 
@@ -16,6 +19,8 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.competitive_alert_system import (

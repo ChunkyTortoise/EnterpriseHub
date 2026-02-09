@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 A/B Testing Workflow Integration Tests
 
@@ -12,6 +15,8 @@ End-to-end tests for the ABTestingService covering:
 import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+
+@pytest.mark.integration
 
 
 @pytest.fixture(autouse=True)

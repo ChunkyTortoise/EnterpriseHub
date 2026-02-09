@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Domain Configuration Service
 Validates DNS/SSL automation and domain management functionality
@@ -15,6 +18,8 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.domain_configuration_service import (
+
+@pytest.mark.integration
     DNSProvider,
     DNSRecord,
     DomainConfiguration,

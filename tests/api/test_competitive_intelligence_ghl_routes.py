@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Competitive Intelligence GHL Integration API Routes.
 Comprehensive test suite for GHL CRM integration endpoints.
@@ -9,6 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.api.routes.competitive_intelligence_ghl import (

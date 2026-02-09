@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration Tests for Smart Appointment Scheduling System.
 
@@ -29,6 +32,8 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.core.conversation_manager import AIResponse
 from ghl_real_estate_ai.services.calendar_scheduler import AUSTIN_TZ, AppointmentType
+
+@pytest.mark.integration
 
 
 @pytest.fixture

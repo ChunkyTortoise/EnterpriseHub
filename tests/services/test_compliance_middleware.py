@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for FHA/RESPA Compliance Middleware.
 
@@ -23,6 +26,8 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 from ghl_real_estate_ai.services.compliance_middleware import (
+
+@pytest.mark.unit
     ComplianceMiddleware,
     ComplianceResult,
     ViolationCategory,

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Corporate Relocation Service
 
@@ -16,6 +19,8 @@ from unittest.mock import AsyncMock, Mock, mock_open, patch
 import pytest
 
 from ghl_real_estate_ai.services.corporate_relocation_service import (
+
+@pytest.mark.integration
     CorporateContract,
     CorporatePartnerTier,
     CorporateRelocationService,

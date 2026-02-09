@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Buyer Saved Search & Alerts Service.
 
 Covers search creation, new-only match detection, SMS notification format,
@@ -7,6 +10,8 @@ deactivation, message length constraint, and multiple searches per buyer.
 import pytest
 
 from ghl_real_estate_ai.services.saved_search import (
+
+@pytest.mark.unit
     SavedSearchService,
     SearchCriteria,
 )

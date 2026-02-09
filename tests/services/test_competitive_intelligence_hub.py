@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Competitive Intelligence Hub - Consolidated Service
 
@@ -12,6 +15,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.competitive_intelligence_hub import (
+
+@pytest.mark.integration
     AlertPriority,
     CompetitiveAlert,
     CompetitiveIntelligenceHub,

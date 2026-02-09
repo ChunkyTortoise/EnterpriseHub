@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for LLM Observability Service."""
 
 from __future__ import annotations
@@ -7,6 +10,8 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.llm_observability import (
+
+@pytest.mark.integration
     LatencyReport,
     LLMObservabilityService,
     LLMTrace,

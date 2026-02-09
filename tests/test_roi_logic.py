@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Unit Tests for ROI Logic
 Verifies the math behind the Professional Services Catalog ROI models.
@@ -6,6 +9,8 @@ Verifies the math behind the Professional Services Catalog ROI models.
 import pytest
 
 from utils.roi_logic import (
+
+@pytest.mark.unit
     calculate_automation_roi,
     calculate_data_roi,
     calculate_marketing_roi,

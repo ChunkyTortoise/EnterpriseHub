@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for SHAP Explainer Service
 
@@ -26,6 +29,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
 from ghl_real_estate_ai.services.shap_explainer_service import (
+
+@pytest.mark.integration
     BusinessFeatureMapper,
     FeatureContext,
     SHAPExplainerService,

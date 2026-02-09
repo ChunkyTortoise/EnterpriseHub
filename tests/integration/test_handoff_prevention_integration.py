@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Integration tests for handoff prevention safeguards.
 
 Exercises circular prevention, rate limiting, concurrent lock handling,
@@ -10,6 +13,8 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+
+@pytest.mark.integration
     HandoffDecision,
     JorgeHandoffService,
 )
