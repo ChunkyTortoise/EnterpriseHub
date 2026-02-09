@@ -14,10 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-pytestmark = [
-    pytest.mark.unit,
-    pytest.mark.xfail(reason="Leads route mocks need alignment with app service wiring", strict=False),
-]
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -142,20 +139,11 @@ def _set_overrides(ghl=None, mem=None, scorer=None, matcher=None):
 
 
 @pytest.fixture(autouse=True)
-def _cleanup_overrides():
+def _leads_cleanup_overrides():
     """Clear dependency overrides after each test."""
     yield
     _get_app().dependency_overrides.clear()
 
-
-@pytest.fixture(autouse=True)
-def _bypass_rate_limiter():
-    """Bypass rate limiter to avoid cross-module test pollution."""
-    with patch(
-        "ghl_real_estate_ai.api.middleware.rate_limiter.EnhancedRateLimiter.is_allowed",
-        new_callable=lambda: lambda *a, **kw: AsyncMock(return_value=(True, None)),
-    ):
-        yield
 
 
 # ---------------------------------------------------------------------------
