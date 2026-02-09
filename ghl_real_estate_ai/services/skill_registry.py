@@ -4,7 +4,7 @@ Manages tool access and categorization across Discovery, Analysis, Strategy, Act
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 
 class SkillCategory(Enum):

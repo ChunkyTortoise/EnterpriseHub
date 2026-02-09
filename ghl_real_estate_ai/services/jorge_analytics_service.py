@@ -17,19 +17,14 @@ Target: 92%+ lead scoring accuracy, <2s dashboard load time
 import asyncio
 import json
 import time
-from collections import defaultdict, deque
-from dataclasses import asdict
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.analytics_models import (
     AnalyticsRequest,
-    AnalyticsResponse,
-    CalibrationBucket,
     CompetitiveIntel,
     CompetitivePressure,
     DropOffAnalysis,
@@ -40,16 +35,12 @@ from ghl_real_estate_ai.models.analytics_models import (
     GeographicAnalysis,
     GeographicMetrics,
     LeadQualityMetrics,
-    LeadQualityTrend,
     MarketTemperature,
     MarketTimingInsight,
     MarketTimingMetrics,
-    MetricCategory,
-    PerformanceGoal,
     PerformanceSummary,
     RevenueForecast,
     SourceROI,
-    TimeSeriesDataPoint,
 )
 from ghl_real_estate_ai.services.advanced_analytics_engine import AdvancedAnalyticsEngine
 from ghl_real_estate_ai.services.cache_service import get_cache_service

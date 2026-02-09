@@ -2,8 +2,9 @@
 Tests for SellerIntentDecoder - seller-specific intent analysis.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
 from ghl_real_estate_ai.models.lead_scoring import SellerIntentProfile

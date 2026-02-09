@@ -3,9 +3,8 @@ SMS compliance webhook endpoints for TCPA opt-out handling.
 Provides endpoints for processing incoming SMS messages and managing compliance.
 """
 
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field

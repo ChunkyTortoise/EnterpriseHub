@@ -29,15 +29,14 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import logging
 import statistics
 import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List
 
 import numpy as np
 

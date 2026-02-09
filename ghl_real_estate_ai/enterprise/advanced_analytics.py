@@ -25,10 +25,9 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 from ...core.llm_client import LLMClient
 from ...services.cache_service import CacheService

@@ -15,7 +15,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pandas as pd
 
@@ -31,7 +31,7 @@ from ghl_real_estate_ai.services.executive_portfolio_manager import PortfolioMan
 from ghl_real_estate_ai.services.market_opportunity_report_service import MarketOpportunityReportService
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.perplexity_researcher import PerplexityResearcher
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import LeadPriority, PredictiveLeadScorerV2
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 from ghl_real_estate_ai.services.vapi_service import VapiService
 
 logger = get_logger(__name__)

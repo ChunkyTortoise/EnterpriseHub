@@ -11,9 +11,8 @@ Provides:
 - Demographics
 """
 
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class NeighborhoodInsightsEngine:

@@ -9,10 +9,9 @@ Advanced analytics on workflow, trigger, and automation performance with:
 - A/B test integration and optimization recommendations
 """
 
-import json
 import logging
 import statistics
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum

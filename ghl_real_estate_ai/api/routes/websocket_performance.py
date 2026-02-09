@@ -9,14 +9,13 @@ Target: <10ms event delivery latency validation and monitoring
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.auth_service import UserRole, get_auth_service
 from ghl_real_estate_ai.services.optimized_event_publisher import (
     get_optimized_event_publisher,
     get_real_time_performance_metrics,

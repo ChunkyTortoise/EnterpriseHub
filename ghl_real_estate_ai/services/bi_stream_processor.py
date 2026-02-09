@@ -18,18 +18,15 @@ Performance: <100ms aggregation processing, 5-second dashboard refresh
 
 import asyncio
 import json
-import logging
 import time
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
-from ghl_real_estate_ai.services.websocket_server import EventType, RealTimeEvent
 
 logger = get_logger(__name__)
 

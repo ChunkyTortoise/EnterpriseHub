@@ -11,13 +11,12 @@ Provides enterprise-grade monitoring and observability:
 """
 
 import asyncio
-import json
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from enum import Enum
 from statistics import mean, median
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import aiohttp
 from pydantic import BaseModel, ConfigDict

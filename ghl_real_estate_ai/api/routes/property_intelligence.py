@@ -6,12 +6,11 @@ Matches frontend PropertyIntelligenceAPI.ts expectations.
 
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from ghl_real_estate_ai.agents.property_intelligence_agent import get_property_intelligence_agent
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher

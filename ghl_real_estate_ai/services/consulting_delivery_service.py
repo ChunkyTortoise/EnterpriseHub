@@ -5,16 +5,14 @@ Manages structured delivery of high-ticket consulting engagements ($25K-$100K).
 Provides project management, stakeholder coordination, and success measurement.
 """
 
-import asyncio
 import json
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

@@ -3,15 +3,11 @@ Real-Time Executive Dashboard - Service 6 Advanced Analytics Visualization
 Comprehensive executive command center with live KPI tracking, revenue attribution, and predictive insights
 """
 
-import asyncio
-import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 

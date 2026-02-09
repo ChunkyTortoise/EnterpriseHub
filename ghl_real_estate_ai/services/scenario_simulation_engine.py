@@ -9,16 +9,13 @@ or "What if I raise qualification thresholds?" with instant data-driven projecti
 Author: Enhanced from research recommendations - January 2026
 """
 
-import asyncio
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
-from scipy import stats
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

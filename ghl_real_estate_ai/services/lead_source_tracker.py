@@ -15,8 +15,6 @@ Key Features:
 - Custom field updates for source tracking in GHL
 """
 
-import asyncio
-import json
 import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone

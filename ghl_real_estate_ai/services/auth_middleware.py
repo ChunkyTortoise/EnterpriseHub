@@ -5,10 +5,10 @@ Provides authentication decorators, session management, and permission checking.
 """
 
 from functools import wraps
-from typing import Any, Callable, Optional
+from typing import Optional
 
 import streamlit as st
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

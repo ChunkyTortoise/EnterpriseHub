@@ -5,8 +5,6 @@ Provides utilities for starting and managing background services like the lead s
 """
 
 import asyncio
-import logging
-from typing import Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

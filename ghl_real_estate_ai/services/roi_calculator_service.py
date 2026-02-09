@@ -4,14 +4,14 @@ Provides detailed financial modeling for real estate investments.
 Calculates cash flow, tax benefits, and long-term appreciation.
 """
 
-from typing import Any, Dict, List
+from typing import List
 
 from pydantic import BaseModel
 
 # Re-export ClientROIReport from its canonical location so that existing
 # imports (e.g. pricing_optimization, dynamic_value_justification_engine)
 # continue to work.
-from ghl_real_estate_ai.services.client_success_scoring_service import ClientROIReport
+from ghl_real_estate_ai.services.client_success_scoring_service import ClientROIReport as ClientROIReport  # noqa: F401
 
 
 class InvestmentProjection(BaseModel):

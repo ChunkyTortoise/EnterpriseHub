@@ -18,16 +18,14 @@ Features:
 
 import asyncio
 import json
-import logging
 import time
 import traceback
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect, status
-from fastapi.websockets import WebSocketState
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

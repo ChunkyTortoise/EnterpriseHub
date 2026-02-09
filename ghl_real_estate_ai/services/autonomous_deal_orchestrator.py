@@ -29,7 +29,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -40,7 +40,6 @@ from ghl_real_estate_ai.services.transaction_service import (
     MilestoneUpdate,
     TransactionCreate,
     TransactionService,
-    TransactionStatus,
 )
 
 logger = logging.getLogger(__name__)

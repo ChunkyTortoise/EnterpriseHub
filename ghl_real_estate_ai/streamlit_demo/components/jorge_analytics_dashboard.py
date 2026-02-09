@@ -12,15 +12,12 @@ Complete analytics system integrating:
 Built specifically for Jorge's GHL Real Estate AI system.
 """
 
-import asyncio
-import json
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import numpy as np
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -274,7 +271,6 @@ class JorgeAnalyticsAPIClient:
 
     async def get_geographic_analytics(self) -> Dict[str, Any]:
         """Get geographic performance analytics."""
-        import random
 
         return {
             "market_analysis": {

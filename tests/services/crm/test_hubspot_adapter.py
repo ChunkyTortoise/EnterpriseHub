@@ -10,7 +10,6 @@ import pytest
 from ghl_real_estate_ai.services.crm import CRMContact, HubSpotAdapter
 from ghl_real_estate_ai.services.crm.hubspot_adapter import HubSpotError
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

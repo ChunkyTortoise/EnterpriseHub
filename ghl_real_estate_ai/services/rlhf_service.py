@@ -5,11 +5,10 @@ Integrates with LangSmith for trace tracking and weekly retraining.
 """
 
 import json
-import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

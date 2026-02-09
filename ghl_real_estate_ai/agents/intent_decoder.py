@@ -7,11 +7,8 @@ Updated to use unified models in ghl_real_estate_ai.models.lead_scoring.
 from __future__ import annotations
 
 import logging
-import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient, GHLContact
@@ -39,7 +36,6 @@ class LeadIntentDecoder:
         self.ghl_client = ghl_client
 
         # Load industry config for config-first marker initialization
-        from ghl_real_estate_ai.config.industry_config import IndustryConfig
 
         cfg = industry_config
         self._cfg = cfg

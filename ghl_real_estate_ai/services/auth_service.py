@@ -5,7 +5,6 @@ Provides secure user authentication with role-based permissions.
 Handles user creation, authentication, token management, and permissions.
 """
 
-import asyncio
 import hashlib
 import hmac
 import os
@@ -13,8 +12,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiosqlite
 import jwt

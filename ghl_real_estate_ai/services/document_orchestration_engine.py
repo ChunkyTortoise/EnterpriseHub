@@ -25,7 +25,6 @@ Status: Production-Ready Intelligent Document Management
 """
 
 import asyncio
-import base64
 import hashlib
 import logging
 import uuid
@@ -33,7 +32,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant

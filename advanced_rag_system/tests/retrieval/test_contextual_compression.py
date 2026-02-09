@@ -17,7 +17,6 @@ from src.retrieval.contextual_compression import (
     RelevanceScore,
     RelevanceScorer,
     ScoringMethod,
-    SegmentScore,
     TokenBudgetManager,
     TokenCounter,
 )

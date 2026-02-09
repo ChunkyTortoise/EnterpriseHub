@@ -4,11 +4,9 @@ Implements the validated 68% token reduction approach from Perplexity research.
 """
 
 import json
-import os
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

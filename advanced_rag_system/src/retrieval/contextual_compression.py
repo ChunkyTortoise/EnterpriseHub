@@ -31,7 +31,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from src.core.types import DocumentChunk, SearchResult

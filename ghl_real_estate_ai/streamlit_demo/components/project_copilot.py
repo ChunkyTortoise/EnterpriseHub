@@ -4,7 +4,6 @@ Greets the user and provides guided walkthroughs of the platform.
 """
 
 import asyncio
-from datetime import datetime
 
 import streamlit as st
 

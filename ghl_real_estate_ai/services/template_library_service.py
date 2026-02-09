@@ -24,33 +24,27 @@ Based on agent a94695b's complete architecture including:
 import asyncio
 import hashlib
 import json
-import logging
 import math
 import re
-import statistics
 import uuid
-from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
-import asyncpg
 import scipy.stats as stats
-from asyncpg import Connection, Pool
+from asyncpg import Connection
 
 # Third-party imports
 from jinja2 import DictLoader, Environment, select_autoescape
-from jinja2 import Template as JinjaTemplate
 from jinja2.exceptions import TemplateError
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Internal imports
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService
-from ghl_real_estate_ai.services.security_framework import SecurityFramework, SecurityLevel
+from ghl_real_estate_ai.services.security_framework import SecurityFramework
 
 logger = get_logger(__name__)
 

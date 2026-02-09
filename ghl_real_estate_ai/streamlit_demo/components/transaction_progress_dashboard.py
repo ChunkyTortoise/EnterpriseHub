@@ -28,23 +28,15 @@ Business Impact:
 - 15% faster closing times through proactive issue resolution
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.celebration_engine import CelebrationEngine
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-from ghl_real_estate_ai.services.transaction_event_bus import TransactionEventBus
-from ghl_real_estate_ai.services.transaction_intelligence_engine import TransactionIntelligenceEngine
-from ghl_real_estate_ai.services.transaction_service import TransactionService, TransactionSummary
 
 
 class TransactionProgressDashboard:

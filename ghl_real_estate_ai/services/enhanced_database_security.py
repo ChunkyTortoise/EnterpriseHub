@@ -15,15 +15,11 @@ import asyncio
 import json
 import time
 import uuid
-from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List
 
 import asyncpg
-from asyncpg import Connection, Pool
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

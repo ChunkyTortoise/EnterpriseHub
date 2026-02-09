@@ -19,7 +19,6 @@ from ..models.compliance_models import (
     ComplianceStatus,
     PolicyViolation,
     RegulationType,
-    RiskAssessment,
 )
 
 if TYPE_CHECKING:

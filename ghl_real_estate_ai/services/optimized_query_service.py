@@ -15,17 +15,13 @@ Performance Targets:
 - Slow query detection and optimization
 """
 
-import asyncio
 import hashlib
 import json
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import asyncpg
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.database.connection_manager import get_db_pool
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

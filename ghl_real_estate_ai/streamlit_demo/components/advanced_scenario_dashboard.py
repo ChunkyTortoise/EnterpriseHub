@@ -8,16 +8,12 @@ Implements research recommendations for sophisticated BI capabilities.
 Author: Enhanced from research recommendations - January 2026
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 # Import services
 try:

@@ -26,17 +26,13 @@ Created: 2026-01-18
 Integration: Seamlessly integrates with competitive intelligence pipeline
 """
 
-import asyncio
-import hashlib
-import json
-import logging
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -45,7 +41,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Import competitive intelligence components
-from ghl_real_estate_ai.services.competitive_data_pipeline import CompetitorDataPoint, ThreatAssessment, ThreatLevel
+from ghl_real_estate_ai.services.competitive_data_pipeline import ThreatAssessment, ThreatLevel
 
 logger = get_logger(__name__)
 

@@ -10,10 +10,9 @@ KEY OPTIMIZATIONS:
 5. Connection pool monitoring
 """
 
-import asyncio
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional
 
 import httpx
 
@@ -22,7 +21,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import LangChain models only for type checking
 if TYPE_CHECKING:
-    from langchain_core.language_models.chat_models import BaseChatModel
+    pass
 
 logger = get_logger(__name__)
 

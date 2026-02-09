@@ -8,11 +8,7 @@ Integrates event logs from GHL, AI thought streams, and milestone tracking.
 
 import asyncio
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
 
-import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.agent_state_sync import sync_service

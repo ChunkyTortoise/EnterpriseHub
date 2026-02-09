@@ -15,20 +15,15 @@ providing insights no competitor in the Inland Empire can match.
 
 import asyncio
 import json
-import logging
-import os
-import re
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler

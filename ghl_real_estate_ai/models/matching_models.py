@@ -3,7 +3,7 @@ Data models for enhanced property matching system.
 Defines all data structures for the 15-factor contextual matching algorithm.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional

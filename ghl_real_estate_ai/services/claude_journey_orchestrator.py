@@ -4,11 +4,10 @@ Uses Claude AI to design, predict, and optimize personalized lead paths.
 Now featuring a Functional Dispatcher and Autonomous Journey Triggers.
 """
 
-import asyncio
 import json
 import logging
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

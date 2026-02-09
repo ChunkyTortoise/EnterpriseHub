@@ -1,6 +1,5 @@
 """Tests for Advanced Parser module."""
 
-from datetime import datetime
 
 import pytest
 from src.core.exceptions import RetrievalError
@@ -14,7 +13,6 @@ from src.query.advanced_parser import (
 )
 from src.query.entity_extractor import EntityType
 from src.query.intent_classifier_v2 import IntentType
-from src.query.temporal_processor import TemporalConstraintType
 
 
 class TestParsedQuery:

@@ -3,7 +3,7 @@ Graphiti Schema Definition for Real Estate AI.
 Reference: AGENT_MEMORY_STRATEGY.md
 """
 
-from typing import Dict, List
+from typing import Dict
 
 # Entity Types
 ENTITY_LEAD = "Lead"

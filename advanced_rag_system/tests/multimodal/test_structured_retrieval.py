@@ -13,14 +13,10 @@ Tests cover:
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pandas as pd
 import pytest
 from src.core.exceptions import RetrievalError
-from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.multimodal.structured_retriever import (
     StructuredQuery,
     StructuredRetriever,

@@ -10,10 +10,9 @@ Features:
 - Time-sensitive opportunity alerts
 """
 
-import json
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 
 class LeadPriority(Enum):

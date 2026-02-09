@@ -3,7 +3,7 @@ Real Estate Domain Skills.
 Wraps core real estate services into standardized Agent Skills.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

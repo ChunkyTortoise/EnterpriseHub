@@ -20,14 +20,12 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import json
-import math
 import re
 import statistics
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

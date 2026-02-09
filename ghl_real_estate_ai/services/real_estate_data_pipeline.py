@@ -11,17 +11,13 @@ This service provides unified access to real estate data sources including:
 Critical Missing Component: This was identified as 90% missing in production readiness audit.
 """
 
-import asyncio
-import json
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import aiohttp
-import pandas as pd
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

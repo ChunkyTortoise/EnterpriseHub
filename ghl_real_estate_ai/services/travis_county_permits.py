@@ -8,7 +8,6 @@ Replaces mock permit data with actual Travis County permit information.
 Author: Data Integration Phase - January 2026
 """
 
-import asyncio
 import json
 import re
 from dataclasses import dataclass

@@ -6,9 +6,8 @@ Supports dependency injection and configuration-based repository selection.
 """
 
 import os
-from datetime import timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 try:
     from .caching_repository import CachingRepository, MemoryCacheBackend, RedisCacheBackend

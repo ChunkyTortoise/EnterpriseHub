@@ -27,12 +27,11 @@ Performance Targets:
 Author: Jorge's Real Estate AI Platform - Phase 3.2 Implementation
 """
 
-import asyncio
 import json
 import time
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

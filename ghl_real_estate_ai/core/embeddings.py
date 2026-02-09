@@ -6,8 +6,6 @@ Provides a simple interface for generating embeddings using sentence-transformer
 
 from typing import List
 
-import numpy as np
-
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

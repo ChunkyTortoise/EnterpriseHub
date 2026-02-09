@@ -10,7 +10,7 @@ import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Import Primitive Components
-from ghl_real_estate_ai.streamlit_demo.components.primitives import CardConfig, icon, render_obsidian_card
+from ghl_real_estate_ai.streamlit_demo.components.primitives import CardConfig, render_obsidian_card
 
 
 def render_property_matcher(lead_context: Dict, elite_mode: bool = False, analysis_result=None):
@@ -98,7 +98,6 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool = False, analys
                         )
 
                         eli = get_enhanced_lead_intelligence()
-                        import asyncio
 
                         deep_reasoning = run_async(eli.get_psychological_property_fit(property, analysis_result))
                         st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")

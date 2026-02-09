@@ -17,13 +17,11 @@ Performance: Sub-200ms prediction latency
 import asyncio
 import hashlib
 import json
-import logging
-import pickle
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import joblib
 import numpy as np
@@ -37,7 +35,6 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

@@ -16,12 +16,11 @@ Architecture:
 
 import asyncio
 import hashlib
-import logging
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import asyncpg
 from asyncpg import Pool

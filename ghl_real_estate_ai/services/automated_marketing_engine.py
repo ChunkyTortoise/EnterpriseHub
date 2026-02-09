@@ -13,17 +13,13 @@ This system transforms Jorge's marketing from manual tasks to AI-powered automat
 that consistently generates leads and maintains market presence.
 """
 
-import asyncio
-import calendar
 import json
-import logging
 import re
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.parse import quote
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence

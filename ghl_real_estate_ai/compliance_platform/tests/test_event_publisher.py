@@ -10,10 +10,9 @@ Tests cover:
 - EventBus combined functionality
 """
 
-import asyncio
 import json
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, patch
 
 import pytest
 

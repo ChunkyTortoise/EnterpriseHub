@@ -3,10 +3,9 @@ Smart Follow-Up Automation Engine - Wow Factor Feature #3
 Automatically triggers perfect follow-ups at the right time
 """
 
-import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 
 @dataclass

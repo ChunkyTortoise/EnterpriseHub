@@ -5,7 +5,7 @@ Manages stress-responsive dashboard states (Calm, Focused, Crisis).
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

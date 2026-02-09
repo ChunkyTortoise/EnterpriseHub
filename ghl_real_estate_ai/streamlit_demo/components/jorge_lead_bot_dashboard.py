@@ -11,13 +11,11 @@ Complete lead automation system integrating:
 Built specifically for Jorge's GHL system.
 """
 
-import asyncio
-import json
 import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import plotly.express as px
@@ -519,7 +517,6 @@ from ghl_real_estate_ai.streamlit_demo.obsidian_theme import (
     inject_elite_css,
     render_dossier_block,
     render_journey_line,
-    render_neural_heatmap,
     render_neural_progress,
     render_tactical_dock,
     render_terminal_log,

@@ -6,15 +6,11 @@ Provides executive-level interface for portfolio analysis, performance tracking,
 and strategic decision-making for ultra-high-net-worth clients.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import List
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
@@ -36,7 +32,7 @@ try:
         create_sample_uhnw_client,
     )
 except ImportError:
-    from dataclasses import dataclass, field
+    from dataclasses import dataclass
     from enum import Enum
 
     class PropertyType(str, Enum):

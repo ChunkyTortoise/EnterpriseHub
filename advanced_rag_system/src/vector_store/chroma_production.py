@@ -44,10 +44,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Set, TypeVar
 from uuid import UUID, uuid4
 
-from src.core.config import get_settings
 from src.core.exceptions import NotFoundError, VectorStoreError
 from src.core.types import DocumentChunk, SearchResult
 from src.vector_store.base import SearchOptions, VectorStoreConfig

@@ -3,7 +3,6 @@ AI Training Sandbox Component
 Interactive chat interface for testing AI prompts and personas in real-time
 """
 
-from typing import Dict, List
 
 import streamlit as st
 

@@ -10,29 +10,15 @@ Author: Claude Code Agent Swarm (Phase 2B - Billing Integration)
 Created: 2026-01-18
 """
 
-import asyncio
-from collections import defaultdict
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from ghl_real_estate_ai.api.schemas.billing import (
-    RevenueAnalytics,
-    SubscriptionStatus,
-    SubscriptionTier,
-    TierDistribution,
-    UsageSummary,
-)
-
 # Billing service imports
-from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
-from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 
 
 # Simulate billing data for demonstration (until database is connected)

@@ -21,10 +21,10 @@ import asyncio
 import json
 import logging
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # Internal imports
 from .churn_prediction_engine import ChurnPrediction, ChurnRiskTier

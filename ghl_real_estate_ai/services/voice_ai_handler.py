@@ -14,16 +14,13 @@ This system transforms Jorge from local agent to AI-powered real estate empire
 with capabilities no competitor in the Inland Empire can match.
 """
 
-import asyncio
 import json
-import logging
 import re
 import uuid
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Union
-from urllib.parse import quote
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
@@ -31,7 +28,6 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
 from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
-    RanchoCucamongaConversationContext,
     get_rancho_cucamonga_ai_assistant,
 )
 

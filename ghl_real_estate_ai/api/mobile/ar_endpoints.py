@@ -3,18 +3,13 @@ AR/VR Integration API - Property Visualization and Spatial Computing
 Advanced augmented and virtual reality endpoints for immersive property experiences.
 """
 
-import asyncio
-import base64
 import hashlib
 import json
-import os
-import tempfile
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user

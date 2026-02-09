@@ -11,13 +11,12 @@ Provides comprehensive monitoring capabilities for production deployment:
 
 import asyncio
 import json
-import logging
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List
 
 import aiosqlite
 import psutil

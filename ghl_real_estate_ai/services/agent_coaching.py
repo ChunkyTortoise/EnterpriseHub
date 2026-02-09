@@ -3,7 +3,6 @@ Real-Time Agent Coaching Service - Wow Factor Feature #2
 Provides live coaching suggestions during conversations
 """
 
-import re
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional

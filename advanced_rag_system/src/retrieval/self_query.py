@@ -30,10 +30,9 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-from uuid import UUID
+from typing import Any, Dict, List, Optional
 
-from src.core.types import DocumentChunk, SearchResult
+from src.core.types import SearchResult
 from src.vector_store.base import SearchOptions, VectorStore
 
 logger = logging.getLogger(__name__)

@@ -5,10 +5,9 @@ Uses Perplexity AI to perform real-time web research and synthesize
 data-driven insights for real estate professionals.
 """
 
-import asyncio
 from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider
+from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

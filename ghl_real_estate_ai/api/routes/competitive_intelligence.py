@@ -32,10 +32,8 @@ Created: 2026-01-18
 Integration: Seamlessly integrates with existing EnterpriseHub architecture
 """
 
-import logging
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -47,19 +45,14 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Import competitive intelligence services
 from ghl_real_estate_ai.services.competitive_data_pipeline import (
-    CompetitorDataPoint,
     DataSource,
     DataType,
-    MarketInsight,
-    ThreatAssessment,
     ThreatLevel,
     get_competitive_data_pipeline,
 )
 from ghl_real_estate_ai.services.competitive_intelligence_system import (
-    IntelligenceReport,
     get_competitive_intelligence_system,
 )
-from ghl_real_estate_ai.services.competitive_response_automation import get_competitive_response_engine
 
 logger = get_logger(__name__)
 

@@ -6,7 +6,6 @@ Automatically reviews conversations and identifies quality issues
 
 import json
 import random
-import statistics
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -128,7 +127,6 @@ class QualityAssuranceEngine:
             }
 
         # Scoring Logic: Multi-vector Sentiment & Accuracy Analysis
-        import numpy as np
         import pandas as pd
 
         df = pd.DataFrame(raw_convos)

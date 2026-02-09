@@ -3,10 +3,9 @@ AI Lead Insights Service - Wow Factor Feature #1
 Provides intelligent analysis and predictions about leads using AI
 """
 
-import json
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
 
 @dataclass

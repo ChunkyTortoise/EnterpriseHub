@@ -10,10 +10,8 @@ Generates synthetic documents, queries, and ground truth data for:
 Provides consistent, reproducible test data across benchmark runs.
 """
 
-import hashlib
 import json
 import random
-import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path

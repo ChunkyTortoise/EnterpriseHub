@@ -15,25 +15,18 @@ Performance: Spatial indexing and optimized queries
 Accuracy: Sub-meter precision for location analysis
 """
 
-import asyncio
-import hashlib
-import json
-import logging
 import math
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 import pyproj
 import shapely.geometry as geom
 from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
-from shapely.ops import transform
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 

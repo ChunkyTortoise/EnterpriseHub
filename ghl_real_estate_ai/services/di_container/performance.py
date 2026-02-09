@@ -9,11 +9,10 @@ import asyncio
 import logging
 import threading
 import time
-import weakref
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from datetime import datetime
+from typing import Any, Dict, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 

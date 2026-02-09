@@ -24,18 +24,10 @@ Author: Claude Code Agent - System Consolidation Specialist
 Created: 2026-01-19
 """
 
-import asyncio
-import hashlib
-import json
-import logging
-import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

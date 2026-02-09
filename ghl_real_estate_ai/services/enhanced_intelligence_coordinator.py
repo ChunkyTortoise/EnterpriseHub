@@ -13,12 +13,11 @@ Provides unified interface for the enhanced features from research recommendatio
 Author: Enhanced from research recommendations - January 2026
 """
 
-import asyncio
 import json
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -26,9 +25,9 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Core service imports
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator
-from ghl_real_estate_ai.services.emergency_deal_rescue import RescueUrgencyLevel, get_emergency_deal_rescue
+from ghl_real_estate_ai.services.emergency_deal_rescue import get_emergency_deal_rescue
 from ghl_real_estate_ai.services.ghl_deal_intelligence_service import get_ghl_deal_intelligence_service
-from ghl_real_estate_ai.services.market_sentiment_radar import AlertPriority, get_market_sentiment_radar
+from ghl_real_estate_ai.services.market_sentiment_radar import get_market_sentiment_radar
 
 # Enhanced service imports
 from ghl_real_estate_ai.services.scenario_simulation_engine import (

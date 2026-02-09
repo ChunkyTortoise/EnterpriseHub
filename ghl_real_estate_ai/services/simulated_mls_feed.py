@@ -4,7 +4,6 @@ Provides a mock stream of market changes (price drops, new listings)
 to test real-time Agent Swarm responses.
 """
 
-import asyncio
 import random
 from datetime import datetime
 from typing import Any, Dict, List, Optional

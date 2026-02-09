@@ -8,10 +8,7 @@ Addresses Priority 4 issue: Tool schema serialization edge cases
 - Preserves maximum schema information at each fallback level
 """
 
-import asyncio
 import inspect
-import json
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

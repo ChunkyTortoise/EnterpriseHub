@@ -9,10 +9,9 @@ This module provides the complete Phase 3 hybrid RAG system that integrates:
 
 from __future__ import annotations
 
-import asyncio
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult

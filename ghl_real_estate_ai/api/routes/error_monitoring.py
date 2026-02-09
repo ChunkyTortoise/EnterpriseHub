@@ -17,19 +17,15 @@ Date: 2026-01-25
 Performance: <50ms response time, real-time updates
 """
 
-import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.error_monitoring_service import (
-    AlertSeverity,
     ErrorCategory,
     get_error_monitoring_service,
 )

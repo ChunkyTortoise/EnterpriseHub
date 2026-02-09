@@ -23,7 +23,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 from uuid import uuid4
 
 import aiohttp

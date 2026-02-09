@@ -1,12 +1,10 @@
 """Tests for the tool registry module."""
 
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from src.agents.tool_registry import (
     CalculatorTool,
-    ToolExecutionError,
     ToolMetadata,
     ToolRegistry,
     ToolResult,

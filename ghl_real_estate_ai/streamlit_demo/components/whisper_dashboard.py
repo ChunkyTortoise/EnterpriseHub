@@ -3,10 +3,8 @@ Whisper Mode Dashboard - Section 3 of 2026 Strategic Roadmap
 Real-time coaching interface for Jorge during live calls.
 """
 
-import asyncio
 from datetime import datetime
 
-import pandas as pd
 import streamlit as st
 
 from ghl_real_estate_ai.services.ghost_followup_engine import get_ghost_followup_engine

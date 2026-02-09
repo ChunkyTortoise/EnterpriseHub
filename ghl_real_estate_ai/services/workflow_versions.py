@@ -4,7 +4,6 @@ Track changes, rollback, and A/B testing
 """
 
 import copy
-import json
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional

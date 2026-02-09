@@ -473,7 +473,6 @@ class RealEstateServiceRegistrar:
 
     async def _register_repositories(self, config: Dict[str, Any]) -> None:
         """Register repository services"""
-        from ..repositories.interfaces import IPropertyRepository
         from ..repositories.repository_factory import RepositoryFactory
 
         # Register repository factory as singleton

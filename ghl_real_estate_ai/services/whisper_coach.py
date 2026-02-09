@@ -3,11 +3,8 @@ Whisper Mode Real-Time Coaching Engine - Section 3 of 2026 Strategic Roadmap
 Provides live sentiment analysis and coaching cues for Jorge during calls.
 """
 
-import asyncio
 import json
-import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 

@@ -8,31 +8,24 @@ Author: Claude Code Agent Swarm
 Created: 2026-01-17
 """
 
-import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from starlette.status import (
     HTTP_200_OK,
-    HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user, require_auth
+from ghl_real_estate_ai.api.middleware.jwt_auth import require_auth
 from ghl_real_estate_ai.services.golden_lead_detector import (
     BehavioralSignal,
     GoldenLeadDetector,
-    GoldenLeadPattern,
     GoldenLeadScore,
     GoldenLeadTier,
-    analyze_single_lead,
-    batch_detect_golden_leads,
     create_golden_lead_detector,
 )
 from ghl_real_estate_ai.services.tenant_service import TenantService

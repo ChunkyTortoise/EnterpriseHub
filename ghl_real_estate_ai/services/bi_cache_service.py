@@ -21,12 +21,10 @@ Performance: >95% cache hit rates, <50ms query response
 import asyncio
 import hashlib
 import json
-import logging
-import statistics
 import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple
 

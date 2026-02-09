@@ -25,20 +25,16 @@ Created: 2026-01-18
 """
 
 import asyncio
-import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .claude_assistant import ClaudeAssistant
 from .dynamic_value_justification_engine import (
-    PricingTier,
     RealTimeROICalculation,
     ValueCommunicationPackage,
-    ValueDimension,
     get_dynamic_value_justification_engine,
 )
 

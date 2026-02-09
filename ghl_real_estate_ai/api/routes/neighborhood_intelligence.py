@@ -18,13 +18,10 @@ Security: Rate limiting, input validation, authentication
 Integration: GHL webhook compatible, Pydantic validation
 """
 
-import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-import numpy as np
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Body, Depends, Path, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -35,9 +32,7 @@ from ghl_real_estate_ai.ml.price_prediction_engine import (
     get_price_prediction_engine,
 )
 from ghl_real_estate_ai.services.geospatial_analysis_service import (
-    AnalysisType,
     GeographicPoint,
-    TransportationType,
     get_geospatial_analysis_service,
 )
 from ghl_real_estate_ai.services.inventory_alert_system import (
@@ -47,9 +42,6 @@ from ghl_real_estate_ai.services.inventory_alert_system import (
     get_inventory_alert_system,
 )
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
-    InvestmentGrade,
-    MarketSegment,
-    MarketTrend,
     NeighborhoodIntelligenceService,
     get_neighborhood_intelligence_service,
 )

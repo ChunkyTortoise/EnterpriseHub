@@ -21,20 +21,16 @@ Business Impact:
 - 25% improvement in client retention
 """
 
-import asyncio
-import json
 import logging
 import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.database.transaction_schema import (
-    MilestoneStatus,
     MilestoneType,
     RealEstateTransaction,
-    TransactionCelebration,
     TransactionMilestone,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService

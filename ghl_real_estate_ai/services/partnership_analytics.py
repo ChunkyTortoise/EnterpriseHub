@@ -6,16 +6,10 @@ employee relocation metrics, and revenue attribution by partnership.
 Advanced analytics for Fortune 500 enterprise partnerships.
 """
 
-import asyncio
-import json
-import statistics
-from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
-from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
-from uuid import uuid4
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.corporate_billing_service import CorporateBillingService

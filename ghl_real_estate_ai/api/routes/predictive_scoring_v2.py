@@ -18,14 +18,11 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
@@ -35,13 +32,12 @@ from ghl_real_estate_ai.ml.market_specific_models import MarketSpecificModelRout
 
 # Backward compatibility imports
 from ghl_real_estate_ai.services.ai_predictive_lead_scoring import PredictiveLeadScorer
-from ghl_real_estate_ai.services.intelligent_lead_router import IntelligentLeadRouter, PriorityLevel, RoutingStrategy
+from ghl_real_estate_ai.services.intelligent_lead_router import IntelligentLeadRouter, RoutingStrategy
 
 # Import V2 components
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
     InferenceMode,
     InferenceRequest,
-    MarketSegment,
     RealTimeInferenceEngineV2,
 )
 

@@ -12,23 +12,19 @@ Integrates with Jorge's Enhanced Lead Scorer and Neural Property Matcher.
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.jorge_property_models import (
-    ConfidenceLevel,
     LeadPropertyPreferences,
     MatchingAlgorithm,
     MatchingPerformanceMetrics,
     MatchReasoning,
-    Property,
     PropertyFilters,
-    PropertyMatch,
     PropertyMatchRequest,
     PropertyMatchResponse,
     PropertyType,

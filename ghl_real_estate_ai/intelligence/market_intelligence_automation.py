@@ -12,15 +12,12 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
-import requests
 from anthropic import AsyncAnthropic
-from scipy import stats
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 

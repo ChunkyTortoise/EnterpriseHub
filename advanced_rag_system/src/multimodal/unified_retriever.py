@@ -20,8 +20,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from src.core.exceptions import RetrievalError

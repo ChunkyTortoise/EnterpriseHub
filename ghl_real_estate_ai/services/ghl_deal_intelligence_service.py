@@ -8,12 +8,10 @@ Provides live deal risk monitoring and conversation intelligence.
 Author: Data Integration Phase - January 2026
 """
 
-import asyncio
 import json
-import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

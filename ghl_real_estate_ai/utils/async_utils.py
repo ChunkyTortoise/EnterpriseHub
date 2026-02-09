@@ -4,8 +4,7 @@ Provides helpers for spawning background tasks in environments with or without a
 """
 
 import asyncio
-import threading
-from typing import Any, Coroutine, Optional
+from typing import Coroutine, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

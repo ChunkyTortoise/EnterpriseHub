@@ -12,17 +12,15 @@ This module provides:
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
-
-import numpy as np
+from typing import Any, Dict, List, Optional
 
 from ...ghl_utils.jorge_config import JorgeConfig
 from ...services.cache_service import CacheService
 from ...services.claude_assistant import ClaudeAssistant
-from ..multi_agent.agent_coordinator import AgentAssignment, AgentRole, BaseAgent, ClientPriority, ClientRequest
+from ..multi_agent.agent_coordinator import BaseAgent, ClientRequest
 
 logger = logging.getLogger(__name__)
 

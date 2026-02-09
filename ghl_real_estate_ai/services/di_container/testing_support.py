@@ -8,14 +8,13 @@ and integration test helpers for the dependency injection system.
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Dict, List, Optional, Type, Union
-from unittest.mock import AsyncMock, MagicMock, Mock
+from typing import Any, Dict, List, Optional, Type
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from .container import DIContainer, ServiceLifetime
+from .container import DIContainer
 from .pattern_integration import RealEstateServiceOrchestrator
-from .service_registration import ServiceRegistrar, YamlConfigurationProvider
 
 logger = logging.getLogger(__name__)
 

@@ -11,11 +11,10 @@ Provides real SendGrid API integration for email communications:
 """
 
 import asyncio
-import base64
 import json
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import sendgrid

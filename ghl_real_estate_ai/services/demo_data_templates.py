@@ -4,7 +4,6 @@ Realistic lead, property, and conversation templates for client demonstrations
 Version: 2.0.0
 """
 
-import random
 from enum import Enum
 from typing import Any, Dict, List
 

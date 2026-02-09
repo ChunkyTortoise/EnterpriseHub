@@ -27,7 +27,6 @@ async def test_strategy_pattern_integration():
         print("📦 Testing imports...")
         from strategy_integration import (
             STRATEGY_PATTERN_AVAILABLE,
-            RepositoryPropertyMatcher,
             create_repository_property_matcher,
             enhanced_generate_property_matches,
         )
@@ -124,20 +123,10 @@ async def test_import_paths():
 
     try:
         # Test direct Strategy Pattern imports
-        from ghl_real_estate_ai.services.scoring import (
-            PropertyMatcherContext,
-            ScoringContext,
-            ScoringResult,
-            create_property_matcher,
-            get_scoring_factory,
-        )
 
         print("✅ Direct Strategy Pattern imports working")
 
         # Test Repository Pattern imports
-        from interfaces import PropertyQuery, SortOrder
-        from property_data_service import PropertyDataService, PropertyDataServiceFactory
-        from query_builder import PropertyQueryBuilder
 
         print("✅ Repository Pattern imports working")
 

@@ -8,9 +8,9 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from .schema import ENTITY_LEAD, RELATION_TYPES
+from .schema import ENTITY_LEAD
 
 # Try to import graphiti_core and drivers
 try:

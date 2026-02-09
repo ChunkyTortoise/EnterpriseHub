@@ -12,26 +12,15 @@ Features:
 """
 
 import asyncio
-import json
 import time
 import warnings
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
-import pandas as pd
+from typing import Any, Dict, List, Tuple
 
 warnings.filterwarnings("ignore")
 
 # ML and optimization imports
-import scipy.stats as stats
-from scipy.optimize import minimize
-from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from ghl_real_estate_ai.agents.intent_decoder import IntentDecoder
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot

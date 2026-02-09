@@ -5,7 +5,6 @@ Fast, rule-based scoring strategy optimized for high-volume processing.
 Uses simple algorithms for real-time property matching.
 """
 
-import math
 from typing import Any, Dict, List
 
 try:

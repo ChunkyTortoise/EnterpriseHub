@@ -13,7 +13,7 @@ import pytest
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.dense.dense_retriever_mock import MockDenseRetriever
-from src.vector_store.base import SearchOptions, VectorStoreConfig
+from src.vector_store.base import SearchOptions
 
 # ---------------------------------------------------------------------------
 # Shared fixtures

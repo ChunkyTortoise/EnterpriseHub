@@ -24,21 +24,16 @@ Date: 2026-01-16
 """
 
 import asyncio
-import json
-import logging
 import warnings
-from abc import ABC, abstractmethod
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 from sklearn.ensemble import IsolationForest
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 

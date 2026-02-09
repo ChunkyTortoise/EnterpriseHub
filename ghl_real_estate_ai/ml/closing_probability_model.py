@@ -9,24 +9,22 @@ features and market conditions.
 import asyncio
 import json
 import os
-import pickle
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 import joblib
 import numpy as np
 import pandas as pd
-import shap
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
-from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.metrics import confusion_matrix, roc_auc_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer, MarketFeatures
+from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)

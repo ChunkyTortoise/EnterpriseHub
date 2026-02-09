@@ -10,16 +10,12 @@ This module provides:
 - Jorge's empire scaling predictions and ROI optimization
 """
 
-import asyncio
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
-import pandas as pd
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeConfig
 from ghl_real_estate_ai.services.cache_service import CacheService

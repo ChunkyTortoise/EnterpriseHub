@@ -4,7 +4,7 @@ Portal Routes for GHL Real Estate AI.
 Handles branded client portal interactions including swipe actions.
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field

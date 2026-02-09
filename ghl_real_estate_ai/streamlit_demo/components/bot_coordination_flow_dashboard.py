@@ -10,13 +10,11 @@ Features:
 - Bot coordination patterns and optimization insights
 """
 
-import json
 import random
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots

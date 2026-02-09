@@ -31,9 +31,6 @@ Author: Claude Code Enterprise Growth
 Created: January 2026
 """
 
-import asyncio
-import json
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -41,7 +38,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 from ghl_real_estate_ai.analytics.customer_lifetime_analytics import CustomerLifetimeAnalytics
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

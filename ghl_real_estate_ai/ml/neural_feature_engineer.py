@@ -20,35 +20,26 @@ Created: 2026-01-18
 import asyncio
 import hashlib
 import json
-import logging
-import pickle
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
-import cv2
 import numpy as np
 import pandas as pd
 import PIL.Image as Image
 import spacy
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchvision.transforms as transforms
-from sklearn.decomposition import PCA
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.manifold import TSNE
-from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+from sklearn.preprocessing import RobustScaler, StandardScaler
 from textblob import TextBlob
-from transformers import AutoModel, AutoTokenizer, BertModel, BertTokenizer, CLIPModel, CLIPProcessor
+from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import existing services
-from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer, MarketFeatures
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)

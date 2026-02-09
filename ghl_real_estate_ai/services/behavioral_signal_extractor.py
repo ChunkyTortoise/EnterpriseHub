@@ -39,17 +39,13 @@ Author: Claude Code Agent - Behavioral Analytics Specialist
 Created: 2026-01-18
 """
 
-import asyncio
-import hashlib
 import json
-import logging
-import re
 import statistics
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

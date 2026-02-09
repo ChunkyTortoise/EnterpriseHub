@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import structlog
 from structlog.processors import JSONRenderer
-from structlog.stdlib import BoundLogger, filter_by_level
+from structlog.stdlib import BoundLogger
 
 from src.core.config import Settings, get_settings
 

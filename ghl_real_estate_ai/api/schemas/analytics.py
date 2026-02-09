@@ -10,7 +10,7 @@ Cache TTL: 5-15 minutes depending on data volatility
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 

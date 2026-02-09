@@ -27,7 +27,6 @@ from ghl_real_estate_ai.agents.bot_personality import (
     TemperatureThresholds,
 )
 
-
 # ── Pydantic Sub-Schemas ─────────────────────────────────────────────────────
 
 

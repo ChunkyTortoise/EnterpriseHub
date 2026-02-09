@@ -8,7 +8,7 @@ features including fallback handling, performance monitoring, and batch processi
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 try:
     from .property_scorer import PropertyScorer, ScoringContext, ScoringResult

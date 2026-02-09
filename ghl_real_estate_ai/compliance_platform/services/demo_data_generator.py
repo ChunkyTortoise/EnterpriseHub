@@ -10,8 +10,6 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from ..models.compliance_models import (
-    AIModelRegistration,
-    ComplianceStatus,
     PolicyViolation,
     RegulationType,
     RiskLevel,

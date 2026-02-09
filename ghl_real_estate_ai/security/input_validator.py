@@ -9,11 +9,11 @@ import re
 import urllib.parse
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import bleach
 from email_validator import EmailNotValidError, validate_email
-from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ValidationSeverity(str, Enum):

@@ -13,14 +13,12 @@ Performance Integration:
 Jorge's methodology integration with 6% commission validation and confrontational qualification patterns.
 """
 
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-from uuid import UUID
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.types import confloat, conint, constr
 
 # =====================================================================================

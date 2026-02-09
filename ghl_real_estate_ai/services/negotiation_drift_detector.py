@@ -5,8 +5,7 @@ Analyzes behavioral patterns (latency, hedging, sentiment shift) to detect flexi
 
 import logging
 import re
-from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

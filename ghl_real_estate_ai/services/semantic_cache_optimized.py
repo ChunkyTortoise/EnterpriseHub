@@ -10,7 +10,6 @@ OPTIMIZATIONS:
 5. Fast variation matching
 """
 
-import asyncio
 import hashlib
 import json
 import time

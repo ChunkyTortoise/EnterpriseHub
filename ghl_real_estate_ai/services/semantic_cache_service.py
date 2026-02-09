@@ -4,9 +4,8 @@ Implements similarity-based caching for agentic reasoning results.
 Reduces token usage and improves response time for repetitive or similar queries.
 """
 
-import json
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 

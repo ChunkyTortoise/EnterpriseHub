@@ -3,8 +3,6 @@ Journey Orchestrator UI Component
 Renders the autonomous lead journey designed by Claude.
 """
 
-import asyncio
-from datetime import datetime, timedelta
 
 import streamlit as st
 

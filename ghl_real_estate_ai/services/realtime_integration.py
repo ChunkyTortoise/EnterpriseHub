@@ -18,12 +18,12 @@ import functools
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.event_publisher import EventType, get_event_publisher
+from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 

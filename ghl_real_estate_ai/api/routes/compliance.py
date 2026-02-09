@@ -12,14 +12,12 @@ This module provides:
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from ...compliance.audit_documentation_system import (
@@ -30,16 +28,13 @@ from ...compliance.audit_documentation_system import (
 )
 from ...compliance.compliance_automation_engine import (
     ComplianceAutomationEngine,
-    ComplianceRegulation,
-    ComplianceStatus,
 )
 from ...compliance.privacy_protection_system import (
-    DataCategory,
     PrivacyProtectionSystem,
     PrivacyRegulation,
     PrivacyRight,
 )
-from ...compliance.security_framework import AccessAction, JorgeSecurityFramework, SecurityContext, SecurityLevel
+from ...compliance.security_framework import JorgeSecurityFramework
 from ...services.auth_service import get_current_user
 from ...services.websocket_manager import WebSocketManager
 

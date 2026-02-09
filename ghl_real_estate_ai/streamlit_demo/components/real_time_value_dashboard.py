@@ -27,18 +27,14 @@ Author: Claude Code Agent
 Created: 2026-01-18
 """
 
-import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Dict, Optional
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.services.dynamic_value_justification_engine import (
     PricingTier,

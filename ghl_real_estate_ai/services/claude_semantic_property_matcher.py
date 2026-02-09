@@ -5,10 +5,9 @@ Provides lifestyle-based matching using behavioral psychology and Claude AI.
 
 import asyncio
 import json
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List
 
 import streamlit as st
 

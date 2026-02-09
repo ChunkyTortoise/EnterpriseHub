@@ -3,17 +3,14 @@ Mobile Router - Main routing module for mobile API endpoints
 Integrates authentication, AR/VR, voice, and mobile-optimized data endpoints.
 """
 
-import asyncio
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.mobile.ar_endpoints import router as ar_router
-from ghl_real_estate_ai.api.mobile.auth import mobile_auth_service
 from ghl_real_estate_ai.api.mobile.auth import router as auth_router
 from ghl_real_estate_ai.api.schemas.mobile import *
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

@@ -9,14 +9,11 @@ Optimizes follow-up sequences based on:
 - Integration with GHL automation workflows
 """
 
-import asyncio
 import json
-import random
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

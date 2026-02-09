@@ -45,7 +45,6 @@ from ultra_fast_ml_engine import (
     FeaturePreprocessor,
     UltraFastMLEngine,
     UltraFastPredictionRequest,
-    UltraFastPredictionResult,
     get_ultra_fast_ml_engine,
 )
 

@@ -5,9 +5,8 @@ Tracks agent accuracy, latency, and cost.
 """
 
 import logging
-import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

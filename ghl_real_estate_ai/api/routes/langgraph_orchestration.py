@@ -7,7 +7,6 @@ Exposes the LangGraph-based lead qualification pipeline via REST endpoints:
 - Pipeline health and configuration
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException

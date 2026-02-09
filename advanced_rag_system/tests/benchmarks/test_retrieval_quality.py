@@ -10,7 +10,7 @@ Tests retrieval accuracy metrics according to targets:
 import asyncio
 import os
 import sys
-from typing import Any, Dict, List, Set
+from typing import Dict
 
 import numpy as np
 import pytest

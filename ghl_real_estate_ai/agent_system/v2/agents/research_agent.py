@@ -4,14 +4,13 @@ Specialized in property research, market trends, and comparable finding.
 Built with PydanticAI and optimized for Gemini 3 Pro.
 """
 
-import os
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.gemini import GeminiModel
 
-from ghl_real_estate_ai.models.jorge_property_models import Property, PropertyAddress, PropertyFeatures, PropertyType
+from ghl_real_estate_ai.models.jorge_property_models import Property
 from ghl_real_estate_ai.services.perplexity_researcher import PerplexityResearcher
 from ghl_real_estate_ai.services.simulated_mls_feed import get_simulated_mls
 

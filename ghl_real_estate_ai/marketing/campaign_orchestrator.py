@@ -14,12 +14,11 @@ This module provides:
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 import aiohttp
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..ghl_utils.jorge_config import JorgeConfig
 from ..services.cache_service import CacheService

@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set
 
 from ...ghl_utils.jorge_config import JorgeConfig
 from ...services.cache_service import CacheService

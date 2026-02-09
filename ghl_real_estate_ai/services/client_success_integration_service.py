@@ -14,19 +14,17 @@ Key Features:
 - CRM workflow automation
 """
 
-import asyncio
-import json
 import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from .ai_negotiation_partner import AINetworkingPartner
 from .austin_market_service import AustinMarketService
 from .cache_service import CacheService
 from .claude_assistant import ClaudeAssistant
 from .client_outcome_verification_service import get_client_outcome_verification_service
-from .client_success_scoring_service import MetricType, VerificationStatus, get_client_success_service
+from .client_success_scoring_service import MetricType, get_client_success_service
 from .ghl_client import GHLClient
 from .premium_service_justification_engine import get_premium_service_justification_engine
 from .transaction_intelligence_engine import TransactionIntelligenceEngine

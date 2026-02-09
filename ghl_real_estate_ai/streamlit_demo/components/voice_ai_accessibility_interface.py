@@ -3,14 +3,10 @@ Voice AI & Accessibility Interface - Service 6 Universal Design
 Comprehensive voice integration and accessibility compliance for inclusive user experience
 """
 
-import asyncio
-import json
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
 
-import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 

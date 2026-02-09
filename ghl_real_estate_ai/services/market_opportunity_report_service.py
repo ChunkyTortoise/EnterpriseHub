@@ -8,9 +8,8 @@ Leverages:
 - LLM for narrative generation
 """
 
-import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.business_intelligence_reporting_engine import (

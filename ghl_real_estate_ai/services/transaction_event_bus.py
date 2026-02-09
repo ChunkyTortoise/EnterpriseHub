@@ -25,13 +25,12 @@ import json
 import logging
 import time
 import uuid
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
 import redis.asyncio as redis
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -677,4 +676,3 @@ async def create_event_bus(redis_url: str = "redis://localhost:6379") -> Transac
 
 
 # Type alias for better code readability
-from collections.abc import AsyncIterator

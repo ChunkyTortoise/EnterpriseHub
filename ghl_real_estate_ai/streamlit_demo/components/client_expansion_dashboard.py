@@ -7,15 +7,11 @@ framework. Provides real-time insights, opportunity prioritization, action
 tracking, and revenue forecasting for scaling $130K → $400K MRR.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from decimal import Decimal
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.services.client_expansion_intelligence import (
     ExpansionTier,

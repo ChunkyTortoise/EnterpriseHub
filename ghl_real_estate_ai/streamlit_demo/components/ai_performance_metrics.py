@@ -2,7 +2,6 @@
 AI Performance Metrics Dashboard - Shows real-time AI performance statistics
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 import plotly.graph_objects as go

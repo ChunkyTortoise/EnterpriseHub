@@ -9,10 +9,8 @@ Comprehensive business optimization interface featuring:
 - Productivity Metrics & Recommendations
 """
 
-import asyncio
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pandas as pd
 import plotly.express as px

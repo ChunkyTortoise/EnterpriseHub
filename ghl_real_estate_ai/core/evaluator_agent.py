@@ -4,9 +4,9 @@ Judges output quality based on domain-specific rubrics.
 """
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from ghl_real_estate_ai.core.llm_client import TaskComplexity, get_llm_client
+from ghl_real_estate_ai.core.llm_client import get_llm_client
 
 
 class EvaluatorAgent:

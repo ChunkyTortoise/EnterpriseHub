@@ -20,28 +20,22 @@ Business Impact:
 - 15% faster closing times through proactive issue resolution
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import asyncpg
-from sqlalchemy import and_, func, insert, or_, select, update
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from ghl_real_estate_ai.database.transaction_schema import (
-    Base,
     EventType,
     MilestoneStatus,
     MilestoneType,
     RealEstateTransaction,
     TransactionCelebration,
     TransactionEvent,
-    TransactionMetrics,
     TransactionMilestone,
     TransactionPrediction,
     TransactionStatus,

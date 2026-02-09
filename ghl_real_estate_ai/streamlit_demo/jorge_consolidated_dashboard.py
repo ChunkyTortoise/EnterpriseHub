@@ -15,14 +15,10 @@ Author: Claude Code Assistant
 Created: 2026-01-25
 """
 
-import asyncio
-import json
-import os
 import sys
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pandas as pd
 import plotly.express as px
