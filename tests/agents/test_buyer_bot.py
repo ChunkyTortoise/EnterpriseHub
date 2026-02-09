@@ -1102,3 +1102,181 @@ class TestBuyerBotIntegration:
     async def test_orchestrator_integration(self):
         """Test buyer bot integration with enhanced orchestrator."""
         pass
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: Affordability Calculator, Objection Handling, Enhanced Matching Tests
+# ---------------------------------------------------------------------------
+
+
+class TestBuyerBotAffordability:
+    """Test affordability calculator and objection handling."""
+
+    @pytest.fixture
+    def mock_deps(self):
+        with patch.multiple(
+            "ghl_real_estate_ai.agents.jorge_buyer_bot",
+            BuyerIntentDecoder=AsyncMock,
+            ClaudeAssistant=AsyncMock,
+            get_event_publisher=Mock,
+            PropertyMatcher=AsyncMock,
+            get_ml_analytics_engine=Mock,
+        ):
+            yield
+
+    def _make_state(self, **overrides):
+        state = {
+            "buyer_id": "test_buyer_100",
+            "buyer_name": "Jane Doe",
+            "target_areas": None,
+            "conversation_history": [
+                {"role": "user", "content": "Looking for a house under $500k"},
+            ],
+            "intent_profile": None,
+            "budget_range": {"min": 400000, "max": 500000},
+            "financing_status": "pre_approved",
+            "urgency_level": "3_months",
+            "property_preferences": {"bedrooms": 3},
+            "current_qualification_step": "budget",
+            "objection_detected": False,
+            "detected_objection_type": None,
+            "next_action": "respond",
+            "response_content": "",
+            "matched_properties": [],
+            "financial_readiness_score": 75.0,
+            "buying_motivation_score": 65.0,
+            "buyer_temperature": "warm",
+            "is_qualified": False,
+            "tone_variant": "empathetic",
+            "current_journey_stage": "qualification",
+            "properties_viewed_count": 0,
+            "last_action_timestamp": None,
+            "user_message": "test",
+            "intelligence_context": None,
+            "intelligence_performance_ms": 0.0,
+            "affordability_analysis": None,
+            "mortgage_details": None,
+            "max_monthly_payment": None,
+            "objection_history": None,
+        }
+        state.update(overrides)
+        return state
+
+    @pytest.mark.asyncio
+    async def test_affordability_calc_with_budget(self, mock_deps):
+        """Test affordability calculation with valid budget."""
+        bot = JorgeBuyerBot()
+        state = self._make_state()
+        result = await bot.calculate_affordability(state)
+
+        assert result.get("affordability_analysis") is not None
+        analysis = result["affordability_analysis"]
+        assert analysis["max_price"] == 500000
+        assert analysis["down_payment"] == 100000  # 20% of 500k
+        assert analysis["loan_amount"] == 400000
+        assert analysis["monthly_mortgage"] > 0
+        assert analysis["monthly_tax"] > 0
+        assert analysis["monthly_insurance"] > 0
+        assert analysis["total_monthly_payment"] > 0
+        assert result["max_monthly_payment"] > 0
+
+    @pytest.mark.asyncio
+    async def test_affordability_calc_without_budget(self, mock_deps):
+        """Test affordability skips without budget."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(budget_range=None)
+        result = await bot.calculate_affordability(state)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_affordability_includes_tax_and_insurance(self, mock_deps):
+        """Test that tax and insurance are included in total."""
+        bot = JorgeBuyerBot()
+        state = self._make_state()
+        result = await bot.calculate_affordability(state)
+        analysis = result["affordability_analysis"]
+        assert analysis["total_monthly_payment"] > analysis["monthly_mortgage"]
+
+    @pytest.mark.asyncio
+    async def test_mortgage_details_populated(self, mock_deps):
+        """Test mortgage details dict is populated."""
+        bot = JorgeBuyerBot()
+        state = self._make_state()
+        result = await bot.calculate_affordability(state)
+        details = result["mortgage_details"]
+        assert details["rate"] > 0
+        assert details["term_years"] == 30
+        assert details["type"] == "30-year fixed"
+
+    @pytest.mark.asyncio
+    async def test_objection_handling_budget_shock(self, mock_deps):
+        """Test objection handling for budget shock."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(
+            objection_detected=True,
+            detected_objection_type="budget_shock",
+            affordability_analysis={"total_monthly_payment": 3500},
+        )
+        result = await bot.handle_objections(state)
+        assert len(result["objection_history"]) == 1
+        assert result["objection_history"][0]["type"] == "budget_shock"
+
+    @pytest.mark.asyncio
+    async def test_objection_handling_analysis_paralysis(self, mock_deps):
+        """Test objection handling for analysis paralysis."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(
+            objection_detected=True,
+            detected_objection_type="analysis_paralysis",
+        )
+        result = await bot.handle_objections(state)
+        assert result["objection_history"][0]["type"] == "analysis_paralysis"
+
+    @pytest.mark.asyncio
+    async def test_objection_handling_spouse_decision(self, mock_deps):
+        """Test objection handling for spouse decision."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(
+            objection_detected=True,
+            detected_objection_type="spouse_decision",
+        )
+        result = await bot.handle_objections(state)
+        assert result["objection_history"][0]["type"] == "spouse_decision"
+
+    @pytest.mark.asyncio
+    async def test_objection_handling_timing(self, mock_deps):
+        """Test objection handling for timing concerns."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(
+            objection_detected=True,
+            detected_objection_type="timing",
+        )
+        result = await bot.handle_objections(state)
+        assert result["objection_history"][0]["type"] == "timing"
+
+    @pytest.mark.asyncio
+    async def test_objection_enriched_with_affordability(self, mock_deps):
+        """Test budget shock objection enriched with affordability data."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(
+            objection_detected=True,
+            detected_objection_type="budget_shock",
+            affordability_analysis={"total_monthly_payment": 3500},
+        )
+        result = await bot.handle_objections(state)
+        # Verify the affordability data was used
+        assert len(result["objection_history"]) == 1
+
+    def test_route_after_matching_with_objection(self, mock_deps):
+        """Test routing to objection handling when objection detected."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(objection_detected=True)
+        result = bot._route_after_matching(state)
+        assert result == "handle_objections"
+
+    def test_route_after_matching_no_objection(self, mock_deps):
+        """Test normal routing when no objection detected."""
+        bot = JorgeBuyerBot()
+        state = self._make_state(objection_detected=False, next_action="respond")
+        result = bot._route_after_matching(state)
+        assert result == "respond"
