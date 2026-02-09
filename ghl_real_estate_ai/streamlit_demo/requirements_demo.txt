@@ -1,0 +1,8 @@
+# Streamlit Cloud - EnterpriseHub BI Demo (Lightweight)
+# For demo mode - no heavy ML dependencies required
+
+streamlit>=1.40.0
+plotly>=5.20.0
+pandas>=2.1.0
+numpy>=1.26.0
+scikit-learn>=1.3.0
