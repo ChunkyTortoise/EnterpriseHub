@@ -1,0 +1,66 @@
+# LinkedIn Posts - Week 2 Schedule
+# Usage: python scripts/linkedin_helper.py calendar --posts scripts/examples/posts_week2.yaml
+
+posts:
+  - title: "Building Multi-Agent AI Systems: Lessons from Production"
+    date: "2026-02-17 08:30"
+    content: |
+      Just shipped a multi-agent orchestration system that reduced client acquisition costs by 40%.
+
+      Key learnings:
+      • Agent coordination beats single LLMs for complex workflows
+      • Prompt caching = 10x cost reduction
+      • Context management is the hardest problem
+
+      Tech stack: Claude + Gemini + Redis + FastAPI
+      Results: <200ms overhead, 94% test coverage
+
+      What's your biggest challenge with AI agents?
+
+  - title: "Real Estate Tech Revolution: 3 Trends Every Agent Should Know"
+    date: "2026-02-19 08:30"
+    content: |
+      Real estate is being transformed by AI. Here are 3 trends I'm seeing:
+
+      1. **Conversational CRM**: AI chatbots qualifying leads 24/7
+         - 80% qualification accuracy
+         - 3x response rate vs. traditional forms
+
+      2. **Predictive Analytics**: ML scoring lead quality
+         - Financial readiness detection
+         - Intent classification at 90%+ accuracy
+
+      3. **Automated Workflows**: End-to-end lifecycle automation
+         - From lead capture → follow-up → transaction tracking
+         - 60% time savings for agents
+
+      Tech stack matters: GoHighLevel + Claude + Redis + Streamlit
+
+      What tools are you using?
+
+  - title: "From 0 to 322 Tests: Building Production-Ready AI Systems"
+    date: "2026-02-21 08:30"
+    content: |
+      How do you ship AI features with confidence?
+
+      I just crossed 322 tests (94% coverage) across 11 repos. Here's my approach:
+
+      **Testing Strategy:**
+      • Unit tests: Core logic, edge cases
+      • Integration tests: API contracts, DB queries
+      • E2E tests: Full user workflows
+      • Load tests: Scale to 100 concurrent users
+
+      **Key Insights:**
+      • Mocking LLM calls = deterministic tests
+      • Pytest fixtures = DRY test code
+      • GitHub Actions = CI on every PR
+
+      **Results:**
+      • Zero production bugs in 3 months
+      • Deploy with confidence
+      • Faster feature development
+
+      What's your testing philosophy for AI systems?
+
+      #AI #Testing #SoftwareEngineering #MachineLearning
