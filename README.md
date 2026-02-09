@@ -28,6 +28,10 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
 
+## Demo Snapshot
+
+![Demo Snapshot](assets/demo.png)
+
 ![Platform Overview](assets/screenshots/platform-overview.png)
 
 ## What This Solves
@@ -35,6 +39,21 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 - **Slow lead response** -- Three AI bots (Lead, Buyer, Seller) qualify prospects in real time using a Q0-Q4 framework, enforcing the 5-minute response rule
 - **Disconnected tools** -- Qualification results, CRM updates, and analytics live in one platform instead of spreadsheets + separate dashboards
 - **No visibility into pipeline health** -- Streamlit BI dashboard surfaces lead flow, conversion rates, commission tracking, and bot performance metrics
+
+## Service Mapping
+
+- **Service 4:** Multi-Agent Workflows (Agentic AI Systems)
+- **Service 6:** AI-Powered Personal and Business Automation
+- **Service 8:** Interactive Business Intelligence Dashboards
+- **Service 10:** Predictive Analytics and Lead Scoring
+
+## Certification Mapping
+
+- IBM Generative AI Engineering with PyTorch, LangChain & Hugging Face
+- IBM RAG and Agentic AI Professional Certificate
+- Duke University LLMOps Specialization
+- Google Data Analytics Certificate
+- IBM Business Intelligence Analyst Professional Certificate
 
 <details>
 <summary>Screenshots</summary>

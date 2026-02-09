@@ -1,12 +1,13 @@
 """Tests for structured compliance escalation service (seller bot integration)."""
 
-import pytest
 from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 from ghl_real_estate_ai.services.compliance_escalation import (
     ComplianceEscalationService,
-    ViolationType,
     ViolationSeverity,
+    ViolationType,
 )
 
 
