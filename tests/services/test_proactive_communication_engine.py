@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Proactive Communication Engine.
 Tests cover multi-channel communication, AI-generated messaging, and GHL integration.
@@ -9,6 +12,8 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.proactive_communication_engine import (

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 """Unit tests for the TokenAnalytics component.
 
 Tests record usage, cost aggregation by bot/provider, daily trend,
@@ -11,6 +14,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.token_analytics import (
+
+@pytest.mark.unit
     TokenAnalytics,
     TokenUsageRecord,
     _generate_demo_data,

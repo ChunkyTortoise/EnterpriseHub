@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 """Unit tests for agent handlers."""
 
 from unittest.mock import MagicMock, call, patch
@@ -20,6 +23,8 @@ from utils.agent_handlers import (
     validator_bot_handler,
 )
 from utils.exceptions import APIError, DataProcessingError
+
+@pytest.mark.unit
 
 # ============================================================================
 # Helper Tests

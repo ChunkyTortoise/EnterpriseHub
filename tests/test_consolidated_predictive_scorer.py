@@ -1,3 +1,9 @@
+import pytest
+pytestmark = pytest.mark.integration
+
+import pytest
+
+@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Comprehensive tests for consolidated PredictiveLeadScorer

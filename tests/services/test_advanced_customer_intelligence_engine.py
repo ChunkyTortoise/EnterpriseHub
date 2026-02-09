@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Test Suite for Advanced Customer Intelligence Engine
@@ -28,6 +31,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import pytest_asyncio
+
+@pytest.mark.integration
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 

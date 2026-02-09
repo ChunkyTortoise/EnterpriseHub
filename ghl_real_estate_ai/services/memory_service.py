@@ -9,6 +9,9 @@ Currently supports:
 """
 
 import json
+import asyncio
+import aiofiles
+import aiofiles.os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -80,16 +83,23 @@ class MemoryService:
         # Prevent empty result
         return sanitized or "unknown"
 
+    async def _get_file_path_async(self, contact_id: str, location_id: Optional[str] = None) -> Path:
+        """
+        Get the file path for storing a contact's context (async version).
+        """
+        safe_contact = self._sanitize_path_component(contact_id)
+        if location_id:
+            safe_location = self._sanitize_path_component(location_id)
+            location_dir = self.memory_dir / safe_location
+            if not await aiofiles.os.path.exists(location_dir):
+                await aiofiles.os.makedirs(location_dir, exist_ok=True)
+            return location_dir / f"{safe_contact}.json"
+
+        return self.memory_dir / f"{safe_contact}.json"
+
     def _get_file_path(self, contact_id: str, location_id: Optional[str] = None) -> Path:
         """
-        Get the file path for storing a contact's context.
-
-        Args:
-            contact_id: GHL contact ID
-            location_id: Optional GHL location ID for tenant isolation
-
-        Returns:
-            Path object
+        Get the file path for storing a contact's context (sync version).
         """
         safe_contact = self._sanitize_path_component(contact_id)
         if location_id:
@@ -178,11 +188,12 @@ class MemoryService:
             return self._get_default_context(contact_id, resolved_loc)
 
         # 3. Fallback to File storage
-        file_path = self._get_file_path(contact_id, resolved_loc)
-        if file_path.exists():
+        file_path = await self._get_file_path_async(contact_id, resolved_loc)
+        if await aiofiles.os.path.exists(file_path):
             try:
-                with open(file_path, "r") as f:
-                    context = json.load(f)
+                async with aiofiles.open(file_path, "r") as f:
+                    content = await f.read()
+                    context = json.loads(content)
 
                     # Security Verification
                     if context.get("location_id") != resolved_loc:
@@ -202,10 +213,68 @@ class MemoryService:
                             logger.warning(f"Failed to retrieve Graphiti context for {contact_id}: {ge}")
 
                     return context
-            except Exception as e:
-                logger.error(f"Failed to read memory file for {contact_id}: {e}")
+            except (IOError, json.JSONDecodeError) as e:
+                logger.error(f"Failed to read memory file for {contact_id}: {str(e)}")
 
         return self._get_default_context(contact_id, resolved_loc)
+
+    async def get_context_batch(self, contact_ids: List[str], location_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Batch retrieve conversation context for a list of contacts with strict tenant isolation.
+        Aims to solve N+1 query problems in dashboard listings.
+
+        Args:
+            contact_ids: List of GHL contact IDs
+            location_id: Optional GHL location ID for tenant isolation
+
+        Returns:
+            Dictionary mapping contact_id to context dict
+        """
+        if not contact_ids:
+            return {}
+
+        resolved_loc = self._resolve_location_id(location_id)
+        results = {}
+
+        # 1. Try Redis first (Batch mode)
+        if self._should_use_redis(resolved_loc):
+            cache_keys = [f"ctx:{resolved_loc}:{cid}" for cid in contact_ids]
+            cached_contexts = await self.cache_service.get_many(cache_keys)
+            
+            for cid in contact_ids:
+                key = f"ctx:{resolved_loc}:{cid}"
+                if key in cached_contexts:
+                    context = cached_contexts[key]
+                    # Security Verification
+                    if context.get("location_id") == resolved_loc:
+                        results[cid] = context
+                    else:
+                        logger.error(f"TENANT LEAK PREVENTED (Redis Batch): {cid} leak from {context.get('location_id')}")
+
+        # Identify missing IDs that need to be fetched from file system or default
+        missing_ids = [cid for cid in contact_ids if cid not in results]
+        
+        if not missing_ids:
+            return results
+
+        # 2. Try Memory/File storage for missing IDs (Parallel mode)
+        async def fetch_missing(cid):
+            if self.storage_type == "memory":
+                cache_key = f"{resolved_loc}:{cid}"
+                context = self._memory_cache.get(cache_key)
+                if context and context.get("location_id") == resolved_loc:
+                    return cid, context
+                return cid, self._get_default_context(cid, resolved_loc)
+            
+            # File storage fallback
+            return cid, await self.get_context(cid, resolved_loc)
+
+        missing_results = await asyncio.gather(*[fetch_missing(cid) for cid in missing_ids])
+        
+        for cid, context in missing_results:
+            results[cid] = context
+
+        return results
 
     async def add_interaction(
         self, contact_id: str, message: str, role: str, location_id: Optional[str] = None
@@ -269,8 +338,8 @@ class MemoryService:
                 try:
                     with open(file_path, "w") as f:
                         json.dump(context, f, indent=2)
-                except Exception:
-                    pass
+                except IOError:
+                    logger.warning(f"Failed to backup memory context to file for {contact_id}")
             return
 
         # 2. Save to Memory
@@ -280,12 +349,12 @@ class MemoryService:
             return
 
         # 3. Save to File
-        file_path = self._get_file_path(contact_id, resolved_loc)
+        file_path = await self._get_file_path_async(contact_id, resolved_loc)
         try:
-            with open(file_path, "w") as f:
-                json.dump(context, f, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save memory file for {contact_id}: {e}")
+            async with aiofiles.open(file_path, "w") as f:
+                await f.write(json.dumps(context, indent=2))
+        except (IOError, TypeError) as e:
+            logger.error(f"Failed to save memory file for {contact_id}: {str(e)}")
 
     def _get_default_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         """Return default context for new conversations."""
@@ -414,24 +483,25 @@ class MemoryService:
         if file_path.exists():
             try:
                 file_path.unlink()
-            except Exception as e:
-                logger.error(f"Failed to delete memory file for {contact_id} in {resolved_loc}: {e}")
+            except OSError as e:
+                logger.error(f"Failed to delete memory file for {contact_id} in {resolved_loc}: {str(e)}")
 
     async def store_conversation_memory(
         self, conversation_id: str, content: Dict[str, Any], ttl_hours: Optional[int] = None
     ) -> None:
         """
-        Store a specialized conversation memory (e.g., for analytics).
+        Store a specialized conversation memory (e.g., for analytics) asynchronously.
         """
         # For now, we store it as a regular file in a sub-directory
         memory_path = self.memory_dir / "specialized"
-        memory_path.mkdir(parents=True, exist_ok=True)
+        if not await aiofiles.os.path.exists(memory_path):
+            await aiofiles.os.makedirs(memory_path, exist_ok=True)
 
         file_path = memory_path / f"{conversation_id}.json"
 
         try:
-            with open(file_path, "w") as f:
-                json.dump(
+            async with aiofiles.open(file_path, "w") as f:
+                await f.write(json.dumps(
                     {
                         "content": content,
                         "stored_at": datetime.utcnow().isoformat(),
@@ -439,8 +509,7 @@ class MemoryService:
                         if ttl_hours
                         else None,
                     },
-                    f,
                     indent=2,
-                )
-        except Exception as e:
-            logger.error(f"Failed to store conversation memory {conversation_id}: {e}")
+                ))
+        except (IOError, TypeError) as e:
+            logger.error(f"Failed to store conversation memory {conversation_id}: {str(e)}")

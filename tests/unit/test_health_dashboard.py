@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 """Unit tests for the HealthDashboard component.
 
 Tests health status calculation, demo mode data generation, summary
@@ -11,6 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.health_dashboard import (
+
+@pytest.mark.integration
     EndpointHealth,
     HealthDashboard,
     _generate_demo_endpoints,

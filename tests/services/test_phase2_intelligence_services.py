@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Unit Tests for Phase 2 Intelligence Layer Services.
 
@@ -25,6 +28,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import numpy as np
 import pandas as pd
 import pytest
+
+@pytest.mark.integration
 
 # Import Phase 2 Intelligence Layer services
 try:

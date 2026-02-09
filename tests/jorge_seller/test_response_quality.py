@@ -10,6 +10,8 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
+@pytest.mark.integration
+
 
 @pytest.fixture
 def mock_conversation_manager():

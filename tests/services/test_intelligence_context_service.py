@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Intelligence Context Service Tests - Phase 3.2 Testing
 ======================================================
@@ -40,6 +43,8 @@ from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContex
 
 # Import service under test
 from ghl_real_estate_ai.services.intelligence_context_service import (
+
+@pytest.mark.integration
     IntelligenceContextService,
     get_intelligence_context_service,
     health_check,

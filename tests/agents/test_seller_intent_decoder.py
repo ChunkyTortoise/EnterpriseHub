@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for SellerIntentDecoder - seller-specific intent analysis.
 """
@@ -8,6 +11,8 @@ import pytest
 
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
 from ghl_real_estate_ai.models.lead_scoring import SellerIntentProfile
+
+@pytest.mark.integration
 
 
 class TestSellerIntentDecoder:

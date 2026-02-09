@@ -1,8 +1,13 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Real-Time Market Intelligence Service."""
 
 import pytest
 
 from ghl_real_estate_ai.services.real_time_market_intelligence import (
+
+@pytest.mark.unit
     AlertSeverity,
     MarketCondition,
     Neighborhood,

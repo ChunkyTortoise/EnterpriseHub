@@ -11,6 +11,8 @@ sys.modules["streamlit"] = mock_st
 
 # Import the component to test
 from ghl_real_estate_ai.streamlit_demo.components.voice_ai_interface import (
+
+@pytest.mark.integration
     VoiceAIInterface,
     VoiceInteractionType,
     render_voice_ai_interface,

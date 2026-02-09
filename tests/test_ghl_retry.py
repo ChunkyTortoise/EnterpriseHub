@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for GHL client retry logic (send_message and add_tags).
 
@@ -13,6 +16,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.api.schemas.ghl import MessageType

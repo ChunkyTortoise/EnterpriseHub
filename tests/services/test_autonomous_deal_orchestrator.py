@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Autonomous Deal Orchestration Engine.
 Tests cover workflow management, autonomous task execution, and system integration.
@@ -11,6 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.autonomous_deal_orchestrator import (
+
+@pytest.mark.integration
     AutonomousDealOrchestrator,
     AutonomousTask,
     DocumentRequest,

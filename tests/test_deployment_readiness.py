@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Deployment Readiness Tests — Phase 5
 
@@ -15,6 +18,8 @@ import re
 from pathlib import Path
 
 import pytest
+
+@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Helpers

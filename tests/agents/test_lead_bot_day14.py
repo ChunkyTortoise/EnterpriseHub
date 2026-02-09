@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Lead Bot Day 14 CMA PDF Email Attachment (Stream B).
 
@@ -16,6 +19,8 @@ import pytest
 
 from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
 from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
+
+@pytest.mark.integration
 
 # ================================
 # FIXTURES

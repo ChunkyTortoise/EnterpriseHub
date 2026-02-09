@@ -749,7 +749,8 @@ class MonitoringService:
                 return 99.8
             else:
                 return 95.0
-        except:
+        except Exception as e:
+            logger.debug(f"Error calculating uptime percentage: {e}")
             return 99.0
 
     async def _calculate_error_rate(self, minutes: int) -> float:

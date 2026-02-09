@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Vapi Voice Conversation Intelligence.
 
@@ -22,6 +25,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.vapi_voice_integration import (
+
+@pytest.mark.integration
     CallEventResult,
     SpeakerRole,
     TranscriptAnalysis,

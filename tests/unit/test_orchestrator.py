@@ -8,6 +8,8 @@ from typing import Any, Dict
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from utils.orchestrator import (
     Agent,
     AgentExecutionError,

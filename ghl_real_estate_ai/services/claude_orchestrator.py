@@ -447,8 +447,9 @@ class ClaudeOrchestrator:
                     # Convert to Gemini/Claude tool declaration format
                     try:
                         parameters = mcp_tool.model_json_schema()
-                    except Exception:
+                    except (ValueError, TypeError, AttributeError) as e:
                         # Fallback for complex schemas that Pydantic V2 fails to serialize for JSON Schema
+                        logger.warning(f"Failed to serialize schema for tool {name}: {e}")
                         parameters = {"type": "object", "properties": {}}
 
                     tools.append({"name": mcp_tool.name, "description": mcp_tool.description, "parameters": parameters})
@@ -822,8 +823,9 @@ class ClaudeOrchestrator:
                 enhanced["semantic_memory"] = memory_context.get("relevant_knowledge", "")
                 enhanced["conversation_history"] = memory_context.get("conversation_history", [])
                 enhanced["extracted_preferences"] = memory_context.get("extracted_preferences", {})
-            except Exception:
+            except (ConnectionError, TimeoutError, KeyError) as e:
                 # Graceful degradation if memory unavailable
+                logger.debug(f"Memory service unavailable for lead {lead_id}: {e}")
                 pass
 
         return enhanced
@@ -1216,7 +1218,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
             return actions
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"Failed to parse recommended actions: {e}")
             return []
 
     def _structure_action(self, action_text: str) -> Dict[str, Any]:
@@ -1316,7 +1319,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
             return variants
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"Failed to parse script variants: {e}")
             return []
 
     def _parse_risk_factors(self, content: str, json_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, str]]:
@@ -1372,7 +1376,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
             return risks
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"Failed to parse risk factors: {e}")
             return []
 
     def _structure_risk(self, risk_text: str) -> Dict[str, str]:
@@ -1451,7 +1456,8 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
             return opportunities
 
-        except Exception:
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"Failed to parse opportunities: {e}")
             return []
 
     def _structure_opportunity(self, opp_text: str) -> Dict[str, str]:
@@ -1606,14 +1612,16 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
                     validated_messages.append({"role": role_str, "content": content_str})
 
-                except Exception:
+                except (ValueError, KeyError, TypeError) as e:
                     # Skip individual malformed messages
+                    logger.debug(f"Skipping malformed message: {e}")
                     continue
 
             return validated_messages
 
-        except Exception:
+        except (ValueError, KeyError, TypeError) as e:
             # Graceful degradation on any error
+            logger.warning(f"Failed to validate messages: {e}")
             return []
 
     async def _analyze_churn_risk_comprehensive(self, lead_id: str, memory_data: Dict[str, Any]) -> Dict[str, Any]:

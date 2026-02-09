@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for competitive response system
 
@@ -22,6 +25,8 @@ from ghl_real_estate_ai.prompts.competitive_responses import (
     get_competitive_response_system,
 )
 from ghl_real_estate_ai.services.competitor_intelligence import CompetitorMention, RiskLevel
+
+@pytest.mark.integration
 
 
 class TestCompetitiveResponseSystem:

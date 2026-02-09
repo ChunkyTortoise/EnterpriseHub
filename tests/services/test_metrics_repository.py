@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for JorgeMetricsRepository.
 
 Validates all CRUD methods with mocked asyncpg pool to ensure correct
@@ -12,6 +15,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.repositories.jorge_metrics_repository import (
+
+@pytest.mark.integration
     JorgeMetricsRepository,
 )
 

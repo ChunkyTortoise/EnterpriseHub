@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Advanced Analytics Visualization Engine
 Comprehensive test suite for analytics and visualization capabilities
@@ -10,6 +13,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import pytest_asyncio
+
+@pytest.mark.integration
 
 # Import the service under test
 try:

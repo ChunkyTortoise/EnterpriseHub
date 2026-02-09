@@ -56,6 +56,8 @@ from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricing
 from ghl_real_estate_ai.services.roi_calculator_service import ROICalculatorService
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
+@pytest.mark.integration
+
 
 class PerformanceMetricsCollector:
     """Advanced performance metrics collection and analysis"""

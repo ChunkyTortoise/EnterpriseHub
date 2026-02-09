@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive integration tests for the Dynamic Pricing System.
 
@@ -11,6 +14,8 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from fastapi.testclient import TestClient

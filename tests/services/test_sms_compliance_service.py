@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for SMS Compliance Service
 Tests TCPA compliance, opt-out handling, and frequency caps.
@@ -10,6 +13,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.sms_compliance_service import (
+
+@pytest.mark.integration
     OptOutReason,
     SMSComplianceService,
     SMSValidationResult,

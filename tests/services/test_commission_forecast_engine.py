@@ -1,8 +1,13 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Commission Forecasting Engine."""
 
 import pytest
 
 from ghl_real_estate_ai.services.commission_forecast_engine import (
+
+@pytest.mark.unit
     LUXURY_COMMISSION_RATE,
     LUXURY_THRESHOLD,
     SEASONAL_FACTORS,

@@ -10,6 +10,8 @@ import pytest
 from ghl_real_estate_ai.services.crm import CRMContact, GHLAdapter
 from ghl_real_estate_ai.services.crm.ghl_adapter import GHLError
 
+@pytest.mark.integration
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Lead Bot Day 14 CMA PDF attachment feature.
 
@@ -35,6 +38,8 @@ from ghl_real_estate_ai.utils.pdf_renderer import (
     PDFRenderer,
 )
 from tests.mocks.external_services import MockSendGridClient
+
+@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Fixtures

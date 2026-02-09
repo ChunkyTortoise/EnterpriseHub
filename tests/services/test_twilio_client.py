@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 """
 Comprehensive tests for Twilio Client.
@@ -40,6 +43,8 @@ except (ImportError, TypeError, AttributeError):
 
 # Import test utilities
 from tests.mocks.external_services import MockTwilioClient, MockWebhookPayloads
+
+@pytest.mark.integration
 
 
 class TestTwilioConfig:

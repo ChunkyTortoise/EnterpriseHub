@@ -170,8 +170,8 @@ async def lifespan(app: FastAPI):
                 ghl_api_key=settings.ghl_api_key,
             )
             logger.info(f"Auto-registered primary tenant: {settings.ghl_location_id}")
-        except Exception as e:
-            logger.error(f"Failed to auto-register primary tenant: {e}")
+        except (ImportError, AttributeError, ValueError) as e:
+            logger.error(f"Failed to auto-register primary tenant: {str(e)}")
 
     # ========================================================================
     # START WEBSOCKET SERVICES (Phase 3: Real-time Integration)
@@ -218,7 +218,7 @@ async def lifespan(app: FastAPI):
         logger.info("✅ All real-time WebSocket services started successfully")
 
     except Exception as e:
-        logger.error(f"❌ Failed to start WebSocket services: {e}")
+        logger.error(f"❌ Failed to start WebSocket services: {str(e)}")
         # Don't raise here - allow app to start but log the issue
         logger.warning("WebSocket services failed to start - real-time features may be unavailable")
 
@@ -324,8 +324,8 @@ async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
         total_handoff_attempts = analytics.get("total_handoffs", 0) + blocked_handoffs
         if total_handoff_attempts > 0:
             rate_limit_error_rate = analytics.get("blocked_by_rate_limit", 0) / total_handoff_attempts
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to fetch handoff analytics for alert stats: {str(e)}")
 
     # Build flat dict matching alert rule conditions
     stats: dict = {
@@ -723,17 +723,30 @@ from ghl_real_estate_ai.api.middleware.global_exception_handler import setup_glo
 setup_global_exception_handlers(app)
 
 # Add CORS middleware (SECURITY FIX: Restrict origins)
-ALLOWED_ORIGINS = [
-    "*",  # Dev: allow all for browser debugging
-    "https://app.gohighlevel.com",
-    "https://*.gohighlevel.com",
-    os.getenv("STREAMLIT_URL", "http://localhost:8501"),
-    os.getenv("FRONTEND_URL", "http://localhost:3000"),
-]
-
-# Production security: Remove localhost origins
+# Environment-based CORS configuration
 if os.getenv("ENVIRONMENT") == "production":
-    ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if not origin.startswith("http://localhost")]
+    ALLOWED_ORIGINS = [
+        "https://app.gohighlevel.com",
+        "https://*.gohighlevel.com",
+        os.getenv("STREAMLIT_URL", ""),
+        os.getenv("FRONTEND_URL", ""),
+    ]
+    # Remove empty strings and localhost
+    ALLOWED_ORIGINS = [
+        origin for origin in ALLOWED_ORIGINS 
+        if origin and not origin.startswith("http://localhost")
+    ]
+else:
+    # Development/Staging: Allow localhost but NOT wildcard
+    ALLOWED_ORIGINS = [
+        "https://app.gohighlevel.com",
+        "https://*.gohighlevel.com",
+        os.getenv("STREAMLIT_URL", "http://localhost:8501"),
+        os.getenv("FRONTEND_URL", "http://localhost:3000"),
+        "http://localhost:8501",
+        "http://localhost:3000",
+    ]
+
 
 app.add_middleware(
     CORSMiddleware,

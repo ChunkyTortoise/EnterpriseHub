@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Jorge Delivery Test Suite — Stream D
 
@@ -34,6 +37,8 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
+
+@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Helpers

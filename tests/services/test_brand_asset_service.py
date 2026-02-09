@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Brand Asset Service
 Validates image processing, CDN integration, and asset management functionality
@@ -28,6 +31,8 @@ from ghl_real_estate_ai.services.brand_asset_service import (
     StorageProvider,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
+
+@pytest.mark.integration
 
 
 def _enum_json_dumps(obj, **kwargs):

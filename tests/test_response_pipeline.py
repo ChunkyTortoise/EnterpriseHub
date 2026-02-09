@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for the response post-processing pipeline (Phase 1)."""
 
 import pytest
@@ -23,6 +26,8 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.sms_truncation i
     SMSTruncationProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.tcpa_opt_out import (
+
+@pytest.mark.integration
     TCPAOptOutProcessor,
 )
 

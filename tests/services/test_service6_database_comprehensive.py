@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 #!/usr/bin/env python3
 
 """
@@ -59,6 +62,8 @@ from ghl_real_estate_ai.services.service6_ai_integration import Service6AIRespon
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "mocks"))
 from external_services import MockEnhancedDatabaseService, create_mock_service6_response, create_test_lead_data
+
+@pytest.mark.integration
 
 
 class TestDatabaseServiceModels:

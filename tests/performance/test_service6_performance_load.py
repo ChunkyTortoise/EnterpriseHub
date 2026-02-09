@@ -55,6 +55,8 @@ from tests.fixtures.sample_data import LeadProfiles
 
 # Import test utilities
 from tests.mocks.external_services import (
+
+@pytest.mark.integration
     MockClaudeClient,
     MockDatabaseService,
     MockRedisClient,

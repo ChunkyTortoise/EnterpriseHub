@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for the industry-agnostic bot configuration layer.
 
@@ -24,6 +27,8 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.config.industry_config import (
+
+@pytest.mark.integration
     BotPersonality,
     HandoffConfig,
     IndustryConfig,

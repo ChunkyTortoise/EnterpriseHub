@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Business Intelligence Reporting Engine
 Comprehensive test suite for BI reporting and intelligence capabilities
@@ -10,6 +13,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import pytest_asyncio
+
+@pytest.mark.integration
 
 # Import the service under test
 try:

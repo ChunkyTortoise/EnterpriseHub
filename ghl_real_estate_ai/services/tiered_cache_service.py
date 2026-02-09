@@ -166,8 +166,8 @@ class CacheItem(Generic[T]):
             try:
                 # Estimate size using pickle serialization
                 self.size_bytes = len(pickle.dumps(self.value))
-            except Exception:
-                # Fallback size estimate
+            except (pickle.PickleError, AttributeError, TypeError):
+                # Fallback size estimate for non-picklable objects
                 self.size_bytes = 1024  # 1KB default
 
     @property
@@ -508,8 +508,8 @@ class TieredCacheService:
 
             return cache_item.value
 
-        except Exception as e:
-            logger.error(f"Cache deserialization error for key {key}: {e}")
+        except (pickle.PickleError, AttributeError, EOFError, ImportError) as e:
+            logger.error(f"Cache deserialization error for key {key}: {str(e)}")
             await self.l2_backend.delete(key)
             self.metrics.update_l2_miss((time.perf_counter() - start_time) * 1000)
             return None

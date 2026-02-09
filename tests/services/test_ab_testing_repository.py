@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for ABTestingRepository — the PostgreSQL persistence layer.
 
 Since tests run without a real database, all asyncpg calls are mocked
@@ -10,6 +13,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_repository import (
+
+@pytest.mark.integration
     ABTestingRepository,
 )
 

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration tests for Jorge Seller Bot
 
@@ -32,6 +35,8 @@ from ghl_real_estate_ai.agents.jorge_seller_bot import (
     get_jorge_seller_bot,
 )
 from ghl_real_estate_ai.models.lead_scoring import (
+
+@pytest.mark.integration
     ConditionRealism,
     FinancialReadinessScore,
     LeadIntentProfile,

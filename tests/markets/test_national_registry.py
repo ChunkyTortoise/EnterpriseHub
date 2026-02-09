@@ -16,6 +16,8 @@ from unittest.mock import AsyncMock, Mock, mock_open, patch
 import pytest
 
 from ghl_real_estate_ai.markets.national_registry import (
+
+@pytest.mark.unit
     CorporateHeadquarters,
     CorporatePartnerTier,
     CrossMarketInsights,

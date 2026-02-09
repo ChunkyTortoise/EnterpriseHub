@@ -12,6 +12,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from streamlit_cloud.components.chatbot_widget import (
+
+@pytest.mark.unit
     MOCK_RESPONSES,
     SCORE_TRIGGERS,
     ChatbotWidget,

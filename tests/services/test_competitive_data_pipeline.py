@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive Tests for Competitive Intelligence Data Pipeline
 
@@ -21,6 +24,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.competitive_data_pipeline import (
+
+@pytest.mark.integration
     CompetitiveDataPipeline,
     CompetitorDataPoint,
     DataQualityScore,
