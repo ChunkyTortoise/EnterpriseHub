@@ -17,6 +17,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+from ghl_real_estate_ai.services.compliance_escalation import ComplianceEscalationService
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
 # Lazy import to avoid circular dependency - imported where used
@@ -150,6 +151,7 @@ class JorgeSellerEngine:
         self.pricing_optimizer = DynamicPricingOptimizer()
         self.psychographic_engine = PsychographicSegmentationEngine()
         self.psychology_analyzer = get_seller_psychology_analyzer()
+        self.compliance_escalation = ComplianceEscalationService(ghl_client=self.ghl_client)
 
     async def process_seller_response(
         self,

@@ -69,6 +69,9 @@ ERROR_ID_BUYER_QUALIFICATION_FAILED = "BUYER_QUALIFICATION_FAILED"
 ERROR_ID_FINANCIAL_ASSESSMENT_FAILED = "FINANCIAL_ASSESSMENT_FAILED"
 ERROR_ID_COMPLIANCE_VIOLATION = "COMPLIANCE_VIOLATION"
 ERROR_ID_SYSTEM_FAILURE = "SYSTEM_FAILURE"
+
+# TCPA opt-out phrases — mirrors webhook.py for consistent compliance handling
+OPT_OUT_PHRASES = ["stop", "unsubscribe", "not interested", "opt out", "remove me", "cancel"]
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -1236,6 +1239,26 @@ class JorgeBuyerBot:
                 "handoff_signals": {},
             }
         user_message = str(user_message).strip()[:MAX_MESSAGE_LENGTH]
+
+        # TCPA opt-out check — must run BEFORE any AI processing
+        msg_lower = user_message.lower().strip()
+        if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
+            logger.info(f"Opt-out detected for buyer {conversation_id}")
+            return {
+                "buyer_id": conversation_id,
+                "lead_id": conversation_id,
+                "response_content": (
+                    "You've been unsubscribed from automated messages. "
+                    "If you'd like to reconnect, just text us anytime."
+                ),
+                "opt_out_detected": True,
+                "actions": [{"type": "add_tag", "tag": "AI-Off"}],
+                "buyer_temperature": "unknown",
+                "current_step": "opt_out",
+                "engagement_status": "opted_out",
+                "financial_readiness": 0.0,
+                "handoff_signals": {},
+            }
 
         try:
             import time as _time
