@@ -204,7 +204,13 @@ class JorgeBuyerBot:
         enable_handoff: bool = True,
         budget_ranges: Optional[Dict] = None,
         budget_config: Optional[BuyerBudgetConfig] = None,
+        industry_config: Optional["IndustryConfig"] = None,
     ):
+        # Industry-agnostic configuration layer (backward compatible)
+        from ghl_real_estate_ai.config.industry_config import IndustryConfig
+
+        self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
+
         self.intent_decoder = BuyerIntentDecoder()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
@@ -260,7 +266,7 @@ class JorgeBuyerBot:
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(BuyerBotState)
 
-        # 6-Node Buyer Workflow + Intelligence Enhancement (mirrors seller's pattern)
+        # Buyer Workflow with Affordability & Objection Handling
         workflow.add_node("analyze_buyer_intent", self.analyze_buyer_intent)
 
         # Add intelligence gathering node if enabled
@@ -268,8 +274,10 @@ class JorgeBuyerBot:
             workflow.add_node("gather_buyer_intelligence", self.gather_buyer_intelligence)
 
         workflow.add_node("assess_financial_readiness", self.assess_financial_readiness)
+        workflow.add_node("calculate_affordability", self.calculate_affordability)
         workflow.add_node("qualify_property_needs", self.qualify_property_needs)
         workflow.add_node("match_properties", self.match_properties)
+        workflow.add_node("handle_objections", self.handle_objections)
         workflow.add_node("generate_buyer_response", self.generate_buyer_response)
         workflow.add_node("schedule_next_action", self.schedule_next_action)
 
@@ -282,15 +290,22 @@ class JorgeBuyerBot:
             workflow.add_edge("gather_buyer_intelligence", "assess_financial_readiness")
         else:
             workflow.add_edge("analyze_buyer_intent", "assess_financial_readiness")
-        workflow.add_edge("assess_financial_readiness", "qualify_property_needs")
+        workflow.add_edge("assess_financial_readiness", "calculate_affordability")
+        workflow.add_edge("calculate_affordability", "qualify_property_needs")
         workflow.add_edge("qualify_property_needs", "match_properties")
 
-        # Routing based on qualification and property matches
+        # Routing based on qualification, objections, and property matches
         workflow.add_conditional_edges(
             "match_properties",
-            self._route_buyer_action,
-            {"respond": "generate_buyer_response", "schedule": "schedule_next_action", "end": END},
+            self._route_after_matching,
+            {
+                "handle_objections": "handle_objections",
+                "respond": "generate_buyer_response",
+                "schedule": "schedule_next_action",
+                "end": END,
+            },
         )
+        workflow.add_edge("handle_objections", "generate_buyer_response")
 
         workflow.add_edge("generate_buyer_response", "schedule_next_action")
         workflow.add_edge("schedule_next_action", END)
@@ -308,6 +323,14 @@ class JorgeBuyerBot:
         except Exception as e:
             logger.error(f"Error routing buyer action: {str(e)}")
             return "respond"
+
+    def _route_after_matching(
+        self, state: BuyerBotState
+    ) -> Literal["handle_objections", "respond", "schedule", "end"]:
+        """Route after property matching — check for objections first."""
+        if state.get("objection_detected"):
+            return "handle_objections"
+        return self._route_buyer_action(state)
 
     async def analyze_buyer_intent(self, state: BuyerBotState) -> Dict:
         """Extract and structure buyer intent from conversation using BuyerIntentDecoder."""
@@ -427,6 +450,68 @@ class JorgeBuyerBot:
                 "current_qualification_step": "error",
             }
 
+    async def calculate_affordability(self, state: BuyerBotState) -> Dict:
+        """Calculate affordability analysis from buyer's budget range."""
+        budget_range = state.get("budget_range")
+        if not budget_range:
+            return {}
+
+        try:
+            max_price = budget_range.get("max", 0)
+            if max_price <= 0:
+                return {}
+
+            # Standard mortgage calculations (Rancho Cucamonga rates)
+            down_payment_pct = 0.20
+            interest_rate = 0.0685  # Current 30-yr fixed rate
+            loan_term_years = 30
+            property_tax_rate = 0.0115  # California / San Bernardino County
+            insurance_annual = 1800  # Average annual homeowner's insurance
+
+            down_payment = max_price * down_payment_pct
+            loan_amount = max_price - down_payment
+
+            # Monthly mortgage (standard amortization formula)
+            monthly_rate = interest_rate / 12
+            num_payments = loan_term_years * 12
+            if monthly_rate > 0:
+                monthly_mortgage = loan_amount * (
+                    monthly_rate * (1 + monthly_rate) ** num_payments
+                ) / ((1 + monthly_rate) ** num_payments - 1)
+            else:
+                monthly_mortgage = loan_amount / num_payments
+
+            monthly_tax = (max_price * property_tax_rate) / 12
+            monthly_insurance = insurance_annual / 12
+            total_monthly = monthly_mortgage + monthly_tax + monthly_insurance
+
+            affordability_analysis = {
+                "max_price": max_price,
+                "down_payment": round(down_payment, 2),
+                "loan_amount": round(loan_amount, 2),
+                "monthly_mortgage": round(monthly_mortgage, 2),
+                "monthly_tax": round(monthly_tax, 2),
+                "monthly_insurance": round(monthly_insurance, 2),
+                "total_monthly_payment": round(total_monthly, 2),
+            }
+
+            mortgage_details = {
+                "rate": interest_rate,
+                "term_years": loan_term_years,
+                "type": "30-year fixed",
+                "down_payment_pct": down_payment_pct,
+            }
+
+            return {
+                "affordability_analysis": affordability_analysis,
+                "mortgage_details": mortgage_details,
+                "max_monthly_payment": round(total_monthly, 2),
+            }
+
+        except Exception as e:
+            logger.error(f"Error calculating affordability: {str(e)}")
+            return {}
+
     async def qualify_property_needs(self, state: BuyerBotState) -> Dict:
         """Qualify property needs and preferences using budget_config urgency thresholds."""
         try:
@@ -454,21 +539,36 @@ class JorgeBuyerBot:
     async def match_properties(self, state: BuyerBotState) -> Dict:
         """
         Match properties to buyer preferences using existing PropertyMatcher.
-        Only proceed if buyer is sufficiently qualified.
+        Uses find_buyer_matches when budget is available for better filtering.
         """
         try:
             if not state.get("budget_range"):
                 return {"matched_properties": [], "properties_viewed_count": 0, "next_action": "qualify_more"}
 
-            # Use existing property matching service
-            # Handle both sync and async property matcher (for tests/mocks)
-            if inspect.iscoroutinefunction(self.property_matcher.find_matches):
+            budget_range = state["budget_range"]
+            preferences = state.get("property_preferences") or {}
+
+            # Use find_buyer_matches for budget-aware matching
+            budget_max = budget_range.get("max", 0)
+            beds = preferences.get("bedrooms")
+            neighborhood = preferences.get("neighborhood")
+
+            if budget_max > 0 and hasattr(self.property_matcher, "find_buyer_matches"):
+                if inspect.iscoroutinefunction(self.property_matcher.find_buyer_matches):
+                    matches = await self.property_matcher.find_buyer_matches(
+                        budget=budget_max, beds=beds, neighborhood=neighborhood, limit=5
+                    )
+                else:
+                    matches = self.property_matcher.find_buyer_matches(
+                        budget=budget_max, beds=beds, neighborhood=neighborhood, limit=5
+                    )
+            elif inspect.iscoroutinefunction(self.property_matcher.find_matches):
                 matches = await self.property_matcher.find_matches(
-                    preferences=state.get("property_preferences") or {}, limit=5
+                    preferences=preferences, limit=5
                 )
             else:
                 matches = self.property_matcher.find_matches(
-                    preferences=state.get("property_preferences") or {}, limit=5
+                    preferences=preferences, limit=5
                 )
 
             # Emit property match event
@@ -488,6 +588,71 @@ class JorgeBuyerBot:
         except Exception as e:
             logger.error(f"Error matching properties for {state['buyer_id']}: {str(e)}")
             return {"matched_properties": [], "properties_viewed_count": 0, "next_action": "qualify_more"}
+
+    async def handle_objections(self, state: BuyerBotState) -> Dict:
+        """Handle detected buyer objections with appropriate strategies."""
+        objection_type = state.get("detected_objection_type")
+        if not objection_type:
+            return {}
+
+        objection_strategies = {
+            "budget_shock": {
+                "approach": "Show affordable alternatives and financing options",
+                "talking_points": [
+                    "There are great neighborhoods with homes in your range",
+                    "Let's explore areas that give you the best value",
+                ],
+            },
+            "analysis_paralysis": {
+                "approach": "Narrow focus and create urgency with market data",
+                "talking_points": [
+                    "Based on what you've told me, I'd focus on these top 3 options",
+                    "Properties in this range are moving quickly right now",
+                ],
+            },
+            "spouse_decision": {
+                "approach": "Include partner and schedule joint viewing",
+                "talking_points": [
+                    "I'd love to include them in the conversation",
+                    "Would a weekend showing work for both of you?",
+                ],
+            },
+            "timing": {
+                "approach": "Provide market education and soft follow-up",
+                "talking_points": [
+                    "I understand timing is important. Let me share what the market looks like",
+                    "I can keep you updated on new listings that match your criteria",
+                ],
+            },
+        }
+
+        strategy = objection_strategies.get(objection_type, {
+            "approach": "Address concern with empathy and helpful information",
+            "talking_points": ["I understand your concern. Let's work through this together."],
+        })
+
+        # Enrich budget_shock with affordability data if available
+        if objection_type == "budget_shock" and state.get("affordability_analysis"):
+            analysis = state["affordability_analysis"]
+            strategy["talking_points"].append(
+                f"With 20% down, your estimated monthly payment would be "
+                f"${analysis.get('total_monthly_payment', 0):,.0f}"
+            )
+
+        # Track objection in history
+        objection_record = {
+            "type": objection_type,
+            "strategy": strategy["approach"],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        objection_history = state.get("objection_history") or []
+        objection_history.append(objection_record)
+
+        return {
+            "objection_history": objection_history,
+            "current_qualification_step": "objection_handling",
+        }
 
     async def generate_buyer_response(self, state: BuyerBotState) -> Dict:
         """

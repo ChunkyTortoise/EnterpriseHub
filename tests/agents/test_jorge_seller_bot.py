@@ -916,3 +916,416 @@ class TestQualificationResult:
             orchestrated_tasks=["task_1", "task_2"],
         )
         assert len(qr.orchestrated_tasks) == 2
+
+
+# ---------------------------------------------------------------------------
+# Phase 1+3: CMA, Market Intelligence, Listing Prep, Property Condition Tests
+# ---------------------------------------------------------------------------
+
+
+class TestSellerBotCMAAndMarket:
+    """Test CMA generation, market analysis, and valuation defense."""
+
+    @pytest.fixture
+    def mock_seller_deps(self):
+        """Patch core external service constructors so JorgeSellerBot can instantiate."""
+        with (
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder") as mock_intent,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.SellerIntentDecoder") as mock_seller_intent,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant") as mock_claude,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher") as mock_events,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine") as mock_ml,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.CMAGenerator") as mock_cma,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_market_intelligence") as mock_market,
+        ):
+            mock_intent_instance = MagicMock()
+            mock_intent_instance.analyze_lead.return_value = _make_profile()
+            mock_intent.return_value = mock_intent_instance
+
+            mock_seller_intent_instance = MagicMock()
+            mock_seller_intent.return_value = mock_seller_intent_instance
+
+            mock_claude_instance = MagicMock()
+            mock_claude_instance.analyze_with_context = AsyncMock(
+                return_value={"content": "Test response"}
+            )
+            mock_claude.return_value = mock_claude_instance
+
+            mock_events_instance = MagicMock()
+            mock_events_instance.publish_bot_status_update = AsyncMock()
+            mock_events_instance.publish_jorge_qualification_progress = AsyncMock()
+            mock_events_instance.publish_conversation_update = AsyncMock()
+            mock_events.return_value = mock_events_instance
+
+            mock_ml_instance = MagicMock()
+            mock_ml_instance.predict_lead_journey = AsyncMock(
+                return_value=MagicMock(
+                    conversion_probability=0.5,
+                    stage_progression_velocity=0.3,
+                    processing_time_ms=10,
+                )
+            )
+            mock_ml_instance.predict_conversion_probability = AsyncMock(
+                return_value=MagicMock(
+                    urgency_score=50,
+                    optimal_action="respond",
+                    processing_time_ms=10,
+                )
+            )
+            mock_ml_instance.predict_optimal_touchpoints = AsyncMock(
+                return_value=MagicMock(
+                    response_pattern="standard",
+                    processing_time_ms=10,
+                )
+            )
+            mock_ml.return_value = mock_ml_instance
+
+            mock_cma_instance = MagicMock()
+            mock_cma.return_value = mock_cma_instance
+
+            mock_market_instance = MagicMock()
+            mock_market.return_value = mock_market_instance
+
+            yield {
+                "intent": mock_intent_instance,
+                "seller_intent": mock_seller_intent_instance,
+                "claude": mock_claude_instance,
+                "events": mock_events_instance,
+                "ml": mock_ml_instance,
+                "cma": mock_cma_instance,
+                "market": mock_market_instance,
+            }
+
+    def _make_seller_state(self, **overrides):
+        """Create a seller state dict with defaults."""
+        state = {
+            "lead_id": "test_seller_001",
+            "lead_name": "Test Seller",
+            "property_address": "123 Main St, Rancho Cucamonga, CA",
+            "conversation_history": [
+                {"role": "user", "content": "I want to sell my house"},
+            ],
+            "intent_profile": _make_profile(),
+            "current_tone": "CONSULTATIVE",
+            "stall_detected": False,
+            "detected_stall_type": None,
+            "next_action": "respond",
+            "response_content": "",
+            "psychological_commitment": 50.0,
+            "is_qualified": True,
+            "current_journey_stage": "qualification",
+            "follow_up_count": 0,
+            "last_action_timestamp": None,
+            "tone_variant": "empathetic",
+            "adaptive_mode": "standard",
+            "adaptive_question_used": None,
+            "adaptation_applied": False,
+            "memory_updated": False,
+            "cma_report": None,
+            "estimated_value": None,
+            "listing_price_recommendation": None,
+            "zestimate": None,
+            "property_condition": None,
+            "repair_estimates": None,
+            "staging_recommendations": None,
+            "market_data": None,
+            "market_trend": None,
+            "comparable_properties": None,
+            "seller_intent_profile": None,
+        }
+        state.update(overrides)
+        return state
+
+    @pytest.mark.asyncio
+    async def test_generate_cma_with_address(self, mock_seller_deps):
+        """Test CMA generation when address is available."""
+        from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
+        from datetime import date
+
+        mock_report = MagicMock()
+        mock_report.estimated_value = 850000
+        mock_report.value_range_low = 807500
+        mock_report.value_range_high = 892500
+        mock_report.confidence_score = 88
+        mock_report.zillow_variance_percent = 5.0
+        mock_report.zillow_explanation = "CMA shows higher value"
+        mock_report.market_narrative = "Market is strong"
+        mock_report.comparables = [
+            MagicMock(address="456 Oak", sale_price=840000, sqft=2800, beds=4, baths=3.0, price_per_sqft=300),
+        ]
+        mock_report.market_context = MagicMock(
+            market_name="Rancho Cucamonga, CA",
+            price_trend=12.5,
+            dom_average=28,
+            inventory_level=1450,
+        )
+
+        mock_seller_deps["cma"].generate_report = AsyncMock(return_value=mock_report)
+
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state()
+        result = await bot.generate_cma(state)
+
+        assert result.get("cma_report") is not None
+        assert result["estimated_value"] == 850000
+        assert len(result["comparable_properties"]) == 1
+        assert result["market_data"]["dom_average"] == 28
+
+    @pytest.mark.asyncio
+    async def test_generate_cma_without_address(self, mock_seller_deps):
+        """Test CMA generation skips when no address."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(property_address=None)
+        result = await bot.generate_cma(state)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_generate_cma_handles_error(self, mock_seller_deps):
+        """Test CMA gracefully handles generation errors."""
+        mock_seller_deps["cma"].generate_report = AsyncMock(
+            side_effect=Exception("CMA service unavailable")
+        )
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state()
+        result = await bot.generate_cma(state)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_market_conditions_sellers_market(self, mock_seller_deps):
+        """Test sellers market classification (low inventory)."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(
+            market_data={"inventory_level": 1000}  # 1000/480 ≈ 2.08 months = sellers
+        )
+        result = await bot.analyze_market_conditions(state)
+        assert result["market_trend"] == "sellers_market"
+
+    @pytest.mark.asyncio
+    async def test_market_conditions_buyers_market(self, mock_seller_deps):
+        """Test buyers market classification (high inventory)."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(
+            market_data={"inventory_level": 4000}  # 4000/480 ≈ 8.33 months = buyers
+        )
+        result = await bot.analyze_market_conditions(state)
+        assert result["market_trend"] == "buyers_market"
+
+    @pytest.mark.asyncio
+    async def test_market_conditions_balanced(self, mock_seller_deps):
+        """Test balanced market classification."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(
+            market_data={"inventory_level": 2000}  # 2000/480 ≈ 4.17 months = balanced
+        )
+        result = await bot.analyze_market_conditions(state)
+        assert result["market_trend"] == "balanced"
+
+    @pytest.mark.asyncio
+    async def test_valuation_defense_with_cma(self, mock_seller_deps):
+        """Test valuation defense generates response with CMA data."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(
+            cma_report={
+                "estimated_value": 850000,
+                "zillow_variance_percent": 5.0,
+                "zillow_explanation": "CMA shows higher value",
+                "market_narrative": "Strong market",
+            },
+            comparable_properties=[{"address": "456 Oak"}],
+        )
+        result = await bot.defend_valuation(state)
+        assert "response_content" in result
+
+    @pytest.mark.asyncio
+    async def test_valuation_defense_without_cma(self, mock_seller_deps):
+        """Test valuation defense skips without CMA data."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state()
+        result = await bot.defend_valuation(state)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_route_after_stall_zestimate(self, mock_seller_deps):
+        """Test routing to valuation defense on Zestimate stall."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(
+            detected_stall_type="zestimate",
+            cma_report={"estimated_value": 850000},
+        )
+        result = bot._route_after_stall_detection(state)
+        assert result == "defend_valuation"
+
+    @pytest.mark.asyncio
+    async def test_route_after_stall_no_zestimate(self, mock_seller_deps):
+        """Test routing to strategy when no Zestimate stall."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(detected_stall_type="thinking")
+        result = bot._route_after_stall_detection(state)
+        assert result == "select_strategy"
+
+    @pytest.mark.asyncio
+    async def test_market_context_injected_into_prompt(self, mock_seller_deps):
+        """Test that CMA data is injected into response generation prompt."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_seller_state(
+            cma_report={"estimated_value": 850000},
+            market_trend="sellers_market",
+            market_data={"dom_average": 28},
+            comparable_properties=[{"address": "456 Oak"}],
+            stall_detected=False,
+        )
+        result = await bot.generate_jorge_response(state)
+        assert "response_content" in result
+
+        # Verify Claude was called with market data in prompt
+        call_args = bot.claude.analyze_with_context.call_args
+        prompt = call_args[0][0] if call_args[0] else call_args[1].get("prompt", "")
+        assert "$850,000" in prompt or "850,000" in prompt
+
+    def test_property_condition_extraction_move_in_ready(self, mock_seller_deps):
+        """Test move-in ready condition extraction."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        history = [
+            {"role": "user", "content": "The house is turnkey, recently renovated"},
+        ]
+        result = bot._extract_property_condition(history)
+        assert result == "move_in_ready"
+
+    def test_property_condition_extraction_needs_work(self, mock_seller_deps):
+        """Test needs-work condition extraction."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        history = [
+            {"role": "user", "content": "It needs work, the kitchen is dated"},
+        ]
+        result = bot._extract_property_condition(history)
+        assert result == "needs_work"
+
+    def test_property_condition_extraction_major_repairs(self, mock_seller_deps):
+        """Test major repairs condition extraction."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        history = [
+            {"role": "user", "content": "It's a fixer with foundation issues"},
+        ]
+        result = bot._extract_property_condition(history)
+        assert result == "major_repairs"
+
+    def test_property_condition_extraction_none(self, mock_seller_deps):
+        """Test no condition extracted from generic conversation."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        history = [
+            {"role": "user", "content": "I want to sell my house"},
+        ]
+        result = bot._extract_property_condition(history)
+        assert result is None
+
+
+class TestSellerBotListingPrep:
+    """Test listing preparation node."""
+
+    @pytest.fixture
+    def mock_seller_deps(self):
+        with (
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder") as mock_intent,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.SellerIntentDecoder"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher") as mock_events,
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.CMAGenerator"),
+            patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_market_intelligence"),
+        ):
+            mock_intent.return_value = MagicMock()
+            mock_events_instance = MagicMock()
+            mock_events_instance.publish_bot_status_update = AsyncMock()
+            mock_events.return_value = mock_events_instance
+            yield
+
+    def _make_state(self, **overrides):
+        state = {
+            "lead_id": "test_001",
+            "lead_name": "Test",
+            "property_address": "123 Main St",
+            "conversation_history": [],
+            "is_qualified": True,
+            "property_condition": "needs_work",
+            "current_journey_stage": "qualification",
+        }
+        state.update(overrides)
+        return state
+
+    @pytest.mark.asyncio
+    async def test_listing_prep_qualified_seller(self, mock_seller_deps):
+        """Test listing prep generates staging and repair recommendations."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_state()
+        result = await bot.prepare_listing(state)
+
+        assert len(result["staging_recommendations"]) > 4
+        assert result["repair_estimates"]["total"] > 0
+        assert result["current_journey_stage"] == "listing_prep"
+
+    @pytest.mark.asyncio
+    async def test_listing_prep_unqualified_seller(self, mock_seller_deps):
+        """Test listing prep skips unqualified sellers."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_state(is_qualified=False)
+        result = await bot.prepare_listing(state)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_listing_prep_no_address(self, mock_seller_deps):
+        """Test listing prep skips without address."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_state(property_address=None)
+        result = await bot.prepare_listing(state)
+        assert result == {}
+
+    def test_staging_recommendations_move_in_ready(self, mock_seller_deps):
+        """Test staging recs for move-in ready property."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        recs = bot._generate_staging_recommendations("move_in_ready")
+        assert any("photography" in r.lower() for r in recs)
+        assert len(recs) >= 5
+
+    def test_staging_recommendations_needs_work(self, mock_seller_deps):
+        """Test staging recs for needs-work property."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        recs = bot._generate_staging_recommendations("needs_work")
+        assert any("paint" in r.lower() for r in recs)
+
+    def test_staging_recommendations_major_repairs(self, mock_seller_deps):
+        """Test staging recs for major repairs property."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        recs = bot._generate_staging_recommendations("major_repairs")
+        assert any("inspection" in r.lower() for r in recs)
+
+    def test_repair_estimates_move_in_ready(self, mock_seller_deps):
+        """Test repair estimates for move-in ready."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        estimates = bot._estimate_repairs("move_in_ready")
+        assert estimates["total"] < 5000
+
+    def test_repair_estimates_needs_work(self, mock_seller_deps):
+        """Test repair estimates for needs-work."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        estimates = bot._estimate_repairs("needs_work")
+        assert estimates["total"] > 5000
+
+    def test_repair_estimates_major_repairs(self, mock_seller_deps):
+        """Test repair estimates for major repairs."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        estimates = bot._estimate_repairs("major_repairs")
+        assert estimates["total"] > 20000
+
+    def test_select_strategy_listing_prep_route(self, mock_seller_deps):
+        """Test strategy routes to listing_prep for qualified seller in listing_prep stage."""
+        bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
+        state = self._make_state(
+            current_journey_stage="listing_prep",
+            is_qualified=True,
+            property_address="123 Main St",
+            stall_detected=False,
+            psychological_commitment=50.0,
+        )
+        # Test the routing logic directly
+        route = bot._route_seller_action({"next_action": "listing_prep"})
+        assert route == "listing_prep"

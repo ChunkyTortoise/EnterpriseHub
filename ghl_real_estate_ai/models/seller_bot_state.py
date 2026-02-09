@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, TypedDict
 
-from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
+from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile, SellerIntentProfile
 
 
 class JorgeSellerState(TypedDict):
@@ -46,3 +46,16 @@ class JorgeSellerState(TypedDict):
     adaptive_question_used: Optional[str]
     adaptation_applied: bool
     memory_updated: bool
+
+    # CMA & Market Intelligence fields
+    cma_report: Optional[Dict[str, Any]]
+    estimated_value: Optional[float]
+    listing_price_recommendation: Optional[float]
+    zestimate: Optional[float]
+    property_condition: Optional[str]  # "move_in_ready" | "needs_work" | "major_repairs"
+    repair_estimates: Optional[Dict[str, float]]
+    staging_recommendations: Optional[List[str]]
+    market_data: Optional[Dict[str, Any]]
+    market_trend: Optional[str]  # "sellers_market" | "buyers_market" | "balanced"
+    comparable_properties: Optional[List[Dict]]
+    seller_intent_profile: Optional[Any]

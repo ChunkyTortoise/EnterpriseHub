@@ -23,7 +23,9 @@ from uuid import uuid4
 
 from langgraph.graph import END, StateGraph
 
+from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -32,6 +34,7 @@ from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingServic
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
 
 # Track 3.1 Predictive Intelligence Integration
 try:
@@ -269,11 +272,24 @@ class JorgeSellerBot:
     - Adaptive Intelligence (conversation memory & dynamic questioning)
     """
 
-    def __init__(self, tenant_id: str = "jorge_seller", config: Optional[JorgeFeatureConfig] = None):
+    def __init__(
+        self,
+        tenant_id: str = "jorge_seller",
+        config: Optional[JorgeFeatureConfig] = None,
+        industry_config: Optional["IndustryConfig"] = None,
+    ):
+        # Industry-agnostic configuration layer (backward compatible)
+        from ghl_real_estate_ai.config.industry_config import IndustryConfig
+
+        self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
+
         # Core components (always initialized)
         self.tenant_id = tenant_id
         self.config = config or JorgeFeatureConfig()
         self.intent_decoder = LeadIntentDecoder()
+        self.seller_intent_decoder = SellerIntentDecoder()
+        self.cma_generator = CMAGenerator()
+        self.market_intelligence = get_market_intelligence()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
 
@@ -374,7 +390,13 @@ class JorgeSellerBot:
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_intelligence", self.gather_intelligence_context)
 
+        # CMA & Market Intelligence nodes
+        workflow.add_node("generate_cma", self.generate_cma)
+        workflow.add_node("analyze_market_conditions", self.analyze_market_conditions)
+
         workflow.add_node("detect_stall", self.detect_stall)
+        workflow.add_node("defend_valuation", self.defend_valuation)
+        workflow.add_node("prepare_listing", self.prepare_listing)
         workflow.add_node("select_strategy", self.select_strategy)
         workflow.add_node("generate_jorge_response", self.generate_jorge_response)
         workflow.add_node("execute_follow_up", self.execute_follow_up)
@@ -385,21 +407,39 @@ class JorgeSellerBot:
         # Conditional routing for intelligence gathering
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_edge("analyze_intent", "gather_intelligence")
-            workflow.add_edge("gather_intelligence", "detect_stall")
+            workflow.add_edge("gather_intelligence", "generate_cma")
         else:
-            workflow.add_edge("analyze_intent", "detect_stall")
+            workflow.add_edge("analyze_intent", "generate_cma")
 
-        workflow.add_edge("detect_stall", "select_strategy")
+        workflow.add_edge("generate_cma", "analyze_market_conditions")
+        workflow.add_edge("analyze_market_conditions", "detect_stall")
+
+        # Conditional routing from detect_stall
+        workflow.add_conditional_edges(
+            "detect_stall",
+            self._route_after_stall_detection,
+            {
+                "defend_valuation": "defend_valuation",
+                "select_strategy": "select_strategy",
+            },
+        )
+        workflow.add_edge("defend_valuation", "select_strategy")
 
         # Routing based on next_action
         workflow.add_conditional_edges(
             "select_strategy",
             self._route_seller_action,
-            {"respond": "generate_jorge_response", "follow_up": "execute_follow_up", "end": END},
+            {
+                "respond": "generate_jorge_response",
+                "follow_up": "execute_follow_up",
+                "listing_prep": "prepare_listing",
+                "end": END,
+            },
         )
 
         workflow.add_edge("generate_jorge_response", END)
         workflow.add_edge("execute_follow_up", END)
+        workflow.add_edge("prepare_listing", "generate_jorge_response")
 
         return workflow.compile()
 
@@ -475,13 +515,60 @@ class JorgeSellerBot:
             next_action="detect_stall",
         )
 
+        # Extract property condition from conversation
+        property_condition = self._extract_property_condition(
+            state.get("conversation_history", [])
+        )
+
+        # Run seller intent decoder for enhanced analysis
+        seller_intent_profile = self.seller_intent_decoder.analyze_seller(
+            state["lead_id"], state["conversation_history"]
+        )
+
         return {
             "intent_profile": profile,
             "psychological_commitment": profile.pcs.total_score,
             "is_qualified": profile.frs.classification in ["Hot Lead", "Warm Lead"],
             "seller_temperature": seller_temperature,
             "last_action_timestamp": datetime.now(timezone.utc),
+            "property_condition": property_condition,
+            "seller_intent_profile": seller_intent_profile,
         }
+
+    def _extract_property_condition(
+        self, conversation_history: List[Dict[str, Any]]
+    ) -> Optional[str]:
+        """Extract property condition from conversation keywords."""
+        if not conversation_history:
+            return None
+
+        text = " ".join(
+            msg.get("content", "").lower()
+            for msg in conversation_history
+            if msg.get("role") == "user"
+        )
+
+        move_in_ready_markers = [
+            "move-in ready", "move in ready", "turnkey", "just remodeled",
+            "recently renovated", "updated", "great condition", "perfect condition",
+        ]
+        needs_work_markers = [
+            "needs work", "needs some work", "needs updating", "dated",
+            "cosmetic", "needs paint", "some updates", "a little work",
+        ]
+        major_repairs_markers = [
+            "major repairs", "fixer", "fixer-upper", "foundation",
+            "roof issues", "structural", "condemned", "tear down",
+        ]
+
+        if any(m in text for m in major_repairs_markers):
+            return "major_repairs"
+        elif any(m in text for m in needs_work_markers):
+            return "needs_work"
+        elif any(m in text for m in move_in_ready_markers):
+            return "move_in_ready"
+
+        return None
 
     async def gather_intelligence_context(self, state: JorgeSellerState) -> Dict:
         """
@@ -598,6 +685,208 @@ class JorgeSellerBot:
 
         return preferences
 
+    async def generate_cma(self, state: JorgeSellerState) -> Dict:
+        """Generate CMA report if property address is available."""
+        property_address = state.get("property_address")
+        if not property_address:
+            return {}
+
+        try:
+            zestimate = state.get("zestimate", 0.0)
+            report = await self.cma_generator.generate_report(
+                property_address, zestimate or 0.0
+            )
+
+            comparable_properties = []
+            for comp in report.comparables:
+                comparable_properties.append({
+                    "address": comp.address,
+                    "sale_price": comp.sale_price,
+                    "sqft": comp.sqft,
+                    "beds": comp.beds,
+                    "baths": comp.baths,
+                    "price_per_sqft": comp.price_per_sqft,
+                })
+
+            market_data = {
+                "market_name": report.market_context.market_name,
+                "price_trend": report.market_context.price_trend,
+                "dom_average": report.market_context.dom_average,
+                "inventory_level": report.market_context.inventory_level,
+                "narrative": report.market_narrative,
+            }
+
+            logger.info(
+                f"CMA generated for {property_address}: "
+                f"estimated value ${report.estimated_value:,.0f}"
+            )
+
+            return {
+                "cma_report": {
+                    "estimated_value": report.estimated_value,
+                    "value_range_low": report.value_range_low,
+                    "value_range_high": report.value_range_high,
+                    "confidence_score": report.confidence_score,
+                    "zillow_variance_percent": report.zillow_variance_percent,
+                    "zillow_explanation": report.zillow_explanation,
+                    "market_narrative": report.market_narrative,
+                },
+                "estimated_value": report.estimated_value,
+                "comparable_properties": comparable_properties,
+                "market_data": market_data,
+            }
+
+        except Exception as e:
+            logger.warning(f"CMA generation failed for {property_address}: {e}")
+            return {}
+
+    async def analyze_market_conditions(self, state: JorgeSellerState) -> Dict:
+        """Determine market trend from available data."""
+        market_data = state.get("market_data")
+        if not market_data:
+            return {"market_trend": "balanced"}
+
+        try:
+            inventory_level = market_data.get("inventory_level", 1450)
+            # Use months of inventory approximation:
+            # < 3 months supply = sellers market
+            # > 6 months supply = buyers market
+            # Rancho Cucamonga: ~480 sales/month avg, so months = inventory / 480
+            months_of_inventory = inventory_level / 480
+
+            if months_of_inventory < 3:
+                trend = "sellers_market"
+            elif months_of_inventory > 6:
+                trend = "buyers_market"
+            else:
+                trend = "balanced"
+
+            return {"market_trend": trend}
+
+        except Exception as e:
+            logger.warning(f"Market conditions analysis failed: {e}")
+            return {"market_trend": "balanced"}
+
+    async def defend_valuation(self, state: JorgeSellerState) -> Dict:
+        """Build Zillow-defense response using CMA data when Zestimate stall detected."""
+        cma_report = state.get("cma_report")
+        if not cma_report:
+            return {}
+
+        try:
+            estimated_value = cma_report.get("estimated_value", 0)
+            variance = cma_report.get("zillow_variance_percent", 0)
+            explanation = cma_report.get("zillow_explanation", "")
+            comp_count = len(state.get("comparable_properties", []))
+            market_narrative = cma_report.get("market_narrative", "")
+
+            defense_context = (
+                f"Our CMA analysis of {comp_count} recent comparable sales shows "
+                f"an estimated value of ${estimated_value:,.0f}. "
+                f"The Zillow Zestimate differs by {abs(variance):.1f}%. "
+                f"{explanation} {market_narrative}"
+            )
+
+            prompt = f"""
+            As Jorge, the seller mentioned Zillow/Zestimate. Use this CMA data to
+            gently educate them about why real comparable sales are more accurate:
+
+            {defense_context}
+
+            Be helpful and educational, not dismissive. Keep under 160 chars for SMS.
+            """
+
+            response = await self.claude.analyze_with_context(prompt)
+            content = (
+                response.get("content")
+                or response.get("analysis")
+                or f"Real comps show ${estimated_value:,.0f} — Zillow can't walk through your house!"
+            )
+
+            return {"response_content": content}
+
+        except Exception as e:
+            logger.warning(f"Valuation defense failed: {e}")
+            return {}
+
+    async def prepare_listing(self, state: JorgeSellerState) -> Dict:
+        """Generate listing preparation recommendations."""
+        if not state.get("is_qualified") or not state.get("property_address"):
+            return {}
+
+        property_condition = state.get("property_condition")
+        staging_recs = self._generate_staging_recommendations(property_condition)
+        repair_estimates = self._estimate_repairs(property_condition)
+
+        return {
+            "staging_recommendations": staging_recs,
+            "repair_estimates": repair_estimates,
+            "current_journey_stage": "listing_prep",
+        }
+
+    def _generate_staging_recommendations(
+        self, condition: Optional[str]
+    ) -> List[str]:
+        """Generate staging recommendations based on property condition."""
+        base_recs = [
+            "Declutter all rooms and remove personal photos",
+            "Deep clean entire property including windows",
+            "Maximize natural lighting — open all blinds and curtains",
+            "Add fresh flowers or plants to key rooms",
+        ]
+
+        if condition == "move_in_ready":
+            base_recs.extend([
+                "Professional photography to showcase turnkey condition",
+                "Highlight recent upgrades in listing description",
+            ])
+        elif condition == "needs_work":
+            base_recs.extend([
+                "Fresh neutral paint in main living areas",
+                "Replace dated light fixtures and hardware",
+                "Consider professional staging for primary living spaces",
+            ])
+        elif condition == "major_repairs":
+            base_recs.extend([
+                "Get pre-listing inspection to identify all issues",
+                "Obtain contractor estimates for major repairs",
+                "Consider selling as-is with repair credit",
+                "Price accordingly to reflect condition",
+            ])
+
+        return base_recs
+
+    def _estimate_repairs(
+        self, condition: Optional[str]
+    ) -> Dict[str, float]:
+        """Estimate repair costs based on condition (Rancho Cucamonga rates)."""
+        if condition == "move_in_ready":
+            return {
+                "deep_cleaning": 500.0,
+                "touch_up_paint": 300.0,
+                "landscaping_refresh": 400.0,
+                "total": 1200.0,
+            }
+        elif condition == "needs_work":
+            return {
+                "interior_paint": 3500.0,
+                "flooring_update": 5000.0,
+                "fixture_replacement": 1500.0,
+                "deep_cleaning": 500.0,
+                "landscaping": 800.0,
+                "total": 11300.0,
+            }
+        elif condition == "major_repairs":
+            return {
+                "roof_repair": 8000.0,
+                "hvac_update": 6000.0,
+                "plumbing_repair": 4000.0,
+                "electrical_update": 3500.0,
+                "foundation_assessment": 2000.0,
+                "total": 23500.0,
+            }
+        return {"minimal_prep": 800.0, "total": 800.0}
+
     async def detect_stall(self, state: JorgeSellerState) -> Dict:
         """Detect if the lead is using standard stalling language."""
         # Update bot status
@@ -653,7 +942,14 @@ class JorgeSellerBot:
         pcs = state["psychological_commitment"]
 
         # FRIENDLY APPROACH: Jorge's helpful consultation foundation
-        if state["stall_detected"]:
+        # Check for listing prep routing (qualified + address + listing_prep stage)
+        if (
+            state.get("is_qualified")
+            and state.get("property_address")
+            and state.get("current_journey_stage") == "listing_prep"
+        ):
+            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "listing_prep"}
+        elif state["stall_detected"]:
             base_strategy = {"current_tone": "UNDERSTANDING", "next_action": "respond"}
         elif pcs < 30:
             # Low commitment = Supportive approach (help them understand)
@@ -796,6 +1092,23 @@ class JorgeSellerBot:
         FRS Classification: {state["intent_profile"].frs.classification}
 
         TASK: Generate a helpful, friendly response that builds trust and provides value.
+        """
+
+        # Inject CMA market context if available
+        cma_report = state.get("cma_report")
+        if cma_report:
+            estimated_value = cma_report.get("estimated_value", 0)
+            market_trend = state.get("market_trend", "balanced")
+            market_data = state.get("market_data", {})
+            dom_average = market_data.get("dom_average", 0)
+            comp_count = len(state.get("comparable_properties", []))
+
+            prompt += f"""
+        MARKET DATA CONTEXT (use naturally in response when relevant):
+        - Estimated property value: ${estimated_value:,.0f}
+        - Average days on market: {dom_average}
+        - Market trend: {market_trend.replace('_', ' ')}
+        - Comparable properties analyzed: {comp_count}
         """
 
         if state["stall_detected"] and state["detected_stall_type"] in friendly_responses:
@@ -1310,13 +1623,29 @@ class JorgeSellerBot:
         else:
             return "cold"
 
-    def _route_seller_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "end"]:
+    def _route_seller_action(
+        self, state: JorgeSellerState
+    ) -> Literal["respond", "follow_up", "listing_prep", "end"]:
         """Determine if we should respond immediately or queue a follow-up."""
-        if state["next_action"] == "follow_up":
+        next_action = state.get("next_action", "respond")
+        if next_action == "follow_up":
             return "follow_up"
-        if state["next_action"] == "end":
+        if next_action == "end":
             return "end"
+        if next_action == "listing_prep":
+            return "listing_prep"
         return "respond"
+
+    def _route_after_stall_detection(
+        self, state: JorgeSellerState
+    ) -> Literal["defend_valuation", "select_strategy"]:
+        """Route to valuation defense if Zestimate stall detected with CMA data."""
+        if (
+            state.get("detected_stall_type") == "zestimate"
+            and state.get("cma_report") is not None
+        ):
+            return "defend_valuation"
+        return "select_strategy"
 
     # ================================
     # TRACK 3.1: PREDICTIVE INTELLIGENCE ENHANCEMENT METHODS

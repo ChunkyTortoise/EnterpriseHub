@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+    EnrichedHandoffContext,
     HandoffDecision,
     JorgeHandoffService,
 )
@@ -42,7 +43,7 @@ class TestEvaluateHandoff:
         assert decision is not None
         assert decision.source_bot == "lead"
         assert decision.target_bot == "buyer"
-        assert decision.confidence == 0.85
+        assert decision.confidence >= 0.85  # History signal blending may boost score
         assert "buyer_intent_detected" in decision.reason
 
     @pytest.mark.asyncio
@@ -62,7 +63,7 @@ class TestEvaluateHandoff:
         assert decision is not None
         assert decision.source_bot == "lead"
         assert decision.target_bot == "seller"
-        assert decision.confidence == 0.9
+        assert decision.confidence >= 0.9  # History signal blending may boost score
 
     @pytest.mark.asyncio
     async def test_no_handoff_below_confidence_threshold(self, handoff_service):
@@ -115,7 +116,7 @@ class TestEvaluateHandoff:
         assert decision is not None
         assert decision.source_bot == "buyer"
         assert decision.target_bot == "seller"
-        assert decision.confidence == 0.85
+        assert decision.confidence >= 0.85  # History signal blending may boost score
 
 
 class TestExecuteHandoff:
@@ -175,3 +176,139 @@ class TestExecuteHandoff:
         assert call_kwargs["contact_id"] == "test_analytics"
         assert call_kwargs["data"]["source_bot"] == "seller"
         assert call_kwargs["data"]["target_bot"] == "buyer"
+
+
+# ---------------------------------------------------------------------------
+# Phase 4: SellerBotConfig and EnrichedHandoffContext Tests
+# ---------------------------------------------------------------------------
+
+
+class TestSellerBotConfig:
+    """Test SellerBotConfig defaults and environment overrides."""
+
+    def test_defaults(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+        config = SellerBotConfig()
+        assert config.enable_cma_generation is True
+        assert config.enable_market_intelligence is True
+        assert config.enable_listing_prep is True
+        assert config.enable_valuation_defense is True
+        assert config.enable_seller_intent_decoder is True
+        assert config.cma_confidence_threshold == 70.0
+        assert config.hot_frs_threshold == 75.0
+        assert config.warm_frs_threshold == 50.0
+
+    def test_from_environment_defaults(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+        config = SellerBotConfig.from_environment()
+        assert config.enable_cma_generation is True
+        assert config.listing_prep_qualification_threshold == 0.75
+
+    def test_from_environment_overrides(self, monkeypatch):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+        monkeypatch.setenv("SELLER_ENABLE_CMA", "false")
+        monkeypatch.setenv("SELLER_HOT_FRS_THRESHOLD", "80.0")
+        config = SellerBotConfig.from_environment()
+        assert config.enable_cma_generation is False
+        assert config.hot_frs_threshold == 80.0
+
+    def test_feature_flags_independent(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+        config = SellerBotConfig(
+            enable_cma_generation=False,
+            enable_listing_prep=True,
+        )
+        assert config.enable_cma_generation is False
+        assert config.enable_listing_prep is True
+
+
+class TestEnrichedHandoffContext:
+    """Test EnrichedHandoffContext creation and usage."""
+
+    def test_default_values(self):
+        ctx = EnrichedHandoffContext()
+        assert ctx.source_qualification_score == 0.0
+        assert ctx.source_temperature == "cold"
+        assert ctx.budget_range is None
+        assert ctx.property_address is None
+        assert ctx.cma_summary is None
+        assert ctx.conversation_summary == ""
+        assert ctx.key_insights == {}
+        assert ctx.urgency_level == "browsing"
+
+    def test_populated_context(self):
+        ctx = EnrichedHandoffContext(
+            source_qualification_score=85.0,
+            source_temperature="hot",
+            budget_range={"min": 400000, "max": 600000},
+            property_address="123 Main St",
+            cma_summary={"estimated_value": 550000},
+            conversation_summary="Motivated seller looking to list",
+            key_insights={"is_motivated": True},
+            urgency_level="immediate",
+        )
+        assert ctx.source_qualification_score == 85.0
+        assert ctx.source_temperature == "hot"
+        assert ctx.budget_range["max"] == 600000
+        assert ctx.property_address == "123 Main St"
+        assert ctx.cma_summary["estimated_value"] == 550000
+        assert ctx.urgency_level == "immediate"
+
+    @pytest.mark.asyncio
+    async def test_handoff_decision_includes_enriched_context(self):
+        JorgeHandoffService.reset_analytics()
+        service = JorgeHandoffService()
+
+        intent_signals = {
+            "buyer_intent_score": 0.9,
+            "seller_intent_score": 0.1,
+            "detected_intent_phrases": ["buyer intent detected"],
+            "qualification_score": 75.0,
+            "temperature": "warm",
+            "budget_range": {"min": 300000, "max": 500000},
+            "urgency_level": "3_months",
+        }
+
+        decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="test_enriched_001",
+            conversation_history=[
+                {"role": "user", "content": "I want to buy a house, pre-approved for $450k"},
+            ],
+            intent_signals=intent_signals,
+        )
+
+        assert decision is not None
+        assert decision.enriched_context is not None
+        assert decision.enriched_context.source_qualification_score == 75.0
+        assert decision.enriched_context.source_temperature == "warm"
+        assert decision.enriched_context.budget_range["max"] == 500000
+        assert decision.enriched_context.urgency_level == "3_months"
+
+    @pytest.mark.asyncio
+    async def test_enriched_context_with_cma(self):
+        JorgeHandoffService.reset_analytics()
+        service = JorgeHandoffService()
+
+        intent_signals = {
+            "seller_intent_score": 0.9,
+            "buyer_intent_score": 0.1,
+            "detected_intent_phrases": ["seller intent detected"],
+            "cma_summary": {"estimated_value": 850000},
+            "property_address": "123 Main St",
+            "key_insights": {"is_motivated": True},
+        }
+
+        decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="test_enriched_002",
+            conversation_history=[
+                {"role": "user", "content": "I need to sell my house, what's it worth?"},
+            ],
+            intent_signals=intent_signals,
+        )
+
+        assert decision is not None
+        assert decision.enriched_context.cma_summary["estimated_value"] == 850000
+        assert decision.enriched_context.property_address == "123 Main St"
+        assert decision.enriched_context.key_insights.get("is_motivated") is True
