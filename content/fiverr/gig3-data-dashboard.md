@@ -6,9 +6,9 @@
 
 ---
 
-## Gig Description
+## Gig Description (SEO Enhanced)
 
-Turn your raw spreadsheet data into stunning, interactive dashboards that tell compelling stories. Built on the insight-engine architecture with 313 tests and intelligent chart selection that automatically detects the best visualizations for your data.
+Turn your raw spreadsheet data into stunning, interactive dashboards that tell compelling stories. Perfect for sales analytics, marketing reports, financial dashboards, and operations monitoring. Built on the insight-engine architecture with 313 tests and intelligent chart selection that automatically detects the best visualizations for your data.
 
 ### What I Deliver:
 
@@ -194,9 +194,16 @@ Most people waste hours in Excel making charts that don't communicate insights. 
 
 ---
 
-## Tags
+## Tags (SEO Optimized — High-Volume Keywords)
 
-`data visualization`, `dashboard`, `excel`, `csv`, `charts`, `analytics`, `infographic`, `reporting`, `tableau alternative`, `streamlit`, `python`, `data analysis`, `business intelligence`, `interactive charts`, `data storytelling`, `pivot tables`
+`data visualization`, `excel dashboard`, `business intelligence`, `dashboard`, `interactive charts`, `excel`, `csv`, `analytics`, `reporting`, `python`, `data analysis`, `tableau alternative`, `power bi alternative`, `charts`, `kpi dashboard`
+
+**Search Intent Keywords:**
+- "excel dashboard" (40K+ searches/month)
+- "data visualization" (25K+ searches/month)
+- "dashboard" (60K+ searches/month)
+- "business intelligence" (12K+ searches/month)
+- "csv to dashboard" (5K+ searches/month)
 
 ---
 

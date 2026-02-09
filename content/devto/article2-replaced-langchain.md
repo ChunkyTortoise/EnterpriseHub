@@ -1,6 +1,6 @@
 ---
 title: Why I Replaced LangChain with 15KB of httpx
-published: false
+published: true
 tags: python, ai, langchain, llm
 ---
 
