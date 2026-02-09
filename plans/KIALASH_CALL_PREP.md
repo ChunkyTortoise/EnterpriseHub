@@ -7,7 +7,7 @@
 
 ## Opening Pitch (30 seconds)
 
-> "I'm Cayman Roden, an AI engineer who builds production multi-agent systems. EnterpriseHub is my flagship project -- a real estate AI platform with 3 specialized conversational bots that hand off conversations to each other in real time, coordinated by a centralized orchestration layer with confidence-threshold routing, tiered caching, and full observability. It's backed by 4,000+ tests in the main repo, 6,000+ across 11 repos, all CI green. Let me walk you through the architecture."
+> "I'm Cayman Roden, an AI engineer who builds production multi-agent systems. EnterpriseHub is my flagship project -- a real estate AI platform with 3 specialized conversational bots that hand off conversations to each other in real time, coordinated by a centralized orchestration layer with confidence-threshold routing, tiered caching, and full observability. It's backed by 5,000+ tests in the main repo, 7,800+ across 11 repos, all CI green. Let me walk you through the architecture."
 
 ---
 
@@ -181,8 +181,8 @@
 
 ### Key Talking Points
 
-**6,003 tests across 11 repositories, all CI green:**
-- EnterpriseHub alone: 4,097 tests
+**7,800+ tests across 11 repositories, all CI green:**
+- EnterpriseHub alone: ~5,000 tests
 - TDD workflow: red-green-refactor cycle enforced
 - CI/CD: GitHub Actions, pre-commit hooks (ruff auto-fix), pyright type checking
 - Singletons all have `reset()` classmethod for test isolation (`PerformanceTracker.reset()`, `AlertingService.reset()`, `BotMetricsCollector.reset()`)
@@ -234,10 +234,11 @@
 - `services/crm/protocol.py`, `ghl_adapter.py`, `hubspot_adapter.py` -- clean separation
 - Adding a new CRM = implement 5 async methods (get, create, update, search, sync_lead)
 
-**Broader portfolio (11 repos, 6,003 tests):**
-- `docqa-engine`: RAG pipeline with REST API, vector store adapters, BM25/TF-IDF, Streamlit demo
-- `ai-orchestrator (AgentForge)`: Multi-provider orchestrator with tool chaining, tracing, REST API, flow visualization
-- `scrape-and-serve`: Web scraping framework with SEO analyzer, validators, scheduler
+**Broader portfolio (11 repos, 7,800+ tests):**
+- `ai-orchestrator (AgentForge)` (423 tests): Multi-provider orchestrator with ReAct agent loop, tool chaining, agent memory, multi-agent mesh, evaluation framework, model registry, cost tracking, tracing, REST API
+- `docqa-engine` (501 tests): RAG pipeline with hybrid BM25+dense retrieval, cross-encoder re-ranking, query expansion, answer quality scoring, conversation manager, document relationship graph, REST API
+- `insight-engine` (521 tests): BI analytics with statistical testing, KPI framework, advanced anomaly detection (Isolation Forest, LOF, Mahalanobis), regression diagnostics, dimensionality reduction, forecasting, clustering
+- `llm-integration-starter` (220 tests): Multi-provider LLM client with guardrails engine (injection detection, PII redaction), circuit breaker, fallback chains, streaming, caching
 - All repos have CI/CD, typed Python, comprehensive tests
 
 **What's needed to go full multi-tenant:**
@@ -284,7 +285,9 @@
 >
 > **Observability**: I've built P50/P95/P99 tracking, 7-rule alerting with 3-level escalation (PagerDuty/Opsgenie), OpenTelemetry tracing, and metrics collection -- all integrated and tested.
 >
-> **Testing discipline**: 6,000+ tests across 11 repos, TDD, CI/CD. This scales well for multi-tenant systems where regressions are expensive.
+> **Testing discipline**: 7,800+ tests across 11 repos, TDD, CI/CD. This scales well for multi-tenant systems where regressions are expensive.
+>
+> **Agent frameworks**: I also built AgentForge -- a standalone multi-LLM orchestrator with a ReAct agent loop, tool registry, agent memory with TTL/LRU eviction, multi-agent mesh with consensus voting, evaluation framework, and model registry. 423 tests, all CI green.
 >
 > I'm ready to start contributing from day one."
 
@@ -306,6 +309,8 @@
 | Industry Config | `ghl_real_estate_ai/config/industry_config.py` |
 | Multi-Tenant Models | `ghl_real_estate_ai/compliance_platform/multitenancy/models.py` |
 | OpenTelemetry | `ghl_real_estate_ai/services/jorge/telemetry.py` |
+| Agent Cost Tracker | `ghl_real_estate_ai/services/agent_cost_tracker.py` |
+| RAG Decision Tracer | `advanced_rag_system/src/agents/decision_tracer.py` |
 
 ---
 
@@ -316,4 +321,7 @@ If he asks to see code during the call, show these in order:
 2. **`evaluate_handoff()`** -- the full decision pipeline: signal extraction, score blending, learned adjustment, circular check
 3. **`PerformanceTracker.SLA_CONFIG`** -- concrete P50/P95/P99 targets per bot
 4. **`IndustryConfig` YAML** -- show how swapping one file changes the entire bot personality and intent patterns
-5. **Test count** -- `pytest --co -q | tail -1` showing 4,097 tests collected (6,003 across portfolio)
+5. **Test count** -- `pytest --co -q | tail -1` showing ~5,000 tests collected (7,800+ across portfolio)
+6. **AgentForge ReAct Agent** -- `agentforge/react_agent.py` -- working Reason+Act loop with tool integration
+7. **Agent Memory** -- `agentforge/agent_memory.py` -- TTL-based memory store with LRU eviction and keyword search
+8. **Multi-Agent Mesh** -- `agentforge/multi_agent.py` -- agent registration, messaging, consensus voting, handoff protocol
