@@ -6,6 +6,8 @@ from typing import Any, Dict
 
 import streamlit as st
 
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+
 
 def render_ghl_status_panel():
     """
@@ -20,7 +22,7 @@ def render_ghl_status_panel():
     st.markdown("### 🔗 GoHighLevel Integration Status")
 
     # Mock connection check (in production, this would call actual GHL API)
-    connection_status = check_ghl_connection()
+    connection_status = run_async(check_ghl_connection())
 
     # Main status card
     if connection_status["connected"]:
@@ -180,7 +182,7 @@ def render_ghl_status_panel():
             st.info("Redirect to settings page...")
 
 
-def check_ghl_connection() -> Dict[str, Any]:
+async def check_ghl_connection() -> Dict[str, Any]:
     """
     Check GHL connection status
     In production, this would make actual API calls
@@ -212,7 +214,7 @@ def check_ghl_connection() -> Dict[str, Any]:
 def render_ghl_quick_stats():
     """Render a compact version for sidebar or header - Obsidian Edition"""
 
-    status = check_ghl_connection()
+    status = run_async(check_ghl_connection())
 
     if status["connected"]:
         st.markdown(

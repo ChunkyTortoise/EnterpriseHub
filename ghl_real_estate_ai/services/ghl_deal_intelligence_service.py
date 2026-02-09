@@ -111,12 +111,12 @@ class GHLDealIntelligenceService:
             if pipeline_ids:
                 # Get deals from specific pipelines
                 for pipeline_id in pipeline_ids:
-                    response = self.ghl_client.get_opportunities(limit=limit, pipeline_id=pipeline_id)
+                    response = await self.ghl_client.get_opportunities(limit=limit, pipeline_id=pipeline_id)
                     opportunities = response.get("opportunities", [])
                     all_deals.extend(opportunities)
             else:
                 # Get all opportunities
-                response = self.ghl_client.get_opportunities(limit=limit)
+                response = await self.ghl_client.get_opportunities(limit=limit)
                 all_deals = response.get("opportunities", [])
 
             # Process and enrich deal data
@@ -162,7 +162,7 @@ class GHLDealIntelligenceService:
 
         try:
             # Get opportunity from GHL
-            opportunity = self.ghl_client.get_opportunity(deal_id)
+            opportunity = await self.ghl_client.get_opportunity(deal_id)
             deal_data = await self._process_opportunity(opportunity)
 
             # Cache result
@@ -186,7 +186,7 @@ class GHLDealIntelligenceService:
 
         try:
             # Get conversations from GHL
-            conversations_response = self.ghl_client.get_conversations(contact_id=contact_id)
+            conversations_response = await self.ghl_client.get_conversations(contact_id=contact_id)
             conversations = conversations_response.get("conversations", [])
 
             # Get messages from recent conversations
@@ -195,7 +195,7 @@ class GHLDealIntelligenceService:
             for conversation in conversations[:3]:  # Last 3 conversations
                 conv_id = conversation.get("id")
                 if conv_id:
-                    messages_response = self.ghl_client.get_messages(conv_id, limit=10)
+                    messages_response = await self.ghl_client.get_messages(conv_id, limit=10)
                     messages = messages_response.get("messages", [])
 
                     for message in messages:
@@ -317,7 +317,7 @@ class GHLDealIntelligenceService:
             return {}
 
         try:
-            contact = self.ghl_client.get_contact(contact_id)
+            contact = await self.ghl_client.get_contact(contact_id)
             return {
                 "name": f"{contact.get('firstName', '')} {contact.get('lastName', '')}".strip(),
                 "email": contact.get("email"),
