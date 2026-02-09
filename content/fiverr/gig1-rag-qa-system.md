@@ -6,9 +6,9 @@
 
 ---
 
-## Gig Description
+## Gig Description (SEO Enhanced)
 
-Transform your documents into an intelligent Question & Answer system using Retrieval-Augmented Generation (RAG). I build custom AI-powered document search engines that understand your content and provide accurate, cited answers to any question.
+Transform your documents into an intelligent Question & Answer system using Retrieval-Augmented Generation (RAG). I build custom AI-powered document search engines that understand your content and provide accurate, cited answers to any question — perfect for legal research, HR policies, technical documentation, and enterprise knowledge bases.
 
 ### What I Deliver:
 
@@ -175,9 +175,16 @@ Unlike basic keyword search, RAG understands context and meaning. It retrieves r
 
 ---
 
-## Tags
+## Tags (SEO Optimized — High-Volume Keywords)
 
-`ai chatbot`, `document qa`, `rag system`, `retrieval augmented generation`, `pdf search`, `ai assistant`, `knowledge base`, `semantic search`, `openai`, `pinecone`, `vector database`, `machine learning`, `nlp`, `text analysis`, `automation`
+`ai chatbot`, `document qa`, `rag system`, `retrieval augmented generation`, `pdf search`, `ai assistant`, `knowledge base`, `semantic search`, `openai`, `vector database`, `machine learning`, `nlp`, `chatgpt integration`, `langchain`, `ai automation`
+
+**Search Intent Keywords:**
+- "rag document search" (2K+ searches/month)
+- "ai pdf question answering" (5K+ searches/month)
+- "intelligent document search" (3K+ searches/month)
+- "knowledge base ai" (3K+ searches/month)
+- "document chatbot" (8K+ searches/month)
 
 ---
 
