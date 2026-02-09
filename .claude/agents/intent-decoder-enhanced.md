@@ -1,3 +1,10 @@
+---
+name: intent-decoder
+description: Multi-modal intent analysis, conversation intelligence, customer profiling, and routing decisions
+tools: Read, Grep, Glob
+model: sonnet
+---
+
 # Enhanced Intent Decoder Agent - Phase 4
 ## Multi-Modal Conversation Intelligence Engine
 

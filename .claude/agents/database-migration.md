@@ -1,3 +1,10 @@
+---
+name: database-migration
+description: PostgreSQL schema design, Alembic migrations, data model integrity, and safe schema changes
+tools: Read, Grep, Glob, Bash, Edit
+model: sonnet
+---
+
 # Database Migration Agent
 
 **Role**: Database Schema Architect & Migration Specialist

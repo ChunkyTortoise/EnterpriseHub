@@ -1,3 +1,10 @@
+---
+name: integration-test-workflow
+description: Multi-agent coordination testing, cross-module integration verification, and workflow validation
+tools: Read, Grep, Glob, Bash
+model: sonnet
+---
+
 # Agent Integration Test Workflow
 
 **Purpose**: Demonstrate multi-agent coordination for feature enhancement
