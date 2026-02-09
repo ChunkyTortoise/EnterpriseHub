@@ -14,7 +14,7 @@ Features:
 
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -146,46 +146,40 @@ class PortalSwipeManager:
             return await self._process_pass(lead_id, property_id, location_id, feedback)
 
     async def _process_like(self, lead_id: str, property_id: str, location_id: str) -> Dict[str, Any]:
-        """
-        Logic for a RIGHT SWIPE (Interest).
-
-        Actions:
-        - Tag lead in GHL with 'portal_liked_property' and 'hot_lead'
-        - Add note to GHL contact
-        - Detect high-intent behavior (multiple likes in short time)
-        - Trigger AI speed-to-lead for high intent
-        """
+        """Process a 'like' action with high-intent detection BEFORE GHL API calls."""
         result = {"status": "logged", "trigger_sms": False, "high_intent": False}
 
         try:
-            # A. Tag the lead in GHL
-            tags = ["portal_liked_property", "hot_lead"]
-            await self.ghl_client.add_tags(lead_id, tags)
-            logger.info(f"Tagged lead {lead_id} with {tags}")
-
-            # B. Send note via SMS (GHL doesn't have add_note in API)
-            note_body = (
-                f"🏠 User LIKED property {property_id} in Client Portal.\nTimestamp: {datetime.utcnow().isoformat()}"
-            )
-            # Store note in memory instead of GHL
-            logger.info(f"Note for {lead_id}: {note_body}")
-
-            # C. Detect high-intent behavior
+            # STEP 1: Count recent likes (local operation, no external dependencies)
             recent_likes = self._count_recent_likes(lead_id, minutes=10)
             logger.info(f"Lead {lead_id} has {recent_likes} likes in last 10 minutes")
 
+            # STEP 2: Detect high-intent behavior FIRST (before any API calls)
             if recent_likes >= 3:
                 result["high_intent"] = True
                 result["trigger_sms"] = True
                 result["message"] = f"High intent detected: {recent_likes} likes in 10 minutes"
-
-                # Tag as super hot lead
-                await self.ghl_client.add_tags(lead_id, ["super_hot_lead", "immediate_followup"])
-
                 logger.warning(f"⚡ HIGH INTENT DETECTED for {lead_id} - {recent_likes} likes")
 
-            # D. Update memory with liked property
+            # STEP 3: Update memory (local operation)
             await self._update_liked_properties(lead_id, location_id, property_id)
+
+            # STEP 4: Try GHL API calls (can fail without breaking high-intent flag)
+            try:
+                tags = ["portal_liked_property", "hot_lead"]
+                if result["high_intent"]:
+                    tags.extend(["super_hot_lead", "immediate_followup"])
+
+                await self.ghl_client.add_tags(lead_id, tags)
+                logger.info(f"✅ Successfully tagged lead {lead_id} in GHL with {tags}")
+                result["ghl_tagged"] = True
+
+            except Exception as ghl_error:
+                # Log but don't fail - high-intent flag already set
+                logger.error(f"Failed to tag lead {lead_id} in GHL: {ghl_error}")
+                result["ghl_tagged"] = False
+                result["ghl_error"] = str(ghl_error)
+                # Continue execution - high-intent detection already complete
 
         except Exception as e:
             logger.error(f"Error processing like: {e}")
@@ -317,7 +311,7 @@ class PortalSwipeManager:
                 {
                     "property_id": property_id,
                     "reason": reason,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
 
@@ -341,7 +335,7 @@ class PortalSwipeManager:
             context["liked_properties"].append(
                 {
                     "property_id": property_id,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
 
@@ -364,7 +358,7 @@ class PortalSwipeManager:
             "lead_id": lead_id,
             "property_id": property_id,
             "action": action.value,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "meta_data": {
                 "time_on_card": time_on_card,
             },
@@ -381,12 +375,17 @@ class PortalSwipeManager:
 
     def _count_recent_likes(self, lead_id: str, minutes: int = 10) -> int:
         """Count the number of likes for a lead in the last N minutes."""
-        cutoff_time = datetime.utcnow() - timedelta(minutes=minutes)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
         count = 0
         for interaction in self.interactions:
             if interaction["lead_id"] == lead_id and interaction["action"] == SwipeAction.LIKE.value:
                 timestamp = datetime.fromisoformat(interaction["timestamp"].replace("Z", "+00:00"))
+
+                # Make timezone-naive timestamps aware for comparison
+                if timestamp.tzinfo is None:
+                    timestamp = timestamp.replace(tzinfo=timezone.utc)
+
                 if timestamp >= cutoff_time:
                     count += 1
 

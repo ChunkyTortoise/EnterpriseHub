@@ -6,8 +6,29 @@ Tests the FastAPI routes for swipe actions.
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from unittest.mock import Mock, AsyncMock, patch
 
 from ghl_real_estate_ai.api.main import app
+
+
+@pytest.fixture
+def mock_ghl_for_api_tests():
+    """Mock GHL client for API-level tests."""
+    from ghl_real_estate_ai.api.routes.portal import swipe_manager
+
+    mock_client = Mock()
+    mock_client.add_tags = AsyncMock(return_value={"status": "success"})
+
+    # Save original client
+    original_client = swipe_manager.ghl_client
+
+    # Replace with mock
+    swipe_manager.ghl_client = mock_client
+
+    yield mock_client
+
+    # Restore original
+    swipe_manager.ghl_client = original_client
 
 
 @pytest.mark.asyncio
@@ -193,7 +214,7 @@ async def test_get_lead_interactions_with_limit():
 
 
 @pytest.mark.asyncio
-async def test_high_intent_detection_via_api():
+async def test_high_intent_detection_via_api(mock_ghl_for_api_tests):
     """Test that high-intent is detected through API calls."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
