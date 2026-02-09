@@ -7,16 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.1.0] - 2026-02-09
+
 ### Added — Wave 5: Cross-Repository Feature Enhancements
 - **ai-orchestrator**: ReAct agent loop with tool-use reasoning, evaluation framework with automated scoring, model registry for provider management
 - **docqa-engine**: Cross-encoder re-ranker for improved retrieval precision, query expansion with synonym and semantic broadening, answer quality scoring with citation verification
 - **insight-engine**: Statistical significance testing (t-test, chi-square, ANOVA), KPI definition framework with threshold alerts, dimensionality reduction (PCA) for high-dimensional datasets
 
 ### Added — Wave 6: Observability and Cost Intelligence
-- **LLM Observability Service**: Token-level tracing, latency histograms, error categorization, and per-model cost attribution
-- **Conversation Analytics**: Session-level metrics (turns, resolution rate, escalation triggers), funnel analysis for lead qualification stages
-- **Agent Cost Tracker**: Per-agent token consumption, cost-per-task breakdowns, budget alerts with configurable thresholds
+- **LLM Observability Service**: Token-level tracing, latency histograms (P50/P95/P99), error categorization, and per-model cost attribution
+- **Conversation Analytics**: Sentiment drift detection, topic drift via TF-IDF cosine similarity, engagement scoring, resolution detection, handoff effectiveness measurement
+- **Agent Cost Tracker**: Per-agent token consumption, cost-per-task breakdowns, anomaly detection via z-scores, efficiency rankings
 - **RAG Decision Tracer**: Query-to-retrieval audit trail, re-ranker score visibility, chunk selection rationale logging
+- **Prompt Experiment Runner**: A/B testing framework for prompt variants
+- **Response Evaluator**: Quality scoring for LLM response evaluation
+- **Observability documentation**: `docs/OBSERVABILITY.md` with architecture diagrams and service reference
 - 59 new tests covering observability, analytics, cost tracking, and RAG tracing services
 
 ## [8.0.0] - 2026-02-07
@@ -465,4 +470,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-Last Updated: February 7, 2026
+Last Updated: February 9, 2026
