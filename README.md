@@ -67,28 +67,67 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 
 ## Architecture
 
+```mermaid
+graph TB
+    subgraph Clients["Client Layer"]
+        LB["Lead Bot :8001"]
+        SB["Seller Bot :8002"]
+        BB["Buyer Bot :8003"]
+        BI["Streamlit BI Dashboard :8501"]
+    end
+
+    subgraph Core["FastAPI Core — Orchestration Layer"]
+        CO["Claude Orchestrator<br/><small>Multi-strategy parsing, L1/L2/L3 cache</small>"]
+        AMC["Agent Mesh Coordinator<br/><small>22 agents, capability routing, audit trails</small>"]
+        HO["Handoff Service<br/><small>0.7 confidence, circular prevention</small>"]
+    end
+
+    subgraph CRM["CRM Integration"]
+        GHL["GoHighLevel<br/><small>Webhooks, Contact Sync, Workflows</small>"]
+        HS["HubSpot Adapter"]
+        SF["Salesforce Adapter"]
+    end
+
+    subgraph AI["AI Services"]
+        CL["Claude<br/><small>Primary LLM</small>"]
+        GM["Gemini<br/><small>Analysis</small>"]
+        PP["Perplexity<br/><small>Research</small>"]
+        OR["OpenRouter<br/><small>Fallback</small>"]
+    end
+
+    subgraph RAG["Advanced RAG System"]
+        BM25["BM25 Sparse Search"]
+        DE["Dense Embeddings"]
+        RRF["Reciprocal Rank Fusion"]
+        VS["ChromaDB Vector Store"]
+    end
+
+    subgraph Data["Data Layer"]
+        PG[("PostgreSQL<br/><small>Leads, Properties, Analytics</small>")]
+        RD[("Redis<br/><small>L2 Cache, Sessions, Rate Limiting</small>")]
+    end
+
+    LB & SB & BB -->|"Qualification<br/>Requests"| Core
+    BI -->|"Analytics<br/>Queries"| Core
+    Core -->|"CRM Sync"| CRM
+    CO -->|"LLM Calls"| AI
+    CO -->|"Retrieval"| RAG
+    Core -->|"Read/Write"| Data
+    RAG --> VS
+    HO -->|"Bot Transfer"| Clients
 ```
-                          +---------------------------+
-                          |    Streamlit BI Dashboard  |
-                          |  (Command Center)          |
-                          +------------+--------------+
-                                       |
-+------------------+     +-------------+-------------+     +-------------------+
-|   Jorge Bots     |     |       FastAPI Core         |     | GoHighLevel CRM   |
-|                  +---->+    (Orchestration Layer)    +<----+   Integration     |
-|  Lead Bot :8001  |     |                             |     |                   |
-|  Seller Bot :8002|     |  Claude Orchestrator        |     |  Webhooks         |
-|  Buyer Bot :8003 |     |  Agent Mesh Coordinator     |     |  Contact Sync     |
-+------------------+     +-------------+---------------+     +-------------------+
-                                       |
-              +------------------------+------------------------+
-              |                        |                        |
-    +---------+--------+    +----------+---------+    +---------+---------+
-    |   PostgreSQL     |    |      Redis         |    |  AI Providers     |
-    |   (Leads, Props, |    |  (Cache, Sessions, |    |  Claude, Gemini,  |
-    |    Analytics)    |    |   Rate Limiting)   |    |  OpenRouter       |
-    +------------------+    +--------------------+    +-------------------+
-```
+
+## Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| Test Suite | 4,992+ automated tests |
+| LLM Cost Reduction | 89% via 3-tier Redis caching |
+| Orchestration Overhead | <200ms per request |
+| API P95 Latency | <300ms under 10 req/sec |
+| Cache Hit Rate | >85% for repeated queries |
+| CRM Integrations | 3 (GoHighLevel, HubSpot, Salesforce) |
+| Bot Handoff Accuracy | 0.7 confidence threshold |
 
 ## Quick Start
 

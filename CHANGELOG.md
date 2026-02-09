@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes.
+### Added — Wave 5: Cross-Repository Feature Enhancements
+- **ai-orchestrator**: ReAct agent loop with tool-use reasoning, evaluation framework with automated scoring, model registry for provider management
+- **docqa-engine**: Cross-encoder re-ranker for improved retrieval precision, query expansion with synonym and semantic broadening, answer quality scoring with citation verification
+- **insight-engine**: Statistical significance testing (t-test, chi-square, ANOVA), KPI definition framework with threshold alerts, dimensionality reduction (PCA) for high-dimensional datasets
+
+### Added — Wave 6: Observability and Cost Intelligence
+- **LLM Observability Service**: Token-level tracing, latency histograms, error categorization, and per-model cost attribution
+- **Conversation Analytics**: Session-level metrics (turns, resolution rate, escalation triggers), funnel analysis for lead qualification stages
+- **Agent Cost Tracker**: Per-agent token consumption, cost-per-task breakdowns, budget alerts with configurable thresholds
+- **RAG Decision Tracer**: Query-to-retrieval audit trail, re-ranker score visibility, chunk selection rationale logging
+- 59 new tests covering observability, analytics, cost tracking, and RAG tracing services
 
 ## [8.0.0] - 2026-02-07
 
