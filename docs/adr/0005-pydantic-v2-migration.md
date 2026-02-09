@@ -1,4 +1,4 @@
-# ADR 0005: Pydantic V2 Migration
+# ADR 0005: Pydantic V2 Strict Validation
 
 ## Status
 
@@ -6,47 +6,44 @@ Accepted
 
 ## Context
 
-The platform's entire data validation layer was built on Pydantic V1, which reached end-of-life status. Pydantic V2, built on a Rust core (`pydantic-core`), offers 5-50x faster validation depending on schema complexity. Given that every API request, webhook event, CRM sync payload, and bot response passes through Pydantic validation, the performance impact was significant.
+The platform exchanges data across multiple boundaries: CRM webhooks from GoHighLevel, LLM responses from Claude/Gemini/Perplexity, PostgreSQL database models, and FastAPI API endpoints. Historically, loose dict-based data passing caused subtle bugs — missing fields, wrong types, and silent data loss — that only surfaced in production.
 
-Specific pain points with V1:
-- Request validation contributed ~15ms per API call at P95 (measured via `PerformanceTracker`)
-- Complex nested schemas (e.g., `LeadQualificationResult` with 12 nested models) took 8-12ms to validate
-- V1's `orm_mode` configuration caused subtle bugs when mixing SQLAlchemy models with Pydantic schemas
-- No native support for `Annotated` types, requiring verbose `Field()` declarations
-
-The migration scope included:
-- 47 Pydantic models across billing, API schemas, and service layers
-- 23 API route handlers with request/response models
-- 8 webhook event schemas
-- 12 internal service DTOs
+Specific pain points:
+- Dict-based payloads allowed typos in field names to pass silently (e.g., `lead_scroe` instead of `lead_score`)
+- LLM response parsing relied on manual key checking, missing fields caused `KeyError` in production
+- CRM webhook payloads varied between event types with no compile-time distinction
+- Bot response types (Lead, Buyer, Seller) were differentiated by string checks instead of type-safe unions
+- Request validation contributed ~15ms per API call at P95 under Pydantic V1 (measured via `PerformanceTracker`)
 
 ## Decision
 
-Perform a full migration of all Pydantic schemas to V2, using the `model_config` pattern instead of the inner `Config` class. Key changes:
+Adopt Pydantic V2 for all data models with strict validation enforced at every system boundary. Key design decisions:
 
-**Configuration**: Replace `class Config` with `model_config = ConfigDict(...)` at the class level. This is more explicit and enables better IDE support.
+**Strict Validation at Boundaries**: All API request/response schemas, CRM webhook payloads, LLM parsed outputs, and database transfer objects use Pydantic `BaseModel` with `model_config = ConfigDict(strict=True)` where appropriate. Data is validated on entry and exit, never passed as raw dicts between services.
 
-**ORM Mode**: Replace `orm_mode = True` with `from_attributes = True` in `model_config`. This clarifies intent and works more reliably with SQLAlchemy 2.0.
+**Structured Error Responses**: All validation errors follow a standard JSON format with `error`, `message`, `field`, and `code` keys. This enables consistent error handling across API consumers and bot conversation flows.
 
-**Validators**: Migrate from `@validator` to `@field_validator` with explicit `mode='before'` or `mode='after'` declarations. This eliminates the ambiguity in V1's validator execution order.
+**Discriminated Unions**: Polymorphic models use Pydantic's `Discriminator` and `Tag` pattern to eliminate `isinstance` chains. For example, bot response types (LeadBotResponse, BuyerBotResponse, SellerBotResponse) are unified under a discriminated union keyed on `bot_type`, enabling type-safe dispatch without runtime type checking.
+
+**ORM Integration**: Replace V1's `orm_mode = True` with `from_attributes = True` in `model_config`. This works reliably with SQLAlchemy 2.0 relationship loading and prevents the subtle bugs caused by V1's attribute access patterns.
+
+**Validators**: Migrate from `@validator` to `@field_validator` with explicit `mode='before'` or `mode='after'` declarations. This eliminates ambiguity in validator execution order.
 
 **Serialization**: Replace `.dict()` with `.model_dump()` and `.json()` with `.model_dump_json()`. Add explicit `exclude_none=True` where JSON payloads should omit null fields.
-
-**Migration Strategy**: All-at-once migration (not incremental) to avoid maintaining V1/V2 compatibility shims. The migration was performed across a single release cycle with comprehensive test coverage validating every schema.
 
 ## Consequences
 
 ### Positive
-- 5x faster request validation at P95 (15ms down to ~3ms per request)
-- Complex nested schema validation (e.g., `LeadQualificationResult`) reduced from 8-12ms to 1-2ms
-- `from_attributes` works correctly with SQLAlchemy 2.0 relationship loading
+- Type errors caught at system boundaries before propagating into business logic
+- Self-documenting API contracts via OpenAPI schema generation from Pydantic models
+- 10x faster validation vs Pydantic V1 (Rust-based `pydantic-core`): P95 from 15ms to ~1.5ms
+- Discriminated unions eliminate `isinstance` chains for bot response routing
+- Structured error format enables consistent client-side error handling across all endpoints
 - `@field_validator` with explicit mode eliminates validator ordering bugs
-- Better error messages with structured `ValidationError` details (loc, msg, type fields)
-- Native `Annotated` type support enables cleaner field declarations
 
 ### Negative
-- Breaking change for any external V1 consumers of API response schemas
-- All 47 models required manual migration and testing (no automated migration path for custom validators)
-- `.dict()` and `.json()` calls across the entire codebase needed updating (89 call sites)
-- Some V1 validator behaviors (e.g., `pre=True` with `always=True`) required non-trivial refactoring
+- Migration effort from dict-based code required updating 47 models and 89 serialization call sites
+- Some third-party integrations (GHL webhooks, Stripe events) need manual adapter models for loose payloads
+- Strict mode rejects previously-accepted loose inputs (e.g., string "123" no longer auto-coerced to int)
+- Discriminated union pattern requires all polymorphic models to carry a discriminator field
 - Team members needed to learn V2 patterns; V1 muscle memory caused initial friction

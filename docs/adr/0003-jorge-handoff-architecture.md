@@ -28,6 +28,13 @@ Implement a centralized `JorgeHandoffService` with the following safeguards:
 
 **Pattern Learning**: After accumulating 10+ data points per handoff direction, the service adjusts confidence thresholds based on outcome history. Successful handoffs (measured by subsequent engagement) lower the threshold slightly; failed handoffs raise it.
 
+**Temperature Tag Publishing**: Lead scores drive CRM tag assignment and workflow triggers:
+- **Hot-Lead** (score >= 80): Priority workflow trigger, immediate agent notification
+- **Warm-Lead** (score 40-79): Nurture sequence enrollment, follow-up reminder scheduling
+- **Cold-Lead** (score < 40): Educational content drip, periodic check-in cadence
+
+Tags are published to GoHighLevel via the enhanced GHL client, enabling downstream automation without direct bot involvement.
+
 ## Consequences
 
 ### Positive
