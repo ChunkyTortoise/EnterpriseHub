@@ -14,17 +14,17 @@ Here's what I built and what I learned.
 
 | Project | Focus | Tests | Demo |
 |---------|-------|-------|------|
-| EnterpriseHub | Real estate AI + multi-agent chatbots | ~4,937 | [Live](https://ct-enterprise-ai.streamlit.app) |
-| docqa-engine | RAG pipeline with hybrid retrieval | 322 | [Live](https://ct-document-engine.streamlit.app) |
-| insight-engine | Auto-dashboard from CSV | 313 | [Live](https://ct-insight-engine.streamlit.app) |
-| jorge_real_estate_bots | Real estate AI assistant | 279 | — |
-| Revenue-Sprint | AI security + cost optimization | 240 | — |
-| scrape-and-serve | Web scraping infrastructure | 236 | [Live](https://ct-scrape-and-serve.streamlit.app) |
-| ai-orchestrator (AgentForge) | Multi-LLM orchestrator (15KB) | 214 | [Live](https://ct-agentforge.streamlit.app) |
-| mcp-toolkit | FastMCP tool server framework | 158 | [Live](https://ct-mcp-toolkit.streamlit.app) |
-| llm-integration-starter | Minimal LLM client | 149 | [GitHub](https://github.com/ChunkyTortoise/llm-integration-starter) |
-| prompt-engineering-lab | Prompt patterns + A/B testing | 127 | [GitHub](https://github.com/ChunkyTortoise/prompt-engineering-lab) |
-| chunkytortoise.github.io | Portfolio site | — | [Live](https://chunkytortoise.github.io) |
+| EnterpriseHub | Real estate AI platform, multi-agent chatbots, CRM | 4,937 | [Live](https://ct-enterprise-ai.streamlit.app) |
+| jorge_real_estate_bots | Standalone chatbot framework | 279 | [GitHub](https://github.com/ChunkyTortoise/jorge_real_estate_bots) |
+| ai-orchestrator (AgentForge) | Multi-LLM orchestrator, async, 15KB | 214 | [Live](https://ct-agentforge.streamlit.app) |
+| Revenue-Sprint | AI security + cost optimization CLI | 240 | [GitHub](https://github.com/ChunkyTortoise/Revenue-Sprint) |
+| insight-engine | Data analytics, forecasting, clustering | 313 | [Live](https://ct-insight-engine.streamlit.app) |
+| docqa-engine | RAG document Q&A, hybrid retrieval | 322 | [Live](https://ct-document-engine.streamlit.app) |
+| scrape-and-serve | Web scraping, SEO, schedulers | 236 | [Live](https://ct-scrape-and-serve.streamlit.app) |
+| mcp-toolkit | FastMCP v2, CLI, GitPython | 158 | [Live](https://ct-mcp-toolkit.streamlit.app) |
+| prompt-engineering-lab | Prompt patterns, A/B testing, optimizer | 127 | [GitHub](https://github.com/ChunkyTortoise/prompt-engineering-lab) |
+| llm-integration-starter | Mock LLM, streaming, circuit breaker | 149 | [GitHub](https://github.com/ChunkyTortoise/llm-integration-starter) |
+| chunkytortoise.github.io | Portfolio site, Tailwind CSS | — | [Live](https://chunkytortoise.github.io) |
 
 **Total: 7,016+ tests | 11 repos | 6 live Streamlit demos**
 

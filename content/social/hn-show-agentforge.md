@@ -213,6 +213,4 @@ MIT. Free for commercial use.
 
 **Demo**: https://ct-agentforge.streamlit.app
 
-**PyPI**: https://pypi.org/project/agentforge
-
 Questions? Drop them in the comments.
