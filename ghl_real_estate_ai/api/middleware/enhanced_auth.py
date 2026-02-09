@@ -381,12 +381,10 @@ class EnhancedJWTAuth:
         SECURITY FIX: Notify user if password is truncated.
         """
         if len(password) > 72:
-            logger.warning(
-                f"PASSWORD_TRUNCATED: Password longer than 72 bytes will be truncated",
-                extra={"original_length": len(password), "truncated_length": 72},
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must not exceed 72 characters"
             )
-            # This warning should be shown to user in production
-            password = password[:72]
 
         password_bytes = password.encode("utf-8")
         salt = bcrypt.gensalt(rounds=12)  # Increased from default 10

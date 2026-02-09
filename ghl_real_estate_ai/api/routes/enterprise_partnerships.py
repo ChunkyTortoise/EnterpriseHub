@@ -192,6 +192,23 @@ async def initiate_sso_login(
     auth_service: EnterpriseAuthService = Depends(lambda: enterprise_auth_service),
 ):
     """Initiate SSO login flow for enterprise user."""
+    # SECURITY FIX: Robustly validate redirect_uri against whitelist
+    import os
+    from urllib.parse import urlparse
+
+    allowed_domains = [d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()]
+    
+    # Requirement: redirect_uri MUST be present and have a valid netloc
+    parsed_uri = urlparse(redirect_uri)
+    
+    if not parsed_uri.netloc:
+        logger.warning(f"SSO initiation blocked: Missing netloc in redirect URI {redirect_uri}")
+        raise HTTPException(status_code=400, detail="Invalid redirect URI format")
+
+    if parsed_uri.netloc not in [urlparse(d).netloc or d for d in allowed_domains]:
+        logger.warning(f"SSO initiation blocked: Unauthorized netloc {parsed_uri.netloc} for URI {redirect_uri}")
+        raise HTTPException(status_code=400, detail="Unauthorized redirect URI")
+
     try:
         sso_result = await auth_service.initiate_sso_login(domain, redirect_uri)
         return sso_result
