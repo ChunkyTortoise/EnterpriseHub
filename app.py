@@ -1,3 +1,4 @@
+import runpy
 import sys
 from pathlib import Path
 
@@ -41,13 +42,11 @@ if __name__ == "__main__":
     else:
         # Case 2: Running via "streamlit run app.py"
         # Execute the target script in the current process to proxy it
-        with open(TARGET_APP) as f:
-            code = f.read()
+        # Update __file__ so the inner script resolves relative paths correctly
+        original_file = sys.modules['__main__'].__file__
+        sys.modules['__main__'].__file__ = str(TARGET_APP)
 
-        # We must update __file__ so the inner script resolves relative paths correctly
-        global_vars = {
-            "__file__": str(TARGET_APP),
-            "__name__": "__main__",
-        }
-
-        exec(code, global_vars)
+        try:
+            runpy.run_path(str(TARGET_APP), run_name="__main__")
+        finally:
+            sys.modules['__main__'].__file__ = original_file
