@@ -3,10 +3,9 @@ GoHighLevel API Client
 Wrapper for GHL API v2 with Jorge's credentials integration.
 """
 
-import json
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import requests
 

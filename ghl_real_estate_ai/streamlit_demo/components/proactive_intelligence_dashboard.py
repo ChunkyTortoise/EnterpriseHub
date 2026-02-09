@@ -3,16 +3,10 @@ Proactive Intelligence Dashboard - Smart Notifications & Predictive Analytics UI
 Real-time alerts, predictions, and performance coaching interface.
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
@@ -41,7 +35,6 @@ def render_proactive_intelligence_dashboard():
     Proactive Intelligence Dashboard with real-time alerts and predictions.
     Obsidian Command Edition.
     """
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
 
     st.markdown(
         """

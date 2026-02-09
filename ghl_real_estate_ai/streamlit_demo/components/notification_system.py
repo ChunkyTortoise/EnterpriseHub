@@ -13,11 +13,10 @@ Features:
 - Role-based notification filtering
 """
 
-import json
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import streamlit as st
 

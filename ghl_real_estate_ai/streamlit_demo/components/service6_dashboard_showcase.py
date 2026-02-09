@@ -4,7 +4,6 @@ Integration showcase for all advanced dashboard interfaces and enterprise compon
 """
 
 from datetime import datetime
-from typing import Any, Dict
 
 import streamlit as st
 
@@ -366,7 +365,6 @@ class Service6DashboardShowcase:
             st.markdown("---")
             st.markdown("**📈 Live Metrics**")
 
-            import time
 
             current_time = datetime.now()
 

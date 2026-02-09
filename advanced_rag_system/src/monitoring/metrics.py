@@ -29,7 +29,7 @@ from __future__ import annotations
 import functools
 import time
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar
 
 from prometheus_client import (
     CONTENT_TYPE_LATEST,

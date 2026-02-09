@@ -14,13 +14,12 @@ Features:
 - WebSocket error handling support
 """
 
-import asyncio
 import time
 import traceback
 import uuid
 from typing import Any, Dict, Optional, Union
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError

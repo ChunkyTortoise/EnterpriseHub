@@ -3,7 +3,7 @@ Contact Timing Component - Urgency Badges with Success Rates
 Enhanced visualization for optimal contact times
 """
 
-from typing import Dict, List, Literal
+from typing import Dict, List
 
 import streamlit as st
 

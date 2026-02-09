@@ -3,9 +3,8 @@ GHL DNA Synchronization Service (The Bridge)
 Maps 25+ Qualification Factors and 16+ Lifestyle Dimensions into GHL Custom Fields.
 """
 
-import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.ghl_client import GHLClient

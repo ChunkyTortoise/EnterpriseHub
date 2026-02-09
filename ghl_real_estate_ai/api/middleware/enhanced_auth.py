@@ -11,13 +11,11 @@ SECURITY FIXES:
 5. Token blacklist for logout functionality
 """
 
-import asyncio
-import hashlib
 import secrets
 import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Optional
 
 import bcrypt
 import redis.asyncio as aioredis

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
-from uuid import UUID, uuid4
+from typing import Dict, List, Optional
+from uuid import uuid4
 
 import pandas as pd
 

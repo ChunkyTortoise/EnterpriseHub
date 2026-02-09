@@ -4,7 +4,6 @@ Identifies buyer personas and adapts bot tone dynamically.
 """
 
 import json
-import logging
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity

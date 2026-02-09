@@ -3,7 +3,7 @@ Segmentation Pulse Dashboard Component
 Enhanced data visualization for Smart Segmentation with KPI ribbon and distribution chart
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import plotly.graph_objects as go
 import streamlit as st
@@ -13,7 +13,6 @@ def render_segmentation_pulse(segment_data: Dict[str, Any]):
     """
     Render the enhanced Segmentation Pulse dashboard with Obsidian Command styling.
     """
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
     # Extract metrics from segment data
     char = segment_data.get("characteristics", {})

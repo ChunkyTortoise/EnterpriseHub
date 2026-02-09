@@ -10,15 +10,10 @@ Provides comprehensive push notification capabilities:
 - Personalized scheduling and targeting
 """
 
-import asyncio
-import json
-import logging
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

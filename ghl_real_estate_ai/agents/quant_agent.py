@@ -9,11 +9,7 @@ Specializes in calculating investor-grade metrics:
 - Exit Strategy Simulations
 """
 
-import math
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.core.gemini_logger import log_metrics
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

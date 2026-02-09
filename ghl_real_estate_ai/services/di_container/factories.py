@@ -7,7 +7,7 @@ dependency injection and configuration-driven initialization.
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,6 @@ async def create_property_repository(
     This function is used by the DI container to create repository instances
     with proper dependency injection.
     """
-    from ..repositories.interfaces import IPropertyRepository
 
     repo_type = config.get("type", "json")
 
@@ -45,7 +44,6 @@ async def create_json_repository(
     repository_factory: "RepositoryFactory", config: Dict[str, Any]
 ) -> "IPropertyRepository":
     """Factory for JSON-based property repository"""
-    from ..repositories.interfaces import IPropertyRepository
 
     json_config = {
         "data_paths": config.get("data_paths", []),
@@ -69,7 +67,6 @@ async def create_mls_repository(
     repository_factory: "RepositoryFactory", config: Dict[str, Any]
 ) -> "IPropertyRepository":
     """Factory for MLS API repository"""
-    from ..repositories.interfaces import IPropertyRepository
 
     mls_config = {
         "api_base_url": config.get("api_base_url"),
@@ -99,7 +96,6 @@ async def create_rag_repository(
     repository_factory: "RepositoryFactory", config: Dict[str, Any]
 ) -> "IPropertyRepository":
     """Factory for RAG/semantic search repository"""
-    from ..repositories.interfaces import IPropertyRepository
 
     rag_config = {
         "data_paths": config.get("data_paths", []),
@@ -127,7 +123,6 @@ async def create_hybrid_repository(
     repository_factory: "RepositoryFactory", config: Dict[str, Any]
 ) -> "IPropertyRepository":
     """Factory for hybrid repository (multiple data sources)"""
-    from ..repositories.interfaces import IPropertyRepository
 
     # For now, create primary repository based on configuration
     # In full implementation, would create composite repository

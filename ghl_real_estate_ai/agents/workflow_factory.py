@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow

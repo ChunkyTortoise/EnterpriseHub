@@ -8,10 +8,9 @@ Provides economic stress indicators affecting real estate markets.
 Author: Data Integration Phase - January 2026
 """
 
-import asyncio
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import aiohttp

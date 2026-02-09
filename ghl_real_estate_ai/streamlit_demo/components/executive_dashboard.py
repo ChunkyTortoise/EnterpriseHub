@@ -3,9 +3,6 @@ Executive Command Center - Real-time dashboard for Jorge
 Beautiful, actionable, single-pane-of-glass view
 """
 
-import random
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
 
 import streamlit as st
 
@@ -14,7 +11,7 @@ def render_executive_dashboard(mock_data: bool = True):
     """
     Render the Executive Command Center dashboard - Obsidian Command Edition.
     """
-    from ghl_real_estate_ai.streamlit_demo.components.primitives import ICONS, CardConfig, icon, render_obsidian_card
+    from ghl_real_estate_ai.streamlit_demo.components.primitives import CardConfig, render_obsidian_card
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
     st.markdown("# 🎯 EXECUTIVE COMMAND")

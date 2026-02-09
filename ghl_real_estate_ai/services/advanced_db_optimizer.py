@@ -29,21 +29,17 @@ Created: January 2026
 
 import asyncio
 import hashlib
-import json
-import logging
 import statistics
 import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 # Database imports
-import asyncpg
-import sqlalchemy as sa
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import QueuePool
 from sqlalchemy.sql import text
 
 from ghl_real_estate_ai.ghl_utils.config import settings

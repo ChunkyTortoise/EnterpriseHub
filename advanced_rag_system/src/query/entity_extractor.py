@@ -10,14 +10,11 @@ This module provides advanced entity recognition capabilities including:
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-
-from src.core.exceptions import RetrievalError
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class EntityType(Enum):

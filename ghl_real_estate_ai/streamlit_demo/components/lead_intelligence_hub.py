@@ -58,13 +58,12 @@ except ImportError:
     CLAUDE_SERVICES_AVAILABLE = False
 
 # Import Primitive Components
-from ghl_real_estate_ai.streamlit_demo.components.primitives import CardConfig, icon, render_obsidian_card
+from ghl_real_estate_ai.streamlit_demo.components.primitives import CardConfig, render_obsidian_card
 from ghl_real_estate_ai.streamlit_demo.plotly_optimizer import plotly_optimizer
 
 
 def render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=False):
     import inspect
-    import os
 
     st.sidebar.info(f"HUB FILE: {__file__}")
     _render_lead_roi_sidebar()

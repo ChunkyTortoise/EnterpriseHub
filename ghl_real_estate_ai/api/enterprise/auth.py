@@ -6,18 +6,14 @@ multi-tenant access control, and corporate user provisioning.
 Designed for Fortune 500 enterprise partnerships.
 """
 
-import asyncio
-import base64
-import hashlib
-import os
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import httpx
 import jwt
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ghl_real_estate_ai.ghl_utils.config import settings

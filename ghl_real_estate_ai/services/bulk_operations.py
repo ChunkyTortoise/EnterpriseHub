@@ -5,12 +5,11 @@ Enables mass actions on leads including batch scoring, bulk messaging,
 tag management, stage transitions, and assignment operations.
 """
 
-import asyncio
 import json
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class BulkOperationsManager:

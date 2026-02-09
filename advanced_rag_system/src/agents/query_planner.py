@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Set, Tuple
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator

@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 
@@ -21,7 +20,6 @@ if str(demo_root) not in sys.path:
     sys.path.insert(0, str(demo_root))
 
 if __name__ == "__main__":
-    import streamlit.web.bootstrap
     from streamlit.web import cli as stcli
 
     try:

@@ -5,7 +5,6 @@ Centralized registry for managing market configurations and services across
 multiple geographic markets. Supports dynamic market discovery and service instantiation.
 """
 
-import os
 
 try:
     import yaml

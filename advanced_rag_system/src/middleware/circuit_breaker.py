@@ -54,7 +54,7 @@ from typing import Any, Callable, Dict, Optional, TypeVar, cast
 from pydantic import BaseModel, Field
 
 from src.core.exceptions import RAGException
-from src.monitoring.health import HealthChecker, HealthResult, HealthStatus, health_checker
+from src.monitoring.health import HealthChecker, HealthResult
 from src.monitoring.metrics import MetricsCollector, metrics_collector
 from src.utils.logging import get_logger
 

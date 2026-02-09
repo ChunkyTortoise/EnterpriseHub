@@ -4,7 +4,7 @@ Specialized in personalized outreach, campaign copy, and GHL integration.
 Built with PydanticAI and optimized for Gemini 2.0 Flash.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext

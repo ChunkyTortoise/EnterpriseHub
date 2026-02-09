@@ -18,21 +18,16 @@ Key Features:
 - Marketing spend optimization insights
 """
 
-import asyncio
-import json
-from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.lead_source_tracker import (
     LeadSource,
     LeadSourceTracker,
-    SourceAttribution,
     SourcePerformance,
 )
 

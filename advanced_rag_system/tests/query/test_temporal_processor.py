@@ -2,13 +2,11 @@
 
 from datetime import datetime, timedelta
 
-import numpy as np
 import pytest
 from src.query.temporal_processor import (
     RecencyBoostConfig,
     TemporalConstraint,
     TemporalConstraintType,
-    TemporalContext,
     TemporalProcessor,
     TimeAwareRetriever,
 )

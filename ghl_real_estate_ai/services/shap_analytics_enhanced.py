@@ -24,15 +24,11 @@ import json
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 from ghl_real_estate_ai.api.schemas.analytics import (
-    AnalyticsWebSocketEvent,
-    EventPriority,
-    EventType,
     FeatureTrendPoint,
     SHAPWaterfallData,
 )

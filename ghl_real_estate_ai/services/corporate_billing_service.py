@@ -6,17 +6,13 @@ corporate contract management, and revenue sharing calculations.
 Extends the base billing service for Fortune 500 partnerships.
 """
 
-import asyncio
-import calendar
 from datetime import datetime, timedelta, timezone
-from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, Dict, List, Optional, Union
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from ghl_real_estate_ai.api.schemas.billing import SubscriptionTier
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
+from ghl_real_estate_ai.services.billing_service import BillingService
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 

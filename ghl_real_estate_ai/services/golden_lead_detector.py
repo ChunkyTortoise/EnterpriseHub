@@ -9,18 +9,12 @@ Created: 2026-01-17
 """
 
 import asyncio
-import json
-import logging
 import math
-from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer

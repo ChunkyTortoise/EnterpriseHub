@@ -4,18 +4,16 @@ Provides production-grade PostgreSQL connection management with advanced feature
 """
 
 import asyncio
-import json
 import time
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 import asyncpg
-from asyncpg import Connection, Pool, Record
-from pydantic import BaseModel
+from asyncpg import Pool, Record
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

@@ -17,7 +17,6 @@ This service enables validation of all financial claims.
 
 import asyncio
 import json
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal

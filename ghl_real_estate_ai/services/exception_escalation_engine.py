@@ -28,12 +28,11 @@ Status: Production-Ready Intelligent Exception Management
 import asyncio
 import json
 import logging
-import traceback
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant

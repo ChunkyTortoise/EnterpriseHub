@@ -18,8 +18,7 @@ import asyncio
 import json
 import os
 import sys
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import asyncpg
 

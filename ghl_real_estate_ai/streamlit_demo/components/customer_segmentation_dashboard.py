@@ -25,7 +25,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 try:
     import matplotlib.pyplot as plt
@@ -33,9 +32,7 @@ try:
 except ImportError:
     sns = None
     plt = None
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA

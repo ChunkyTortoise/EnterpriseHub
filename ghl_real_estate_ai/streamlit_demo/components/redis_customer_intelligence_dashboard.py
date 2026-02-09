@@ -20,28 +20,20 @@ Author: Claude Code Customer Intelligence Platform
 Created: January 2026 - Redis Integration Complete
 """
 
-import asyncio
-import json
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
 # Import Redis Analytics Connector
 from ghl_real_estate_ai.services.redis_analytics_connector import (
-    CustomerSegment,
-    DataStreamType,
-    JourneyStageData,
-    RealTimeMetric,
     RedisAnalyticsConnector,
-    create_redis_analytics_connector,
 )
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 

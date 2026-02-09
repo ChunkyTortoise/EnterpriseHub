@@ -28,17 +28,12 @@ Date: 2026-01-16
 import asyncio
 import hashlib
 import json
-import logging
-import threading
 import time
-import uuid
-from abc import ABC, abstractmethod
-from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor
+from collections import deque
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional
 
 # Performance and networking libraries
 try:
@@ -52,9 +47,7 @@ except ImportError:
 
 # Service integrations
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import create_advanced_ml_scoring_engine
 from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.mlops_pipeline import create_mlops_pipeline
 
 logger = get_logger(__name__)
 

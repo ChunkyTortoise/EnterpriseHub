@@ -3,11 +3,9 @@ Claude Platform Companion - Intelligent Platform-Wide Assistant
 Provides personalized greetings, context awareness, and cross-platform intelligence.
 """
 
-import asyncio
 import json
-import re
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 

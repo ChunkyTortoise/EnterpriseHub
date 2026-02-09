@@ -1,7 +1,7 @@
 """Tests for the EmbeddingProvider abstract base class and EmbeddingConfig."""
 
 import math
-from typing import Any, List
+from typing import List
 
 import pytest
 from src.core.exceptions import EmbeddingError

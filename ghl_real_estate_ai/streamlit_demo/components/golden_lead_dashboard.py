@@ -9,13 +9,11 @@ Created: 2026-01-17
 """
 
 import asyncio
-from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 

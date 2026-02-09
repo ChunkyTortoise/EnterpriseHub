@@ -4,20 +4,16 @@ ML-powered timing optimization with behavioral pattern recognition.
 Extends the base LeadBotWorkflow with Track 1 enhancements.
 """
 
-import asyncio
-import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
 from langgraph.graph import END, StateGraph
 
-from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
-from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 # Track 3.1 Integration
 try:

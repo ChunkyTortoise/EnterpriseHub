@@ -1,12 +1,11 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
-from uuid import UUID
+from typing import Any, Generic, List, Optional, Type, TypeVar
 
-from sqlalchemy import delete, desc, select, update
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ..models.compliance_models import ComplianceStatus, RiskLevel
-from .models import Base, DBComplianceScore, DBModelRegistration, DBPolicyViolation, DBRiskAssessment
+from .models import Base, DBModelRegistration, DBPolicyViolation, DBRiskAssessment
 
 T = TypeVar("T", bound=Base)
 

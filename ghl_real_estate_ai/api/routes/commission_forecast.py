@@ -5,10 +5,9 @@ Exposes revenue forecasting, Monte Carlo simulation, and executive
 summary generation from pipeline data.
 """
 
-import logging
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

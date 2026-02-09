@@ -17,14 +17,11 @@ Date: 2026-01-25
 Performance: <100ms response time, caching enabled
 """
 
-import asyncio
-import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user

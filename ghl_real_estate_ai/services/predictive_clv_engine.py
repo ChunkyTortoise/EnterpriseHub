@@ -28,15 +28,12 @@ Created: 2026-01-18
 
 import asyncio
 import json
-import logging
-import pickle
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -60,7 +57,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_conversation_intelligence import get_conversation_intelligence
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadIntelligence
 from ghl_real_estate_ai.services.market_timing_service import MarketTimingService
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2, PredictiveScore
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 
 logger = get_logger(__name__)
 cache = get_cache_service()

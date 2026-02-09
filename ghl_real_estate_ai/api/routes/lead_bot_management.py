@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import require_auth

@@ -4,7 +4,6 @@ Professional client demonstration environment with seeded data and scenario mana
 Version: 2.0.0
 """
 
-import asyncio
 import json
 import logging
 import uuid
@@ -14,13 +13,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
-from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_async_session
-from ..models.conversations import Conversation, ConversationMessage
-from ..models.leads import Lead, LeadInteraction
-from ..models.properties import Property, PropertyMatch
 from ..services.cache_service import CacheService
 from ..services.claude_assistant import ClaudeAssistant
 from ..services.roi_calculator_service import ROICalculatorService

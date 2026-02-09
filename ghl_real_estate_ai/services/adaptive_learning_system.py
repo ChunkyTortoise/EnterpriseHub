@@ -19,14 +19,13 @@ Status: Advanced Adaptive Learning Platform with Agent Feedback Loops
 
 import asyncio
 import json
-import logging
 import statistics
 from abc import ABC, abstractmethod
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 

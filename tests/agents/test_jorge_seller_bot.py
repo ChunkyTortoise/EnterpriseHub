@@ -1039,8 +1039,9 @@ class TestSellerBotCMAAndMarket:
     @pytest.mark.asyncio
     async def test_generate_cma_with_address(self, mock_seller_deps):
         """Test CMA generation when address is available."""
-        from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
         from datetime import date
+
+        from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
 
         mock_report = MagicMock()
         mock_report.estimated_value = 850000

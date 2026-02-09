@@ -5,18 +5,16 @@ Comprehensive Streamlit interface for AI-powered negotiation analysis,
 real-time coaching, and strategy optimization.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from ghl_real_estate_ai.api.schemas.negotiation import NegotiationAnalysisRequest, RealTimeCoachingRequest
+from ghl_real_estate_ai.api.schemas.negotiation import NegotiationAnalysisRequest
 from ghl_real_estate_ai.services.ai_negotiation_partner import get_ai_negotiation_partner
-from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 
 @st.cache_resource

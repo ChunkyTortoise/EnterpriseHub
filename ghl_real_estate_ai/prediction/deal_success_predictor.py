@@ -10,15 +10,12 @@ This module provides:
 - Jorge's methodology application for deal closing
 """
 
-import asyncio
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
+from typing import Any, Dict, List, Optional
 
 from ...ghl_utils.jorge_config import JorgeConfig
 from ...services.cache_service import CacheService

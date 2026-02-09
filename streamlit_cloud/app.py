@@ -5,8 +5,6 @@ Runs on Streamlit Cloud with zero external dependencies (no DB, Redis, or API ke
 """
 
 import datetime
-import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd

@@ -10,16 +10,14 @@ Features:
 - Security event logging
 """
 
-import asyncio
 import html
 import json
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 from urllib.parse import unquote
 
 import bleach
 from fastapi import HTTPException, Request, status
-from pydantic import BaseModel, ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

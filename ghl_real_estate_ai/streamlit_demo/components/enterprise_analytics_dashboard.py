@@ -27,17 +27,12 @@ Created: January 2026
 """
 
 import asyncio
-import json
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 

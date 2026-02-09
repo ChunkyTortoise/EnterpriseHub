@@ -5,12 +5,9 @@ Uses APScheduler to trigger lead sequence actions at the correct intervals.
 Integrates with sequence state service for persistence and GHL for message delivery.
 """
 
-import asyncio
-import json
-import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
@@ -20,8 +17,6 @@ from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.lead_sequence_state_service import (
-    LeadSequenceState,
-    LeadSequenceStateService,
     SequenceDay,
     get_sequence_service,
 )
@@ -239,7 +234,6 @@ class LeadSequenceScheduler:
         """Send SMS for the specified sequence day."""
         try:
             # Import here to avoid circular imports
-            from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
             from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
 
             # Get lead information (this would come from your lead database/GHL)

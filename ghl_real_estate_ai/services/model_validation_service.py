@@ -15,18 +15,14 @@ This service enables validation of claims like "95% accuracy", "67% recovery rat
 """
 
 import asyncio
-import json
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import scipy.stats as stats
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
-from sklearn.model_selection import cross_val_score
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

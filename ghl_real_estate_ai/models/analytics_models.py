@@ -3,14 +3,11 @@ Jorge's Advanced Analytics Models
 Data structures for business intelligence and forecasting
 """
 
-from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
-
-from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
 
 
 class ForecastHorizon(Enum):

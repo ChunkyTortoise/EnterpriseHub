@@ -5,10 +5,9 @@ Exposes multi-channel sentiment analysis, emotion classification,
 conversation-level trends, and escalation risk detection.
 """
 
-import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

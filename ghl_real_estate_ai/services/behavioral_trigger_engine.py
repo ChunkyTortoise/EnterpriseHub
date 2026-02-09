@@ -10,12 +10,10 @@ Implements 2026 real estate best practices:
 Based on research: "Predictive seller intelligence will dominate" - Fello.ai 2026
 """
 
-import asyncio
-import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 

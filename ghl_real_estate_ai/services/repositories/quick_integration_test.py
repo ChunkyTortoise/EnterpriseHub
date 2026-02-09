@@ -73,7 +73,7 @@ async def test_basic_integration():
 
     try:
         # Import Strategy Pattern components
-        from ghl_real_estate_ai.services.scoring import ScoringContext, create_property_matcher
+        from ghl_real_estate_ai.services.scoring import create_property_matcher
 
         # Create strategy matcher
         strategy_matcher = create_property_matcher("enhanced", fallback_strategy="basic")

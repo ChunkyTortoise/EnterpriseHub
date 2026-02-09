@@ -8,14 +8,11 @@ Validates latency and throughput targets for query enhancement components:
 - Throughput: >100 queries/second for classification
 """
 
-import asyncio
 import statistics
 import time
-from typing import Dict, List
 
 import pytest
 from src.retrieval.query import (
-    ClassifierConfig,
     ExpansionConfig,
     HyDEConfig,
     HyDEGenerator,

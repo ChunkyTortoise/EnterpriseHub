@@ -25,7 +25,7 @@ from uuid import UUID, uuid4
 
 import pandas as pd
 
-from src.core.exceptions import RetrievalError, ValidationError
+from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.embeddings.openai_provider import OpenAIEmbeddingConfig, OpenAIEmbeddingProvider
 from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig

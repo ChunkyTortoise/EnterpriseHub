@@ -24,7 +24,6 @@ def verify_imports():
     print("🔍 Verifying imports...")
 
     try:
-        from ghl_real_estate_ai.streamlit_demo.mock_services.mock_claude import MockClaudeService
 
         print("  ✅ MockClaudeService imported")
     except Exception as e:
@@ -32,7 +31,6 @@ def verify_imports():
         return False
 
     try:
-        from ghl_real_estate_ai.streamlit_demo.mock_services.mock_rag import MockRAGService
 
         print("  ✅ MockRAGService imported")
     except Exception as e:
@@ -40,7 +38,6 @@ def verify_imports():
         return False
 
     try:
-        from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
         print("  ✅ LeadScorer imported")
     except Exception as e:

@@ -5,19 +5,13 @@ Main orchestration service integrating risk detection, policy enforcement,
 audit tracking, and regulatory mapping into a unified compliance workflow.
 """
 
-import asyncio
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
-from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database.models import (
     DBComplianceScore,
-    DBModelRegistration,
-    DBPolicyViolation,
-    DBRemediationAction,
-    DBRiskAssessment,
 )
 from ..database.repository import (
     AssessmentRepository,
@@ -30,11 +24,9 @@ from ..engine.regulatory_mapper import RegulatoryMapper, RequirementStatus
 from ..engine.risk_detector import RiskDetector
 from ..models.compliance_models import (
     AIModelRegistration,
-    ComplianceReport,
     ComplianceScore,
     ComplianceStatus,
     PolicyViolation,
-    RegulationType,
     RiskAssessment,
     RiskLevel,
     ViolationSeverity,

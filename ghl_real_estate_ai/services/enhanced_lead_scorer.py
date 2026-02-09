@@ -26,13 +26,12 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .ai_predictive_lead_scoring import PredictiveLeadScorer
-from .dynamic_scoring_weights import DynamicScoringOrchestrator, LeadSegment, MarketMetrics, ScoringWeights
+from .dynamic_scoring_weights import DynamicScoringOrchestrator, LeadSegment
 from .lead_scorer import LeadScorer
 
 

@@ -8,9 +8,9 @@ import time
 import traceback
 import uuid
 from collections import defaultdict
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 

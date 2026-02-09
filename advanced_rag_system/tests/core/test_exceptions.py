@@ -1,6 +1,5 @@
 """Tests for core exceptions."""
 
-import pytest
 from src.core.exceptions import (
     CacheError,
     ConfigurationError,
@@ -9,7 +8,6 @@ from src.core.exceptions import (
     NotFoundError,
     RAGException,
     RateLimitError,
-    ValidationError,
     VectorStoreError,
 )
 

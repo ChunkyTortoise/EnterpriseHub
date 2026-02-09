@@ -18,12 +18,11 @@ This service enables safe production rollout of the $4.91M ARR enhancement syste
 import asyncio
 import hashlib
 import json
-import logging
 import random
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

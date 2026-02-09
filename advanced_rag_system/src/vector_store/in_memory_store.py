@@ -18,7 +18,7 @@ from uuid import UUID
 import numpy as np
 
 from src.core.exceptions import NotFoundError, VectorStoreError
-from src.core.types import DocumentChunk, Metadata, SearchResult
+from src.core.types import DocumentChunk, SearchResult
 from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig
 
 

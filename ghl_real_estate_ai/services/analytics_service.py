@@ -4,9 +4,7 @@ Analytics Service for GHL Real Estate AI.
 Tracks and retrieves system performance metrics and lead conversion data.
 """
 
-import asyncio
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional

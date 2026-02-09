@@ -8,7 +8,6 @@ Validates re-ranking quality and performance targets:
 - Accuracy: >85% relevant results in top-5
 """
 
-import asyncio
 import statistics
 import time
 from typing import List
@@ -17,10 +16,8 @@ from uuid import uuid4
 import pytest
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.reranking.base import (
-    BaseReRanker,
     MockReRanker,
     ReRankingConfig,
-    ReRankingResult,
     ReRankingStrategy,
 )
 from src.reranking.cross_encoder import CrossEncoderReRanker

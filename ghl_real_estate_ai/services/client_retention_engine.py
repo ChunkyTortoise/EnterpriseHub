@@ -13,17 +13,12 @@ This system transforms Jorge's client relationships into a continuous source of 
 and repeat business, positioning him as the lifetime real estate advisor for IE families.
 """
 
-import asyncio
 import json
-import logging
-import re
 import uuid
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-from dateutil.relativedelta import relativedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence

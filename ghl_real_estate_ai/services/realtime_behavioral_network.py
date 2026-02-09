@@ -18,8 +18,6 @@ Status: Advanced Real-Time Behavioral Analysis Platform
 """
 
 import asyncio
-import json
-import logging
 import queue
 import threading
 import time
@@ -27,7 +25,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intelligence_swarm
 from ghl_real_estate_ai.core.llm_client import get_llm_client

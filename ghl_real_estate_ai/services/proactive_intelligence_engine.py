@@ -4,13 +4,11 @@ Provides proactive alerts, predictive insights, and continuous background monito
 """
 
 import asyncio
-import json
-import logging
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

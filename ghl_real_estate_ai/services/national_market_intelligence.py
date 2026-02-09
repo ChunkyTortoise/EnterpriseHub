@@ -19,20 +19,16 @@ Created: 2026-01-18
 
 import asyncio
 import json
-import logging
 import statistics
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-import pandas as pd
-
 from ..ghl_utils.logger import get_logger
-from ..markets.national_registry import CrossMarketInsights, get_national_market_registry
+from ..markets.national_registry import get_national_market_registry
 from ..services.cache_service import get_cache_service
 from ..services.claude_assistant import ClaudeAssistant
 

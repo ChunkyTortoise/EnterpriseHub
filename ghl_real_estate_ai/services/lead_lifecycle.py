@@ -8,9 +8,9 @@ and duration analysis for lead progression through the sales funnel.
 import json
 import statistics
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 
 class LeadLifecycleTracker:

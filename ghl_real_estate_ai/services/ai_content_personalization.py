@@ -7,7 +7,7 @@ Delivers personalized content and property recommendations based on AI analysis
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 

@@ -22,14 +22,12 @@ Architecture Integration:
 - Database: PostgreSQL behavioral prediction tables
 """
 
-import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
-from fastapi.responses import JSONResponse
 
-from ghl_real_estate_ai.api.dependencies import get_current_user, get_location_context, validate_rate_limit
+from ghl_real_estate_ai.api.dependencies import get_current_user, validate_rate_limit
 from ghl_real_estate_ai.api.schemas.predictive_behavior import (
     AnalyticsSummaryResponse,
     BatchPredictionRequest,
@@ -44,7 +42,6 @@ from ghl_real_estate_ai.api.schemas.predictive_behavior import (
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.predictive_lead_behavior_service import (
-    BehavioralPrediction,
     get_predictive_behavior_service,
 )
 

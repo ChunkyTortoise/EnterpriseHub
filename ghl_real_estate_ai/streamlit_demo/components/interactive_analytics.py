@@ -9,19 +9,17 @@ Advanced analytics dashboard with:
 - Mobile-responsive charts
 """
 
-import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
 # Import Primitive Components
-from ghl_real_estate_ai.streamlit_demo.components.primitives import ICONS, CardConfig, icon, render_obsidian_card
+from ghl_real_estate_ai.streamlit_demo.components.primitives import CardConfig, render_obsidian_card
 from ghl_real_estate_ai.streamlit_demo.plotly_optimizer import plotly_optimizer
 
 

@@ -9,7 +9,6 @@ This module provides:
 5. Real-time market intelligence for competitive responses
 """
 
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum

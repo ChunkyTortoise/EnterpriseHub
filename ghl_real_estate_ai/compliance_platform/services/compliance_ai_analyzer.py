@@ -18,14 +18,10 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 from ..models.compliance_models import (
     AIModelRegistration,
-    ComplianceStatus,
     PolicyViolation,
-    RegulationType,
     RiskAssessment,
-    RiskLevel,
     ViolationSeverity,
 )
-from ..models.risk_models import RiskCategory, RiskIndicator
 
 logger = get_logger(__name__)
 

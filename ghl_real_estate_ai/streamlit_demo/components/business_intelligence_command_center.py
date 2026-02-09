@@ -9,15 +9,11 @@ Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 """
 
 import asyncio
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 try:
     from ghl_real_estate_ai.intelligence.business_intelligence_dashboard import (

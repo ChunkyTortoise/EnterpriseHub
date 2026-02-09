@@ -5,10 +5,9 @@ Provides real-time conversation analysis, intent detection, and response suggest
 
 import asyncio
 import json
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 
@@ -17,7 +16,6 @@ from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Import existing services
-from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)

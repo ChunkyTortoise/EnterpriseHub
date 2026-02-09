@@ -14,10 +14,9 @@ Feature flags allow selective enablement for different deployment scenarios.
 Jorge now focuses on building relationships and helping customers succeed.
 """
 
-import asyncio
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
@@ -40,7 +39,7 @@ from ghl_real_estate_ai.services.market_intelligence import get_market_intellige
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
 except ImportError:
-    from ghl_real_estate_ai.stubs.bots_stub import MLAnalyticsEngine, get_ml_analytics_engine
+    from ghl_real_estate_ai.stubs.bots_stub import get_ml_analytics_engine
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:

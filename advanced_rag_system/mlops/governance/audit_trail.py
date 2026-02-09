@@ -3,7 +3,6 @@ Enterprise ML Governance and Audit Trail System
 Demonstrates compliance, lineage tracking, and governance for production ML
 """
 
-import hashlib
 import json
 import logging
 import uuid
@@ -12,7 +11,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,6 @@ import logging
 import time
 from typing import List, Optional
 
-from src.core.config import get_settings
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
 from src.embeddings.base import EmbeddingConfig

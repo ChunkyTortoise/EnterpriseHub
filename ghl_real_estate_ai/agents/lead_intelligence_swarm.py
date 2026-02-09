@@ -18,12 +18,9 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
-
-import aiohttp
-from pydantic import BaseModel
+from typing import Any, Dict, List, Tuple
 
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 

@@ -10,7 +10,6 @@ Replaces Travis County service for California market focus.
 Author: Geographic Migration - January 2026
 """
 
-import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -21,7 +20,6 @@ import aiohttp
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.sentiment_types import (
-    AlertPriority,
     DataSourceInterface,
     SentimentSignal,
     SentimentTriggerType,

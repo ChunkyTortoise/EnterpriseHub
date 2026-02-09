@@ -23,14 +23,12 @@ Created: 2026-01-18
 """
 
 import asyncio
-import json
-import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.billing_service import BillingService
@@ -38,7 +36,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer_v2 import DynamicPricingOptimizerV2
 
 # Import existing services
-from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2, PredictiveScore
+from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 
 logger = get_logger(__name__)
 cache = get_cache_service()

@@ -7,17 +7,15 @@ This module tests all re-ranking components including:
 - Integration tests for the complete re-ranking pipeline
 """
 
-import asyncio
 import time
-from typing import List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import List
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import pytest
 from src.core.exceptions import RateLimitError, RetrievalError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.reranking.base import (
-    BaseReRanker,
     MockReRanker,
     ReRankingConfig,
     ReRankingResult,

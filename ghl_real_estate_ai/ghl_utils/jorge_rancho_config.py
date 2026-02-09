@@ -11,10 +11,9 @@ Created: 2026-01-25
 Market Focus: Rancho Cucamonga, California (Inland Empire)
 """
 
-import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 
 class RanchoNeighborhood(Enum):

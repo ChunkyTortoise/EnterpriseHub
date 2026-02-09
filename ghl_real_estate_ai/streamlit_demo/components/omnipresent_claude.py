@@ -6,11 +6,9 @@ Claude is aware of all platform activity and can provide strategic recommendatio
 as bot workflows progress.
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 import streamlit as st
 

@@ -14,7 +14,7 @@ Features:
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 

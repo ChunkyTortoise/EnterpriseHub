@@ -13,8 +13,6 @@ Features:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
 
 import pandas as pd
 import plotly.express as px
@@ -24,7 +22,7 @@ from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
-from ...services.client_success_scoring_service import MetricType, VerificationStatus, get_client_success_service
+from ...services.client_success_scoring_service import get_client_success_service
 
 
 @st.cache_resource

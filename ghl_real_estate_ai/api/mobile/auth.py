@@ -4,16 +4,12 @@ Enhanced authentication system for mobile applications with biometric integratio
 """
 
 import hashlib
-import hmac
-import json
-import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import JWTAuth, get_current_user

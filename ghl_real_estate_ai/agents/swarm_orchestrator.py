@@ -18,7 +18,6 @@ Date: 2026-01-05
 
 import asyncio
 import json
-import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -77,9 +76,6 @@ class Agent:
     status: str = "idle"  # idle, working, completed, error
 
 
-import ghl_real_estate_ai.agent_system.skills.codebase
-import ghl_real_estate_ai.agent_system.skills.frontend
-import ghl_real_estate_ai.agent_system.skills.ghl_bridge
 from ghl_real_estate_ai.agent_system.hooks.governance import governance_auditor
 from ghl_real_estate_ai.agent_system.hooks.real_estate import SentimentDecoder
 from ghl_real_estate_ai.agent_system.hooks.security import SecuritySentry
@@ -87,7 +83,6 @@ from ghl_real_estate_ai.agent_system.skills.base import registry as skill_regist
 from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
 from ghl_real_estate_ai.agents.traceability import trace_agent_action
 from ghl_real_estate_ai.core.llm_client import LLMClient
-from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.roi_engine import roi_engine
 
 

@@ -1,7 +1,7 @@
 """Tests for RedisCacheBackend with mocked redis.asyncio — no running Redis needed."""
 
 import pickle
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from src.embeddings.cache import RedisCacheBackend

@@ -11,19 +11,17 @@ This module provides:
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ...prediction.business_forecasting_engine import BusinessForecastingEngine
 from ...prediction.client_behavior_analyzer import ClientBehaviorAnalyzer
 from ...prediction.deal_success_predictor import DealSuccessPredictor
-from ...prediction.jorge_prediction_engine import JorgePredictionEngine, PredictionContext, PredictionType, TimeFrame
+from ...prediction.jorge_prediction_engine import JorgePredictionEngine, PredictionContext, TimeFrame
 from ...prediction.market_intelligence_analyzer import MarketIntelligenceAnalyzer
 from ...services.auth_service import get_current_user
 from ...services.websocket_manager import WebSocketManager

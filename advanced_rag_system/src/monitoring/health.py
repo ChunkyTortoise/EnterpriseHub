@@ -32,7 +32,7 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Protocol
+from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 from src.core.config import Settings, get_settings
 from src.utils.logging import get_logger
@@ -408,7 +408,6 @@ async def check_vector_store() -> HealthResult:
     """
     start_time = time.perf_counter()
     try:
-        from src.vector_store.base import VectorStore
         from src.vector_store.chroma_store import ChromaVectorStore
 
         settings = get_settings()

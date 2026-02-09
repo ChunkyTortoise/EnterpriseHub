@@ -16,9 +16,8 @@ from ghl_real_estate_ai.agents.bot_personality import (
     ScoringWeights,
     TemperatureThresholds,
 )
-from ghl_real_estate_ai.agents.personality_config import (
-    PersonalityConfig,
-    YAMLBotPersonality,
+from ghl_real_estate_ai.agents.personalities.dental import (  # noqa: F401
+    DentalLeadPersonality,
 )
 
 # Import to trigger @register decorators
@@ -27,10 +26,10 @@ from ghl_real_estate_ai.agents.personalities.real_estate import (  # noqa: F401
     RealEstateLeadPersonality,
     RealEstateSellerPersonality,
 )
-from ghl_real_estate_ai.agents.personalities.dental import (  # noqa: F401
-    DentalLeadPersonality,
+from ghl_real_estate_ai.agents.personality_config import (
+    PersonalityConfig,
+    YAMLBotPersonality,
 )
-
 
 # ── ABC Contract Tests ───────────────────────────────────────────────────────
 

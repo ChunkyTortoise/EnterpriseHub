@@ -16,14 +16,10 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import cv2
-import numpy as np
-import openai
 from openai import AsyncOpenAI
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance
 
 from ..ghl_utils.jorge_config import JorgeConfig
 from ..services.cache_service import CacheService

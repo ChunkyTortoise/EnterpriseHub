@@ -5,18 +5,15 @@ Production-grade audit trail system for complete compliance record-keeping.
 Aligned with EU AI Act Article 12, HIPAA audit requirements, and SOX compliance.
 """
 
-import asyncio
 import hashlib
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
-from uuid import uuid4
+from typing import Any, Dict, List, Optional
 
 from ..models.compliance_models import (
     AuditRecord,
-    ComplianceStatus,
     RegulationType,
     ViolationSeverity,
 )

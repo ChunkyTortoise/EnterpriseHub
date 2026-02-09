@@ -11,15 +11,13 @@ Used for quality benchmarks measuring retrieval accuracy, relevance, and answer 
 """
 
 import asyncio
-import hashlib
 import json
 import random
 import tempfile
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Optional
 
 try:
     import numpy as np

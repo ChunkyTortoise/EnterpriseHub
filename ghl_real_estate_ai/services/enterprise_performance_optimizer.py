@@ -27,20 +27,15 @@ Status: Production-Ready Enterprise Performance Platform
 
 import asyncio
 import gc
-import hashlib
 import json
-import logging
 import threading
 import time
-import uuid
-import weakref
-from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import psutil
@@ -60,7 +55,6 @@ except ImportError:
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
-from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.performance_tracker import PerformanceTracker
 
 logger = get_logger(__name__)

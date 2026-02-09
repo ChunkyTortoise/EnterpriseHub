@@ -3,7 +3,6 @@ Mock RAG Service - Property matching simulation.
 """
 
 import json
-import os
 from typing import Dict, List
 
 

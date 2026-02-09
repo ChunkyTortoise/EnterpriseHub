@@ -19,7 +19,7 @@ Date: 2026-01-09
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
 
 
 class LeadSegment(str, Enum):

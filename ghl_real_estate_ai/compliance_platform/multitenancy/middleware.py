@@ -28,7 +28,6 @@ from jose import JWTError, jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .models import (
-    ROLE_PERMISSIONS,
     TIER_FEATURES,
     TIER_LIMITS,
     AuditLogEntry,

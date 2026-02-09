@@ -11,15 +11,10 @@ Complete buyer automation system integrating:
 Built specifically for Jorge's GHL system.
 """
 
-import asyncio
-import json
 import os
 import sys
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -32,11 +27,7 @@ from ghl_real_estate_ai.streamlit_demo.obsidian_theme import (
     get_svg_icon,
     inject_elite_css,
     render_biometric_heartbeat,
-    render_countdown_gauge,
-    render_dossier_block,
     render_journey_line,
-    render_neural_progress,
-    render_terminal_log,
     style_obsidian_chart,
 )
 

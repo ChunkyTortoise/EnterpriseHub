@@ -13,17 +13,16 @@ Designed for production use with async operations and persistence support.
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import random
 import uuid
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum, auto
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -483,7 +482,6 @@ class StatisticalTester:
         )
 
         # P-value (two-sided)
-        from math import gamma, pi, sqrt
 
         # Approximate t-distribution CDF using normal for large df
         if df > 30:

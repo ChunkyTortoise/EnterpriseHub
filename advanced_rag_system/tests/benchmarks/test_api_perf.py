@@ -8,13 +8,11 @@ Tests end-to-end API performance according to targets:
 """
 
 import asyncio
-import json
 import os
 import sys
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-import aiohttp
 import numpy as np
 import pytest
 

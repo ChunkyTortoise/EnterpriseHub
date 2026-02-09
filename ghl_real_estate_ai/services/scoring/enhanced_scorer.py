@@ -5,8 +5,7 @@ Advanced rule-based scoring with sophisticated algorithms and multi-factor analy
 Balanced performance and accuracy for production real estate applications.
 """
 
-import math
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List
 
 try:
     from .property_scorer import ConfidenceLevel, PropertyScorer, ScoringResult

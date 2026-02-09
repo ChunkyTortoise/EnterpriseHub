@@ -9,7 +9,7 @@ import json
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Generator, List, Optional
 
 import httpx
 

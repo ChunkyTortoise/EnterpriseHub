@@ -11,7 +11,7 @@ from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.gemini import GeminiModel
 
 from ghl_real_estate_ai.models.jorge_property_models import ConfidenceLevel, MatchReasoning
-from ghl_real_estate_ai.services.competitive_intelligence_hub import IntelligenceType, get_competitive_intelligence_hub
+from ghl_real_estate_ai.services.competitive_intelligence_hub import get_competitive_intelligence_hub
 from ghl_real_estate_ai.services.roi_calculator_service import roi_calculator
 
 

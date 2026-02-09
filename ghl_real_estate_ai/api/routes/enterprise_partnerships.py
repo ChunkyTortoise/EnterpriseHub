@@ -5,12 +5,11 @@ FastAPI routes for Fortune 500 corporate partnership management,
 including SSO authentication, volume billing, and analytics.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 

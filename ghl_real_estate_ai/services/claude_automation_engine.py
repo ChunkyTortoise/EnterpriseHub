@@ -3,16 +3,14 @@ Claude Automation Engine - Intelligent Report & Script Generation
 Replaces hardcoded templates with dynamic Claude AI generation
 """
 
-import asyncio
-import json
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
-from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeTaskType, get_claude_orchestrator
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, get_claude_orchestrator
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
 

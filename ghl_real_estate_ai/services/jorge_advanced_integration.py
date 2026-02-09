@@ -10,44 +10,33 @@ This module integrates the four advanced modules with Jorge's existing Rancho Cu
 Provides unified interface and orchestration for the complete AI-powered real estate platform.
 """
 
-import asyncio
-import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.automated_marketing_engine import (
-    CampaignPriority,
-    CampaignType,
-    ContentFormat,
     get_automated_marketing_engine,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.client_retention_engine import (
     ClientProfile,
-    EngagementType,
     LifeEventType,
     get_client_retention_engine,
 )
 from ghl_real_estate_ai.services.market_prediction_engine import (
-    MarketConfidence,
-    PredictionType,
     TimeHorizon,
     get_market_prediction_engine,
 )
 from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
-    RanchoCucamongaConversationContext,
     get_rancho_cucamonga_ai_assistant,
 )
 from ghl_real_estate_ai.services.voice_ai_handler import (
-    CallType,
     ConversationStage,
     VoiceCallContext,
-    VoiceResponse,
     get_voice_ai_handler,
 )
 

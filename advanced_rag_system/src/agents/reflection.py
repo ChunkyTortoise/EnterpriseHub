@@ -16,7 +16,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from src.agents.query_planner import QueryIntent, QueryPlan, StepStatus
+from src.agents.query_planner import QueryIntent, QueryPlan
 from src.agents.tool_registry import ToolResult
 
 

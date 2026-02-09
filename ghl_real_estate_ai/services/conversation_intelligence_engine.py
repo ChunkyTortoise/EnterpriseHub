@@ -35,18 +35,13 @@ Created: 2026-01-18
 
 import asyncio
 import json
-import logging
 import re
 import statistics
-import uuid
-from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from collections import deque
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -55,12 +50,8 @@ from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 # Import existing conversation intelligence services
 from ghl_real_estate_ai.services.claude_conversation_intelligence import (
-    ConversationAnalysis,
     ConversationIntelligenceEngine,
-    ConversationThread,
-    IntentSignals,
 )
-from ghl_real_estate_ai.services.enhanced_conversation_intelligence import ConversationOutcomePrediction
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
 logger = get_logger(__name__)

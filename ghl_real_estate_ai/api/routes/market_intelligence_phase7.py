@@ -10,18 +10,14 @@ Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.intelligence.market_intelligence_automation import (
-    CompetitivePositioningAlert,
     EnhancedMarketIntelligenceAutomation,
-    MarketOpportunity,
-    MarketTrendAlert,
-    MarketTrendType,
     TrendSeverity,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService

@@ -6,14 +6,11 @@ corporate relocation programs, and bulk employee housing coordination.
 Targeting $500K+ annual revenue enhancement through enterprise partnerships.
 """
 
-import asyncio
-import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.billing_service import BillingService
 from ghl_real_estate_ai.services.cache_service import CacheService

@@ -7,9 +7,9 @@ Provides AI-powered property matching based on natural language queries.
 
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -26,7 +26,6 @@ except ImportError:
 from .interfaces import (
     IPropertyRepository,
     PropertyQuery,
-    QueryOperator,
     RepositoryError,
     RepositoryMetadata,
     RepositoryResult,

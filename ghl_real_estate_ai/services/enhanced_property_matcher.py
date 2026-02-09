@@ -10,9 +10,7 @@ Extends the basic PropertyMatcher with:
 """
 
 import json
-import logging
-import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 

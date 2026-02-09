@@ -1,10 +1,9 @@
 """Tests for self-querying retrieval system."""
 
-from typing import List
 from uuid import uuid4
 
 import pytest
-from src.core.types import DocumentChunk, Metadata, SearchResult
+from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.self_query import (
     Entity,
     ExecutionStrategy,
@@ -16,14 +15,11 @@ from src.retrieval.self_query import (
     QueryAnalysis,
     QueryAnalyzer,
     QueryIntent,
-    QueryPlan,
     QueryPlanner,
-    RelevanceScore,
     SelfQueryResult,
     SelfQueryRetriever,
     TemporalRef,
 )
-from src.vector_store.base import SearchOptions
 
 # ============================================================================
 # Fixtures

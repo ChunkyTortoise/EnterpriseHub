@@ -1,5 +1,3 @@
-import asyncio
-import json
 
 import pandas as pd
 import plotly.express as px
@@ -1604,7 +1602,6 @@ def render_seller_journey_hub(
     render_seller_analytics,
 ):
     """Render the complete seller experience - Obsidian Command Edition"""
-    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import render_dossier_block, style_obsidian_chart
 
     st.markdown(
         """

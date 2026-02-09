@@ -12,7 +12,7 @@ Data sources (priority order):
 
 import logging
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 

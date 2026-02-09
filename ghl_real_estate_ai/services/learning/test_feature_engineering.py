@@ -10,7 +10,6 @@ import asyncio
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -33,7 +32,6 @@ async def test_feature_engineering_pipeline():
             TimeFeatureExtractor,
         )
         from learning.feature_engineering.standard_feature_engineer import StandardFeatureEngineer
-        from learning.interfaces import EventType, FeatureType
         from learning.tracking.behavior_tracker import InMemoryBehaviorTracker
         from learning.tracking.event_collector import EventCollector
 

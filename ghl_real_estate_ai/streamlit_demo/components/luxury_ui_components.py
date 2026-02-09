@@ -14,17 +14,12 @@ Features:
 - High-end client interaction patterns
 """
 
-import base64
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from io import BytesIO
-from typing import Any, Dict, List, Optional, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Union
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 
 @dataclass

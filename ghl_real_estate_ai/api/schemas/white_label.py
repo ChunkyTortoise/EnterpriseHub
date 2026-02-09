@@ -7,9 +7,9 @@ supporting the $500K ARR platform foundation.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, EmailStr, Field, ValidationInfo, field_validator
 
 # ===================================================================
 # ENUM TYPES

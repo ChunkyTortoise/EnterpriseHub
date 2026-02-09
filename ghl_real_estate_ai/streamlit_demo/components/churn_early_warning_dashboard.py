@@ -17,17 +17,15 @@ Author: EnterpriseHub AI
 Last Updated: 2026-01-09
 """
 
-import asyncio
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 # Component styling and configuration - only when run standalone
 if __name__ == "__main__":

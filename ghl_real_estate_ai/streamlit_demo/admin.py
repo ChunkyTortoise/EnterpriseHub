@@ -3,7 +3,6 @@ GHL Real Estate AI - Admin Dashboard
 Manage tenants and knowledge base.
 """
 
-import asyncio
 import json
 import os
 import sys

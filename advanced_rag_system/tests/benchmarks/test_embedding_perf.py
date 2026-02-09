@@ -10,7 +10,6 @@ import asyncio
 import os
 import sys
 import time
-from typing import List
 
 import numpy as np
 import pytest

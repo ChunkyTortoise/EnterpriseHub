@@ -6,14 +6,11 @@ Provides user profile data structures, preference extraction, and interest model
 
 from __future__ import annotations
 
-import asyncio
-import json
-import time
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar
+from typing import Any, Callable, Dict, List, Optional
 
 
 class PreferenceSource(Enum):

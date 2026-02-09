@@ -15,10 +15,8 @@ Follows established architecture patterns:
 - Event publishing and memory service integration
 """
 
-import logging
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, Query
 from pydantic import BaseModel, Field
@@ -26,7 +24,6 @@ from pydantic import BaseModel, Field
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.client_journey_mapping import (
-    JourneyHealthStatus,
     JourneyStage,
     MilestoneType,
     get_client_journey_mapping,

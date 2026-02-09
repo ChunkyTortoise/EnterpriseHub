@@ -6,27 +6,19 @@ Integrates with Stripe API for payment processing and invoice management.
 """
 
 import hashlib
-import hmac
 import os
 from datetime import datetime, timezone
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
 import stripe
 
 from ghl_real_estate_ai.api.schemas.billing import (
     SUBSCRIPTION_TIERS,
-    BillingError,
     CreateSubscriptionRequest,
     ModifySubscriptionRequest,
-    SubscriptionResponse,
-    SubscriptionStatus,
     SubscriptionTier,
     UsageRecordRequest,
-    UsageRecordResponse,
 )
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)

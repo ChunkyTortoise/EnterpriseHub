@@ -12,9 +12,7 @@ Tests cover:
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -27,7 +25,6 @@ except ImportError:
     HAS_PIL = False
 
 from src.core.exceptions import RetrievalError
-from src.core.types import Metadata, SearchResult
 from src.multimodal.structured_retriever import StructuredQuery
 from src.multimodal.unified_retriever import (
     QueryModality,

@@ -15,10 +15,9 @@ Author: Jorge's Real Estate AI Platform - Phase 3.3 Bot Workflow Integration
 """
 
 import json
-import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

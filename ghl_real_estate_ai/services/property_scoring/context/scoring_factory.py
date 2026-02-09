@@ -4,8 +4,7 @@ Factory Pattern implementation for creating and managing scoring strategies
 """
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type
 
 from ..interfaces.property_scorer import AdaptiveScorer, PropertyScorer, TrainableScorer
 from ..strategies.basic_property_scorer import BasicPropertyScorer

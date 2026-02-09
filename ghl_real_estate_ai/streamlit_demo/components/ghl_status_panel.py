@@ -2,7 +2,6 @@
 GHL Connection Status Panel - Shows real-time GoHighLevel integration status
 """
 
-from datetime import datetime
 from typing import Any, Dict
 
 import streamlit as st

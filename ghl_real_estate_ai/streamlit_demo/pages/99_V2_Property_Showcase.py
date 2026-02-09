@@ -1,11 +1,8 @@
 import asyncio
-import json
-import time
 
 import streamlit as st
 
 from ghl_real_estate_ai.agent_system.v2.conductor import process_request
-from ghl_real_estate_ai.services.ghl_integration_service import ghl_integration_service
 from ghl_real_estate_ai.services.performance_monitoring_service import performance_monitor
 from ghl_real_estate_ai.services.property_visualizer import PropertyVisualizer
 

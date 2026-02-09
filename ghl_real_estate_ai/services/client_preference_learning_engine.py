@@ -15,16 +15,11 @@ Features:
 Author: Jorge's Real Estate AI Platform - Phase 2.4 Implementation
 """
 
-import asyncio
-import hashlib
-import json
 import re
-import statistics
-from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 # Core service imports
 from ghl_real_estate_ai.services.cache_service import get_cache_service

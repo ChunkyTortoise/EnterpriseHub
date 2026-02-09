@@ -6,12 +6,11 @@ Provides fault tolerance for external service calls with intelligent recovery
 import asyncio
 import functools
 import logging
-import random
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

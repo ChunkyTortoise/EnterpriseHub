@@ -3,7 +3,7 @@ V2 Properties API Router
 Exposes the Modular Agentic Powerhouse analysis capabilities.
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field

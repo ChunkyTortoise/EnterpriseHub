@@ -3,9 +3,8 @@ Codebase Analysis Skills.
 Optimized for Gemini 2.0 with Context Caching.
 """
 
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

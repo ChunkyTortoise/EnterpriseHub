@@ -13,16 +13,14 @@ Key Features:
 - Automated fraud detection and anomaly identification
 """
 
-import asyncio
 import hashlib
-import json
 import logging
 import statistics
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

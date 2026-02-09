@@ -10,16 +10,12 @@ This module provides:
 - 6% commission optimization through predictive insights
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-
-import numpy as np
-import pandas as pd
+from typing import Any, Dict, List, Optional
 
 from ...ghl_utils.jorge_config import JorgeConfig
 from ...services.cache_service import CacheService

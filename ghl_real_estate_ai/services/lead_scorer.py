@@ -21,8 +21,6 @@ Lead Classifications (Jorge's Criteria):
 
 import hashlib
 import json
-import re
-from datetime import datetime
 from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.config import settings

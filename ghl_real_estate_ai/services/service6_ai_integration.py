@@ -26,29 +26,23 @@ Date: 2026-01-16
 """
 
 import asyncio
-import json
-import logging
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import all the advanced AI/ML components
 from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import (
-    MLFeatureVector,
     MLScoringResult,
     create_advanced_ml_scoring_engine,
 )
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
 from ghl_real_estate_ai.services.claude_platform_companion import ClaudePlatformCompanion
 from ghl_real_estate_ai.services.memory_service import MemoryService
-from ghl_real_estate_ai.services.mlops_pipeline import ModelMetadata, ModelPerformanceMetrics, create_mlops_pipeline
+from ghl_real_estate_ai.services.mlops_pipeline import create_mlops_pipeline
 from ghl_real_estate_ai.services.predictive_analytics_engine import (
-    AnomalyDetection,
-    BehavioralPattern,
     ContentPersonalization,
     create_predictive_analytics_engine,
 )
@@ -63,8 +57,6 @@ from ghl_real_estate_ai.services.realtime_inference_engine import (
 from ghl_real_estate_ai.services.tiered_cache_service import TieredCacheService
 from ghl_real_estate_ai.services.voice_ai_integration import (
     CallAnalysis,
-    LiveCoachingPrompt,
-    VoiceSegment,
     create_voice_ai_integration,
 )
 

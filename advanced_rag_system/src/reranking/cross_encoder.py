@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import time
 import warnings
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult

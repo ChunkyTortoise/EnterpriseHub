@@ -10,8 +10,6 @@ This module provides:
 - Real-time financial analytics and reporting
 """
 
-import asyncio
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

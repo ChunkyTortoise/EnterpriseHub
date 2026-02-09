@@ -18,14 +18,13 @@ Performance: <5ms message latency, 1000+ concurrent connections
 
 import asyncio
 import json
-import logging
 import time
 import uuid
 from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -33,8 +32,6 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.websocket_server import (
-    EventType,
-    RealTimeEvent,
     WebSocketManager,
     get_websocket_manager,
 )

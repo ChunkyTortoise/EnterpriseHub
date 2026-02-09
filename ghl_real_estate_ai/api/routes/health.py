@@ -9,12 +9,11 @@ Provides multiple levels of health checks:
 - Service dependencies
 """
 
-import asyncio
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -23,7 +22,7 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import get_database
-from ghl_real_estate_ai.services.monitoring_service import HealthStatus, MonitoringService
+from ghl_real_estate_ai.services.monitoring_service import MonitoringService
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
 
 logger = get_logger(__name__)

@@ -4,18 +4,14 @@ Creates unbeatable competitive advantages through domain-specific AI models.
 Trained on millions of customer interactions that competitors can't access.
 """
 
-import asyncio
-import json
 import logging
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional
 
 from ..core.llm_client import LLMClient
 from ..intelligence.collective_learning_engine import CollectiveLearningEngine

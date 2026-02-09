@@ -13,11 +13,8 @@ OPTIMIZATIONS:
 import asyncio
 import hashlib
 import json
-import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-import pandas as pd
 import streamlit as st
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -29,17 +26,11 @@ from ghl_real_estate_ai.utils.async_utils import safe_create_task
 logger = get_logger(__name__)
 
 # Import multi-market and churn recovery systems
-from ghl_real_estate_ai.markets.config_schemas import MarketConfig
 from ghl_real_estate_ai.markets.registry import MarketRegistry, get_market_service
 from ghl_real_estate_ai.services.churn_prediction_engine import (
     ChurnEventTracker,
-    ChurnEventType,
-    ChurnReason,
 )
 from ghl_real_estate_ai.services.reengagement_engine import (
-    CLVEstimate,
-    CLVTier,
-    RecoveryCampaignType,
     ReengagementEngine,
 )
 

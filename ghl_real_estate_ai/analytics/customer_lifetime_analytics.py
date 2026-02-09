@@ -33,27 +33,22 @@ Author: Claude Code Enterprise Analytics
 Created: January 2026
 """
 
-import asyncio
-import json
-import logging
 import warnings
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import DBSCAN, KMeans
 
 # ML imports
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
-from sklearn.metrics import classification_report, mean_squared_error, silhouette_score
+from sklearn.metrics import classification_report, mean_squared_error
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 

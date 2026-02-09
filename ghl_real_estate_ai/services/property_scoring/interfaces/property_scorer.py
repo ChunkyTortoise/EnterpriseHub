@@ -6,7 +6,7 @@ Defines the contract for all property scoring algorithms
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class ConfidenceLevel(Enum):

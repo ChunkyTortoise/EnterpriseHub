@@ -29,7 +29,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from .behavioral_triggers import BehavioralTriggerEngine
 from .churn_intervention_orchestrator import InterventionExecution, InterventionOrchestrator, InterventionStatus

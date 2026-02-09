@@ -3,9 +3,8 @@ Deal Closing Probability Predictor - Wow Factor Feature #4
 Uses ML-inspired algorithms to predict likelihood of closing
 """
 
-import math
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from datetime import datetime
+from typing import Dict, List
 
 
 class DealClosingPredictor:

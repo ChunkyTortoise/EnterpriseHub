@@ -5,9 +5,7 @@ Demonstrates structured delivery methodology for high-ticket consulting engageme
 Showcases project management, stakeholder coordination, and ROI tracking capabilities.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pandas as pd
 import plotly.express as px
@@ -16,13 +14,8 @@ import streamlit as st
 
 from ghl_real_estate_ai.services.consulting_delivery_service import (
     ConsultingDeliveryService,
-    ConsultingEngagement,
-    DeliverableStatus,
     EngagementStatus,
     EngagementTier,
-    ROIMetrics,
-    Stakeholder,
-    StakeholderRole,
 )
 
 

@@ -6,10 +6,9 @@ the dashboard frontend. Includes authentication, connection management,
 and administrative endpoints for monitoring WebSocket performance.
 """
 
-import asyncio
 import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import JSONResponse
@@ -18,7 +17,7 @@ from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.auth_service import UserRole, get_auth_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-from ghl_real_estate_ai.services.websocket_server import WebSocketClient, get_websocket_manager
+from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/websocket", tags=["Real-Time WebSocket"])

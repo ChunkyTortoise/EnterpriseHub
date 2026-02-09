@@ -34,16 +34,12 @@ Author: Claude Code Enterprise Analytics
 Created: January 2026
 """
 
-import asyncio
-import json
-import logging
-import pickle
 
 # Machine Learning imports
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -55,26 +51,19 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 import xgboost as xgb
-from sklearn.cluster import DBSCAN, KMeans
 from sklearn.ensemble import (
     GradientBoostingClassifier,
-    GradientBoostingRegressor,
-    IsolationForest,
     RandomForestClassifier,
-    RandomForestRegressor,
 )
-from sklearn.feature_selection import RFE, SelectFromModel
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import (
-    classification_report,
     mean_absolute_error,
     mean_squared_error,
     r2_score,
     roc_auc_score,
-    silhouette_score,
 )
-from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler, StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Time series forecasting
 try:

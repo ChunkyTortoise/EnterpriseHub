@@ -7,20 +7,16 @@ Provides explicit and implicit feedback collection with profile update mechanism
 from __future__ import annotations
 
 import asyncio
-import time
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar, Union
+from typing import Any, Dict, List, Optional, Union
 
 from src.personalization.profile_store import InMemoryProfileStore, ProfileStore
 from src.personalization.user_profile import (
     Interaction,
-    Interest,
     InterestModel,
-    Preference,
     PreferenceCategory,
     PreferenceSource,
     ProfileManager,

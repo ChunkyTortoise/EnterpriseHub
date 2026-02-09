@@ -15,16 +15,14 @@ Performance Impact: 90%+ latency reduction
 """
 
 import asyncio
-import json
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.websocket_server import EventType, RealTimeEvent, get_websocket_manager
 

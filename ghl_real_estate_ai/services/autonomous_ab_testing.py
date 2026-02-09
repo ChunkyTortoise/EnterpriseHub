@@ -18,21 +18,18 @@ Status: Production-Ready Autonomous Testing Intelligence
 
 import asyncio
 import json
-import logging
 import random
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-from scipy import stats
 
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.advanced_analytics_engine import get_advanced_analytics_engine
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.database_service import get_database
 
 logger = get_logger(__name__)
 
