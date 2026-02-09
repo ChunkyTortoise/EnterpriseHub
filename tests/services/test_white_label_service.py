@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for White-Label Service.
 
@@ -16,6 +19,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.white_label_service import (
+
+@pytest.mark.integration
     BrandingConfig,
     BrandingTier,
     IntegrationMarketplace,

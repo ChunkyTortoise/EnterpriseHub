@@ -1354,8 +1354,8 @@ class JorgeBuyerBot:
             # Feed metrics to alerting (non-blocking)
             try:
                 self.metrics_collector.feed_to_alerting(self.alerting_service)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to feed metrics to alerting: {str(e)}")
 
             # Record A/B test outcome (reuse variant from pre-workflow assignment)
             try:
@@ -1398,8 +1398,8 @@ class JorgeBuyerBot:
                 _fail_duration = (_time.time() - _workflow_start) * 1000
                 await self.performance_tracker.track_operation("buyer_bot", "process", _fail_duration, success=False)
                 self.metrics_collector.record_bot_interaction("buyer", duration_ms=_fail_duration, success=False)
-            except Exception:
-                pass
+            except Exception as ex:
+                logger.debug(f"Secondary failure in error metrics recording: {str(ex)}")
 
             logger.error(f"Error processing buyer conversation for {conversation_id}: {str(e)}")
             return {

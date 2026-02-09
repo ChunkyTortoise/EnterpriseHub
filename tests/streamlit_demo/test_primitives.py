@@ -54,6 +54,8 @@ def test_executive_dashboard_rendering():
     test_script = """
 import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.components.executive_dashboard import render_executive_dashboard
+
+@pytest.mark.integration
 render_executive_dashboard(mock_data=True)
 """
     at = AppTest.from_string(test_script)

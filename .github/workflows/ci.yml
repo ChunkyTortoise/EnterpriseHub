@@ -82,7 +82,7 @@ jobs:
         GHL_API_KEY: test-ghl-key-for-ci-only
         GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
-        pytest tests/unit/ --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=0 -v
+        pytest -m unit --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=0 -v
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -90,7 +90,7 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-unit-${{ matrix.python-version }}
-        fail_ci_if_error: false
+        fail_ci_if_error: true
 
   test-integration:
     name: Integration Tests
@@ -129,7 +129,7 @@ jobs:
         GHL_API_KEY: test-ghl-key-for-ci-only
         GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
-        pytest tests/integration/ -v --tb=short || true
+        pytest -m integration -v --tb=short
 
   type-check:
     name: Type Checking
@@ -150,7 +150,7 @@ jobs:
         pip install -r requirements-dev.txt
 
     - name: Run mypy
-      run: mypy app.py utils/
+      run: mypy ghl_real_estate_ai src utils advanced_rag_system app.py main.py mcp_server.py production_server.py admin_dashboard.py
 
   build:
     name: Build Check

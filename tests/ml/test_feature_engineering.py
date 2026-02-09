@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for ML feature engineering pipeline.
 """
@@ -10,6 +13,8 @@ import numpy as np
 import pytest
 
 from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer, MarketFeatures
+
+@pytest.mark.unit
 
 
 class TestFeatureEngineer:

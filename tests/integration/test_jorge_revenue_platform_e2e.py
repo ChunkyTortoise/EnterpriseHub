@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Jorge's Revenue Acceleration Platform - Comprehensive End-to-End Integration Tests
 Phase 4.1: Complete Workflow Validation

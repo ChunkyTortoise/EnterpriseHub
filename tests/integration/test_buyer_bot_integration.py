@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration tests for Jorge's Buyer Bot Ecosystem
 Tests end-to-end workflows, orchestrator integration, and real-time events.

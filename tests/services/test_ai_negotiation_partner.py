@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for AI Negotiation Partner system.
 
@@ -28,6 +31,8 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
     WinProbabilityAnalysis,
 )
 from ghl_real_estate_ai.services.ai_negotiation_partner import AINegotiationPartner
+
+@pytest.mark.integration
 
 
 @pytest.fixture

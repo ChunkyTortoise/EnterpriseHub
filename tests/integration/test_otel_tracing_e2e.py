@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """End-to-end integration tests for OpenTelemetry tracing.
 
 Verifies:
@@ -10,6 +13,8 @@ Verifies:
 from unittest.mock import patch
 
 import pytest
+
+@pytest.mark.integration
 
 
 def _otel_sdk_available() -> bool:

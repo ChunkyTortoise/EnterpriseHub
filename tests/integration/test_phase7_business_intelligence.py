@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Integration Tests for Phase 7 Business Intelligence System.
 
@@ -24,6 +27,8 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     import threading

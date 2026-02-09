@@ -19,6 +19,8 @@ from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     JorgeHandoffService,
 )
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
+
+@pytest.mark.unit
     SLA_CONFIG,
     PerformanceTracker,
 )

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Track 3.1 Predictive Intelligence - ML Analytics Engine Validation Tests
 ========================================================================
@@ -29,6 +32,8 @@ import pytest_asyncio
 # Import Track 3.1 components (skip if bots package unavailable)
 pytest.importorskip("bots", reason="bots package not available in EnterpriseHub standalone")
 from bots.shared.ml_analytics_engine import (
+
+@pytest.mark.integration
     ConfidenceLevel,
     ConversionProbabilityAnalysis,
     LeadJourneyPrediction,

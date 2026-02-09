@@ -1,9 +1,14 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for hybrid property recommender (Phase 5C)."""
 
 import numpy as np
 import pytest
 
 from ghl_real_estate_ai.ml.hybrid_recommender import (
+
+@pytest.mark.integration
     BuyerPreference,
     HybridPropertyRecommender,
     PropertyFeatures,

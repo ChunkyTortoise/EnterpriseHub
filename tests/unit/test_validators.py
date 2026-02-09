@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 """Unit tests for the validators module.
 
 Tests SchemaValidator, ConfidenceScorer, and ContradictionDetector classes
@@ -11,6 +14,8 @@ import pandas as pd
 import pytest
 
 from utils.validators import (
+
+@pytest.mark.integration
     ConfidenceScorer,
     Conflict,
     ContradictionDetector,

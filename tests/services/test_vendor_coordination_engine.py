@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Vendor Coordination Engine.
 Tests cover vendor management, scheduling, performance tracking, and automation.
@@ -11,6 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.vendor_coordination_engine import (
+
+@pytest.mark.integration
     AppointmentStatus,
     ServiceRequest,
     ServiceType,

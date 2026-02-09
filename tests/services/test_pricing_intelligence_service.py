@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Pricing Intelligence Service - Investment & Pricing Analysis
 
@@ -23,6 +26,8 @@ from ghl_real_estate_ai.services.dynamic_valuation_engine import (
     ValuationResult,
 )
 from ghl_real_estate_ai.services.pricing_intelligence_service import (
+
+@pytest.mark.unit
     InvestmentGrade,
     InvestmentMetrics,
     InvestmentOpportunity,

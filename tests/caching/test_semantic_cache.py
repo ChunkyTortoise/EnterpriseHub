@@ -18,6 +18,8 @@ import numpy as np
 import pytest
 
 from src.caching.semantic_cache import (
+
+@pytest.mark.integration
     CacheEntry,
     CacheKeyGenerator,
     EmbeddingService,

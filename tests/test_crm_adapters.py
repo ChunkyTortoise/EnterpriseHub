@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for CRM adapters -- GHL and HubSpot."""
 
 from __future__ import annotations
@@ -14,6 +17,8 @@ from ghl_real_estate_ai.services.crm.hubspot_adapter import (
     HubSpotError,
 )
 from ghl_real_estate_ai.services.crm.protocol import CRMContact, CRMProtocol
+
+@pytest.mark.integration
 
 # ------------------------------------------------------------------
 # Helpers

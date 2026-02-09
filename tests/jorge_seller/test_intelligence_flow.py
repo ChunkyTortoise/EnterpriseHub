@@ -11,6 +11,8 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 )
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
+@pytest.mark.integration
+
 
 class TestJorgeIntelligenceFlow:
     """

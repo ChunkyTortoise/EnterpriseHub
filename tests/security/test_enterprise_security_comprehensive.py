@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive Enterprise Security Test Suite
 Tests all security controls for Jorge's Revenue Acceleration Platform

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Predictive Analytics API endpoints.
 """
@@ -21,6 +24,8 @@ from ghl_real_estate_ai.services.action_recommendations import (
     TimingOptimization,
 )
 from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import LeadInsights, LeadPriority, PredictiveScore
+
+@pytest.mark.integration
 
 
 class TestPredictiveAnalyticsAPI:

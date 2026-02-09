@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Advanced Agent Ecosystem
 Tests ClaudeConciergeAgent, PropertyIntelligenceAgent, and CustomerJourneyOrchestrator
@@ -28,6 +31,8 @@ from ghl_real_estate_ai.agents.customer_journey_orchestrator import (
     JourneyTemplateEngine,
 )
 from ghl_real_estate_ai.agents.property_intelligence_agent import (
+
+@pytest.mark.integration
     InvestmentAnalysisEngine,
     InvestmentStrategy,
     PropertyDataCollector,

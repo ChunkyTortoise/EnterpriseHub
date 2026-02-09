@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Exception Escalation Engine.
 Tests cover exception detection, classification, resolution strategies, and escalation workflows.
@@ -9,6 +12,8 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.exception_escalation_engine import (

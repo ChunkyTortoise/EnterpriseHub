@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Integration tests for Jorge metrics persistence.
 
 Verifies the full flow from service layer through to repository calls:
@@ -21,6 +24,8 @@ from ghl_real_estate_ai.repositories.jorge_metrics_repository import (
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+@pytest.mark.integration
 
 
 @pytest.fixture(autouse=True)

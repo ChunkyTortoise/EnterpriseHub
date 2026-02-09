@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Smoke test for Enterprise Hub module structure.
 Verifies that all registered modules exist and are importable.
@@ -6,6 +9,8 @@ Verifies that all registered modules exist and are importable.
 import importlib
 
 import pytest
+
+@pytest.mark.unit
 
 try:
     from app import MODULES

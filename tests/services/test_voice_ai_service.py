@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Tests for Voice AI Service
 
@@ -16,6 +19,8 @@ import pytest
 import pytest_asyncio
 
 from ghl_real_estate_ai.services.voice_ai_service import (
+
+@pytest.mark.integration
     VoiceAIService,
     VoiceAnalytics,
     VoiceInteraction,

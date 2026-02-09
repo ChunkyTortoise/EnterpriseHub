@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Test suite for Client Retention Engine - Comprehensive client lifecycle management system
 """

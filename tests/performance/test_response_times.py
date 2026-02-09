@@ -28,6 +28,8 @@ import psutil
 import pytest
 import pytest_asyncio
 
+@pytest.mark.integration
+
 # ---------------------------------------------------------------------------
 # Performance Baseline Utility
 # ---------------------------------------------------------------------------

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for JorgeHandoffService seed data and DB persistence.
 
 Validates seed_historical_data generation, export/import,
@@ -10,6 +13,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+
+@pytest.mark.integration
     JorgeHandoffService,
 )
 

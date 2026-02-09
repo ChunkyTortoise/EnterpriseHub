@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for BotMetricsCollector.
 
 Covers interaction recording, input validation, handoff recording,
@@ -9,6 +12,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import (
+
+@pytest.mark.integration
     VALID_BOT_TYPES,
     BotMetricsCollector,
 )

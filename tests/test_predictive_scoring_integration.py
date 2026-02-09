@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 import asyncio
 import json
 import os
@@ -12,6 +15,8 @@ os.environ["GHL_LOCATION_ID"] = "loc-test-789"
 os.environ["JORGE_SELLER_MODE"] = "false"
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
+
+@pytest.mark.integration
 
 
 @pytest.mark.asyncio

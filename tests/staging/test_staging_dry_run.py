@@ -34,6 +34,8 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.ghl_utils.config import settings as app_settings
 from ghl_real_estate_ai.services.compliance_guard import (
+
+@pytest.mark.integration
     ComplianceGuard,
     ComplianceStatus,
     compliance_guard,

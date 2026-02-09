@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive Tests for Competitive Intelligence API Routes
 
@@ -27,6 +30,8 @@ try:
 except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
 from fastapi import FastAPI
+
+@pytest.mark.integration
 
 # Create test app
 app = FastAPI()

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for offer strategy advisor service.
 
 Validates market-aware offer recommendations including pricing,
@@ -7,6 +10,8 @@ contingencies, escalation clauses, and competitive assessments.
 import pytest
 
 from ghl_real_estate_ai.services.offer_advisor import OfferAdvisor, OfferStrategy
+
+@pytest.mark.unit
 
 
 @pytest.fixture

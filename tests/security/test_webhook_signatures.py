@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Webhook Signature Security Tests for Service 6
 
@@ -25,6 +28,8 @@ from unittest.mock import Mock, patch
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
+
+@pytest.mark.integration
 
 # Import the webhook handlers (assuming they exist)
 try:

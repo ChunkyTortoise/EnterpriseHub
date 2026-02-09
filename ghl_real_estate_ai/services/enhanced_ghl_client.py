@@ -856,7 +856,8 @@ class EnhancedGHLClient(GHLClient):
             if last_message_time:
                 silence_duration = datetime.utcnow() - last_message_time
                 return silence_duration > timedelta(hours=24)
-        except:
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Failed to check lead silence: {e}")
             pass
 
         return False
@@ -877,7 +878,8 @@ class EnhancedGHLClient(GHLClient):
             workflows = await self.get_workflows()
             active_workflows = [w for w in workflows if w.status == WorkflowStatus.ACTIVE]
             return len(active_workflows)
-        except:
+        except Exception as e:
+            logger.debug(f"Failed to get active sequences count: {e}")
             return 0
 
     async def _calculate_weekly_conversion_rate(self) -> float:
@@ -952,8 +954,8 @@ class EnhancedGHLClient(GHLClient):
             # If none work, try ISO format
             return datetime.fromisoformat(date_string.replace("Z", "+00:00"))
 
-        except Exception:
-            logger.warning(f"Failed to parse date: {date_string}")
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to parse date '{date_string}': {str(e)}")
             return None
 
 

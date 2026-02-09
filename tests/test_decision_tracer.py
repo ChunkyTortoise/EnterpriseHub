@@ -1,3 +1,9 @@
+import pytest
+pytestmark = pytest.mark.integration
+
+import pytest
+
+@pytest.mark.unit
 """Tests for RAG Decision Tracer."""
 
 from __future__ import annotations

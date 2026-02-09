@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """
 Comprehensive tests for Jorge Buyer Bot Implementation
 Tests JorgeBuyerBot, BuyerIntentDecoder, and buyer-specific workflows.

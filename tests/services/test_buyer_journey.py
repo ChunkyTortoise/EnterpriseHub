@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.integration
+
 """Tests for Buyer Journey Stage Tracking Service.
 
 Covers stage determination from buyer state, progression tracking,
@@ -11,6 +14,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from ghl_real_estate_ai.services.buyer_journey import (
+
+@pytest.mark.integration
     STAGE_ACTIONS,
     STAGE_TAGS,
     BuyerJourneyTracker,
