@@ -96,6 +96,12 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+reportMissingImports = false
+reportMissingModuleSource = false
+
 # pytest config in pytest.ini (takes precedence)
 
 [tool.coverage.run]
