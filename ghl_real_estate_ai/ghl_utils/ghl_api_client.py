@@ -4,10 +4,11 @@ Wrapper for GHL API v2 with Jorge's credentials integration.
 """
 
 import os
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-import requests
+import httpx
 
 
 class GHLAPIClient:
@@ -41,8 +42,25 @@ class GHLAPIClient:
             "Version": "2021-07-28",
             "Content-Type": "application/json",
         }
+        
+        # Connection pooling: max_connections=20, timeout=10s
+        self.client = httpx.AsyncClient(
+            headers=self.headers,
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=5),
+            timeout=httpx.Timeout(10.0),
+        )
 
-    def _make_request(
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.client.aclose()
+
+    async def close(self):
+        """Close the underlying HTTP client."""
+        await self.client.aclose()
+
+    async def _make_request(
         self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None
     ) -> Dict:
         """
@@ -60,8 +78,8 @@ class GHLAPIClient:
         url = f"{self.BASE_URL}/{endpoint}"
 
         try:
-            response = requests.request(
-                method=method, url=url, headers=self.headers, json=data, params=params, timeout=30
+            response = await self.client.request(
+                method=method, url=url, json=data, params=params
             )
 
             response.raise_for_status()
@@ -72,19 +90,26 @@ class GHLAPIClient:
                 "status_code": response.status_code,
             }
 
-        except requests.exceptions.HTTPError as e:
+        except httpx.HTTPStatusError as e:
+            error_data = {}
+            try:
+                if e.response.content:
+                    error_data = e.response.json()
+            except Exception:
+                pass
+                
             return {
                 "success": False,
                 "error": str(e),
-                "status_code": e.response.status_code if hasattr(e, "response") else 500,
-                "details": e.response.json() if hasattr(e, "response") and e.response.content else {},
+                "status_code": e.response.status_code,
+                "details": error_data,
             }
         except Exception as e:
             return {"success": False, "error": str(e), "status_code": 500}
 
     # ========== CONTACTS/LEADS ==========
 
-    def get_contacts(self, limit: int = 100, skip: int = 0, query: Optional[str] = None) -> Dict:
+    async def get_contacts(self, limit: int = 100, skip: int = 0, query: Optional[str] = None) -> Dict:
         """
         Get contacts/leads from GHL.
 
@@ -101,9 +126,9 @@ class GHLAPIClient:
         if query:
             params["query"] = query
 
-        return self._make_request("GET", "contacts", params=params)
+        return await self._make_request("GET", "contacts", params=params)
 
-    def get_contact(self, contact_id: str) -> Dict:
+    async def get_contact(self, contact_id: str) -> Dict:
         """
         Get single contact by ID.
 
@@ -113,9 +138,9 @@ class GHLAPIClient:
         Returns:
             Contact details
         """
-        return self._make_request("GET", f"contacts/{contact_id}")
+        return await self._make_request("GET", f"contacts/{contact_id}")
 
-    def create_contact(self, contact_data: Dict) -> Dict:
+    async def create_contact(self, contact_data: Dict) -> Dict:
         """
         Create new contact in GHL.
 
@@ -126,9 +151,9 @@ class GHLAPIClient:
             Created contact
         """
         contact_data["locationId"] = self.location_id
-        return self._make_request("POST", "contacts", data=contact_data)
+        return await self._make_request("POST", "contacts", data=contact_data)
 
-    def update_contact(self, contact_id: str, updates: Dict) -> Dict:
+    async def update_contact(self, contact_id: str, updates: Dict) -> Dict:
         """
         Update contact information.
 
@@ -139,9 +164,9 @@ class GHLAPIClient:
         Returns:
             Updated contact
         """
-        return self._make_request("PUT", f"contacts/{contact_id}", data=updates)
+        return await self._make_request("PUT", f"contacts/{contact_id}", data=updates)
 
-    def add_tag_to_contact(self, contact_id: str, tag: str) -> Dict:
+    async def add_tag_to_contact(self, contact_id: str, tag: str) -> Dict:
         """
         Add tag to contact.
 
@@ -152,11 +177,11 @@ class GHLAPIClient:
         Returns:
             Update result
         """
-        return self._make_request("POST", f"contacts/{contact_id}/tags", data={"tags": [tag]})
+        return await self._make_request("POST", f"contacts/{contact_id}/tags", data={"tags": [tag]})
 
     # ========== OPPORTUNITIES ==========
 
-    def get_opportunities(self, pipeline_id: Optional[str] = None, status: Optional[str] = None) -> Dict:
+    async def get_opportunities(self, pipeline_id: Optional[str] = None, status: Optional[str] = None) -> Dict:
         """
         Get opportunities (deals) from GHL.
 
@@ -174,9 +199,9 @@ class GHLAPIClient:
         if status:
             params["status"] = status
 
-        return self._make_request("GET", "opportunities", params=params)
+        return await self._make_request("GET", "opportunities", params=params)
 
-    def get_opportunity(self, opportunity_id: str) -> Dict:
+    async def get_opportunity(self, opportunity_id: str) -> Dict:
         """
         Get single opportunity by ID.
 
@@ -186,9 +211,9 @@ class GHLAPIClient:
         Returns:
             Opportunity details
         """
-        return self._make_request("GET", f"opportunities/{opportunity_id}")
+        return await self._make_request("GET", f"opportunities/{opportunity_id}")
 
-    def create_opportunity(self, opportunity_data: Dict) -> Dict:
+    async def create_opportunity(self, opportunity_data: Dict) -> Dict:
         """
         Create new opportunity.
 
@@ -199,9 +224,9 @@ class GHLAPIClient:
             Created opportunity
         """
         opportunity_data["locationId"] = self.location_id
-        return self._make_request("POST", "opportunities", data=opportunity_data)
+        return await self._make_request("POST", "opportunities", data=opportunity_data)
 
-    def update_opportunity(self, opportunity_id: str, updates: Dict) -> Dict:
+    async def update_opportunity(self, opportunity_id: str, updates: Dict) -> Dict:
         """
         Update opportunity.
 
@@ -212,22 +237,22 @@ class GHLAPIClient:
         Returns:
             Updated opportunity
         """
-        return self._make_request("PUT", f"opportunities/{opportunity_id}", data=updates)
+        return await self._make_request("PUT", f"opportunities/{opportunity_id}", data=updates)
 
     # ========== PIPELINES ==========
 
-    def get_pipelines(self) -> Dict:
+    async def get_pipelines(self) -> Dict:
         """
         Get all pipelines for location.
 
         Returns:
             List of pipelines
         """
-        return self._make_request("GET", f"opportunities/pipelines", params={"locationId": self.location_id})
+        return await self._make_request("GET", f"opportunities/pipelines", params={"locationId": self.location_id})
 
     # ========== CONVERSATIONS ==========
 
-    def get_conversations(self, contact_id: str) -> Dict:
+    async def get_conversations(self, contact_id: str) -> Dict:
         """
         Get conversations for a contact.
 
@@ -237,9 +262,9 @@ class GHLAPIClient:
         Returns:
             List of conversations
         """
-        return self._make_request("GET", f"conversations", params={"contactId": contact_id})
+        return await self._make_request("GET", f"conversations", params={"contactId": contact_id})
 
-    def send_message(self, contact_id: str, message: str, message_type: str = "SMS") -> Dict:
+    async def send_message(self, contact_id: str, message: str, message_type: str = "SMS") -> Dict:
         """
         Send message to contact.
 
@@ -253,20 +278,20 @@ class GHLAPIClient:
         """
         data = {"contactId": contact_id, "message": message, "type": message_type}
 
-        return self._make_request("POST", "conversations/messages", data=data)
+        return await self._make_request("POST", "conversations/messages", data=data)
 
     # ========== CUSTOM FIELDS ==========
 
-    def get_custom_fields(self) -> Dict:
+    async def get_custom_fields(self) -> Dict:
         """
         Get custom fields for location.
 
         Returns:
             List of custom fields
         """
-        return self._make_request("GET", "custom-fields", params={"locationId": self.location_id})
+        return await self._make_request("GET", "custom-fields", params={"locationId": self.location_id})
 
-    def update_custom_field(self, contact_id: str, field_id: str, field_value: Any) -> Dict:
+    async def update_custom_field(self, contact_id: str, field_id: str, field_value: Any) -> Dict:
         """
         Update custom field value for contact.
 
@@ -278,11 +303,11 @@ class GHLAPIClient:
         Returns:
             Update result
         """
-        return self.update_contact(contact_id, {"customFields": [{"id": field_id, "value": str(field_value)}]})
+        return await self.update_contact(contact_id, {"customFields": [{"id": field_id, "value": str(field_value)}]})
 
     # ========== HELPER METHODS ==========
 
-    def search_contacts_by_email(self, email: str) -> Dict:
+    async def search_contacts_by_email(self, email: str) -> Dict:
         """
         Search for contact by email.
 
@@ -292,9 +317,9 @@ class GHLAPIClient:
         Returns:
             Contact if found
         """
-        return self.get_contacts(query=email, limit=1)
+        return await self.get_contacts(query=email, limit=1)
 
-    def get_hot_leads(self, days: int = 7) -> Dict:
+    async def get_hot_leads(self, days: int = 7) -> Dict:
         """
         Get recently created leads (hot leads).
 
@@ -305,7 +330,7 @@ class GHLAPIClient:
             List of recent contacts
         """
         # Get recent contacts
-        contacts = self.get_contacts(limit=100)
+        contacts = await self.get_contacts(limit=100)
 
         if not contacts.get("success"):
             return contacts
@@ -323,14 +348,14 @@ class GHLAPIClient:
 
         return {"success": True, "data": {"contacts": recent_contacts, "count": len(recent_contacts)}}
 
-    def get_deal_pipeline_summary(self) -> Dict:
+    async def get_deal_pipeline_summary(self) -> Dict:
         """
         Get summary of all deals in pipeline.
 
         Returns:
             Pipeline summary with counts and values
         """
-        opportunities = self.get_opportunities()
+        opportunities = await self.get_opportunities()
 
         if not opportunities.get("success"):
             return opportunities
@@ -356,7 +381,7 @@ class GHLAPIClient:
 
         return {"success": True, "data": summary}
 
-    def health_check(self) -> Dict:
+    async def health_check(self) -> Dict:
         """
         Check API connection health.
 
@@ -365,7 +390,7 @@ class GHLAPIClient:
         """
         try:
             # Try simple contacts request
-            result = self.get_contacts(limit=1)
+            result = await self.get_contacts(limit=1)
 
             return {
                 "healthy": result.get("success", False),
@@ -396,33 +421,37 @@ def get_jorge_client() -> GHLAPIClient:
 
 
 if __name__ == "__main__":
-    # Demo usage
-    print("🔌 GHL API Client - Connection Test\n")
+    # Demo usage (using asyncio loop)
+    async def main():
+        print("🔌 GHL API Client - Connection Test\n")
 
-    try:
-        client = get_jorge_client()
-        health = client.health_check()
+        try:
+            client = get_jorge_client()
+            async with client as active_client:
+                health = await active_client.health_check()
 
-        print(f"API Health: {'✅ Healthy' if health['healthy'] else '❌ Unhealthy'}")
-        print(f"Location ID: {health['location_id']}")
-        print(f"Checked At: {health['checked_at']}")
+                print(f"API Health: {'✅ Healthy' if health['healthy'] else '❌ Unhealthy'}")
+                print(f"Location ID: {health['location_id']}")
+                print(f"Checked At: {health['checked_at']}")
 
-        if health["healthy"]:
-            print("\n📊 Testing API Endpoints...")
+                if health["healthy"]:
+                    print("\n📊 Testing API Endpoints...")
 
-            # Test contacts
-            contacts = client.get_contacts(limit=5)
-            if contacts["success"]:
-                count = len(contacts.get("data", {}).get("contacts", []))
-                print(f"✅ Contacts: Retrieved {count} contacts")
+                    # Test contacts
+                    contacts = await active_client.get_contacts(limit=5)
+                    if contacts["success"]:
+                        count = len(contacts.get("data", {}).get("contacts", []))
+                        print(f"✅ Contacts: Retrieved {count} contacts")
 
-            # Test opportunities
-            opps = client.get_opportunities()
-            if opps["success"]:
-                count = len(opps.get("data", {}).get("opportunities", []))
-                print(f"✅ Opportunities: Retrieved {count} deals")
+                    # Test opportunities
+                    opps = await active_client.get_opportunities()
+                    if opps["success"]:
+                        count = len(opps.get("data", {}).get("opportunities", []))
+                        print(f"✅ Opportunities: Retrieved {count} deals")
 
-            print("\n🎉 All API endpoints working!")
+                    print("\n🎉 All API endpoints working!")
 
-    except Exception as e:
-        print(f"❌ Error: {e}")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+
+    asyncio.run(main())

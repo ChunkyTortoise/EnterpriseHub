@@ -3,6 +3,7 @@ Leads and Conversations API Router
 Integrates frontend Elite Dashboard with GHL production services
 """
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -19,31 +20,22 @@ from ghl_real_estate_ai.services.websocket_server import EventType, RealTimeEven
 logger = get_logger(__name__)
 router = APIRouter(tags=["Leads Management"])
 
-# Lazy service singletons — defer initialization until first request
-_memory_service = None
-_lead_scorer = None
-_property_matcher = None
+
+# --- DEPENDENCIES ---
+
+def get_memory_service() -> MemoryService:
+    """Dependency to get MemoryService instance"""
+    return MemoryService()
 
 
-def _get_memory_service():
-    global _memory_service
-    if _memory_service is None:
-        _memory_service = MemoryService()
-    return _memory_service
+def get_lead_scorer() -> LeadScorer:
+    """Dependency to get LeadScorer instance"""
+    return LeadScorer()
 
 
-def _get_lead_scorer():
-    global _lead_scorer
-    if _lead_scorer is None:
-        _lead_scorer = LeadScorer()
-    return _lead_scorer
-
-
-def _get_property_matcher():
-    global _property_matcher
-    if _property_matcher is None:
-        _property_matcher = PropertyMatcher()
-    return _property_matcher
+def get_property_matcher() -> PropertyMatcher:
+    """Dependency to get PropertyMatcher instance"""
+    return PropertyMatcher()
 
 
 def get_ghl_client() -> GHLAPIClient:
@@ -57,33 +49,37 @@ async def list_leads(
     status: Optional[str] = None,
     limit: int = Query(default=20, ge=1, le=100),
     ghl: GHLAPIClient = Depends(get_ghl_client),
+    memory_service: MemoryService = Depends(get_memory_service),
+    lead_scorer: LeadScorer = Depends(get_lead_scorer),
 ):
     """
     List all leads with formatting for Elite Dashboard.
     """
     try:
-        # Fetch contacts from GHL
-        result = ghl.get_contacts(limit=limit)
+        # Fetch contacts from GHL (now async)
+        result = await ghl.get_contacts(limit=limit)
         if not result.get("success"):
             raise HTTPException(status_code=500, detail="Failed to fetch contacts from GHL")
 
         contacts = result.get("data", {}).get("contacts", [])
 
-        formatted_leads = []
-        for contact in contacts:
-            contact_id = contact.get("id")
+        # ENTERPRISE PERFORMANCE FIX: Use batch fetching for contexts to avoid N+1 queries
+        contact_ids = [c.get("id") for c in contacts]
+        contexts_map = await memory_service.get_context_batch(contact_ids)
 
-            # Get lead score and temperature
-            context = await _get_memory_service().get_context(contact_id)
+        async def format_lead_with_context(contact):
+            contact_id = contact.get("id")
+            context = contexts_map.get(contact_id)
+            
             score = 0
             temperature = "cold"
             pcs_score = 0
 
             if context:
                 # Calculate Jorge's question count score
-                question_count = await _get_lead_scorer().calculate(context)
+                question_count = await lead_scorer.calculate(context)
                 # Convert to percentage for Elite Dashboard
-                score = _get_lead_scorer().get_percentage_score(question_count)
+                score = lead_scorer.get_percentage_score(question_count)
 
                 # Get PCS score if available
                 lead_intel = context.get("lead_intelligence", {})
@@ -92,27 +88,28 @@ async def list_leads(
                     pcs_score = context.get("psychological_commitment", 0)
 
                 # Map score to temperature
-                temperature = _get_lead_scorer().classify(question_count)
+                temperature = lead_scorer.classify(question_count)
 
             # Use tags to override status if present (GHL convention)
             tags = contact.get("tags", [])
             lead_status = _map_ghl_status(contact.get("type", "new"), tags)
 
-            formatted_leads.append(
-                {
-                    "id": contact_id,
-                    "firstName": contact.get("firstName", ""),
-                    "lastName": contact.get("lastName", ""),
-                    "email": contact.get("email", ""),
-                    "phone": contact.get("phone", ""),
-                    "status": lead_status,
-                    "temperature": temperature,
-                    "score": score,
-                    "pcsScore": pcs_score,
-                    "ghlContactId": contact_id,
-                    "lastContact": contact.get("dateUpdated", contact.get("dateAdded", datetime.now().isoformat())),
-                }
-            )
+            return {
+                "id": contact_id,
+                "firstName": contact.get("firstName", ""),
+                "lastName": contact.get("lastName", ""),
+                "email": contact.get("email", ""),
+                "phone": contact.get("phone", ""),
+                "status": lead_status,
+                "temperature": temperature,
+                "score": score,
+                "pcsScore": pcs_score,
+                "ghlContactId": contact_id,
+                "lastContact": contact.get("dateUpdated", contact.get("dateAdded", datetime.now().isoformat())),
+            }
+
+        # Execute parallel formatting (scoring is still parallel but context is already fetched)
+        formatted_leads = await asyncio.gather(*[format_lead_with_context(c) for c in contacts])
 
         # Filter by status if provided
         if status:
@@ -128,7 +125,9 @@ async def list_leads(
 # --- ENDPOINT 2: PATCH /api/leads/{lead_id}/status ---
 @router.patch("/leads/{lead_id}/status")
 async def update_lead_status(
-    lead_id: str, status_update: Dict[str, Any] = Body(...), ghl: GHLAPIClient = Depends(get_ghl_client)
+    lead_id: str, 
+    status_update: Dict[str, Any] = Body(...), 
+    ghl: GHLAPIClient = Depends(get_ghl_client)
 ):
     """
     Update lead status and metrics in GHL.
@@ -143,7 +142,7 @@ async def update_lead_status(
         # 1. Update Status (via Tags)
         if new_status:
             tag = f"Status-{new_status.title()}"
-            result = ghl.add_tag_to_contact(lead_id, tag)
+            result = await ghl.add_tag_to_contact(lead_id, tag)
             if not result.get("success"):
                 logger.warning(f"Failed to update tag for {lead_id}: {result.get('error')}")
             else:
@@ -151,7 +150,7 @@ async def update_lead_status(
 
         # 2. Update Temperature Custom Field
         if new_temp and settings.custom_field_seller_temperature:
-            result = ghl.update_custom_field(lead_id, settings.custom_field_seller_temperature, new_temp)
+            result = await ghl.update_custom_field(lead_id, settings.custom_field_seller_temperature, new_temp)
             if not result.get("success"):
                 logger.warning(f"Failed to update temperature field for {lead_id}: {result.get('error')}")
             else:
@@ -159,7 +158,7 @@ async def update_lead_status(
 
         # 3. Update PCS Score Custom Field
         if new_pcs is not None and settings.custom_field_pcs_score:
-            result = ghl.update_custom_field(lead_id, settings.custom_field_pcs_score, new_pcs)
+            result = await ghl.update_custom_field(lead_id, settings.custom_field_pcs_score, new_pcs)
             if not result.get("success"):
                 logger.warning(f"Failed to update PCS field for {lead_id}: {result.get('error')}")
             else:
@@ -191,12 +190,17 @@ async def update_lead_status(
 
 # --- ENDPOINT 3: GET /api/leads/{lead_id}/property-matches ---
 @router.get("/leads/{lead_id}/property-matches")
-async def get_lead_property_matches(lead_id: str, limit: int = 5):
+async def get_lead_property_matches(
+    lead_id: str, 
+    limit: int = 5,
+    memory_service: MemoryService = Depends(get_memory_service),
+    property_matcher: PropertyMatcher = Depends(get_property_matcher)
+):
     """
     Get AI-ranked property matches for a lead.
     """
     try:
-        context = await _get_memory_service().get_context(lead_id)
+        context = await memory_service.get_context(lead_id)
         if not context:
             return []
 
@@ -204,7 +208,7 @@ async def get_lead_property_matches(lead_id: str, limit: int = 5):
         if not preferences:
             return []
 
-        matches = _get_property_matcher().find_matches(preferences, limit=limit)
+        matches = property_matcher.find_matches(preferences, limit=limit)
 
         # Format for frontend PropertyMatch interface
         formatted_matches = []
@@ -233,18 +237,22 @@ async def get_lead_property_matches(lead_id: str, limit: int = 5):
 
 # --- ENDPOINT 4: GET /api/conversations/{conversation_id}/messages ---
 @router.get("/conversations/{conversation_id}/messages")
-async def get_conversation_messages(conversation_id: str, ghl: GHLAPIClient = Depends(get_ghl_client)):
+async def get_conversation_messages(
+    conversation_id: str, 
+    ghl: GHLAPIClient = Depends(get_ghl_client),
+    memory_service: MemoryService = Depends(get_memory_service)
+):
     """
     Fetch message history for a conversation.
     Note: conversation_id usually maps to contact_id in our simplified Elite Dashboard.
     """
     try:
-        # GHL API v2 uses contactId to find conversations
-        result = ghl.get_conversations(contact_id=conversation_id)
+        # GHL API v2 uses contactId to find conversations (now async)
+        result = await ghl.get_conversations(contact_id=conversation_id)
 
         if not result.get("success"):
             # Fallback to memory if GHL fails or returns nothing
-            context = await _get_memory_service().get_context(conversation_id)
+            context = await memory_service.get_context(conversation_id)
             if context:
                 history = context.get("conversation_history", [])
                 return [
