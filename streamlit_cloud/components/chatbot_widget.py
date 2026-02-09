@@ -253,10 +253,9 @@ class ChatbotWidget:
             "buyer": "\U0001f3e0 Buyer Bot",
             "seller": "\U0001f4b0 Seller Bot",
         }
-        st.sidebar.markdown(
-            f"**Active Bot:** "
-            f"{bot_labels.get(st.session_state['bot_type'], '\U0001f3af Lead Bot')}"
-        )
+        default_label = "\U0001f3af Lead Bot"
+        bot_label = bot_labels.get(st.session_state['bot_type'], default_label)
+        st.sidebar.markdown(f"**Active Bot:** {bot_label}")
 
     def render_chat(self) -> None:
         """Render the chat interface."""

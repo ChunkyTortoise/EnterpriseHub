@@ -4,9 +4,10 @@ Tests for Portal API endpoints.
 Tests the FastAPI routes for swipe actions.
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import Mock, AsyncMock, patch
 
 from ghl_real_estate_ai.api.main import app
 
