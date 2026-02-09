@@ -1,0 +1,1 @@
+"""Industry-specific BotPersonality implementations."""

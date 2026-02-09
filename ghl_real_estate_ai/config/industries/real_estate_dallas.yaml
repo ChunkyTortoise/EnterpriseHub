@@ -1,0 +1,147 @@
+# Dallas/DFW Real Estate — Industry Config
+# Extracted from: jorge_real_estate_bots bots/shared/config.py
+industry: real_estate
+
+market:
+  name: Dallas-Fort Worth Metroplex
+  state: TX
+  regulatory_authority: Texas Real Estate Commission (TREC)
+  service_areas:
+    - Dallas
+    - Plano
+    - Frisco
+    - McKinney
+    - Allen
+  neighborhoods:
+    - name: Plano
+      median_price: 450000
+      characteristics: [Top schools, Corporate headquarters, Family-friendly]
+    - name: Frisco
+      median_price: 525000
+      characteristics: [Rapid growth, New construction, Sports venues]
+    - name: McKinney
+      median_price: 400000
+      characteristics: [Historic downtown, Affordable, Growing community]
+    - name: Allen
+      median_price: 420000
+      characteristics: [Excellent schools, Quiet suburbs, Parks]
+  price_ranges:
+    entry_level: {min: 200000, max: 350000, description: Starter homes and condos}
+    mid_market: {min: 350000, max: 550000, description: Family homes}
+    luxury: {min: 550000, max: 800000, description: Premium homes}
+  compliance_notes:
+    - Licensed by the Texas Real Estate Commission (TREC)
+    - Texas Property Code disclosure requirements
+    - Seller's Disclosure Notice required
+    - Equal Housing Opportunity
+
+personality:
+  name: Jorge Salas
+  role: Real Estate Professional
+  approach: HELPFUL, CONSULTATIVE, and RELATIONSHIP-FOCUSED
+  core_values:
+    - Put the client's success first
+    - Build trust through expertise and care
+    - Provide valuable insights and education
+    - Be patient and understanding
+    - Focus on long-term relationships
+  system_prompt_template: |
+    You are {{ name }}, a caring and knowledgeable real estate professional
+    specializing in the Dallas-Fort Worth area.
+    Your approach is: {{ approach }}.
+
+    CORE VALUES:
+    {% for value in core_values %}- {{ value }}
+    {% endfor %}
+    CURRENT CONTEXT:
+    Lead: {{ lead_name }}
+    Tone Mode: {{ tone_mode }}
+  tone_instructions:
+    empathetic: Be warm, caring, and understanding
+    professional: Be direct, efficient, and knowledgeable
+  phrases:
+    greeting: ["Hey there! I'm Jorge — ready to help you find your DFW dream home."]
+    closing: ["Let's make this happen for you!"]
+
+intents:
+  motivation:
+    high: [need to sell fast, relocating, behind on payments, divorce, estate]
+    medium: [thinking about it, might sell next year, curious about value]
+    low: [just browsing, not sure]
+  timeline:
+    high: [asap, 30 days, this month, immediately]
+    medium: [soon, this year, flexible]
+    low: [eventually, maybe later]
+  condition:
+    high: [as-is, needs work, fixer, discount]
+    medium: [minor fixes, flexible on condition]
+    low: [perfect, turnkey, premium pricing]
+  price:
+    high: [zestimate, comps, comparable, market value]
+    medium: [range, negotiable]
+    low: []
+  buyer_patterns:
+    - looking for
+    - want to buy
+    - pre-approved
+    - mortgage
+    - budget
+    - house hunting
+  seller_patterns:
+    - want to sell
+    - sell my
+    - home value
+    - thinking about selling
+    - need to sell
+  scoring_weights:
+    motivation: 0.35
+    timeline: 0.30
+    condition: 0.20
+    price: 0.15
+  temperature_thresholds:
+    hot: 75
+    warm: 50
+    lukewarm: 25
+
+questions:
+  questions:
+    - {id: 1, text: "What's your timeline for selling?"}
+    - {id: 2, text: "What's driving you to sell the property?"}
+    - {id: 3, text: "What's your bottom-line number?"}
+    - {id: 4, text: "Are you flexible on the closing date?"}
+  follow_ups:
+    zestimate:
+      - "Online estimates are a starting point! Let me show you what DFW homes actually sell for."
+    thinking:
+      - "Take your time — what questions can I help answer?"
+  accelerators:
+    - "Sounds like you're ready! Want to schedule a time to discuss your options?"
+    - "Based on what you've shared, let's find a time to create your plan."
+
+handoff:
+  thresholds:
+    default: 0.7
+    lead_to_buyer: 0.7
+    lead_to_seller: 0.7
+  rate_limits:
+    per_hour: 3
+    per_day: 10
+  circular_prevention_window: 1800
+  buyer_intent_patterns:
+    - \bi\s+want\s+to\s+buy\b
+    - \blooking\s+to\s+buy\b
+    - \bbudget\b.*\$
+    - \bpre[- ]?approv
+    - \bdown\s+payment\b
+  seller_intent_patterns:
+    - \bsell\s+my\s+(home|house|property)\b
+    - \bhome\s+valu
+    - \bneed\s+to\s+sell\b
+
+business_rules:
+  commission_standard: 0.06
+  commission_minimum: 0.04
+  preferred_timeline_days: 60
+  sms_max_length: 160
+  min_price: 200000
+  max_price: 800000

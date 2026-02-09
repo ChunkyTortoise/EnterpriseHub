@@ -118,9 +118,38 @@ class JorgeHandoffService:
         r"\bsell\s+first\b",
     ]
 
-    def __init__(self, analytics_service=None):
+    def __init__(self, analytics_service=None, industry_config=None):
         self.analytics_service = analytics_service
         self._repository: Any = None
+
+        # Wire industry config into instance-level patterns and thresholds
+        cfg = industry_config
+        if cfg and cfg.handoff.buyer_intent_patterns:
+            self._buyer_intent_patterns = cfg.handoff.buyer_intent_patterns
+        else:
+            self._buyer_intent_patterns = list(self.BUYER_INTENT_PATTERNS)
+
+        if cfg and cfg.handoff.seller_intent_patterns:
+            self._seller_intent_patterns = cfg.handoff.seller_intent_patterns
+        else:
+            self._seller_intent_patterns = list(self.SELLER_INTENT_PATTERNS)
+
+        # Wire thresholds from config
+        if cfg and cfg.handoff.thresholds:
+            self._thresholds = dict(self.THRESHOLDS)  # start with defaults
+            default_thresh = cfg.handoff.thresholds.get("default")
+            if default_thresh is not None:
+                # Apply config default threshold to all routes
+                for key in self._thresholds:
+                    self._thresholds[key] = default_thresh
+                # Then apply any route-specific overrides from config
+                for key_str, val in cfg.handoff.thresholds.items():
+                    if key_str != "default" and "->" in key_str:
+                        parts = key_str.split("->")
+                        if len(parts) == 2:
+                            self._thresholds[(parts[0].strip(), parts[1].strip())] = val
+        else:
+            self._thresholds = dict(self.THRESHOLDS)
 
     # ── Persistence Configuration ─────────────────────────────────────
 
@@ -620,7 +649,7 @@ class JorgeHandoffService:
         if target == current_bot:
             return None
 
-        threshold = self.THRESHOLDS.get((current_bot, target))
+        threshold = self._thresholds.get((current_bot, target), self.THRESHOLDS.get((current_bot, target)))
         if threshold is None:
             return None
 
@@ -899,9 +928,11 @@ class JorgeHandoffService:
             "sample_size": sample_size,
         }
 
-    @classmethod
-    def extract_intent_signals_from_history(cls, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
+    def extract_intent_signals_from_history(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
         """Scan recent conversation history for intent patterns.
+
+        Uses instance-level patterns (wired from IndustryConfig) with
+        fallback to class-level defaults.
 
         Examines up to the last 5 messages and aggregates buyer/seller
         intent signals with confidence scores.
@@ -914,6 +945,9 @@ class JorgeHandoffService:
             Dict mapping signal names to confidence scores, e.g.:
             {"buyer_intent": 0.6, "seller_intent": 0.3}
         """
+        buyer_patterns = getattr(self, "_buyer_intent_patterns", self.BUYER_INTENT_PATTERNS)
+        seller_patterns = getattr(self, "_seller_intent_patterns", self.SELLER_INTENT_PATTERNS)
+
         recent = conversation_history[-5:] if conversation_history else []
         buyer_total = 0
         seller_total = 0
@@ -923,11 +957,11 @@ class JorgeHandoffService:
             if not isinstance(text, str) or not text.strip():
                 continue
 
-            for pattern in cls.BUYER_INTENT_PATTERNS:
+            for pattern in buyer_patterns:
                 if re.search(pattern, text, re.IGNORECASE):
                     buyer_total += 1
 
-            for pattern in cls.SELLER_INTENT_PATTERNS:
+            for pattern in seller_patterns:
                 if re.search(pattern, text, re.IGNORECASE):
                     seller_total += 1
 
@@ -939,3 +973,15 @@ class JorgeHandoffService:
             signals["seller_intent"] = min(1.0, round(seller_total * 0.2, 2))
 
         return signals
+
+    @classmethod
+    def extract_intent_signals_from_history_cls(cls, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
+        """Backward-compatible classmethod wrapper for extract_intent_signals_from_history.
+
+        Uses class-level patterns (no config). Prefer the instance method when
+        an IndustryConfig is available.
+        """
+        instance = cls.__new__(cls)
+        instance._buyer_intent_patterns = list(cls.BUYER_INTENT_PATTERNS)
+        instance._seller_intent_patterns = list(cls.SELLER_INTENT_PATTERNS)
+        return instance.extract_intent_signals_from_history(conversation_history)

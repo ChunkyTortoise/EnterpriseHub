@@ -25,8 +25,13 @@ class BuyerIntentDecoder:
     Implements buyer-specific FRS and Motivation scoring for purchase qualification.
     """
 
-    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None):
+    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None, industry_config: Optional["IndustryConfig"] = None):
         self.ghl_client = ghl_client
+
+        # Load industry config for config-first marker initialization
+        from ghl_real_estate_ai.config.industry_config import IndustryConfig
+
+        cfg = industry_config
 
         # Financial Readiness Markers
         self.high_finance_readiness = [
@@ -44,10 +49,19 @@ class BuyerIntentDecoder:
         self.flexible_budget = ["around", "approximately", "roughly", "ballpark"]
         self.vague_budget = ["not sure", "depends", "varies", "flexible"]
 
-        # Urgency Markers
-        self.immediate_urgency = ["need to move", "lease ending", "must buy", "urgent", "this month"]
-        self.medium_urgency = ["looking seriously", "want to move", "ready to buy", "3 months"]
-        self.low_urgency = ["just looking", "browsing", "might buy", "eventually", "someday"]
+        # Urgency Markers (config-first, hardcoded fallback)
+        self.immediate_urgency = (
+            cfg.intents.timeline.high if cfg and cfg.intents.timeline.high
+            else ["need to move", "lease ending", "must buy", "urgent", "this month"]
+        )
+        self.medium_urgency = (
+            cfg.intents.timeline.medium if cfg and cfg.intents.timeline.medium
+            else ["looking seriously", "want to move", "ready to buy", "3 months"]
+        )
+        self.low_urgency = (
+            cfg.intents.motivation.low if cfg and cfg.intents.motivation.low
+            else ["just looking", "browsing", "might buy", "eventually", "someday"]
+        )
 
         # Timeline Markers
         self.committed_timeline = ["by", "before", "deadline", "need to close", "must move"]
