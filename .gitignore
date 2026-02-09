@@ -130,6 +130,7 @@ logs/
 .cache/
 *.cache
 .chroma_db/
+data/chroma/
 .benchmarks/
 
 # MCP Configuration (contains local paths and secrets)
