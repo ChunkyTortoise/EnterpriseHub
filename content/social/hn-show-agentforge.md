@@ -2,7 +2,7 @@
 
 **Title:** Show HN: AgentForge — Multi-LLM orchestrator in 15KB
 
-**URL:** https://github.com/ChunkyTortoise/agentforge
+**URL:** https://github.com/ChunkyTortoise/ai-orchestrator
 
 ---
 
@@ -117,8 +117,8 @@ pip install agentforge
 Or from source:
 
 ```bash
-git clone https://github.com/ChunkyTortoise/agentforge
-cd agentforge
+git clone https://github.com/ChunkyTortoise/ai-orchestrator
+cd ai-orchestrator
 pip install -e .
 ```
 
@@ -167,7 +167,7 @@ class ChatBot(Agent):
 ## Project Structure
 
 ```
-agentforge/
+ai-orchestrator/
 ├── core/
 │   ├── agent.py         # Base agent class
 │   ├── orchestrator.py  # Task routing
@@ -209,7 +209,7 @@ MIT. Free for commercial use.
 
 ---
 
-**GitHub**: https://github.com/ChunkyTortoise/agentforge
+**GitHub**: https://github.com/ChunkyTortoise/ai-orchestrator
 
 **Demo**: https://ct-agentforge.streamlit.app
 
