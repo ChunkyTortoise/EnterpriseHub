@@ -147,7 +147,6 @@
           },
           "recent_actions": {
             "items": {
-              "additionalProperties": true,
               "type": "object"
             },
             "title": "Recent Actions",
@@ -279,7 +278,6 @@
           "feedback": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -361,7 +359,6 @@
             "type": "string"
           },
           "feedback": {
-            "additionalProperties": true,
             "title": "Feedback",
             "type": "object"
           },
@@ -635,7 +632,6 @@
           "arguments": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
