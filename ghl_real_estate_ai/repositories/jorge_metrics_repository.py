@@ -602,6 +602,153 @@ class JorgeMetricsRepository:
             logger.warning("Failed to load handoff outcomes: %s", exc)
             return []
 
+    # ── Objection Events ─────────────────────────────────────────────
+
+    async def save_objection_event(
+        self,
+        contact_id: str,
+        objection_type: str,
+        objection_category: str,
+        confidence: float,
+        matched_text: Optional[str],
+        graduation_level: str,
+        response_variant: int,
+        response_text: Optional[str],
+        market_data: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Insert an objection handling event.
+
+        Args:
+            contact_id: GHL contact ID.
+            objection_type: Specific objection type (e.g., "pricing_general").
+            objection_category: High-level category (e.g., "pricing").
+            confidence: Detection confidence score (0.0-1.0).
+            matched_text: Text fragment that triggered detection.
+            graduation_level: Response level (validate, data, social_proof, market_test).
+            response_variant: A/B test variant index.
+            response_text: Actual response text sent.
+            market_data: Optional market data used in response.
+        """
+        try:
+            pool = await self._get_pool()
+            await pool.execute(
+                """
+                INSERT INTO objection_events
+                    (contact_id, objection_type, objection_category, confidence,
+                     matched_text, graduation_level, response_variant, response_text,
+                     market_data, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+                """,
+                contact_id,
+                objection_type,
+                objection_category,
+                confidence,
+                matched_text,
+                graduation_level,
+                response_variant,
+                response_text,
+                json.dumps(market_data) if market_data else None,
+            )
+        except Exception as exc:
+            logger.warning("Failed to save objection event: %s", exc)
+
+    async def update_objection_outcome(
+        self,
+        contact_id: str,
+        objection_type: str,
+        outcome: str,
+    ) -> None:
+        """Update the outcome of the most recent objection event for a contact.
+
+        Args:
+            contact_id: GHL contact ID.
+            objection_type: Specific objection type to update.
+            outcome: One of "resolved", "unresolved", "escalated".
+        """
+        try:
+            pool = await self._get_pool()
+            await pool.execute(
+                """
+                UPDATE objection_events
+                SET outcome = $1, outcome_timestamp = NOW(), updated_at = NOW()
+                WHERE contact_id = $2 AND objection_type = $3
+                  AND id = (
+                      SELECT id FROM objection_events
+                      WHERE contact_id = $2 AND objection_type = $3
+                      ORDER BY created_at DESC
+                      LIMIT 1
+                  )
+                """,
+                outcome,
+                contact_id,
+                objection_type,
+            )
+        except Exception as exc:
+            logger.warning("Failed to update objection outcome: %s", exc)
+
+    async def load_objection_events(
+        self,
+        since_timestamp: float,
+        objection_category: Optional[str] = None,
+        contact_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Load objection events since a Unix timestamp.
+
+        Args:
+            since_timestamp: Unix timestamp cutoff.
+            objection_category: Optional filter by category.
+            contact_id: Optional filter by contact.
+
+        Returns:
+            List of dicts with objection event data.
+        """
+        try:
+            pool = await self._get_pool()
+            query = """
+                SELECT id, contact_id, objection_type, objection_category,
+                       confidence, matched_text, graduation_level, response_variant,
+                       response_text, outcome, outcome_timestamp, market_data,
+                       EXTRACT(EPOCH FROM created_at) as timestamp
+                FROM objection_events
+                WHERE EXTRACT(EPOCH FROM created_at) >= $1
+            """
+            params: list = [since_timestamp]
+            idx = 2
+
+            if objection_category is not None:
+                query += f" AND objection_category = ${idx}"
+                params.append(objection_category)
+                idx += 1
+
+            if contact_id is not None:
+                query += f" AND contact_id = ${idx}"
+                params.append(contact_id)
+
+            query += " ORDER BY created_at ASC"
+
+            rows = await pool.fetch(query, *params)
+            return [
+                {
+                    "id": r["id"],
+                    "contact_id": r["contact_id"],
+                    "objection_type": r["objection_type"],
+                    "objection_category": r["objection_category"],
+                    "confidence": r["confidence"],
+                    "matched_text": r["matched_text"],
+                    "graduation_level": r["graduation_level"],
+                    "response_variant": r["response_variant"],
+                    "response_text": r["response_text"],
+                    "outcome": r["outcome"],
+                    "outcome_timestamp": r["outcome_timestamp"],
+                    "market_data": json.loads(r["market_data"]) if r["market_data"] else None,
+                    "timestamp": r["timestamp"],
+                }
+                for r in rows
+            ]
+        except Exception as exc:
+            logger.warning("Failed to load objection events: %s", exc)
+            return []
+
     # ── Cleanup ───────────────────────────────────────────────────────
 
     async def close(self) -> None:

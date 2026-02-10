@@ -23,6 +23,7 @@ class TriggerType(str, Enum):
     NEIGHBORHOOD_SALE = "neighborhood_sale"
     SEASONAL_TIMING = "seasonal_timing"
     NEW_LISTING = "new_listing"
+    ABANDONMENT_RECOVERY = "abandonment_recovery"
 
 
 class TriggerPriority(str, Enum):
@@ -99,6 +100,9 @@ TRIGGER_TEMPLATES = {
     TriggerType.NEW_LISTING: (
         "Just listed: {property_summary} in {area} at ${price:,.0f}. "
         "This matches your criteria. Would you like to know more?"
+    ),
+    TriggerType.ABANDONMENT_RECOVERY: (
+        "{message}"  # Custom message from recovery orchestrator
     ),
 }
 
@@ -282,6 +286,33 @@ class MarketTriggerService:
             "active_watchlists": len(self._watchlists),
             "contacts_with_history": len(self._trigger_history),
         }
+
+    def create_abandonment_trigger(
+        self,
+        contact_id: str,
+        message: str,
+        stage: str,
+        priority: TriggerPriority = TriggerPriority.MEDIUM,
+    ) -> MarketTrigger:
+        """Create an abandonment recovery trigger.
+
+        Args:
+            contact_id: GHL contact ID
+            message: Personalized recovery message
+            stage: Abandonment stage (24h, 3d, 7d, 14d, 30d)
+            priority: Trigger priority (default: MEDIUM)
+
+        Returns:
+            MarketTrigger for abandonment recovery
+        """
+        return MarketTrigger(
+            trigger_type=TriggerType.ABANDONMENT_RECOVERY,
+            priority=priority,
+            contact_id=contact_id,
+            title=f"Recovery attempt - {stage} stage",
+            message=message,
+            data={"stage": stage, "type": "abandonment_recovery"},
+        )
 
 
 # Singleton

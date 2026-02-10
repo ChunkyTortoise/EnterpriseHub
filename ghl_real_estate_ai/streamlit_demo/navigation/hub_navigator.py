@@ -41,6 +41,7 @@ HUB_CATEGORIES = {
     ],
     "Analytics & Insights": [
         "Data Arbitrage Hub",
+        "Lead Source ROI",
         "Agent ROI Dashboard",
         "Billing Analytics",
         "Marketplace Management",
@@ -84,6 +85,7 @@ COUNSEL_MESSAGES = {
     "Proactive Intelligence": "2 high-priority alerts detected. Pipeline risk identified - take action now to stay on target.",
     "Swarm Intelligence": "The analyst swarm is currently processing 142 leads. Token efficiency is at an all-time high.",
     "Real-Time Intelligence": "Market conditions are shifting in East Austin. Update your valuation models.",
+    "Lead Source ROI": "Facebook Ads ROI at 280% vs Realtor.com at 95%. Recommend shifting $3K budget to top performers for +$10K revenue.",
     "Billing Analytics": "ARR is tracking at $187K - 23% monthly growth puts us on target for $240K. 23 customers in overage generating strong usage revenue.",
     "Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
     "Seller Journey Hub": "The Maple Ave listing is hitting peak interest. I recommend an open house this Sunday.",
