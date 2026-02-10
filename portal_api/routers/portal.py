@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from portal_api.dependencies import Services, get_services
-from portal_api.models import DeckResponse, Interaction, SwipeResponse
+from portal_api.dependencies import Services, get_services, require_demo_api_key
+from portal_api.models import ApiErrorResponse, DeckResponse, Interaction, SwipeResponse
 
 router = APIRouter(prefix="/portal", tags=["portal"])
 
@@ -12,7 +12,17 @@ async def get_smart_deck(contact_id: str, services: Services = Depends(get_servi
     return DeckResponse(deck=deck)
 
 
-@router.post("/swipe", response_model=SwipeResponse)
+@router.post(
+    "/swipe",
+    response_model=SwipeResponse,
+    dependencies=[Depends(require_demo_api_key)],
+    responses={
+        401: {
+            "model": ApiErrorResponse,
+            "description": "API key missing or invalid",
+        }
+    },
+)
 async def log_swipe(interaction: Interaction, services: Services = Depends(get_services)) -> SwipeResponse:
     services.inventory.log_interaction(
         lead_id=interaction.contact_id,

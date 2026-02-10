@@ -136,8 +136,14 @@ class GHLSyncResponse(BaseModel):
     synced_count: int
 
 
-class ErrorResponse(BaseModel):
-    detail: str
+class ApiErrorDetail(BaseModel):
+    code: str
+    message: str
+    request_id: str | None = None
+
+
+class ApiErrorResponse(BaseModel):
+    error: ApiErrorDetail
 
 
 class GHLField(BaseModel):
