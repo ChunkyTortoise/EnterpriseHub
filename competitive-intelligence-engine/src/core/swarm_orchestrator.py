@@ -138,4 +138,26 @@ class BaseSwarmAgent(EventHandler):
 
     async def handle(self, event: Event) -> bool:
         """Standard event handling implementation for swarm agents."""
-        raise NotImplementedError("Subclasses must implement specific logic")
+        try:
+            prompt = (
+                f"Event Type: {event.type.name}\n"
+                f"Source: {event.source_system}\n"
+                f"Priority: {event.priority.value}\n"
+                f"Data: {event.data}\n"
+            )
+            insight = await self.think(prompt)
+
+            await self.orchestrator.event_bus.publish(
+                event_type=EventType.INTELLIGENCE_INSIGHT_CREATED,
+                data={
+                    "agent": self.name,
+                    "insight": insight,
+                    "source_event": event.to_dict(),
+                },
+                source_system=self.name,
+                priority=EventPriority.MEDIUM,
+            )
+            return True
+        except Exception as e:
+            logger.error(f"BaseSwarmAgent handle failed: {e}")
+            return False

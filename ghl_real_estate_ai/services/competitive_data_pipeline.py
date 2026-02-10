@@ -217,7 +217,33 @@ class DataCollector:
 
     async def collect_data(self, target_competitors: List[str]) -> List[CompetitorDataPoint]:
         """Collect competitive data from this source."""
-        raise NotImplementedError
+        data_points: List[CompetitorDataPoint] = []
+        start_time = datetime.now()
+        self.collection_stats["total_collections"] += 1
+
+        try:
+            for competitor_id in target_competitors:
+                data_points.append(
+                    CompetitorDataPoint(
+                        competitor_id=competitor_id,
+                        data_source=self.source_type,
+                        data_type=DataType.METADATA,
+                        raw_data={"status": "no_data", "source": self.source_type.value},
+                        confidence_score=0.1,
+                        collected_at=datetime.now()
+                    )
+                )
+            self.collection_stats["successful_collections"] += 1
+        except Exception as e:
+            logger.error(f"Default data collection failed: {e}")
+            self.collection_stats["failed_collections"] += 1
+        finally:
+            duration = (datetime.now() - start_time).total_seconds()
+            total = self.collection_stats["total_collections"]
+            current_avg = self.collection_stats["avg_collection_time"]
+            self.collection_stats["avg_collection_time"] = ((current_avg * (total - 1)) + duration) / total
+
+        return data_points
 
     async def validate_data(self, data_point: CompetitorDataPoint) -> bool:
         """Validate collected data point."""

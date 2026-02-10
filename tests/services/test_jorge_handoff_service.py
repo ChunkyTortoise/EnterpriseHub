@@ -116,6 +116,272 @@ class TestEvaluateHandoff:
         assert decision.target_bot == "seller"
         assert decision.confidence == 0.85
 
+    @pytest.mark.asyncio
+    async def test_handoff_confidence_schema_shape(self, handoff_service):
+        """Decision exposes WS3 confidence schema fields."""
+        intent_signals = {
+            "buyer_intent_score": 0.82,
+            "seller_intent_score": 0.2,
+            "detected_intent_phrases": ["looking to buy", "pre-approved"],
+        }
+        decision = await handoff_service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="test_schema",
+            conversation_history=[{"role": "user", "content": "I want to buy soon"}],
+            intent_signals=intent_signals,
+        )
+        assert decision is not None
+        schema = decision.to_confidence_schema()
+        assert set(schema.keys()) == {"mode", "score", "reason", "evidence"}
+        assert schema["mode"] == "buyer"
+        assert schema["score"] == pytest.approx(0.82, abs=1e-6)
+        assert schema["reason"] == "buyer_intent_detected"
+        assert schema["evidence"]["source_bot"] == "lead"
+        assert schema["evidence"]["target_bot"] == "buyer"
+
+    @pytest.mark.asyncio
+    async def test_lead_conflict_routing_is_deterministic(self, mock_analytics):
+        """Equal buyer/seller scores use configured deterministic tie-break."""
+        service = JorgeHandoffService(
+            analytics_service=mock_analytics,
+            lead_conflict_priority="buyer",
+        )
+        intent_signals = {
+            "buyer_intent_score": 0.75,
+            "seller_intent_score": 0.75,
+            "detected_intent_phrases": ["buy", "sell first"],
+        }
+        decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="test_conflict_priority",
+            conversation_history=[],
+            intent_signals=intent_signals,
+        )
+        assert decision is not None
+        assert decision.target_bot == "buyer"
+        assert decision.reason == "conflict_priority_buyer"
+
+    @pytest.mark.asyncio
+    async def test_thresholds_are_configurable(self, mock_analytics):
+        """Custom thresholds override defaults for routing decisions."""
+        service = JorgeHandoffService(
+            analytics_service=mock_analytics,
+            thresholds={("lead", "buyer"): 0.9},
+        )
+
+        low_decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="test_threshold_low",
+            conversation_history=[],
+            intent_signals={
+                "buyer_intent_score": 0.85,
+                "seller_intent_score": 0.0,
+                "detected_intent_phrases": ["looking to buy"],
+            },
+        )
+        assert low_decision is None
+
+        high_decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id="test_threshold_high",
+            conversation_history=[],
+            intent_signals={
+                "buyer_intent_score": 0.92,
+                "seller_intent_score": 0.0,
+                "detected_intent_phrases": ["looking to buy", "pre-approved"],
+            },
+        )
+        assert high_decision is not None
+        assert high_decision.target_bot == "buyer"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "current_bot,intent_signals,expected_target",
+        [
+            (
+                "lead",
+                {
+                    "buyer_intent_score": 0.75,
+                    "seller_intent_score": 0.75,
+                    "detected_intent_phrases": ["buy", "sell"],
+                },
+                "buyer",
+            ),
+            (
+                "lead",
+                {
+                    "buyer_intent_score": 0.75,
+                    "seller_intent_score": 0.75,
+                    "detected_intent_phrases": ["buy", "sell"],
+                },
+                "seller",
+            ),
+        ],
+    )
+    async def test_lead_conflict_priority_routes_deterministically(
+        self,
+        mock_analytics,
+        current_bot,
+        intent_signals,
+        expected_target,
+    ):
+        """Lead score ties always resolve to the configured priority bot."""
+        service = JorgeHandoffService(
+            analytics_service=mock_analytics,
+            thresholds={
+                ("lead", "buyer"): 0.7,
+                ("lead", "seller"): 0.7,
+            },
+            lead_conflict_priority=expected_target,
+        )
+
+        decision = await service.evaluate_handoff(
+            current_bot=current_bot,
+            contact_id=f"test_conflict_{expected_target}",
+            conversation_history=[],
+            intent_signals=intent_signals,
+        )
+
+        assert decision is not None
+        assert decision.target_bot == expected_target
+        assert decision.reason == f"conflict_priority_{expected_target}"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "priority,thresholds,buyer_score,seller_score,expected_target",
+        [
+            (
+                "buyer",
+                {("lead", "buyer"): 0.75, ("lead", "seller"): 0.7},
+                0.75,
+                0.75,
+                "buyer",
+            ),
+            (
+                "seller",
+                {("lead", "buyer"): 0.7, ("lead", "seller"): 0.75},
+                0.75,
+                0.75,
+                "seller",
+            ),
+            (
+                "buyer",
+                {("lead", "buyer"): 0.7501, ("lead", "seller"): 0.7},
+                0.75,
+                0.75,
+                None,
+            ),
+            (
+                "seller",
+                {("lead", "buyer"): 0.7, ("lead", "seller"): 0.7501},
+                0.75,
+                0.75,
+                None,
+            ),
+        ],
+    )
+    async def test_lead_conflict_threshold_boundaries(
+        self,
+        mock_analytics,
+        priority,
+        thresholds,
+        buyer_score,
+        seller_score,
+        expected_target,
+    ):
+        """Lead tie routing obeys threshold boundaries at/just-above cutoffs."""
+        service = JorgeHandoffService(
+            analytics_service=mock_analytics,
+            thresholds=thresholds,
+            lead_conflict_priority=priority,
+        )
+        decision = await service.evaluate_handoff(
+            current_bot="lead",
+            contact_id=f"test_conflict_boundary_{priority}",
+            conversation_history=[],
+            intent_signals={
+                "buyer_intent_score": buyer_score,
+                "seller_intent_score": seller_score,
+                "detected_intent_phrases": ["buy", "sell"],
+            },
+        )
+
+        if expected_target is None:
+            assert decision is None
+        else:
+            assert decision is not None
+            assert decision.target_bot == expected_target
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "current_bot,intent_signals,expected_target",
+        [
+            (
+                "lead",
+                {"buyer_intent_score": 0.7, "seller_intent_score": 0.2},
+                "buyer",
+            ),
+            (
+                "lead",
+                {"buyer_intent_score": 0.6999, "seller_intent_score": 0.2},
+                None,
+            ),
+            (
+                "lead",
+                {"buyer_intent_score": 0.2, "seller_intent_score": 0.7},
+                "seller",
+            ),
+            (
+                "lead",
+                {"buyer_intent_score": 0.2, "seller_intent_score": 0.6999},
+                None,
+            ),
+            (
+                "seller",
+                {"buyer_intent_score": 0.6, "seller_intent_score": 0.2},
+                "buyer",
+            ),
+            (
+                "seller",
+                {"buyer_intent_score": 0.5999, "seller_intent_score": 0.2},
+                None,
+            ),
+            (
+                "buyer",
+                {"buyer_intent_score": 0.2, "seller_intent_score": 0.8},
+                "seller",
+            ),
+            (
+                "buyer",
+                {"buyer_intent_score": 0.2, "seller_intent_score": 0.7999},
+                None,
+            ),
+        ],
+    )
+    async def test_route_threshold_boundaries_matrix(
+        self,
+        handoff_service,
+        current_bot,
+        intent_signals,
+        expected_target,
+    ):
+        """Each route honors threshold boundaries with deterministic pass/fail."""
+        decision = await handoff_service.evaluate_handoff(
+            current_bot=current_bot,
+            contact_id=f"test_threshold_matrix_{current_bot}",
+            conversation_history=[],
+            intent_signals={
+                **intent_signals,
+                "detected_intent_phrases": [],
+            },
+        )
+
+        if expected_target is None:
+            assert decision is None
+        else:
+            assert decision is not None
+            assert decision.target_bot == expected_target
+
 
 class TestExecuteHandoff:
     """Tests for JorgeHandoffService.execute_handoff()."""
@@ -174,3 +440,7 @@ class TestExecuteHandoff:
         assert call_kwargs["contact_id"] == "test_analytics"
         assert call_kwargs["data"]["source_bot"] == "seller"
         assert call_kwargs["data"]["target_bot"] == "buyer"
+        assert call_kwargs["data"]["mode"] == "buyer"
+        assert call_kwargs["data"]["score"] == pytest.approx(0.7, abs=1e-6)
+        assert call_kwargs["data"]["reason"] == "buyer_intent_detected"
+        assert set(call_kwargs["data"]["handoff_confidence"].keys()) == {"mode", "score", "reason", "evidence"}

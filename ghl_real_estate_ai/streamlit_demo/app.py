@@ -1145,6 +1145,7 @@ with st.sidebar:
             "Agent ROI Dashboard",
             "Billing Analytics",
             "Marketplace Management",
+            "Smart Analyst",
             "Ops & Optimization",
             "Claude Cost Tracking"
         ],
@@ -1155,6 +1156,7 @@ with st.sidebar:
             "Voice AI Assistant",
             "Sales Copilot",
             "Deep Research",
+            "Agent Hub",
             "Automation Studio"
         ],
         "🛠️ Bot Management": [
@@ -1337,6 +1339,8 @@ with st.sidebar:
         "Lead Bot Sequences": "42 active 3-7-30 sequences. Day 7 voice calls at 73% success. 12 CMAs generated, automation optimized.",
         "Bot Testing & Validation": "All integration tests passing. 98.5% system health. Demo-ready with full end-to-end validation complete.",
         "Sales Copilot": "Preparing talking points for your 2pm call. Client prefers a direct, data-driven approach.",
+        "Smart Analyst": "Upload data and ask your first question. I'll generate SQL, insights, and a PDF report.",
+        "Agent Hub": "Planner, Researcher, Reviewer, Publisher are ready. Approve or edit before publishing.",
         "Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month.",
         "Deep Research": "Perplexity-powered search is active. Ask me to research any market or property."
     }
@@ -2193,6 +2197,11 @@ def render_proactive_intelligence_hub():
 render_claude_assistant(claude)
 
 if selected_hub == "Executive Command Center":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.hub_router import render_hub
+        render_hub("Executive Command Center")
+    except Exception:
+        pass
     # Executive Swarm Activation
     with st.container():
         col1, col2 = st.columns([3, 1])
@@ -2343,6 +2352,11 @@ if selected_hub == "Executive Command Center":
     st.markdown("---")
     render_executive_hub(services, mock_data, sparkline, render_insight_card)
 elif selected_hub == "Lead Intelligence Hub":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.hub_router import render_hub
+        render_hub("Lead Intelligence Hub")
+    except Exception:
+        pass
     render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=st.session_state.get('elite_mode', False))
 elif selected_hub == "Data Arbitrage Hub":
     from ghl_real_estate_ai.streamlit_demo.components.data_arbitrage_dashboard import render_data_arbitrage_dashboard
@@ -2387,6 +2401,11 @@ elif selected_hub == "Seller Journey Hub":
         render_seller_analytics
     )
 elif selected_hub == "Automation Studio":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.hub_router import render_hub
+        render_hub("Automation Studio")
+    except Exception:
+        pass
     studio_hub = AutomationStudioHub(services, claude)
     studio_hub.render_hub()
 elif selected_hub == "SMS Compliance Dashboard":
@@ -2430,8 +2449,25 @@ elif selected_hub == "Bot Testing & Validation":
         st.info(f"Error: {str(e)}")
         st.info("Bot testing interface is being optimized. Please try again shortly.")
 elif selected_hub == "Sales Copilot":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.hub_router import render_hub
+        render_hub("Sales Copilot")
+    except Exception:
+        pass
     copilot_hub = SalesCopilotHub(services, claude)
     copilot_hub.render_hub()
+elif selected_hub == "Smart Analyst":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.smart_analyst import render_smart_analyst
+        render_smart_analyst()
+    except Exception as e:
+        st.error(f"Smart Analyst unavailable: {e}")
+elif selected_hub == "Agent Hub":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.components.agent_hub import render_agent_hub
+        render_agent_hub()
+    except Exception as e:
+        st.error(f"Agent Hub unavailable: {e}")
 elif selected_hub == "Billing Analytics":
     try:
         render_billing_dashboard()
@@ -2443,6 +2479,11 @@ elif selected_hub == "Marketplace Management":
     render_marketplace_management()
 
 elif selected_hub == "Ops & Optimization":
+    try:
+        from ghl_real_estate_ai.streamlit_demo.hub_router import render_hub
+        render_hub("Ops & Optimization")
+    except Exception:
+        pass
     ops_hub = OpsOptimizationHub(services, claude)
     ops_hub.render_hub()
 elif selected_hub == "Claude Cost Tracking":
@@ -2490,5 +2531,3 @@ st.markdown("""
 </div>
 
 """, unsafe_allow_html=True)
-
-

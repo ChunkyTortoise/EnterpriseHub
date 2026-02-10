@@ -19,7 +19,56 @@ class BaseSwarmAgent:
 
     async def analyze(self, lead_data: Dict[str, Any], messages: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         """Perform analysis on the lead data."""
-        raise NotImplementedError
+        try:
+            inter_agent_context = ""
+            if messages:
+                inter_agent_context = "\n".join(
+                    f"- {msg.get('from', 'agent')}: {msg.get('summary', msg.get('content', ''))}"
+                    for msg in messages
+                )
+
+            prompt = f"""
+            You are a specialized real estate AI agent.
+            Agent Name: {self.name}
+            Role: {self.role}
+            Description: {self.description}
+
+            Lead Data: {json.dumps(lead_data, default=str)}
+
+            Inter-Agent Context:
+            {inter_agent_context or 'None'}
+
+            OUTPUT FORMAT:
+            Provide your 'Reasoning Trace' first, then a JSON block.
+            The JSON must include: "agent", "role", "summary", "recommendations", "confidence", and "reasoning_trace".
+            """
+
+            response = await self.orchestrator.chat_query(
+                query=prompt,
+                context={"agent": self.name, "role": self.role},
+                lead_id=lead_data.get("lead_id", "unknown")
+            )
+            parsed = self._parse_response(response.content)
+            if "agent" not in parsed:
+                parsed["agent"] = self.name
+            if "role" not in parsed:
+                parsed["role"] = self.role
+            if "confidence" not in parsed:
+                parsed["confidence"] = 0.6
+            parsed.setdefault("summary", parsed.get("reasoning_trace", "Analysis complete"))
+            parsed.setdefault("recommendations", [])
+            parsed.setdefault("timestamp", datetime.utcnow().isoformat())
+            return parsed
+        except Exception as exc:
+            return {
+                "agent": self.name,
+                "role": self.role,
+                "summary": "Fallback analysis due to error",
+                "recommendations": [],
+                "confidence": 0.2,
+                "error": str(exc),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
         try:

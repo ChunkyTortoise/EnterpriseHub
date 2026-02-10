@@ -6,9 +6,9 @@ Ensures each team is charged on their own account.
 """
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -95,7 +95,7 @@ class TenantService:
             "anthropic_api_key": anthropic_api_key,
             "ghl_api_key": ghl_api_key,
             "ghl_calendar_id": ghl_calendar_id,
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
         file_path = self._get_file_path(location_id)
@@ -103,12 +103,77 @@ class TenantService:
             json.dump(config, f, indent=2)
         logger.info(f"Saved tenant config for {location_id}")
 
+    async def register_tenant_config(
+        self,
+        location_id: str,
+        anthropic_api_key: str,
+        ghl_api_key: str,
+        ghl_calendar_id: Optional[str] = None,
+        *,
+        overwrite: bool = False,
+    ) -> Literal["created", "updated", "unchanged"]:
+        """
+        Register tenant config with duplicate-safe idempotency guard.
+
+        Returns:
+            "created" when a new config is written,
+            "updated" when an existing config is replaced with overwrite=True,
+            "unchanged" when the same config is already present.
+        Raises:
+            ValueError when a conflicting config exists and overwrite=False.
+        """
+        file_path = self._get_file_path(location_id)
+        requested = {
+            "location_id": location_id,
+            "anthropic_api_key": anthropic_api_key,
+            "ghl_api_key": ghl_api_key,
+            "ghl_calendar_id": ghl_calendar_id,
+        }
+
+        if file_path.exists():
+            try:
+                with open(file_path, "r") as f:
+                    existing = json.load(f)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"Invalid tenant configuration for {location_id}") from exc
+
+            existing_core = {
+                "location_id": existing.get("location_id"),
+                "anthropic_api_key": existing.get("anthropic_api_key"),
+                "ghl_api_key": existing.get("ghl_api_key"),
+                "ghl_calendar_id": existing.get("ghl_calendar_id"),
+            }
+            if existing_core == requested:
+                logger.info(f"Tenant config already registered for {location_id}; no changes applied")
+                return "unchanged"
+
+            if not overwrite:
+                raise ValueError(
+                    f"tenant config already exists for {location_id}. Use --force to overwrite."
+                )
+
+            await self.save_tenant_config(
+                location_id=location_id,
+                anthropic_api_key=anthropic_api_key,
+                ghl_api_key=ghl_api_key,
+                ghl_calendar_id=ghl_calendar_id,
+            )
+            return "updated"
+
+        await self.save_tenant_config(
+            location_id=location_id,
+            anthropic_api_key=anthropic_api_key,
+            ghl_api_key=ghl_api_key,
+            ghl_calendar_id=ghl_calendar_id,
+        )
+        return "created"
+
     async def save_agency_config(self, agency_id: str, api_key: str) -> None:
         """Save master agency credentials."""
         config = {
             "agency_id": agency_id,
             "agency_api_key": api_key,
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
         file_path = self.tenants_dir / "agency_master.json"
         with open(file_path, "w") as f:

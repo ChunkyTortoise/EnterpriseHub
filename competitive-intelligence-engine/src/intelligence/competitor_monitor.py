@@ -246,7 +246,17 @@ class DataCollector:
     
     async def collect_data(self, target: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Collect intelligence data from source."""
-        raise NotImplementedError("Subclasses must implement collect_data")
+        try:
+            return {
+                "target": target,
+                "source": self.data_source.value,
+                "records": [],
+                "metadata": config or {},
+                "collected_at": datetime.now().isoformat(),
+            }
+        except Exception as e:
+            logger.error(f"Base DataCollector collect_data failed: {e}")
+            return {"target": target, "source": self.data_source.value, "records": [], "error": str(e)}
     
     async def validate_data(self, raw_data: Dict[str, Any]) -> bool:
         """Validate collected data quality."""

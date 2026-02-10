@@ -29,9 +29,23 @@ class HandoffDecision:
     confidence: float        # 0.0-1.0
     context: Dict[str, Any] = field(default_factory=dict)
 
+    def to_confidence_schema(self) -> Dict[str, Any]:
+        """Normalize decision details into the WS3 handoff confidence schema."""
+        evidence = dict(self.context or {})
+        evidence.setdefault("source_bot", self.source_bot)
+        evidence.setdefault("target_bot", self.target_bot)
+        return JorgeHandoffService.build_handoff_confidence(
+            mode=self.target_bot,
+            score=self.confidence,
+            reason=self.reason,
+            evidence=evidence,
+        )
+
 
 class JorgeHandoffService:
     """Evaluates and executes cross-bot handoffs based on intent signals."""
+
+    VALID_MODES = {"seller", "buyer", "lead", "fallback"}
 
     TAG_MAP = {
         "lead": "Needs Qualifying",
@@ -39,13 +53,15 @@ class JorgeHandoffService:
         "seller": "Needs Qualifying",
     }
 
-    # Confidence thresholds per handoff direction
-    THRESHOLDS = {
+    # Default confidence thresholds per handoff direction
+    DEFAULT_THRESHOLDS = {
         ("lead", "buyer"): 0.7,
         ("lead", "seller"): 0.7,
         ("buyer", "seller"): 0.8,
         ("seller", "buyer"): 0.6,
     }
+    THRESHOLDS = DEFAULT_THRESHOLDS
+    DEFAULT_LEAD_CONFLICT_PRIORITY = "seller"
 
     # Intent phrase patterns for signal boosting
     BUYER_INTENT_PATTERNS = [
@@ -70,8 +86,72 @@ class JorgeHandoffService:
         r"\bsell\s+first\b",
     ]
 
-    def __init__(self, analytics_service=None):
+    def __init__(
+        self,
+        analytics_service=None,
+        thresholds: Optional[Dict[tuple[str, str], float]] = None,
+        lead_conflict_priority: str = DEFAULT_LEAD_CONFLICT_PRIORITY,
+    ):
         self.analytics_service = analytics_service
+        self.thresholds = dict(self.DEFAULT_THRESHOLDS)
+        if thresholds:
+            for route, value in thresholds.items():
+                if isinstance(route, tuple) and len(route) == 2:
+                    self.thresholds[(str(route[0]), str(route[1]))] = float(value)
+        if lead_conflict_priority not in {"buyer", "seller"}:
+            logger.warning(
+                "Invalid lead conflict priority '%s'; defaulting to '%s'",
+                lead_conflict_priority,
+                self.DEFAULT_LEAD_CONFLICT_PRIORITY,
+            )
+            lead_conflict_priority = self.DEFAULT_LEAD_CONFLICT_PRIORITY
+        self.lead_conflict_priority = lead_conflict_priority
+
+    @classmethod
+    def build_handoff_confidence(
+        cls,
+        mode: str,
+        score: float,
+        reason: str,
+        evidence: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Create a normalized WS3 handoff confidence payload."""
+        normalized_mode = mode if mode in cls.VALID_MODES else "fallback"
+        normalized_score = max(0.0, min(1.0, float(score or 0.0)))
+        return {
+            "mode": normalized_mode,
+            "score": normalized_score,
+            "reason": reason or "unspecified",
+            "evidence": dict(evidence or {}),
+        }
+
+    @classmethod
+    def build_signal_confidence(
+        cls,
+        mode: str,
+        intent_signals: Optional[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Build confidence payload from extracted intent signals."""
+        signals = intent_signals or {}
+        buyer_score = float(signals.get("buyer_intent_score", 0.0) or 0.0)
+        seller_score = float(signals.get("seller_intent_score", 0.0) or 0.0)
+        max_score = max(buyer_score, seller_score)
+        detected_phrases = signals.get("detected_intent_phrases", [])
+
+        reason = "intent_signal_detected" if max_score > 0 else "no_intent_signal"
+        if buyer_score > 0 and seller_score > 0 and buyer_score == seller_score:
+            reason = "conflicting_intent_signals"
+
+        return cls.build_handoff_confidence(
+            mode=mode,
+            score=max_score,
+            reason=reason,
+            evidence={
+                "buyer_intent_score": buyer_score,
+                "seller_intent_score": seller_score,
+                "detected_intent_phrases": detected_phrases,
+            },
+        )
 
     async def evaluate_handoff(
         self,
@@ -81,29 +161,48 @@ class JorgeHandoffService:
         intent_signals: Dict[str, Any],
     ) -> Optional[HandoffDecision]:
         """Evaluate whether a handoff is needed based on intent signals."""
-        buyer_score = intent_signals.get("buyer_intent_score", 0.0)
-        seller_score = intent_signals.get("seller_intent_score", 0.0)
+        buyer_score = float(intent_signals.get("buyer_intent_score", 0.0) or 0.0)
+        seller_score = float(intent_signals.get("seller_intent_score", 0.0) or 0.0)
         detected_phrases = intent_signals.get("detected_intent_phrases", [])
 
-        # Determine candidate target and score
-        if current_bot in ("lead", "seller") and buyer_score > seller_score:
+        target = ""
+        score = 0.0
+        reason = ""
+
+        # Determine candidate target and score with deterministic tie-breaks
+        if current_bot == "lead":
+            if buyer_score > seller_score:
+                target = "buyer"
+                score = buyer_score
+                reason = "buyer_intent_detected"
+            elif seller_score > buyer_score:
+                target = "seller"
+                score = seller_score
+                reason = "seller_intent_detected"
+            elif buyer_score > 0 and seller_score > 0:
+                target = self.lead_conflict_priority
+                score = buyer_score if target == "buyer" else seller_score
+                reason = f"conflict_priority_{target}"
+        elif current_bot == "seller" and buyer_score > seller_score:
             target = "buyer"
             score = buyer_score
-        elif current_bot in ("lead", "buyer") and seller_score > buyer_score:
+            reason = "buyer_intent_detected"
+        elif current_bot == "buyer" and seller_score > buyer_score:
             target = "seller"
             score = seller_score
-        else:
+            reason = "seller_intent_detected"
+
+        if not target:
             return None
 
         # No self-handoff
         if target == current_bot:
             return None
 
-        threshold = self.THRESHOLDS.get((current_bot, target))
+        threshold = self.thresholds.get((current_bot, target))
         if threshold is None or score < threshold:
             return None
 
-        reason = f"{target}_intent_detected"
         return HandoffDecision(
             source_bot=current_bot,
             target_bot=target,
@@ -113,6 +212,9 @@ class JorgeHandoffService:
                 "contact_id": contact_id,
                 "detected_phrases": detected_phrases,
                 "conversation_turns": len(conversation_history),
+                "buyer_intent_score": buyer_score,
+                "seller_intent_score": seller_score,
+                "threshold_used": threshold,
             },
         )
 
@@ -145,6 +247,7 @@ class JorgeHandoffService:
         # Log analytics event
         if self.analytics_service:
             try:
+                confidence_schema = decision.to_confidence_schema()
                 await self.analytics_service.track_event(
                     event_type="jorge_handoff",
                     location_id=location_id,
@@ -155,6 +258,10 @@ class JorgeHandoffService:
                         "reason": decision.reason,
                         "confidence": decision.confidence,
                         "detected_phrases": decision.context.get("detected_phrases", []),
+                        "mode": confidence_schema["mode"],
+                        "score": confidence_schema["score"],
+                        "evidence": confidence_schema["evidence"],
+                        "handoff_confidence": confidence_schema,
                     },
                 )
             except Exception as e:

@@ -1,5 +1,6 @@
 # Production Database Module
 from .connection_manager import DatabaseConnectionManager, get_db_manager
+from .session import get_async_session
 # TODO: Implement missing database modules
 # from .models import *
 # from .migrations import DatabaseMigrator
@@ -10,6 +11,7 @@ from .connection_manager import DatabaseConnectionManager, get_db_manager
 __all__ = [
     'DatabaseConnectionManager',
     'get_db_manager',
+    'get_async_session',
     # TODO: Add when implemented
     # 'DatabaseMigrator',
     # 'DatabaseHealthMonitor',

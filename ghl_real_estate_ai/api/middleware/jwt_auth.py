@@ -25,6 +25,25 @@ if not SECRET_KEY:
     raise ValueError(error_msg)
 # Security configuration - enforce strong settings
 ALGORITHM = "HS256"
+ACTIVE_KID = os.getenv("JWT_ACTIVE_KID", "primary")
+RAW_KEY_RING = os.getenv("JWT_KEY_RING")
+KEY_RING = {}
+
+if RAW_KEY_RING:
+    try:
+        import json
+        if RAW_KEY_RING.strip().startswith("{"):
+            KEY_RING = json.loads(RAW_KEY_RING)
+        else:
+            pairs = [item.strip() for item in RAW_KEY_RING.split(",") if item.strip()]
+            for pair in pairs:
+                kid, key = pair.split(":", 1)
+                KEY_RING[kid.strip()] = key.strip()
+    except Exception as exc:
+        print(f"SECURITY WARNING: Failed to parse JWT_KEY_RING: {exc}")
+
+if not KEY_RING:
+    KEY_RING = {ACTIVE_KID: SECRET_KEY}
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Security validation for JWT secret
@@ -70,7 +89,8 @@ class JWTAuth:
             "token_type": "access"
         })
 
-        access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        key = KEY_RING.get(ACTIVE_KID, SECRET_KEY)
+        access_token = jwt.encode(to_encode, key, algorithm=ALGORITHM, headers={"kid": ACTIVE_KID})
 
         if include_refresh_token:
             # Create refresh token with longer expiration
@@ -81,7 +101,7 @@ class JWTAuth:
                 "jti": uuid.uuid4().hex[:16],
                 "token_type": "refresh"
             }
-            refresh_token = jwt.encode(refresh_data, SECRET_KEY, algorithm=ALGORITHM)
+            refresh_token = jwt.encode(refresh_data, key, algorithm=ALGORITHM, headers={"kid": ACTIVE_KID})
             return access_token, refresh_token
 
         return access_token
@@ -97,7 +117,19 @@ class JWTAuth:
             "jti": uuid.uuid4().hex[:16],
             "token_type": "refresh"
         }
-        return jwt.encode(refresh_data, SECRET_KEY, algorithm=ALGORITHM)
+        key = KEY_RING.get(ACTIVE_KID, SECRET_KEY)
+        return jwt.encode(refresh_data, key, algorithm=ALGORITHM, headers={"kid": ACTIVE_KID})
+
+    @staticmethod
+    def _resolve_key(token: str) -> str:
+        try:
+            header = jwt.get_unverified_header(token)
+            kid = header.get("kid")
+            if kid and kid in KEY_RING:
+                return KEY_RING[kid]
+        except Exception:
+            pass
+        return SECRET_KEY
 
     @staticmethod
     def refresh_access_token(refresh_token: str) -> str:
@@ -114,7 +146,7 @@ class JWTAuth:
             HTTPException: If refresh token is invalid or expired
         """
         try:
-            payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload = jwt.decode(refresh_token, JWTAuth._resolve_key(refresh_token), algorithms=[ALGORITHM])
 
             # Validate token type
             if payload.get("token_type") != "refresh":
@@ -183,7 +215,7 @@ class JWTAuth:
             )
             
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload = jwt.decode(token, JWTAuth._resolve_key(token), algorithms=[ALGORITHM])
             
             # Validate required fields
             if "sub" not in payload:

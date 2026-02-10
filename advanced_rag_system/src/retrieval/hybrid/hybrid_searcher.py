@@ -65,6 +65,8 @@ class HybridSearcher:
         hybrid_config: Optional[HybridSearchConfig] = None,
         bm25_config: Optional[BM25Config] = None,
         fusion_config: Optional[FusionConfig] = None,
+        dense_retriever: Optional[Any] = None,
+        sparse_retriever: Optional[BM25Index] = None,
     ):
         """Initialize hybrid searcher.
 
@@ -77,9 +79,16 @@ class HybridSearcher:
         self.bm25_config = bm25_config or BM25Config()
         self.fusion_config = fusion_config or FusionConfig()
 
-        # Initialize retrievers
-        self.dense_retriever = DenseRetriever() if self.hybrid_config.enable_dense else None
-        self.sparse_retriever = BM25Index(self.bm25_config) if self.hybrid_config.enable_sparse else None
+        # Initialize retrievers (allow injection for testing or custom backends)
+        if self.hybrid_config.enable_dense:
+            self.dense_retriever = dense_retriever or DenseRetriever()
+        else:
+            self.dense_retriever = None
+
+        if self.hybrid_config.enable_sparse:
+            self.sparse_retriever = sparse_retriever or BM25Index(self.bm25_config)
+        else:
+            self.sparse_retriever = None
 
         # Initialize fusion algorithm
         if self.hybrid_config.fusion_method == "rrf":

@@ -129,7 +129,84 @@ class FollowUpAgent:
 
     async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
         """Analyze lead and provide follow-up recommendation."""
-        raise NotImplementedError
+        try:
+            prompt = f"""
+            You are an autonomous follow-up strategy agent ({self.agent_type.value}).
+            Analyze the context and provide a structured follow-up recommendation.
+
+            Lead ID: {lead_id}
+            Context: {json.dumps(context, default=str)}
+
+            Return JSON with fields:
+            - recommended_action
+            - reasoning
+            - confidence (0-1)
+            - optimal_timing (ISO timestamp or null)
+            - suggested_channel (sms/email/call/voicemail/whatsapp or null)
+            - suggested_message (string or null)
+            - escalation_needed (true/false)
+            """
+
+            response = await self.llm_client.generate(
+                prompt=prompt,
+                max_tokens=400,
+                temperature=0.4,
+            )
+
+            content = response.content if response and response.content else "{}"
+            try:
+                # Attempt to parse JSON from response
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+                parsed = json.loads(content)
+            except Exception:
+                parsed = {}
+
+            confidence = float(parsed.get("confidence", 0.6)) if isinstance(parsed.get("confidence", 0.6), (int, float, str)) else 0.6
+            recommended_action = parsed.get("recommended_action", "Schedule follow-up")
+            reasoning = parsed.get("reasoning", "Default recommendation based on available context")
+
+            # Log debate data if blackboard is available
+            self.log_thought(lead_id, reasoning, recommended_action, confidence)
+
+            suggested_channel = parsed.get("suggested_channel")
+            suggested_message = parsed.get("suggested_message")
+            escalation_needed = bool(parsed.get("escalation_needed", False))
+
+            optimal_timing = None
+            try:
+                if parsed.get("optimal_timing"):
+                    optimal_timing = datetime.fromisoformat(parsed["optimal_timing"])
+            except Exception:
+                optimal_timing = None
+
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=max(0.0, min(1.0, confidence)),
+                recommended_action=recommended_action,
+                reasoning=reasoning,
+                optimal_timing=optimal_timing,
+                suggested_channel=FollowUpChannel(suggested_channel) if suggested_channel in {c.value for c in FollowUpChannel} else None,
+                suggested_message=suggested_message,
+                escalation_needed=escalation_needed,
+                metadata={
+                    "raw_response": content,
+                    "context_keys": list(context.keys()),
+                },
+            )
+
+        except Exception as e:
+            logger.error(f"FollowUpAgent analyze failed: {e}")
+            return FollowUpRecommendation(
+                agent_type=self.agent_type,
+                confidence=0.2,
+                recommended_action="Fallback: manual follow-up",
+                reasoning="Agent analysis failed; manual review recommended.",
+                escalation_needed=True,
+                metadata={"error": str(e)},
+            )
 
 
 class TimingOptimizerAgent(FollowUpAgent):
