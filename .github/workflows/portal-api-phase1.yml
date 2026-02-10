@@ -63,4 +63,4 @@ jobs:
 
       - name: Run targeted tests
         run: |
-          pytest -q -o addopts='' portal_api/tests/test_portal_api.py
+          pytest -q -o addopts='' --confcutdir=portal_api/tests portal_api/tests
