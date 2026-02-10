@@ -1,12 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from portal_api.dependencies import Services, get_services
-from portal_api.models import GHLFieldsResponse, GHLFieldsUnavailableResponse, GHLSyncResponse
+from portal_api.models import ErrorResponse, GHLFieldsResponse, GHLFieldsUnavailableResponse, GHLSyncResponse
 
 router = APIRouter(prefix="/ghl", tags=["ghl"])
 
 
-@router.post("/sync", response_model=GHLSyncResponse)
+@router.post(
+    "/sync",
+    response_model=GHLSyncResponse,
+    responses={
+        500: {
+            "model": ErrorResponse,
+            "description": "GoHighLevel sync failed",
+        }
+    },
+)
 async def sync_ghl(services: Services = Depends(get_services)) -> GHLSyncResponse:
     try:
         count = services.ghl.sync_contacts_from_ghl()
