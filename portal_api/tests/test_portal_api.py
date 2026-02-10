@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 
 from fastapi.testclient import TestClient
 
@@ -10,8 +11,10 @@ from portal_api.dependencies import get_services
 client = TestClient(app)
 
 
-def _reset_state() -> None:
-    response = client.post("/system/reset")
+def _reset_state(api_key: str | None = None) -> None:
+    effective_api_key = api_key or os.getenv("PORTAL_API_DEMO_KEY")
+    headers = {"X-API-Key": effective_api_key} if effective_api_key else None
+    response = client.post("/system/reset", headers=headers)
     assert response.status_code == 200
 
 
@@ -25,6 +28,13 @@ def _openapi_error_ref(paths: dict, route: str, method: str, status_code: str) -
 
 def _openapi_request_ref(paths: dict, route: str, method: str) -> str:
     return paths[route][method]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+
+
+def _assert_request_id_header(response, expected: str | None = None) -> None:
+    request_id = response.headers.get("X-Request-ID")
+    assert request_id
+    if expected:
+        assert request_id == expected
 
 
 def test_root_endpoint() -> None:
@@ -65,7 +75,24 @@ def test_openapi_ghl_sync_500_contract_locked() -> None:
 
     assert "500" in responses
     assert responses["500"]["description"] == "GoHighLevel sync failed"
-    assert _openapi_error_ref(openapi["paths"], "/ghl/sync", "post", "500").endswith("/ErrorResponse")
+    assert _openapi_error_ref(openapi["paths"], "/ghl/sync", "post", "500").endswith("/ApiErrorResponse")
+
+
+def test_openapi_401_contracts_locked_for_mutating_routes() -> None:
+    openapi = app.openapi()
+    paths = openapi["paths"]
+    guarded_routes = [
+        ("/portal/swipe", "post"),
+        ("/vapi/tools/book-tour", "post"),
+        ("/ghl/sync", "post"),
+        ("/system/reset", "post"),
+    ]
+
+    for route, method in guarded_routes:
+        responses = paths[route][method]["responses"]
+        assert "401" in responses
+        assert responses["401"]["description"] == "API key missing or invalid"
+        assert _openapi_error_ref(paths, route, method, "401").endswith("/ApiErrorResponse")
 
 
 def test_openapi_422_validation_contracts_locked_on_selected_routes() -> None:
@@ -107,7 +134,14 @@ def test_openapi_state_details_limit_parameter_bounds() -> None:
 def test_health_endpoint() -> None:
     response = client.get("/health")
     assert response.status_code == 200
+    _assert_request_id_header(response)
     assert response.json()["status"] == "ok"
+
+
+def test_request_id_header_propagates_when_supplied() -> None:
+    response = client.get("/health", headers={"X-Request-ID": "demo-request-123"})
+    assert response.status_code == 200
+    _assert_request_id_header(response, expected="demo-request-123")
 
 
 def test_portal_deck_endpoint() -> None:
@@ -402,6 +436,7 @@ def test_swipe_rejects_invalid_action() -> None:
         },
     )
     assert response.status_code == 422
+    _assert_request_id_header(response)
     payload = response.json()
     assert any(error["loc"][-1] == "action" for error in payload.get("detail", []))
 
@@ -582,10 +617,76 @@ def test_ghl_sync_returns_500_on_service_exception(monkeypatch) -> None:
     services = get_services()
 
     def _raise_sync_error() -> int:
-        raise RuntimeError("ghl sync failed")
+        raise RuntimeError("upstream provider timeout")
 
     monkeypatch.setattr(services.ghl, "sync_contacts_from_ghl", _raise_sync_error)
 
     response = client.post("/ghl/sync")
     assert response.status_code == 500
-    assert response.json()["detail"] == "ghl sync failed"
+    _assert_request_id_header(response)
+    payload = response.json()
+    assert payload["error"]["code"] == "ghl_sync_failed"
+    assert payload["error"]["message"] == "GoHighLevel sync failed"
+    assert payload["error"]["request_id"] == response.headers["X-Request-ID"]
+    assert "upstream provider timeout" not in json.dumps(payload)
+
+
+def test_demo_api_key_guard_disabled_when_env_unset(monkeypatch) -> None:
+    _reset_state()
+    monkeypatch.delenv("PORTAL_API_DEMO_KEY", raising=False)
+
+    response = client.post(
+        "/portal/swipe",
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert response.status_code == 200
+    _assert_request_id_header(response)
+
+
+def test_demo_api_key_guard_enforced_when_env_set(monkeypatch) -> None:
+    _reset_state()
+    monkeypatch.setenv("PORTAL_API_DEMO_KEY", "demo-secret")
+
+    unauthorized = client.post(
+        "/portal/swipe",
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert unauthorized.status_code == 401
+    _assert_request_id_header(unauthorized)
+    unauthorized_payload = unauthorized.json()
+    assert unauthorized_payload["error"]["code"] == "unauthorized"
+    assert unauthorized_payload["error"]["message"] == "Invalid API key"
+    assert unauthorized_payload["error"]["request_id"] == unauthorized.headers["X-Request-ID"]
+
+    authorized = client.post(
+        "/portal/swipe",
+        headers={"X-API-Key": "demo-secret"},
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert authorized.status_code == 200
+    _assert_request_id_header(authorized)
+
+
+def test_demo_api_key_guard_protects_reset_and_allows_valid_key(monkeypatch) -> None:
+    _reset_state()
+    monkeypatch.setenv("PORTAL_API_DEMO_KEY", "demo-secret")
+
+    unauthorized = client.post("/system/reset")
+    assert unauthorized.status_code == 401
+    assert unauthorized.json()["error"]["code"] == "unauthorized"
+
+    authorized = client.post("/system/reset", headers={"X-API-Key": "demo-secret"})
+    assert authorized.status_code == 200
+    _assert_request_id_header(authorized)

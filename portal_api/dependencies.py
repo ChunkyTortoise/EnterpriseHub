@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Dict
+
+from fastapi import Header, Request
 
 from modules.appointment_manager import AppointmentManager
 from modules.ghl_sync import GHLSyncService
@@ -16,6 +19,12 @@ class Services:
     ghl: GHLSyncService
     appointment: AppointmentManager
     trigger_outbound_call: Any
+
+
+class DemoAuthError(Exception):
+    """Raised when demo API key auth is enabled and a request is unauthorized."""
+
+    pass
 
 
 @lru_cache(maxsize=1)
@@ -59,3 +68,12 @@ def get_detailed_service_state(recent_limit: int = 5) -> Dict[str, Any]:
         "ghl": services.ghl.get_state_snapshot(recent_limit=recent_limit),
         "appointment": services.appointment.get_state_snapshot(recent_limit=recent_limit),
     }
+
+
+def require_demo_api_key(request: Request, x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
+    expected_api_key = os.getenv("PORTAL_API_DEMO_KEY")
+    if not expected_api_key:
+        return
+    if x_api_key == expected_api_key:
+        return
+    raise DemoAuthError("Invalid API key")

@@ -169,8 +169,10 @@ Standalone FastAPI module used for the client showcase and deterministic API val
 - Typed request/response contracts are enforced with Pydantic models and locked OpenAPI schema assertions.
 - `POST /portal/swipe` accepts only `action` values `like` or `pass`.
 - `GET /system/state/details` enforces `limit` bounds: `ge=0`, `le=100`, default `5`.
-- `POST /ghl/sync` documents both success (`200`) and service-failure (`500`) contracts.
-- CI gate for this surface is deterministic and scoped to lint + compile + `portal_api` tests.
+- `POST /ghl/sync` documents both success (`200`) and service-failure (`500`) contracts with `ApiErrorResponse`.
+- Demo auth guard is env-gated on mutating routes: unset `PORTAL_API_DEMO_KEY` keeps current behavior; set it to require matching `X-API-Key`.
+- Every response includes an `X-Request-ID` header (propagated when provided, generated when absent).
+- Full `portal_api` OpenAPI schema is snapshot-locked at `portal_api/tests/openapi_snapshot.json`.
 
 ### Alias Map
 
@@ -183,56 +185,47 @@ Standalone FastAPI module used for the client showcase and deterministic API val
 Run from repository root:
 
 ```bash
-ruff check main.py portal_api modules
-
-python3 -m py_compile \
-  main.py \
-  portal_api/app.py \
-  portal_api/dependencies.py \
-  portal_api/models.py \
-  portal_api/routers/root.py \
-  portal_api/routers/vapi.py \
-  portal_api/routers/portal.py \
-  portal_api/routers/ghl.py \
-  portal_api/routers/admin.py \
-  modules/inventory_manager.py \
-  modules/ghl_sync.py \
-  modules/appointment_manager.py \
-  modules/voice_trigger.py
-
-pytest -q -o addopts='' portal_api/tests/test_portal_api.py
+bash scripts/portal_api_validate.sh
 ```
 
 ### Interview Demo Run (5 minutes)
 
 ```bash
-# 1) Reset deterministic in-memory state
-curl -s -X POST http://127.0.0.1:8000/system/reset | jq
-
-# 2) Load a deck
-curl -s "http://127.0.0.1:8000/portal/deck?contact_id=lead_001" | jq
-
-# 3) Perform a valid swipe
-curl -s -X POST http://127.0.0.1:8000/portal/swipe \
-  -H "content-type: application/json" \
-  -d '{"contact_id":"lead_001","property_id":"prop_001","action":"like"}' | jq
-
-# 4) Book a tour via Vapi tool payload
-curl -s -X POST http://127.0.0.1:8000/vapi/tools/book-tour \
-  -H "content-type: application/json" \
-  -d '{"toolCall":{"id":"demo-1","function":{"arguments":{"contact_id":"lead_001","slot_time":"2026-02-15T10:00:00","property_address":"123 Palm Ave"}}}}' | jq
-
-# 5) Show aggregate + detailed state
-curl -s http://127.0.0.1:8000/system/state | jq
-curl -s "http://127.0.0.1:8000/system/state/details?limit=2" | jq
-
-# 6) Negative-path proof: invalid swipe action returns 422
-curl -s -X POST http://127.0.0.1:8000/portal/swipe \
-  -H "content-type: application/json" \
-  -d '{"contact_id":"lead_001","property_id":"prop_001","action":"save"}' | jq
+bash scripts/portal_api_interview_demo.sh
 ```
 
-Known limitations / next steps: auth and authorization layers, real external integrations, and deeper observability/telemetry are intentionally simplified in this demo slice.
+### OpenAPI Snapshot Refresh
+
+Use this only when an API contract change is intentional:
+
+```bash
+python3 scripts/refresh_portal_openapi_snapshot.py
+pytest -q -o addopts='' --confcutdir=portal_api/tests portal_api/tests
+```
+
+### Typed Client Smoke Example
+
+```bash
+python3 scripts/portal_api_client_example.py
+```
+
+If demo auth is enabled:
+
+```bash
+PORTAL_API_DEMO_KEY=demo-secret python3 scripts/portal_api_client_example.py --api-key demo-secret
+```
+
+### Optional P2 Helpers
+
+```bash
+# Ensure local toolchain + API health are ready before interview demo
+bash scripts/portal_api_preflight.sh
+
+# Lightweight repeated-run timing sanity (not a benchmark)
+python3 scripts/portal_api_latency_sanity.py --runs 10
+```
+
+Known limitations / next steps: full auth/authz, real external provider hardening, and deeper observability are intentionally out of scope for this interview slice.
 
 ### Client Showcase (Streamlit + enterprise-ui)
 

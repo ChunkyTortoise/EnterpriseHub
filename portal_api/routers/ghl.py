@@ -1,7 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
 
-from portal_api.dependencies import Services, get_services
-from portal_api.models import ErrorResponse, GHLFieldsResponse, GHLFieldsUnavailableResponse, GHLSyncResponse
+from portal_api.dependencies import Services, get_services, require_demo_api_key
+from portal_api.models import (
+    ApiErrorDetail,
+    ApiErrorResponse,
+    GHLFieldsResponse,
+    GHLFieldsUnavailableResponse,
+    GHLSyncResponse,
+)
 
 router = APIRouter(prefix="/ghl", tags=["ghl"])
 
@@ -9,19 +16,28 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
 @router.post(
     "/sync",
     response_model=GHLSyncResponse,
+    dependencies=[Depends(require_demo_api_key)],
     responses={
+        401: {
+            "model": ApiErrorResponse,
+            "description": "API key missing or invalid",
+        },
         500: {
-            "model": ErrorResponse,
+            "model": ApiErrorResponse,
             "description": "GoHighLevel sync failed",
         }
     },
 )
-async def sync_ghl(services: Services = Depends(get_services)) -> GHLSyncResponse:
+async def sync_ghl(request: Request, services: Services = Depends(get_services)) -> GHLSyncResponse | JSONResponse:
     try:
         count = services.ghl.sync_contacts_from_ghl()
         return GHLSyncResponse(status="success", synced_count=count)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception:
+        request_id = getattr(request.state, "request_id", None)
+        payload = ApiErrorResponse(
+            error=ApiErrorDetail(code="ghl_sync_failed", message="GoHighLevel sync failed", request_id=request_id)
+        ).model_dump()
+        return JSONResponse(status_code=500, content=payload)
 
 
 @router.get("/fields", response_model=GHLFieldsResponse | GHLFieldsUnavailableResponse)
