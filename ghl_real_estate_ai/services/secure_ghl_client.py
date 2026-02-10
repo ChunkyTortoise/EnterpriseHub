@@ -70,6 +70,7 @@ class SecureGHLClient:
             "Content-Type": "application/json",
             "User-Agent": f"GHL-Real-Estate-AI/{settings.version}",
         }
+        self.http_client = httpx.AsyncClient(timeout=30.0)
 
     def _validate_api_key(self) -> bool:
         """Validate API key format for security."""
@@ -130,51 +131,50 @@ class SecureGHLClient:
         params = {"locationId": self.location_id, "limit": limit}
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(endpoint, params=params, headers=self.headers)
+            response = await self.http_client.get(endpoint, params=params, headers=self.headers)
 
-                # SECURITY: Log API request for monitoring
-                logger.info(
-                    f"GHL_API_REQUEST: Conversations fetch request",
+            # SECURITY: Log API request for monitoring
+            logger.info(
+                f"GHL_API_REQUEST: Conversations fetch request",
+                extra={
+                    "endpoint": "conversations/search",
+                    "status_code": response.status_code,
+                    "request_id": response.headers.get("x-request-id"),
+                    "limit": limit,
+                },
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            conversations = data.get("conversations", [])
+
+            if not isinstance(conversations, list):
+                error_id = f"INVALID_RESPONSE_{uuid.uuid4().hex[:8].upper()}"
+                logger.error(
+                    f"GHL_API_INVALID_RESPONSE: Expected list, got {type(conversations)}",
                     extra={
-                        "endpoint": "conversations/search",
-                        "status_code": response.status_code,
-                        "request_id": response.headers.get("x-request-id"),
-                        "limit": limit,
+                        "error_id": error_id,
+                        "response_type": type(conversations).__name__,
+                        "response_keys": list(data.keys()) if isinstance(data, dict) else None,
                     },
                 )
-
-                response.raise_for_status()
-                data = response.json()
-
-                conversations = data.get("conversations", [])
-
-                if not isinstance(conversations, list):
-                    error_id = f"INVALID_RESPONSE_{uuid.uuid4().hex[:8].upper()}"
-                    logger.error(
-                        f"GHL_API_INVALID_RESPONSE: Expected list, got {type(conversations)}",
-                        extra={
-                            "error_id": error_id,
-                            "response_type": type(conversations).__name__,
-                            "response_keys": list(data.keys()) if isinstance(data, dict) else None,
-                        },
-                    )
-                    raise GHLAPIError(
-                        f"Invalid response format from GHL API: expected list, got {type(conversations)}",
-                        error_id=error_id,
-                        status_code=response.status_code,
-                    )
-
-                logger.info(
-                    f"GHL_CONVERSATIONS_FETCHED: Successfully retrieved {len(conversations)} conversations",
-                    extra={
-                        "conversation_count": len(conversations),
-                        "requested_limit": limit,
-                        "response_time_ms": response.elapsed.total_seconds() * 1000,
-                    },
+                raise GHLAPIError(
+                    f"Invalid response format from GHL API: expected list, got {type(conversations)}",
+                    error_id=error_id,
+                    status_code=response.status_code,
                 )
 
-                return conversations
+            logger.info(
+                f"GHL_CONVERSATIONS_FETCHED: Successfully retrieved {len(conversations)} conversations",
+                extra={
+                    "conversation_count": len(conversations),
+                    "requested_limit": limit,
+                    "response_time_ms": response.elapsed.total_seconds() * 1000,
+                },
+            )
+
+            return conversations
 
         except httpx.TimeoutException as e:
             error_id = f"GHL_TIMEOUT_{uuid.uuid4().hex[:8].upper()}"
@@ -314,23 +314,22 @@ class SecureGHLClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(endpoint, json=payload, headers=self.headers)
+            response = await self.http_client.post(endpoint, json=payload, headers=self.headers)
 
-                # SECURITY: Log message sending for audit
-                logger.info(
-                    f"GHL_MESSAGE_SENT: Message sent successfully",
-                    extra={
-                        "contact_id": contact_id[:8] + "..." if len(contact_id) > 8 else contact_id,
-                        "channel": channel.value,
-                        "message_length": len(sanitized_message),
-                        "status_code": response.status_code,
-                        "message_id": response.json().get("messageId") if response.status_code == 200 else None,
-                    },
-                )
+            # SECURITY: Log message sending for audit
+            logger.info(
+                f"GHL_MESSAGE_SENT: Message sent successfully",
+                extra={
+                    "contact_id": contact_id[:8] + "..." if len(contact_id) > 8 else contact_id,
+                    "channel": channel.value,
+                    "message_length": len(sanitized_message),
+                    "status_code": response.status_code,
+                    "message_id": response.json().get("messageId") if response.status_code == 200 else None,
+                },
+            )
 
-                response.raise_for_status()
-                return response.json()
+            response.raise_for_status()
+            return response.json()
 
         except httpx.HTTPStatusError as e:
             error_id = f"MESSAGE_SEND_FAILED_{uuid.uuid4().hex[:8].upper()}"

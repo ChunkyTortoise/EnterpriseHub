@@ -582,8 +582,8 @@ async def apply_suggestion(suggestion_id: str, current_user=Depends(get_current_
         return result
 
     except Exception as e:
-        logger.error(f"Error applying suggestion {suggestion_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to apply suggestion {suggestion_id}")
+        logger.exception("Failed to apply suggestion")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/suggestions/{suggestion_id}/dismiss")
@@ -617,8 +617,8 @@ async def dismiss_suggestion(
         return {"success": True, "message": "Suggestion dismissed"}
 
     except Exception as e:
-        logger.error(f"Error dismissing suggestion {suggestion_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to dismiss suggestion {suggestion_id}")
+        logger.exception("Failed to dismiss suggestion")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -667,7 +667,7 @@ async def analyze_platform_performance(current_user=Depends(get_current_user_opt
             "overallHealth": 0,
             "keyMetrics": [],
             "recommendations": [],
-            "alerts": [{"level": "error", "message": f"Analysis failed: {str(e)}"}],
+            "alerts": [{"level": "error", "message": "Analysis temporarily unavailable"}],
         }
 
 
@@ -832,6 +832,6 @@ async def get_context(session_id: str, current_user=Depends(get_current_user_opt
         return context
 
     except Exception as e:
-        logger.error(f"Error fetching context for session {session_id}: {e}")
+        logger.exception("Failed to fetch session context")
 
-        raise HTTPException(status_code=500, detail=f"Failed to fetch context for session {session_id}")
+        raise HTTPException(status_code=500, detail="Internal server error")

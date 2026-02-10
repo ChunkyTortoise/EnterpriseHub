@@ -11,6 +11,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 import anthropic
+import httpx
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -235,10 +236,11 @@ async def safe_send_sms(contact_id: str, location_id: str, message: str, agent_n
     await send_sms_via_ghl(contact_id, location_id, message)
 
 
+_webhook_http_client = httpx.AsyncClient(timeout=30.0)
+
+
 async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
     """Send SMS message via GHL API"""
-    import httpx
-
     url = f"{GHL_API_BASE_URL}/conversations/messages"
 
     headers = {
@@ -254,11 +256,10 @@ async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
     }
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            logger.info(f"SMS sent to contact {contact_id}")
-            return response.json()
+        response = await _webhook_http_client.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        logger.info(f"SMS sent to contact {contact_id}")
+        return response.json()
 
     except Exception as e:
         logger.error(f"Failed to send SMS: {e}")
@@ -267,8 +268,6 @@ async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
 
 async def update_contact_tag(contact_id: str, location_id: str, tag: str):
     """Add tag to contact in GHL"""
-    import httpx
-
     url = f"{GHL_API_BASE_URL}/contacts/{contact_id}/tags"
 
     headers = {
@@ -279,10 +278,9 @@ async def update_contact_tag(contact_id: str, location_id: str, tag: str):
     payload = {"tags": [tag]}
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-            logger.info(f"Tag '{tag}' added to contact {contact_id}")
+        response = await _webhook_http_client.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        logger.info(f"Tag '{tag}' added to contact {contact_id}")
 
     except Exception as e:
         logger.error(f"Failed to update tag: {e}")

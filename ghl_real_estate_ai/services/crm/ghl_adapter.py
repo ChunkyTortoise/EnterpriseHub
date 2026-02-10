@@ -39,6 +39,7 @@ class GHLAdapter(CRMProtocol):
         self._api_key = api_key
         self._location_id = location_id
         self._base_url = base_url.rstrip("/")
+        self._http_client = httpx.AsyncClient(timeout=30.0)
 
     # ------------------------------------------------------------------
     # Field mapping helpers
@@ -112,14 +113,13 @@ class GHLAdapter(CRMProtocol):
     ) -> httpx.Response:
         """Execute an HTTP request and raise on failure."""
         url = f"{self._base_url}{path}"
-        async with httpx.AsyncClient() as client:
-            resp = await client.request(
-                method,
-                url,
-                headers=self._headers,
-                json=json_body,
-                params=params,
-            )
+        resp = await self._http_client.request(
+            method,
+            url,
+            headers=self._headers,
+            json=json_body,
+            params=params,
+        )
         if resp.status_code == 401:
             raise GHLError(401, "Authentication failed")
         if resp.status_code == 404:

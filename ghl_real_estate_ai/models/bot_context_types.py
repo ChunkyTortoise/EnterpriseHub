@@ -52,10 +52,12 @@ class LeadBotResponse(TypedDict, total=False):
     lead_id: str
     response_content: str
     current_step: str  # "awaiting_input", "qualifying", "nurturing"
-    engagement_status: str  # "active", "dormant", "qualified"
+    engagement_status: str  # "active", "dormant", "qualified", "error"
     temperature: NotRequired[str]  # "hot", "warm", "lukewarm", "cold"
     handoff_signals: NotRequired[dict[str, Any]]
     intelligence_context: NotRequired[Any]
+    error: NotRequired[str]  # Error message on failure
+    ab_test: NotRequired[dict[str, Any]]  # experiment_id + variant
 
 
 class BuyerBotResponse(TypedDict, total=False):
@@ -65,12 +67,15 @@ class BuyerBotResponse(TypedDict, total=False):
     lead_id: str
     response_content: str
     current_step: str  # "budget", "timeline", "preferences", "decision_makers"
-    engagement_status: str  # "active", "dormant", "qualified"
+    engagement_status: str  # "active", "dormant", "qualified", "opted_out"
     financial_readiness: float  # 0-100
     buying_motivation_score: NotRequired[float]  # 0-100
     buyer_temperature: NotRequired[str]  # "hot", "warm", "lukewarm", "cold"
     handoff_signals: NotRequired[dict[str, Any]]
     matched_properties: NotRequired[list[dict[str, Any]]]
+    opt_out_detected: NotRequired[bool]  # True when TCPA opt-out triggered
+    actions: NotRequired[list[dict[str, Any]]]  # GHL tag actions
+    ab_test: NotRequired[dict[str, Any]]  # experiment_id + variant
 
 
 class SellerBotResponse(TypedDict, total=False):
@@ -80,12 +85,14 @@ class SellerBotResponse(TypedDict, total=False):
     seller_id: NotRequired[str]
     response_content: str
     current_step: NotRequired[str]
+    engagement_status: NotRequired[str]  # "qualification", "error", etc.
     frs_score: float  # Financial Readiness Score (0-100)
     pcs_score: float  # Psychological Commitment Score (0-100)
-    temperature: str  # "hot", "warm", "lukewarm", "cold"
-    handoff_signals: list[str]  # ["buyer_intent_detected", etc.]
+    temperature: NotRequired[str]  # "hot", "warm", "lukewarm", "cold"
+    handoff_signals: dict[str, Any]  # intent signals from handoff service
     is_qualified: NotRequired[bool]
     next_action: NotRequired[str]
+    ab_test: NotRequired[dict[str, Any]]  # experiment_id + variant
 
 
 # ── Intent & Handoff Types ────────────────────────────────────────────

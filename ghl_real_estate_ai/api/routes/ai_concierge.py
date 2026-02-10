@@ -293,7 +293,7 @@ async def get_conversation_insights(
 
         logger.error(f"Failed to get insights for {conversation_id}: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve insights for conversation"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve insights"
         )
 
 
@@ -562,7 +562,7 @@ async def control_conversation_monitoring(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to {control_request.action} monitoring for conversation",
+            detail="Failed to update monitoring control",
         )
 
 

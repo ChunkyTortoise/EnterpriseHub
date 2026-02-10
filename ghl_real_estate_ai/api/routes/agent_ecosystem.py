@@ -601,8 +601,8 @@ async def get_agent_by_id(agent_id: str, current_user=Depends(get_current_user_o
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching agent {agent_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch agent {agent_id}")
+        logger.exception("Failed to fetch agent status")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.put("/{agent_id}/status")
@@ -639,8 +639,8 @@ async def update_agent_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating agent {agent_id} status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update agent {agent_id}")
+        logger.exception("Failed to update agent status")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -764,8 +764,8 @@ async def pause_agent(agent_id: str, current_user=Depends(get_current_user_optio
         return {"success": True, "action": "paused", "agent_id": agent_id}
 
     except Exception as e:
-        logger.error(f"Error pausing agent {agent_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to pause agent {agent_id}")
+        logger.exception("Failed to pause agent")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/{agent_id}/resume")
@@ -788,8 +788,8 @@ async def resume_agent(agent_id: str, current_user=Depends(get_current_user_opti
         return {"success": True, "action": "resumed", "agent_id": agent_id}
 
     except Exception as e:
-        logger.error(f"Error resuming agent {agent_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to resume agent {agent_id}")
+        logger.exception("Failed to resume agent")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/{agent_id}/restart")
@@ -812,8 +812,8 @@ async def restart_agent(agent_id: str, current_user=Depends(get_current_user_opt
         return {"success": True, "action": "restarted", "agent_id": agent_id}
 
     except Exception as e:
-        logger.error(f"Error restarting agent {agent_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to restart agent {agent_id}")
+        logger.exception("Failed to restart agent")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================

@@ -26,6 +26,7 @@ class VoiceService:
     def __init__(self):
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
         self.google_stt_api_key = os.getenv("GOOGLE_STT_API_KEY")
+        self.http_client = httpx.AsyncClient(timeout=15.0)
 
     async def transcribe_audio(self, audio_content: bytes) -> str:
         """
@@ -56,10 +57,9 @@ class VoiceService:
         }
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, json=data, headers=headers)
-                response.raise_for_status()
-                return response.content
+            response = await self.http_client.post(url, json=data, headers=headers)
+            response.raise_for_status()
+            return response.content
         except Exception as e:
             logger.error(f"ElevenLabs TTS failed: {e}")
             return b"Error synthesizing speech"

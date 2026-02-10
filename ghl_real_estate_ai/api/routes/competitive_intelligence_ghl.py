@@ -216,7 +216,8 @@ class GHLMarketIntelligenceService:
                 )
 
                 if response.status_code not in [200, 201]:
-                    raise HTTPException(status_code=400, detail=f"Failed to create GHL campaign: {response.text}")
+                    logger.error("GHL campaign creation failed: status=%s", response.status_code)
+                    raise HTTPException(status_code=400, detail="Failed to create GHL campaign")
 
                 ghl_campaign = response.json()
 
