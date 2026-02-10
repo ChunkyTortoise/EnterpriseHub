@@ -114,6 +114,10 @@ def dispatch_hub(
         from ghl_real_estate_ai.streamlit_demo.components.war_room_dashboard import render_war_room_dashboard
 
         render_war_room_dashboard()
+    elif selected_hub == "Lead Source ROI":
+        from ghl_real_estate_ai.streamlit_demo.components.source_roi_dashboard import render_source_roi_dashboard
+
+        render_source_roi_dashboard()
     elif selected_hub == "Agent ROI Dashboard":
         from ghl_real_estate_ai.streamlit_demo.components.agent_roi_dashboard import render_agent_roi_dashboard
 

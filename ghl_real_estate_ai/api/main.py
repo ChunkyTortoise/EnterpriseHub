@@ -332,6 +332,77 @@ async def lifespan(app: FastAPI):
         logger.warning("Failed to start periodic alerting task: %s", e)
 
     # ========================================================================
+    # LEAD ABANDONMENT RECOVERY (Phase 2.1)
+    # ========================================================================
+
+    abandonment_task_started = False
+    try:
+        from ghl_real_estate_ai.services.jorge.abandonment_background_task import (
+            start_abandonment_background_task,
+        )
+        from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
+
+        # Initialize GHL client for recovery messages
+        if settings.ghl_api_key and settings.ghl_location_id:
+            ghl_client = EnhancedGHLClient(
+                api_key=settings.ghl_api_key,
+                location_id=settings.ghl_location_id,
+            )
+
+            # Get database pool from Jorge repository
+            db_pool = None
+            if jorge_repository:
+                db_pool = await jorge_repository._get_pool()
+
+            # Start abandonment detection background task (4-hour interval)
+            abandonment_task_started = await start_abandonment_background_task(
+                ghl_client=ghl_client,
+                db_pool=db_pool,
+                interval_seconds=4 * 3600,  # 4 hours
+            )
+
+            if abandonment_task_started:
+                logger.info("✅ Lead Abandonment Recovery background task started (4-hour interval)")
+            else:
+                logger.warning("⚠️ Lead Abandonment Recovery task failed to start")
+        else:
+            logger.warning("⚠️ GHL credentials not configured - abandonment recovery disabled")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to start Lead Abandonment Recovery: {e}")
+        logger.warning("Abandonment recovery will not function automatically")
+
+    # ========================================================================
+    # LEAD SOURCE ROI ANALYTICS (Phase 2.3)
+    # ========================================================================
+
+    source_roi_task_started = False
+    try:
+        from ghl_real_estate_ai.services.jorge.source_roi_background_task import (
+            start_source_roi_background_task,
+        )
+
+        # Get database pool from Jorge repository
+        db_pool = None
+        if jorge_repository:
+            db_pool = await jorge_repository._get_pool()
+
+        # Start source ROI update background task (24-hour interval)
+        source_roi_task_started = await start_source_roi_background_task(
+            db_pool=db_pool,
+            interval_seconds=86400,  # 24 hours
+        )
+
+        if source_roi_task_started:
+            logger.info("✅ Lead Source ROI Analytics background task started (24-hour interval)")
+        else:
+            logger.warning("⚠️ Lead Source ROI Analytics task failed to start")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to start Lead Source ROI Analytics: {e}")
+        logger.warning("Source ROI metrics will not update automatically")
+
+    # ========================================================================
     # STARTUP ENV VAR VALIDATION (non-blocking warnings)
     # ========================================================================
 
@@ -347,6 +418,28 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
         logger.info("Periodic alerting background task stopped")
+
+    # Stop abandonment detection task
+    if abandonment_task_started:
+        try:
+            from ghl_real_estate_ai.services.jorge.abandonment_background_task import (
+                stop_abandonment_background_task,
+            )
+            await stop_abandonment_background_task()
+            logger.info("Lead Abandonment Recovery background task stopped")
+        except Exception as e:
+            logger.warning(f"Failed to stop abandonment task gracefully: {e}")
+
+    # Stop source ROI analytics task
+    if source_roi_task_started:
+        try:
+            from ghl_real_estate_ai.services.jorge.source_roi_background_task import (
+                stop_source_roi_background_task,
+            )
+            await stop_source_roi_background_task()
+            logger.info("Lead Source ROI Analytics background task stopped")
+        except Exception as e:
+            logger.warning(f"Failed to stop source ROI task gracefully: {e}")
 
     # Close Jorge metrics repository connection pool
     if jorge_repository:
