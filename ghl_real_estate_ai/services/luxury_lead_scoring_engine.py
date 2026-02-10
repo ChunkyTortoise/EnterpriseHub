@@ -26,6 +26,7 @@ from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.optimized_cache_service import cached
+from ghl_real_estate_ai.utils.score_utils import clamp_score
 
 
 class WealthTier(Enum):
@@ -291,7 +292,7 @@ class LuxuryLeadScoringEngine:
             indicators.investment_sophistication * 0.5,
             (1 if indicators.public_records_match else 0) * 30,
         ]
-        indicators.net_worth_confidence = min(sum(confidence_factors), 100)
+        indicators.net_worth_confidence = clamp_score(sum(confidence_factors))
 
         return indicators
 
@@ -458,7 +459,7 @@ class LuxuryLeadScoringEngine:
                 professional_score += 5
 
             sophistication_score = max(
-                sophistication_score, min(investment_score + luxury_score + professional_score, 100)
+                sophistication_score, clamp_score(investment_score + luxury_score + professional_score)
             )
 
         return sophistication_score
@@ -567,7 +568,7 @@ class LuxuryLeadScoringEngine:
             if any(term in content for term in service_terms):
                 profile.service_level_expectations = "white_glove"
 
-        profile.lifestyle_score = min(lifestyle_score, 100)
+        profile.lifestyle_score = clamp_score(lifestyle_score)
 
         # Privacy and discretion analysis
         privacy_indicators = ["private", "confidential", "discrete", "quiet", "off-market"]
@@ -581,7 +582,7 @@ class LuxuryLeadScoringEngine:
             * 10
         )
 
-        profile.privacy_requirements = min(privacy_score, 100)
+        profile.privacy_requirements = clamp_score(privacy_score)
         profile.discretion_importance = profile.privacy_requirements  # Correlated
 
         return profile
@@ -663,8 +664,8 @@ class LuxuryLeadScoringEngine:
             content = comm.get("content", "").lower()
             sophistication_score += sum(1 for term in investment_terms if term in content) * 3
 
-        capacity.financing_sophistication = min(sophistication_score, 100)
-        capacity.real_estate_experience = min(sophistication_score * 0.8, 100)
+        capacity.financing_sophistication = clamp_score(sophistication_score)
+        capacity.real_estate_experience = clamp_score(sophistication_score * 0.8)
 
         # Investment capacity score
         capacity_factors = [
@@ -673,7 +674,7 @@ class LuxuryLeadScoringEngine:
             capacity.real_estate_experience * 0.2,  # Experience
         ]
 
-        capacity.investment_capacity_score = min(sum(capacity_factors), 100)
+        capacity.investment_capacity_score = clamp_score(sum(capacity_factors))
 
         return capacity
 
@@ -792,7 +793,7 @@ class LuxuryLeadScoringEngine:
             avg_range = sum(price_ranges) / len(price_ranges) if price_ranges else 0
 
             # Lower price range variance = less price sensitive
-            intel.price_sensitivity = max(0, 100 - (avg_range / 1_000_000 * 50))
+            intel.price_sensitivity = clamp_score(100 - (avg_range / 1_000_000 * 50))
 
         return intel
 
@@ -825,7 +826,7 @@ class LuxuryLeadScoringEngine:
         """Calculate master luxury score using weighted factors"""
 
         # Component scores
-        net_worth_score = min(luxury_lead.net_worth_indicators.net_worth_confidence, 100)
+        net_worth_score = clamp_score(luxury_lead.net_worth_indicators.net_worth_confidence)
         lifestyle_score = luxury_lead.lifestyle_profile.lifestyle_score
         investment_score = luxury_lead.investment_capacity.investment_capacity_score
 
@@ -840,10 +841,9 @@ class LuxuryLeadScoringEngine:
         buying_score = buying_signal_scores.get(luxury_lead.buying_signal, 50)
 
         # Competitive intelligence score
-        competitive_score = min(
+        competitive_score = clamp_score(
             luxury_lead.competitive_intel.referral_source_quality
             + (100 - luxury_lead.competitive_intel.price_sensitivity) * 0.5,
-            100,
         )
 
         # Weighted final score
@@ -855,7 +855,7 @@ class LuxuryLeadScoringEngine:
             + competitive_score * self.scoring_weights["competitive_intel"]
         )
 
-        return min(master_score, 100)
+        return clamp_score(master_score)
 
     def _determine_qualification_status(self, luxury_lead: LuxuryLead) -> str:
         """Determine lead qualification status"""

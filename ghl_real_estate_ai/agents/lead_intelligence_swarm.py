@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Any, Dict, List, Tuple
 
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
+from ghl_real_estate_ai.utils.datetime_utils import parse_iso8601
 
 # Configure logging
 logging.basicConfig(
@@ -642,7 +643,7 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
             return False
 
         try:
-            timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+            timestamp = parse_iso8601(timestamp_str)
             return (datetime.utcnow() - timestamp).days <= 7
         except Exception:
             return False

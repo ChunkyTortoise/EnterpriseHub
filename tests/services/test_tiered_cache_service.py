@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -26,8 +27,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.tiered_cache_service import (
-
-@pytest.mark.integration
     CacheItem,
     CacheMetrics,
     LRUCache,
@@ -160,12 +159,16 @@ class TestCacheItem:
 
     def test_access_tracking(self):
         """Test access count and timestamp tracking."""
-        item = CacheItem(value="test", created_at=time.time(), expires_at=time.time() + 300)
+        base = 1_000_000.0
+        item = CacheItem(value="test", created_at=base, expires_at=base + 300)
 
+        # Pin last_access to a known value (bypasses default_factory timing)
+        item.last_access = base
         initial_access = item.last_access
 
-        time.sleep(0.01)  # Small delay
-        item.access()
+        # Mock time.time in source module so access() records a later timestamp
+        with patch("ghl_real_estate_ai.services.tiered_cache_service.time.time", return_value=base + 1.0):
+            item.access()
 
         assert item.access_count == 1
         assert item.last_access > initial_access
@@ -209,32 +212,34 @@ class TestLRUCache:
 
     def test_ttl_expiration(self):
         """Test TTL expiration."""
-        cache = LRUCache(max_size=10, default_ttl=1)
+        base = 1_000_000.0
+        with patch("ghl_real_estate_ai.services.tiered_cache_service.time.time", return_value=base):
+            cache = LRUCache(max_size=10, default_ttl=1)
+            cache.set("key1", "value1", ttl=1)
+            assert cache.get("key1") == "value1"
 
-        cache.set("key1", "value1", ttl=1)
-        assert cache.get("key1") == "value1"
-
-        # Wait for expiration
-        time.sleep(1.1)
-        assert cache.get("key1") is None
+        # Advance time past TTL without sleeping
+        with patch("ghl_real_estate_ai.services.tiered_cache_service.time.time", return_value=base + 2.0):
+            assert cache.get("key1") is None
 
     def test_cleanup_expired(self):
         """Test manual expired item cleanup."""
-        cache = LRUCache(max_size=10, default_ttl=1)
+        base = 1_000_000.0
+        with patch("ghl_real_estate_ai.services.tiered_cache_service.time.time", return_value=base):
+            cache = LRUCache(max_size=10, default_ttl=1)
 
-        # Add items with short TTL
-        cache.set("key1", "value1", ttl=1)
-        cache.set("key2", "value2", ttl=1)
+            # Add items with short TTL
+            cache.set("key1", "value1", ttl=1)
+            cache.set("key2", "value2", ttl=1)
 
-        # Wait for expiration
-        time.sleep(1.1)
+        # Advance time past TTL without sleeping
+        with patch("ghl_real_estate_ai.services.tiered_cache_service.time.time", return_value=base + 2.0):
+            # Cleanup should remove expired items
+            expired_count = cache.cleanup_expired()
+            assert expired_count == 2
 
-        # Cleanup should remove expired items
-        expired_count = cache.cleanup_expired()
-        assert expired_count == 2
-
-        assert cache.get("key1") is None
-        assert cache.get("key2") is None
+            assert cache.get("key1") is None
+            assert cache.get("key2") is None
 
     def test_lru_stats(self):
         """Test LRU cache statistics."""

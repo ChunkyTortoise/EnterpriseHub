@@ -18,8 +18,6 @@ import numpy as np
 import pytest
 
 from src.caching.semantic_cache import (
-
-@pytest.mark.integration
     CacheEntry,
     CacheKeyGenerator,
     EmbeddingService,
@@ -403,10 +401,9 @@ class TestSemanticCache:
         # Add entry with very short TTL
         await cache.set("expiring query", {"data": "value"}, ttl=0)
 
-        # Wait a tiny bit
-        import time
-
-        time.sleep(0.1)
+        # Backdate all entries so they appear expired (no wall-clock delay)
+        for entry in cache._memory_cache.values():
+            entry.created_at = datetime.now() - timedelta(seconds=1)
 
         # Should not find expired entry
         result = await cache.get("expiring query")

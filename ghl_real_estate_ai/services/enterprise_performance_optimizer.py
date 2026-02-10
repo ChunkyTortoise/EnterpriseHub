@@ -56,6 +56,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.database_service import get_database
 from ghl_real_estate_ai.services.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.utils.score_utils import clamp_score
 
 logger = get_logger(__name__)
 
@@ -1048,7 +1049,7 @@ class EnterprisePerformanceOptimizer:
         # Weighted average
         overall_score = response_time_score * 0.3 + error_rate_score * 0.3 + cpu_score * 0.2 + memory_score * 0.2
 
-        return min(100, max(0, overall_score))
+        return clamp_score(overall_score)
 
     # Additional helper methods would continue here...
     # [Additional implementation methods for scaling, optimization, etc.]
