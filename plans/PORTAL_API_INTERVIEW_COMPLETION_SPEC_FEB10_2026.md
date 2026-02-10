@@ -16,7 +16,12 @@ Complete and package the Portal API work so it is demonstrably production-minded
 - Current targeted validation status (local):
   - `ruff check main.py portal_api modules` passes
   - `python3 -m py_compile` portal/module set passes
-  - `pytest -q -o addopts='' portal_api/tests/test_portal_api.py` passes (`22 passed`)
+  - `pytest -q -o addopts='' portal_api/tests/test_portal_api.py` passes (`24 passed`)
+- Completion commits:
+  - `5bc2455a` (contracts + docs + evidence)
+  - `6bd4d7a7` (workflow dependency fix)
+- Remote workflow confirmation:
+  - `portal-api-phase1` run `21859818555` passed on 2026-02-10
 - Critical route OpenAPI refs are now locked for:
   - `/`, `/health`, `/system/state`, `/system/state/details`, `/portal/swipe`, `/vapi/tools/book-tour`, `/ghl/sync`
 
