@@ -9,10 +9,12 @@ import shutil
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
 from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
+
 
 @pytest.mark.unit
 
@@ -32,6 +34,33 @@ def lifecycle_tracker(test_location_id):
     lifecycle_dir = Path(__file__).parent.parent / "data" / "lifecycle" / test_location_id
     if lifecycle_dir.exists():
         shutil.rmtree(lifecycle_dir)
+
+
+
+class _AdvancingDatetime(datetime):
+    """datetime subclass where now() auto-advances by a configurable step."""
+
+    _current: datetime = datetime(2026, 1, 15, 10, 0, 0)
+    _step: timedelta = timedelta(minutes=1)
+
+    @classmethod
+    def now(cls, tz=None):
+        result = cls._current
+        cls._current = cls._current + cls._step
+        return result
+
+    @classmethod
+    def reset(cls, start=None, step=None):
+        cls._current = start or datetime(2026, 1, 15, 10, 0, 0)
+        cls._step = step or timedelta(minutes=1)
+
+
+@pytest.fixture(autouse=True)
+def _mock_lifecycle_datetime():
+    """Auto-mock datetime.now() in the lead_lifecycle module so tests need no time.sleep."""
+    _AdvancingDatetime.reset()
+    with patch("ghl_real_estate_ai.services.lead_lifecycle.datetime", _AdvancingDatetime):
+        yield
 
 
 class TestJourneyCreation:
@@ -137,7 +166,6 @@ class TestStageTransitions:
             contact_id="contact_trans1", contact_name="Eve Foster", source="website"
         )
 
-        time.sleep(0.01)  # Small delay to ensure duration calculation
 
         lifecycle_tracker.transition_stage(journey_id, "contacted", "First response sent", lead_score=35)
 
@@ -171,7 +199,6 @@ class TestStageTransitions:
         ]
 
         for stage, reason, score in stages_to_visit:
-            time.sleep(0.01)
             lifecycle_tracker.transition_stage(journey_id, stage, reason, score)
 
         journey = lifecycle_tracker.journeys[journey_id]
@@ -202,13 +229,9 @@ class TestStageTransitions:
 
         # Progress to hot
         lifecycle_tracker.transition_stage(journey_id, "contacted")
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "qualified")
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "engaged")
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "hot")
-        time.sleep(0.01)
 
         # Now regress back to engaged
         lifecycle_tracker.transition_stage(journey_id, "engaged", "Lost interest")
@@ -225,7 +248,6 @@ class TestStageTransitions:
         )
 
         lifecycle_tracker.transition_stage(journey_id, "appointment")
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "converted", "Deal closed!")
 
         journey = lifecycle_tracker.journeys[journey_id]
@@ -255,7 +277,6 @@ class TestJourneySummary:
 
         lifecycle_tracker.record_event(journey_id, "message", "Initial contact")
         lifecycle_tracker.transition_stage(journey_id, "contacted", lead_score=35)
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "qualified", lead_score=58)
 
         summary = lifecycle_tracker.get_journey_summary(journey_id)
@@ -276,9 +297,7 @@ class TestJourneySummary:
         )
 
         lifecycle_tracker.transition_stage(journey_id, "contacted")
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "qualified")
-        time.sleep(0.01)
         lifecycle_tracker.transition_stage(journey_id, "converted")
 
         summary = lifecycle_tracker.get_journey_summary(journey_id)
@@ -325,9 +344,7 @@ class TestBottleneckAnalysis:
             )
 
             tracker.transition_stage(journey_id, "contacted")
-            time.sleep(0.02)  # Simulate time in stage
             tracker.transition_stage(journey_id, "qualified")
-            time.sleep(0.05)  # Longer time in qualified (bottleneck)
             tracker.transition_stage(journey_id, "engaged")
 
         analysis = tracker.analyze_bottlenecks()
@@ -350,7 +367,6 @@ class TestBottleneckAnalysis:
         )
 
         lifecycle_tracker.transition_stage(journey_id, "contacted")
-        time.sleep(0.1)  # Long time in contacted
         lifecycle_tracker.transition_stage(journey_id, "qualified")
 
         analysis = lifecycle_tracker.analyze_bottlenecks()
@@ -424,7 +440,6 @@ class TestStageAnalytics:
             )
 
             lifecycle_tracker.transition_stage(journey_id, "contacted", lead_score=30 + i * 10)
-            time.sleep(0.01)
             lifecycle_tracker.transition_stage(journey_id, "qualified", lead_score=50 + i * 10)
 
         analytics = lifecycle_tracker.get_stage_analytics()

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """End-to-end integration tests for OpenTelemetry tracing.
@@ -13,6 +14,7 @@ Verifies:
 from unittest.mock import patch
 
 import pytest
+
 
 @pytest.mark.integration
 
@@ -233,17 +235,25 @@ class TestOtelTracingE2E:
 
     def test_span_duration_is_positive(self):
         """jorge.duration_ms should be a positive number."""
-        import time
+        from unittest.mock import patch
 
         telemetry_mod = self._patch_telemetry()
 
-        with telemetry_mod.optional_span("jorge.test", "slow_op"):
-            time.sleep(0.01)  # 10ms
+        # Mock perf_counter to simulate 15ms elapsed (no wall-clock delay)
+        call_count = [0]
+        def mock_perf_counter():
+            call_count[0] += 1
+            return call_count[0] * 0.015  # 15ms per call
+
+        with patch.object(telemetry_mod, "time") as mock_time:
+            mock_time.perf_counter = mock_perf_counter
+            with telemetry_mod.optional_span("jorge.test", "slow_op"):
+                pass  # No sleep needed
 
         spans = self.memory_exporter.get_finished_spans()
         assert len(spans) == 1
         duration = spans[0].attributes["jorge.duration_ms"]
-        assert duration >= 5.0  # At least 5ms (allowing for timer granularity)
+        assert duration >= 5.0  # At least 5ms (from mocked perf_counter)
 
 
 class TestGracefulDegradationE2E:

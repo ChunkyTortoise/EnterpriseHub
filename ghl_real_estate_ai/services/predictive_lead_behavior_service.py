@@ -28,6 +28,7 @@ import numpy as np
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import TenantScopedCache, get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.utils.score_utils import clamp_score
 
 logger = get_logger(__name__)
 
@@ -571,7 +572,7 @@ class PredictiveLeadBehaviorService:
 
             # Weighted average
             engagement_score = base_score * 0.5 + velocity_score * 0.3 + consistency_score * 0.2
-            return min(100.0, max(0.0, engagement_score))
+            return clamp_score(engagement_score)
 
         except Exception as e:
             logger.warning(f"Engagement score calculation failed: {e}")
@@ -720,7 +721,7 @@ class PredictiveLeadBehaviorService:
         if trend.direction == "decreasing":
             risk_factors.append("declining trend")
 
-        return {"score": min(100.0, max(0.0, churn_score)), "factors": risk_factors}
+        return {"score": clamp_score(churn_score), "factors": risk_factors}
 
     def _calculate_conversion_readiness(self, features: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate conversion readiness score."""
@@ -759,7 +760,7 @@ class PredictiveLeadBehaviorService:
 
         # Higher engagement and velocity = higher response probability
         probability = ((velocity_score + engagement_score) / 2) / 100.0
-        return min(1.0, max(0.0, probability))
+        return clamp_score(probability, max_val=1.0)
 
     def _estimate_response_time(self, features: Dict[str, Any]) -> float:
         """Estimate expected response time in hours."""

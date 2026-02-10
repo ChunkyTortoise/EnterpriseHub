@@ -24,6 +24,7 @@ from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionE
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.claude_conversation_intelligence import ClaudeConversationIntelligenceService
 from ghl_real_estate_ai.services.ghl_deal_intelligence_service import GHLDealData, get_ghl_deal_intelligence_service
+from ghl_real_estate_ai.utils.score_utils import clamp_score
 
 logger = get_logger(__name__)
 
@@ -525,7 +526,7 @@ class EmergencyDealRescue:
         if deal.last_contact_date and (datetime.now() - deal.last_contact_date).days < 3:
             score += 10
 
-        return min(100, max(10, score))
+        return clamp_score(score, min_val=10)
 
     def _classify_price_range(self, deal_value: float) -> str:
         """Classify deal into price range categories."""

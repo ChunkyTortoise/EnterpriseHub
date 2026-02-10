@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
 
+from ghl_real_estate_ai.utils.datetime_utils import parse_iso8601
+
 
 class AuditEventType(str, Enum):
     """Types of audit events"""
@@ -641,7 +643,7 @@ class AuditLogger:
 
         # Time range filtering
         if "start_time" in criteria or "end_time" in criteria:
-            event_time = datetime.fromisoformat(event_dict["timestamp"].replace("Z", "+00:00"))
+            event_time = parse_iso8601(event_dict["timestamp"])
 
             if "start_time" in criteria:
                 start_time = datetime.fromisoformat(criteria["start_time"])
@@ -661,7 +663,7 @@ class AuditLogger:
             event_id=event_dict["event_id"],
             event_type=AuditEventType(event_dict["event_type"]),
             severity=AuditSeverity(event_dict["severity"]),
-            timestamp=datetime.fromisoformat(event_dict["timestamp"].replace("Z", "+00:00")),
+            timestamp=parse_iso8601(event_dict["timestamp"]),
             user_id=event_dict.get("user_id"),
             session_id=event_dict.get("session_id"),
             ip_address=event_dict.get("ip_address"),
