@@ -72,7 +72,7 @@ async def get_latency_metrics() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get latency metrics: {e}")
-        raise HTTPException(status_code=500, detail=f"Performance metrics unavailable: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/throughput-metrics")
@@ -135,7 +135,7 @@ async def get_throughput_metrics() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get throughput metrics: {e}")
-        raise HTTPException(status_code=500, detail=f"Throughput metrics unavailable: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/connection-health")
@@ -216,7 +216,7 @@ async def get_connection_health() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get connection health: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection health unavailable: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/optimization-status")
@@ -279,7 +279,7 @@ async def get_optimization_status() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get optimization status: {e}")
-        raise HTTPException(status_code=500, detail=f"Optimization status unavailable: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/live-metrics-stream")
@@ -457,7 +457,7 @@ def _calculate_connection_duration(connected_at: str) -> str:
             return f"{int(minutes)}m {int(seconds)}s"
         else:
             return f"{int(seconds)}s"
-    except:
+    except ValueError: # Changed bare except to specific ValueError
         return "unknown"
 
 

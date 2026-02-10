@@ -516,7 +516,7 @@ class ClientSuccessIntegrationService:
             # Test basic functionality
             test_result = await self.transaction_intelligence.get_proactive_recommendations({"test": "transaction"})
             return test_result is not None
-        except:
+        except Exception:
             return False
 
     async def _test_ai_negotiation_connection(self) -> bool:
@@ -525,7 +525,7 @@ class ClientSuccessIntegrationService:
             # Test basic functionality
             test_result = await self.ai_negotiation.analyze_negotiation_opportunity({"test": "data"})
             return test_result is not None
-        except:
+        except Exception:
             return False
 
     async def _test_market_service_connection(self) -> bool:
@@ -533,7 +533,7 @@ class ClientSuccessIntegrationService:
         try:
             test_result = await self.market_service.get_current_market_conditions()
             return test_result is not None
-        except:
+        except Exception:
             return False
 
     async def _test_claude_integration(self) -> bool:
@@ -541,7 +541,7 @@ class ClientSuccessIntegrationService:
         try:
             test_response = await self.claude.generate_response("Test connection", "test")
             return bool(test_response)
-        except:
+        except Exception:
             return False
 
     async def _test_ghl_integration(self) -> bool:
@@ -549,7 +549,7 @@ class ClientSuccessIntegrationService:
         try:
             test_result = await self.ghl_client.get_contacts(limit=1)
             return test_result is not None
-        except:
+        except Exception:
             return False
 
     async def _setup_event_handlers(self) -> None:

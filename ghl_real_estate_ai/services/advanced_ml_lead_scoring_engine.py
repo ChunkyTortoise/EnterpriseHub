@@ -507,7 +507,7 @@ class FeatureEngineeringPipeline:
                 prev_time = datetime.fromisoformat(messages[i - 1].get("timestamp", ""))
                 if msg.get("role") == "user":  # User response
                     response_times.append((current_time - prev_time).total_seconds() / 3600)
-            except:
+            except (ValueError, TypeError, KeyError):
                 pass
 
         avg_response_velocity = np.mean(response_times) if response_times else 24.0
@@ -738,7 +738,7 @@ class FeatureEngineeringPipeline:
         for msg in messages:
             try:
                 timestamps.append(datetime.fromisoformat(msg.get("timestamp", "")))
-            except:
+            except (ValueError, TypeError):
                 pass
 
         if len(timestamps) < 2:
@@ -887,7 +887,7 @@ class FeatureEngineeringPipeline:
             # Exponential decay: recent = 1.0, 1 week old = 0.5
             recency_weight = np.exp(-hours_since / 168)  # 168 hours = 1 week
             return min(recency_weight, 1.0)
-        except:
+        except (ValueError, TypeError):
             return 0.5
 
 

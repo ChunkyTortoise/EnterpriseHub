@@ -5,6 +5,8 @@ import pytest
 from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
 
+@pytest.mark.unit
+
 
 @pytest.fixture
 def mock_buyer_deps():

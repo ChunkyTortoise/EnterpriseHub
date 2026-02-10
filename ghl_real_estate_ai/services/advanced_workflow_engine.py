@@ -98,7 +98,8 @@ class WorkflowCondition:
                 else:
                     return None
             return value
-        except:
+        except (AttributeError, KeyError, TypeError) as e:
+            logger.debug(f"Failed to get nested field '{field_path}': {e}")
             return None
 
 

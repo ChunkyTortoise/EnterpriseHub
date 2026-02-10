@@ -120,7 +120,7 @@ class HandoffAgent:
             if "sell" in summary or "seller" in summary:
                 return "seller"
             return "buyer"  # Default to buyer
-        except:
+        except Exception:
             return "buyer"
 
     async def _handoff_to_seller_bot(self, lead_id: str, location_id: str, context: Dict):

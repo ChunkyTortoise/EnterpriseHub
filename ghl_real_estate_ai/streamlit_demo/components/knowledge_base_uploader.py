@@ -87,7 +87,9 @@ def process_document(file, file_hash: str) -> Dict:
     try:
         content = file.read().decode("utf-8") if file.type == "text/plain" else file.read()
         file.seek(0)
-    except:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error reading file content: {e}")
         content = file.read()
     file_type = file.type
     if "pdf" in file_type:

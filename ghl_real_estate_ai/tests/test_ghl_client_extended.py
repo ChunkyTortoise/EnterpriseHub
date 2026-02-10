@@ -12,6 +12,8 @@ import pytest
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
+@pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestGHLClient:
@@ -47,94 +49,98 @@ class TestGHLClient:
 
     # --- Health Check Tests ---
 
-    def test_check_health_test_mode(self):
+    async def test_check_health_test_mode(self):
         """Test health check in test mode."""
         with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = True
             client = GHLClient()
-            response = client.check_health()
+            response = await client.check_health()
             assert response.status_code == 200
 
-    def test_check_health_live_success(self, client):
+    async def test_check_health_live_success(self, client):
         """Test health check live success."""
         with (
             patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.Client") as MockClient,
+            patch("httpx.AsyncClient") as MockClient,
         ):
             mock_settings.test_mode = False
 
-            mock_http = MockClient.return_value.__enter__.return_value
-            mock_http.get.return_value = Mock(status_code=200)
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_http.get = AsyncMock(return_value=Mock(status_code=200))
 
-            response = client.check_health()
+            response = await client.check_health()
             assert response.status_code == 200
 
-    def test_check_health_live_failure(self, client):
+    async def test_check_health_live_failure(self, client):
         """Test health check failure."""
         with (
             patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.Client") as MockClient,
+            patch("httpx.AsyncClient") as MockClient,
         ):
             mock_settings.test_mode = False
 
-            mock_http = MockClient.return_value.__enter__.return_value
-            mock_http.get.side_effect = Exception("Connection refused")
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_http.get = AsyncMock(side_effect=Exception("Connection refused"))
 
-            response = client.check_health()
+            response = await client.check_health()
             assert response.status_code == 500
 
     # --- Get Conversations Tests ---
 
-    def test_get_conversations_invalid_limit(self, client):
+    async def test_get_conversations_invalid_limit(self, client):
         """Test invalid limit raises ValueError."""
         with pytest.raises(ValueError, match="Invalid conversation limit"):
-            client.get_conversations(limit=0)
+            await client.get_conversations(limit=0)
 
-    def test_get_conversations_success(self, client):
+    async def test_get_conversations_success(self, client):
         """Test successful conversation fetch."""
         with (
             patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.Client") as MockClient,
+            patch("httpx.AsyncClient") as MockClient,
         ):
             mock_settings.test_mode = False
 
-            mock_http = MockClient.return_value.__enter__.return_value
-            mock_http.get.return_value.json.return_value = {"conversations": [{"id": 1}]}
-            mock_http.get.return_value.status_code = 200
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_response = Mock()
+            mock_response.json.return_value = {"conversations": [{"id": 1}]}
+            mock_response.status_code = 200
+            mock_http.get = AsyncMock(return_value=mock_response)
 
-            convs = client.get_conversations()
+            convs = await client.get_conversations()
             assert len(convs) == 1
             assert convs[0]["id"] == 1
 
-    def test_get_conversations_timeout(self, client):
+    async def test_get_conversations_timeout(self, client):
         """Test timeout handling."""
         with (
             patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.Client") as MockClient,
+            patch("httpx.AsyncClient") as MockClient,
         ):
             mock_settings.test_mode = False
 
-            mock_http = MockClient.return_value.__enter__.return_value
-            mock_http.get.side_effect = httpx.TimeoutException("Timeout")
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_http.get = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
 
             with pytest.raises(ConnectionError, match="Timeout fetching conversations"):
-                client.get_conversations()
+                await client.get_conversations()
 
     # --- Get Opportunities Tests ---
 
-    def test_get_opportunities_success(self, client):
+    async def test_get_opportunities_success(self, client):
         """Test successful opportunity fetch."""
         with (
             patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.Client") as MockClient,
+            patch("httpx.AsyncClient") as MockClient,
         ):
             mock_settings.test_mode = False
 
-            mock_http = MockClient.return_value.__enter__.return_value
-            mock_http.get.return_value.json.return_value = {"opportunities": [{"monetary_value": 1000}]}
-            mock_http.get.return_value.status_code = 200
+            mock_http = MockClient.return_value.__aenter__.return_value
+            mock_response = Mock()
+            mock_response.json.return_value = {"opportunities": [{"monetary_value": 1000}]}
+            mock_response.status_code = 200
+            mock_http.get = AsyncMock(return_value=mock_response)
 
-            opps = client.get_opportunities()
+            opps = await client.get_opportunities()
             assert len(opps) == 1
             assert opps[0]["monetary_value"] == 1000
 
@@ -264,16 +270,16 @@ class TestGHLClient:
 
     # --- Fetch Dashboard Data Tests ---
 
-    def test_fetch_dashboard_data_success(self, client):
+    async def test_fetch_dashboard_data_success(self, client):
         """Test fetching dashboard data."""
         with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
 
             # Mock sync methods
-            client.get_conversations = Mock(return_value=[{"id": 1, "tags": ["Qualified"], "contactName": "John"}])
-            client.get_opportunities = Mock(return_value=[{"status": "won", "monetary_value": 5000}])
+            client.get_conversations = AsyncMock(return_value=[{"id": 1, "tags": ["Qualified"], "contactName": "John"}])
+            client.get_opportunities = AsyncMock(return_value=[{"status": "won", "monetary_value": 5000}])
 
-            data = client.fetch_dashboard_data()
+            data = await client.fetch_dashboard_data()
 
             assert data["metrics"]["total_revenue"] == 5000
             assert data["metrics"]["active_leads"] == 1

@@ -72,7 +72,7 @@ async def get_market_intelligence_dashboard() -> Dict[str, Any]:
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get dashboard data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/market-trends")
@@ -131,7 +131,7 @@ async def get_current_market_trends(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get market trends: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/competitive-analysis")
@@ -186,7 +186,7 @@ async def get_competitive_positioning() -> Dict[str, Any]:
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get competitive analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/market-opportunities")
@@ -256,7 +256,7 @@ async def get_market_opportunities(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get market opportunities: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/strategic-insights")
@@ -284,7 +284,7 @@ async def get_strategic_insights() -> Dict[str, Any]:
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate strategic insights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/start-monitoring")
@@ -317,7 +317,7 @@ async def start_automated_monitoring(background_tasks: BackgroundTasks) -> Dict[
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start monitoring: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/stream/market-alerts")
@@ -444,7 +444,7 @@ async def get_market_health_score() -> Dict[str, Any]:
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to calculate market health score: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/jorge-performance-summary")
@@ -510,7 +510,7 @@ async def get_jorge_performance_summary() -> Dict[str, Any]:
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get Jorge performance summary: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Health check endpoint

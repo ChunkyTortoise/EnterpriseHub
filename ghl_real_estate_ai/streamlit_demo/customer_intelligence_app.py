@@ -441,7 +441,7 @@ class CustomerIntelligencePlatformApp:
                     redis_enabled = getattr(st.session_state.redis_connector, "redis_enabled", False)
                     status_class = "status-healthy" if redis_enabled else "status-warning"
                     status_text = "Connected" if redis_enabled else "Mock Data"
-                except:
+                except Exception:
                     status_class = "status-error"
                     status_text = "Error"
             else:

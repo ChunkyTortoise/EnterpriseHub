@@ -37,7 +37,8 @@ async def update_crm_config(location_id: str, platform: str, config: CRMConfigUp
         service.update_config(platform, config.dict(exclude_unset=True))
         return {"message": f"{platform} configuration updated successfully"}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("Invalid CRM config update: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid configuration")
 
 
 @router.post("/{location_id}/sync/{contact_id}")
@@ -68,5 +69,5 @@ async def get_ghl_fields():
             return {"message": "No fields found or API key not configured"}
         return fields
     except Exception as e:
-        logger.error(f"Error fetching GHL fields: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error fetching GHL fields")
+        raise HTTPException(status_code=500, detail="Internal server error")

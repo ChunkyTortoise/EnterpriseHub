@@ -157,7 +157,7 @@ async def find_property_matches(
 
     except ValueError as e:
         logger.warning(f"Invalid request for lead {query.lead_id}: {e}")
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail="Validation failed")
     except Exception as e:
         logger.error(f"Property matching failed for lead {query.lead_id}: {e}")
         raise HTTPException(status_code=500, detail="Property matching service temporarily unavailable")

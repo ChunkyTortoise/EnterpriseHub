@@ -654,7 +654,7 @@ class WorkflowStateManager:
             return None
         try:
             return datetime.fromisoformat(datetime_str)
-        except:
+        except (ValueError, TypeError):
             return None
 
     async def export_execution_data(

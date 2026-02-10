@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """
 🧬 Lifecycle Trigger Test Script
 ================================

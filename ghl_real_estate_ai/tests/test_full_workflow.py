@@ -7,6 +7,8 @@ from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.models.lead_scoring import FinancialReadinessScore, LeadIntentProfile, PriceResponsiveness
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 
+@pytest.mark.integration
+
 
 @pytest.fixture
 def mock_dependencies():

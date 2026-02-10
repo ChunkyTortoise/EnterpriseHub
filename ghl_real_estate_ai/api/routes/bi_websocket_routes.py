@@ -90,7 +90,8 @@ async def dashboard_websocket(
         logger.error(f"Dashboard WebSocket error for location {location_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except (RuntimeError, ConnectionError) as e:
+            logger.debug(f"WebSocket already closed: {e}")
             pass
 
 
@@ -141,7 +142,8 @@ async def revenue_intelligence_websocket(
         logger.error(f"Revenue Intelligence WebSocket error for location {location_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except (RuntimeError, ConnectionError) as e:
+            logger.debug(f"WebSocket already closed: {e}")
             pass
 
 
@@ -198,7 +200,8 @@ async def bot_performance_websocket(
         logger.error(f"Bot Performance WebSocket error for location {location_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except (RuntimeError, ConnectionError) as e:
+            logger.debug(f"WebSocket already closed: {e}")
             pass
 
 
@@ -254,7 +257,8 @@ async def business_intelligence_websocket(
         logger.error(f"Business Intelligence WebSocket error for location {location_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except (RuntimeError, ConnectionError) as e:
+            logger.debug(f"WebSocket already closed: {e}")
             pass
 
 
@@ -313,7 +317,8 @@ async def ai_concierge_websocket(
         logger.error(f"AI Concierge WebSocket error for location {location_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except (RuntimeError, ConnectionError) as e:
+            logger.debug(f"WebSocket already closed: {e}")
             pass
 
 
@@ -372,7 +377,8 @@ async def advanced_analytics_websocket(
         logger.error(f"Advanced Analytics WebSocket error for location {location_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except (RuntimeError, ConnectionError) as e:
+            logger.debug(f"WebSocket already closed: {e}")
             pass
 
 
@@ -449,7 +455,7 @@ async def bi_websocket_metrics():
 
     except Exception as e:
         logger.error(f"Failed to get BI WebSocket metrics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Initialize BI WebSocket manager on module load

@@ -130,8 +130,9 @@ class JorgeFollowUpScheduler:
             lock_key = f"followup_lock:{contact_id}:{location_id}"
             try:
                 acquired = await self.cache.set(lock_key, "1", ttl=300, nx=True)
-            except Exception:
+            except Exception as e:
                 # Cache supports set() but may not support nx — fall back to get/set
+                logger.debug(f"Cache lock check failed, falling back to get/set: {e}")
                 existing = await self.cache.get(lock_key)
                 if existing:
                     self.logger.info(f"Follow-up already in progress for {contact_id} (lock held)")
@@ -549,7 +550,8 @@ class JorgeFollowUpScheduler:
                 # Minimum 24 hours between follow-ups
                 if hours_since_followup < 24:
                     return False
-            except:
+            except (ValueError, TypeError) as e:
+                logger.debug(f"Failed to parse last_followup_date '{last_followup_date}': {e}")
                 pass
 
         # Check if we've exceeded max follow-up duration
@@ -560,7 +562,8 @@ class JorgeFollowUpScheduler:
                 days_since_first_contact = (datetime.now() - first_contact).days
                 if days_since_first_contact > self.schedule_config.MAX_FOLLOW_UP_DAYS:
                     return False
-            except:
+            except (ValueError, TypeError) as e:
+                logger.debug(f"Failed to parse first_contact_date '{first_contact_date}': {e}")
                 pass
 
         return True

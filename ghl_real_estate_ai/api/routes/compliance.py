@@ -185,7 +185,7 @@ async def get_compliance_status(
 
     except Exception as e:
         logger.error(f"Compliance status retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Security Event Management
@@ -274,7 +274,7 @@ async def get_security_events(
 
     except Exception as e:
         logger.error(f"Security events retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Security events retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/security/events")
@@ -322,7 +322,7 @@ async def create_security_event(event: SecurityEventRequest, current_user: Dict 
 
     except Exception as e:
         logger.error(f"Security event creation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Security event creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Audit Trail Management
@@ -397,7 +397,7 @@ async def search_audit_records(search: AuditSearchRequest, current_user: Dict = 
 
     except Exception as e:
         logger.error(f"Audit search failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Audit search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/audit/integrity")
@@ -432,7 +432,7 @@ async def verify_audit_integrity(current_user: Dict = Depends(get_current_user))
 
     except Exception as e:
         logger.error(f"Audit integrity verification failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Integrity verification failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Privacy Rights Management
@@ -482,7 +482,7 @@ async def submit_privacy_request(request: PrivacyRequestSubmission, current_user
 
     except Exception as e:
         logger.error(f"Privacy request submission failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Privacy request submission failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/privacy/requests/{request_id}")
@@ -528,7 +528,7 @@ async def get_privacy_request_status(request_id: str, current_user: Dict = Depen
 
     except Exception as e:
         logger.error(f"Privacy request status retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Compliance Reporting
@@ -584,7 +584,7 @@ async def generate_compliance_report(
 
     except Exception as e:
         logger.error(f"Compliance report generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/reports/{report_id}")
@@ -640,7 +640,7 @@ async def get_compliance_report(report_id: str, current_user: Dict = Depends(get
 
     except Exception as e:
         logger.error(f"Compliance report retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Report retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Document Management
@@ -676,7 +676,7 @@ async def create_compliance_document(
 
     except Exception as e:
         logger.error(f"Document creation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Document creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Export and Archive
@@ -707,7 +707,7 @@ async def export_audit_data(
 
     except Exception as e:
         logger.error(f"Audit data export failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Real-time Monitoring WebSocket

@@ -595,7 +595,8 @@ class WeightConfigService:
                 for item in data:
                     try:
                         performance_data.append(json.loads(item))
-                    except:
+                    except (json.JSONDecodeError, TypeError) as e:
+                        logger.debug(f"Failed to parse performance item: {e}")
                         continue
 
                 # Cache locally

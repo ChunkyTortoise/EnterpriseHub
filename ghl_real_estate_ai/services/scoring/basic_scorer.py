@@ -210,7 +210,7 @@ class BasicPropertyScorer(PropertyScorer):
         if isinstance(property_baths, str):
             try:
                 property_baths = float(property_baths)
-            except:
+            except (ValueError, TypeError):
                 property_baths = 2
 
         bath_diff = abs(property_baths - preferred_baths)

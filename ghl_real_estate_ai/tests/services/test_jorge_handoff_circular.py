@@ -9,6 +9,8 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+
+@pytest.mark.unit
     HandoffDecision,
     JorgeHandoffService,
 )

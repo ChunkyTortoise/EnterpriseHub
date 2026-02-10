@@ -8,6 +8,8 @@ import pytest
 
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
+@pytest.mark.unit
+
 
 class TestJorgeLeadScoring:
     """Test Jorge's lead scoring requirements."""

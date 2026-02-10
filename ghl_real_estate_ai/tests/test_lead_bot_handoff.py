@@ -11,6 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+
+@pytest.mark.integration
     HandoffDecision,
     JorgeHandoffService,
 )

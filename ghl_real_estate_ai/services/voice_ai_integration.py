@@ -179,15 +179,16 @@ class AudioProcessor:
         if HAS_AUDIO_LIBS:
             try:
                 self.vad = webrtcvad.Vad(2)  # Aggressiveness level 2
-            except:
-                logger.warning("WebRTC VAD not available")
+            except Exception as e:
+                logger.warning(f"WebRTC VAD not available: {e}")
 
     def detect_speech(self, audio_data: bytes) -> bool:
         """Detect if audio contains speech"""
         if self.vad and len(audio_data) == self.frame_size * 2:  # 16-bit samples
             try:
                 return self.vad.is_speech(audio_data, self.sample_rate)
-            except:
+            except Exception as e:
+                logger.debug(f"VAD speech detection failed: {e}")
                 pass
 
         # Fallback: simple energy-based detection
@@ -801,22 +802,22 @@ class IntentAnalysisService:
             if line.startswith("BUYING_INTENT:"):
                 try:
                     result["buying_intent"] = int(line.split(":")[1].strip())
-                except:
+                except (ValueError, IndexError):
                     pass
             elif line.startswith("URGENCY:"):
                 try:
                     result["urgency"] = int(line.split(":")[1].strip())
-                except:
+                except (ValueError, IndexError):
                     pass
             elif line.startswith("ENGAGEMENT:"):
                 try:
                     result["engagement"] = int(line.split(":")[1].strip())
-                except:
+                except (ValueError, IndexError):
                     pass
             elif line.startswith("OBJECTION_LIKELIHOOD:"):
                 try:
                     result["objection_likelihood"] = int(line.split(":")[1].strip())
-                except:
+                except (ValueError, IndexError):
                     pass
             elif line.startswith("KEY_INSIGHTS:"):
                 result["insights"] = line.split(":", 1)[1].strip()

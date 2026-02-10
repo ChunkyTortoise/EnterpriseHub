@@ -97,7 +97,7 @@ class ClaudeIntentDetector:
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
             return json.loads(content)
-        except:
+        except (json.JSONDecodeError, IndexError):
             return {}
 
 

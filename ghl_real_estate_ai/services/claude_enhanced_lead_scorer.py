@@ -369,7 +369,7 @@ class ClaudeEnhancedLeadScorer:
                 base_score += 20  # Recent activity bonus
             elif hours_since < 72:
                 base_score += 10  # Somewhat recent
-        except:
+        except (ValueError, TypeError):
             pass  # Skip recency bonus on error
 
         return min(base_score, 100.0)

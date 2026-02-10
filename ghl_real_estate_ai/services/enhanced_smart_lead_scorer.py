@@ -641,7 +641,8 @@ class EnhancedSmartLeadScorer:
 
             target_date = datetime.strptime(date_str, "%Y-%m-%d")
             return (target_date - datetime.now()).days <= days
-        except:
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Date conversion failed for '{date_str}': {e}")
             return False
 
 

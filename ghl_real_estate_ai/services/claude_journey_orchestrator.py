@@ -213,7 +213,8 @@ class ClaudeJourneyOrchestrator:
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
             return json.loads(content)
-        except:
+        except (json.JSONDecodeError, TypeError, IndexError) as e:
+            logger.debug(f"Failed to parse Claude JSON response: {e}")
             return {}
 
     def _get_fallback_journey(self, lead_id: str, lead_profile: Dict[str, Any]) -> PersonalizedJourney:

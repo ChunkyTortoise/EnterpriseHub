@@ -10,6 +10,8 @@ import pytest
 
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 
+@pytest.mark.integration
+
 
 @pytest.fixture
 def temp_storage(tmp_path):

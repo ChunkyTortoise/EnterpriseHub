@@ -8,6 +8,8 @@ import pytest
 
 from ghl_real_estate_ai.services.crm_service import CRMService
 
+@pytest.mark.integration
+
 # Set dummy env vars for test mode
 os.environ["ENVIRONMENT"] = "development"
 

@@ -294,7 +294,7 @@ async def analyze_lead_intelligence(
         logger.error(f"Lead intelligence analysis failed: {str(e)}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Analysis failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
 @router.post("/batch", response_model=BatchDetectionResponse, status_code=HTTP_200_OK)
@@ -357,7 +357,7 @@ async def batch_detect_leads(
         logger.error(f"Batch lead detection failed: {str(e)}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Batch detection failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
 @router.get("/filter", response_model=List[GoldenLeadScoreResponse])
@@ -403,7 +403,7 @@ async def filter_golden_leads(
         logger.error(f"Golden lead filtering failed: {str(e)}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Filtering failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
 @router.get("/lead/{lead_id}", response_model=Optional[GoldenLeadScoreResponse])
@@ -445,7 +445,7 @@ async def get_lead_analysis(
         logger.error(f"Failed to retrieve lead analysis: {str(e)}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Retrieval failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
 @router.get("/metrics", response_model=PerformanceMetricsResponse)
@@ -476,7 +476,7 @@ async def get_performance_metrics(
         logger.error(f"Failed to retrieve performance metrics: {str(e)}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Metrics retrieval failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
 @router.post("/circuit-breaker/reset")
@@ -513,7 +513,7 @@ async def reset_circuit_breaker(
         logger.error(f"Circuit breaker reset failed: {str(e)}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Reset failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
 @router.get("/health")

@@ -11,6 +11,8 @@ import pytest
 
 from ghl_real_estate_ai.services.property_matcher_ml import ConfidenceScore, PropertyMatcherML
 
+@pytest.mark.integration
+
 
 class TestConfidenceScore:
     """Test the ConfidenceScore dataclass"""

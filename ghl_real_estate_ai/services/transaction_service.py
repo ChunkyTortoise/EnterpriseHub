@@ -613,7 +613,7 @@ class TransactionService:
                     import json
 
                     prediction_data = json.loads(ai_response)
-                except:
+                except (json.JSONDecodeError, TypeError, ValueError):
                     # Fallback to basic analysis if AI parsing fails
                     prediction_data = await self._fallback_prediction_analysis(transaction, milestones)
 

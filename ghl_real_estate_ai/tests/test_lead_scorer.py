@@ -8,6 +8,8 @@ import pytest
 
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
+@pytest.mark.unit
+
 
 class TestLeadScorer:
     """Test suite for LeadScorer class using Question Count scoring."""

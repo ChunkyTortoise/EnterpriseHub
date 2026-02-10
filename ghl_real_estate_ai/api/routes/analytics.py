@@ -165,7 +165,7 @@ async def generate_shap_waterfall(
         processing_time_ms = (time.time() - start_time) * 1000
 
         logger.warning(f"SHAP waterfall validation error: {e} [request_id: {request_id}]")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid request: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request")
 
     except FileNotFoundError:
         _endpoint_metrics[endpoint_name]["errors"] += 1
@@ -279,7 +279,7 @@ async def get_feature_trends(
     except ValueError as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
         logger.warning(f"Feature trends validation error: {e} [request_id: {request_id}]")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request")
 
     except Exception as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
@@ -378,7 +378,7 @@ async def generate_market_heatmap(
     except ValueError as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
         logger.warning(f"Market heatmap validation error: {e} [request_id: {request_id}]")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request")
 
     except Exception as e:
         _endpoint_metrics[endpoint_name]["errors"] += 1
@@ -635,7 +635,8 @@ async def analytics_websocket(
         if websocket.client_state.name != "DISCONNECTED":
             try:
                 await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
-            except:
+            except (RuntimeError, ConnectionError) as e:
+                logger.debug(f"WebSocket already closed: {e}")
                 pass
 
     finally:

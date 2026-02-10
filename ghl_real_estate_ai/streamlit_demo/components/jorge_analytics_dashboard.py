@@ -58,7 +58,9 @@ class JorgeAnalyticsAPIClient:
                 response = requests.get(f"{self.base_url}/jorge-analytics/dashboard/metrics")
                 if response.status_code == 200:
                     return response.json()
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error getting analytics dashboard metrics: {e}")
             pass
 
         # Mock data for demo

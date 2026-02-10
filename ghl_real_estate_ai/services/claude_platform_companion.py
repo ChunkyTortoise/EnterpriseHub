@@ -256,7 +256,7 @@ class ClaudePlatformCompanion:
             """
             response = await self.claude_assistant.get_response(prompt)
             return response.get("content", "Ready to assist in this hub.").strip().strip('"')
-        except:
+        except Exception:
             return "Ready to assist in this hub."
 
     async def get_intelligent_suggestions(self, current_activity: Dict) -> List[ContextualInsight]:
@@ -1160,7 +1160,7 @@ class ClaudePlatformCompanion:
 
         try:
             audio_data = await self.voice_service.synthesize_speech(fallback_text, voice_id="jorge")
-        except:
+        except Exception:
             audio_data = b""
 
         return VoiceResponse(

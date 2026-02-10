@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 Tests for Workflow Marketplace functionality
 """

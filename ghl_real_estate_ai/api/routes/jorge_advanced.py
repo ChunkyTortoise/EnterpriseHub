@@ -202,7 +202,7 @@ async def start_voice_call(request: VoiceCallStartRequest):
 
     except Exception as e:
         logger.error(f"Error starting voice call: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to start voice call: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/voice/process-input", response_model=VoiceResponse)
@@ -223,7 +223,7 @@ async def process_voice_input(request: VoiceInputRequest):
 
     except Exception as e:
         logger.error(f"Error processing voice input: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to process voice input: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/voice/end-call/{call_id}", response_model=VoiceCallAnalytics)
@@ -250,7 +250,7 @@ async def end_voice_call(call_id: str):
 
     except Exception as e:
         logger.error(f"Error ending voice call: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to end voice call: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/voice/analytics")
@@ -268,7 +268,7 @@ async def get_voice_analytics(days: int = Query(default=7, description="Number o
 
     except Exception as e:
         logger.error(f"Error fetching voice analytics: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch voice analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================== MARKETING AUTOMATION ENDPOINTS ==================
@@ -301,7 +301,7 @@ async def create_automated_campaign(request: CampaignCreationRequest):
 
     except Exception as e:
         logger.error(f"Error creating campaign: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/marketing/campaigns/{campaign_id}/content")
@@ -325,7 +325,7 @@ async def get_campaign_content(campaign_id: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching campaign content: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign content: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/marketing/campaigns/{campaign_id}/performance")
@@ -359,7 +359,7 @@ async def get_campaign_performance(campaign_id: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching campaign performance: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch campaign performance: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/marketing/ab-test/{campaign_id}")
@@ -383,7 +383,7 @@ async def start_ab_test(campaign_id: str, test_config: Dict[str, Any] = Body(...
 
     except Exception as e:
         logger.error(f"Error starting A/B test: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to start A/B test: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================== CLIENT RETENTION ENDPOINTS ==================
@@ -414,7 +414,7 @@ async def update_client_lifecycle(request: ClientLifecycleUpdate):
 
     except Exception as e:
         logger.error(f"Error updating client lifecycle: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to update client lifecycle: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/retention/track-referral")
@@ -444,7 +444,7 @@ async def track_referral(request: ReferralTracking):
 
     except Exception as e:
         logger.error(f"Error tracking referral: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to track referral: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/retention/client/{client_id}/engagement")
@@ -477,7 +477,7 @@ async def get_client_engagement(client_id: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching client engagement: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch client engagement: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/retention/analytics")
@@ -495,7 +495,7 @@ async def get_retention_analytics(days: int = Query(default=30, description="Num
 
     except Exception as e:
         logger.error(f"Error fetching retention analytics: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch retention analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================== MARKET PREDICTION ENDPOINTS ==================
@@ -521,7 +521,7 @@ async def analyze_market(request: MarketAnalysisRequest):
 
     except Exception as e:
         logger.error(f"Error analyzing market: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to analyze market: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/market/investment-opportunities")
@@ -554,7 +554,7 @@ async def find_investment_opportunities(request: InvestmentOpportunityRequest):
 
     except Exception as e:
         logger.error(f"Error finding investment opportunities: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to find investment opportunities: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/market/trends/{neighborhood}")
@@ -580,7 +580,7 @@ async def get_market_trends(
 
     except Exception as e:
         logger.error(f"Error fetching market trends: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch market trends: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================== INTEGRATION & DASHBOARD ENDPOINTS ==================
@@ -609,7 +609,7 @@ async def get_dashboard_metrics():
 
     except Exception as e:
         logger.error(f"Error fetching dashboard metrics: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch dashboard metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/health/modules")
@@ -641,7 +641,7 @@ async def get_module_health():
 
     except Exception as e:
         logger.error(f"Error checking module health: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to check module health: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/integration/trigger-event")
@@ -668,7 +668,7 @@ async def trigger_integration_event(event_type: EventType, event_data: Dict[str,
 
     except Exception as e:
         logger.error(f"Error triggering integration event: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to trigger integration event: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================== SYSTEM ENDPOINTS ==================

@@ -128,7 +128,9 @@ def render_conversation_simulator(services, selected_lead_name):
                         # Fallback
                         try:
                             full_response = services["predictive_scorer"].simulate_response(selected_lead_name, prompt)
-                        except Exception:
+                        except Exception as e:
+                            import logging
+                            logging.getLogger(__name__).debug(f"Predictive scorer fallback simulation failed: {str(e)}")
                             full_response = "I see. Could you tell me more about your timeline for moving?"
 
                     st.progress(1.0)

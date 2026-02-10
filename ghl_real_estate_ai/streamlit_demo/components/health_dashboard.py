@@ -637,7 +637,9 @@ class HealthDashboard:
                         stats_1h = loop.run_until_complete(self._performance_tracker.get_bot_stats(bot_name, "1h"))
                         stats_24h = loop.run_until_complete(self._performance_tracker.get_bot_stats(bot_name, "24h"))
                         loop.close()
-                    except Exception:
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).error(f"Error getting bot performance stats: {e}")
                         stats_1h = {}
                         stats_24h = {}
 
@@ -665,7 +667,9 @@ class HealthDashboard:
                         status=status,
                     )
                 )
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error rendering health checks: {e}")
             return _generate_demo_endpoints()
 
         return endpoints if endpoints else _generate_demo_endpoints()

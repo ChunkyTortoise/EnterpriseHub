@@ -9,6 +9,8 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_service import (
+
+@pytest.mark.unit
     ABTestingService,
     ExperimentStatus,
 )

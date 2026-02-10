@@ -20,7 +20,9 @@ try:
         BusinessIntelligenceDashboard,
         create_business_intelligence_dashboard,
     )
-except (ImportError, Exception):
+except (ImportError, Exception) as e:
+    import logging
+    logging.getLogger(__name__).warning(f"BusinessIntelligenceDashboard modules unavailable: {e}")
     BusinessIntelligenceDashboard = None
     create_business_intelligence_dashboard = None
 
@@ -621,7 +623,9 @@ class BusinessIntelligenceCommandCenter:
                 try:
                     update_time = datetime.fromisoformat(last_update.replace("Z", "+00:00"))
                     st.write(f"⏰ Updated: {update_time.strftime('%H:%M:%S')}")
-                except:
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).debug(f"Last updated timestamp parsing error: {e}")
                     st.write(f"⏰ Updated: {last_update}")
             else:
                 st.write("⏰ Updated: Unknown")

@@ -203,7 +203,7 @@ async def get_predictive_score(request: ConversationContextRequest, current_user
 
     except Exception as e:
         logger.error(f"Error generating predictive score: {e}")
-        raise HTTPException(status_code=500, detail=f"Error generating predictive score: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/insights", response_model=LeadInsightsResponse)
@@ -248,7 +248,7 @@ async def get_lead_insights(request: ConversationContextRequest, current_user: d
 
     except Exception as e:
         logger.error(f"Error generating lead insights: {e}")
-        raise HTTPException(status_code=500, detail=f"Error generating lead insights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/actions", response_model=List[ActionRecommendationResponse])
@@ -307,7 +307,7 @@ async def get_action_recommendations(
 
     except Exception as e:
         logger.error(f"Error generating action recommendations: {e}")
-        raise HTTPException(status_code=500, detail=f"Error generating action recommendations: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/action-sequence")
@@ -369,7 +369,7 @@ async def get_action_sequence(
 
     except Exception as e:
         logger.error(f"Error generating action sequence: {e}")
-        raise HTTPException(status_code=500, detail=f"Error generating action sequence: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/timing-optimization")
@@ -414,7 +414,7 @@ async def optimize_timing(
 
     except Exception as e:
         logger.error(f"Error optimizing timing: {e}")
-        raise HTTPException(status_code=500, detail=f"Error optimizing timing: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/model-performance", response_model=ModelPerformanceResponse)
@@ -462,7 +462,7 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
 
     except Exception as e:
         logger.error(f"Error retrieving model performance: {e}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving model performance: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/train-model")
@@ -514,7 +514,7 @@ async def train_model(
 
     except Exception as e:
         logger.error(f"Error starting model training: {e}")
-        raise HTTPException(status_code=500, detail=f"Error starting model training: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/pipeline-status")
@@ -560,7 +560,7 @@ async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
 
     except Exception as e:
         logger.error(f"Error getting pipeline status: {e}")
-        raise HTTPException(status_code=500, detail=f"Error getting pipeline status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Batch operations for processing multiple leads
@@ -633,4 +633,4 @@ async def batch_score_leads(leads: List[ConversationContextRequest], current_use
 
     except Exception as e:
         logger.error(f"Error in batch scoring: {e}")
-        raise HTTPException(status_code=500, detail=f"Error in batch scoring: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

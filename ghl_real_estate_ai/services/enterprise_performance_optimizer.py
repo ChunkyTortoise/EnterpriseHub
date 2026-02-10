@@ -431,7 +431,7 @@ class IntelligentCache:
                 return len(json.dumps(value).encode("utf-8"))
             else:
                 return len(str(value).encode("utf-8"))
-        except:
+        except Exception:
             return 1024  # Default estimate
 
     def _update_memory_usage(self):

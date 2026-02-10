@@ -143,7 +143,7 @@ class DynamicScoringDemo:
                 budget = float(budget_str.lower().replace("m", "")) * 1000000
             else:
                 budget = float("".join(c for c in budget_str if c.isdigit() or c == "."))
-        except:
+        except Exception:
             budget = 0
 
         intent = prefs.get("motivation", "").lower()

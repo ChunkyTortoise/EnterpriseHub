@@ -704,15 +704,24 @@ def demo_auth_component():
             try:
                 auth.require_role([UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN])
                 st.success("✅ Admin access granted!")
-            except:
+            except SystemExit:
+                # streamlit.stop() raises SystemExit, which we want to propagate or handle silently
                 st.error("❌ Admin access denied")
+            except (AuthenticationError, AuthorizationError) as e:
+                st.error(f"❌ Admin access denied: {str(e)}")
+            except Exception as e:
+                st.error(f"❌ An unexpected error occurred: {str(e)}")
 
         if st.button("Test Analytics Permission"):
             try:
                 auth.require_permission([Permission.VIEW_ANALYTICS])
                 st.success("✅ Analytics access granted!")
-            except:
+            except SystemExit:
                 st.error("❌ Analytics access denied")
+            except (AuthenticationError, AuthorizationError) as e:
+                st.error(f"❌ Analytics access denied: {str(e)}")
+            except Exception as e:
+                st.error(f"❌ An unexpected error occurred: {str(e)}")
 
         # Session info
         auth.render_session_info()

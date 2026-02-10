@@ -26,6 +26,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from ghl_real_estate_ai.services.analytics_engine import (
+
+@pytest.mark.integration
     AnalyticsEngine,
     ComplianceMonitor,
     ConversationMetrics,

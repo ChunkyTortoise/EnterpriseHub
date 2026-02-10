@@ -106,7 +106,9 @@ class CostTrackingDashboard:
         try:
             if hasattr(self.conversation_optimizer, "get_optimization_stats"):
                 return await self.conversation_optimizer.get_optimization_stats()
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Failed to fetch conversation metrics: {str(e)}")
             pass
         return {"tokens_saved": 2847563, "avg_reduction": 52.3, "conversations_optimized": 1247}
 
@@ -115,7 +117,9 @@ class CostTrackingDashboard:
         try:
             if hasattr(self.prompt_caching, "get_cache_analytics"):
                 return await self.prompt_caching.get_cache_analytics()
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Failed to fetch cache metrics: {str(e)}")
             pass
         return {"hit_rate": 94.2, "cost_saved": 1247.83, "cache_entries": 8934, "avg_savings_per_hit": 0.14}
 
@@ -124,7 +128,9 @@ class CostTrackingDashboard:
         try:
             if hasattr(self.token_budget, "get_budget_analytics"):
                 return await self.token_budget.get_budget_analytics()
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Failed to fetch budget metrics: {str(e)}")
             pass
         return {"utilization": 67.3, "active_budgets": 23, "alerts_active": 2, "cost_savings": 234.67}
 
@@ -133,7 +139,9 @@ class CostTrackingDashboard:
         try:
             if hasattr(self.async_service, "get_performance_stats"):
                 return await self.async_service.get_performance_stats()
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Failed to fetch performance metrics: {str(e)}")
             pass
         return {"avg_response_time": 127.5, "throughput_improvement": 3.2, "parallel_operations": 1834}
 
@@ -142,7 +150,9 @@ class CostTrackingDashboard:
         try:
             if hasattr(self.db_service, "get_pool_metrics"):
                 return await self.db_service.get_pool_metrics()
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Failed to fetch database metrics: {str(e)}")
             pass
         return {"active_connections": 8, "pool_utilization": 34.7, "avg_connection_time": 23.4}
 

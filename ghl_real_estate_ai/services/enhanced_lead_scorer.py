@@ -238,7 +238,8 @@ class EnhancedLeadScorer:
         try:
             ml_result = self.ml_scorer.score_lead(lead_id, lead_data, include_explanation=True)
             ml_score = ml_result.score
-        except:
+        except (ValueError, KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"ML scoring failed for lead {lead_id}: {e}")
             ml_score = None
 
         # Create unified result
@@ -339,7 +340,8 @@ class EnhancedLeadScorer:
             if not self.fallback_manager.is_circuit_open("ml_scorer"):
                 ml_result = self.ml_scorer.score_lead(lead_id, lead_data, include_explanation=True)
                 ml_score = ml_result.score
-        except:
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"ML scorer circuit breaker triggered for lead {lead_id}: {e}")
             self.fallback_manager.record_failure("ml_scorer")
 
         # Try dynamic scoring
@@ -348,7 +350,8 @@ class EnhancedLeadScorer:
                 dynamic_result = await self.dynamic_orchestrator.score_lead_with_dynamic_weights(
                     tenant_id=tenant_id, lead_id=lead_id, lead_data=lead_data, segment=segment
                 )
-        except:
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.warning(f"Dynamic scoring failed for lead {lead_id}: {e}")
             self.fallback_manager.record_failure("dynamic_scorer")
 
         # Combine available scores intelligently
@@ -369,13 +372,15 @@ class EnhancedLeadScorer:
         if failed_mode == ScoringMode.DYNAMIC_ADAPTIVE:
             try:
                 return await self._score_ml_enhanced(lead_id, context, tenant_id, segment)
-            except:
+            except (ValueError, KeyError, AttributeError) as e:
+                logger.debug(f"Fallback to ML enhanced failed: {e}")
                 pass
 
         if failed_mode in [ScoringMode.DYNAMIC_ADAPTIVE, ScoringMode.ML_ENHANCED]:
             try:
                 return await self._score_jorge_original(lead_id, context, tenant_id, segment)
-            except:
+            except (ValueError, KeyError, AttributeError) as e:
+                logger.debug(f"Fallback to Jorge original failed: {e}")
                 pass
 
         # Final fallback - static heuristics
@@ -544,7 +549,8 @@ class EnhancedLeadScorer:
                 # Simple budget parsing
                 budget_str = str(budget_str).replace("$", "").replace(",", "").replace("k", "000")
                 budget = float(budget_str)
-            except:
+            except (ValueError, TypeError) as e:
+                logger.debug(f"Budget parsing failed: {e}")
                 budget = 0
 
         # Convert to lead_data format

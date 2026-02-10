@@ -306,7 +306,7 @@ async def track_real_time_value(request: ValueTrackingRequest, value_engine=Depe
 
     except Exception as e:
         logger.error(f"Error tracking value: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to track value: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/roi/calculate", response_model=ROICalculationResponse)
@@ -353,7 +353,7 @@ async def calculate_real_time_roi(request: ROICalculationRequest, value_engine=D
 
     except Exception as e:
         logger.error(f"Error calculating ROI: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to calculate ROI: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/pricing/optimize", response_model=PricingOptimizationResponse)
@@ -422,7 +422,7 @@ async def optimize_dynamic_pricing(request: PricingOptimizationRequest, value_en
 
     except Exception as e:
         logger.error(f"Error optimizing pricing: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to optimize pricing: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/communication/package/{agent_id}/{client_id}", response_model=ValueCommunicationResponse)
@@ -481,7 +481,7 @@ async def generate_value_communication_package(
 
     except Exception as e:
         logger.error(f"Error generating communication package: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate communication package: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/justification/document", response_model=JustificationDocumentResponse)
@@ -523,7 +523,7 @@ async def create_justification_documentation(
 
     except Exception as e:
         logger.error(f"Error creating documentation: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create documentation: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/dashboard/data/{agent_id}")
@@ -604,7 +604,7 @@ async def get_dashboard_data(
 
     except Exception as e:
         logger.error(f"Error getting dashboard data: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get dashboard data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/messages/generate", response_model=MessageGenerationResponse)
@@ -653,7 +653,7 @@ async def generate_value_message(
 
     except Exception as e:
         logger.error(f"Error generating message: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate message: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/templates/list")
@@ -706,7 +706,7 @@ async def list_message_templates(
 
     except Exception as e:
         logger.error(f"Error listing templates: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to list templates: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Export router

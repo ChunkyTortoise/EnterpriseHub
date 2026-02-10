@@ -17,6 +17,8 @@ from uuid import uuid4
 import pytest
 
 from ghl_real_estate_ai.config.feature_config import (
+
+@pytest.mark.integration
     AgentMeshConfig,
     FeatureConfig,
     MCPConfig,

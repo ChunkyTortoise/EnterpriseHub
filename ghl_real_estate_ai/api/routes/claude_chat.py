@@ -5,6 +5,7 @@ Handles interactive queries with full context integration
 
 import asyncio
 import json
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -15,6 +16,7 @@ from pydantic import BaseModel
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, get_claude_orchestrator
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/claude", tags=["claude-chat"])
 
 
@@ -106,7 +108,8 @@ async def chat_query(request: ChatQueryRequest, claude: ClaudeOrchestrator = Dep
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing chat query: {str(e)}")
+        logger.exception("Error processing chat query")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/query-stream")
@@ -180,7 +183,8 @@ async def get_conversation_history(contact_id: str, location_id: Optional[str] =
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving conversation history: {str(e)}")
+        logger.exception("Error retrieving conversation history")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/lead-analysis/{lead_id}")
@@ -209,7 +213,8 @@ async def analyze_lead_comprehensive(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing lead: {str(e)}")
+        logger.exception("Error analyzing lead")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/generate-script")
@@ -237,7 +242,8 @@ async def generate_script(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating script: {str(e)}")
+        logger.exception("Error generating script")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/synthesize-report")
@@ -264,7 +270,8 @@ async def synthesize_report(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error synthesizing report: {str(e)}")
+        logger.exception("Error synthesizing report")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/performance-metrics")

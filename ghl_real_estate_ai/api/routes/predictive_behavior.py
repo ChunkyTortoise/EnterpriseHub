@@ -169,7 +169,7 @@ async def predict_batch_behaviors(
         raise
     except Exception as e:
         logger.error(f"Batch prediction setup failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to setup batch processing: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/prediction/{lead_id}", response_model=BehavioralPredictionResponse)
@@ -243,7 +243,7 @@ async def analyze_behavioral_trends(
 
     except Exception as e:
         logger.error(f"Trend analysis failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Trend analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/trends/{trend_type}", response_model=BehavioralTrendResponse)
@@ -293,7 +293,7 @@ async def get_behavioral_trends(
         raise
     except Exception as e:
         logger.error(f"Get trends failed for {trend_type}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get trends: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -336,7 +336,7 @@ async def submit_behavioral_feedback(
 
     except Exception as e:
         logger.error(f"Feedback recording failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to record feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/feedback/accuracy", response_model=AnalyticsSummaryResponse)
@@ -373,7 +373,7 @@ async def get_prediction_accuracy(
 
     except Exception as e:
         logger.error(f"Accuracy analytics failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get accuracy analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -418,7 +418,7 @@ async def get_behavioral_analytics_summary(
 
     except Exception as e:
         logger.error(f"Analytics summary failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get analytics summary: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/analytics/performance", response_model=AnalyticsSummaryResponse)
@@ -462,7 +462,7 @@ async def get_model_performance_metrics(
 
     except Exception as e:
         logger.error(f"Performance metrics failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get performance metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================

@@ -156,7 +156,7 @@ async def create_demo_session(request: DemoSessionRequest, current_user: dict = 
 
     except Exception as e:
         logger.error(f"Error creating demo session: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create demo session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/sessions/{session_id}", response_model=DemoSessionResponse)
@@ -196,7 +196,7 @@ async def get_demo_session(
         raise
     except Exception as e:
         logger.error(f"Error retrieving demo session {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve demo session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sessions/{session_id}/extend")
@@ -231,7 +231,7 @@ async def extend_demo_session(
         raise
     except Exception as e:
         logger.error(f"Error extending demo session {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to extend session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sessions/{session_id}/reset", response_model=DemoSessionResponse)
@@ -267,7 +267,7 @@ async def reset_demo_session(
 
     except Exception as e:
         logger.error(f"Error resetting demo session {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to reset session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.delete("/sessions/{session_id}")
@@ -297,7 +297,7 @@ async def cleanup_demo_session(
         raise
     except Exception as e:
         logger.error(f"Error cleaning up demo session {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to cleanup session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================
@@ -336,7 +336,7 @@ async def get_roi_calculation(
         raise
     except Exception as e:
         logger.error(f"Error getting ROI calculation for {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve ROI calculation: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/sessions/{session_id}/performance", response_model=PerformanceMetricsResponse)
@@ -368,7 +368,7 @@ async def get_performance_metrics(
         raise
     except Exception as e:
         logger.error(f"Error getting performance metrics for {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve performance metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================
@@ -456,7 +456,7 @@ async def cleanup_expired_sessions(
 
     except Exception as e:
         logger.error(f"Error during expired session cleanup: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to cleanup expired sessions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================

@@ -107,8 +107,8 @@ def _fetch_rules() -> List[Dict[str, Any]]:
         )
         if response.status_code == 200:
             return response.json()
-    except Exception:
-        logger.debug("API unreachable, using demo alert rules")
+    except Exception as e:
+        logger.debug(f"API unreachable, using demo alert rules: {e}")
     return [dict(r) for r in _DEMO_RULES]
 
 
@@ -131,8 +131,8 @@ def _toggle_rule(name: str, active: bool) -> bool:
             timeout=2,
         )
         return response.status_code == 200
-    except Exception:
-        logger.debug("Could not toggle rule '%s' (API unreachable)", name)
+    except Exception as e:
+        logger.debug(f"Could not toggle rule '{name}' (API unreachable): {e}")
         return False
 
 

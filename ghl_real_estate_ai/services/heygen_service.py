@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ class HeyGenService:
         self.api_key = api_key or os.getenv("HEYGEN_API_KEY")
         self.avatar_id = os.getenv("HEYGEN_AVATAR_ID", "jorge_avatar_v1")
         self.base_url = "https://api.heygen.com/v2"
+        self.http_client = httpx.AsyncClient(timeout=15.0)
 
         if not self.api_key:
             logger.warning("HEYGEN_API_KEY not found. Video generation will be mocked.")
@@ -53,7 +54,7 @@ class HeyGenService:
 
         try:
             url = f"{self.base_url}/video/generate"
-            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            response = await self.http_client.post(url, headers=headers, json=payload)
 
             if response.status_code == 200:
                 data = response.json()
@@ -75,7 +76,7 @@ class HeyGenService:
         headers = {"X-Api-Key": self.api_key}
         url = f"{self.base_url}/video/status/{video_id}"
 
-        response = requests.get(url, headers=headers)
+        response = await self.http_client.get(url, headers=headers)
         return response.json()
 
 

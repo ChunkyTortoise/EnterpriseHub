@@ -16,6 +16,7 @@ Last Updated: 2026-01-18
 """
 
 import asyncio
+import collections
 import hashlib
 import json
 import logging
@@ -108,7 +109,7 @@ class L1MemoryCache:
         self.max_size = max_size
         self.max_memory_bytes = max_memory_mb * 1024 * 1024
         self.cache: Dict[str, CacheItem] = {}
-        self.access_order: List[str] = []  # LRU tracking
+        self.access_order: collections.OrderedDict = collections.OrderedDict()  # O(1) LRU tracking
         self.current_memory = 0
         # Fix race condition: Initialize lock in constructor
         self._lock = asyncio.Lock()
@@ -128,27 +129,26 @@ class L1MemoryCache:
                 await self._remove_item(key)
                 return None
 
-            # Update LRU order
-            self.access_order.remove(key)
-            self.access_order.append(key)
+            # Update LRU order - O(1) with OrderedDict
+            self.access_order.move_to_end(key)
             item.mark_accessed()
 
             return item.value
 
     async def set(self, key: str, value: Any, ttl: int = 300) -> bool:
+        # Serialize outside the lock to avoid blocking other coroutines
+        try:
+            size_bytes = len(pickle.dumps(value))
+        except Exception:
+            size_bytes = 1024  # Default estimate
+
+        # Check memory limits before acquiring lock
+        if size_bytes > self.max_memory_bytes:
+            logger.warning(f"Item too large for L1 cache: {size_bytes} bytes")
+            return False
+
         lock = await self._get_lock()
         async with lock:
-            # Calculate item size
-            try:
-                size_bytes = len(pickle.dumps(value))
-            except:
-                size_bytes = 1024  # Default estimate
-
-            # Check memory limits
-            if size_bytes > self.max_memory_bytes:
-                logger.warning(f"Item too large for L1 cache: {size_bytes} bytes")
-                return False
-
             # Remove existing item if present
             if key in self.cache:
                 await self._remove_item(key)
@@ -161,7 +161,7 @@ class L1MemoryCache:
             item = CacheItem(value=value, created_at=time.time(), ttl=ttl, size_bytes=size_bytes)
 
             self.cache[key] = item
-            self.access_order.append(key)
+            self.access_order[key] = True
             self.current_memory += size_bytes
 
             return True
@@ -188,13 +188,12 @@ class L1MemoryCache:
             item = self.cache[key]
             self.current_memory -= item.size_bytes
             del self.cache[key]
-            if key in self.access_order:
-                self.access_order.remove(key)
+            self.access_order.pop(key, None)
 
     async def _evict_lru(self):
         """Evict least recently used item"""
         if self.access_order:
-            lru_key = self.access_order[0]
+            lru_key = next(iter(self.access_order))
             await self._remove_item(lru_key)
 
     def get_stats(self) -> Dict[str, Any]:
@@ -295,7 +294,7 @@ class L2RedisCache:
                 if data:
                     try:
                         output[key] = pickle.loads(data)
-                    except:
+                    except Exception:
                         pass  # Skip corrupted entries
 
             return output

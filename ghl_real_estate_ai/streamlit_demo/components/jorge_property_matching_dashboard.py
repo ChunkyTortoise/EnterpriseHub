@@ -56,7 +56,10 @@ class JorgePropertyMatchingAPIClient:
                 response = requests.get(f"{self.base_url}/jorge-property-matching/dashboard/metrics")
                 if response.status_code == 200:
                     return response.json()
-        except:
+        except (requests.RequestException, ValueError) as e:
+            # Fallback to mock data if API fails or returns invalid JSON
+            import logging
+            logging.getLogger(__name__).debug(f"Property matching API fetch failed, using mock data: {str(e)}")
             pass
 
         # Mock data for demo

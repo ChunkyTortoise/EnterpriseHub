@@ -528,7 +528,8 @@ class AutomationService:
                     log = json.load(f)
                     if log.get("automation_type") == "timeline_action":
                         count += 1
-            except:
+            except Exception as e:
+                logger.debug(f"Failed to read automation log file '{log_file}': {e}")
                 continue
         return count
 

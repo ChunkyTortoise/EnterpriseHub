@@ -641,7 +641,7 @@ class RevenueOrchestration:
             probability_match = re.search(r"0\.\d+", response)
             if probability_match:
                 return float(probability_match.group())
-        except:
+        except (ValueError, TypeError, AttributeError):
             pass
 
         return 0.1  # Default low churn probability

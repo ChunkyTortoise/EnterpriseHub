@@ -8,6 +8,8 @@ import pytest
 
 from ghl_real_estate_ai.services.predictive_scoring import BatchPredictor, PredictiveLeadScorer
 
+@pytest.mark.unit
+
 
 class TestPredictiveLeadScorer:
     def test_predict_conversion_hot_lead(self):

@@ -967,7 +967,8 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
         try:
             response = await self.llm_client.agenerate(prompt=prompt, max_tokens=500, temperature=0.7)
             return json.loads(response.content)
-        except:
+        except Exception as e:
+            logger.warning(f"AI timing insight generation failed: {e}")
             return {
                 "key_factors": [f"Market conditions favor {action_type}ers", "Seasonal timing alignment"],
                 "risk_factors": ["Market volatility", "Interest rate uncertainty"],
@@ -1001,7 +1002,8 @@ Return as JSON with key_factors, risk_factors, opportunities arrays.
         try:
             response = await self.llm_client.agenerate(prompt=prompt, max_tokens=500, temperature=0.7)
             return json.loads(response.content)
-        except:
+        except Exception as e:
+            logger.warning(f"AI investment insight generation failed: {e}")
             return {
                 "key_factors": ["Strong IE growth", "Logistics employment", "Population trends"],
                 "risk_factors": ["Market cycles", "Interest rate sensitivity"],
@@ -1168,7 +1170,8 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
         try:
             response = await self.llm_client.agenerate(prompt=prompt, max_tokens=400, temperature=0.5)
             return json.loads(response.content)
-        except:
+        except Exception as e:
+            logger.warning(f"Seasonal patterns AI analysis failed: {e}")
             return {
                 "peak_months": [4, 5, 6],
                 "seasonal_trends": "Spring peak with winter slowdown",

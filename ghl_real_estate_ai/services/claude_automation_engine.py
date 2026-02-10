@@ -368,7 +368,8 @@ class ClaudeAutomationEngine:
                 "market_avg_response_time": 4.2,
                 "seasonal_adjustments": {},
             }
-        except:
+        except Exception as e:
+            logger.debug(f"Performance benchmarks retrieval failed: {e}")
             pass
 
         return context
@@ -518,7 +519,8 @@ class ClaudeAutomationEngine:
                 return content[start_idx:].strip()
             else:
                 return content[start_idx:end_idx].strip()
-        except:
+        except Exception as e:
+            logger.debug(f"Section extraction failed for '{start_marker}': {e}")
             return None
 
     def _extract_list(self, content: str, marker: str) -> List[str]:
@@ -540,7 +542,8 @@ class ClaudeAutomationEngine:
                         items.append(clean_line)
 
             return items[:10]  # Limit to 10 items
-        except:
+        except Exception as e:
+            logger.debug(f"List extraction failed for '{marker}': {e}")
             return []
 
     def _extract_action_items(self, content: str) -> List[Dict[str, Any]]:

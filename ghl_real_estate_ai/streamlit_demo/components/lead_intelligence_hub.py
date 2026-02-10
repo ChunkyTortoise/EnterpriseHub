@@ -71,7 +71,9 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
         from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadIntelligence
 
         st.sidebar.info(f"SRV FILE: {inspect.getfile(EnhancedLeadIntelligence)}")
-    except:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).debug(f"EnhancedLeadIntelligence service not found: {e}")
         st.sidebar.warning("SRV NOT FOUND")
     st.header("🧠 Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
@@ -222,6 +224,8 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     )
                     st.session_state[analysis_cache_key] = analysis_result
                 except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Analysis failed for {selected_lead_name}: {str(e)}")
                     st.error(f"Analysis failed: {str(e)}")
     if selected_lead_name != "-- Select a Lead --":
         lead_context = lead_options[selected_lead_name]
@@ -425,7 +429,9 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     st.warning(f"Enhanced conversation intelligence unavailable: {str(e)}")
                     try:
                         conversation_engine.render_intelligence_panel([], lead_context)
-                    except Exception:
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).error(f"Basic intelligence panel render error: {e}")
                         st.info(
                             "💡 **Enhanced Intelligence Offline**: Basic conversation analysis temporarily unavailable"
                         )
@@ -682,7 +688,9 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     }
                     pred_result = services["predictive_scorer"].predict_conversion(scoring_data)
                     health_score = pred_result.get("conversion_probability", health_score)
-            except Exception:
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Lead intelligence sidebar toggle error: {e}")
                 pass
             lead_data_enhanced = {
                 "lead_id": lead_context.get("lead_id", "demo_lead"),
@@ -1167,7 +1175,9 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                             )
                         st.markdown("</div>", unsafe_allow_html=True)
             except (ImportError, Exception) as e:
-                st.info(f"Smart Segmentation module unavailable: {e}")
+                import logging
+                logging.getLogger(__name__).debug(f"Smart Segmentation module unavailable: {e}")
+                st.info(f"Smart Segmentation module unavailable")
     with tab8:
         if ENHANCED_COMPONENTS_AVAILABLE:
             render_personalization_engine(services, selected_lead_name, analysis_result=analysis_result)
@@ -1683,4 +1693,6 @@ def _render_lead_roi_sidebar():
                 config=CardConfig(variant="alert", glow_color="#10B981", padding="1.25rem"),
             )
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error rendering lead ROI sidebar: {e}")
         pass

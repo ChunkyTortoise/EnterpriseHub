@@ -232,7 +232,7 @@ class SecurityFramework:
                 try:
                     token_payload = await self.validate_jwt_token(auth_header[7:])
                     key_suffix = token_payload.get("sub", "anonymous")
-                except:
+                except Exception:
                     key_suffix = self._get_client_ip(request)
             else:
                 key_suffix = self._get_client_ip(request)

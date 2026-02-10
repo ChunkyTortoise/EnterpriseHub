@@ -9,6 +9,8 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
+@pytest.mark.integration
+
 
 @pytest.fixture(autouse=True)
 def mock_rate_limiter():

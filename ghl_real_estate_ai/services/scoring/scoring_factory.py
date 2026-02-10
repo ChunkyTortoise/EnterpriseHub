@@ -132,7 +132,7 @@ class ScoringFactory:
         try:
             temp_instance = strategy_class()
             characteristics = temp_instance.get_performance_characteristics()
-        except:
+        except Exception:
             characteristics = {"error": "Unable to determine characteristics"}
 
         return {

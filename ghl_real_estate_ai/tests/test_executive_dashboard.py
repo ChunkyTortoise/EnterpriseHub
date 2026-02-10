@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+@pytest.mark.unit
+
 try:
     from ghl_real_estate_ai.services.executive_dashboard import ExecutiveDashboardService, calculate_roi
 except ImportError:

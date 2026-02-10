@@ -9,7 +9,7 @@ import base64
 import os
 from typing import List, Optional
 
-import requests
+import httpx
 from anthropic import Anthropic
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -35,7 +35,7 @@ class VisionTagger:
 
         try:
             # 1. Fetch image and convert to base64
-            response = requests.get(image_url)
+            response = httpx.get(image_url)
             response.raise_for_status()
             image_data = base64.b64encode(response.content).decode("utf-8")
             media_type = response.headers.get("Content-Type", "image/jpeg")

@@ -9,6 +9,8 @@ import pytest
 
 from ghl_real_estate_ai.services.voice_service import VoiceService
 
+@pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_voice_transcription():

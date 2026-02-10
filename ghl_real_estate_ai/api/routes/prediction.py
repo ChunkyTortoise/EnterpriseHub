@@ -111,7 +111,7 @@ async def predict_market_movement(request: MarketMovementRequest, current_user: 
 
     except Exception as e:
         logger.error(f"Market movement prediction failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Client Behavior Prediction
@@ -174,7 +174,7 @@ async def predict_client_behavior(request: ClientBehaviorRequest, current_user: 
 
     except Exception as e:
         logger.error(f"Client behavior prediction failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Deal Outcome Prediction
@@ -241,7 +241,7 @@ async def predict_deal_outcome(request: DealOutcomeRequest, current_user: Dict =
 
     except Exception as e:
         logger.error(f"Deal outcome prediction failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Business Forecasting
@@ -320,7 +320,7 @@ async def generate_business_forecast(request: BusinessForecastRequest, current_u
 
     except Exception as e:
         logger.error(f"Business forecast generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Bulk Predictions
@@ -365,7 +365,7 @@ async def process_bulk_predictions(
 
     except Exception as e:
         logger.error(f"Bulk predictions failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Bulk prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Prediction Explanation
@@ -380,7 +380,7 @@ async def explain_prediction(prediction_id: str, current_user: Dict = Depends(ge
 
     except Exception as e:
         logger.error(f"Prediction explanation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Update Prediction Accuracy
@@ -400,7 +400,7 @@ async def update_prediction_accuracy(
 
     except Exception as e:
         logger.error(f"Prediction accuracy update failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Accuracy update failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Real-time Prediction Updates WebSocket

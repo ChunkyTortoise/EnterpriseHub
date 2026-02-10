@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 Test Suite for Property Scoring Strategy Pattern
 

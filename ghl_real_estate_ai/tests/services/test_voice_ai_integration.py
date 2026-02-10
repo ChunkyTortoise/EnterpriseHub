@@ -21,6 +21,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.voice_ai_integration import (
+
+@pytest.mark.integration
     AudioProcessor,
     CallAnalysis,
     EmotionAnalysisService,
