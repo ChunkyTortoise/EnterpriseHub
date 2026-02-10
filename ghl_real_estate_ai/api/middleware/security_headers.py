@@ -65,9 +65,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         """Staging environment CSP policy."""
         return (
             "default-src 'self'; "
-            "script-src 'self' 'sha256-xyz' "
+            "script-src 'self' 'nonce-{nonce}' "
             "https://cdn.jsdelivr.net https://unpkg.com; "
-            "style-src 'self' 'sha256-abc' "
+            "style-src 'self' 'nonce-{nonce}' "
             "https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
@@ -80,11 +80,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
 
     def _get_production_csp(self) -> str:
-        """Production-ready strict CSP policy."""
+        """Production-ready strict CSP policy.
+
+        Uses nonce-based script/style allowlisting with strict-dynamic.
+        'unsafe-inline' is kept as a fallback for browsers that don't support nonces,
+        but strict-dynamic takes precedence in modern browsers (CSP Level 3).
+        """
         return (
             "default-src 'self'; "
-            "script-src 'self' 'strict-dynamic' 'nonce-{nonce}' 'unsafe-inline' https:; "
-            "style-src 'self' 'nonce-{nonce}' 'unsafe-inline'; "
+            "script-src 'self' 'strict-dynamic' 'nonce-{nonce}'; "
+            "style-src 'self' 'nonce-{nonce}'; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
             "connect-src 'self' wss: https:; "
@@ -129,8 +134,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if self.enable_csp:
             csp_policy = self.csp_policies.get(self.environment, self.csp_policies["production"])
 
-            # Add nonce for inline scripts/styles in production
-            if self.environment == "production":
+            # Add nonce for inline scripts/styles in staging and production
+            if self.environment in ("staging", "production"):
                 nonce = self._generate_csp_nonce()
                 csp_policy = csp_policy.format(nonce=nonce)
                 headers["X-CSP-Nonce"] = nonce
