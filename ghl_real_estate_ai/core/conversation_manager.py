@@ -29,6 +29,7 @@ from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import PredictiveLeadScorerV2
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+from ghl_real_estate_ai.utils.datetime_utils import parse_iso8601
 
 # Import conversation optimizer with error handling
 try:
@@ -702,7 +703,7 @@ Count questions_answered based on how many of the 4 main categories have data.
         if lead_score >= 3 and slots:
             available_slots_text = "I can get you on the phone with Jorge's team. Would one of these work?\n"
             for slot in slots[:2]:
-                dt = datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
+                dt = parse_iso8601(slot["start_time"])
                 available_slots_text += f"- {dt.strftime('%a @ %I:%M %p')}\n"
             available_slots_text += "Or should I just have them call you when they're free?"
         elif lead_score >= 3:
@@ -730,7 +731,7 @@ Count questions_answered based on how many of the 4 main categories have data.
                         start_time=matched_slot,
                         title=f"AI Booking: {contact_info.get('first_name', 'Lead')}",
                     )
-                    dt = datetime.fromisoformat(matched_slot.replace("Z", "+00:00"))
+                    dt = parse_iso8601(matched_slot)
                     appointment_booked_msg = f"\n\n[SYSTEM: Confirmed for {dt.strftime('%a @ %I:%M %p')}]"
             except Exception as e:
                 logger.error(f"Auto-booking failed: {e}")

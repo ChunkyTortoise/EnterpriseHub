@@ -18,8 +18,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.caching.query_cache import (
-
-@pytest.mark.integration
     CacheWarmingStrategy,
     CompressionHandler,
     ContentHasher,
@@ -529,10 +527,9 @@ class TestQueryCache:
         """Test that expired results are not returned."""
         await cache.set("query", [{"id": 1}], ttl=0)
 
-        # Wait a tiny bit
-        import time
-
-        time.sleep(0.1)
+        # Backdate all cached results so they appear expired (no wall-clock delay)
+        for result_entry in cache._cache.values():
+            result_entry.expires_at = datetime.now() - timedelta(seconds=1)
 
         result = await cache.get("query")
         assert result is None

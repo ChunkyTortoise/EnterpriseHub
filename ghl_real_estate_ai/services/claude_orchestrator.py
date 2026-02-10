@@ -30,6 +30,7 @@ from ghl_real_estate_ai.services.psychographic_segmentation_engine import Psycho
 from ghl_real_estate_ai.services.sentiment_drift_engine import SentimentDriftEngine
 from ghl_real_estate_ai.services.skill_registry import SkillCategory, skill_registry
 from ghl_real_estate_ai.utils.async_utils import safe_create_task
+from ghl_real_estate_ai.utils.score_utils import clamp_score
 
 
 class ClaudeTaskType(Enum):
@@ -1173,10 +1174,10 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                     conf = json_data["confidence"]
                     # Handle percentage or decimal
                     if isinstance(conf, (int, float)):
-                        return min(1.0, max(0.0, conf if conf <= 1.0 else conf / 100.0))
+                        return clamp_score(conf if conf <= 1.0 else conf / 100.0, max_val=1.0)
                 if "confidence_score" in json_data:
                     conf = json_data["confidence_score"]
-                    return min(1.0, max(0.0, conf if conf <= 1.0 else conf / 100.0))
+                    return clamp_score(conf if conf <= 1.0 else conf / 100.0, max_val=1.0)
 
             # Strategy 2: Extract percentage from text
             # Patterns: "confidence: 85%", "85% confidence", "confidence = 0.85"
@@ -1191,7 +1192,7 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 if match:
                     value = float(match.group(1))
                     # Normalize to 0-1 range
-                    return min(1.0, max(0.0, value if value <= 1.0 else value / 100.0))
+                    return clamp_score(value if value <= 1.0 else value / 100.0, max_val=1.0)
 
             # Strategy 3: Qualitative confidence mapping
             qualitative_map = {

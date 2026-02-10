@@ -998,7 +998,6 @@ class TestTrackLatencyDecorator:
 
         @track_latency(operation="test_operation", component="test_component")
         def test_function():
-            time.sleep(0.01)
             return "result"
 
         result = test_function()
@@ -1074,10 +1073,8 @@ class TestMetricsIntegration:
         Validates that multiple metric types can be recorded
         and retrieved together in a realistic workflow.
         """
-        # Simulate a search operation
-        start_time = time.perf_counter()
-        time.sleep(0.01)
-        duration = time.perf_counter() - start_time
+        # Simulated search operation duration (no wall-clock delay)
+        duration = 0.015
 
         metrics_collector.observe_search_latency(
             duration=duration, operation="hybrid_search", component="retrieval", status="success"
