@@ -22,6 +22,7 @@ from ghl_real_estate_ai.models.bot_context_types import (
 )
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
+from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
@@ -716,6 +717,7 @@ class LeadBotWorkflow:
         self.metrics_collector = BotMetricsCollector()
         self.alerting_service = AlertingService()
         self.ab_testing = ABTestingService()
+        self.cache_service = CacheService()
         self._init_ab_experiments()
 
         # Performance tracking
@@ -731,6 +733,42 @@ class LeadBotWorkflow:
 
         # Build workflow based on enabled features
         self.workflow = self._build_unified_graph()
+
+    async def check_voice_call_data(self, lead_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Check if lead has recent voice call qualification data.
+
+        Returns voice call data if found and recent (<7 days), otherwise None.
+        This allows bots to skip re-qualification after voice calls.
+        """
+        try:
+            bot_state_key = f"bot_state:{lead_id}"
+            bot_state = await self.cache_service.get(bot_state_key)
+
+            if not bot_state or "voice_call_data" not in bot_state:
+                return None
+
+            voice_data = bot_state["voice_call_data"]
+
+            # Check if data is recent (within 7 days)
+            synced_at = datetime.fromisoformat(voice_data.get("synced_at", ""))
+            age_days = (datetime.now() - synced_at).days
+
+            if age_days > 7:
+                logger.debug(f"Voice call data for {lead_id} is stale ({age_days} days old)")
+                return None
+
+            logger.info(
+                f"Found voice call qualification data for {lead_id} "
+                f"(qualified: {voice_data.get('qualification_complete')}, "
+                f"status: {voice_data.get('qualified_status')})"
+            )
+
+            return voice_data
+
+        except Exception as e:
+            logger.debug(f"Failed to check voice call data for {lead_id}: {e}")
+            return None
 
     def _init_ab_experiments(self) -> None:
         """Create default A/B experiments if not already registered."""
@@ -1576,10 +1614,65 @@ class LeadBotWorkflow:
             bot_type="lead-bot", contact_id=state["lead_id"], status="processing", current_step="analyze_intent"
         )
 
-        await sync_service.record_lead_event(state["lead_id"], "AI", "Analyzing lead intent profile.", "thought")
+        # Phase 1.1: Check for voice call qualification data first
+        voice_data = await self.check_voice_call_data(state["lead_id"])
 
-        _intent_start_time = time.time()
-        profile = self.intent_decoder.analyze_lead(state["lead_id"], state["conversation_history"])
+        if voice_data and voice_data.get("qualification_complete"):
+            # Voice call already qualified this lead - skip re-qualification
+            logger.info(
+                f"Skipping re-qualification for {state['lead_id']} - "
+                f"using voice call data (status: {voice_data.get('qualified_status')})"
+            )
+
+            await sync_service.record_lead_event(
+                state["lead_id"],
+                "AI",
+                f"Using voice call qualification: {voice_data.get('qualified_status')} "
+                f"(sentiment: {voice_data.get('sentiment'):.2f}, interest: {voice_data.get('interest_level'):.2f})",
+                "thought",
+            )
+
+            # Convert voice call data to intent profile format
+            # Create a mock profile based on voice call outcomes
+            from ghl_real_estate_ai.agents.intent_decoder import LeadProfile
+
+            # Map voice qualification to FRS classification
+            voice_status = voice_data.get("qualified_status", "warm")
+            classification_map = {"hot": "Hot Lead", "warm": "Warm Lead", "cold": "Cold Lead"}
+            classification = classification_map.get(voice_status, "Warm Lead")
+
+            # Estimate FRS score from voice data
+            interest = voice_data.get("interest_level", 0.5)
+            urgency = voice_data.get("urgency_level", 0.5)
+            frs_score = int((interest * 0.6 + urgency * 0.4) * 100)
+
+            # Create simplified profile from voice data
+            profile = LeadProfile(
+                lead_id=state["lead_id"],
+                frs=type(
+                    "FRS",
+                    (),
+                    {
+                        "total_score": frs_score,
+                        "classification": classification,
+                        "price": type("Price", (), {"category": "Price-Aware"})(),
+                    },
+                )(),
+                pcs=type("PCS", (), {"total_score": int(urgency * 100)})(),
+            )
+
+            # Store voice qualification metadata
+            state["voice_qualified"] = True
+            state["voice_call_id"] = voice_data.get("call_id")
+
+            _intent_start_time = time.time()
+
+        else:
+            # No recent voice call data - proceed with normal chat qualification
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Analyzing lead intent profile.", "thought")
+
+            _intent_start_time = time.time()
+            profile = self.intent_decoder.analyze_lead(state["lead_id"], state["conversation_history"])
 
         # Sync to Lyrio (Phase 4)
         lyrio = LyrioClient()
