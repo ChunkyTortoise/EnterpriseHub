@@ -25,6 +25,7 @@ Key Features:
 import asyncio
 import base64
 import logging
+import os
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
@@ -131,9 +132,9 @@ class AzureAuthIntegration:
 
         # Azure AD configuration
         self.azure_config = AzureADConfig(
-            tenant_id="common",  # Multi-tenant
-            client_id="12345678-1234-1234-1234-123456789abc",  # Demo client ID
-            client_secret="demo_client_secret",
+            tenant_id=os.environ.get("AZURE_AD_TENANT_ID", "common"),
+            client_id=os.environ.get("AZURE_AD_CLIENT_ID", ""),
+            client_secret=os.environ.get("AZURE_AD_CLIENT_SECRET", ""),
             redirect_uri="https://app.enterprisehub.ai/auth/callback",
             scopes=["openid", "profile", "email", "User.Read", "GroupMember.Read.All", "Directory.Read.All"],
             authority="https://login.microsoftonline.com",
@@ -388,8 +389,10 @@ class AzureAuthIntegration:
             }
         )
 
-        # Generate JWT (for demo - in production use proper signing)
-        return jwt.encode(payload, "demo_secret_key", algorithm="HS256")
+        azure_jwt_secret = os.environ.get("AZURE_JWT_SECRET")
+        if not azure_jwt_secret:
+            raise RuntimeError("AZURE_JWT_SECRET environment variable must be set for Azure AD token generation")
+        return jwt.encode(payload, azure_jwt_secret, algorithm="HS256")
 
     async def _parse_id_token(self, id_token: str) -> Dict[str, Any]:
         """Parse and validate ID token from Azure AD."""

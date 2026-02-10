@@ -251,7 +251,8 @@ async def monitor_system_resources():
                 mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
                 gpu_memory_percent = (mem_info.used / mem_info.total) * 100
                 GPU_MEMORY.set(gpu_memory_percent)
-            except Exception:
+            except Exception as e:
+                logger.debug(f"GPU monitoring not available: {e}")
                 pass  # GPU monitoring not available
 
             await asyncio.sleep(30)  # Update every 30 seconds
@@ -353,7 +354,7 @@ async def health_check(engine: UltraFastMLEngine = Depends(get_ml_engine)):
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        raise HTTPException(status_code=503, detail=f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="Health check failed")
 
 
 @app.get("/ready")
@@ -364,7 +365,7 @@ async def readiness_check(engine: UltraFastMLEngine = Depends(get_ml_engine)):
             raise HTTPException(status_code=503, detail="ML model not loaded")
         return {"status": "ready"}
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Service not ready: {str(e)}")
+        raise HTTPException(status_code=503, detail="Service not ready")
 
 
 @app.get("/startup")
@@ -429,7 +430,7 @@ async def predict_single(
 
     except Exception as e:
         logger.error(f"Prediction failed for {request.lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Prediction failed")
 
 
 @app.post("/predict/batch", response_model=BatchPredictionResponse)
@@ -514,7 +515,7 @@ async def predict_batch(
 
     except Exception as e:
         logger.error(f"Batch prediction failed for {batch_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Batch prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Batch prediction failed")
 
 
 @app.get("/metrics")
@@ -567,7 +568,7 @@ async def warm_cache(
 
     except Exception as e:
         logger.error(f"Cache warming failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Cache warming failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Cache warming failed")
 
 
 # =============================================================================
