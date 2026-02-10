@@ -1473,6 +1473,88 @@ class VoiceAIIntegration:
             call_summary="Call ended without recorded conversation.",
         )
 
+    async def sync_call_to_bot_state(
+        self,
+        call_id: str,
+        lead_id: str,
+        call_outcome: Dict[str, Any],
+        ghl_client: Optional[Any] = None,
+    ) -> bool:
+        """
+        Sync voice call outcomes to bot conversation state.
+
+        This enables Lead/Buyer bots to skip re-qualification after voice calls
+        by reading qualification data from the voice call analysis.
+
+        Args:
+            call_id: Voice call identifier
+            lead_id: Lead/contact identifier
+            call_outcome: Voice call analysis outcome with qualification data
+            ghl_client: Optional EnhancedGHLClient for GHL sync
+
+        Returns:
+            True if sync successful
+
+        Call outcome format:
+        {
+            "sentiment": float (-1 to 1),
+            "objections": List[str],
+            "appointment_booked": bool,
+            "interest_level": float (0-1),
+            "urgency_level": float (0-1),
+            "qualification_complete": bool,
+            "qualified_status": "hot"|"warm"|"cold",
+            "next_action": str,
+        }
+        """
+        try:
+            # 1. Update bot conversation state in memory
+            bot_state_key = f"bot_state:{lead_id}"
+            bot_state = await self.cache.get(bot_state_key) or {}
+
+            # Merge voice call data into bot state
+            bot_state["voice_call_data"] = {
+                "call_id": call_id,
+                "synced_at": datetime.now().isoformat(),
+                "sentiment": call_outcome.get("sentiment", 0.0),
+                "objections": call_outcome.get("objections", []),
+                "appointment_booked": call_outcome.get("appointment_booked", False),
+                "interest_level": call_outcome.get("interest_level", 0.5),
+                "urgency_level": call_outcome.get("urgency_level", 0.5),
+                "qualification_complete": call_outcome.get("qualification_complete", False),
+                "qualified_status": call_outcome.get("qualified_status", "unknown"),
+                "next_action": call_outcome.get("next_action", "follow_up"),
+            }
+
+            # Cache for 7 days
+            await self.cache.set(bot_state_key, bot_state, ttl=7 * 24 * 3600)
+
+            # 2. Sync to GHL custom fields if client provided
+            if ghl_client:
+                custom_fields = {
+                    "call_sentiment": call_outcome.get("sentiment", 0.0),
+                    "call_objections": ",".join(call_outcome.get("objections", [])),
+                    "appointment_booked": call_outcome.get("appointment_booked", False),
+                    "voice_qualified": call_outcome.get("qualification_complete", False),
+                    "voice_qualification_status": call_outcome.get("qualified_status", "unknown"),
+                    "last_call_outcome": call_outcome.get("next_action", "follow_up"),
+                }
+
+                try:
+                    await ghl_client.update_contact(lead_id, {"custom_fields": custom_fields})
+                    logger.info(f"Synced call outcome to GHL for lead {lead_id}")
+                except Exception as ghl_error:
+                    logger.warning(f"Failed to sync call outcome to GHL: {ghl_error}")
+                    # Don't fail the entire operation if GHL sync fails
+
+            logger.info(f"Successfully synced voice call {call_id} outcome to bot state for lead {lead_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to sync call outcome to bot state: {e}")
+            await self._alert_voice_failure("call_sync_failure", str(e), call_id)
+            return False
+
     async def _save_call_analysis(self, analysis: CallAnalysis):
         """Save call analysis to memory for future reference"""
         try:
@@ -1491,6 +1573,25 @@ class VoiceAIIntegration:
                 },
                 ttl_hours=24 * 30,  # Keep for 30 days
             )
+
+            # Auto-sync call outcome to bot state
+            call_outcome = {
+                "sentiment": analysis.lead_sentiment_progression[-1]
+                if analysis.lead_sentiment_progression
+                else 0.0,
+                "objections": analysis.lead_objections,
+                "appointment_booked": analysis.conversion_probability > 0.7,
+                "interest_level": analysis.lead_interest_level,
+                "urgency_level": analysis.lead_urgency_signals,
+                "qualification_complete": analysis.conversion_probability > 0.5,
+                "qualified_status": (
+                    "hot" if analysis.conversion_probability > 0.7 else "warm" if analysis.conversion_probability > 0.4 else "cold"
+                ),
+                "next_action": analysis.optimal_follow_up_timing,
+            }
+
+            await self.sync_call_to_bot_state(analysis.call_id, analysis.lead_id, call_outcome)
+
         except Exception as e:
             logger.error(f"CRITICAL: Failed to save call analysis: {e}")
             # Alert about call analysis save failure

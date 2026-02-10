@@ -40,6 +40,14 @@ from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
+from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
+
+try:
+    from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
+
+    GHL_CLIENT_AVAILABLE = True
+except ImportError:
+    GHL_CLIENT_AVAILABLE = False
 
 # Track 3.1 Predictive Intelligence Integration
 try:
@@ -303,6 +311,7 @@ class JorgeSellerBot:
         self.market_intelligence = get_market_intelligence()
         self.claude = ClaudeAssistant()
         self.event_publisher = get_event_publisher()
+        self.seller_psychology_analyzer = get_seller_psychology_analyzer()
 
         # Track 3.1 Predictive Intelligence Engine (always enabled)
         if self.config.enable_track3_intelligence:
@@ -410,6 +419,7 @@ class JorgeSellerBot:
         workflow.add_node("prepare_listing", self.prepare_listing)
         workflow.add_node("select_strategy", self.select_strategy)
         workflow.add_node("generate_jorge_response", self.generate_jorge_response)
+        workflow.add_node("recalculate_pcs", self.recalculate_pcs_node)
         workflow.add_node("execute_follow_up", self.execute_follow_up)
 
         # Define Edges
@@ -448,7 +458,8 @@ class JorgeSellerBot:
             },
         )
 
-        workflow.add_edge("generate_jorge_response", END)
+        workflow.add_edge("generate_jorge_response", "recalculate_pcs")
+        workflow.add_edge("recalculate_pcs", END)
         workflow.add_edge("execute_follow_up", END)
         workflow.add_edge("prepare_listing", "generate_jorge_response")
 
@@ -468,6 +479,7 @@ class JorgeSellerBot:
         workflow.add_node("detect_stall", self.detect_stall)
         workflow.add_node("adaptive_strategy", self.adaptive_strategy_selection)
         workflow.add_node("generate_adaptive_response", self.generate_adaptive_response)
+        workflow.add_node("recalculate_pcs", self.recalculate_pcs_node)
         workflow.add_node("execute_follow_up", self.execute_follow_up)
         workflow.add_node("update_memory", self.update_conversation_memory)
 
@@ -495,7 +507,8 @@ class JorgeSellerBot:
             },
         )
 
-        workflow.add_edge("generate_adaptive_response", "update_memory")
+        workflow.add_edge("generate_adaptive_response", "recalculate_pcs")
+        workflow.add_edge("recalculate_pcs", "update_memory")
         workflow.add_edge("execute_follow_up", "update_memory")
         workflow.add_edge("update_memory", END)
 
@@ -536,6 +549,12 @@ class JorgeSellerBot:
             state["lead_id"], state["conversation_history"]
         )
 
+        # Phase 1.2: Classify seller type (Investor, Distressed, Traditional)
+        seller_classification = await self.seller_psychology_analyzer.classify_seller_type(
+            conversation_history=state["conversation_history"],
+            custom_fields=state.get("metadata", {}).get("custom_fields") if state.get("metadata") else None,
+        )
+
         return {
             "intent_profile": profile,
             "psychological_commitment": profile.pcs.total_score,
@@ -544,6 +563,7 @@ class JorgeSellerBot:
             "last_action_timestamp": datetime.now(timezone.utc),
             "property_condition": property_condition,
             "seller_intent_profile": seller_intent_profile,
+            "seller_persona": seller_classification,
         }
 
     def _extract_property_condition(
@@ -1082,6 +1102,38 @@ class JorgeSellerBot:
             except (KeyError, ValueError):
                 tone_variant = "empathetic"
 
+        # Phase 1.2: Get seller persona classification
+        seller_persona = state.get("seller_persona", {})
+        persona_type = seller_persona.get("persona_type", "Traditional")
+        persona_confidence = seller_persona.get("confidence", 0.0)
+
+        # Persona-specific response guidance
+        persona_guidance = {
+            "Investor": """
+            INVESTOR SELLER APPROACH:
+            - Focus on ROI, cash flow analysis, and tax benefits
+            - Discuss 1031 exchange opportunities if timeline fits
+            - Emphasize cap rate and market appreciation trends
+            - Reference portfolio strategy and investment property performance
+            - Be data-driven and business-focused
+            """,
+            "Distressed": """
+            DISTRESSED SELLER APPROACH:
+            - Emphasize speed, certainty, and flexible closing
+            - Highlight as-is purchase acceptance
+            - Show empathy for their situation without being pushy
+            - Provide clear timeline expectations and next steps
+            - Stress confidentiality and quick resolution
+            """,
+            "Traditional": """
+            TRADITIONAL SELLER APPROACH:
+            - Standard home sale process and marketing strategy
+            - Focus on maximizing value through proper preparation
+            - Emphasize local market expertise and negotiation skills
+            - Build trust through education and relationship
+            """,
+        }
+
         # Base prompt for Jorge Persona
         prompt = f"""
         You are Jorge Salas, a caring and knowledgeable real estate professional.
@@ -1101,8 +1153,12 @@ class JorgeSellerBot:
         Tone style: {tone_variant}
         Conversation Context: {state["detected_stall_type"] or "None"}
         FRS Classification: {state["intent_profile"].frs.classification}
+        Seller Type: {persona_type} (confidence: {persona_confidence:.0%})
+
+        {persona_guidance.get(persona_type, "")}
 
         TASK: Generate a helpful, friendly response that builds trust and provides value.
+        Tailor your response to the seller's persona type above.
         """
 
         # Inject CMA market context if available
@@ -1171,6 +1227,100 @@ class JorgeSellerBot:
         )
 
         return {"response_content": content}
+
+    async def recalculate_pcs_node(self, state: JorgeSellerState) -> Dict:
+        """
+        Recalculate PCS dynamically based on conversation flow.
+        Called after each message to track engagement evolution.
+        """
+        await self.event_publisher.publish_bot_status_update(
+            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="recalculate_pcs"
+        )
+
+        logger.info(f"Recalculating PCS for {state['lead_name']}")
+
+        # Get current PCS
+        current_pcs = state.get("psychological_commitment", 0.0)
+        conversation_history = state.get("conversation_history", [])
+
+        # Get last user message
+        user_messages = [msg for msg in conversation_history if msg.get("role") == "user"]
+        last_message = user_messages[-1].get("content", "") if user_messages else ""
+
+        # Recalculate PCS using seller psychology analyzer
+        pcs_result = await self.seller_psychology_analyzer.recalculate_pcs(
+            current_pcs=current_pcs,
+            conversation_history=conversation_history,
+            last_message=last_message,
+        )
+
+        updated_pcs = pcs_result["updated_pcs"]
+        delta = pcs_result["delta"]
+        trend = pcs_result["trend"]
+        engagement_metrics = pcs_result["engagement_metrics"]
+
+        logger.info(
+            f"PCS updated for {state['lead_name']}: {current_pcs:.1f} → {updated_pcs:.1f} "
+            f"(Δ{delta:+.1f}, trend: {trend})"
+        )
+
+        # Update intent_profile with new PCS
+        intent_profile = state.get("intent_profile")
+        if intent_profile:
+            from ghl_real_estate_ai.models.lead_scoring import PsychologicalCommitmentScore
+
+            # Create updated PCS object
+            updated_pcs_obj = PsychologicalCommitmentScore(
+                total_score=updated_pcs,
+                response_velocity_score=intent_profile.pcs.response_velocity_score,
+                message_length_score=intent_profile.pcs.message_length_score,
+                question_depth_score=intent_profile.pcs.question_depth_score,
+                objection_handling_score=intent_profile.pcs.objection_handling_score,
+                call_acceptance_score=intent_profile.pcs.call_acceptance_score,
+            )
+
+            # Update intent profile
+            from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
+
+            updated_profile = LeadIntentProfile(
+                lead_id=intent_profile.lead_id,
+                frs=intent_profile.frs,
+                pcs=updated_pcs_obj,
+                lead_type=intent_profile.lead_type,
+                market_context=intent_profile.market_context,
+                next_best_action=intent_profile.next_best_action,
+            )
+
+            # Sync updated PCS to GHL custom field
+            try:
+                if hasattr(self, "ghl_client") and self.ghl_client:
+                    contact_id = state.get("lead_id")
+                    await self.ghl_client.update_contact(
+                        contact_id=contact_id,
+                        updates={"custom_fields": {"pcs": str(int(updated_pcs))}},
+                    )
+                    logger.info(f"Synced PCS={updated_pcs:.1f} to GHL for contact {contact_id}")
+            except Exception as e:
+                logger.warning(f"Failed to sync PCS to GHL: {e}")
+
+            # Emit event for PCS update
+            await self.event_publisher.publish_conversation_update(
+                conversation_id=f"jorge_{state['lead_id']}",
+                lead_id=state["lead_id"],
+                stage="pcs_updated",
+                message=f"PCS: {current_pcs:.1f} → {updated_pcs:.1f} (trend: {trend})",
+            )
+
+            return {
+                "intent_profile": updated_profile,
+                "psychological_commitment": updated_pcs,
+                "pcs_trend": trend,
+                "pcs_delta": delta,
+                "engagement_metrics": engagement_metrics,
+            }
+
+        return {"psychological_commitment": updated_pcs}
+
 
     async def execute_follow_up(self, state: JorgeSellerState) -> Dict:
         """Execute automated follow-up for unresponsive or lukewarm sellers."""
@@ -1892,6 +2042,18 @@ class JorgeSellerBot:
                 frs_score = getattr(getattr(intent_profile, "frs", None), "total_score", 0.0)
                 pcs_score = getattr(getattr(intent_profile, "pcs", None), "total_score", 0.0)
 
+            # Phase 1.2: Sync seller persona to GHL (non-blocking)
+            seller_persona = result.get("seller_persona")
+            if seller_persona and seller_persona.get("persona_type"):
+                try:
+                    await self._sync_seller_persona_to_ghl(
+                        contact_id=conversation_id,
+                        persona_type=seller_persona["persona_type"],
+                        confidence=seller_persona.get("confidence", 0.0),
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to sync persona tag (non-blocking): {e}")
+
             # Record performance metrics
             await self.performance_tracker.track_operation("seller_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("seller", duration_ms=_workflow_duration_ms, success=True)
@@ -1928,6 +2090,7 @@ class JorgeSellerBot:
                 "frs_score": frs_score,
                 "pcs_score": pcs_score,
                 "handoff_signals": handoff_signals,
+                "seller_persona": seller_persona,
                 "ab_test": {
                     "experiment_id": ABTestingService.RESPONSE_TONE_EXPERIMENT,
                     "variant": _tone_variant,
@@ -1953,6 +2116,73 @@ class JorgeSellerBot:
                 "pcs_score": 0.0,
                 "handoff_signals": {},
             }
+
+    async def _sync_seller_persona_to_ghl(
+        self,
+        contact_id: str,
+        persona_type: str,
+        confidence: float,
+    ) -> bool:
+        """
+        Sync seller persona classification to GHL as tags.
+
+        Tags applied:
+        - "Investor-Seller" for persona_type == "Investor"
+        - "Distressed-Seller" for persona_type == "Distressed"
+        - "Traditional-Seller" for persona_type == "Traditional"
+
+        Args:
+            contact_id: GHL contact ID
+            persona_type: Classified persona type
+            confidence: Classification confidence (0.0-1.0)
+
+        Returns:
+            True if sync successful, False otherwise
+        """
+        if not GHL_CLIENT_AVAILABLE:
+            logger.warning("GHL client not available, skipping persona tag sync")
+            return False
+
+        # Only sync if confidence is above threshold (30%)
+        if confidence < 0.3:
+            logger.info(f"Skipping persona tag sync for {contact_id} - confidence too low: {confidence:.2f}")
+            return False
+
+        try:
+            persona_tag = f"{persona_type}-Seller"
+
+            async with EnhancedGHLClient() as ghl:
+                # Get existing tags
+                contact = await ghl.get_contact(contact_id)
+                if not contact:
+                    logger.warning(f"Contact {contact_id} not found in GHL")
+                    return False
+
+                existing_tags = contact.tags or []
+
+                # Remove old persona tags
+                persona_tags = ["Investor-Seller", "Distressed-Seller", "Traditional-Seller"]
+                cleaned_tags = [tag for tag in existing_tags if tag not in persona_tags]
+
+                # Add new persona tag
+                updated_tags = cleaned_tags + [persona_tag]
+
+                # Update contact with new tags
+                from ghl_real_estate_ai.models.ghl_webhook_types import GHLContactUpdatePayload
+
+                update_payload = GHLContactUpdatePayload(tags=updated_tags)
+                success = await ghl.update_contact(contact_id, update_payload)
+
+                if success:
+                    logger.info(f"Successfully synced persona tag '{persona_tag}' to GHL for contact {contact_id}")
+                else:
+                    logger.error(f"Failed to update persona tag for contact {contact_id}")
+
+                return success
+
+        except Exception as e:
+            logger.error(f"Error syncing persona tag to GHL: {e}")
+            return False
 
     # ================================
     # UNIFIED PROCESSING METHODS

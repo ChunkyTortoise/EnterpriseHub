@@ -76,15 +76,17 @@ class MLAnalyticsEngine:
 _engine_instance: Optional[MLAnalyticsEngine] = None
 
 
-def get_ml_analytics_engine() -> MLAnalyticsEngine:
+def get_ml_analytics_engine(tenant_id: Optional[str] = None) -> MLAnalyticsEngine:
+    """Get ML analytics engine instance. tenant_id is optional for stub compatibility."""
     global _engine_instance
     if _engine_instance is None:
         _engine_instance = MLAnalyticsEngine()
     return _engine_instance
 
 
-def get_ml_engine() -> MLAnalyticsEngine:
-    return get_ml_analytics_engine()
+def get_ml_engine(tenant_id: Optional[str] = None) -> MLAnalyticsEngine:
+    """Get ML engine instance. tenant_id is optional for stub compatibility."""
+    return get_ml_analytics_engine(tenant_id)
 
 
 # --- feature_engineering stubs ---
