@@ -5,6 +5,8 @@ from uuid import uuid4
 import pytest
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.self_query import (
+
+@pytest.mark.integration
     Entity,
     ExecutionStrategy,
     FallbackHandler,

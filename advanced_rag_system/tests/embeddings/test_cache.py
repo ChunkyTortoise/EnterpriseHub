@@ -6,6 +6,8 @@ import pytest
 from src.core.exceptions import CacheError
 from src.core.types import DocumentChunk
 from src.embeddings.cache import (
+
+@pytest.mark.integration
     CacheStats,
     EmbeddingCache,
     MemoryCacheBackend,

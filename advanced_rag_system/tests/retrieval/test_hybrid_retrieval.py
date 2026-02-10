@@ -17,6 +17,8 @@ from src.retrieval.hybrid.fusion import (
     normalize_scores,
 )
 from src.retrieval.hybrid.hybrid_searcher import (
+
+@pytest.mark.unit
     HybridSearchConfig,
     HybridSearcher,
 )

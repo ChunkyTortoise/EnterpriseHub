@@ -19,6 +19,8 @@ from src.analytics.market_share_analytics import (
 )
 from src.core.event_bus import EventType, EventPriority
 
+@pytest.mark.unit
+
 
 class TestMarketShareAnalytics:
     """Test suite for Market Share Analytics."""

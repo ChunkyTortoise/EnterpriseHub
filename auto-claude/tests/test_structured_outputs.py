@@ -25,6 +25,8 @@ _pydantic_models_path = (
 sys.path.insert(0, str(_pydantic_models_path))
 
 from pydantic_models import (
+
+@pytest.mark.integration
     # Follow-up review models
     FindingResolution,
     FollowupFinding,

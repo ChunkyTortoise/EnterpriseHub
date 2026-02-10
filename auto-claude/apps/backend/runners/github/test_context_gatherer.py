@@ -198,6 +198,8 @@ import { Component } from 'react';
 import { helper } from './utils';
 import { config } from '../config';
 import external from 'lodash';
+
+@pytest.mark.unit
 """
 
     gatherer = PRContextGatherer(project_dir, 1)

@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 Simple end-to-end test for Jorge's pricing system.
 """

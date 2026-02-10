@@ -6,6 +6,7 @@ DuckDB for efficient SQL execution on DataFrames.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
@@ -15,6 +16,8 @@ import pandas as pd
 
 from src.core.exceptions import ValidationError
 from src.core.types import DocumentChunk, Metadata, SearchResult
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -340,39 +343,39 @@ class SQLQueryEngine:
             if op == "=":
                 try:
                     df = df[df[col] == value]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying '=' operator in WHERE clause for col '{col}': {e}")
             elif op in ("!=", "<>"):
                 try:
                     df = df[df[col] != value]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying '!=' operator in WHERE clause for col '{col}': {e}")
             elif op == "<":
                 try:
                     df = df[df[col] < float(value)]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying '<' operator in WHERE clause for col '{col}': {e}")
             elif op == ">":
                 try:
                     df = df[df[col] > float(value)]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying '>' operator in WHERE clause for col '{col}': {e}")
             elif op == "<=":
                 try:
                     df = df[df[col] <= float(value)]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying '<=' operator in WHERE clause for col '{col}': {e}")
             elif op == ">=":
                 try:
                     df = df[df[col] >= float(value)]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying '>=' operator in WHERE clause for col '{col}': {e}")
             elif op == "LIKE":
                 pattern = value.replace("%", ".*").replace("_", ".")
                 try:
                     df = df[df[col].astype(str).str.match(pattern, case=False, na=False)]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error applying 'LIKE' operator in WHERE clause for col '{col}': {e}")
 
         return df
 

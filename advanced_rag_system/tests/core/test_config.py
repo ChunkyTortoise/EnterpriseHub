@@ -6,6 +6,8 @@ from unittest.mock import patch
 import pytest
 from src.core.config import Settings, get_settings
 
+@pytest.mark.integration
+
 
 class TestSettings:
     """Test cases for Settings."""

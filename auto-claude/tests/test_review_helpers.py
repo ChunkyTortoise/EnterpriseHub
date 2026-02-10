@@ -24,6 +24,8 @@ from review import (
 )
 from tests.review_fixtures import review_spec_dir, complete_spec_dir
 
+@pytest.mark.integration
+
 
 # =============================================================================
 # TEXT HELPER FUNCTIONS

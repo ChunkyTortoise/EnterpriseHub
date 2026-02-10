@@ -25,6 +25,8 @@ from src.analytics.market_share_analytics import (
 )
 from src.core.event_bus import EventType, EventPriority, Event
 
+@pytest.mark.unit
+
 
 class TestAnalyticsCoordinator:
     """Test suite for Analytics Coordinator."""

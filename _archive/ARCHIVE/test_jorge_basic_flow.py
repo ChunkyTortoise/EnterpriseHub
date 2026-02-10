@@ -15,6 +15,8 @@ import asyncio
 import pytest
 from typing import Dict, Any
 
+@pytest.mark.integration
+
 # Add the project root to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'ghl_real_estate_ai'))
 

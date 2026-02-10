@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """Tests for core exceptions."""
 
 from src.core.exceptions import (

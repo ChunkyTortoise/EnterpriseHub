@@ -21,6 +21,8 @@ import pytest
 
 from worktree import WorktreeManager
 
+@pytest.mark.unit
+
 
 class TestWorktreeManagerInitialization:
     """Tests for WorktreeManager initialization."""

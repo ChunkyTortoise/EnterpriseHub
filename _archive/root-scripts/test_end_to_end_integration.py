@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 End-to-End Integration Test for Jorge's AI Empire Platform

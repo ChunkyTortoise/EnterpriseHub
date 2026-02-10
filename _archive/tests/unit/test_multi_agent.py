@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """
 Unit tests for Multi-Agent Workflow Orchestrator module.
 

@@ -31,6 +31,8 @@ from qa.report import (
 )
 
 from qa.criteria import (
+
+@pytest.mark.unit
     load_implementation_plan,
     save_implementation_plan,
 )

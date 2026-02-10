@@ -31,6 +31,8 @@ from workflow_analytics_service import (
 )
 from ..core.ai_orchestrator import AIInsight, AnalysisType, AdvancedAIOrchestrator
 
+@pytest.mark.integration
+
 
 @pytest.fixture
 def mock_ai_orchestrator():

@@ -35,6 +35,8 @@ from pydantic_models import (
     ResolutionVerification,
 )
 from models import (
+
+@pytest.mark.integration
     PRReviewFinding,
     ReviewSeverity,
     ReviewCategory,

@@ -21,6 +21,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 
 from validation_strategy import (
+
+@pytest.mark.integration
     ValidationStep,
     ValidationStrategy,
     ValidationStrategyBuilder,

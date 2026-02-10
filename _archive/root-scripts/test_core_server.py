@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """
 Minimal FastAPI server test for Jorge's Agent Ecosystem
 Tests core functionality without problematic route

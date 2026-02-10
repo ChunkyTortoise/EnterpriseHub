@@ -18,6 +18,8 @@ from src.analytics.landscape_mapper import (
 )
 from src.core.event_bus import EventType, EventPriority
 
+@pytest.mark.unit
+
 
 class TestLandscapeMapper:
     """Test suite for Competitive Landscape Mapper."""

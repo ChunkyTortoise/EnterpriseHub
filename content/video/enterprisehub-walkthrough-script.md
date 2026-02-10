@@ -1,9 +1,11 @@
 # EnterpriseHub Video Walkthrough Script
 
-**Total Duration:** 6:30  
-**Target Audience:** Potential clients, employers, and customers evaluating the platform  
-**Demo URL:** https://ct-enterprise-ai.streamlit.app  
+**Total Duration:** 6:30
+**Target Audience:** Potential clients, employers, and customers evaluating the platform
+**Demo URL:** https://ct-enterprise-ai.streamlit.app
 **GitHub:** https://github.com/ChunkyTortoise/EnterpriseHub
+
+> **⚠️ Before Recording:** Verify that the demo URL (https://ct-enterprise-ai.streamlit.app) is active and responding. Streamlit Community Cloud apps can go to sleep after inactivity — wake the app at least 30 minutes before recording to ensure smooth performance during the demo.
 
 ---
 

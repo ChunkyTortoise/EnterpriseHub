@@ -33,6 +33,8 @@ from src.core.rbac import Role, User
 from src.analytics.executive_analytics_engine import ExecutiveAnalyticsEngine
 from src.prediction.deep_learning_forecaster import DeepLearningForecaster
 
+@pytest.mark.integration
+
 @pytest.fixture
 def ceo_user():
     """CEO user with full permissions"""

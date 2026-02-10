@@ -16,6 +16,8 @@ import time
 
 import pytest
 from rate_limiter import (
+
+@pytest.mark.integration
     CostLimitExceeded,
     CostTracker,
     RateLimiter,

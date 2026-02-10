@@ -17,6 +17,8 @@ import pytest
 from review import ReviewState, REVIEW_STATE_FILE
 from tests.review_fixtures import approved_state, pending_state
 
+@pytest.mark.integration
+
 
 # =============================================================================
 # REVIEW STATE - BASIC FUNCTIONALITY
