@@ -890,6 +890,12 @@ class EnterpriseAuthService:
             f"enterprise_refresh:{refresh_token}", session_id, ttl=self.enterprise_refresh_token_expiry
         )
 
+        # Track session ID for per-user invalidation
+        session_set_key = f"enterprise_user_sessions:{user['tenant_id']}:{user['email']}"
+        existing_sessions = await self.cache_service.get(session_set_key) or []
+        existing_sessions.append(session_id)
+        await self.cache_service.set(session_set_key, existing_sessions, ttl=session_timeout * 3600)
+
         # Create JWT payload
         payload = {
             "sub": user["user_id"],
@@ -955,10 +961,30 @@ class EnterpriseAuthService:
             raise EnterpriseAuthError(f"Token refresh failed: {str(e)}", error_code="TOKEN_REFRESH_FAILED")
 
     async def _invalidate_user_sessions(self, tenant_id: str, user_email: str) -> None:
-        """Invalidate all active sessions for a user."""
-        # This would query all sessions for the user and invalidate them
-        # Implementation depends on session storage strategy
-        logger.info(f"Invalidated sessions for user {user_email} in tenant {tenant_id}")
+        """Invalidate all active sessions for a user.
+
+        Deletes every session and its associated refresh token from cache,
+        then removes the session tracking key.
+        """
+        session_set_key = f"enterprise_user_sessions:{tenant_id}:{user_email}"
+        session_ids = await self.cache_service.get(session_set_key) or []
+        invalidated = 0
+
+        for session_id in session_ids:
+            session_data = await self.cache_service.get(f"enterprise_session:{session_id}")
+            if session_data:
+                # Delete the refresh token mapping if present
+                refresh_token = session_data.get("refresh_token")
+                if refresh_token:
+                    await self.cache_service.delete(f"enterprise_refresh:{refresh_token}")
+                await self.cache_service.delete(f"enterprise_session:{session_id}")
+                invalidated += 1
+
+        # Clean up the tracking key
+        await self.cache_service.delete(session_set_key)
+        logger.info(
+            f"Invalidated {invalidated}/{len(session_ids)} sessions for user {user_email} in tenant {tenant_id}"
+        )
 
 
 # Global instance for dependency injection
