@@ -685,6 +685,160 @@ class ABTestingService:
         p_value = math.erfc(z / math.sqrt(2))
         return p_value
 
+    # ── Auto-Promotion Support ────────────────────────────────────────
+
+    def get_promotion_candidates(
+        self,
+        min_p_value: float = 0.05,
+        min_lift_percent: float = 10.0,
+        min_sample_size: int = 1000,
+        min_runtime_days: float = 7.0,
+    ) -> List[Dict[str, Any]]:
+        """Get experiments ready for auto-promotion.
+
+        Identifies experiments meeting all promotion criteria:
+        - Statistical significance (p < min_p_value)
+        - Material lift (> min_lift_percent improvement)
+        - Sufficient data (≥ min_sample_size impressions)
+        - Temporal stability (≥ min_runtime_days runtime)
+
+        Args:
+            min_p_value: Maximum p-value for significance (default 0.05).
+            min_lift_percent: Minimum lift percentage (default 10.0).
+            min_sample_size: Minimum total impressions (default 1000).
+            min_runtime_days: Minimum runtime in days (default 7.0).
+
+        Returns:
+            List of dicts with experiment metadata and promotion criteria.
+        """
+        candidates = []
+
+        with self._data_lock:
+            for exp in self._experiments.values():
+                if exp.status != ExperimentStatus.ACTIVE:
+                    continue
+
+                # Check runtime
+                runtime_hours = (time.time() - exp.created_at) / 3600
+                runtime_days = runtime_hours / 24.0
+                if runtime_days < min_runtime_days:
+                    continue
+
+                # Check sample size
+                total_impressions = sum(len(contacts) for contacts in exp.assignments.values())
+                if total_impressions < min_sample_size:
+                    continue
+
+                # Get conversion rates
+                rates: List[tuple] = []
+                for v in exp.variants:
+                    n = len(exp.assignments[v])
+                    k = len(exp.outcomes[v])
+                    if n > 0:
+                        rates.append((v, k, n, k / n))
+
+                if len(rates) < 2:
+                    continue
+
+                # Sort by conversion rate
+                rates.sort(key=lambda t: t[3], reverse=True)
+
+                # Calculate p-value between top two
+                p_value = self._two_proportion_z_test(
+                    rates[0][1],
+                    rates[0][2],
+                    rates[1][1],
+                    rates[1][2],
+                )
+
+                if p_value >= min_p_value:
+                    continue
+
+                # Calculate lift
+                winner_rate = rates[0][3]
+                control_rate = rates[1][3]
+                if control_rate == 0:
+                    lift_percent = float("inf") if winner_rate > 0 else 0.0
+                else:
+                    lift_percent = ((winner_rate - control_rate) / control_rate) * 100.0
+
+                if lift_percent < min_lift_percent:
+                    continue
+
+                # All criteria met!
+                candidates.append(
+                    {
+                        "experiment_id": exp.experiment_id,
+                        "winning_variant": rates[0][0],
+                        "control_variant": rates[1][0],
+                        "p_value": round(p_value, 6),
+                        "lift_percent": round(lift_percent, 2),
+                        "sample_size": total_impressions,
+                        "runtime_days": round(runtime_days, 2),
+                        "winner_conversion_rate": round(winner_rate, 4),
+                        "control_conversion_rate": round(control_rate, 4),
+                    }
+                )
+
+        return candidates
+
+    def get_experiment_metrics(self, experiment_id: str) -> Dict[str, Any]:
+        """Get detailed metrics for an experiment.
+
+        Returns comprehensive metrics including per-variant stats,
+        statistical significance, and promotion readiness.
+
+        Args:
+            experiment_id: Target experiment.
+
+        Returns:
+            Dict with full experiment metrics.
+
+        Raises:
+            KeyError: If experiment does not exist.
+        """
+        results = self.get_experiment_results(experiment_id)
+
+        # Calculate lift between top two variants
+        sorted_variants = sorted(
+            results.variants,
+            key=lambda v: v.conversion_rate,
+            reverse=True,
+        )
+
+        lift_percent = None
+        if len(sorted_variants) >= 2:
+            winner = sorted_variants[0]
+            control = sorted_variants[1]
+            if control.conversion_rate > 0:
+                lift_percent = (
+                    (winner.conversion_rate - control.conversion_rate) / control.conversion_rate
+                ) * 100.0
+
+        return {
+            "experiment_id": results.experiment_id,
+            "status": results.status,
+            "runtime_days": round(results.duration_hours / 24.0, 2),
+            "total_impressions": results.total_impressions,
+            "total_conversions": results.total_conversions,
+            "is_significant": results.is_significant,
+            "p_value": results.p_value,
+            "winner": results.winner,
+            "lift_percent": round(lift_percent, 2) if lift_percent is not None else None,
+            "variants": [
+                {
+                    "variant": v.variant,
+                    "impressions": v.impressions,
+                    "conversions": v.conversions,
+                    "conversion_rate": v.conversion_rate,
+                    "total_value": v.total_value,
+                    "confidence_interval": v.confidence_interval,
+                }
+                for v in results.variants
+            ],
+            "created_at": results.created_at,
+        }
+
     # ── Testing Support ───────────────────────────────────────────────
 
     @classmethod

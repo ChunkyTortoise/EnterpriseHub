@@ -89,6 +89,14 @@ from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCo
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 
+# Phase 3 Loop 3: Handoff context propagation
+try:
+    from ghl_real_estate_ai.services.jorge.jorge_handoff_service import EnrichedHandoffContext
+    HANDOFF_CONTEXT_AVAILABLE = True
+except ImportError:
+    HANDOFF_CONTEXT_AVAILABLE = False
+    EnrichedHandoffContext = None
+
 try:
     from bots.shared.ml_analytics_engine import get_ml_analytics_engine
 except ImportError:
@@ -343,6 +351,19 @@ class JorgeBuyerBot:
     async def analyze_buyer_intent(self, state: BuyerBotState) -> Dict:
         """Extract and structure buyer intent from conversation using BuyerIntentDecoder."""
         try:
+            # Phase 3 Loop 3: Skip intent analysis if handoff context already populated state
+            if state.get("skip_qualification") and state.get("handoff_context_used"):
+                logger.info(f"Skipping intent analysis for {state.get('buyer_id')} - using handoff context")
+                # Return existing state values
+                return {
+                    "intent_profile": state.get("intent_profile"),
+                    "budget_range": state.get("budget_range"),
+                    "urgency_score": state.get("urgency_score", 70),
+                    "buying_motivation_score": state.get("buying_motivation_score", 70),
+                    "preference_clarity": 0.8,  # High since came from qualified lead
+                    "current_qualification_step": state.get("current_qualification_step", "property_matching"),
+                }
+
             conversation_history = state.get("conversation_history", [])
             buyer_id = state.get("buyer_id", "unknown")
 
@@ -411,6 +432,17 @@ class JorgeBuyerBot:
     async def assess_financial_readiness(self, state: BuyerBotState) -> Dict:
         """Assess buyer's financial preparedness using budget_config thresholds."""
         try:
+            # Phase 3 Loop 3: Skip financial assessment if handoff context already populated state
+            if state.get("skip_qualification") and state.get("handoff_context_used"):
+                logger.info(f"Skipping financial assessment for {state.get('buyer_id')} - using handoff context")
+                # Return existing state values from handoff context
+                return {
+                    "budget_range": state.get("budget_range"),
+                    "financing_status": state.get("financing_status", "pre_qualified_handoff"),
+                    "financial_readiness_score": state.get("financial_readiness_score", 70),
+                    "current_qualification_step": "property_matching",
+                }
+
             profile = state.get("intent_profile", {})
             budget_range = state.get("budget_range")
             intelligence_context = state.get("intelligence_context")
@@ -1194,6 +1226,122 @@ class JorgeBuyerBot:
         except Exception as e:
             logger.error(f"Error scheduling follow-up for {buyer_id}: {str(e)}")
 
+    # ================================
+    # PHASE 3 LOOP 3: HANDOFF CONTEXT HELPERS
+    # ================================
+
+    def _has_valid_handoff_context(self, handoff_context: Optional["EnrichedHandoffContext"]) -> bool:
+        """Check if handoff context is valid and recent (<24h).
+
+        Args:
+            handoff_context: The handoff context to validate
+
+        Returns:
+            True if context is valid and recent, False otherwise
+        """
+        if not handoff_context or not HANDOFF_CONTEXT_AVAILABLE:
+            return False
+
+        # Check if context has timestamp and is recent
+        if hasattr(handoff_context, 'timestamp'):
+            from datetime import datetime, timezone, timedelta
+            try:
+                if isinstance(handoff_context.timestamp, str):
+                    context_time = datetime.fromisoformat(handoff_context.timestamp.replace('Z', '+00:00'))
+                else:
+                    context_time = handoff_context.timestamp
+
+                age = datetime.now(timezone.utc) - context_time
+                if age > timedelta(hours=24):
+                    logger.info(f"Handoff context is stale (age: {age.total_seconds() / 3600:.1f}h)")
+                    return False
+            except (ValueError, AttributeError) as e:
+                logger.warning(f"Failed to parse handoff context timestamp: {e}")
+                return False
+
+        # Check if context has meaningful data
+        has_data = (
+            handoff_context.budget_range or
+            handoff_context.conversation_summary or
+            handoff_context.key_insights
+        )
+
+        if not has_data:
+            logger.info("Handoff context present but lacks meaningful data")
+            return False
+
+        logger.info("Valid handoff context detected - will skip re-qualification")
+        return True
+
+    def _populate_state_from_context(
+        self,
+        handoff_context: "EnrichedHandoffContext",
+        initial_state: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Populate buyer state from handoff context to skip re-qualification.
+
+        Args:
+            handoff_context: The validated handoff context
+            initial_state: The initial buyer state dict
+
+        Returns:
+            Updated state dict with context data
+        """
+        try:
+            # Populate budget information
+            if handoff_context.budget_range:
+                initial_state["budget_range"] = handoff_context.budget_range
+                initial_state["financial_readiness_score"] = 70.0  # High since came from lead bot
+                logger.info(f"Populated budget from handoff: {handoff_context.budget_range}")
+
+            # Populate urgency level
+            if handoff_context.urgency_level:
+                initial_state["urgency_level"] = handoff_context.urgency_level
+                # Map urgency to score
+                urgency_map = {
+                    "immediate": 90,
+                    "urgent": 80,
+                    "ready": 70,
+                    "considering": 50,
+                    "browsing": 30
+                }
+                initial_state["urgency_score"] = urgency_map.get(handoff_context.urgency_level, 50)
+                logger.info(f"Populated urgency from handoff: {handoff_context.urgency_level}")
+
+            # Add key insights to metadata for context
+            if handoff_context.key_insights:
+                if "metadata" not in initial_state:
+                    initial_state["metadata"] = {}
+                initial_state["metadata"]["handoff_insights"] = handoff_context.key_insights
+                logger.info(f"Added {len(handoff_context.key_insights)} key insights from handoff")
+
+            # Add conversation summary for continuity
+            if handoff_context.conversation_summary:
+                # Prepend summary to conversation history as system message
+                summary_msg = {
+                    "role": "system",
+                    "content": f"[HANDOFF CONTEXT] {handoff_context.conversation_summary}",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                if "conversation_history" not in initial_state:
+                    initial_state["conversation_history"] = []
+                initial_state["conversation_history"].insert(0, summary_msg)
+                logger.info("Added conversation summary from handoff")
+
+            # Mark that we should skip qualification
+            initial_state["skip_qualification"] = True
+            initial_state["handoff_context_used"] = True
+            initial_state["current_qualification_step"] = "property_matching"  # Skip to matching
+
+            logger.info("Successfully populated state from handoff context")
+            return initial_state
+
+        except Exception as e:
+            logger.error(f"Error populating state from handoff context: {e}")
+            # Return original state on error - fall back to normal qualification
+            initial_state["skip_qualification"] = False
+            return initial_state
+
     async def process_buyer_conversation(
         self,
         conversation_id: str,
@@ -1203,6 +1351,7 @@ class JorgeBuyerBot:
         buyer_phone: Optional[str] = None,
         buyer_email: Optional[str] = None,
         metadata: Optional[BotMetadata] = None,
+        handoff_context: Optional["EnrichedHandoffContext"] = None,
     ) -> BuyerBotResponse:
         """
         Main entry point for processing buyer conversations.
@@ -1312,7 +1461,14 @@ class JorgeBuyerBot:
                 "tone_variant": _tone_variant,
                 "intelligence_context": None,
                 "intelligence_performance_ms": 0.0,
+                "skip_qualification": False,
+                "handoff_context_used": False,
             }
+
+            # Phase 3 Loop 3: Apply handoff context if valid
+            if handoff_context and self._has_valid_handoff_context(handoff_context):
+                initial_state = self._populate_state_from_context(handoff_context, initial_state)
+                logger.info(f"Buyer bot using handoff context for {conversation_id} - skipping re-qualification")
 
             if buyer_phone:
                 initial_state["buyer_phone"] = buyer_phone

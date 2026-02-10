@@ -25,6 +25,44 @@ from ghl_real_estate_ai.models.lead_scoring import (
 
 logger = logging.getLogger(__name__)
 
+# Phase 3 Loop 1: GHL Tag Boost Configuration
+TAG_BOOST_MAP = {
+    "urgent-seller": 15,
+    "pre-approved-buyer": 20,
+    "hot-lead": 15,
+    "warm-lead": 10,
+    "cold-lead": -5,
+    "investor-seller": 10,
+    "distressed-seller": 12,
+    "referral": 5,
+    "do-not-contact": -20,
+    "dnc": -20,
+}
+
+# Phase 3 Loop 1: Custom Field Boost Configuration
+CUSTOM_FIELD_BOOST_MAP = {
+    "pre_approval_status": {
+        "values": ["approved", "pre-approved"],
+        "boost": 15,
+    },
+    "budget": {
+        "threshold": 500000,
+        "boost": 10,
+        "field_type": "numeric",
+    },
+    "timeline": {
+        "values": ["immediate", "asap", "urgent"],
+        "boost": 12,
+    },
+    "property_type": {
+        "values": ["investment", "cash-buyer"],
+        "boost": 8,
+    },
+}
+
+# Maximum total boost cap to prevent over-inflation
+MAX_BOOST_CAP = 30
+
 
 class LeadIntentDecoder:
     """
@@ -306,10 +344,12 @@ class LeadIntentDecoder:
         """
         Apply FRS and PCS boosts/penalties based on GHL contact data.
 
-        Boost logic:
-        - Tags: Hot-Lead → +15 FRS, Warm-Lead → +8 FRS, Cold-Lead → -5 FRS
+        Phase 3 Loop 1 Enhancement:
+        - Tag-based boosts using TAG_BOOST_MAP configuration
+        - Custom field boosts using CUSTOM_FIELD_BOOST_MAP configuration
         - Lead age: < 7 days → +10 FRS (fresh), > 90 days → -10 FRS (stale)
         - Engagement recency: < 3 days → +10 PCS velocity, > 30 days → -15 PCS
+        - Max boost cap: +30 to prevent over-inflation
 
         Args:
             frs_score: Base FRS total score from conversation analysis.
@@ -322,21 +362,52 @@ class LeadIntentDecoder:
         """
         frs_boost = 0.0
         pcs_boost = 0.0
+        applied_boosts = []  # For logging which boosts were applied
+
         tags = [t.lower() for t in ghl_data.get("tags", [])]
 
-        # --- Tag-based FRS boosts ---
-        if "hot-lead" in tags:
-            frs_boost += 15
-        elif "warm-lead" in tags:
-            frs_boost += 8
-        elif "cold-lead" in tags:
-            frs_boost -= 5
+        # --- Tag-based FRS boosts (Phase 3 Loop 1) ---
+        for tag_key, boost_value in TAG_BOOST_MAP.items():
+            if tag_key in tags:
+                frs_boost += boost_value
+                applied_boosts.append(f"tag:{tag_key}({boost_value:+.0f})")
+                logger.debug(f"Tag boost applied: {tag_key} → {boost_value:+.0f} FRS")
 
-        # Additional tag signals
-        if "referral" in tags:
-            frs_boost += 5
-        if "do-not-contact" in tags or "dnc" in tags:
-            frs_boost -= 20
+        # --- Custom field boosts (Phase 3 Loop 1) ---
+        custom_fields = ghl_data.get("custom_fields", {})
+
+        for field_name, field_config in CUSTOM_FIELD_BOOST_MAP.items():
+            field_value = custom_fields.get(field_name)
+
+            if field_value is None:
+                continue
+
+            # Handle numeric field types (e.g., budget)
+            if field_config.get("field_type") == "numeric":
+                try:
+                    numeric_value = float(field_value)
+                    threshold = field_config.get("threshold", 0)
+                    if numeric_value >= threshold:
+                        boost = field_config["boost"]
+                        frs_boost += boost
+                        applied_boosts.append(f"field:{field_name}>={threshold}({boost:+.0f})")
+                        logger.debug(
+                            f"Custom field boost applied: {field_name}={numeric_value} ≥ {threshold} → {boost:+.0f} FRS"
+                        )
+                except (ValueError, TypeError):
+                    logger.debug(f"Could not parse numeric value for {field_name}: {field_value}")
+
+            # Handle value-based matching (e.g., pre_approval_status, timeline)
+            elif "values" in field_config:
+                field_value_lower = str(field_value).lower()
+                matching_values = [v.lower() for v in field_config["values"]]
+                if field_value_lower in matching_values:
+                    boost = field_config["boost"]
+                    frs_boost += boost
+                    applied_boosts.append(f"field:{field_name}={field_value}({boost:+.0f})")
+                    logger.debug(
+                        f"Custom field boost applied: {field_name}={field_value} → {boost:+.0f} FRS"
+                    )
 
         # --- Lead age factor (days since date_added) ---
         date_added = ghl_data.get("date_added")
@@ -347,11 +418,17 @@ class LeadIntentDecoder:
                     date_added = date_added.replace(tzinfo=timezone.utc)
                 lead_age_days = (now - date_added).days
                 if lead_age_days <= 7:
-                    frs_boost += 10  # Fresh lead
+                    age_boost = 10  # Fresh lead
+                    frs_boost += age_boost
+                    applied_boosts.append(f"age:{lead_age_days}d({age_boost:+.0f})")
                 elif lead_age_days <= 30:
-                    frs_boost += 5  # Recent lead
+                    age_boost = 5  # Recent lead
+                    frs_boost += age_boost
+                    applied_boosts.append(f"age:{lead_age_days}d({age_boost:+.0f})")
                 elif lead_age_days > 90:
-                    frs_boost -= 10  # Stale lead
+                    age_boost = -10  # Stale lead
+                    frs_boost += age_boost
+                    applied_boosts.append(f"age:{lead_age_days}d({age_boost:+.0f})")
             except Exception as e:
                 logger.debug(f"Could not compute lead age: {e}")
 
@@ -364,26 +441,35 @@ class LeadIntentDecoder:
                     last_activity = last_activity.replace(tzinfo=timezone.utc)
                 days_since_activity = (now - last_activity).days
                 if days_since_activity <= 3:
-                    pcs_boost += 10  # Very recent engagement
+                    engagement_boost = 10  # Very recent engagement
+                    pcs_boost += engagement_boost
+                    applied_boosts.append(f"engagement:{days_since_activity}d({engagement_boost:+.0f}PCS)")
                 elif days_since_activity <= 7:
-                    pcs_boost += 5  # Recent engagement
+                    engagement_boost = 5  # Recent engagement
+                    pcs_boost += engagement_boost
+                    applied_boosts.append(f"engagement:{days_since_activity}d({engagement_boost:+.0f}PCS)")
                 elif days_since_activity > 30:
-                    pcs_boost -= 15  # Disengaged
+                    engagement_boost = -15  # Disengaged
+                    pcs_boost += engagement_boost
+                    applied_boosts.append(f"engagement:{days_since_activity}d({engagement_boost:+.0f}PCS)")
             except Exception as e:
                 logger.debug(f"Could not compute engagement recency: {e}")
 
-        # --- Custom field signals ---
-        custom_fields = ghl_data.get("custom_fields", {})
-        if custom_fields.get("pre_approval_status") in ("approved", "pre-approved"):
-            frs_boost += 10
+        # --- Apply boost cap (Phase 3 Loop 1) ---
+        original_frs_boost = frs_boost
+        if frs_boost > MAX_BOOST_CAP:
+            frs_boost = MAX_BOOST_CAP
+            logger.info(f"FRS boost capped: {original_frs_boost:.1f} → {MAX_BOOST_CAP}")
+            applied_boosts.append(f"CAPPED({original_frs_boost:.1f}→{MAX_BOOST_CAP})")
 
         boosted_frs = max(0, min(100, frs_score + frs_boost))
         boosted_pcs = max(0, min(100, pcs_score + pcs_boost))
 
         logger.info(
-            f"GHL boosts applied: FRS {frs_score} → {boosted_frs} "
-            f"(+{frs_boost}), PCS {pcs_score} → {boosted_pcs} (+{pcs_boost})"
+            f"GHL boosts applied: FRS {frs_score:.1f} → {boosted_frs:.1f} "
+            f"({frs_boost:+.1f}), PCS {pcs_score:.1f} → {boosted_pcs:.1f} ({pcs_boost:+.1f})"
         )
+        logger.info(f"Boost breakdown: {', '.join(applied_boosts) if applied_boosts else 'none'}")
 
         return boosted_frs, boosted_pcs
 

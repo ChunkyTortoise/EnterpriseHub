@@ -26,6 +26,20 @@ from ghl_real_estate_ai.models.bot_context_types import (
 )
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
+# Phase 3 Loop 3: GHL client for storing handoff context
+try:
+    from ghl_real_estate_ai.services.ghl_client import GHLClient
+    GHL_CLIENT_AVAILABLE = True
+except ImportError:
+    GHL_CLIENT_AVAILABLE = False
+    GHLClient = None
+
+# Import HandoffRouter for performance-based routing
+try:
+    from ghl_real_estate_ai.services.jorge.handoff_router import HandoffRouter
+except ImportError:
+    HandoffRouter = None  # type: ignore
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,6 +59,7 @@ class EnrichedHandoffContext:
     conversation_summary: str = ""
     key_insights: Dict[str, Any] = field(default_factory=dict)
     urgency_level: str = "browsing"
+    timestamp: Optional[str] = None  # ISO format timestamp for 24h TTL validation
 
 
 @dataclass
@@ -95,6 +110,7 @@ class JorgeHandoffService:
         "handoffs_by_hour": {h: 0 for h in range(24)},
         "blocked_by_rate_limit": 0,
         "blocked_by_circular": 0,
+        "blocked_by_performance": 0,
     }
 
     # Minimum data points required before learned adjustments apply
@@ -123,9 +139,24 @@ class JorgeHandoffService:
         r"\bsell\s+first\b",
     ]
 
-    def __init__(self, analytics_service=None, industry_config=None):
+    def __init__(self, analytics_service=None, industry_config=None, outcome_publisher=None):
         self.analytics_service = analytics_service
         self._repository: Any = None
+        self._outcome_publisher = outcome_publisher
+
+        # Initialize HandoffRouter for performance-based routing
+        if HandoffRouter is not None:
+            self._handoff_router = HandoffRouter(analytics_service=analytics_service)
+        else:
+            self._handoff_router = None
+            logger.warning("HandoffRouter not available, performance-based routing disabled")
+
+        # Phase 3 Loop 3: Initialize GHL client for handoff context storage
+        if GHL_CLIENT_AVAILABLE:
+            self._ghl_client = GHLClient()
+        else:
+            self._ghl_client = None
+            logger.warning("GHLClient not available, handoff context storage disabled")
 
         # Wire industry config into instance-level patterns and thresholds
         cfg = industry_config
@@ -171,9 +202,30 @@ class JorgeHandoffService:
             repository: A repository instance (or None to disable).
         """
         self._repository = repository
+
+        # Also configure HandoffRouter's repository
+        if self._handoff_router is not None:
+            self._handoff_router.set_repository(repository)
+
         logger.info(
             "JorgeHandoffService persistence %s",
             "enabled" if repository else "disabled",
+        )
+
+    def set_outcome_publisher(self, outcome_publisher: Any) -> None:
+        """Attach an outcome publisher for GHL integration.
+
+        The publisher must implement:
+            - ``publish_handoff_outcome(contact_id, source_bot, target_bot,
+              outcome, confidence)`` (async)
+
+        Args:
+            outcome_publisher: An OutcomePublisher instance (or None to disable).
+        """
+        self._outcome_publisher = outcome_publisher
+        logger.info(
+            "JorgeHandoffService outcome publishing %s",
+            "enabled" if outcome_publisher else "disabled",
         )
 
     async def load_from_database(self, since_minutes: int = 10080) -> int:
@@ -386,6 +438,10 @@ class JorgeHandoffService:
             cls._analytics["blocked_by_rate_limit"] += 1
         elif blocked_by == "circular":
             cls._analytics["blocked_by_circular"] += 1
+        elif blocked_by == "performance":
+            if "blocked_by_performance" not in cls._analytics:
+                cls._analytics["blocked_by_performance"] = 0
+            cls._analytics["blocked_by_performance"] += 1
 
     @classmethod
     def get_analytics_summary(cls) -> HandoffAnalytics:
@@ -416,6 +472,7 @@ class JorgeHandoffService:
             "peak_hour": peak_hour,
             "blocked_by_rate_limit": cls._analytics["blocked_by_rate_limit"],
             "blocked_by_circular": cls._analytics["blocked_by_circular"],
+            "blocked_by_performance": cls._analytics.get("blocked_by_performance", 0),
         }
 
     @classmethod
@@ -430,6 +487,7 @@ class JorgeHandoffService:
             "handoffs_by_hour": {h: 0 for h in range(24)},
             "blocked_by_rate_limit": 0,
             "blocked_by_circular": 0,
+            "blocked_by_performance": 0,
         }
         cls._active_handoffs = {}
         cls._handoff_outcomes = {}
@@ -675,6 +733,7 @@ class JorgeHandoffService:
         reason = f"{target}_intent_detected"
 
         # Build enriched handoff context from intent signals
+        from datetime import datetime, timezone
         enriched = EnrichedHandoffContext(
             source_qualification_score=intent_signals.get("qualification_score", 0.0),
             source_temperature=intent_signals.get("temperature", "cold"),
@@ -684,6 +743,7 @@ class JorgeHandoffService:
             conversation_summary=intent_signals.get("conversation_summary", ""),
             key_insights=intent_signals.get("key_insights", {}),
             urgency_level=intent_signals.get("urgency_level", "browsing"),
+            timestamp=datetime.now(timezone.utc).isoformat(),  # Set timestamp for 24h TTL
         )
 
         return HandoffDecision(
@@ -725,6 +785,44 @@ class JorgeHandoffService:
 
         try:
             self._cleanup_old_entries()
+
+            # Check performance-based routing FIRST (before circular/rate checks)
+            if self._handoff_router is not None:
+                deferral_decision = await self._handoff_router.should_defer_handoff(
+                    target_bot=decision.target_bot
+                )
+                if deferral_decision.should_defer:
+                    # Defer handoff and schedule retry
+                    deferral_result = await self._handoff_router.defer_handoff(
+                        contact_id=contact_id,
+                        source_bot=decision.source_bot,
+                        target_bot=decision.target_bot,
+                        reason=deferral_decision.reason,
+                        location_id=location_id,
+                    )
+
+                    # Add deferral tag for tracking
+                    tag = f"Handoff-Deferred-{decision.target_bot.replace('_', '').capitalize()}-Performance"
+                    actions_deferred = [{"type": "add_tag", "tag": tag}]
+
+                    self._record_analytics(route, start_time, success=False, blocked_by="performance")
+
+                    logger.warning(
+                        f"Handoff {route} deferred due to performance: {deferral_decision.reason} "
+                        f"(P95={deferral_decision.p95_percent_of_sla:.1%} of SLA, "
+                        f"error_rate={deferral_decision.error_rate:.2%})"
+                    )
+
+                    return [
+                        {
+                            "handoff_executed": False,
+                            "reason": f"Performance: {deferral_decision.reason}",
+                            "deferred": True,
+                            "retry_after": deferral_result.get("retry_after"),
+                            "retry_count": deferral_result.get("retry_count"),
+                            "actions": actions_deferred,
+                        }
+                    ]
 
             circular_reason = self._check_circular_handoff(contact_id, decision.source_bot, decision.target_bot)
             if circular_reason:
@@ -782,6 +880,10 @@ class JorgeHandoffService:
             self._record_handoff(contact_id, decision.source_bot, decision.target_bot)
             self._record_analytics(route, start_time, success=True)
 
+            # Phase 3 Loop 3: Store enriched handoff context in GHL custom field
+            if decision.enriched_context:
+                await self._store_handoff_context(contact_id, decision.enriched_context)
+
             return actions
         finally:
             self._release_handoff_lock(contact_id)
@@ -826,12 +928,16 @@ class JorgeHandoffService:
         metadata: Optional[Dict[str, Any]] = None,
         *,
         _repository: Any = None,
+        _outcome_publisher: Any = None,
     ) -> None:
         """Record the outcome of a handoff for pattern learning.
 
         If a repository is attached (via ``_repository`` kwarg or
         instance-level ``_repository``), the outcome is also persisted
         to PostgreSQL (fire-and-forget; DB errors are logged, not raised).
+
+        If an outcome publisher is attached (via ``_outcome_publisher`` kwarg),
+        the outcome is published to GHL as tags and custom fields.
 
         Args:
             contact_id: The contact that was handed off.
@@ -840,6 +946,7 @@ class JorgeHandoffService:
             outcome: One of "successful", "failed", "reverted", "timeout".
             metadata: Optional extra context about the outcome.
             _repository: Optional repository for DB write-through.
+            _outcome_publisher: Optional outcome publisher for GHL write-through.
         """
         valid_outcomes = {"successful", "failed", "reverted", "timeout"}
         if outcome not in valid_outcomes:
@@ -860,6 +967,9 @@ class JorgeHandoffService:
             "metadata": metadata or {},
         }
         cls._handoff_outcomes[pair_key].append(record)
+
+        # Extract confidence from metadata if available
+        confidence = metadata.get("confidence", 0.0) if metadata else 0.0
 
         # Write-through to DB if repository provided
         repo = _repository
@@ -893,7 +1003,70 @@ class JorgeHandoffService:
             except RuntimeError:
                 logger.debug("No event loop for handoff outcome DB write-through")
 
+        # Publish to GHL if outcome publisher provided
+        publisher = _outcome_publisher
+        if publisher is not None:
+            import asyncio
+
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(
+                        publisher.publish_handoff_outcome(
+                            contact_id=contact_id,
+                            source_bot=source_bot,
+                            target_bot=target_bot,
+                            outcome=outcome,
+                            confidence=confidence,
+                        )
+                    )
+                else:
+                    loop.run_until_complete(
+                        publisher.publish_handoff_outcome(
+                            contact_id=contact_id,
+                            source_bot=source_bot,
+                            target_bot=target_bot,
+                            outcome=outcome,
+                            confidence=confidence,
+                        )
+                    )
+            except RuntimeError:
+                logger.debug("No event loop for handoff outcome GHL write-through")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to publish handoff outcome to GHL for contact {contact_id}: {e}"
+                )
+
         logger.info(f"Recorded handoff outcome: {pair_key} for contact {contact_id} -> {outcome}")
+
+    def record_outcome(
+        self,
+        contact_id: str,
+        source_bot: str,
+        target_bot: str,
+        outcome: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Instance method wrapper for recording handoff outcomes.
+
+        Uses the instance's repository and outcome publisher if configured.
+
+        Args:
+            contact_id: The contact that was handed off.
+            source_bot: Bot that initiated the handoff.
+            target_bot: Bot that received the handoff.
+            outcome: One of "successful", "failed", "reverted", "timeout".
+            metadata: Optional extra context about the outcome.
+        """
+        self.record_handoff_outcome(
+            contact_id=contact_id,
+            source_bot=source_bot,
+            target_bot=target_bot,
+            outcome=outcome,
+            metadata=metadata,
+            _repository=self._repository,
+            _outcome_publisher=self._outcome_publisher,
+        )
 
     @classmethod
     def get_learned_adjustments(cls, source_bot: str, target_bot: str) -> LearnedAdjustments:
