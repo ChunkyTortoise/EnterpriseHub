@@ -110,7 +110,7 @@ class AgentTask:
     task_type: str
     priority: TaskPriority
     capabilities_required: List[AgentCapability]
-    payload: Dict[str, Any]
+    payload: AgentTaskPayload
     created_at: datetime
     deadline: Optional[datetime]
     max_cost: Optional[float]
@@ -118,7 +118,7 @@ class AgentTask:
     assigned_agent: Optional[str] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    result: Optional[Dict[str, Any]] = None
+    result: Optional[AgentTaskResult] = None
     error: Optional[str] = None
 
     @property
@@ -394,7 +394,7 @@ class AgentMeshCoordinator:
             logger.error(f"Task execution failed: {e}")
             await self._handle_task_failure(task, str(e))
 
-    async def _execute_jorge_bot_task(self, task: AgentTask, agent: MeshAgent) -> Dict[str, Any]:
+    async def _execute_jorge_bot_task(self, task: AgentTask, agent: MeshAgent) -> AgentTaskResult:
         """Execute task on Jorge bot agents"""
         # Use progressive skills for token efficiency
         skill_result = await self.skills_manager.execute_skill(task.task_type, task.payload)
@@ -411,7 +411,7 @@ class AgentMeshCoordinator:
 
         return skill_result
 
-    async def _execute_mcp_task(self, task: AgentTask, agent: MeshAgent) -> Dict[str, Any]:
+    async def _execute_mcp_task(self, task: AgentTask, agent: MeshAgent) -> AgentTaskResult:
         """Execute task using MCP protocol"""
         # Parse MCP server and tool from agent endpoint
         server_name, tool_name = agent.endpoint.split(":", 1)
@@ -420,7 +420,7 @@ class AgentMeshCoordinator:
 
         return result
 
-    async def _execute_generic_task(self, task: AgentTask, agent: MeshAgent) -> Dict[str, Any]:
+    async def _execute_generic_task(self, task: AgentTask, agent: MeshAgent) -> AgentTaskResult:
         """Execute generic HTTP-based task"""
         # Placeholder for HTTP API calls to generic agents
         return {"status": "completed", "message": "Generic task execution"}

@@ -41,6 +41,18 @@ from pydantic import BaseModel, Field
 
 # Import shared dependencies
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.api_analytics_types import (
+    CollectionMetricsData,
+    CollectionSummaryData,
+    CompetitiveLandscape,
+    CompetitorDataPoint,
+    ProcessingMetricsData,
+    ResponseStrategy,
+    RiskSummaryData,
+    SystemHealthData,
+    ThreatDataItem,
+    UptimeStatsData,
+)
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 # Import competitive intelligence services
@@ -110,8 +122,8 @@ class CompetitorDataResponse(BaseModel):
     """Response model for competitor data."""
 
     competitor_id: str
-    data_points: List[Dict[str, Any]]
-    collection_summary: Dict[str, Any]
+    data_points: List[CompetitorDataPoint]
+    collection_summary: CollectionSummaryData
     quality_metrics: Dict[str, float]
     last_updated: datetime
 
@@ -123,7 +135,7 @@ class MarketIntelligenceResponse(BaseModel):
     analysis_period: str
     insights: List[Dict[str, Any]]
     trend_analysis: Dict[str, Any]
-    competitive_landscape: Dict[str, Any]
+    competitive_landscape: CompetitiveLandscape
     strategic_recommendations: List[str]
     confidence_score: float
     generated_at: datetime
@@ -132,21 +144,21 @@ class MarketIntelligenceResponse(BaseModel):
 class ThreatAssessmentResponse(BaseModel):
     """Response model for threat assessments."""
 
-    threats: List[Dict[str, Any]]
-    risk_summary: Dict[str, Any]
+    threats: List[ThreatDataItem]
+    risk_summary: RiskSummaryData
     alert_recommendations: List[str]
-    response_strategies: List[Dict[str, Any]]
+    response_strategies: List[ResponseStrategy]
     assessment_time: datetime
 
 
 class PerformanceMetricsResponse(BaseModel):
     """Response model for system performance metrics."""
 
-    collection_metrics: Dict[str, Any]
-    processing_metrics: Dict[str, Any]
-    quality_metrics: Dict[str, Any]
-    system_health: Dict[str, Any]
-    uptime_stats: Dict[str, Any]
+    collection_metrics: CollectionMetricsData
+    processing_metrics: ProcessingMetricsData
+    quality_metrics: Dict[str, float]
+    system_health: SystemHealthData
+    uptime_stats: UptimeStatsData
 
 
 # Authentication and Authorization

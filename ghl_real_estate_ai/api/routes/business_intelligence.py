@@ -28,6 +28,10 @@ from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.api_analytics_types import (
     AnalyticsMetrics,
+    BotMetricData,
+    CoordinationMetricsData,
+    JorgeCommissionData,
+    PerformanceAlertData,
     PerformanceMetrics,
     RevenueMetrics,
 )
@@ -60,29 +64,29 @@ class DrillDownQuery(BaseModel):
 
 
 class DashboardKPIResponse(BaseModel):
-    metrics: Dict[str, Any]
+    metrics: AnalyticsMetrics
     comparisons: Dict[str, float]
     trends: Dict[str, List[Dict[str, Any]]]
     performance_tiers: Dict[str, str]
-    jorge_commission: Dict[str, Any]
+    jorge_commission: JorgeCommissionData
     last_updated: str
     cache_hit: bool
 
 
 class RevenueIntelligenceResponse(BaseModel):
-    revenue_timeseries: List[Dict[str, Any]]
-    commission_breakdown: List[Dict[str, Any]]
+    revenue_timeseries: List[RevenueMetrics]
+    commission_breakdown: List[RevenueMetrics]
     predictive_trends: List[Dict[str, Any]]
-    summary_metrics: Dict[str, Any]
+    summary_metrics: RevenueMetrics
     forecast_accuracy: float
     last_updated: str
 
 
 class BotPerformanceResponse(BaseModel):
-    bot_metrics: List[Dict[str, Any]]
-    coordination_metrics: Optional[Dict[str, Any]]
+    bot_metrics: List[BotMetricData]
+    coordination_metrics: Optional[CoordinationMetricsData]
     system_health: Dict[str, str]
-    performance_alerts: List[Dict[str, Any]]
+    performance_alerts: List[PerformanceAlertData]
     last_updated: str
 
 
@@ -93,7 +97,7 @@ class PredictiveInsight(BaseModel):
     description: str
     recommended_action: Optional[str] = None
     relevance_score: float = Field(ge=0.0, le=1.0)
-    data: Dict[str, Any]
+    data: PerformanceMetrics
 
 
 # Initialize services

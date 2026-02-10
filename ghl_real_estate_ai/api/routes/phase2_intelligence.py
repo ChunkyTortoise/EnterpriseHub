@@ -23,6 +23,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Qu
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.deps import get_current_user, get_location_access
+from ghl_real_estate_ai.models.api_analytics_types import ConversationInsights
 from ghl_real_estate_ai.services.advanced_property_matching_engine import get_advanced_property_matching_engine
 from ghl_real_estate_ai.services.client_preference_learning_engine import get_client_preference_learning_engine
 from ghl_real_estate_ai.services.conversation_intelligence_service import get_conversation_intelligence_service
@@ -64,7 +65,7 @@ class PreferenceLearningRequest(BaseModel):
     client_id: str = Field(..., description="Client ID")
     source_type: str = Field(..., description="Learning source: conversation, property_interaction")
     conversation_data: Optional[List[Dict[str, Any]]] = Field(None, description="Conversation data")
-    conversation_analysis: Optional[Dict[str, Any]] = Field(None, description="Conversation analysis results")
+    conversation_analysis: Optional[ConversationInsights] = Field(None, description="Conversation analysis results")
     property_id: Optional[str] = Field(None, description="Property ID for interaction learning")
     interaction_data: Optional[Dict[str, Any]] = Field(None, description="Property interaction data")
 

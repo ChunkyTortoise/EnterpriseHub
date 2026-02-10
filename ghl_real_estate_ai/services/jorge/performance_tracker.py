@@ -410,7 +410,7 @@ class PerformanceTracker:
         Returns:
             Dict mapping bot names to their statistics dicts.
         """
-        stats: Dict[str, Any] = {}
+        stats: dict[str, PerformanceMetrics] = {}
 
         for bot_name in VALID_BOT_NAMES:
             stats[bot_name] = await self.get_bot_stats(bot_name, window)
@@ -434,7 +434,7 @@ class PerformanceTracker:
                 - p50_actual, p95_actual, p99_actual: Actual values
                 - violations: List of violation messages
         """
-        compliance_list: List[Dict[str, Any]] = []
+        compliance_list: list[SLAComplianceResult] = []
 
         for bot_name in VALID_BOT_NAMES:
             if bot_name not in self._sla_targets:

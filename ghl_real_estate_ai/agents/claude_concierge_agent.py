@@ -594,7 +594,7 @@ class MultiAgentCoordinator:
             }
 
     async def _invoke_agent(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any], is_supporting: bool = False
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict, is_supporting: bool = False
     ) -> Dict[str, Any]:
         """Invoke a specific agent and return structured response."""
 
@@ -632,7 +632,7 @@ class MultiAgentCoordinator:
             }
 
     async def _invoke_jorge_seller_bot(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict
     ) -> Dict[str, Any]:
         """Invoke Jorge Seller Bot with proper conversation context."""
         try:
@@ -674,7 +674,7 @@ class MultiAgentCoordinator:
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
     async def _invoke_jorge_buyer_bot(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict
     ) -> Dict[str, Any]:
         """Invoke Jorge Buyer Bot with proper conversation context."""
         try:
@@ -720,7 +720,7 @@ class MultiAgentCoordinator:
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
     async def _invoke_lead_bot(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict
     ) -> Dict[str, Any]:
         """Invoke Lead Bot for sequence and nurture workflows."""
         try:
@@ -752,7 +752,7 @@ class MultiAgentCoordinator:
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
     async def _invoke_intent_decoder(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict
     ) -> Dict[str, Any]:
         """Invoke Intent Decoder for conversation analysis."""
         try:
@@ -805,7 +805,7 @@ class MultiAgentCoordinator:
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
     async def _invoke_bot_orchestrator(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict
     ) -> Dict[str, Any]:
         """Invoke Enhanced Bot Orchestrator for complex coordination."""
         try:
@@ -848,7 +848,7 @@ class MultiAgentCoordinator:
             return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
     async def _invoke_claude_generic_agent(
-        self, agent_capability: AgentCapability, request: str, context: Dict[str, Any]
+        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict
     ) -> Dict[str, Any]:
         """Generic Claude-powered agent for agents without specific implementations."""
         try:

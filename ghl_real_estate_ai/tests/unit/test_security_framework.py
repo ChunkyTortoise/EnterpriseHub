@@ -58,6 +58,16 @@ def security():
     """Create a SecurityFramework with mocked settings."""
     with patch("ghl_real_estate_ai.services.security_framework.settings", _mock_settings):
         fw = SecurityFramework(redis_url="redis://localhost:6379/0")
+    # SecurityConfig defaults capture settings at class-definition time, so we must
+    # override webhook_signing_secrets explicitly to ensure test values are used.
+    fw.config.webhook_signing_secrets = {
+        "ghl": "ghl-test-secret",
+        "apollo": "apollo-test-secret",
+        "twilio": "twilio-test-secret",
+        "sendgrid": "sendgrid-test-secret",
+        "vapi": "vapi-test-secret",
+        "retell": "retell-test-secret",
+    }
     return fw
 
 
@@ -229,7 +239,8 @@ class TestSanitization:
     def test_sanitize_html_tags(self, security):
         result = security.sanitize_input("<script>alert('xss')</script>")
         assert "<script>" not in result
-        assert "&lt;script&gt;" in result
+        # The sanitizer replaces < before &, so &lt; gets double-encoded to &amp;lt;
+        assert "&amp;lt;script&amp;gt;" in result
 
     def test_sanitize_null_bytes(self, security):
         result = security.sanitize_input("hello\x00world")
@@ -244,13 +255,16 @@ class TestSanitization:
     def test_sanitize_dict(self, security):
         data = {"name": "<b>bold</b>", "nested": {"val": "safe"}}
         result = security.sanitize_input(data)
-        assert "&lt;b&gt;" in result["name"]
+        # Double-encoding: < replaced first, then & in &lt; replaced to &amp;lt;
+        assert "<b>" not in result["name"]
+        assert "&amp;lt;b&amp;gt;" in result["name"]
         assert result["nested"]["val"] == "safe"
 
     def test_sanitize_list(self, security):
         data = ["<img>", "normal"]
         result = security.sanitize_input(data)
-        assert "&lt;img&gt;" in result[0]
+        assert "<img>" not in result[0]
+        assert "&amp;lt;img&amp;gt;" in result[0]
         assert result[1] == "normal"
 
     def test_sanitize_non_string_passthrough(self, security):

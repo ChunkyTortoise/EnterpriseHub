@@ -137,7 +137,7 @@ class SmartFollowUpOptimizer:
     async def optimize_followup_sequence(
         self,
         lead_id: str,
-        lead_data: Dict[str, Any],
+        lead_data: PersonalizationData,
         interaction_history: List[LeadInteraction],
         goal: str = "conversion",
     ) -> List[FollowUpAction]:
@@ -176,7 +176,7 @@ class SmartFollowUpOptimizer:
         return sequence
 
     async def _analyze_lead_engagement(
-        self, lead_id: str, lead_data: Dict[str, Any], interaction_history: List[LeadInteraction]
+        self, lead_id: str, lead_data: PersonalizationData, interaction_history: List[LeadInteraction]
     ) -> Dict[str, Any]:
         """Analyze lead engagement patterns using AI."""
 
@@ -289,7 +289,7 @@ class SmartFollowUpOptimizer:
     async def _generate_followup_sequence(
         self,
         lead_id: str,
-        lead_data: Dict[str, Any],
+        lead_data: PersonalizationData,
         engagement_analysis: Dict[str, Any],
         timing_optimization: Dict[str, Any],
         goal: str,
@@ -498,7 +498,7 @@ class SmartFollowUpOptimizer:
             return "low"
 
     def _generate_followup_content(
-        self, sequence_number: int, lead_data: Dict[str, Any], engagement_analysis: Dict[str, Any]
+        self, sequence_number: int, lead_data: PersonalizationData, engagement_analysis: Dict[str, Any]
     ) -> str:
         """Generate personalized follow-up content."""
 
@@ -526,7 +526,7 @@ class SmartFollowUpOptimizer:
 
         return content_templates[sequence_number - 1]
 
-    def _generate_subject_line(self, sequence_number: int, lead_data: Dict[str, Any]) -> str:
+    def _generate_subject_line(self, sequence_number: int, lead_data: PersonalizationData) -> str:
         """Generate engaging subject lines."""
 
         location = lead_data.get("location", "Austin")
@@ -631,7 +631,7 @@ class SmartFollowUpOptimizer:
         ]
 
     def _get_fallback_engagement_analysis(
-        self, lead_data: Dict[str, Any], interaction_history: List[LeadInteraction]
+        self, lead_data: PersonalizationData, interaction_history: List[LeadInteraction]
     ) -> Dict[str, Any]:
         """Provide fallback engagement analysis."""
         return {
@@ -661,7 +661,7 @@ class SmartFollowUpOptimizer:
         }
 
     def _get_fallback_followup_sequence(
-        self, lead_id: str, lead_data: Dict[str, Any], timing_optimization: Dict[str, Any]
+        self, lead_id: str, lead_data: PersonalizationData, timing_optimization: Dict[str, Any]
     ) -> List[FollowUpAction]:
         """Provide fallback follow-up sequence."""
         sequence = []
