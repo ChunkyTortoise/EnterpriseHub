@@ -67,6 +67,7 @@ def test_openapi_contract_models_bound_for_critical_routes() -> None:
         ("/portal/swipe", "post"): "SwipeResponse",
         ("/vapi/tools/book-tour", "post"): "VapiToolResponse",
         ("/ghl/sync", "post"): "GHLSyncResponse",
+        ("/language/detect", "post"): "LanguageDetectResponse",
     }
 
     for (route, method), schema_name in expected_response_refs.items():
@@ -74,6 +75,7 @@ def test_openapi_contract_models_bound_for_critical_routes() -> None:
 
     assert _openapi_request_ref(paths, "/portal/swipe", "post").endswith("/Interaction")
     assert _openapi_request_ref(paths, "/vapi/tools/book-tour", "post").endswith("/VapiToolPayload")
+    assert _openapi_request_ref(paths, "/language/detect", "post").endswith("/LanguageDetectRequest")
     assert "requestBody" not in paths["/ghl/sync"]["post"]
 
 
@@ -160,6 +162,7 @@ def test_openapi_422_validation_contracts_locked_on_selected_routes() -> None:
     selected_routes = [
         ("/portal/swipe", "post"),
         ("/system/state/details", "get"),
+        ("/language/detect", "post"),
     ]
 
     for route, method in selected_routes:
@@ -189,6 +192,35 @@ def test_openapi_state_details_limit_parameter_bounds() -> None:
     assert limit_schema["maximum"] == 100
 
 
+def test_openapi_tenant_header_is_optional_on_tenant_scoped_routes() -> None:
+    openapi = app.openapi()
+    paths = openapi["paths"]
+    tenant_scoped_routes = [
+        ("/portal/deck", "get"),
+        ("/portal/swipe", "post"),
+        ("/vapi/tools/book-tour", "post"),
+        ("/system/state", "get"),
+        ("/system/state/details", "get"),
+    ]
+
+    for route, method in tenant_scoped_routes:
+        params = paths[route][method]["parameters"]
+        tenant_param = next(param for param in params if param.get("name") == "X-Tenant-ID")
+        assert tenant_param["in"] == "header"
+        assert tenant_param["required"] is False
+
+
+def test_openapi_language_detect_schema_constraints_locked() -> None:
+    language_request = app.openapi()["components"]["schemas"]["LanguageDetectRequest"]
+    text_schema = language_request["properties"]["text"]
+    assert text_schema["type"] == "string"
+    assert text_schema["minLength"] == 1
+
+    language_response = app.openapi()["components"]["schemas"]["LanguageDetectResponse"]
+    language_schema = language_response["properties"]["language"]
+    assert set(language_schema["enum"]) == {"en", "es", "he", "unknown"}
+
+
 def test_health_endpoint() -> None:
     response = client.get("/health")
     assert response.status_code == 200
@@ -214,6 +246,38 @@ def test_request_logging_emits_request_id(caplog) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("text", "expected_language", "min_confidence"),
+    [
+        ("I would like to schedule a property viewing tomorrow morning.", "en", 0.7),
+        ("Quiero programar una visita a la propiedad manana.", "es", 0.7),
+        ("\u05d0\u05e0\u05d9 \u05de\u05e2\u05d5\u05e0\u05d9\u05d9\u05df \u05dc\u05e7\u05d1\u05d5\u05e2 \u05e1\u05d9\u05d5\u05e8", "he", 0.9),
+    ],
+)
+def test_language_detect_known_fixtures(text: str, expected_language: str, min_confidence: float) -> None:
+    response = client.post("/language/detect", json={"text": text})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["language"] == expected_language
+    assert payload["confidence"] >= min_confidence
+    assert isinstance(payload["strategy"], str)
+    assert payload["strategy"]
+
+
+def test_language_detect_returns_unknown_for_ambiguous_text() -> None:
+    response = client.post("/language/detect", json={"text": "12345 ??? ###"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["language"] == "unknown"
+    assert payload["confidence"] <= 0.4
+
+
+def test_language_detect_rejects_empty_text() -> None:
+    response = client.post("/language/detect", json={"text": ""})
+    assert response.status_code == 422
+    assert any(error["loc"][-1] == "text" for error in response.json().get("detail", []))
+
+
 def test_portal_deck_endpoint() -> None:
     _reset_state()
     response = client.get("/portal/deck", params={"contact_id": "lead_001"})
@@ -222,6 +286,130 @@ def test_portal_deck_endpoint() -> None:
     assert "deck" in payload
     assert isinstance(payload["deck"], list)
     assert len(payload["deck"]) >= 1
+
+
+def test_tenant_isolation_prevents_cross_tenant_interaction_leakage() -> None:
+    _reset_state()
+    swipe_response = client.post(
+        "/portal/swipe",
+        headers={"X-Tenant-ID": "tenant_a"},
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert swipe_response.status_code == 200
+
+    tenant_a_deck = client.get(
+        "/portal/deck",
+        params={"contact_id": "lead_001"},
+        headers={"X-Tenant-ID": "tenant_a"},
+    )
+    assert tenant_a_deck.status_code == 200
+    assert all(card["id"] != "prop_001" for card in tenant_a_deck.json()["deck"])
+
+    tenant_b_deck = client.get(
+        "/portal/deck",
+        params={"contact_id": "lead_001"},
+        headers={"X-Tenant-ID": "tenant_b"},
+    )
+    assert tenant_b_deck.status_code == 200
+    assert any(card["id"] == "prop_001" for card in tenant_b_deck.json()["deck"])
+
+
+def test_tenant_state_counters_are_not_affected_by_other_tenant_activity() -> None:
+    _reset_state()
+    tenant_a_baseline = client.get("/system/state", headers={"X-Tenant-ID": "tenant_a"})
+    assert tenant_a_baseline.status_code == 200
+    assert tenant_a_baseline.json()["state"]["inventory_interactions"] == 0
+
+    tenant_b_swipe = client.post(
+        "/portal/swipe",
+        headers={"X-Tenant-ID": "tenant_b"},
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert tenant_b_swipe.status_code == 200
+
+    tenant_a_after = client.get("/system/state", headers={"X-Tenant-ID": "tenant_a"})
+    assert tenant_a_after.status_code == 200
+    tenant_a_state = tenant_a_after.json()["state"]
+    assert tenant_a_state["inventory_interactions"] == 0
+    assert tenant_a_state["ghl_actions"] == 0
+
+    tenant_b_after = client.get("/system/state", headers={"X-Tenant-ID": "tenant_b"})
+    assert tenant_b_after.status_code == 200
+    tenant_b_state = tenant_b_after.json()["state"]
+    assert tenant_b_state["inventory_interactions"] == 1
+    assert tenant_b_state["ghl_actions"] == 3
+
+
+def test_tenant_header_precedence_over_payload_tenant_fallback() -> None:
+    _reset_state()
+    swipe_response = client.post(
+        "/portal/swipe",
+        headers={"X-Tenant-ID": "tenant_header"},
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+            "location_id": "tenant_payload",
+        },
+    )
+    assert swipe_response.status_code == 200
+
+    header_state = client.get("/system/state", headers={"X-Tenant-ID": "tenant_header"})
+    assert header_state.status_code == 200
+    assert header_state.json()["state"]["inventory_interactions"] == 1
+
+    payload_state = client.get("/system/state", headers={"X-Tenant-ID": "tenant_payload"})
+    assert payload_state.status_code == 200
+    assert payload_state.json()["state"]["inventory_interactions"] == 0
+
+
+def test_tenant_payload_fallback_applies_when_header_absent() -> None:
+    _reset_state()
+    swipe_response = client.post(
+        "/portal/swipe",
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+            "location_id": "tenant_payload",
+        },
+    )
+    assert swipe_response.status_code == 200
+
+    payload_state = client.get("/system/state", headers={"X-Tenant-ID": "tenant_payload"})
+    assert payload_state.status_code == 200
+    assert payload_state.json()["state"]["inventory_interactions"] == 1
+
+    default_state = client.get("/system/state")
+    assert default_state.status_code == 200
+    assert default_state.json()["state"]["inventory_interactions"] == 0
+
+
+def test_default_tenant_behavior_remains_backward_compatible_without_header() -> None:
+    _reset_state()
+    swipe_response = client.post(
+        "/portal/swipe",
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert swipe_response.status_code == 200
+
+    state_response = client.get("/system/state")
+    assert state_response.status_code == 200
+    state = state_response.json()["state"]
+    assert state["tenant_id"] == "tenant_default"
+    assert state["inventory_interactions"] == 1
 
 
 def test_swipe_then_reset_restores_state() -> None:
@@ -234,7 +422,6 @@ def test_swipe_then_reset_restores_state() -> None:
             "contact_id": "lead_001",
             "property_id": "prop_001",
             "action": "like",
-            "location_id": "loc_123",
             "time_on_card": 12.7,
             "feedback": {"note": "interested"},
         },
@@ -274,7 +461,6 @@ def test_system_state_endpoint_tracks_counters() -> None:
             "contact_id": "lead_001",
             "property_id": "prop_001",
             "action": "like",
-            "location_id": "loc_123",
             "time_on_card": 12.7,
             "feedback": {"note": "interested"},
         },

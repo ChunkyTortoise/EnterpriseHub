@@ -16,7 +16,13 @@ run_step() {
   fi
 }
 
-run_step "Lint portal api surface" ruff check main.py portal_api modules
+run_step "Lint portal api surface" \
+  ruff check \
+    main.py \
+    portal_api \
+    modules \
+    scripts/portal_api_client_example.py \
+    scripts/portal_api_latency_sanity.py
 
 run_step "Compile portal api bundle" \
   python3 -m py_compile \
@@ -29,13 +35,14 @@ run_step "Compile portal api bundle" \
     portal_api/routers/portal.py \
     portal_api/routers/ghl.py \
     portal_api/routers/admin.py \
+    portal_api/routers/language.py \
     modules/inventory_manager.py \
     modules/ghl_sync.py \
     modules/appointment_manager.py \
     modules/voice_trigger.py \
     scripts/refresh_portal_openapi_snapshot.py \
-    scripts/portal_api_client_example.py
+    scripts/portal_api_client_example.py \
+    scripts/portal_api_latency_sanity.py
 
 run_step "Run portal api tests (isolated from root conftest)" \
   pytest -q -o addopts='' --confcutdir=portal_api/tests portal_api/tests
-
