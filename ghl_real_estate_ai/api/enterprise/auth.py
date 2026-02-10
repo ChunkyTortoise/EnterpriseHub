@@ -33,7 +33,9 @@ class EnterpriseAuthError(Exception):
         super().__init__(message)
 
 
-class SSOProvider:
+from enum import Enum
+
+class SSOProvider(str, Enum):
     """Supported SSO providers for enterprise authentication."""
 
     AZURE_AD = "azure_ad"
@@ -68,7 +70,12 @@ class EnterpriseAuthService:
         self.security = HTTPBearer()
 
         # JWT configuration for enterprise tokens
-        self.jwt_secret = settings.jwt_secret_key or secrets.token_urlsafe(32)
+        if not settings.jwt_secret_key:
+            raise RuntimeError(
+                "JWT_SECRET_KEY environment variable must be set. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+            )
+        self.jwt_secret = settings.jwt_secret_key
         self.jwt_algorithm = "HS256"
         self.enterprise_token_expiry = 28800  # 8 hours for enterprise sessions
         self.enterprise_refresh_token_expiry = 604800  # 7 days for refresh tokens
