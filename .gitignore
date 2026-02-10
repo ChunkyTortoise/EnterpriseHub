@@ -185,6 +185,11 @@ config/production/*.json
 # Runtime data (conversation memory, session state)
 data/memory/
 
+# Jorge deployment transient local artifacts
+jorge_deployment_package/NEXT_CHAT_CONTINUATION_PROMPT.md
+jorge_deployment_package/data/conversations/.write_probe
+jorge_deployment_package/data/conversations/standalone_checks/
+
 # Test-generated data artifacts
 data/analytics/*/events_*.jsonl
 data/workflows/*.json
