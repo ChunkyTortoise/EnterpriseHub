@@ -3,8 +3,8 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 
-from portal_api.dependencies import Services, get_services
-from portal_api.models import VapiToolCallPayload, VapiToolPayload, VapiToolResponse
+from portal_api.dependencies import Services, get_services, require_demo_api_key
+from portal_api.models import ApiErrorResponse, VapiToolCallPayload, VapiToolPayload, VapiToolResponse
 
 router = APIRouter(prefix="/vapi/tools", tags=["vapi"])
 
@@ -31,7 +31,17 @@ async def vapi_check_availability(payload: VapiToolPayload, services: Services =
     return VapiToolResponse(results=[{"toolCallId": tool_call.id, "result": json.dumps(result)}])
 
 
-@router.post("/book-tour", response_model=VapiToolResponse)
+@router.post(
+    "/book-tour",
+    response_model=VapiToolResponse,
+    dependencies=[Depends(require_demo_api_key)],
+    responses={
+        401: {
+            "model": ApiErrorResponse,
+            "description": "API key missing or invalid",
+        }
+    },
+)
 async def vapi_book_tour(payload: VapiToolPayload, services: Services = Depends(get_services)) -> VapiToolResponse:
     tool_call = payload.toolCall
     args = _parse_tool_arguments(tool_call)
