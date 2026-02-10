@@ -36,6 +36,7 @@ from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+from ghl_real_estate_ai.services.jorge.acceptance_predictor_service import get_acceptance_predictor_service
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
@@ -423,6 +424,7 @@ class JorgeSellerBot:
 
         # CMA & Market Intelligence nodes
         workflow.add_node("generate_cma", self.generate_cma)
+        workflow.add_node("provide_pricing_guidance", self.provide_pricing_guidance)
         workflow.add_node("analyze_market_conditions", self.analyze_market_conditions)
 
         workflow.add_node("detect_stall", self.detect_stall)
@@ -453,10 +455,9 @@ class JorgeSellerBot:
             },
         )
 
-        workflow.add_edge("generate_cma", "analyze_market_conditions")
-
-        # Normal flow goes through CMA/market analysis first
-        workflow.add_edge("generate_cma", "analyze_market_conditions")
+        # Phase 4: ML pricing guidance flow
+        workflow.add_edge("generate_cma", "provide_pricing_guidance")
+        workflow.add_edge("provide_pricing_guidance", "analyze_market_conditions")
         workflow.add_edge("analyze_market_conditions", "detect_stall")
 
         # Conditional routing from detect_stall
@@ -982,6 +983,158 @@ class JorgeSellerBot:
             logger.warning(f"CMA generation failed for {property_address}: {e}")
             return {}
 
+    async def provide_pricing_guidance(self, state: JorgeSellerState) -> Dict:
+        """
+        Generate ML-powered pricing guidance using acceptance predictions.
+
+        Phase 4 Task #13: Integrates AcceptancePredictorService to provide
+        data-driven pricing recommendations with acceptance probabilities.
+
+        Includes A/B test: ML predictions vs static CMA-only guidance.
+        """
+        contact_id = state.get("contact_id", "unknown")
+        property_address = state.get("property_address")
+        cma_report = state.get("cma_report")
+
+        # Skip if no property data available
+        if not property_address or not cma_report:
+            logger.debug(f"Skipping pricing guidance for {contact_id} - no CMA data")
+            return {}
+
+        try:
+            # A/B Test: ML pricing vs static CMA
+            variant = await self.ab_testing.assign_variant(
+                experiment_id="seller_ml_pricing_v1",
+                contact_id=contact_id,
+                metadata={"has_cma": True, "pcs_score": state.get("intent_profile", {}).get("pcs", {}).get("total_score", 0)},
+            )
+
+            if variant == "control":
+                # Control: Static CMA-only guidance (existing behavior)
+                logger.info(f"Pricing guidance for {contact_id}: control (static CMA)")
+                return {"pricing_guidance_variant": "control"}
+
+            # Treatment: ML-powered acceptance predictions
+            logger.info(f"Pricing guidance for {contact_id}: treatment (ML predictions)")
+
+            predictor = get_acceptance_predictor_service()
+
+            # Build prediction context
+            context = {
+                "pcs_score": state.get("intent_profile", {}).get("pcs", {}).get("total_score", 50),
+                "estimated_value": cma_report.get("estimated_value", 0),
+                "cma_report": cma_report,
+                "market_trend": state.get("market_trend", "balanced"),
+                "property_address": property_address,
+            }
+
+            # Get optimal pricing strategy
+            optimal_pricing = await predictor.get_optimal_price_range(
+                seller_id=contact_id,
+                target_probability=0.85,  # Target 85% acceptance probability
+                context=context,
+            )
+
+            # Get predictions for seller's asking price if available
+            asking_price = state.get("asking_price") or cma_report.get("estimated_value", 0)
+            asking_prediction = None
+
+            if asking_price and asking_price > 0:
+                asking_prediction = await predictor.predict_acceptance_probability(
+                    seller_id=contact_id,
+                    offer_price=asking_price,
+                    context=context,
+                )
+
+            # Format conversational guidance
+            guidance = self._format_pricing_guidance(
+                optimal_pricing=optimal_pricing,
+                asking_prediction=asking_prediction,
+                asking_price=asking_price,
+                cma_value=cma_report.get("estimated_value", 0),
+            )
+
+            # Track ML usage
+            await self.ab_testing.track_event(
+                experiment_id="seller_ml_pricing_v1",
+                contact_id=contact_id,
+                event_type="ml_pricing_shown",
+                properties={
+                    "recommended_price": optimal_pricing.recommended_price,
+                    "acceptance_probability": optimal_pricing.acceptance_probability,
+                    "days_to_acceptance": optimal_pricing.time_to_acceptance_days,
+                },
+            )
+
+            logger.info(
+                f"ML pricing guidance for {contact_id}: "
+                f"${optimal_pricing.recommended_price:,.0f} "
+                f"({optimal_pricing.acceptance_probability:.0%} acceptance)"
+            )
+
+            return {
+                "pricing_guidance": guidance,
+                "pricing_guidance_variant": "treatment",
+                "optimal_pricing": {
+                    "min_price": optimal_pricing.min_price,
+                    "max_price": optimal_pricing.max_price,
+                    "recommended_price": optimal_pricing.recommended_price,
+                    "acceptance_probability": optimal_pricing.acceptance_probability,
+                    "time_to_acceptance_days": optimal_pricing.time_to_acceptance_days,
+                },
+            }
+
+        except Exception as e:
+            logger.error(f"Pricing guidance failed for {contact_id}: {e}", exc_info=True)
+            # Graceful fallback to control behavior
+            return {"pricing_guidance_variant": "control"}
+
+    def _format_pricing_guidance(
+        self,
+        optimal_pricing,
+        asking_prediction,
+        asking_price: float,
+        cma_value: float,
+    ) -> str:
+        """Format pricing guidance in conversational style for Jorge."""
+        lines = ["📊 Based on current market analysis and seller engagement patterns:"]
+
+        # If seller has an asking price, show prediction
+        if asking_prediction and asking_price:
+            lines.append("")
+            lines.append(f"Your asking price of ${asking_price:,.0f}:")
+            lines.append(f"   • Acceptance probability: {asking_prediction.acceptance_probability:.0%}")
+            lines.append(
+                f"   • Typical time to acceptance: {asking_prediction.estimated_days_to_acceptance} days"
+            )
+
+        # Show optimal pricing strategy
+        lines.append("")
+        lines.append("💡 Optimal pricing strategy:")
+
+        # Show recommended price with acceptance probability
+        lines.append(
+            f"   • ${optimal_pricing.recommended_price:,.0f} → "
+            f"{optimal_pricing.acceptance_probability:.0%} acceptance probability "
+            f"({optimal_pricing.time_to_acceptance_days} days)"
+        )
+
+        # Show price range
+        if optimal_pricing.min_price and optimal_pricing.max_price:
+            lines.append(
+                f"   • Competitive range: ${optimal_pricing.min_price:,.0f} - ${optimal_pricing.max_price:,.0f}"
+            )
+
+        # Add rationale
+        if optimal_pricing.strategy_rationale:
+            lines.append("")
+            lines.append(f"📈 {optimal_pricing.strategy_rationale}")
+
+        lines.append("")
+        lines.append("Would you like to explore pricing strategies to maximize both speed and value?")
+
+        return "\n".join(lines)
+
     async def analyze_market_conditions(self, state: JorgeSellerState) -> Dict:
         """Determine market trend from available data."""
         market_data = state.get("market_data")
@@ -1387,6 +1540,18 @@ class JorgeSellerBot:
         - Average days on market: {dom_average}
         - Market trend: {market_trend.replace('_', ' ')}
         - Comparable properties analyzed: {comp_count}
+        """
+
+        # Phase 4: Inject ML pricing guidance if available
+        pricing_guidance = state.get("pricing_guidance")
+        if pricing_guidance and state.get("pricing_guidance_variant") == "treatment":
+            prompt += f"""
+
+        ML-POWERED PRICING INSIGHTS (Phase 4 - weave naturally into conversation):
+        {pricing_guidance}
+
+        Use this data-driven pricing analysis to provide specific, actionable recommendations.
+        Present it conversationally as part of your expert guidance.
         """
 
         if state["stall_detected"] and state["detected_stall_type"] in friendly_responses:
