@@ -655,9 +655,9 @@ class SellerPsychologyAnalyzer:
     async def recalculate_pcs(
         self,
         current_pcs: float,
-        conversation_history: List[dict[str, Any]],
+        conversation_history: List[Dict[str, Any]],
         last_message: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Dynamically recalculate PCS based on conversation flow and engagement patterns.
 
