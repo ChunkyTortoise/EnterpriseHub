@@ -528,6 +528,364 @@ class SellerPsychologyAnalyzer:
         else:
             return "low_quality"
 
+    async def classify_seller_type(
+        self,
+        conversation_history: List[Dict[str, Any]],
+        custom_fields: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Classify seller into persona type (Investor, Distressed, Traditional).
+
+        Detection signals:
+        - Investor: "1031 exchange", "cash flow", "cap rate", "rental", "investment property"
+        - Distressed: "foreclosure", "divorce", "must sell quickly", "as-is", "behind on payments"
+        - Traditional: Default if no investor/distressed signals
+
+        Args:
+            conversation_history: List of conversation messages
+            custom_fields: Additional custom field data from GHL
+
+        Returns:
+            Dict with:
+                - persona_type: "Investor", "Distressed", "Traditional"
+                - confidence: 0.0-1.0 confidence score
+                - detected_signals: List of detected keywords/phrases
+        """
+        # Detection patterns
+        investor_signals = [
+            "1031 exchange",
+            "1031",
+            "cash flow",
+            "cashflow",
+            "cap rate",
+            "rental",
+            "investment property",
+            "rental property",
+            "roi",
+            "return on investment",
+            "portfolio",
+            "multiple properties",
+            "tenant",
+            "lease",
+            "passive income",
+        ]
+
+        distressed_signals = [
+            "foreclosure",
+            "pre-foreclosure",
+            "divorce",
+            "must sell quickly",
+            "need to sell fast",
+            "sell quickly",
+            "as-is",
+            "as is",
+            "behind on payments",
+            "can't afford",
+            "cannot afford",
+            "financial hardship",
+            "urgent",
+            "need cash",
+            "inherited",
+            "probate",
+            "estate sale",
+            "medical bills",
+            "job loss",
+            "relocating immediately",
+        ]
+
+        # Combine all conversation text
+        conversation_text = " ".join(
+            msg.get("content", "").lower()
+            for msg in conversation_history
+            if isinstance(msg, dict) and msg.get("role") == "user"
+        )
+
+        # Check custom fields for additional signals
+        if custom_fields:
+            property_type = custom_fields.get("property_type", "").lower()
+            seller_situation = custom_fields.get("seller_situation", "").lower()
+            conversation_text += f" {property_type} {seller_situation}"
+
+        # Count signal matches
+        investor_matches = [signal for signal in investor_signals if signal in conversation_text]
+        distressed_matches = [signal for signal in distressed_signals if signal in conversation_text]
+
+        # Calculate confidence scores
+        investor_confidence = min(len(investor_matches) * 0.3, 1.0)
+        distressed_confidence = min(len(distressed_matches) * 0.3, 1.0)
+
+        # Determine persona type using confidence thresholds:
+        # - 0.6+ (2+ keyword matches): High confidence classification
+        # - 0.3-0.5: Moderate confidence, investor takes precedence over distressed
+        # - <0.3: Default to Traditional seller persona
+        if investor_confidence >= 0.6:
+            persona_type = "Investor"
+            confidence = investor_confidence
+            detected_signals = investor_matches
+        elif distressed_confidence >= 0.6:
+            persona_type = "Distressed"
+            confidence = distressed_confidence
+            detected_signals = distressed_matches
+        elif investor_confidence > distressed_confidence and investor_confidence >= 0.3:
+            persona_type = "Investor"
+            confidence = investor_confidence
+            detected_signals = investor_matches
+        elif distressed_confidence >= 0.3:
+            persona_type = "Distressed"
+            confidence = distressed_confidence
+            detected_signals = distressed_matches
+        else:
+            persona_type = "Traditional"
+            confidence = 0.8  # Default with high confidence when no signals present
+            detected_signals = []
+
+        logger.info(
+            f"Seller classified as {persona_type} (confidence: {confidence:.2f}, "
+            f"signals: {len(detected_signals)})"
+        )
+
+        return {
+            "persona_type": persona_type,
+            "confidence": confidence,
+            "detected_signals": detected_signals,
+            "investor_confidence": investor_confidence,
+            "distressed_confidence": distressed_confidence,
+        }
+
+    async def recalculate_pcs(
+        self,
+        current_pcs: float,
+        conversation_history: List[dict[str, Any]],
+        last_message: str,
+    ) -> dict[str, Any]:
+        """
+        Dynamically recalculate PCS based on conversation flow and engagement patterns.
+
+        Args:
+            current_pcs: Current PCS score (0-100)
+            conversation_history: Full conversation history
+            last_message: Most recent seller message
+
+        Returns:
+            Dict with updated_pcs, delta, trend, and engagement_metrics
+        """
+        if not conversation_history:
+            return {
+                "updated_pcs": current_pcs,
+                "delta": 0.0,
+                "trend": "stable",
+                "engagement_metrics": {},
+            }
+
+        # Extract user messages only
+        user_messages = [
+            msg.get("content", "")
+            for msg in conversation_history
+            if msg.get("role") == "user"
+        ]
+
+        if not user_messages:
+            return {
+                "updated_pcs": current_pcs,
+                "delta": 0.0,
+                "trend": "stable",
+                "engagement_metrics": {},
+            }
+
+        # Calculate engagement velocity (response expansion over time)
+        engagement_velocity = self._calculate_engagement_velocity(user_messages)
+
+        # Calculate question depth (yes/no vs detailed answers)
+        question_depth = self._calculate_question_depth(user_messages)
+
+        # Analyze objection handling (resistance vs acceptance)
+        objection_handling = self._analyze_objection_handling(user_messages)
+
+        # Detect commitment indicators
+        commitment_indicators = self._detect_commitment_indicators(user_messages)
+
+        # Calculate PCS adjustment (-10 to +10 per message)
+        pcs_adjustment = 0.0
+
+        # Engagement velocity impact (±3 points)
+        if engagement_velocity > 0.5:  # Expanding responses
+            pcs_adjustment += 3.0
+        elif engagement_velocity < -0.3:  # Shortening responses
+            pcs_adjustment -= 3.0
+
+        # Question depth impact (±3 points)
+        if question_depth > 0.6:  # Detailed answers
+            pcs_adjustment += 3.0
+        elif question_depth < 0.3:  # Short answers
+            pcs_adjustment -= 2.0
+
+        # Objection handling impact (±2 points)
+        if objection_handling == "acceptance":
+            pcs_adjustment += 2.0
+        elif objection_handling == "resistance":
+            pcs_adjustment -= 2.0
+
+        # Commitment indicators impact (±2 points)
+        if commitment_indicators > 2:
+            pcs_adjustment += 2.0
+        elif commitment_indicators == 0:
+            pcs_adjustment -= 1.0
+
+        # Calculate updated PCS
+        updated_pcs = max(0, min(100, current_pcs + pcs_adjustment))
+
+        # Determine trend
+        if pcs_adjustment > 2:
+            trend = "warming"
+        elif pcs_adjustment < -2:
+            trend = "cooling"
+        else:
+            trend = "stable"
+
+        logger.info(
+            f"PCS recalculation: {current_pcs:.1f} → {updated_pcs:.1f} "
+            f"(Δ{pcs_adjustment:+.1f}, trend: {trend})"
+        )
+
+        return {
+            "updated_pcs": round(updated_pcs, 2),
+            "delta": round(pcs_adjustment, 2),
+            "trend": trend,
+            "engagement_metrics": {
+                "velocity": round(engagement_velocity, 2),
+                "depth": round(question_depth, 2),
+                "objection_handling": objection_handling,
+                "commitment_indicators": commitment_indicators,
+            },
+        }
+
+    def _calculate_engagement_velocity(self, user_messages: List[str]) -> float:
+        """
+        Calculate engagement velocity: rate of response expansion/contraction.
+        Returns value between -1.0 (rapidly shortening) and 1.0 (rapidly expanding).
+        """
+        if len(user_messages) < 2:
+            return 0.0
+
+        # Get word counts for messages
+        word_counts = [len(msg.split()) for msg in user_messages]
+
+        # Compare recent messages (last 3) to earlier messages
+        recent_avg = sum(word_counts[-3:]) / min(3, len(word_counts[-3:]))
+
+        if len(word_counts) > 3:
+            earlier_avg = sum(word_counts[:-3]) / len(word_counts[:-3])
+        else:
+            # Not enough history, compare to baseline
+            earlier_avg = 10.0  # Baseline expectation
+
+        # Normalize velocity
+        if earlier_avg == 0:
+            return 0.0
+
+        velocity = (recent_avg - earlier_avg) / max(earlier_avg, 1.0)
+        return max(-1.0, min(1.0, velocity))
+
+    def _calculate_question_depth(self, user_messages: List[str]) -> float:
+        """
+        Calculate question depth: detailed vs yes/no answers.
+        Returns value between 0.0 (very short) and 1.0 (very detailed).
+        """
+        if not user_messages:
+            return 0.0
+
+        # Analyze last message for depth
+        last_message = user_messages[-1].lower()
+        word_count = len(last_message.split())
+
+        # Score based on word count
+        if word_count >= 20:
+            depth = 1.0
+        elif word_count >= 10:
+            depth = 0.7
+        elif word_count >= 5:
+            depth = 0.4
+        else:
+            depth = 0.2
+
+        # Boost for specific details
+        detail_markers = ["because", "so", "need to", "want to", "have to", "$", "timeline"]
+        detail_count = sum(1 for marker in detail_markers if marker in last_message)
+        depth += min(detail_count * 0.1, 0.3)
+
+        return min(1.0, depth)
+
+    def _analyze_objection_handling(self, user_messages: List[str]) -> str:
+        """
+        Analyze objection handling: resistance vs acceptance.
+        Returns 'resistance', 'neutral', or 'acceptance'.
+        """
+        if not user_messages:
+            return "neutral"
+
+        last_message = user_messages[-1].lower()
+
+        # Resistance markers
+        resistance_markers = [
+            "not interested",
+            "no thanks",
+            "too expensive",
+            "can't afford",
+            "don't want",
+            "stop calling",
+            "remove me",
+            "not right now",
+        ]
+
+        # Acceptance markers
+        acceptance_markers = [
+            "sounds good",
+            "let's do it",
+            "I'm interested",
+            "tell me more",
+            "what's next",
+            "how do we",
+            "when can",
+            "schedule",
+            "appointment",
+        ]
+
+        resistance_count = sum(1 for marker in resistance_markers if marker in last_message)
+        acceptance_count = sum(1 for marker in acceptance_markers if marker in last_message)
+
+        if acceptance_count > resistance_count:
+            return "acceptance"
+        elif resistance_count > acceptance_count:
+            return "resistance"
+        else:
+            return "neutral"
+
+    def _detect_commitment_indicators(self, user_messages: List[str]) -> int:
+        """
+        Detect commitment indicators in conversation.
+        Returns count of commitment signals (0-5+).
+        """
+        if not user_messages:
+            return 0
+
+        # Analyze recent messages (last 2)
+        recent_text = " ".join(user_messages[-2:]).lower()
+
+        commitment_signals = [
+            "when can you",
+            "what's the next step",
+            "how do we proceed",
+            "let's schedule",
+            "I want to",
+            "I need to",
+            "I'm ready",
+            "let's move forward",
+            "what do you need from me",
+            "send me the",
+        ]
+
+        return sum(1 for signal in commitment_signals if signal in recent_text)
+
 
 # Singleton instance
 _seller_psychology_analyzer = None
