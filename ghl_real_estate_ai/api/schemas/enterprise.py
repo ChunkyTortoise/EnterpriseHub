@@ -13,17 +13,38 @@ from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from ghl_real_estate_ai.api.enterprise.auth import SSOProvider, TenantRole
 from ghl_real_estate_ai.models.api_analytics_types import (
+    AdjustmentItem,
+    BenchmarkData,
+    BillingCalculation,
+    BillingContactData,
+    CompetitiveAdvantageItem,
+    CompetitiveIntelligenceData,
     ComplianceMetrics,
+    ContractTermsData,
     CostMetrics,
+    DestinationData,
     EfficiencyMetrics,
+    ForecastData,
+    GrowthOpportunity,
+    InvoiceData,
+    MarketTrendData,
+    PartnerPerformer,
     PartnershipMetrics,
+    PaymentResult,
+    PortfolioSummaryData,
+    PredictiveInsight,
     PricingStructure,
     QualityMetrics,
     RelocationMetrics,
+    RevenueAttribution,
     RevenueMetrics,
+    RiskSummaryData,
     SatisfactionMetrics,
+    StatusIndicators,
     TierConfig,
     TimelineMetric,
+    VolumeCommitmentData,
+    VolumeSummary,
 )
 
 
@@ -316,14 +337,14 @@ class RelocationTracking(BaseModel):
     relocation_id: str
     partnership_id: str
     employee_email: str
-    destination: Dict[str, Any]
+    destination: DestinationData
     timeline_metrics: TimelineMetric
     cost_metrics: CostMetrics
     satisfaction_metrics: SatisfactionMetrics
     efficiency_metrics: EfficiencyMetrics
     compliance_metrics: ComplianceMetrics
-    success_indicators: Dict[str, Any]
-    real_time_status: Dict[str, Any]
+    success_indicators: StatusIndicators
+    real_time_status: StatusIndicators
     last_updated: datetime
 
     model_config = ConfigDict(json_encoders={
@@ -366,9 +387,9 @@ class ContractResponse(BaseModel):
     partnership_id: str
     volume_tier: str
     pricing_structure: PricingStructure
-    contract_terms: Dict[str, Any]
-    billing_contacts: Dict[str, Any]
-    volume_commitments: Dict[str, Any]
+    contract_terms: ContractTermsData
+    billing_contacts: BillingContactData
+    volume_commitments: VolumeCommitmentData
     revenue_sharing: RevenueMetrics
     status: ContractStatus
     total_billed: Decimal = Field(default=Decimal('0.00'))
@@ -406,10 +427,10 @@ class VolumeBillingResponse(BaseModel):
     """Response for volume billing processing."""
     contract_id: str
     billing_period: str
-    volume_summary: Dict[str, Any]
-    billing_calculation: Dict[str, Any]
-    invoice: Optional[Dict[str, Any]] = None
-    payment_result: Dict[str, Any]
+    volume_summary: VolumeSummary
+    billing_calculation: BillingCalculation
+    invoice: Optional[InvoiceData] = None
+    payment_result: PaymentResult
     processed_at: datetime
 
     model_config = ConfigDict(json_encoders={
@@ -427,7 +448,7 @@ class RevenueShareCalculation(BaseModel):
     net_revenue: Decimal
     share_percentage: float
     calculated_share: Decimal
-    adjustments_applied: List[Dict[str, Any]]
+    adjustments_applied: List[AdjustmentItem]
     final_payout_amount: Decimal
     payout_status: str
     calculated_at: datetime
@@ -461,15 +482,15 @@ class PerformanceMetrics(BaseModel):
 
 class TrendAnalysis(BaseModel):
     """Performance trend analysis."""
-    volume_trend: Dict[str, Any]
-    revenue_trend: Dict[str, Any]
-    satisfaction_trend: Dict[str, Any]
+    volume_trend: MarketTrendData
+    revenue_trend: MarketTrendData
+    satisfaction_trend: MarketTrendData
 
 
 class BenchmarkComparison(BaseModel):
     """Performance benchmark comparison."""
-    tier_benchmark: Dict[str, Any]
-    performance_vs_benchmark: Dict[str, Any]
+    tier_benchmark: BenchmarkData
+    performance_vs_benchmark: BenchmarkData
 
 
 class HealthScoreDetails(BaseModel):
@@ -488,7 +509,7 @@ class PartnershipAnalyticsResponse(BaseModel):
     trend_analysis: TrendAnalysis
     benchmark_analysis: BenchmarkComparison
     health_score: HealthScoreDetails
-    predictive_insights: List[Dict[str, Any]]
+    predictive_insights: List[PredictiveInsight]
     recommendations: List[str]
     analysis_confidence: float
     generated_at: datetime
@@ -502,13 +523,13 @@ class RevenueAttributionResponse(BaseModel):
     """Revenue attribution analysis response."""
     partnership_id: str
     attribution_period: Dict[str, datetime]
-    direct_revenue_attribution: Dict[str, Any]
-    indirect_revenue_attribution: Dict[str, Any]
-    revenue_stream_breakdown: Dict[str, Any]
-    customer_lifetime_value: Dict[str, Any]
+    direct_revenue_attribution: RevenueAttribution
+    indirect_revenue_attribution: RevenueAttribution
+    revenue_stream_breakdown: RevenueAttribution
+    customer_lifetime_value: RevenueAttribution
     total_attributed_revenue: Decimal
     revenue_attribution_rate: float
-    attribution_confidence: Dict[str, Any]
+    attribution_confidence: RevenueAttribution
     calculated_at: datetime
 
     model_config = ConfigDict(json_encoders={
@@ -527,13 +548,13 @@ class PartnershipForecast(BaseModel):
     """Partnership forecast response."""
     partnership_id: str
     forecast_horizon_months: int
-    historical_data_summary: Dict[str, Any]
-    volume_forecast: Dict[str, Any]
-    revenue_forecast: Dict[str, Any]
-    health_forecast: Dict[str, Any]
-    risk_opportunity_analysis: Dict[str, Any]
-    forecast_confidence: Dict[str, Any]
-    scenario_analysis: Dict[str, Any]
+    historical_data_summary: ForecastData
+    volume_forecast: ForecastData
+    revenue_forecast: ForecastData
+    health_forecast: ForecastData
+    risk_opportunity_analysis: RiskSummaryData
+    forecast_confidence: ForecastData
+    scenario_analysis: ForecastData
     forecast_assumptions: List[str]
     generated_at: datetime
 
@@ -547,11 +568,11 @@ class CompetitiveAnalysisResponse(BaseModel):
     partnership_id: str
     company_name: str
     industry: str
-    competitive_position: Dict[str, Any]
-    industry_benchmarks: Dict[str, Any]
-    market_opportunity_analysis: Dict[str, Any]
-    competitive_advantages: List[Dict[str, Any]]
-    threat_analysis: Dict[str, Any]
+    competitive_position: CompetitiveIntelligenceData
+    industry_benchmarks: BenchmarkData
+    market_opportunity_analysis: CompetitiveIntelligenceData
+    competitive_advantages: List[CompetitiveAdvantageItem]
+    threat_analysis: RiskSummaryData
     strategic_recommendations: List[str]
     competitive_score: float
     analysis_date: datetime
@@ -565,16 +586,16 @@ class ExecutiveDashboardResponse(BaseModel):
     """Executive dashboard response."""
     dashboard_period: str
     period_range: Dict[str, datetime]
-    portfolio_summary: Dict[str, Any]
-    portfolio_performance: Dict[str, Any]
-    top_performers: List[Dict[str, Any]]
-    revenue_analytics: Dict[str, Any]
-    volume_analytics: Dict[str, Any]
-    health_score_distribution: Dict[str, Any]
-    risk_assessment: Dict[str, Any]
-    growth_opportunities: List[Dict[str, Any]]
-    market_trends_impact: Dict[str, Any]
-    kpi_trends: Dict[str, Any]
+    portfolio_summary: PortfolioSummaryData
+    portfolio_performance: PortfolioSummaryData
+    top_performers: List[PartnerPerformer]
+    revenue_analytics: RevenueMetrics
+    volume_analytics: VolumeSummary
+    health_score_distribution: Dict[str, float]
+    risk_assessment: RiskSummaryData
+    growth_opportunities: List[GrowthOpportunity]
+    market_trends_impact: MarketTrendData
+    kpi_trends: Dict[str, MarketTrendData]
     generated_at: datetime
 
     model_config = ConfigDict(json_encoders={

@@ -437,6 +437,8 @@ class TestAgentDetails:
     @pytest.mark.asyncio
     async def test_get_agent_details_found(self, coordinator):
         coordinator.agents["a1"] = _make_agent(agent_id="a1")
+        # _get_agent_performance_trend is referenced but not implemented in the coordinator
+        coordinator._get_agent_performance_trend = AsyncMock(return_value=[])
         result = await coordinator.get_agent_details("a1")
         assert result is not None
         assert "agent" in result

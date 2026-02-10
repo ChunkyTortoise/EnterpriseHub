@@ -1814,7 +1814,7 @@ Generate the message:"""
 
             drift_analysis = detector.analyze_drift(recent_msg)
 
-            return vapi.trigger_outbound_call(
+            return await vapi.trigger_outbound_call(
                 contact_phone=phone,
                 lead_name=name,
                 property_address=lead_profile.get("demographics", {}).get("city", "your property"),

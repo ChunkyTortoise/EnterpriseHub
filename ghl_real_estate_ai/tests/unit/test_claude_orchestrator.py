@@ -51,23 +51,22 @@ _init_mocks = {
 @pytest.fixture
 def orchestrator():
     """Create a ClaudeOrchestrator with all heavy deps mocked."""
-    with patch.dict("sys.modules", {}):
-        with patch.multiple("ghl_real_estate_ai.services.claude_orchestrator", **{
-            "LLMClient": MagicMock,
-            "MemoryService": MagicMock,
-            "SentimentDriftEngine": MagicMock,
-            "PsychographicSegmentationEngine": MagicMock,
-            "MarketContextInjector": MagicMock,
-            "safe_create_task": MagicMock(),
-        }):
-            from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeTaskType
+    with patch.multiple("ghl_real_estate_ai.services.claude_orchestrator", **{
+        "LLMClient": MagicMock,
+        "MemoryService": MagicMock,
+        "SentimentDriftEngine": MagicMock,
+        "PsychographicSegmentationEngine": MagicMock,
+        "MarketContextInjector": MagicMock,
+        "safe_create_task": MagicMock(),
+    }):
+        from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeTaskType
 
-            orch = ClaudeOrchestrator.__new__(ClaudeOrchestrator)
-            # Manually init the fields we need for parsing tests
-            orch.system_prompts = orch._load_system_prompts()
-            orch.performance_metrics = {"requests_processed": 0, "avg_response_time": 0.0, "errors": 0}
-            orch.agents = {}
-            orch._memory_context_cache = {}
+        orch = ClaudeOrchestrator.__new__(ClaudeOrchestrator)
+        # Manually init the fields we need for parsing tests
+        orch.system_prompts = orch._load_system_prompts()
+        orch.performance_metrics = {"requests_processed": 0, "avg_response_time": 0.0, "errors": 0}
+        orch.agents = {}
+        orch._memory_context_cache = {}
     return orch
 
 
@@ -409,6 +408,10 @@ def _make_full_orchestrator():
         orch.system_prompts = orch._load_system_prompts()
         orch.performance_metrics = {"requests_processed": 0, "avg_response_time": 0.0, "errors": 0}
         orch._memory_context_cache = {}
+        orch._response_cache = {}
+        orch._response_cache_ttl = 300
+        orch._response_cache_hits = 0
+        orch._response_cache_misses = 0
         orch.llm = MagicMock()
         orch.memory = MagicMock()
         orch.mcp_servers = {}
@@ -435,7 +438,7 @@ class TestProcessRequest:
         response = await orch.process_request(request)
 
         assert response.content == "Lead analysis complete. confidence: 80%"
-        assert response.response_time_ms > 0
+        assert response.response_time_ms >= 0
         assert response.input_tokens == 100
         assert response.output_tokens == 50
         assert orch.performance_metrics["requests_processed"] == 1

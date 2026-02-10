@@ -37,6 +37,7 @@ Classes:
 
 import asyncio
 import hashlib
+import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -69,6 +70,8 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 from src.caching.redis_client import BaseRedisClient, RedisClient
+
+logger = logging.getLogger(__name__)
 
 
 class EvictionPolicy(Enum):
@@ -518,7 +521,7 @@ class SemanticCache:
                 try:
                     await self.redis.delete(cache_key)
                 except Exception:
-                    pass
+                    logger.exception(f"Error invalidating cache key: {cache_key}")
 
         return True
 
@@ -549,7 +552,7 @@ class SemanticCache:
                         if cursor == 0:
                             break
                 except Exception:
-                    pass
+                    logger.exception(f"Error invalidating by tag: {tag}")
 
         return removed
 
@@ -563,7 +566,7 @@ class SemanticCache:
                 try:
                     await self.redis.delete_pattern(f"{self.key_prefix}:*")
                 except Exception:
-                    pass
+                    logger.exception("Error clearing semantic cache")
 
     async def _get_exact_match(self, query: str, embedding: np.ndarray) -> Optional[Tuple[Any, float]]:
         """Try to get exact match from cache."""
@@ -591,7 +594,7 @@ class SemanticCache:
                         entry.touch()
                         return entry.value, 1.0
             except Exception:
-                pass
+                logger.exception(f"Error getting exact match from Redis for key: {cache_key}")
 
         return None
 
@@ -637,7 +640,7 @@ class SemanticCache:
                     if cursor == 0:
                         break
             except Exception:
-                pass
+                logger.exception("Error searching for semantic match in Redis")
 
         if best_match:
             best_match.touch()
@@ -763,7 +766,7 @@ class SemanticCache:
                     if cursor == 0:
                         break
             except Exception:
-                pass
+                logger.exception(f"Error scanning Redis for pattern: {pattern}")
 
         return list(set(keys))  # Remove duplicates
 
