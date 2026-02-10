@@ -7,9 +7,11 @@ and client presentation creation.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
+
+from ghl_real_estate_ai.api.middleware import get_current_user
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.professional_export_engine import (
@@ -21,6 +23,7 @@ logger = get_logger(__name__)
 router = APIRouter(
     prefix="/api/v1/exports",
     tags=["Professional Exports"],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -89,7 +92,7 @@ async def generate_market_report(request: MarketReportRequest):
         )
     except Exception as e:
         logger.error("Market report generation failed: %s", e)
-        raise HTTPException(500, f"Report generation error: {e}")
+        raise HTTPException(500, "Report generation failed")
 
 
 @router.post("/market-report/render")
@@ -106,7 +109,7 @@ async def render_market_report(request: MarketReportRequest):
         return HTMLResponse(content=result.content)
     except Exception as e:
         logger.error("Market report rendering failed: %s", e)
-        raise HTTPException(500, f"Report rendering error: {e}")
+        raise HTTPException(500, "Report rendering failed")
 
 
 @router.post("/cma-report", response_model=ExportResponse)
@@ -131,7 +134,7 @@ async def generate_cma_report(request: CMAReportRequest):
         )
     except Exception as e:
         logger.error("CMA report generation failed: %s", e)
-        raise HTTPException(500, f"CMA report error: {e}")
+        raise HTTPException(500, "CMA report generation failed")
 
 
 @router.post("/leads-csv", response_model=ExportResponse)
@@ -151,7 +154,7 @@ async def export_leads_csv(request: LeadExportRequest):
         )
     except Exception as e:
         logger.error("Lead CSV export failed: %s", e)
-        raise HTTPException(500, f"Lead export error: {e}")
+        raise HTTPException(500, "Lead export failed")
 
 
 @router.post("/presentation", response_model=ExportResponse)
@@ -174,7 +177,7 @@ async def generate_presentation(request: PresentationRequest):
         )
     except Exception as e:
         logger.error("Presentation generation failed: %s", e)
-        raise HTTPException(500, f"Presentation error: {e}")
+        raise HTTPException(500, "Presentation generation failed")
 
 
 @router.get("/health")

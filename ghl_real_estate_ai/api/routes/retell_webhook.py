@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -21,8 +21,7 @@ async def handle_retell_webhook(request: Request, payload: Dict[str, Any], backg
     signature = request.headers.get("X-Retell-Signature", "")
     if not RetellClient.validate_webhook(payload, signature):
         logger.warning("Invalid Retell webhook signature")
-        # raise HTTPException(status_code=403, detail="Invalid signature")
-        # Commented out until signature verification is fully implemented
+        raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
     event_type = payload.get("event")
     call_id = payload.get("call_id")

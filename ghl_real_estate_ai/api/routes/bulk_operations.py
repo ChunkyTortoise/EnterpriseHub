@@ -96,7 +96,7 @@ async def bulk_import_leads(location_id: str, request: BulkImportRequest, backgr
 
     except Exception as e:
         logger.error(f"Error starting bulk import: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to start import: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to start import")
 
 
 @router.post("/import/csv", status_code=202)
@@ -141,7 +141,7 @@ async def bulk_import_csv(
 
     except Exception as e:
         logger.error(f"Error importing CSV: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to import CSV: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to import CSV")
 
 
 # Bulk Export Endpoints
@@ -170,7 +170,7 @@ async def bulk_export_leads(location_id: str, request: BulkExportRequest):
 
     except Exception as e:
         logger.error(f"Error exporting leads: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to export leads: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to export leads")
 
 
 @router.post("/export/csv")
@@ -208,7 +208,7 @@ async def bulk_export_csv(location_id: str, request: BulkExportRequest):
 
     except Exception as e:
         logger.error(f"Error exporting CSV: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to export CSV: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to export CSV")
 
 
 # Bulk SMS Campaign Endpoints
@@ -249,7 +249,7 @@ async def create_bulk_sms_campaign(location_id: str, request: BulkSMSRequest, ba
         raise
     except Exception as e:
         logger.error(f"Error creating SMS campaign: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to create SMS campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create SMS campaign")
 
 
 # Bulk Tagging Endpoints
@@ -288,7 +288,7 @@ async def bulk_apply_tags(location_id: str, request: BulkTagRequest, background_
         raise
     except Exception as e:
         logger.error(f"Error applying bulk tags: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to apply tags: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to apply tags")
 
 
 # Operation Status Endpoints
@@ -312,7 +312,7 @@ async def get_operation_status(location_id: str, operation_id: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching operation status: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch operation status")
 
 
 @router.get("/operations/{location_id}/list")
@@ -336,7 +336,7 @@ async def list_operations(
 
     except Exception as e:
         logger.error(f"Error listing operations: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to list operations: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to list operations")
 
 
 # Health check

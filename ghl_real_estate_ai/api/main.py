@@ -435,7 +435,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(security.router)
     app.include_router(demo.router)
     app.include_router(webhook.router, prefix="/api")
-    app.include_router(analytics.router, prefix="/api")
+    app.include_router(analytics.router)
     app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(claude_chat.router, prefix="/api")
     app.include_router(leads.router, prefix="/api")
