@@ -1,14 +1,18 @@
-"""Pricing objection engine for the Jorge Seller Bot.
+"""Multi-category objection engine for the Jorge Seller Bot.
 
-Detects and responds to common seller pricing objections using a graduated
+Detects and responds to 6 categories of seller objections using a graduated
 response strategy: validate -> data -> social_proof -> market_test.
 
-Objection types:
-- Loss aversion: "I can't sell for less than I paid"
-- Anchoring: "My Zillow estimate says..."
-- Neighbor comparison: "My neighbor got $X"
-- Market denial: "The market will bounce back"
-- Improvement overvaluation: "But I put $50K into the kitchen"
+Objection categories:
+1. Pricing: "too expensive", "can't afford", "reduce commission"
+2. Timing: "not ready", "too soon", "wait for spring"
+3. Competition: "checking other agents", "interview others"
+4. Trust: "don't know you", "new to area", "reviews"
+5. Authority: "need to check with spouse", "consult lawyer"
+6. Value: "what's included", "why should I", "what do you do"
+
+Legacy pricing-specific objections (loss aversion, anchoring, etc.) are
+now mapped to the PRICING category for backward compatibility.
 """
 import logging
 import re
@@ -19,12 +23,32 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 
+class ObjectionCategory(str, Enum):
+    """High-level objection categories for Phase 2.2."""
+    PRICING = "pricing"
+    TIMING = "timing"
+    COMPETITION = "competition"
+    TRUST = "trust"
+    AUTHORITY = "authority"
+    VALUE = "value"
+
+
 class ObjectionType(str, Enum):
+    """Specific objection types (legacy + new)."""
+    # Legacy pricing objections (mapped to PRICING category)
     LOSS_AVERSION = "loss_aversion"
     ANCHORING = "anchoring"
     NEIGHBOR_COMP = "neighbor_comp"
     MARKET_DENIAL = "market_denial"
     IMPROVEMENT_OVERVALUE = "improvement_overvalue"
+
+    # New multi-category objections
+    PRICING_GENERAL = "pricing_general"
+    TIMING_NOT_READY = "timing_not_ready"
+    COMPETITION_SHOPPING = "competition_shopping"
+    TRUST_CREDIBILITY = "trust_credibility"
+    AUTHORITY_DECISION_MAKER = "authority_decision_maker"
+    VALUE_PROPOSITION = "value_proposition"
 
 
 class ResponseGraduation(str, Enum):
@@ -35,11 +59,30 @@ class ResponseGraduation(str, Enum):
     MARKET_TEST = "market_test"  # Propose a market test strategy
 
 
+# Map objection types to categories
+OBJECTION_CATEGORY_MAP: Dict[ObjectionType, ObjectionCategory] = {
+    # Legacy pricing objections
+    ObjectionType.LOSS_AVERSION: ObjectionCategory.PRICING,
+    ObjectionType.ANCHORING: ObjectionCategory.PRICING,
+    ObjectionType.NEIGHBOR_COMP: ObjectionCategory.PRICING,
+    ObjectionType.MARKET_DENIAL: ObjectionCategory.PRICING,
+    ObjectionType.IMPROVEMENT_OVERVALUE: ObjectionCategory.PRICING,
+    # New multi-category
+    ObjectionType.PRICING_GENERAL: ObjectionCategory.PRICING,
+    ObjectionType.TIMING_NOT_READY: ObjectionCategory.TIMING,
+    ObjectionType.COMPETITION_SHOPPING: ObjectionCategory.COMPETITION,
+    ObjectionType.TRUST_CREDIBILITY: ObjectionCategory.TRUST,
+    ObjectionType.AUTHORITY_DECISION_MAKER: ObjectionCategory.AUTHORITY,
+    ObjectionType.VALUE_PROPOSITION: ObjectionCategory.VALUE,
+}
+
+
 @dataclass
 class ObjectionDetection:
     """Result of objection detection."""
     detected: bool
     objection_type: Optional[ObjectionType] = None
+    objection_category: Optional[ObjectionCategory] = None
     confidence: float = 0.0
     matched_text: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -47,8 +90,9 @@ class ObjectionDetection:
 
 @dataclass
 class ObjectionResponse:
-    """Generated response to a pricing objection."""
+    """Generated response to a detected objection."""
     objection_type: ObjectionType
+    objection_category: ObjectionCategory
     graduation_level: ResponseGraduation
     response_text: str
     supporting_data: Dict[str, Any] = field(default_factory=dict)
@@ -90,6 +134,52 @@ OBJECTION_PATTERNS: Dict[ObjectionType, List[Tuple[str, float]]] = {
         (r"\bnew\s+(kitchen|bathroom|roof|hvac|flooring)\b", 0.75),
         (r"\bupgraded?\b.{0,20}\b(worth|value)\b", 0.7),
         (r"\bspent\s+\$?\d", 0.8),
+    ],
+    # New multi-category objections
+    ObjectionType.PRICING_GENERAL: [
+        (r"\btoo\s+(expensive|much|high)\b", 0.85),
+        (r"\bcan'?t\s+afford\b", 0.9),
+        (r"\breduce\s+(your\s+)?commission\b", 0.9),
+        (r"\bfees?\s+(are|too)\b", 0.8),
+        (r"\bcheaper\s+agent\b", 0.85),
+        (r"\b(lower|reduce)\s+(the\s+)?price\b", 0.8),
+    ],
+    ObjectionType.TIMING_NOT_READY: [
+        (r"\bnot\s+ready\b", 0.85),
+        (r"\btoo\s+soon\b", 0.8),
+        (r"\bwait\s+(for|until)\s+(spring|summer|fall|market)\b", 0.85),
+        (r"\bneed\s+(more\s+)?time\b", 0.75),
+        (r"\brushing\s+(me|us)\b", 0.8),
+        (r"\bthinking\s+about\s+it\b", 0.7),
+    ],
+    ObjectionType.COMPETITION_SHOPPING: [
+        (r"\bcheck(ing)?\s+(with\s+)?other\s+agents?\b", 0.9),
+        (r"\binterview(ing)?\s+(other|multiple|a\s+few)\b", 0.85),
+        (r"\bcomparing\s+agents?\b", 0.85),
+        (r"\btalking\s+to\s+(other|someone\s+else)\b", 0.8),
+        (r"\bhave\s+another\s+agent\b", 0.9),
+    ],
+    ObjectionType.TRUST_CREDIBILITY: [
+        (r"\bdon'?t\s+know\s+(you|anything\s+about\s+you)\b", 0.9),
+        (r"\bnew\s+to\s+(the\s+)?(area|market)\b", 0.8),
+        (r"\bhow\s+(long|many)\s+(have\s+you\s+been|years|experience)\b", 0.75),
+        (r"\breview?s\b", 0.7),
+        (r"\breferences?\b", 0.75),
+        (r"\bcredentials?\b", 0.8),
+    ],
+    ObjectionType.AUTHORITY_DECISION_MAKER: [
+        (r"\bneed\s+to\s+(check|talk|consult)\s+(with|my)\s+(spouse|wife|husband|partner)\b", 0.9),
+        (r"\bneed\s+to\s+(think|consult)\s+(it\s+over|my\s+lawyer|my\s+family)\b", 0.85),
+        (r"\bnot\s+the\s+only\s+decision\s+maker\b", 0.9),
+        (r"\bmy\s+(wife|husband|partner)\s+needs\s+to\b", 0.85),
+    ],
+    ObjectionType.VALUE_PROPOSITION: [
+        (r"\bwhat'?s\s+included\b", 0.8),
+        (r"\bwhy\s+should\s+I\b", 0.75),
+        (r"\bwhat\s+do\s+you\s+(do|offer)\b", 0.7),
+        (r"\bhow\s+(are\s+you\s+)?different\b", 0.8),
+        (r"\bwhat\s+makes\s+you\s+(special|better|unique)\b", 0.85),
+        (r"\bwhat'?s\s+in\s+it\s+for\s+me\b", 0.9),
     ],
 }
 
@@ -205,11 +295,31 @@ RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, str]] = {
 
 
 class PricingObjectionEngine:
-    """Detects pricing objections and generates graduated responses."""
+    """Detects multi-category objections and generates graduated responses.
+
+    Supports 6 objection categories:
+    - PRICING: Commission, costs, fees
+    - TIMING: Not ready, waiting for market
+    - COMPETITION: Shopping other agents
+    - TRUST: Credibility, experience, reviews
+    - AUTHORITY: Need spouse/partner approval
+    - VALUE: What's included, why choose you
+    """
 
     def __init__(self):
         # Track graduation level per contact per objection type
         self._contact_graduation: Dict[str, Dict[ObjectionType, int]] = {}
+
+    def get_objection_category(self, objection_type: ObjectionType) -> Optional[ObjectionCategory]:
+        """Get the category for a specific objection type.
+
+        Args:
+            objection_type: The specific objection type.
+
+        Returns:
+            ObjectionCategory or None if not found.
+        """
+        return OBJECTION_CATEGORY_MAP.get(objection_type)
 
     def detect_objection(self, message: str) -> ObjectionDetection:
         """Detect if a message contains a pricing objection.
@@ -232,9 +342,13 @@ class PricingObjectionEngine:
         if best_match is None:
             return ObjectionDetection(detected=False)
 
+        obj_type = best_match[0]
+        obj_category = OBJECTION_CATEGORY_MAP.get(obj_type)
+
         return ObjectionDetection(
             detected=True,
-            objection_type=best_match[0],
+            objection_type=obj_type,
+            objection_category=obj_category,
             confidence=best_match[1],
             matched_text=best_match[2],
         )
@@ -244,6 +358,7 @@ class PricingObjectionEngine:
         objection: ObjectionDetection,
         contact_id: str,
         market_data: Optional[Dict[str, Any]] = None,
+        variant_index: int = 0,
     ) -> Optional[ObjectionResponse]:
         """Generate a graduated response to a detected objection.
 
@@ -251,6 +366,7 @@ class PricingObjectionEngine:
             objection: Detection result.
             contact_id: GHL contact ID for tracking graduation.
             market_data: Optional market data for template variables.
+            variant_index: A/B test variant index (default: 0).
 
         Returns:
             ObjectionResponse or None if no objection detected.
@@ -259,6 +375,7 @@ class PricingObjectionEngine:
             return None
 
         obj_type = objection.objection_type
+        obj_category = objection.objection_category or OBJECTION_CATEGORY_MAP.get(obj_type)
 
         # Get current graduation level for this contact + objection type
         contact_state = self._contact_graduation.setdefault(contact_id, {})
@@ -268,9 +385,15 @@ class PricingObjectionEngine:
         level_idx = min(current_level_idx, len(graduation_order) - 1)
         graduation_level = graduation_order[level_idx]
 
-        # Get response template
-        templates = RESPONSE_TEMPLATES.get(obj_type, {})
-        template = templates.get(graduation_level, "")
+        # Import here to avoid circular dependency
+        try:
+            from ghl_real_estate_ai.prompts.objection_responses import get_response_template
+            template = get_response_template(obj_type, graduation_level, variant_index)
+        except (ImportError, Exception) as e:
+            logger.warning("Failed to import objection_responses, using legacy templates: %s", e)
+            # Fallback to legacy RESPONSE_TEMPLATES
+            templates = RESPONSE_TEMPLATES.get(obj_type, {})
+            template = templates.get(graduation_level, "")
 
         if not template:
             return None
@@ -289,12 +412,17 @@ class PricingObjectionEngine:
         next_graduation = graduation_order[next_idx] if next_idx > level_idx else None
 
         logger.info(
-            "Pricing objection response: %s (level %s) for contact %s",
-            obj_type.value, graduation_level.value, contact_id,
+            "Objection response: %s/%s (level %s, variant %d) for contact %s",
+            obj_category.value if obj_category else "unknown",
+            obj_type.value,
+            graduation_level.value,
+            variant_index,
+            contact_id,
         )
 
         return ObjectionResponse(
             objection_type=obj_type,
+            objection_category=obj_category or ObjectionCategory.PRICING,
             graduation_level=graduation_level,
             response_text=response_text,
             supporting_data=market_data or {},
