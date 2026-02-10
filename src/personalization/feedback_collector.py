@@ -7,6 +7,7 @@ Provides explicit and implicit feedback collection with profile update mechanism
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -22,6 +23,10 @@ from src.personalization.user_profile import (
     ProfileManager,
     UserProfile,
 )
+
+
+
+logger = logging.getLogger(__name__)
 
 
 class FeedbackType(Enum):
@@ -406,7 +411,7 @@ class FeedbackCollector:
             except asyncio.CancelledError:
                 break
             except Exception:
-                # Log error but continue
+                logger.exception("Error in feedback flush loop")
                 continue
 
     async def _flush_buffer(self) -> None:
@@ -430,7 +435,7 @@ class FeedbackCollector:
                 await self.processor.batch_process(profile, user_feedbacks)
                 await self.store.set(user_id, profile)
             except Exception:
-                # Log error but continue with other users
+                logger.exception(f"Error flushing feedback for user {user_id}")
                 continue
 
     async def collect_explicit(

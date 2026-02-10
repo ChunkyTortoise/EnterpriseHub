@@ -27,6 +27,7 @@ from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.bot_context_types import (
+    BotMetadata,
     ConversationMessage,
     QualificationData,
     SellerBotResponse,
@@ -546,7 +547,7 @@ class JorgeSellerBot:
         }
 
     def _extract_property_condition(
-        self, conversation_history: List[Dict[str, Any]]
+        self, conversation_history: List[ConversationMessage]
     ) -> Optional[str]:
         """Extract property condition from conversation keywords."""
         if not conversation_history:
@@ -651,7 +652,7 @@ class JorgeSellerBot:
             "intelligence_available": intelligence_context is not None,
         }
 
-    def _extract_preferences_from_conversation(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _extract_preferences_from_conversation(self, conversation_history: List[ConversationMessage]) -> Dict[str, Any]:
         """Extract basic preferences from conversation for intelligence gathering."""
         preferences = {}
 
@@ -1823,11 +1824,11 @@ class JorgeSellerBot:
         conversation_id: str,
         user_message: str,
         seller_name: Optional[str] = None,
-        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        conversation_history: Optional[List[ConversationMessage]] = None,
         seller_phone: Optional[str] = None,
         seller_email: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: Optional[BotMetadata] = None,
+    ) -> SellerBotResponse:
         try:
             _workflow_start = time.time()
 

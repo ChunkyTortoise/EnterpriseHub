@@ -1604,7 +1604,7 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
         return context
 
-    def _extract_conversation_messages(self, memory_data: Dict[str, Any]) -> List[Dict[str, str]]:
+    def _extract_conversation_messages(self, memory_data: MemoryContext) -> List[Dict[str, str]]:
         """
         Extract and validate conversation messages from memory data.
 
@@ -1684,7 +1684,7 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
             logger.warning(f"Failed to validate messages: {e}")
             return []
 
-    async def _analyze_churn_risk_comprehensive(self, lead_id: str, memory_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_churn_risk_comprehensive(self, lead_id: str, memory_data: MemoryContext) -> Dict[str, Any]:
         """
         Perform comprehensive multi-dimensional churn risk analysis.
 
