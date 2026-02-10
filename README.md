@@ -23,7 +23,7 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-4,500+_passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-4%2C937_passing-brightgreen)](tests/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
@@ -121,7 +121,7 @@ graph TB
 
 | Metric | Value |
 |--------|-------|
-| Test Suite | 4,500+ automated tests |
+| Test Suite | 4,937 automated tests |
 | LLM Cost Reduction | 89% via 3-tier Redis caching |
 | Orchestration Overhead | <200ms per request |
 | API P95 Latency | <300ms under 10 req/sec |
@@ -139,6 +139,75 @@ pip install -r requirements.txt
 # Demo mode — no API keys, no database, pre-populated dashboards
 make demo
 ```
+
+## Portal API (Phase 1)
+
+Standalone FastAPI module used for the client showcase and deterministic API validation.
+
+- Entrypoint: `main.py`
+- Package: `portal_api/`
+- CI workflow: `.github/workflows/portal-api-phase1.yml`
+
+### Endpoint Matrix
+
+| Method | Endpoint | Purpose |
+|-------|----------|---------|
+| GET | `/` | Root metadata + links |
+| GET | `/health` | API health status |
+| GET | `/portal/deck` | Return smart property deck for a contact |
+| POST | `/portal/swipe` | Log swipe action (`like` or `pass`) |
+| POST | `/vapi/tools/check-availability` | Vapi tool: return appointment slots |
+| POST | `/vapi/tools/book-tour` | Vapi tool: create appointment booking |
+| POST | `/ghl/sync` | Trigger GHL contact sync |
+| GET | `/ghl/fields` | Return GHL field metadata |
+| POST | `/system/reset` | Reset in-memory demo state |
+| GET | `/system/state` | Aggregate service counters |
+| GET | `/system/state/details` | Detailed counters + recent records |
+
+### Alias Map
+
+- `POST /system/reset` aliases: `POST /admin/reset`, `POST /reset`
+- `GET /system/state` aliases: `GET /admin/state`, `GET /state`
+- `GET /system/state/details` aliases: `GET /admin/state/details`, `GET /state/details`
+
+### Validation Commands
+
+Run from repository root:
+
+```bash
+ruff check main.py portal_api modules
+
+python3 -m py_compile \
+  main.py \
+  portal_api/app.py \
+  portal_api/dependencies.py \
+  portal_api/models.py \
+  portal_api/routers/root.py \
+  portal_api/routers/vapi.py \
+  portal_api/routers/portal.py \
+  portal_api/routers/ghl.py \
+  portal_api/routers/admin.py \
+  modules/inventory_manager.py \
+  modules/ghl_sync.py \
+  modules/appointment_manager.py \
+  modules/voice_trigger.py
+
+pytest -q -o addopts='' portal_api/tests/test_portal_api.py
+```
+
+### Client Showcase (Streamlit + enterprise-ui)
+
+```bash
+# Streamlit showcase
+python3 -m streamlit run streamlit_cloud/app.py --server.headless=true --server.port=8765
+
+# Frontend MVP (separate terminal)
+cd enterprise-ui
+npm install
+npm run dev
+```
+
+Detailed operator runbook: `plans/CLIENT_SHOWCASE_RUNBOOK_FEB10_2026.md`
 
 ### Full Setup (with external services)
 
@@ -187,7 +256,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 4,500+ automated tests
+├── tests/                        # 4,937 automated tests
 ├── app.py                        # FastAPI entry point
 ├── admin_dashboard.py            # Streamlit BI dashboard
 └── docker-compose.yml            # Container orchestration
