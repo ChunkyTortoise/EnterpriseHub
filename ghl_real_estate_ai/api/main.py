@@ -246,6 +246,23 @@ async def lifespan(app: FastAPI):
         logger.warning("Lead Bot automation will not function - sequences must be triggered manually")
 
     # ========================================================================
+    # JORGE BOT PERSISTENCE: Wire repository into services
+    # ========================================================================
+
+    jorge_repository = None
+    try:
+        from ghl_real_estate_ai.repositories.jorge_metrics_repository import JorgeMetricsRepository
+
+        if settings.database_url:
+            jorge_repository = JorgeMetricsRepository(dsn=settings.database_url)
+            logger.info("✅ Jorge metrics repository initialized")
+        else:
+            logger.warning("⚠️ DATABASE_URL not configured - Jorge metrics will not persist to DB")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Jorge metrics repository: {e}")
+        logger.warning("Jorge metrics will operate in memory-only mode")
+
+    # ========================================================================
     # JORGE BOT MONITORING: Periodic alerting background task
     # ========================================================================
 
@@ -254,6 +271,40 @@ async def lifespan(app: FastAPI):
         from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
         from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
         from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
+        # Wire repository into Jorge services (enables persistence)
+        if jorge_repository:
+            try:
+                performance_tracker = PerformanceTracker()
+                metrics_collector = BotMetricsCollector()
+                alerting_service = AlertingService()
+
+                performance_tracker.set_repository(jorge_repository)
+                metrics_collector.set_repository(jorge_repository)
+                alerting_service.set_repository(jorge_repository)
+
+                logger.info("✅ Repository wired into Jorge services (PerformanceTracker, BotMetricsCollector, AlertingService)")
+
+                # Wire repository into JorgeHandoffService (module-level instance)
+                try:
+                    from ghl_real_estate_ai.api.routes.webhook import handoff_service
+                    handoff_service.set_repository(jorge_repository)
+                    logger.info("✅ Repository wired into JorgeHandoffService")
+
+                    # Hydrate handoff outcomes (last 7 days)
+                    loaded_outcomes = await handoff_service.load_from_database(since_minutes=10080)
+                    logger.info(f"✅ Loaded {loaded_outcomes} handoff outcomes from database")
+                except Exception as e:
+                    logger.warning(f"Failed to wire repository into handoff service: {e}")
+
+                # Hydrate metrics from database (last 60 minutes)
+                try:
+                    loaded_interactions = await metrics_collector.load_from_db(since_minutes=60)
+                    logger.info(f"✅ Loaded {loaded_interactions} interaction records from database")
+                except Exception as e:
+                    logger.warning(f"Failed to hydrate metrics from database: {e}")
+            except Exception as e:
+                logger.error(f"Failed to wire repository into services: {e}")
 
         async def _periodic_alert_check():
             """Run alert checks every 60 seconds.
@@ -296,6 +347,14 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
         logger.info("Periodic alerting background task stopped")
+
+    # Close Jorge metrics repository connection pool
+    if jorge_repository:
+        try:
+            await jorge_repository.close()
+            logger.info("✅ Jorge metrics repository connection pool closed")
+        except Exception as e:
+            logger.warning(f"Failed to close repository connection pool: {e}")
 
 
 async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
