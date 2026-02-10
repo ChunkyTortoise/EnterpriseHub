@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
@@ -50,6 +51,7 @@ class AppointmentType(str, Enum):
     """Jorge's appointment types for real estate business."""
 
     BUYER_CONSULTATION = "buyer_consultation"
+    SELLER_CONSULTATION = "seller_consultation"
     LISTING_APPOINTMENT = "listing_appointment"
     INVESTOR_MEETING = "investor_meeting"
     PROPERTY_SHOWING = "property_showing"
@@ -60,6 +62,7 @@ class AppointmentDuration(int, Enum):
     """Standard appointment durations in minutes."""
 
     BUYER_CONSULTATION = 60  # 1 hour buyer consultation
+    SELLER_CONSULTATION = 30  # 30 min seller consult (Jorge scope)
     LISTING_APPOINTMENT = 90  # 1.5 hours listing presentation
     INVESTOR_MEETING = 45    # 45 min investor meeting
     PROPERTY_SHOWING = 30    # 30 min property showing
@@ -704,6 +707,7 @@ class CalendarScheduler:
 
         type_titles = {
             AppointmentType.BUYER_CONSULTATION: "Buyer Consultation",
+            AppointmentType.SELLER_CONSULTATION: "Seller Consultation",
             AppointmentType.LISTING_APPOINTMENT: "Listing Appointment",
             AppointmentType.INVESTOR_MEETING: "Investor Meeting",
             AppointmentType.PROPERTY_SHOWING: "Property Showing",
@@ -748,6 +752,11 @@ class CalendarScheduler:
             List of GHLAction objects for confirmation
         """
         actions = []
+        confirmation_strategy = getattr(
+            jorge_settings,
+            "APPOINTMENT_CONFIRMATION_STRATEGY",
+            "sms_only",
+        )
 
         # Generate confirmation message
         confirmation_message = self._generate_confirmation_message(booking, contact_info)
@@ -758,6 +767,31 @@ class CalendarScheduler:
             message=confirmation_message,
             channel=MessageType.SMS
         ))
+
+        # Optional email confirmation based on explicit strategy.
+        if confirmation_strategy == "sms_and_email":
+            email_message = self._generate_email_confirmation_message(booking, contact_info)
+            if contact_info.get("email"):
+                actions.append(
+                    GHLAction(
+                        type=ActionType.SEND_MESSAGE,
+                        message=email_message,
+                        channel=MessageType.EMAIL,
+                    )
+                )
+            else:
+                email_workflow_id = getattr(
+                    jorge_settings,
+                    "APPOINTMENT_CONFIRMATION_EMAIL_WORKFLOW_ID",
+                    None,
+                )
+                if email_workflow_id:
+                    actions.append(
+                        GHLAction(
+                            type=ActionType.TRIGGER_WORKFLOW,
+                            workflow_id=email_workflow_id,
+                        )
+                    )
 
         # Add appointment-related tags
         actions.append(GHLAction(
@@ -816,6 +850,7 @@ class CalendarScheduler:
 
         type_messages = {
             AppointmentType.BUYER_CONSULTATION: "buyer consultation",
+            AppointmentType.SELLER_CONSULTATION: "seller consultation",
             AppointmentType.LISTING_APPOINTMENT: "listing appointment",
             AppointmentType.INVESTOR_MEETING: "investment discussion",
             AppointmentType.PROPERTY_SHOWING: "property showing",
@@ -841,6 +876,21 @@ Looking forward to helping you with your real estate needs!
 📱 Reply RESCHEDULE if you need to change the time"""
 
         return message
+
+    def _generate_email_confirmation_message(
+        self,
+        booking: AppointmentBooking,
+        contact_info: Dict[str, Any],
+    ) -> str:
+        """Generate a plain-text email confirmation message."""
+        name = contact_info.get("first_name", "there")
+        appointment_time = booking.time_slot.format_for_lead()
+        return (
+            f"Hi {name},\n\n"
+            f"Your appointment with Jorge is confirmed for {appointment_time}.\n\n"
+            "Please reply if you need to reschedule.\n\n"
+            "- Jorge's Team"
+        )
 
     def _should_fallback_to_manual(self, error: Exception) -> bool:
         """

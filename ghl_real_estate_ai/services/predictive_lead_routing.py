@@ -139,7 +139,85 @@ class RoutingAnalyzerAgent:
         swarm_analysis: Any
     ) -> RoutingRecommendation:
         """Analyze and recommend agent routing."""
-        raise NotImplementedError
+        try:
+            # Basic heuristic scoring for each agent
+            best_agent: Optional[Agent] = None
+            best_score = -1.0
+            lead_requirements = lead_data.get("requirements", {})
+
+            for agent in available_agents:
+                if agent.availability == AgentAvailability.OFFLINE:
+                    continue
+
+                load_factor = 1.0 - min(agent.current_load / max(agent.max_capacity, 1), 1.0)
+                specialty_match = 0.5
+                if lead_requirements and agent.specialties:
+                    matches = sum(1 for s in agent.specialties if s.value in json.dumps(lead_requirements))
+                    specialty_match = min(1.0, 0.4 + (matches / max(len(agent.specialties), 1)) * 0.6)
+
+                responsiveness = max(0.1, min(1.0, 1.0 - (agent.avg_response_time / 240)))
+                success_factor = max(0.1, min(1.0, agent.success_rate))
+                score = (0.35 * success_factor) + (0.25 * specialty_match) + (0.2 * load_factor) + (0.2 * responsiveness)
+
+                if score > best_score:
+                    best_score = score
+                    best_agent = agent
+
+            if not best_agent:
+                raise ValueError("No eligible agents available for routing")
+
+            # Optional refinement with LLM
+            reasoning = f"Heuristic routing based on success rate, specialty, load, and responsiveness. Score={best_score:.2f}"
+            try:
+                prompt = f"""
+                Provide a concise routing rationale for the selected agent.
+
+                Lead Data: {lead_data}
+                Selected Agent: {best_agent.name} ({best_agent.agent_id})
+                Agent Specialties: {[s.value for s in best_agent.specialties]}
+                Agent Success Rate: {best_agent.success_rate}
+                Agent Load: {best_agent.current_load}/{best_agent.max_capacity}
+                """
+                response = await self.llm_client.generate(prompt=prompt, max_tokens=200, temperature=0.3)
+                if response and response.content:
+                    reasoning = response.content.strip()
+            except Exception:
+                pass
+
+            priority = RoutingPriority.HIGH if best_score >= 0.8 else RoutingPriority.MEDIUM
+            if lead_data.get("urgency") == "urgent":
+                priority = RoutingPriority.URGENT
+
+            return RoutingRecommendation(
+                analyzer_type=self.analyzer_type,
+                recommended_agent_id=best_agent.agent_id,
+                confidence=max(0.0, min(1.0, best_score)),
+                predicted_success_rate=max(0.0, min(1.0, best_agent.success_rate)),
+                reasoning=reasoning,
+                priority=priority,
+                estimated_response_time=best_agent.avg_response_time,
+                load_impact=1.0 / max(best_agent.max_capacity - best_agent.current_load, 1),
+                specialty_match_score=min(1.0, best_score),
+                metadata={
+                    "agent_name": best_agent.name,
+                    "load_factor": 1.0 - min(best_agent.current_load / max(best_agent.max_capacity, 1), 1.0),
+                },
+            )
+
+        except Exception as e:
+            logger.error(f"RoutingAnalyzerAgent analyze failed: {e}")
+            return RoutingRecommendation(
+                analyzer_type=self.analyzer_type,
+                recommended_agent_id="fallback",
+                confidence=0.2,
+                predicted_success_rate=0.4,
+                reasoning=f"Fallback routing due to error: {str(e)}",
+                priority=RoutingPriority.LOW,
+                estimated_response_time=120,
+                load_impact=0.5,
+                specialty_match_score=0.2,
+                metadata={"error": str(e)},
+            )
 
 
 class ExpertiseMatcherAgent(RoutingAnalyzerAgent):

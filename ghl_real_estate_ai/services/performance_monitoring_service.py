@@ -15,6 +15,7 @@ class PerformanceMonitoringService:
     def __init__(self):
         self.metrics_log = []
         self.data_moat = [] # Storage for "Golden Dataset" candidates
+        self.kpi_events = []
 
     def log_agent_run(self, agent_name: str, duration: float, token_usage: Dict[str, int], status: str):
         """Log performance metrics for an agent run."""
@@ -80,5 +81,27 @@ class PerformanceMonitoringService:
             "moat_size": len(self.data_moat),
             "uptime": "99.98%"
         }
+
+    def record_kpi_event(self, name: str, value: Any, tags: Optional[Dict[str, Any]] = None) -> None:
+        """Record KPI telemetry for proof and export."""
+        event = {
+            "timestamp": datetime.now().isoformat(),
+            "name": name,
+            "value": value,
+            "tags": tags or {}
+        }
+        self.kpi_events.append(event)
+        logger.info(f"KPI event recorded: {name}")
+
+    def get_kpi_snapshot(self) -> Dict[str, Any]:
+        """Return latest KPI values for quick export."""
+        snapshot = {}
+        for event in self.kpi_events[-200:]:
+            snapshot[event["name"]] = {
+                "value": event["value"],
+                "timestamp": event["timestamp"],
+                "tags": event["tags"]
+            }
+        return snapshot
 
 performance_monitor = PerformanceMonitoringService()

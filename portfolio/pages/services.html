@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Services & Pricing | EnterpriseHub</title>
+    <title>Professional Services Catalog | EnterpriseHub</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Custom AI frameworks, prompt engineering, and business intelligence solutions. Quick solutions from $300, standard projects $1,500-4,000, enterprise partnerships from $5,000.">
+    <meta name="description" content="Professional Services Catalog with pricing, timelines, and proof. Strategy, automation, data/BI, marketing, MLOps, and governance services.">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,13 +17,13 @@
             font-family: 'Inter', sans-serif;
         }
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
         }
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-block;
@@ -31,50 +31,47 @@
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            border: 2px solid #667eea;
-            transition: all 0.3s ease;
-            display: inline-block;
-            text-decoration: none;
-        }
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
         }
         .service-card {
-            transition: all 0.3s ease;
+            background: white;
+            border-radius: 14px;
+            padding: 1.75rem;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .service-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+        }
+        .badge {
+            background: rgba(79, 70, 229, 0.12);
+            color: #4f46e5;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            letter-spacing: 0.03em;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-slate-50">
 
     <!-- Navigation -->
     <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
         <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <a href="../index.html" class="text-2xl font-bold text-gray-800">EnterpriseHub</a>
+                    <a href="../index.html" class="text-2xl font-extrabold text-slate-900">EnterpriseHub</a>
                 </div>
                 <div class="hidden md:flex space-x-8">
-                    <a href="../index.html#services" class="text-purple-600 font-semibold">Services</a>
-                    <a href="../index.html#frameworks" class="text-gray-600 hover:text-purple-600 transition">Frameworks</a>
-                    <a href="../index.html#process" class="text-gray-600 hover:text-purple-600 transition">Process</a>
-                    <a href="../index.html#contact" class="text-gray-600 hover:text-purple-600 transition">Contact</a>
+                    <a href="../index.html#services" class="text-indigo-600 font-semibold">Services</a>
+                    <a href="../index.html#case-studies" class="text-slate-600 hover:text-indigo-600 transition">Case Studies</a>
+                    <a href="../index.html#process" class="text-slate-600 hover:text-indigo-600 transition">Process</a>
+                    <a href="../index.html#contact" class="text-slate-600 hover:text-indigo-600 transition">Contact</a>
                 </div>
-                <a href="../index.html#contact" class="btn-primary text-sm px-6 py-3">Get Started</a>
+                <a href="mailto:caymanroden@gmail.com" class="btn-primary text-sm px-6 py-3">Book Consultation</a>
             </div>
         </div>
     </nav>
@@ -82,476 +79,537 @@
     <!-- Hero -->
     <section class="pt-32 pb-12 gradient-bg text-white">
         <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto text-center">
-                <h1 class="text-5xl font-bold mb-4">Services & Solutions</h1>
-                <p class="text-2xl text-purple-100">From quick fixes to enterprise partnerships - choose what fits your needs</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tier Comparison -->
-    <section class="py-12 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="max-w-6xl mx-auto">
-                <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Package Comparison</h2>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b-2 border-gray-300">
-                                <th class="py-3 px-4 text-gray-700 font-semibold">Feature</th>
-                                <th class="py-3 px-4 text-center">
-                                    <div class="text-blue-600 font-bold">Tier 1</div>
-                                    <div class="text-sm text-gray-600">Quick</div>
-                                </th>
-                                <th class="py-3 px-4 text-center bg-purple-50">
-                                    <div class="text-purple-600 font-bold">Tier 2 ⭐</div>
-                                    <div class="text-sm text-gray-600">Standard</div>
-                                </th>
-                                <th class="py-3 px-4 text-center">
-                                    <div class="text-green-600 font-bold">Tier 3</div>
-                                    <div class="text-sm text-gray-600">Technical Co-Founder</div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Price Range</td>
-                                <td class="py-3 px-4 text-center">$300-800</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">$1,500-4,000</td>
-                                <td class="py-3 px-4 text-center">$8,000/phase</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Timeline</td>
-                                <td class="py-3 px-4 text-center">2-3 days</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">1-2 weeks</td>
-                                <td class="py-3 px-4 text-center">8-12 weeks</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Best For</td>
-                                <td class="py-3 px-4 text-center">POCs, Testing</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">Core workflows</td>
-                                <td class="py-3 px-4 text-center">New Ventures</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Techniques</td>
-                                <td class="py-3 px-4 text-center">5-15</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">30-50</td>
-                                <td class="py-3 px-4 text-center">Autonomous Agents</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Customization</td>
-                                <td class="py-3 px-4 text-center">Templates</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">Moderate</td>
-                                <td class="py-3 px-4 text-center">Bespoke Architecture</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Training</td>
-                                <td class="py-3 px-4 text-center">Documentation</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">Video + Q&A</td>
-                                <td class="py-3 px-4 text-center">Full Handoff</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Support</td>
-                                <td class="py-3 px-4 text-center">7 days</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">14-21 days</td>
-                                <td class="py-3 px-4 text-center">2 Weeks Post-Launch</td>
-                            </tr>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-3 px-4 font-semibold">Integration</td>
-                                <td class="py-3 px-4 text-center">Standalone</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">API/Tools</td>
-                                <td class="py-3 px-4 text-center">Full System</td>
-                            </tr>
-                            <tr>
-                                <td class="py-3 px-4 font-semibold">Updates</td>
-                                <td class="py-3 px-4 text-center">One-time</td>
-                                <td class="py-3 px-4 text-center bg-purple-50">Minor</td>
-                                <td class="py-3 px-4 text-center">Self-Evolving</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="max-w-5xl mx-auto text-center">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6">
+                    <span class="text-sm font-semibold">Professional Services Catalog (31 services)</span>
+                </div>
+                <h1 class="text-5xl md:text-6xl font-extrabold mb-6">Services, Pricing, and Proof</h1>
+                <p class="text-xl text-indigo-100">Aligned to the Professional Services Catalog with clear timelines, outcomes, and case-study-backed proof.</p>
+                <div class="mt-8 flex flex-wrap justify-center gap-3">
+                    <a href="#service-2" class="px-4 py-2 rounded-full bg-white/15 border border-white/30 text-sm font-semibold">Start with Service 2</a>
+                    <a href="#service-24" class="px-4 py-2 rounded-full bg-white/15 border border-white/30 text-sm font-semibold">Start with Service 24</a>
+                    <a href="#service-1" class="px-4 py-2 rounded-full bg-white/15 border border-white/30 text-sm font-semibold">Start with Service 1</a>
+                    <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Default%20Priority%20Services" class="px-4 py-2 rounded-full bg-white text-slate-900 text-sm font-semibold">Book by Email</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- TIER 1: Quick Solutions -->
-    <section class="py-16 bg-gray-50">
+    <!-- Default Sales Focus -->
+    <section class="py-16 bg-white">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-12">
-                    <div class="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold mb-4">TIER 1</div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-2">Quick Solutions</h2>
-                    <p class="text-xl text-gray-600">2-3 Days | $300-$800</p>
-                    <p class="text-gray-500 mt-2">Perfect for: Testing the waters, specific pain points, POC projects</p>
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Default Near-Term Sales Focus</h2>
+                    <p class="text-slate-600 mt-2">Emphasis set to Services 2, 24, and 1 for near-term conversion.</p>
+                    <p class="text-slate-500 text-sm mt-2">Service 26 uses a temporary default pricing band until the official catalog band is finalized.</p>
                 </div>
-
                 <div class="grid md:grid-cols-3 gap-8">
-                    <!-- Service 1 -->
-                    <div class="service-card card">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Custom Prompt Engineering Package</h3>
-                        <div class="text-3xl font-bold text-blue-600 mb-4">Starting at $400</div>
-
-                        <p class="text-gray-600 mb-4">Optimized prompts for your specific use case</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• 5-10 production-ready prompt templates</li>
-                                <li>• Documentation with examples</li>
-                                <li>• Best practices guide</li>
-                                <li>• Token cost analysis</li>
-                            </ul>
+                    <div class="service-card">
+                        <div class="badge mb-4">Service 2</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Technical Due Diligence for AI Systems</h3>
+                        <p class="text-slate-600 mb-3">Investment: 8,000 - 35,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 15-25 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Architecture, code, and model risk review for transactions</li>
+                            <li>Risk register with remediation cost and valuation impact</li>
+                        </ul>
+                        <div class="flex flex-col gap-3">
+                            <a href="../technical_due_diligence_report_template.md" class="text-indigo-600 font-semibold">Proof: Due Diligence Template</a>
+                            <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Service%202%20Technical%20Due%20Diligence" class="btn-primary text-center text-sm">Book Service 2</a>
                         </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Use Cases:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Content generation workflows</li>
-                                <li>• Customer support automation</li>
-                                <li>• Data extraction and analysis</li>
-                                <li>• Report generation</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4 text-sm text-gray-500">
-                            <strong>Technologies:</strong> GPT-4, Claude, Gemini, Few-Shot Learning
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Request Details</a>
                     </div>
-
-                    <!-- Service 2 -->
-                    <div class="service-card card">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Prompt Optimization Audit</h3>
-                        <div class="text-3xl font-bold text-blue-600 mb-4">Starting at $500</div>
-
-                        <p class="text-gray-600 mb-4">Analyze and optimize your existing prompts</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Comprehensive audit of current prompts</li>
-                                <li>• Optimization recommendations</li>
-                                <li>• Cost reduction analysis</li>
-                                <li>• Implementation roadmap</li>
-                            </ul>
+                    <div class="service-card">
+                        <div class="badge mb-4">Service 24</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Process Documentation and Workflow Optimization</h3>
+                        <p class="text-slate-600 mb-3">Investment: 3,200 - 5,600 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Process map, SOPs, and RACI ownership</li>
+                            <li>Operational KPI framework and optimization plan</li>
+                        </ul>
+                        <div class="flex flex-col gap-3">
+                            <a href="../knowledge_management_system_brief.md" class="text-indigo-600 font-semibold">Proof: Knowledge System Brief</a>
+                            <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Service%2024%20Workflow%20Optimization" class="btn-primary text-center text-sm">Book Service 24</a>
                         </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Perfect For:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Companies with inconsistent results</li>
-                                <li>• High API costs without clear ROI</li>
-                                <li>• Scaling AI usage across teams</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4 p-3 bg-green-50 rounded-lg">
-                            <div class="text-sm font-semibold text-green-700">ROI: Clients typically save 40-60% on API costs</div>
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Start Audit</a>
                     </div>
-
-                    <!-- Service 3 -->
-                    <div class="service-card card">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Framework Lite Implementation</h3>
-                        <div class="text-3xl font-bold text-blue-600 mb-4">Starting at $600</div>
-
-                        <p class="text-gray-600 mb-4">Deploy lightweight framework for your specific task</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Custom prompts (3-5 variations)</li>
-                                <li>• Technique selection for your domain</li>
-                                <li>• Implementation guide</li>
-                                <li>• 7 days support</li>
-                            </ul>
+                    <div class="service-card">
+                        <div class="badge mb-4">Service 1</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Product Strategy and Assessment</h3>
+                        <p class="text-slate-600 mb-3">Investment: 2,800 - 4,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Prioritized AI roadmap aligned to business KPIs</li>
+                            <li>ROI model and implementation sequencing</li>
+                        </ul>
+                        <div class="flex flex-col gap-3">
+                            <a href="../ai_strategy_readiness_template.md" class="text-indigo-600 font-semibold">Proof: Strategy Template</a>
+                            <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Service%201%20AI%20Strategy" class="btn-primary text-center text-sm">Book Service 1</a>
                         </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Use Cases:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Research and analysis automation</li>
-                                <li>• Strategic planning assistance</li>
-                                <li>• Content creation workflows</li>
-                                <li>• Multi-step reasoning tasks</li>
-                            </ul>
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Get Started</a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- TIER 2: Standard Projects -->
-    <section class="py-16 bg-white">
+    <!-- Strategy & Due Diligence -->
+    <section class="py-16 bg-slate-50" id="strategy">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-12">
-                    <div class="inline-block bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold mb-4">TIER 2 ⭐ MOST POPULAR</div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-2">Standard Projects</h2>
-                    <p class="text-xl text-gray-600">1-2 Weeks | $1,500-$4,000</p>
-                    <p class="text-gray-500 mt-2">Perfect for: Core business processes, team-wide deployment, custom frameworks</p>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-8 mb-8">
-                    <!-- Service 4 -->
-                    <div class="service-card card border-t-4 border-purple-500">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Custom Meta-Prompting Framework</h3>
-                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $2,500</div>
-
-                        <p class="text-gray-600 mb-4">Build a tailored meta-prompting system for your organization</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Process:</div>
-                            <ol class="text-sm text-gray-600 space-y-1">
-                                <li>1. Discovery (2 days) - Understand your workflows</li>
-                                <li>2. Design (3 days) - Create framework architecture</li>
-                                <li>3. Build (4 days) - Implement and test</li>
-                                <li>4. Deploy (1 day) - Training and handoff</li>
-                            </ol>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Includes:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>✓ Framework documentation (50+ pages)</li>
-                                <li>✓ Technique selection matrix</li>
-                                <li>✓ Implementation code/scripts</li>
-                                <li>✓ Training videos (2-3 hours)</li>
-                                <li>✓ Quality assurance checklist</li>
-                                <li>✓ 14 days email/Slack support</li>
-                            </ul>
-                        </div>
-
-                        <div class="text-sm text-gray-500 mb-4">
-                            <strong>Timeline:</strong> 10-12 days | <strong>Tech:</strong> Custom frameworks
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Schedule Discovery Call</a>
-                    </div>
-
-                    <!-- Service 5 -->
-                    <div class="service-card card border-t-4 border-purple-500">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Financial Modeling Solutions</h3>
-                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $3,500</div>
-
-                        <p class="text-gray-600 mb-4">Deploy production-ready financial analysis modules</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Features:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• DCF valuation models with sensitivity analysis</li>
-                                <li>• Monte Carlo simulation for risk assessment</li>
-                                <li>• Goal Seek optimization (3 scenarios)</li>
-                                <li>• Bulk CSV analysis for product catalogs</li>
-                                <li>• PDF export for stakeholder reports</li>
-                                <li>• 21 days support</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Perfect For:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Due diligence analysts</li>
-                                <li>• M&A valuation</li>
-                                <li>• CFO advisory</li>
-                                <li>• Business consulting</li>
-                            </ul>
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">View Demo</a>
-                    </div>
-
-                    <!-- Service 6 -->
-                    <div class="service-card card border-t-4 border-purple-500">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Technical Analysis Platform</h3>
-                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $3,200</div>
-
-                        <p class="text-gray-600 mb-4">Bloomberg-quality charts and indicators for market analysis</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Capabilities:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Multi-panel charts (Price, RSI, MACD, Volume)</li>
-                                <li>• Bollinger Bands + ATR indicators</li>
-                                <li>• Multi-ticker comparison (up to 5 assets)</li>
-                                <li>• Real-time data via Yahoo Finance</li>
-                                <li>• Interactive Plotly visualizations</li>
-                                <li>• 21 days support</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                            <div class="text-sm font-semibold text-blue-700">Replaces $24k/year Bloomberg Terminal</div>
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Technical Specs</a>
-                    </div>
-
-                    <!-- Service 7 -->
-                    <div class="service-card card border-t-4 border-purple-500">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">AI Content Engine</h3>
-                        <div class="text-3xl font-bold text-purple-600 mb-4">Starting at $2,000</div>
-
-                        <p class="text-gray-600 mb-4">Automated LinkedIn content with engagement prediction</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Deliverables:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Claude AI integration (6 templates x 5 tones)</li>
-                                <li>• Engagement score prediction (0-10 scale)</li>
-                                <li>• A/B variant generation (3 variations)</li>
-                                <li>• Multi-platform adaptation (Twitter, Instagram)</li>
-                                <li>• Custom training curriculum</li>
-                                <li>• 14 days support</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4 p-3 bg-green-50 rounded-lg">
-                            <div class="text-sm font-semibold text-green-700">Cost: $0.003/post (300x cheaper than ghostwriters)</div>
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Use Case Examples</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- TIER 3: Enterprise -->
-    <section class="py-16 bg-gray-50">
-        <div class="container mx-auto px-6">
-            <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-12">
-                    <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold mb-4">TIER 3</div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-2">AI Technical Co-Founder</h2>
-                    <p class="text-xl text-gray-600">8-12 Weeks | $8,000/phase</p>
-                    <p class="text-gray-500 mt-2">Perfect for: New ventures needing an autonomous engineering team</p>
-                </div>
-
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Strategy & Due Diligence (Services 1-2)</h2>
                 <div class="grid md:grid-cols-2 gap-8">
-                    <!-- Service 8 -->
-                    <div class="service-card card border-t-4 border-green-500">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Autonomous Agent Architecture</h3>
-                        <div class="text-3xl font-bold text-green-600 mb-4">Starting at $8,000</div>
-
-                        <p class="text-gray-600 mb-4">Deploy the "ARETE" swarm to build and maintain your product.</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Phases:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Phase 1: Core Agent (Memory, File I/O, Chat)</li>
-                                <li>• Phase 2: Deployment Pipeline (CI/CD, Git)</li>
-                                <li>• Phase 3: Self-Evolution Loop</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Includes:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>✓ LangGraph State Management</li>
-                                <li>✓ "Guardian" Security Agent</li>
-                                <li>✓ Full Source Code Transfer</li>
-                                <li>✓ 2 Weeks Post-Handoff Support</li>
-                            </ul>
-                        </div>
-
-                        <a href="../ARETE_AGENT_CASE_STUDY.md" target="_blank" class="btn-primary w-full text-center">View Architecture Spec</a>
+                    <div class="service-card" id="service-1">
+                        <div class="badge mb-4">Service 1</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Product Strategy and Assessment</h3>
+                        <p class="text-slate-600 mb-3">Investment: 2,800 - 4,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Prioritized AI roadmap aligned to KPIs</li>
+                            <li>Readiness scorecard and ROI model</li>
+                        </ul>
+                        <a href="../ai_strategy_readiness_template.md" class="text-indigo-600 font-semibold">Proof: Strategy Template</a>
                     </div>
-
-                    <!-- Service 9 -->
-                    <div class="service-card card border-t-4 border-green-500">
-                        <h3 class="text-2xl font-bold mb-3 text-gray-800">Ongoing AI Optimization Partnership</h3>
-                        <div class="text-3xl font-bold text-green-600 mb-4">$2,500-8,000/month</div>
-
-                        <p class="text-gray-600 mb-4">Retainer-based partnership for continuous AI improvement</p>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Monthly Activities:</div>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Review metrics and performance</li>
-                                <li>• Implement new techniques</li>
-                                <li>• Optimize existing workflows</li>
-                                <li>• Address team questions</li>
-                                <li>• Train on new capabilities</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="font-semibold text-gray-700 mb-2">Pricing:</div>
-                            <ul class="text-sm text-gray-600 space-y-2">
-                                <li><strong>Basic:</strong> $2,500/month (10 hours)</li>
-                                <li><strong>Standard:</strong> $5,000/month (20 hours) ⭐</li>
-                                <li><strong>Premium:</strong> $8,000/month (40 hours)</li>
-                            </ul>
-                        </div>
-
-                        <a href="../index.html#contact" class="btn-primary w-full text-center">Discuss Partnership</a>
+                    <div class="service-card" id="service-2">
+                        <div class="badge mb-4">Service 2</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Technical Due Diligence for AI Systems</h3>
+                        <p class="text-slate-600 mb-3">Investment: 8,000 - 35,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 15-25 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Technical risk rating with board-ready recommendation</li>
+                            <li>Prioritized remediation plan with effort and cost model</li>
+                        </ul>
+                        <a href="../technical_due_diligence_report_template.md" class="text-indigo-600 font-semibold">Proof: Due Diligence Template</a>
                     </div>
-                </div>
-
-                <div class="card mt-8 bg-gradient-to-r from-green-50 to-blue-50 text-center">
-                    <h3 class="text-2xl font-bold mb-3 text-gray-800">Custom Solution - Let's Talk</h3>
-                    <p class="text-gray-600 mb-4">Unique challenges require unique solutions</p>
-                    <div class="mb-4">
-                        <div class="font-semibold text-gray-700 mb-2">Examples:</div>
-                        <div class="text-sm text-gray-600">
-                            Multi-modal AI systems • Industry-specific frameworks • API integrations • White-label solutions • Research collaborations
-                        </div>
-                    </div>
-                    <a href="../index.html#contact" class="btn-primary">Tell Me About Your Challenge</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Add-Ons -->
-    <section class="py-16 bg-white">
+    <!-- Automation & Agentic AI -->
+    <section class="py-16 bg-white" id="automation">
         <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto">
-                <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Add-Ons & Extras</h2>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="card">
-                        <h3 class="font-bold text-lg mb-2 text-gray-800">Extended Support</h3>
-                        <ul class="text-sm text-gray-600 space-y-1">
-                            <li>• 30 days: +$300</li>
-                            <li>• 60 days: +$500</li>
-                            <li>• 90 days: +$800</li>
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Automation & Agentic AI (Services 3-6)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="service-card" id="service-3">
+                        <div class="badge mb-4">Service 3</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Knowledge Assistant (Custom RAG System)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 3,600 - 5,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>RAG assistant with semantic search + citations</li>
+                            <li>Production-grade backend with testing</li>
                         </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
                     </div>
-
-                    <div class="card">
-                        <h3 class="font-bold text-lg mb-2 text-gray-800">Additional Training</h3>
-                        <ul class="text-sm text-gray-600 space-y-1">
-                            <li>• Team Workshop (4 hrs): $1,000</li>
-                            <li>• Advanced Training (8 hrs): $1,800</li>
-                            <li>• Ongoing Office Hours: $500/month</li>
+                    <div class="service-card" id="service-4">
+                        <div class="badge mb-4">Service 4</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI SDR Team in a Box (Multi-Agent Workflows)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 7,800 - 11,400 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 5-7 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Multi-agent workflow with audit trail</li>
+                            <li>Integrations with CRM and comms tools</li>
                         </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
                     </div>
-
-                    <div class="card">
-                        <h3 class="font-bold text-lg mb-2 text-gray-800">Integrations</h3>
-                        <ul class="text-sm text-gray-600 space-y-1">
-                            <li>• Slack/Discord Bot: +$800</li>
-                            <li>• API Development: +$1,200</li>
-                            <li>• Custom Web Interface: +$2,000</li>
+                    <div class="service-card" id="service-5">
+                        <div class="badge mb-4">Service 5</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Prompt Engineering System Optimization</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,200 - 2,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1-2 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>A/B tested prompt library + documentation</li>
+                            <li>Cost optimization recommendations</li>
                         </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
                     </div>
-
-                    <div class="card">
-                        <h3 class="font-bold text-lg mb-2 text-gray-800">Priority Service</h3>
-                        <ul class="text-sm text-gray-600 space-y-1">
-                            <li>• 4-hour response time: +$500/month</li>
-                            <li>• Same-day delivery rush: +50% project fee</li>
+                    <div class="service-card" id="service-6">
+                        <div class="badge mb-4">Service 6</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI-Powered Personal Business Automation</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,400 - 2,400 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 2-3 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Automations across 5-10 business tools</li>
+                            <li>Documentation and training included</li>
                         </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data / BI / Analytics -->
+    <section class="py-16 bg-slate-50" id="data-bi">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Data, BI, and Analytics (Services 7-11)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="service-card" id="service-7">
+                        <div class="badge mb-4">Service 7</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Deep Learning Custom ML Models</h3>
+                        <p class="text-slate-600 mb-3">Investment: 6,400 - 12,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 7-10 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Custom neural network + training pipeline</li>
+                            <li>Deployment-ready API and documentation</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-8">
+                        <div class="badge mb-4">Service 8</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Real-Time KPI Dashboard (Interactive BI)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 3,200 - 5,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Interactive dashboard with live data</li>
+                            <li>Automated stakeholder reporting</li>
+                        </ul>
+                        <a href="case-study-marketing-attribution.html" class="text-indigo-600 font-semibold">Proof: Marketing Attribution Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-9">
+                        <div class="badge mb-4">Service 9</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Automated Reporting Pipelines</h3>
+                        <p class="text-slate-600 mb-3">Investment: 2,200 - 3,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 2-3 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Scheduled reports with zero manual work</li>
+                            <li>Error alerts and audit logging</li>
+                        </ul>
+                        <a href="case-study-marketing-attribution.html" class="text-indigo-600 font-semibold">Proof: Marketing Attribution Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-10">
+                        <div class="badge mb-4">Service 10</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Lead Scorer (Predictive Analytics)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 4,400 - 6,400 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 5-7 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Predictive scoring with performance metrics</li>
+                            <li>Monitoring + retraining protocol</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-11">
+                        <div class="badge mb-4">Service 11</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Data Cleaning and Migration</h3>
+                        <p class="text-slate-600 mb-3">Investment: 960 - 1,600 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1-2 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Automated data quality cleanup + validation</li>
+                            <li>Ready-to-use CSV/Excel outputs</li>
+                        </ul>
+                        <a href="case-study-marketing-attribution.html" class="text-indigo-600 font-semibold">Proof: Marketing Attribution Case Study</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marketing / Growth -->
+    <section class="py-16 bg-white" id="marketing">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Marketing and Growth (Services 12-16)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="service-card" id="service-12">
+                        <div class="badge mb-4">Service 12</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Programmatic SEO Content Engine</h3>
+                        <p class="text-slate-600 mb-3">Investment: 6,600 - 9,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Automated content generation + publishing</li>
+                            <li>Performance tracking with keyword coverage</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-13">
+                        <div class="badge mb-4">Service 13</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Email Marketing Automation Sequences</h3>
+                        <p class="text-slate-600 mb-3">Investment: 2,000 - 3,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-4 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>5-10 email sequences + segmentation rules</li>
+                            <li>ESP setup with A/B recommendations</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-14">
+                        <div class="badge mb-4">Service 14</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Social Media Campaign Management</h3>
+                        <p class="text-slate-600 mb-3">Investment: 2,400 - 4,000 USD / month</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-4 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Campaign strategy + 4-week content calendar</li>
+                            <li>Ad setup, optimization, and targeting</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-15">
+                        <div class="badge mb-4">Service 15</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Social Sentiment and Brand Monitoring</h3>
+                        <p class="text-slate-600 mb-3">Investment: 3,200 - 4,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-4 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Automated sentiment monitoring + alerts</li>
+                            <li>Weekly digest reports and trends</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-16">
+                        <div class="badge mb-4">Service 16</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Marketing Attribution and ROI Analysis</h3>
+                        <p class="text-slate-600 mb-3">Investment: 2,800 - 4,400 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-4 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Attribution models + ROI analysis</li>
+                            <li>15-page report and dashboard</li>
+                        </ul>
+                        <a href="case-study-marketing-attribution.html" class="text-indigo-600 font-semibold">Proof: Marketing Attribution Case Study</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Infra / MLOps / Modernization -->
+    <section class="py-16 bg-slate-50" id="infra">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Infra, MLOps, and Modernization (Services 17-20)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="service-card" id="service-17">
+                        <div class="badge mb-4">Service 17</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Cloud Infrastructure Setup and Migration</h3>
+                        <p class="text-slate-600 mb-3">Investment: 4,000 - 6,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 4-6 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Infrastructure-as-code + CI/CD pipeline</li>
+                            <li>Security best practices + monitoring</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-18">
+                        <div class="badge mb-4">Service 18</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">MLOps Model Deployment</h3>
+                        <p class="text-slate-600 mb-3">Investment: 5,200 - 8,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 5-7 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Model deployment pipeline + monitoring</li>
+                            <li>Drift detection and automated retraining</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-19">
+                        <div class="badge mb-4">Service 19</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Excel to Web App Modernization</h3>
+                        <p class="text-slate-600 mb-3">Investment: 6,400 - 12,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 4-7 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Modern web app with auth + database</li>
+                            <li>Data migration + training walkthrough</li>
+                        </ul>
+                        <a href="../excel_to_web_app_modernization_demo.md" class="text-indigo-600 font-semibold">Proof: Modernization Demo</a>
+                    </div>
+                    <div class="service-card" id="service-20">
+                        <div class="badge mb-4">Service 20</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Competitor Intelligence and Web Scraping</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,500 USD + 50 USD / month</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 2-3 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Scheduled scraping with alerts</li>
+                            <li>Trend database + CSV exports</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ops / Training / Governance -->
+    <section class="py-16 bg-white" id="ops">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Ops, Training, and Governance (Services 21-26)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="service-card" id="service-21">
+                        <div class="badge mb-4">Service 21</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Voice Agents (Intelligent Phone Systems)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 4,500 - 7,500 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 4-6 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Voice AI system with scheduling integration</li>
+                            <li>Call analytics dashboard</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-22">
+                        <div class="badge mb-4">Service 22</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Custom AI Model Fine-Tuning</h3>
+                        <p class="text-slate-600 mb-3">Investment: 8,000 - 15,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 7-10 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Fine-tuned model with domain accuracy gains</li>
+                            <li>API deployment + monitoring</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-23">
+                        <div class="badge mb-4">Service 23</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Governance, Risk, and Compliance</h3>
+                        <p class="text-slate-600 mb-3">Investment: 5,200 - 8,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Governance framework + risk assessment</li>
+                            <li>Compliance audit trail documentation</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="service-24">
+                        <div class="badge mb-4">Service 24</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Business Process Documentation and Workflow Optimization</h3>
+                        <p class="text-slate-600 mb-3">Investment: 3,200 - 5,600 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-5 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Process map + SOPs with RACI</li>
+                            <li>KPI framework and optimization plan</li>
+                        </ul>
+                        <a href="../knowledge_management_system_brief.md" class="text-indigo-600 font-semibold">Proof: Knowledge System Brief</a>
+                    </div>
+                    <div class="service-card" id="service-25">
+                        <div class="badge mb-4">Service 25</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Fractional AI Product and Technology Leadership</h3>
+                        <p class="text-slate-600 mb-3">Investment: 5,000 - 15,000 USD / month</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: Ongoing engagement</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Executive AI roadmap and delivery leadership</li>
+                            <li>Hands-on oversight for high-risk initiatives</li>
+                        </ul>
+                        <a href="#engagement-models" class="text-indigo-600 font-semibold">Proof: Engagement Models</a>
+                    </div>
+                    <div class="service-card" id="service-26">
+                        <div class="badge mb-4">Service 26</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Custom API Development</h3>
+                        <p class="text-slate-600 mb-3">Investment: 3,600 - 6,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 3-6 business days (default band)</p>
+                        <p class="text-xs text-slate-500 mb-4">Assumption note: temporary placeholder band pending official pricing update.</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Secure API endpoints with documentation</li>
+                            <li>Auth, rate limits, and monitoring</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Engagement Models -->
+    <section class="py-16 bg-slate-50" id="engagement-models">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">Engagement Models (Fractional Leadership)</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="service-card">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Advisor</h3>
+                        <p class="text-slate-600">Weekly strategic support, roadmap reviews, and vendor oversight.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Hands-On Lead</h3>
+                        <p class="text-slate-600">Embedded leadership for architecture, delivery, and team enablement.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Interim CTO</h3>
+                        <p class="text-slate-600">Full ownership of AI product strategy, staffing, and execution.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick-Win Services -->
+    <section class="py-16 bg-white" id="quick-wins">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Quick-Win Services (QW1-QW7)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="service-card" id="qw1">
+                        <div class="badge mb-4">QW1</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">AI Chatbot Integration (Simple)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,200 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1 business day</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Basic FAQ assistant with core intents</li>
+                            <li>Deployed with minimal integration</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
+                    </div>
+                    <div class="service-card" id="qw2">
+                        <div class="badge mb-4">QW2</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Data Visualization (Single Dashboard)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,400 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1-2 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Single KPI dashboard with filters</li>
+                            <li>Delivered with quick walkthrough</li>
+                        </ul>
+                        <a href="case-study-marketing-attribution.html" class="text-indigo-600 font-semibold">Proof: Marketing Attribution Case Study</a>
+                    </div>
+                    <div class="service-card" id="qw3">
+                        <div class="badge mb-4">QW3</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Simple Automation Workflow</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1 business day</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Connect 3-5 tools with automations</li>
+                            <li>Notifications and basic QA included</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="qw4">
+                        <div class="badge mb-4">QW4</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Prompt Library Creation (10 Custom Prompts)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 900 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1 business day</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>10 production-ready prompts with guidance</li>
+                            <li>Usage and optimization notes</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="qw5">
+                        <div class="badge mb-4">QW5</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Data Cleanup (Small Dataset)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,000 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1 business day</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Normalize and validate a small dataset</li>
+                            <li>Clean export with documentation</li>
+                        </ul>
+                        <a href="case-study-marketing-attribution.html" class="text-indigo-600 font-semibold">Proof: Marketing Attribution Case Study</a>
+                    </div>
+                    <div class="service-card" id="qw6">
+                        <div class="badge mb-4">QW6</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Website Analytics Audit (GA4)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,300 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 1 business day</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Analytics audit with top fixes</li>
+                            <li>Actionable measurement plan</li>
+                        </ul>
+                        <a href="case-study-revenue-sprint.html" class="text-indigo-600 font-semibold">Proof: Revenue-Sprint Case Study</a>
+                    </div>
+                    <div class="service-card" id="qw7">
+                        <div class="badge mb-4">QW7</div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Lead Scoring Model (Basic)</h3>
+                        <p class="text-slate-600 mb-3">Investment: 1,800 USD</p>
+                        <p class="text-sm text-slate-500 mb-4">Timeline: 2 business days</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-5">
+                            <li>Baseline scoring model + ranking</li>
+                            <li>Priority list and handoff notes</li>
+                        </ul>
+                        <a href="case-study-enterprisehub.html" class="text-indigo-600 font-semibold">Proof: EnterpriseHub Case Study</a>
                     </div>
                 </div>
             </div>
@@ -559,35 +617,19 @@
     </section>
 
     <!-- CTA -->
-    <section class="py-16 gradient-bg text-white">
+    <section class="py-16 gradient-bg text-white" id="contact">
         <div class="container mx-auto px-6">
-            <div class="max-w-3xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4">Not Sure Which Package?</h2>
-                <p class="text-xl mb-8 text-purple-100">Free 30-Minute Consultation</p>
-
-                <ul class="text-left inline-block mb-8 text-purple-100">
-                    <li class="mb-2">✓ Discuss your specific needs</li>
-                    <li class="mb-2">✓ Get recommendation on best approach</li>
-                    <li class="mb-2">✓ Receive ballpark estimate</li>
-                    <li>✓ No obligation</li>
-                </ul>
-
-                <div class="text-center">
-                    <a href="../index.html#contact" class="btn-primary text-xl px-8 py-4 inline-block mb-4">
-                        📅 Book Your Free Call
-                    </a>
-                    <p class="text-sm text-purple-200">Or email: <a href="https://linkedin.com/in/caymanroden" target="_blank" class="underline">Connect on LinkedIn</a></p>
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+                <p class="text-lg text-indigo-100 mb-8">Email to book a discovery call or request a scoped proposal.</p>
+                <a href="mailto:caymanroden@gmail.com" class="btn-primary text-lg px-10 py-4">caymanroden@gmail.com</a>
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Service%202%20Technical%20Due%20Diligence" class="px-4 py-2 rounded-full bg-white/15 border border-white/30 text-sm font-semibold">Service 2 Inquiry</a>
+                    <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Service%2024%20Workflow%20Optimization" class="px-4 py-2 rounded-full bg-white/15 border border-white/30 text-sm font-semibold">Service 24 Inquiry</a>
+                    <a href="mailto:caymanroden@gmail.com?subject=Inquiry%20-%20Service%201%20AI%20Strategy" class="px-4 py-2 rounded-full bg-white/15 border border-white/30 text-sm font-semibold">Service 1 Inquiry</a>
                 </div>
             </div>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8">
-        <div class="container mx-auto px-6 text-center">
-            <p class="text-sm text-gray-400">© 2025 Cayman Roden. All rights reserved.</p>
-        </div>
-    </footer>
-
 </body>
 </html>

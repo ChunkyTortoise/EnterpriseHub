@@ -165,7 +165,88 @@ class IntelligenceAgent:
         analysis_context: Dict[str, Any]
     ) -> List[IntelligenceInsight]:
         """Gather intelligence insights."""
-        raise NotImplementedError
+        try:
+            prompt = f"""
+            You are a competitive intelligence agent ({self.agent_type.value}).
+            Analyze the market data and competitor profiles to produce 1-3 concise insights.
+
+            Market Data: {market_data}
+            Competitors: {[c.name for c in competitors]}
+            Context: {analysis_context}
+
+            Return JSON list with fields:
+            - title
+            - description
+            - threat_level (minimal/low/moderate/high/critical)
+            - opportunity_level (minor/moderate/significant/major/transformative)
+            - action_required (true/false)
+            - urgency (immediate/short_term/long_term)
+            """
+
+            response = await self.llm_client.generate(
+                prompt=prompt, max_tokens=600, temperature=0.4
+            )
+            content = response.content if response and response.content else "[]"
+            try:
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+                insights_payload = json.loads(content)
+                if isinstance(insights_payload, dict):
+                    insights_payload = [insights_payload]
+            except Exception:
+                insights_payload = []
+
+            results: List[IntelligenceInsight] = []
+            for raw in insights_payload[:3]:
+                threat = str(raw.get("threat_level", "moderate")).lower()
+                opportunity = str(raw.get("opportunity_level", "moderate")).lower()
+                try:
+                    threat_level = ThreatLevel(threat)
+                except Exception:
+                    threat_level = ThreatLevel.MODERATE
+                try:
+                    opportunity_level = OpportunityLevel(opportunity)
+                except Exception:
+                    opportunity_level = OpportunityLevel.MODERATE
+                results.append(
+                    IntelligenceInsight(
+                        agent_type=self.agent_type,
+                        insight_type=IntelligenceType.STRATEGIC_INSIGHTS,
+                        title=raw.get("title", f"{self.agent_type.value} insight"),
+                        description=raw.get("description", "Insight derived from competitive analysis."),
+                        confidence=float(raw.get("confidence", 0.7)) if raw.get("confidence") is not None else 0.7,
+                        threat_level=threat_level,
+                        opportunity_level=opportunity_level,
+                        action_required=bool(raw.get("action_required", False)),
+                        urgency=raw.get("urgency", "short_term"),
+                        data_sources=[IntelligenceSource.MARKETING_CHANNELS],
+                        affected_competitors=[c.name for c in competitors],
+                        recommended_actions=raw.get("recommended_actions", []),
+                    )
+                )
+
+            if not results:
+                results.append(
+                    IntelligenceInsight(
+                        agent_type=self.agent_type,
+                        insight_type=IntelligenceType.MARKET_ANALYSIS,
+                        title="Baseline market monitoring",
+                        description="No significant competitive shifts detected. Maintain monitoring cadence.",
+                        confidence=0.5,
+                        threat_level=ThreatLevel.LOW,
+                        opportunity_level=OpportunityLevel.MODERATE,
+                        action_required=False,
+                        urgency="long_term",
+                        data_sources=[IntelligenceSource.NEWS_SOURCES],
+                    )
+                )
+
+            return results
+        except Exception as e:
+            logger.error(f"IntelligenceAgent gather_intelligence failed: {e}")
+            return []
 
 
 class MarketAnalyzerAgent(IntelligenceAgent):

@@ -8,10 +8,11 @@ from ghl_real_estate_ai.services.predictive_lead_scorer import PredictiveLeadSco
 from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
+from ghl_real_estate_ai.api.middleware.rate_limiter import rate_limit_dependency
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 
-router = APIRouter(prefix="/intelligence", tags=["intelligence"])
+router = APIRouter(prefix="/intelligence", tags=["intelligence"], dependencies=[Depends(rate_limit_dependency)])
 
 # Lazy service singletons — defer initialization until first request
 _scorer = None

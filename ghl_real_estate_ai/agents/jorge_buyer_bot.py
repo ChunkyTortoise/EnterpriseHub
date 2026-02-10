@@ -1232,6 +1232,10 @@ class JorgeBuyerBot:
             from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
             handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
             result["handoff_signals"] = handoff_signals
+            result["handoff_confidence"] = JorgeHandoffService.build_signal_confidence(
+                mode="buyer",
+                intent_signals=handoff_signals,
+            )
 
             # Emit final qualification result
             await self.event_publisher.publish_buyer_qualification_complete(
@@ -1251,7 +1255,13 @@ class JorgeBuyerBot:
                 "error": str(e),
                 "qualification_status": "error",
                 "response_content": "I'm having technical difficulties. Let me connect you with Jorge directly.",
-                "handoff_signals": {}  # P0 FIX: Include empty handoff_signals in error case
+                "handoff_signals": {},  # P0 FIX: Include empty handoff_signals in error case
+                "handoff_confidence": {
+                    "mode": "fallback",
+                    "score": 0.0,
+                    "reason": "buyer_processing_error",
+                    "evidence": {"error": str(e)},
+                },
             }
 
     # ================================

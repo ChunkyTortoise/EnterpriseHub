@@ -124,7 +124,34 @@ class EnhancedRateLimiter:
                 if self.websocket_connections[key] >= self.websocket_connections_per_ip:
                     return False, "WebSocket connection limit exceeded"
                 self.websocket_connections[key] += 1
-                return True, None
+            return True, None
+
+
+# Shared rate limiter instance for dependency usage
+_dependency_limiter = EnhancedRateLimiter()
+
+
+async def rate_limit_dependency(request: Request, rpm_override: Optional[int] = None) -> None:
+    """Dependency-based rate limiting for per-endpoint control."""
+    ip_address = request.client.host if request.client else "unknown"
+    auth_header = request.headers.get("authorization") or ""
+    is_authenticated = bool(auth_header)
+    user_agent = request.headers.get("user-agent", "")
+    path = request.url.path
+
+    # Temporarily override RPM if provided
+    if rpm_override is not None:
+        _dependency_limiter.requests_per_minute = rpm_override
+
+    allowed, reason = await _dependency_limiter.is_allowed(
+        key=ip_address,
+        is_authenticated=is_authenticated,
+        request_type="http",
+        user_agent=user_agent,
+        path=path,
+    )
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=reason or "Rate limit exceeded")
 
             now = datetime.now()
 

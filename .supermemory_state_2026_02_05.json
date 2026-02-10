@@ -1,7 +1,7 @@
 {
   "project": "EnterpriseHub",
   "version": "5.1.2",
-  "timestamp": "2026-02-05T22:25:00Z",
+  "timestamp": "2026-02-05T14:50:00Z",
   "session_id": "p0-execution-2026-02-05",
   "status": "demo-integration-ready",
   "completion_overall": "90%",
@@ -263,6 +263,31 @@
       "path": "CLIENT_VALUE_EVALUATION_PROMPT.md",
       "type": "prompt",
       "description": "Client value evaluation prompt and file map"
+    },
+    {
+      "path": "Revenue-Sprint/Makefile",
+      "type": "automation",
+      "description": "Added make targets for KPI report and proof points log."
+    },
+    {
+      "path": "Revenue-Sprint/output/proof_points_log.md",
+      "type": "log",
+      "description": "Proof points weekly log generator output."
+    },
+    {
+      "path": "Revenue-Sprint/output/Revenue-Dashboard-One-Pager.md",
+      "type": "dashboard",
+      "description": "Dashboard auto-updated with KPI summary and top hooks/industries."
+    },
+    {
+      "path": "Revenue-Sprint/KPI_DEFINITIONS.md",
+      "type": "doc",
+      "description": "KPI definitions reference for clients."
+    },
+    {
+      "path": "Revenue-Sprint/WORKFLOWS_IMPORT_CHECKLIST.md",
+      "type": "doc",
+      "description": "Workflow import checklist updated with make all shortcut."
     }
   ],
   "git_state": {
@@ -336,5 +361,25 @@
     "AGENTS.md",
     "plans/phase4_production_deployment_roadmap.md",
     "CODEX_NEXT_PHASE_PROMPT.md"
+  ],
+  "recent_updates": [
+    {
+      "date": "2026-02-06",
+      "project": "Revenue-Sprint",
+      "summary": [
+        "Spec 2 hardening implemented: CLI shim, logging with correlation IDs, metrics, Docker/Compose, CI/CD, deployment docs.",
+        "All print statements replaced with structured logging across core and product kits.",
+        "Root README and Gumroad product pages standardized with bundle pricing and assets."
+      ],
+      "commits": [
+        "dbfd897",
+        "f367942"
+      ],
+      "tests": {
+        "pytest": "failed: gspread missing during collection",
+        "ruff_check": "pass",
+        "ruff_format": "pass after format"
+      }
+    }
   ]
 }

@@ -88,6 +88,7 @@ class DatabaseShardingService:
         self.shard_clusters: Dict[int, ShardCluster] = {}
         self.connection_pools: Dict[str, Pool] = {}  # key: "{shard_id}_{role}"
         self.cache_service = get_cache_service()
+        self._shard_overrides: Dict[str, int] = {}
 
         # Shard configuration
         self._initialize_shard_configuration()
@@ -215,6 +216,8 @@ class DatabaseShardingService:
         if not location_id:
             # Default to shard 0 for null location_id
             return 0
+        if location_id in self._shard_overrides:
+            return self._shard_overrides[location_id]
 
         # Use MD5 hash for consistent shard selection
         hash_value = hashlib.md5(location_id.encode('utf-8')).hexdigest()
@@ -410,9 +413,113 @@ class DatabaseShardingService:
             logger.info(f"Location {location_id} already on target shard {target_shard_id}")
             return
 
-        logger.warning(f"Data migration not yet implemented: {location_id} from shard {current_shard_id} to {target_shard_id}")
-        # TODO: Implement data migration logic
-        raise NotImplementedError("Data migration between shards not yet implemented")
+        logger.info(f"Starting shard migration for {location_id}: {current_shard_id} -> {target_shard_id}")
+
+        # Mark migration lock to discourage writes during move
+        await self.cache_service.set(f"shard_migration_lock:{location_id}", True, ttl=900)
+
+        source_pool = await self.get_write_connection(location_id)
+        # Override routing to target shard for target connection
+        target_cluster = self.shard_clusters.get(target_shard_id)
+        if not target_cluster:
+            raise ValueError(f"Target shard {target_shard_id} not configured")
+        target_pool_key = f"{target_cluster.master.shard_id}_{target_cluster.master.role.value}"
+        if target_pool_key not in self.connection_pools:
+            await self._create_connection_pool(target_cluster.master)
+        target_pool = self.connection_pools[target_pool_key]
+
+        table_query = """
+            SELECT table_name
+            FROM information_schema.columns
+            WHERE table_schema='public' AND column_name='location_id'
+        """
+        async with source_pool.acquire() as source_conn, target_pool.acquire() as target_conn:
+            tables = [r["table_name"] for r in await source_conn.fetch(table_query)]
+            migrated_tables = []
+
+            for table in tables:
+                # Fetch column names
+                columns = await source_conn.fetch(
+                    """
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_schema='public' AND table_name=$1
+                    ORDER BY ordinal_position
+                    """,
+                    table,
+                )
+                column_names = [c["column_name"] for c in columns]
+                if not column_names:
+                    continue
+
+                # Pull rows for location_id
+                rows = await source_conn.fetch(
+                    f"SELECT * FROM {table} WHERE location_id=$1", location_id
+                )
+                if not rows:
+                    continue
+
+                # Attempt to detect primary key columns for upsert
+                pk_rows = await source_conn.fetch(
+                    """
+                    SELECT kcu.column_name
+                    FROM information_schema.table_constraints tc
+                    JOIN information_schema.key_column_usage kcu
+                      ON tc.constraint_name = kcu.constraint_name
+                     AND tc.table_schema = kcu.table_schema
+                    WHERE tc.table_schema='public'
+                      AND tc.table_name=$1
+                      AND tc.constraint_type='PRIMARY KEY'
+                    """,
+                    table,
+                )
+                pk_columns = [r["column_name"] for r in pk_rows]
+
+                # Build insert statement
+                col_list = ", ".join(column_names)
+                placeholders = ", ".join([f"${i+1}" for i in range(len(column_names))])
+                if pk_columns:
+                    conflict_cols = ", ".join(pk_columns)
+                    insert_sql = (
+                        f"INSERT INTO {table} ({col_list}) VALUES ({placeholders}) "
+                        f"ON CONFLICT ({conflict_cols}) DO NOTHING"
+                    )
+                else:
+                    insert_sql = f"INSERT INTO {table} ({col_list}) VALUES ({placeholders})"
+
+                # Insert into target
+                await target_conn.executemany(
+                    insert_sql,
+                    [tuple(row[col] for col in column_names) for row in rows],
+                )
+
+                # Verify counts
+                source_count = await source_conn.fetchval(
+                    f"SELECT COUNT(*) FROM {table} WHERE location_id=$1", location_id
+                )
+                target_count = await target_conn.fetchval(
+                    f"SELECT COUNT(*) FROM {table} WHERE location_id=$1", location_id
+                )
+
+                if target_count >= source_count:
+                    await source_conn.execute(
+                        f"DELETE FROM {table} WHERE location_id=$1", location_id
+                    )
+                else:
+                    logger.warning(
+                        f"Count mismatch for {table}: source={source_count} target={target_count}. Skipping delete."
+                    )
+
+                migrated_tables.append(table)
+
+        # Store override mapping
+        self._shard_overrides[location_id] = target_shard_id
+        await self.cache_service.set(f"shard_override:{location_id}", target_shard_id, ttl=86400)
+        await self.cache_service.delete(f"shard_migration_lock:{location_id}")
+
+        logger.info(
+            f"Completed shard migration for {location_id} to shard {target_shard_id}. Tables migrated: {len(migrated_tables)}"
+        )
 
 # Global sharding service instance
 _sharding_service = None

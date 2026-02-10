@@ -33,25 +33,33 @@ except ImportError:
 class CacheBackend:
     """Abstract base class for cache backends"""
 
+    def _resolve_backend(self) -> "CacheBackend":
+        """Return a concrete backend, defaulting to in-memory cache."""
+        backend = getattr(self, "_backend", None)
+        if backend is None:
+            backend = MemoryCacheBackend()
+            setattr(self, "_backend", backend)
+        return backend
+
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
-        raise NotImplementedError
+        return await self._resolve_backend().get(key)
 
     async def set(self, key: str, value: Any, ttl: Optional[timedelta] = None):
         """Set value in cache with optional TTL"""
-        raise NotImplementedError
+        await self._resolve_backend().set(key, value, ttl=ttl)
 
     async def delete(self, key: str):
         """Delete value from cache"""
-        raise NotImplementedError
+        await self._resolve_backend().delete(key)
 
     async def clear(self):
         """Clear all cached values"""
-        raise NotImplementedError
+        await self._resolve_backend().clear()
 
     async def exists(self, key: str) -> bool:
         """Check if key exists in cache"""
-        raise NotImplementedError
+        return await self._resolve_backend().exists(key)
 
 
 class MemoryCacheBackend(CacheBackend):

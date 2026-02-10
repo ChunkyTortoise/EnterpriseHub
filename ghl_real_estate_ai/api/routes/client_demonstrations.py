@@ -60,7 +60,10 @@ class DemoSessionResponse(BaseModel):
     demo_properties: List[Dict[str, Any]]
     demo_conversations: List[Dict[str, Any]]
     roi_calculation: Dict[str, Any]
+    roi_assumptions: Dict[str, Any]
     performance_metrics: Dict[str, Any]
+    data_source: str
+    data_provenance: Dict[str, Any]
     created_at: str
     expires_at: str
     status: str = "active"
@@ -140,7 +143,10 @@ async def create_demo_session(
             demo_properties=demo_env.demo_properties,
             demo_conversations=demo_env.demo_conversations,
             roi_calculation=demo_env.roi_calculation,
+            roi_assumptions=demo_env.roi_assumptions,
             performance_metrics=demo_env.performance_metrics,
+            data_source=demo_env.data_source,
+            data_provenance=demo_env.data_provenance,
             created_at=demo_env.created_at.isoformat(),
             expires_at=demo_env.expires_at.isoformat()
         )
@@ -190,7 +196,10 @@ async def get_demo_session(
             demo_properties=demo_env.demo_properties,
             demo_conversations=demo_env.demo_conversations,
             roi_calculation=demo_env.roi_calculation,
+            roi_assumptions=demo_env.roi_assumptions,
             performance_metrics=demo_env.performance_metrics,
+            data_source=demo_env.data_source,
+            data_provenance=demo_env.data_provenance,
             created_at=demo_env.created_at.isoformat(),
             expires_at=demo_env.expires_at.isoformat()
         )
@@ -272,7 +281,10 @@ async def reset_demo_session(
             demo_properties=demo_env.demo_properties,
             demo_conversations=demo_env.demo_conversations,
             roi_calculation=demo_env.roi_calculation,
+            roi_assumptions=demo_env.roi_assumptions,
             performance_metrics=demo_env.performance_metrics,
+            data_source=demo_env.data_source,
+            data_provenance=demo_env.data_provenance,
             created_at=demo_env.created_at.isoformat(),
             expires_at=demo_env.expires_at.isoformat()
         )

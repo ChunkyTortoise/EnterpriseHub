@@ -31,7 +31,11 @@ class BaseQualityAgent:
     
     async def execute(self) -> Dict[str, Any]:
         """Execute agent's tasks. Override in subclass."""
-        raise NotImplementedError
+        self.status = "skipped"
+        self.start_time = datetime.now()
+        self.end_time = datetime.now()
+        self.errors.append("BaseQualityAgent.execute called without override")
+        return self.report()
     
     def report(self) -> Dict[str, Any]:
         """Generate status report."""

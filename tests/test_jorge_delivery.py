@@ -33,6 +33,10 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
+from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
+    HandoffDecision,
+    JorgeHandoffService,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +72,14 @@ def _make_webhook_event(
 def _action_tags(response: GHLWebhookResponse) -> list[str]:
     """Extract ADD_TAG tag names from a response."""
     return [a.tag for a in response.actions if a.type == ActionType.ADD_TAG]
+
+
+def _background_event_data(background_tasks: MagicMock, event_type: str) -> dict:
+    """Find analytics payload queued to BackgroundTasks for a specific event."""
+    for call in background_tasks.add_task.call_args_list:
+        if call.kwargs.get("event_type") == event_type:
+            return call.kwargs.get("data", {})
+    raise AssertionError(f"Background event '{event_type}' not queued")
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +236,7 @@ class TestOptOutHandling:
              patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", MagicMock(add_tags=AsyncMock())):
             response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
 
-        assert response.message == "No problem at all, reach out whenever you're ready"
+        assert response.message == "Understood. We will not contact you again unless you reach out first."
 
 
 # ---------------------------------------------------------------------------
@@ -421,6 +433,7 @@ def _buyer_webhook_patches(jorge_seller_mode=False, jorge_buyer_mode=True, buyer
         mock_tenant.get_tenant_config = AsyncMock(return_value=None)
 
         mock_conv_mgr = MagicMock()
+        mock_conv_mgr.get_context = AsyncMock(return_value={})
         mock_conv_mgr.get_conversation_history = AsyncMock(return_value=[])
 
         with patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())), \
@@ -917,3 +930,413 @@ class TestLeadModeRouting:
         # Buyer bot should handle, not lead bot
         mock_buyer_bot_instance.process_buyer_conversation.assert_awaited_once()
         mocks["conversation_manager"].generate_response.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------
+# D7 — Handoff Confidence Schema + Deterministic Routing
+# ---------------------------------------------------------------------------
+
+
+class TestHandoffConfidenceWebhookRouting:
+    """Webhook-level WS3 schema emission/usage across seller, buyer, and lead routes."""
+
+    @pytest.mark.asyncio
+    async def test_seller_route_emits_schema_and_applies_handoff_actions(self):
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I need to sell first and then buy nearby",
+            tags=["Needs Qualifying"],
+        )
+        background_tasks = MagicMock()
+
+        mock_settings = MagicMock()
+        mock_settings.activation_tags = ["Needs Qualifying"]
+        mock_settings.deactivation_tags = ["AI-Off", "Qualified", "Stop-Bot"]
+
+        mock_jorge_settings = MagicMock()
+        mock_jorge_settings.JORGE_SELLER_MODE = True
+        mock_jorge_settings.JORGE_BUYER_MODE = False
+        mock_jorge_settings.JORGE_LEAD_MODE = False
+        mock_jorge_settings.BUYER_ACTIVATION_TAG = "Buyer-Lead"
+        mock_jorge_settings.LEAD_ACTIVATION_TAG = "Needs Qualifying"
+
+        seller_result = {
+            "temperature": "warm",
+            "message": "What price would incentivize you to sell?",
+            "questions_answered": 2,
+            "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
+            "handoff_signals": {
+                "buyer_intent_score": 0.72,
+                "seller_intent_score": 0.3,
+                "detected_intent_phrases": ["buy", "sell first"],
+            },
+        }
+        mock_engine = MagicMock()
+        mock_engine.process_seller_response = AsyncMock(return_value=seller_result)
+
+        mock_handoff_service = MagicMock()
+        mock_handoff_service.evaluate_handoff = AsyncMock(
+            return_value=HandoffDecision(
+                source_bot="seller",
+                target_bot="buyer",
+                reason="buyer_intent_detected",
+                confidence=0.72,
+                context={
+                    "buyer_intent_score": 0.72,
+                    "seller_intent_score": 0.3,
+                },
+            )
+        )
+        mock_handoff_service.execute_handoff = AsyncMock(
+            return_value=[
+                {"type": "add_tag", "tag": "Buyer-Lead"},
+                {"type": "add_tag", "tag": "Handoff-Seller-to-Buyer"},
+            ]
+        )
+
+        with patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_settings), \
+             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings), \
+             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", MagicMock(get_context=AsyncMock(return_value={}))), \
+             patch("ghl_real_estate_ai.api.routes.webhook.tenant_service.get_tenant_config", new=AsyncMock(return_value=None)), \
+             patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard.audit_message", new=AsyncMock(return_value=(ComplianceStatus.PASSED, "", []))), \
+             patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine", return_value=mock_engine), \
+             patch("ghl_real_estate_ai.api.routes.webhook.handoff_service", mock_handoff_service):
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, background_tasks)
+
+        assert response.success is True
+        assert "Handoff-Seller-to-Buyer" in _action_tags(response)
+        mock_handoff_service.evaluate_handoff.assert_awaited_once()
+
+        analytics_data = _background_event_data(background_tasks, "jorge_seller_interaction")
+        handoff_confidence = analytics_data["handoff_confidence"]
+        assert set(handoff_confidence.keys()) == {"mode", "score", "reason", "evidence"}
+        assert handoff_confidence["mode"] == "buyer"
+        assert handoff_confidence["reason"] == "buyer_intent_detected"
+        assert handoff_confidence["score"] == pytest.approx(0.72, abs=1e-6)
+        assert handoff_confidence["evidence"]["source_bot"] == "seller"
+        assert handoff_confidence["evidence"]["target_bot"] == "buyer"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "handoff_outcome",
+        [
+            None,
+            RuntimeError("handoff service unavailable"),
+        ],
+        ids=["handoff_returns_none", "handoff_raises"],
+    )
+    async def test_seller_route_handoff_eval_negative_path_emits_baseline_confidence(
+        self,
+        handoff_outcome,
+    ):
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I might buy after I sell this place",
+            tags=["Needs Qualifying"],
+        )
+        background_tasks = MagicMock()
+
+        mock_settings = MagicMock()
+        mock_settings.activation_tags = ["Needs Qualifying"]
+        mock_settings.deactivation_tags = ["AI-Off", "Qualified", "Stop-Bot"]
+
+        mock_jorge_settings = MagicMock()
+        mock_jorge_settings.JORGE_SELLER_MODE = True
+        mock_jorge_settings.JORGE_BUYER_MODE = False
+        mock_jorge_settings.JORGE_LEAD_MODE = False
+        mock_jorge_settings.BUYER_ACTIVATION_TAG = "Buyer-Lead"
+        mock_jorge_settings.LEAD_ACTIVATION_TAG = "Needs Qualifying"
+
+        seller_result = {
+            "temperature": "warm",
+            "message": "What range would make a move worth it for you?",
+            "questions_answered": 2,
+            "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
+            "handoff_signals": {
+                "buyer_intent_score": 0.66,
+                "seller_intent_score": 0.31,
+                "detected_intent_phrases": ["buy after I sell"],
+            },
+        }
+        mock_engine = MagicMock()
+        mock_engine.process_seller_response = AsyncMock(return_value=seller_result)
+
+        mock_handoff_service = MagicMock()
+        if isinstance(handoff_outcome, Exception):
+            mock_handoff_service.evaluate_handoff = AsyncMock(side_effect=handoff_outcome)
+        else:
+            mock_handoff_service.evaluate_handoff = AsyncMock(return_value=handoff_outcome)
+        mock_handoff_service.execute_handoff = AsyncMock(return_value=[])
+
+        with patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_settings), \
+             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings), \
+             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", MagicMock(get_context=AsyncMock(return_value={}))), \
+             patch("ghl_real_estate_ai.api.routes.webhook.tenant_service.get_tenant_config", new=AsyncMock(return_value=None)), \
+             patch("ghl_real_estate_ai.api.routes.webhook.compliance_guard.audit_message", new=AsyncMock(return_value=(ComplianceStatus.PASSED, "", []))), \
+             patch("ghl_real_estate_ai.services.jorge.jorge_seller_engine.JorgeSellerEngine", return_value=mock_engine), \
+             patch("ghl_real_estate_ai.api.routes.webhook.handoff_service", mock_handoff_service):
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, background_tasks)
+
+        assert response.success is True
+        mock_handoff_service.evaluate_handoff.assert_awaited_once()
+        mock_handoff_service.execute_handoff.assert_not_awaited()
+
+        analytics_data = _background_event_data(background_tasks, "jorge_seller_interaction")
+        handoff_confidence = analytics_data["handoff_confidence"]
+        assert set(handoff_confidence.keys()) == {"mode", "score", "reason", "evidence"}
+        assert handoff_confidence["mode"] == "seller"
+        assert handoff_confidence["reason"] == "intent_signal_detected"
+        assert handoff_confidence["score"] == pytest.approx(0.66, abs=1e-6)
+        assert handoff_confidence["evidence"]["buyer_intent_score"] == pytest.approx(0.66, abs=1e-6)
+        assert handoff_confidence["evidence"]["seller_intent_score"] == pytest.approx(0.31, abs=1e-6)
+        assert handoff_confidence["evidence"]["detected_intent_phrases"] == ["buy after I sell"]
+
+    @pytest.mark.asyncio
+    async def test_buyer_route_emits_schema_and_applies_handoff_actions(self):
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "Before buying, I need to sell my current house",
+            tags=["Buyer-Lead"],
+        )
+        background_tasks = MagicMock()
+
+        buyer_result = {
+            "buyer_temperature": "warm",
+            "is_qualified": False,
+            "financial_readiness_score": 55,
+            "response_content": "Got it, let's map your options.",
+            "handoff_signals": {
+                "buyer_intent_score": 0.2,
+                "seller_intent_score": 0.81,
+                "detected_intent_phrases": ["sell first"],
+            },
+        }
+
+        with _buyer_webhook_patches(jorge_seller_mode=False, jorge_buyer_mode=True) as mocks:
+            mocks["buyer_bot"].process_buyer_conversation.return_value = buyer_result
+
+            mock_handoff_service = MagicMock()
+            mock_handoff_service.evaluate_handoff = AsyncMock(
+                return_value=HandoffDecision(
+                    source_bot="buyer",
+                    target_bot="seller",
+                    reason="seller_intent_detected",
+                    confidence=0.81,
+                    context={
+                        "buyer_intent_score": 0.2,
+                        "seller_intent_score": 0.81,
+                    },
+                )
+            )
+            mock_handoff_service.execute_handoff = AsyncMock(
+                return_value=[
+                    {"type": "add_tag", "tag": "Needs Qualifying"},
+                    {"type": "add_tag", "tag": "Handoff-Buyer-to-Seller"},
+                ]
+            )
+
+            with patch("ghl_real_estate_ai.api.routes.webhook.handoff_service", mock_handoff_service):
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, background_tasks)
+
+        assert response.success is True
+        assert "Handoff-Buyer-to-Seller" in _action_tags(response)
+
+        analytics_data = _background_event_data(background_tasks, "jorge_buyer_interaction")
+        handoff_confidence = analytics_data["handoff_confidence"]
+        assert set(handoff_confidence.keys()) == {"mode", "score", "reason", "evidence"}
+        assert handoff_confidence["mode"] == "seller"
+        assert handoff_confidence["reason"] == "seller_intent_detected"
+        assert handoff_confidence["score"] == pytest.approx(0.81, abs=1e-6)
+        assert handoff_confidence["evidence"]["source_bot"] == "buyer"
+        assert handoff_confidence["evidence"]["target_bot"] == "seller"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "handoff_outcome",
+        [
+            None,
+            RuntimeError("handoff evaluator timed out"),
+        ],
+        ids=["handoff_returns_none", "handoff_raises"],
+    )
+    async def test_buyer_route_handoff_eval_negative_path_emits_baseline_confidence(
+        self,
+        handoff_outcome,
+    ):
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to buy, but maybe I will sell eventually",
+            tags=["Buyer-Lead"],
+        )
+        background_tasks = MagicMock()
+
+        buyer_result = {
+            "buyer_temperature": "warm",
+            "is_qualified": False,
+            "financial_readiness_score": 49,
+            "response_content": "Let's narrow down what works for your next move.",
+            "handoff_signals": {
+                "buyer_intent_score": 0.82,
+                "seller_intent_score": 0.21,
+                "detected_intent_phrases": ["want to buy"],
+            },
+        }
+
+        with _buyer_webhook_patches(jorge_seller_mode=False, jorge_buyer_mode=True) as mocks:
+            mocks["buyer_bot"].process_buyer_conversation.return_value = buyer_result
+
+            mock_handoff_service = MagicMock()
+            if isinstance(handoff_outcome, Exception):
+                mock_handoff_service.evaluate_handoff = AsyncMock(side_effect=handoff_outcome)
+            else:
+                mock_handoff_service.evaluate_handoff = AsyncMock(return_value=handoff_outcome)
+            mock_handoff_service.execute_handoff = AsyncMock(return_value=[])
+
+            with patch("ghl_real_estate_ai.api.routes.webhook.handoff_service", mock_handoff_service):
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, background_tasks)
+
+        assert response.success is True
+        mock_handoff_service.evaluate_handoff.assert_awaited_once()
+        mock_handoff_service.execute_handoff.assert_not_awaited()
+
+        analytics_data = _background_event_data(background_tasks, "jorge_buyer_interaction")
+        handoff_confidence = analytics_data["handoff_confidence"]
+        assert set(handoff_confidence.keys()) == {"mode", "score", "reason", "evidence"}
+        assert handoff_confidence["mode"] == "buyer"
+        assert handoff_confidence["reason"] == "intent_signal_detected"
+        assert handoff_confidence["score"] == pytest.approx(0.82, abs=1e-6)
+        assert handoff_confidence["evidence"]["buyer_intent_score"] == pytest.approx(0.82, abs=1e-6)
+        assert handoff_confidence["evidence"]["seller_intent_score"] == pytest.approx(0.21, abs=1e-6)
+        assert handoff_confidence["evidence"]["detected_intent_phrases"] == ["want to buy"]
+
+    @pytest.mark.asyncio
+    async def test_lead_route_emits_schema_with_deterministic_tie_resolution(self):
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to sell my place before I buy the next one",
+            tags=["Needs Qualifying"],
+        )
+        background_tasks = MagicMock()
+        tie_signals = {
+            "buyer_intent_score": 0.75,
+            "seller_intent_score": 0.75,
+            "detected_intent_phrases": ["buy", "sell"],
+        }
+        deterministic_handoff_service = JorgeHandoffService(
+            thresholds={
+                ("lead", "buyer"): 0.7,
+                ("lead", "seller"): 0.7,
+                ("buyer", "seller"): 0.8,
+                ("seller", "buyer"): 0.6,
+            },
+            lead_conflict_priority="seller",
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False) as _:
+            with patch(
+                "ghl_real_estate_ai.api.routes.webhook.JorgeHandoffService.extract_intent_signals",
+                return_value=tie_signals,
+            ), patch(
+                "ghl_real_estate_ai.api.routes.webhook.handoff_service",
+                deterministic_handoff_service,
+            ):
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, background_tasks)
+
+        assert response.success is True
+        assert "Handoff-Lead-to-Seller" in _action_tags(response)
+
+        analytics_data = _background_event_data(background_tasks, "jorge_lead_handoff_evaluation")
+        handoff_confidence = analytics_data["handoff_confidence"]
+        assert set(handoff_confidence.keys()) == {"mode", "score", "reason", "evidence"}
+        assert handoff_confidence["mode"] == "seller"
+        assert handoff_confidence["reason"] == "conflict_priority_seller"
+        assert handoff_confidence["score"] == pytest.approx(0.75, abs=1e-6)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "priority,thresholds,expected_tracking_tag,expected_mode,expected_reason",
+        [
+            (
+                "buyer",
+                {("lead", "buyer"): 0.75, ("lead", "seller"): 0.7},
+                "Handoff-Lead-to-Buyer",
+                "buyer",
+                "conflict_priority_buyer",
+            ),
+            (
+                "seller",
+                {("lead", "buyer"): 0.7, ("lead", "seller"): 0.75},
+                "Handoff-Lead-to-Seller",
+                "seller",
+                "conflict_priority_seller",
+            ),
+            (
+                "buyer",
+                {("lead", "buyer"): 0.7501, ("lead", "seller"): 0.7},
+                None,
+                "lead",
+                "conflicting_intent_signals",
+            ),
+            (
+                "seller",
+                {("lead", "buyer"): 0.7, ("lead", "seller"): 0.7501},
+                None,
+                "lead",
+                "conflicting_intent_signals",
+            ),
+        ],
+    )
+    async def test_lead_tie_threshold_matrix_routes_deterministically(
+        self,
+        priority,
+        thresholds,
+        expected_tracking_tag,
+        expected_mode,
+        expected_reason,
+    ):
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I need to buy and sell at the same time",
+            tags=["Needs Qualifying"],
+        )
+        background_tasks = MagicMock()
+        tie_signals = {
+            "buyer_intent_score": 0.75,
+            "seller_intent_score": 0.75,
+            "detected_intent_phrases": ["buy", "sell"],
+        }
+        deterministic_handoff_service = JorgeHandoffService(
+            thresholds=thresholds,
+            lead_conflict_priority=priority,
+        )
+
+        with _lead_webhook_patches(jorge_lead_mode=True, jorge_seller_mode=False):
+            with patch(
+                "ghl_real_estate_ai.api.routes.webhook.JorgeHandoffService.extract_intent_signals",
+                return_value=tie_signals,
+            ), patch(
+                "ghl_real_estate_ai.api.routes.webhook.handoff_service",
+                deterministic_handoff_service,
+            ):
+                response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, background_tasks)
+
+        assert response.success is True
+        action_tags = _action_tags(response)
+        if expected_tracking_tag:
+            assert expected_tracking_tag in action_tags
+        else:
+            assert "Handoff-Lead-to-Buyer" not in action_tags
+            assert "Handoff-Lead-to-Seller" not in action_tags
+
+        analytics_data = _background_event_data(background_tasks, "jorge_lead_handoff_evaluation")
+        handoff_confidence = analytics_data["handoff_confidence"]
+        assert set(handoff_confidence.keys()) == {"mode", "score", "reason", "evidence"}
+        assert handoff_confidence["mode"] == expected_mode
+        assert handoff_confidence["reason"] == expected_reason
+        assert handoff_confidence["score"] == pytest.approx(0.75, abs=1e-6)

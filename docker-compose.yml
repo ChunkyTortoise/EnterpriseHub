@@ -90,8 +90,29 @@ services:
       - postgres
       - redis
     restart: unless-stopped
-    profiles:
-      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Background Worker (Celery/Async Tasks)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: ghl_worker
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/enterprise_hub}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
 
   # Nginx Load Balancer (Production only)
   nginx:
@@ -163,14 +184,11 @@ networks:
 # Usage Instructions:
 # ==============================================================================
 #
-# Development (basic setup):
+# Development (full stack):
 #   docker-compose up
 #
 # Production (with nginx):
 #   docker-compose --profile production up -d
-#
-# With API backend:
-#   docker-compose --profile api up
 #
 # With monitoring:
 #   docker-compose --profile monitoring up

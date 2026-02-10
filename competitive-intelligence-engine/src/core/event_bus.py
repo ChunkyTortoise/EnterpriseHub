@@ -173,7 +173,11 @@ class EventHandler:
         Returns:
             bool: True if handled successfully, False otherwise
         """
-        raise NotImplementedError
+        logger.warning(
+            f"EventHandler {self.name} has no concrete handle implementation",
+            extra={"event_type": event.type.name, "event_id": event.id}
+        )
+        return False
     
     async def start(self):
         """Start the event handler."""

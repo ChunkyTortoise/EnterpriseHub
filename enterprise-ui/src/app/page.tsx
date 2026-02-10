@@ -34,6 +34,9 @@ export default function Home() {
           <Link className="text-sm font-semibold hover:text-yellow-400 transition-colors text-gray-300" href="/journey">
             Customer Journeys
           </Link>
+          <Link className="text-sm font-semibold hover:text-blue-300 transition-colors text-gray-300" href="/proof-metrics">
+            Proof & Metrics
+          </Link>
         </nav>
       </header>
       <main className="flex-1">

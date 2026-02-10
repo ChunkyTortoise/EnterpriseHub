@@ -147,7 +147,96 @@ class PersonalizerAgent:
         swarm_analysis: Any
     ) -> PersonalizationRecommendation:
         """Personalize content based on agent specialty."""
-        raise NotImplementedError
+        try:
+            prompt = f"""
+            You are a content personalization agent ({self.agent_type.value}).
+            Generate 2-3 variants based on lead context and channel constraints.
+
+            Base Content: {base_content}
+            Content Type: {content_type.value}
+            Channel: {channel.value}
+            Lead Data: {lead_data}
+            Swarm Summary: {getattr(swarm_analysis, 'consensus', None)}
+
+            Return JSON list with fields:
+            - content
+            - target_dimensions (list)
+            - expected_engagement_lift (0-1)
+            """
+
+            response = await self.llm_client.generate(
+                prompt=prompt, max_tokens=700, temperature=0.6
+            )
+            content = response.content if response and response.content else "[]"
+            try:
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+                payload = json.loads(content)
+                if isinstance(payload, dict):
+                    payload = [payload]
+            except Exception:
+                payload = []
+
+            variants: List[ContentVariant] = []
+            for raw in payload[:3]:
+                variant_text = raw.get("content", base_content)
+                variant_id = hashlib.md5(variant_text.encode()).hexdigest()[:8]
+                target_dimensions = []
+                for dim in raw.get("target_dimensions", []):
+                    try:
+                        target_dimensions.append(PersonalizationDimension(dim))
+                    except Exception:
+                        continue
+                if not target_dimensions:
+                    target_dimensions = [PersonalizationDimension.BEHAVIORAL]
+                variants.append(
+                    ContentVariant(
+                        variant_id=f"{self.agent_type.value}_{variant_id}",
+                        content=variant_text,
+                        personalization_factors=target_dimensions,
+                        target_audience={"channel": channel.value},
+                    )
+                )
+
+            expected_lift = float(payload[0].get("expected_engagement_lift", 0.2)) if payload else 0.2
+            return PersonalizationRecommendation(
+                agent_type=self.agent_type,
+                content_variants=variants or [
+                    ContentVariant(
+                        variant_id=f"{self.agent_type.value}_fallback",
+                        content=base_content,
+                        personalization_factors=[PersonalizationDimension.BEHAVIORAL],
+                        target_audience={"channel": channel.value},
+                    )
+                ],
+                confidence=0.75,
+                personalization_reasoning="Generated personalized variants using lead and swarm context.",
+                target_dimensions=[PersonalizationDimension.BEHAVIORAL],
+                expected_engagement_lift=expected_lift,
+                channel_optimized=channel,
+                metadata={"raw_response": content},
+            )
+        except Exception as e:
+            logger.error(f"PersonalizerAgent personalize_content failed: {e}")
+            return PersonalizationRecommendation(
+                agent_type=self.agent_type,
+                content_variants=[
+                    ContentVariant(
+                        variant_id=f"{self.agent_type.value}_error",
+                        content=base_content,
+                        personalization_factors=[PersonalizationDimension.BEHAVIORAL],
+                        target_audience={"channel": channel.value},
+                    )
+                ],
+                confidence=0.2,
+                personalization_reasoning="Fallback due to error.",
+                target_dimensions=[PersonalizationDimension.BEHAVIORAL],
+                expected_engagement_lift=0.0,
+                channel_optimized=channel,
+                metadata={"error": str(e)},
+            )
 
 
 class BehavioralAdapterAgent(PersonalizerAgent):

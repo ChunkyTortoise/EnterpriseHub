@@ -149,7 +149,11 @@ class NotificationChannel:
     
     async def send(self, alert: Alert, message: str) -> bool:
         """Send notification for alert."""
-        raise NotImplementedError
+        logger.warning(
+            "NotificationChannel.send not implemented",
+            extra={"alert": alert.name if alert else None}
+        )
+        return False
 
 
 class EmailNotificationChannel(NotificationChannel):

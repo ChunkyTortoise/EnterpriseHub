@@ -175,7 +175,7 @@ async def liveness_probe():
 
 
 @router.get("/ready", response_model=DetailedHealthResponse)
-async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
+async def readiness_probe():
     """
     Kubernetes-style readiness probe.
     
@@ -280,6 +280,27 @@ async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.g
                 "unhealthy_services": len([s for s in services if s.status in ["unhealthy", "critical"]])
             }
         )
+
+
+@router.get("/startup", response_model=HealthResponse)
+async def startup_probe(request: Request):
+    """
+    Kubernetes-style startup probe.
+
+    Indicates if the application has completed initialization.
+    """
+    uptime = time.time() - _service_start_time
+    startup_complete = getattr(request.app.state, "startup_complete", False)
+    status = "healthy" if startup_complete else "degraded"
+
+    return HealthResponse(
+        status=status,
+        timestamp=datetime.utcnow().isoformat(),
+        uptime_seconds=uptime,
+        checks={
+            "startup_complete": startup_complete,
+        },
+    )
         
     except Exception as e:
         logger.error(f"Readiness probe failed: {e}")

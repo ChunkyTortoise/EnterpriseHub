@@ -489,14 +489,36 @@ class JorgeFollowUpEngine:
         follow_up_config: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """Schedule the next follow-up in the sequence"""
-        
+
         follow_up_type = follow_up_config["type"]
         sequence_position = follow_up_config["position"]
         days_since_contact = follow_up_config["days_since_contact"]
-        
+        temperature = str(
+            seller_data.get("seller_temperature", follow_up_config.get("temperature", "cold"))
+        ).lower()
+        questions_answered = int(seller_data.get("questions_answered", 0) or 0)
+        appointment_status = str(seller_data.get("appointment_status", "")).lower()
+        appointment_booked = bool(seller_data.get("appointment_booked")) or appointment_status in {
+            "booked", "confirmed", "completed"
+        }
+
         # Determine next follow-up date
         next_follow_up_date = None
-        
+
+        # Scope-aligned cadence once qualification is complete:
+        # hot=daily (until appointment booked/completed), warm=weekly, cold=monthly.
+        if questions_answered >= 4:
+            cadence_days = self.tone_engine.config.FOLLOWUP_CADENCE_DAYS.get(temperature)
+            if temperature == "hot" and appointment_booked:
+                return None
+            if cadence_days:
+                next_follow_up_date = datetime.now() + timedelta(days=cadence_days)
+                return {
+                    "scheduled_date": next_follow_up_date.isoformat(),
+                    "type": follow_up_type.value,
+                    "sequence_position": sequence_position + 1
+                }
+
         if follow_up_type in [FollowUpType.INITIAL_NURTURE, FollowUpType.QUALIFICATION_RETRY]:
             # Check if there's a next position in initial sequence
             if sequence_position < len(self.schedule.INITIAL_SEQUENCE_DAYS):

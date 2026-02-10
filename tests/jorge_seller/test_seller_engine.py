@@ -349,3 +349,44 @@ async def test_default_thresholds_backward_compatibility(mock_conversation_manag
     assert analytics["thresholds_used"]["hot_quality"] == 0.7  # Default
     assert analytics["thresholds_used"]["warm_questions"] == 3  # Default
     assert analytics["thresholds_used"]["warm_quality"] == 0.5  # Default
+
+
+def test_validate_seller_required_fields_reports_missing_fields():
+    from ghl_real_estate_ai.core.conversation_manager import ConversationManager
+
+    result = ConversationManager.validate_seller_required_fields(
+        {
+            "motivation": "relocation",
+            "timeline_acceptable": True,
+        }
+    )
+
+    assert result["is_complete"] is False
+    assert set(result["missing_fields"]) == {"property_condition", "price_expectation"}
+    assert result["completion_ratio"] == 0.5
+
+
+@pytest.mark.asyncio
+async def test_required_field_completeness_hook_uses_validator(seller_engine, mock_conversation_manager):
+    mock_conversation_manager.validate_seller_required_fields.return_value = {
+        "required_fields": ["motivation", "timeline_acceptable", "property_condition", "price_expectation"],
+        "missing_fields": ["price_expectation"],
+        "is_complete": False,
+        "completion_ratio": 0.75,
+    }
+
+    enriched = await seller_engine._evaluate_required_field_completeness(
+        {"motivation": "relocation", "timeline_acceptable": True, "property_condition": "needs work"}
+    )
+
+    assert enriched["missing_required_fields"] == ["price_expectation"]
+    assert enriched["required_fields_complete"] is False
+    assert enriched["qualification_completeness"] == 0.75
+
+
+def test_parse_amount_with_retry_honors_max_retries(seller_engine):
+    with patch.object(seller_engine, "_parse_amount_once", side_effect=ValueError("invalid")) as parse_once:
+        parsed = seller_engine._parse_amount_with_retry("not-a-number")
+
+    assert parsed is None
+    assert parse_once.call_count == seller_engine.NUMERIC_PARSE_MAX_RETRIES

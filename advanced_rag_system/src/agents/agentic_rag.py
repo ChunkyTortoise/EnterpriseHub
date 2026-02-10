@@ -21,6 +21,7 @@ from src.agents.reflection import (
     ReflectionEngine,
 )
 from src.agents.tool_registry import ToolRegistry, ToolResult
+from src.agents.memory import ConversationMemory
 from src.core.exceptions import RetrievalError
 from src.retrieval.contextual_compression import ContextualCompressor
 
@@ -33,6 +34,9 @@ class AgenticRAGConfig:
     enable_compression: bool = True
     enable_self_query: bool = True
     top_k: int = 10
+    enable_memory: bool = True
+    memory_max_tokens: int = 1200
+    memory_summary_tokens: int = 300
 
 
 class ExecutionStep(BaseModel):
@@ -69,6 +73,7 @@ class AgenticRAG:
         query_planner: Optional[QueryPlanner] = None,
         reflection_engine: Optional[ReflectionEngine] = None,
         compressor: Optional[ContextualCompressor] = None,
+        memory: Optional[ConversationMemory] = None,
     ) -> None:
         self.config = config or AgenticRAGConfig()
         self.tool_registry = tool_registry or ToolRegistry()
@@ -77,6 +82,10 @@ class AgenticRAG:
         self.compressor = compressor
         self._confidence_scorer = ConfidenceScorer()
         self._initialized = False
+        self.memory = memory or ConversationMemory(
+            max_tokens=self.config.memory_max_tokens,
+            summary_tokens=self.config.memory_summary_tokens,
+        )
 
     async def initialize(self) -> None:
         self._initialized = True
@@ -89,7 +98,14 @@ class AgenticRAG:
             raise ValueError("Query text cannot be empty")
         start_time = time.time()
         try:
-            return await self._run_pipeline(query_text, start_time)
+            memory_context = ""
+            if self.config.enable_memory and self.memory:
+                memory_context = self.memory.get_context()
+                self.memory.add_message("user", query_text)
+            response = await self._run_pipeline(query_text, start_time, memory_context=memory_context)
+            if self.config.enable_memory and self.memory:
+                self.memory.add_message("assistant", response.answer)
+            return response
         except ValueError:
             raise
         except Exception as exc:
@@ -98,8 +114,9 @@ class AgenticRAG:
                 details={"query": query_text},
             ) from exc
 
-    async def _run_pipeline(self, query_text: str, start_time: float) -> AgenticRAGResponse:
-        plan = self.query_planner.create_plan(query_text)
+    async def _run_pipeline(self, query_text: str, start_time: float, memory_context: str = "") -> AgenticRAGResponse:
+        context_query = self._build_context_query(query_text, memory_context)
+        plan = self.query_planner.create_plan(context_query)
         all_tool_results: List[ToolResult] = []
         execution_steps: List[ExecutionStep] = []
         iteration = 1
@@ -120,7 +137,7 @@ class AgenticRAG:
                 corrections = self.reflection_engine.generate_correction_strategies(quality)
                 if not corrections:
                     break
-                new_results = await self._apply_corrections(query_text, corrections, execution_steps)
+                new_results = await self._apply_corrections(context_query, corrections, execution_steps)
                 all_tool_results.extend(new_results)
                 answer = self._synthesize_answer(query_text, all_tool_results)
                 iteration += 1
@@ -135,6 +152,11 @@ class AgenticRAG:
         return AgenticRAGResponse(
             answer=answer, confidence=confidence, sources=sources, trace=trace, quality=quality,
         )
+
+    def _build_context_query(self, query_text: str, memory_context: str) -> str:
+        if memory_context:
+            return f"{query_text}\n\nConversation context:\n{memory_context}"
+        return query_text
 
     async def _execute_plan(self, plan: QueryPlan, all_tool_results: List[ToolResult], execution_steps: List[ExecutionStep]) -> None:
         while not plan.is_complete():
@@ -217,10 +239,23 @@ class AgenticRAG:
             if isinstance(result.data, dict) and "results" in result.data:
                 for item in result.data["results"]:
                     if isinstance(item, dict):
+                        metadata = item.get("metadata", {}) if isinstance(item.get("metadata", {}), dict) else {}
+                        custom = metadata.get("custom", {}) if isinstance(metadata.get("custom", {}), dict) else {}
+                        offset_start = item.get("offset_start") or custom.get("offset_start")
+                        offset_end = item.get("offset_end") or custom.get("offset_end")
+                        page_number = item.get("page_number") or custom.get("page_number") or custom.get("page")
                         sources.append({
                             "tool": result.tool_name,
                             "content": item.get("content", item.get("snippet", "")),
                             "score": item.get("score", 0),
-                            "metadata": item.get("metadata", {}),
+                            "metadata": metadata,
+                            "citation": {
+                                "document_id": item.get("document_id"),
+                                "chunk_id": item.get("id"),
+                                "offset_start": offset_start,
+                                "offset_end": offset_end,
+                                "page_number": page_number,
+                                "source": item.get("source") or metadata.get("source"),
+                            },
                         })
         return sources

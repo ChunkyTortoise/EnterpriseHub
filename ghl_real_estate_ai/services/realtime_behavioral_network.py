@@ -171,7 +171,86 @@ class BehavioralAnalysisAgent:
         context: Dict[str, Any]
     ) -> List[BehavioralInsight]:
         """Process behavioral signals and generate insights."""
-        raise NotImplementedError
+        start_time = time.time()
+        try:
+            if not signals:
+                return []
+
+            lead_signals = defaultdict(list)
+            for signal in signals:
+                lead_signals[signal.lead_id].append(signal)
+
+            insights: List[BehavioralInsight] = []
+            for lead_id, lead_signal_list in lead_signals.items():
+                prompt = f"""
+                You are a behavioral analysis agent ({self.agent_type.value}).
+                Analyze the following signals and return a JSON insight with:
+                - detected_patterns (list)
+                - urgency_level (low/medium/high/critical)
+                - predicted_intent
+                - recommended_actions (list)
+                - behavioral_score (0-100)
+                - trigger_suggestions (list of trigger types)
+
+                Signals: {json.dumps([s.__dict__ for s in lead_signal_list], default=str)}
+                Context: {json.dumps(context, default=str)}
+                """
+
+                response = await self.llm_client.generate(
+                    prompt=prompt,
+                    max_tokens=400,
+                    temperature=0.4,
+                )
+                content = response.content if response and response.content else "{}"
+                try:
+                    if "```json" in content:
+                        content = content.split("```json")[1].split("```")[0].strip()
+                    elif "```" in content:
+                        content = content.split("```")[1].split("```")[0].strip()
+                    parsed = json.loads(content)
+                except Exception:
+                    parsed = {}
+
+                detected_patterns = parsed.get("detected_patterns", [])
+                urgency_level = parsed.get("urgency_level", "medium")
+                predicted_intent = parsed.get("predicted_intent", "unknown")
+                recommended_actions = parsed.get("recommended_actions", [])
+                behavioral_score = float(parsed.get("behavioral_score", 50))
+                trigger_suggestions_raw = parsed.get("trigger_suggestions", [])
+
+                trigger_suggestions = []
+                for trigger in trigger_suggestions_raw:
+                    try:
+                        trigger_suggestions.append(TriggerType(trigger))
+                    except Exception:
+                        continue
+
+                insights.append(
+                    BehavioralInsight(
+                        agent_type=self.agent_type,
+                        insight_id=f"ins_{lead_id}_{int(time.time())}",
+                        lead_id=lead_id,
+                        detected_patterns=[
+                            BehavioralPattern(p) if isinstance(p, dict) else p
+                            for p in detected_patterns
+                        ],
+                        confidence_score=float(parsed.get("confidence_score", 0.7)),
+                        urgency_level=urgency_level,
+                        predicted_intent=predicted_intent,
+                        recommended_actions=recommended_actions,
+                        trigger_suggestions=trigger_suggestions,
+                        behavioral_score=behavioral_score,
+                        processing_time_ms=(time.time() - start_time) * 1000,
+                        metadata={"raw_response": content},
+                    )
+                )
+
+            return insights
+        except Exception as e:
+            logger.error(f"BehavioralAnalysisAgent process_signals failed: {e}")
+            return []
+        finally:
+            self.update_stats((time.time() - start_time) * 1000)
 
     def update_stats(self, processing_time: float):
         """Update agent processing statistics."""

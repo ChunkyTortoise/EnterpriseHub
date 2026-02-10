@@ -33,10 +33,16 @@ interface AgentStatus {
     connectedAgents: string[]
     activeHandoffs: number
   }
+  data_provenance?: {
+    source: string
+    timestamp: string
+    demo_mode: boolean
+    note?: string
+  }
 }
 
 import { useAgentEcosystemIntegration } from '@/hooks/useAgentEcosystemIntegration'
-import { useAgentStats, useAgents, usePlatformActivities, useLoadingState } from '@/store/agentEcosystemStore'
+import { useAgentStats, useAgents, usePlatformActivities, useLoadingState, useAgentMetrics } from '@/store/agentEcosystemStore'
 
 // Mock agent data will be replaced by real data
 const mockAgentData: AgentStatus[] = [
@@ -412,6 +418,7 @@ export function AgentEcosystemDashboard({ className = '' }: AgentEcosystemDashbo
   // Use real data from the store
   const agents = useAgents()
   const agentStats = useAgentStats()
+  const agentMetrics = useAgentMetrics()
   const platformActivities = usePlatformActivities()
   const loadingState = useLoadingState()
 
@@ -433,6 +440,7 @@ export function AgentEcosystemDashboard({ className = '' }: AgentEcosystemDashbo
 
   const categories = Array.from(new Set(agentList.map(a => a.category)))
   const totalHandoffs = agentList.reduce((sum, agent) => sum + (agent.coordination?.activeHandoffs || 0), 0)
+  const provenance = agentMetrics?.data_provenance
 
   return (
     <div className={cn("w-full space-y-6", className)}>
@@ -443,9 +451,20 @@ export function AgentEcosystemDashboard({ className = '' }: AgentEcosystemDashbo
           <p className="text-gray-400 text-sm">
             Jorge's complete 43+ agent ecosystem with real-time coordination and advanced intelligence
           </p>
+          {provenance && (
+            <p className="text-xs text-gray-500 mt-1">
+              Data provenance: {provenance.source} • {provenance.timestamp}
+              {provenance.note ? ` • ${provenance.note}` : ''}
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
+          {provenance && (
+            <Badge className={provenance.demo_mode ? "bg-red-500/10 text-red-300 border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}>
+              {provenance.demo_mode ? "DEMO DATA" : "SANDBOX DATA"}
+            </Badge>
+          )}
           <Badge className="bg-green-500/10 text-green-400 border-green-500/20">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             All Systems Operational

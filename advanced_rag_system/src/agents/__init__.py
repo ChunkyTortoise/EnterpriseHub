@@ -41,6 +41,7 @@ from src.agents.agentic_rag import (
     ExecutionTrace,
     ExecutionStep,
 )
+from src.agents.memory import ConversationMemory
 
 __all__ = [
     # Query Planner
@@ -73,4 +74,5 @@ __all__ = [
     "AgenticRAGResponse",
     "ExecutionTrace",
     "ExecutionStep",
+    "ConversationMemory",
 ]

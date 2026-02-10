@@ -7,6 +7,7 @@ Version: 2.0.0
 import asyncio
 import json
 import uuid
+import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
@@ -17,11 +18,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 from ..database import get_async_session
-from ..models.leads import Lead, LeadInteraction
-from ..models.properties import Property, PropertyMatch
-from ..models.conversations import Conversation, ConversationMessage
+from ..models.leads import Lead
+from ..models.properties import Property
 from ..services.cache_service import CacheService
 from ..services.roi_calculator_service import ROICalculatorService
+from ..services.performance_monitoring_service import performance_monitor
 from ..services.claude_assistant import ClaudeAssistant
 from .ml_analytics_engine import MLAnalyticsEngine
 from .ghl_service import GHLService
@@ -66,7 +67,10 @@ class DemoEnvironment:
     demo_properties: List[Dict[str, Any]]
     demo_conversations: List[Dict[str, Any]]
     roi_calculation: Dict[str, Any]
+    roi_assumptions: Dict[str, Any]
     performance_metrics: Dict[str, Any]
+    data_source: str
+    data_provenance: Dict[str, Any]
     created_at: datetime
     expires_at: datetime
 
@@ -102,6 +106,86 @@ class ClientDemoService:
         self.redis = redis.Redis.from_url("redis://localhost:6379", decode_responses=True)
         logger.info("Client demo service initialized")
 
+    def _get_demo_data_source(self) -> str:
+        """Resolve demo data source preference."""
+        return os.getenv("DEMO_DATA_SOURCE", "synthetic").strip().lower()
+
+    def _build_data_provenance(self, source: str, demo_mode: bool, note: Optional[str] = None) -> Dict[str, Any]:
+        """Standardize provenance metadata for enterprise credibility."""
+        payload = {
+            "source": source,
+            "timestamp": datetime.utcnow().isoformat(),
+            "demo_mode": demo_mode
+        }
+        if note:
+            payload["note"] = note
+        return payload
+
+    async def _load_sandbox_data(self, client_profile: ClientProfile) -> Optional[Dict[str, Any]]:
+        """
+        Attempt to load sandbox data from the database.
+        Returns None if sandbox data is unavailable or empty.
+        """
+        try:
+            async with get_async_session() as session:  # type: AsyncSession
+                lead_rows = (await session.execute(select(Lead).limit(25))).scalars().all()
+                property_rows = (await session.execute(select(Property).limit(25))).scalars().all()
+
+            if not lead_rows and not property_rows:
+                return None
+
+            demo_leads = []
+            for lead in lead_rows:
+                first = getattr(lead, "first_name", "") or ""
+                last = getattr(lead, "last_name", "") or ""
+                name = (f"{first} {last}").strip() or getattr(lead, "email", "Sandbox Lead")
+                lead_score = getattr(lead, "lead_score", 50) or 50
+                temperature = "hot" if lead_score >= 80 else "warm" if lead_score >= 50 else "cool"
+                demo_leads.append(
+                    {
+                        "id": str(lead.id),
+                        "name": name,
+                        "created_at": getattr(lead, "created_at", datetime.utcnow()).isoformat(),
+                        "status": getattr(lead, "qualification_stage", "new"),
+                        "temperature": temperature,
+                        "conversion_probability": min(0.95, max(0.05, lead_score / 100)),
+                    }
+                )
+
+            demo_properties = [
+                {
+                    "id": str(prop.id),
+                    "address": getattr(prop, "address", "Sandbox Property"),
+                    "price": getattr(prop, "price", client_profile.avg_deal_size),
+                    "status": getattr(prop, "status", "active"),
+                    "market": getattr(prop, "market", client_profile.geographic_market),
+                }
+                for prop in property_rows
+            ]
+
+            return {
+                "demo_leads": demo_leads,
+                "demo_properties": demo_properties,
+                "demo_conversations": []
+            }
+        except Exception as e:
+            logger.warning(f"Sandbox data unavailable: {e}")
+            return None
+
+    def _build_roi_assumptions(self, client_profile: ClientProfile) -> Dict[str, Any]:
+        """Expose ROI assumptions used for demo calculations."""
+        return {
+            "monthly_leads": client_profile.monthly_leads,
+            "avg_deal_size": client_profile.avg_deal_size,
+            "commission_rate": client_profile.commission_rate,
+            "current_conversion_rate": 0.15,
+            "target_conversion_rate": 0.25,
+            "current_response_time_hours": 3.5,
+            "jorge_response_time_seconds": 30,
+            "current_accuracy": 0.65,
+            "jorge_accuracy": 0.95
+        }
+
     async def create_demo_session(
         self,
         scenario: DemoScenario,
@@ -131,16 +215,65 @@ class ClientDemoService:
             custom_params
         )
 
-        # Generate realistic demo data
-        demo_leads = await self._generate_demo_leads(client_profile)
-        demo_properties = await self._generate_demo_properties(client_profile)
-        demo_conversations = await self._generate_demo_conversations(client_profile, demo_leads)
+        # Generate demo data (sandbox preferred, fallback to synthetic)
+        demo_source = self._get_demo_data_source()
+        sandbox_payload = None
+        if demo_source == "sandbox":
+            sandbox_payload = await self._load_sandbox_data(client_profile)
+
+        if sandbox_payload:
+            demo_leads = sandbox_payload["demo_leads"]
+            demo_properties = sandbox_payload["demo_properties"]
+            demo_conversations = sandbox_payload["demo_conversations"]
+            data_source = "sandbox"
+            data_provenance = self._build_data_provenance(
+                source="sandbox_db",
+                demo_mode=False,
+                note="Loaded from sandbox database"
+            )
+        else:
+            demo_leads = await self._generate_demo_leads(client_profile)
+            demo_properties = await self._generate_demo_properties(client_profile)
+            demo_conversations = await self._generate_demo_conversations(client_profile, demo_leads)
+            data_source = "synthetic"
+            data_provenance = self._build_data_provenance(
+                source="synthetic_generator",
+                demo_mode=True,
+                note="Generated demo data (sandbox unavailable)"
+            )
 
         # Calculate ROI based on client profile
         roi_calculation = await self._calculate_demo_roi(client_profile)
+        roi_assumptions = self._build_roi_assumptions(client_profile)
 
         # Generate performance metrics
         performance_metrics = await self._generate_performance_metrics(client_profile)
+
+        # Record KPI telemetry for proof and export
+        try:
+            monthly_perf = performance_metrics.get("monthly_performance", {})
+            performance_monitor.record_kpi_event(
+                "leads_processed",
+                monthly_perf.get("leads_processed"),
+                {"source": data_source, "scenario": scenario.value}
+            )
+            performance_monitor.record_kpi_event(
+                "traditional_conversions",
+                monthly_perf.get("traditional_conversions"),
+                {"source": data_source, "scenario": scenario.value}
+            )
+            performance_monitor.record_kpi_event(
+                "jorge_conversions",
+                monthly_perf.get("jorge_conversions"),
+                {"source": data_source, "scenario": scenario.value}
+            )
+            performance_monitor.record_kpi_event(
+                "response_time_jorge",
+                performance_metrics.get("response_times", {}).get("jorge_avg"),
+                {"source": data_source, "scenario": scenario.value}
+            )
+        except Exception as e:
+            logger.warning(f"Failed to record KPI telemetry: {e}")
 
         # Create demo environment
         demo_env = DemoEnvironment(
@@ -150,7 +283,10 @@ class ClientDemoService:
             demo_properties=demo_properties,
             demo_conversations=demo_conversations,
             roi_calculation=roi_calculation,
+            roi_assumptions=roi_assumptions,
             performance_metrics=performance_metrics,
+            data_source=data_source,
+            data_provenance=data_provenance,
             created_at=datetime.utcnow(),
             expires_at=datetime.utcnow() + self.session_duration
         )
@@ -179,7 +315,10 @@ class ClientDemoService:
                 demo_properties=data['demo_properties'],
                 demo_conversations=data['demo_conversations'],
                 roi_calculation=data['roi_calculation'],
+                roi_assumptions=data.get('roi_assumptions', {}),
                 performance_metrics=data['performance_metrics'],
+                data_source=data.get('data_source', 'synthetic'),
+                data_provenance=data.get('data_provenance', self._build_data_provenance("unknown", True, "Missing provenance")),
                 created_at=datetime.fromisoformat(data['created_at']),
                 expires_at=datetime.fromisoformat(data['expires_at'])
             )
@@ -694,7 +833,10 @@ class ClientDemoService:
                 "demo_properties": demo_env.demo_properties,
                 "demo_conversations": demo_env.demo_conversations,
                 "roi_calculation": demo_env.roi_calculation,
+                "roi_assumptions": demo_env.roi_assumptions,
                 "performance_metrics": demo_env.performance_metrics,
+                "data_source": demo_env.data_source,
+                "data_provenance": demo_env.data_provenance,
                 "created_at": demo_env.created_at.isoformat(),
                 "expires_at": demo_env.expires_at.isoformat()
             }

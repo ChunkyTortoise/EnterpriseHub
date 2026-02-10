@@ -70,6 +70,16 @@ class JorgeSellerConfig:
     LONGTERM_FOLLOWUP_INTERVAL = 14  # Every 14 days
     MAX_FOLLOWUP_ATTEMPTS = 10  # Stop after 10 long-term attempts
 
+    # Scope-aligned cadence once qualification is complete
+    # HOT: daily until appointment is booked/completed
+    # WARM: weekly check-ins
+    # COLD: monthly market updates
+    FOLLOWUP_CADENCE_DAYS = {
+        "hot": 1,
+        "warm": 7,
+        "cold": 30
+    }
+
     # ========== GHL INTEGRATION ==========
     # Workflow IDs for different seller temperatures
     HOT_SELLER_WORKFLOW_ID = ""   # Set via HOT_SELLER_WORKFLOW_ID env var
@@ -82,10 +92,16 @@ class JorgeSellerConfig:
         "seller_motivation": "",
         "relocation_destination": "",
         "timeline_urgency": "",
+        "timeline_days": "",
         "property_condition": "",
         "price_expectation": "",
+        "asking_price": "",
+        "mortgage_balance": "",
+        "repair_estimate": "",
         "questions_answered": "",
         "qualification_score": "",
+        "qualification_complete": "",
+        "last_bot_interaction": "",
         "expected_roi": "",
         "lead_value_tier": "",
         "ai_valuation_price": "",
@@ -161,6 +177,21 @@ class JorgeSellerConfig:
     BUYER_LONGTERM_INTERVAL = 14
     BUYER_TEMPERATURE_TAGS = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
 
+    # ========== CROSS-BOT HANDOFF THRESHOLDS ==========
+    # Confidence thresholds used for bot-to-bot routing decisions.
+    HANDOFF_THRESHOLD_LEAD_TO_BUYER = 0.7
+    HANDOFF_THRESHOLD_LEAD_TO_SELLER = 0.7
+    HANDOFF_THRESHOLD_BUYER_TO_SELLER = 0.8
+    HANDOFF_THRESHOLD_SELLER_TO_BUYER = 0.6
+    # Deterministic tie-break when lead has equal buyer/seller intent scores.
+    HANDOFF_LEAD_CONFLICT_PRIORITY = "seller"
+
+    # ========== APPOINTMENT CONFIRMATION SETTINGS ==========
+    # P0 decision: explicit strategy for confirmation behavior
+    # sms_only: only send SMS confirmation from bot
+    # sms_and_email: send SMS + email confirmation from bot
+    APPOINTMENT_CONFIRMATION_STRATEGIES = {"sms_only", "sms_and_email"}
+
     # ========== ANALYTICS & MONITORING ==========
     # Success metrics and KPIs
     SUCCESS_METRICS = {
@@ -198,6 +229,23 @@ class JorgeSellerConfig:
             "hot_quality_threshold": float(os.getenv("HOT_QUALITY_THRESHOLD", str(cls.HOT_QUALITY_THRESHOLD))),
             "warm_questions_required": int(os.getenv("WARM_QUESTIONS_REQUIRED", str(cls.WARM_QUESTIONS_REQUIRED))),
             "warm_quality_threshold": float(os.getenv("WARM_QUALITY_THRESHOLD", str(cls.WARM_QUALITY_THRESHOLD))),
+            "handoff_threshold_lead_to_buyer": float(
+                os.getenv("HANDOFF_THRESHOLD_LEAD_TO_BUYER", str(cls.HANDOFF_THRESHOLD_LEAD_TO_BUYER))
+            ),
+            "handoff_threshold_lead_to_seller": float(
+                os.getenv("HANDOFF_THRESHOLD_LEAD_TO_SELLER", str(cls.HANDOFF_THRESHOLD_LEAD_TO_SELLER))
+            ),
+            "handoff_threshold_buyer_to_seller": float(
+                os.getenv("HANDOFF_THRESHOLD_BUYER_TO_SELLER", str(cls.HANDOFF_THRESHOLD_BUYER_TO_SELLER))
+            ),
+            "handoff_threshold_seller_to_buyer": float(
+                os.getenv("HANDOFF_THRESHOLD_SELLER_TO_BUYER", str(cls.HANDOFF_THRESHOLD_SELLER_TO_BUYER))
+            ),
+            "handoff_lead_conflict_priority": os.getenv(
+                "HANDOFF_LEAD_CONFLICT_PRIORITY", cls.HANDOFF_LEAD_CONFLICT_PRIORITY
+            ).strip().lower(),
+            "appointment_confirmation_strategy": os.getenv("APPOINTMENT_CONFIRMATION_STRATEGY", "sms_only").strip().lower(),
+            "appointment_confirmation_email_workflow_id": os.getenv("APPOINTMENT_CONFIRMATION_EMAIL_WORKFLOW_ID"),
         }
 
     # ========== VALIDATION RULES ==========
@@ -360,6 +408,31 @@ class JorgeEnvironmentSettings:
         self.warm_questions_required = int(os.getenv("WARM_QUESTIONS_REQUIRED", str(JorgeSellerConfig.WARM_QUESTIONS_REQUIRED)))
         self.warm_quality_threshold = float(os.getenv("WARM_QUALITY_THRESHOLD", str(JorgeSellerConfig.WARM_QUALITY_THRESHOLD)))
 
+        # Cross-bot handoff threshold tuning
+        self.handoff_threshold_lead_to_buyer = float(
+            os.getenv("HANDOFF_THRESHOLD_LEAD_TO_BUYER", str(JorgeSellerConfig.HANDOFF_THRESHOLD_LEAD_TO_BUYER))
+        )
+        self.handoff_threshold_lead_to_seller = float(
+            os.getenv("HANDOFF_THRESHOLD_LEAD_TO_SELLER", str(JorgeSellerConfig.HANDOFF_THRESHOLD_LEAD_TO_SELLER))
+        )
+        self.handoff_threshold_buyer_to_seller = float(
+            os.getenv("HANDOFF_THRESHOLD_BUYER_TO_SELLER", str(JorgeSellerConfig.HANDOFF_THRESHOLD_BUYER_TO_SELLER))
+        )
+        self.handoff_threshold_seller_to_buyer = float(
+            os.getenv("HANDOFF_THRESHOLD_SELLER_TO_BUYER", str(JorgeSellerConfig.HANDOFF_THRESHOLD_SELLER_TO_BUYER))
+        )
+        self.handoff_lead_conflict_priority = os.getenv(
+            "HANDOFF_LEAD_CONFLICT_PRIORITY",
+            JorgeSellerConfig.HANDOFF_LEAD_CONFLICT_PRIORITY,
+        ).strip().lower()
+        if self.handoff_lead_conflict_priority not in {"buyer", "seller"}:
+            logger.warning(
+                "Invalid HANDOFF_LEAD_CONFLICT_PRIORITY '%s'; defaulting to '%s'",
+                self.handoff_lead_conflict_priority,
+                JorgeSellerConfig.HANDOFF_LEAD_CONFLICT_PRIORITY,
+            )
+            self.handoff_lead_conflict_priority = JorgeSellerConfig.HANDOFF_LEAD_CONFLICT_PRIORITY
+
         # Message settings
         self.max_sms_length = int(os.getenv("MAX_SMS_LENGTH", "160"))
         self.friendly_approach = os.getenv("FRIENDLY_APPROACH", "true").lower() == "true"
@@ -382,6 +455,17 @@ class JorgeEnvironmentSettings:
         # Lead bot mode
         self.jorge_lead_mode = os.getenv("JORGE_LEAD_MODE", "true").lower() == "true"
         self.lead_activation_tag = os.getenv("LEAD_ACTIVATION_TAG", "Needs Qualifying")
+
+        # Appointment confirmation strategy (P0 explicit decision point)
+        confirmation_strategy = os.getenv("APPOINTMENT_CONFIRMATION_STRATEGY", "sms_only").strip().lower()
+        if confirmation_strategy not in JorgeSellerConfig.APPOINTMENT_CONFIRMATION_STRATEGIES:
+            logger.warning(
+                "Invalid APPOINTMENT_CONFIRMATION_STRATEGY '%s'; defaulting to sms_only",
+                confirmation_strategy,
+            )
+            confirmation_strategy = "sms_only"
+        self.appointment_confirmation_strategy = confirmation_strategy
+        self.appointment_confirmation_email_workflow_id = os.getenv("APPOINTMENT_CONFIRMATION_EMAIL_WORKFLOW_ID")
 
     def _parse_list_env(self, env_var: str, default: List[str]) -> List[str]:
         """Parse environment variable as list"""
@@ -428,6 +512,31 @@ class JorgeEnvironmentSettings:
     def LEAD_ACTIVATION_TAG(self) -> str:
         """Tag that activates lead mode routing"""
         return self.lead_activation_tag
+
+    @property
+    def HANDOFF_THRESHOLDS(self) -> Dict[tuple[str, str], float]:
+        """Confidence thresholds for cross-bot handoff directions."""
+        return {
+            ("lead", "buyer"): self.handoff_threshold_lead_to_buyer,
+            ("lead", "seller"): self.handoff_threshold_lead_to_seller,
+            ("buyer", "seller"): self.handoff_threshold_buyer_to_seller,
+            ("seller", "buyer"): self.handoff_threshold_seller_to_buyer,
+        }
+
+    @property
+    def HANDOFF_LEAD_CONFLICT_PRIORITY(self) -> str:
+        """Deterministic tie-break target for lead-mode routing conflicts."""
+        return self.handoff_lead_conflict_priority
+
+    @property
+    def APPOINTMENT_CONFIRMATION_STRATEGY(self) -> str:
+        """Confirmation strategy used by calendar scheduler."""
+        return self.appointment_confirmation_strategy
+
+    @property
+    def APPOINTMENT_CONFIRMATION_EMAIL_WORKFLOW_ID(self) -> Optional[str]:
+        """Optional workflow for email confirmations when strategy requires it."""
+        return self.appointment_confirmation_email_workflow_id
 
     def validate_ghl_integration(self) -> List[str]:
         """Return warnings for missing GHL configuration."""
