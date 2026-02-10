@@ -40,6 +40,15 @@ from typing import Any, Dict, List, Optional
 # Core services
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.api_analytics_types import (
+    ActionItemData,
+    BIReportSection,
+    ForecastData,
+    InsightData,
+    KPIMetrics,
+    RecommendationData,
+    RiskSummaryData,
+)
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_orchestrator import (
     ClaudeRequest,
@@ -127,7 +136,7 @@ class ReportTemplate:
     filters: Dict[str, Any] = field(default_factory=dict)
 
     # Report structure
-    sections: List[Dict[str, Any]] = field(default_factory=list)
+    sections: List[BIReportSection] = field(default_factory=list)
     visualizations: List[Dict[str, Any]] = field(default_factory=list)
 
     # Generation settings
@@ -164,17 +173,17 @@ class BusinessReport:
     title: str = None
     executive_summary: str = None
     narrative: str = None
-    sections: List[Dict[str, Any]] = field(default_factory=list)
+    sections: List[BIReportSection] = field(default_factory=list)
 
     # Data and analysis
     data_summary: Dict[str, Any] = field(default_factory=dict)
     key_metrics: Dict[str, float] = field(default_factory=dict)
-    insights: List[Dict[str, Any]] = field(default_factory=list)
-    recommendations: List[Dict[str, Any]] = field(default_factory=list)
+    insights: List[InsightData] = field(default_factory=list)
+    recommendations: List[RecommendationData] = field(default_factory=list)
 
     # Forecasting and predictions
-    forecasts: Dict[str, Any] = field(default_factory=dict)
-    risk_assessment: Dict[str, Any] = field(default_factory=dict)
+    forecasts: ForecastData = field(default_factory=dict)
+    risk_assessment: RiskSummaryData = field(default_factory=dict)
 
     # Visual elements
     charts: List[Dict[str, Any]] = field(default_factory=list)
@@ -204,7 +213,7 @@ class KPIDashboard:
     description: str
 
     # KPI configuration
-    kpis: List[Dict[str, Any]] = field(default_factory=list)
+    kpis: List[KPIMetrics] = field(default_factory=list)
     targets: Dict[str, float] = field(default_factory=dict)
     thresholds: Dict[str, Dict[str, float]] = field(default_factory=dict)
 
@@ -246,7 +255,7 @@ class BusinessIntelligenceInsight:
     urgency_score: float = 0.0
 
     # Recommendations
-    recommended_actions: List[Dict[str, Any]] = field(default_factory=list)
+    recommended_actions: List[ActionItemData] = field(default_factory=list)
     implementation_timeline: str = None
     resource_requirements: List[str] = field(default_factory=list)
 

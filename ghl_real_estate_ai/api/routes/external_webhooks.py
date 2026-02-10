@@ -47,9 +47,9 @@ async def handle_twilio_sms_status(request: Request):
             )
 
     except Exception as e:
-        logger.error(f"Error processing Twilio status webhook: {e}")
+        logger.exception("Twilio status webhook processing failed")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Service temporarily unavailable: {str(e)}"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
         )
 
 
@@ -78,9 +78,9 @@ async def handle_twilio_sms_incoming(request: Request):
             )
 
     except Exception as e:
-        logger.error(f"Error processing Twilio incoming webhook: {e}")
+        logger.exception("Twilio incoming webhook processing failed")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Service temporarily unavailable: {str(e)}"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
         )
 
 
@@ -107,9 +107,9 @@ async def handle_sendgrid_events(request: Request):
             )
 
     except Exception as e:
-        logger.error(f"Error processing SendGrid event webhook: {e}")
+        logger.exception("SendGrid event webhook processing failed")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Service temporarily unavailable: {str(e)}"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
         )
 
 
@@ -128,7 +128,7 @@ async def handle_apollo_enrichment(request: Request):
         return {"status": "success", "processed": True}
 
     except Exception as e:
-        logger.error(f"Error processing Apollo enrichment webhook: {e}")
+        logger.exception("Apollo enrichment webhook processing failed")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Service temporarily unavailable: {str(e)}"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
         )

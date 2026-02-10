@@ -20,11 +20,12 @@ class VapiService:
         self.api_key = api_key or os.getenv("VAPI_API_KEY")
         self.assistant_id = os.getenv("VAPI_ASSISTANT_ID")
         self.base_url = "https://api.vapi.ai"
+        self.http_client = httpx.AsyncClient(timeout=15.0)
 
         if not self.api_key:
             logger.warning("VAPI_API_KEY not found. Voice calls will be disabled.")
 
-    def trigger_outbound_call(
+    async def trigger_outbound_call(
         self,
         contact_phone: str,
         lead_name: str,
@@ -116,7 +117,7 @@ class VapiService:
 
         try:
             url = f"{self.base_url}/call/phone"
-            response = httpx.post(url, headers=headers, json=payload)
+            response = await self.http_client.post(url, headers=headers, json=payload)
 
             if response.status_code == 201:
                 logger.info(f"✅ Vapi Call Triggered Successfully for {lead_name}")
@@ -131,6 +132,10 @@ class VapiService:
 
 
 if __name__ == "__main__":
-    # Test/Demo
-    vapi = VapiService()
-    vapi.trigger_outbound_call("+15125551234", "John Doe", "123 Maple Street")
+    import asyncio
+
+    async def _main():
+        vapi = VapiService()
+        await vapi.trigger_outbound_call("+15125551234", "John Doe", "123 Maple Street")
+
+    asyncio.run(_main())

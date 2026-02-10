@@ -449,8 +449,8 @@ async def performance_metrics(current_user: dict = Depends(enterprise_auth_servi
         }
 
     except Exception as e:
-        logger.error(f"Metrics endpoint failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Metrics collection failed: {str(e)}")
+        logger.exception("Metrics endpoint failed")
+        raise HTTPException(status_code=500, detail="Metrics collection failed")
 
 
 @router.get("/dependencies")
@@ -548,8 +548,8 @@ async def dependency_status(current_user: dict = Depends(enterprise_auth_service
         return {"timestamp": datetime.utcnow().isoformat(), "summary": summary, "dependencies": dependencies}
 
     except Exception as e:
-        logger.error(f"Dependency status check failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Dependency check failed: {str(e)}")
+        logger.exception("Dependency status check failed")
+        raise HTTPException(status_code=500, detail="Dependency check failed")
 
 
 @router.post("/alerts/test")
@@ -578,8 +578,8 @@ async def test_alerting(current_user: dict = Depends(enterprise_auth_service.get
         }
 
     except Exception as e:
-        logger.error(f"Test alert creation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Alert test failed: {str(e)}")
+        logger.exception("Test alert creation failed")
+        raise HTTPException(status_code=500, detail="Alert test failed")
 
 
 # Custom response for different health check outcomes

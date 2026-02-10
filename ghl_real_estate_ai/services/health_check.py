@@ -79,6 +79,7 @@ class HealthCheckService:
         self.last_health_check = {}
         self.check_cache = {}
         self.cache_ttl = 30  # Cache health checks for 30 seconds
+        self.http_client = httpx.AsyncClient(timeout=10.0)
 
     async def get_overall_health(self) -> HealthReport:
         """
@@ -340,46 +341,45 @@ class HealthCheckService:
                 )
 
             # Test GHL API connectivity (use a minimal endpoint)
-            async with httpx.AsyncClient() as client:
-                headers = {"Authorization": f"Bearer {settings.GHL_ACCESS_TOKEN}", "Content-Type": "application/json"}
+            headers = {"Authorization": f"Bearer {settings.GHL_ACCESS_TOKEN}", "Content-Type": "application/json"}
 
-                # Test with locations endpoint (minimal data)
-                response = await client.get(
-                    "https://services.leadconnectorhq.com/locations/", headers=headers, timeout=10
-                )
+            # Test with locations endpoint (minimal data)
+            response = await self.http_client.get(
+                "https://services.leadconnectorhq.com/locations/", headers=headers
+            )
 
-                response_time = (time.time() - start_time) * 1000
+            response_time = (time.time() - start_time) * 1000
 
-                # Check rate limiting headers
-                rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
-                rate_limit_limit = response.headers.get("X-RateLimit-Limit")
+            # Check rate limiting headers
+            rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
+            rate_limit_limit = response.headers.get("X-RateLimit-Limit")
 
-                if response.status_code == 200:
-                    if rate_limit_remaining and int(rate_limit_remaining) < 100:
-                        status = HealthStatus.DEGRADED
-                        message = f"GHL API rate limit low: {rate_limit_remaining} remaining"
-                    else:
-                        status = HealthStatus.HEALTHY
-                        message = f"GHL API healthy - {response_time:.1f}ms response time"
-                elif response.status_code == 429:
+            if response.status_code == 200:
+                if rate_limit_remaining and int(rate_limit_remaining) < 100:
                     status = HealthStatus.DEGRADED
-                    message = "GHL API rate limited"
+                    message = f"GHL API rate limit low: {rate_limit_remaining} remaining"
                 else:
-                    status = HealthStatus.UNHEALTHY
-                    message = f"GHL API error: HTTP {response.status_code}"
+                    status = HealthStatus.HEALTHY
+                    message = f"GHL API healthy - {response_time:.1f}ms response time"
+            elif response.status_code == 429:
+                status = HealthStatus.DEGRADED
+                message = "GHL API rate limited"
+            else:
+                status = HealthStatus.UNHEALTHY
+                message = f"GHL API error: HTTP {response.status_code}"
 
-                return ComponentHealth(
-                    name="ghl_api",
-                    status=status,
-                    message=message,
-                    last_check=datetime.utcnow(),
-                    response_time_ms=response_time,
-                    metadata={
-                        "status_code": response.status_code,
-                        "rate_limit_remaining": rate_limit_remaining,
-                        "rate_limit_limit": rate_limit_limit,
-                    },
-                )
+            return ComponentHealth(
+                name="ghl_api",
+                status=status,
+                message=message,
+                last_check=datetime.utcnow(),
+                response_time_ms=response_time,
+                metadata={
+                    "status_code": response.status_code,
+                    "rate_limit_remaining": rate_limit_remaining,
+                    "rate_limit_limit": rate_limit_limit,
+                },
+            )
 
         except Exception as e:
             return ComponentHealth(
@@ -622,22 +622,21 @@ class HealthCheckService:
             # For now, we'll simulate with some basic checks
 
             # Test internal API endpoint performance
-            async with httpx.AsyncClient() as client:
-                api_tests = []
+            api_tests = []
 
-                # Test health endpoint itself (recursive but useful for baseline)
-                try:
-                    resp = await client.get("http://localhost:8000/health/live", timeout=5)
-                    api_tests.append(("health", resp.status_code == 200, resp.elapsed.total_seconds() * 1000))
-                except Exception as e:
-                    api_tests.append(("health", False, 0))
+            # Test health endpoint itself (recursive but useful for baseline)
+            try:
+                resp = await self.http_client.get("http://localhost:8000/health/live")
+                api_tests.append(("health", resp.status_code == 200, resp.elapsed.total_seconds() * 1000))
+            except Exception:
+                api_tests.append(("health", False, 0))
 
-                # Test docs endpoint
-                try:
-                    resp = await client.get("http://localhost:8000/docs", timeout=5)
-                    api_tests.append(("docs", resp.status_code == 200, resp.elapsed.total_seconds() * 1000))
-                except Exception as e:
-                    api_tests.append(("docs", False, 0))
+            # Test docs endpoint
+            try:
+                resp = await self.http_client.get("http://localhost:8000/docs")
+                api_tests.append(("docs", resp.status_code == 200, resp.elapsed.total_seconds() * 1000))
+            except Exception:
+                api_tests.append(("docs", False, 0))
 
             response_time = (time.time() - start_time) * 1000
 

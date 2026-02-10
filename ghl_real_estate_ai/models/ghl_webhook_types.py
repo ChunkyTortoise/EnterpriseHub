@@ -37,19 +37,27 @@ class GHLCustomField(TypedDict, total=False):
 
 
 class GHLContactData(TypedDict, total=False):
-    """Contact data structure from GHL API."""
+    """Contact data structure from GHL API.
 
+    Includes both camelCase (GHL API format) and snake_case (internal format)
+    field variants since both are used across the codebase.
+    """
+
+    # Common fields
     id: str
-    contactId: str
-    firstName: str
-    lastName: str
     name: str
     email: str
     phone: str
     tags: list[str]
-    customFields: list[GHLCustomField] | dict[str, Any]
     source: str
     status: str
+    locationId: str
+
+    # GHL API format (camelCase)
+    contactId: str
+    firstName: str
+    lastName: str
+    customFields: list[GHLCustomField] | dict[str, Any]
     dateAdded: str
     dateUpdated: str
     dateOfBirth: str
@@ -61,6 +69,15 @@ class GHLContactData(TypedDict, total=False):
     companyName: str
     website: str
 
+    # Internal format (snake_case) used by EnhancedGHLClient
+    first_name: str
+    last_name: str
+    custom_fields: dict[str, Any]
+
+    # Extended fields used by GHLIntegrationService mock data
+    preferences: list[str]
+    budget: int | float
+
 
 class GHLSearchParams(TypedDict, total=False):
     """Parameters for searching GHL contacts."""
@@ -69,14 +86,18 @@ class GHLSearchParams(TypedDict, total=False):
     query: str
     email: str
     phone: str
-    tags: str
+    tags: list[str]
     limit: int
     skip: int
 
 
 class GHLContactUpdatePayload(TypedDict, total=False):
-    """Payload for updating GHL contact."""
+    """Payload for updating GHL contact.
 
+    Includes both camelCase and snake_case variants for compatibility.
+    """
+
+    # GHL API format (camelCase)
     firstName: str
     lastName: str
     name: str
@@ -89,6 +110,11 @@ class GHLContactUpdatePayload(TypedDict, total=False):
     city: str
     state: str
     postalCode: str
+
+    # Internal format (snake_case) used by EnhancedGHLClient.update_contact
+    first_name: str
+    last_name: str
+    custom_fields: dict[str, Any]
 
 
 # ============================================================================
@@ -126,21 +152,34 @@ class GHLWebhookPayload(TypedDict, total=False):
 
 
 class GHLOpportunityData(TypedDict, total=False):
-    """Opportunity (deal) data structure."""
+    """Opportunity (deal) data structure.
+
+    Includes both camelCase and snake_case variants for compatibility.
+    """
 
     id: str
     name: str
+    status: str
+    source: str
+    notes: str
+    locationId: str
+
+    # GHL API format (camelCase)
     contactId: str
     pipelineId: str
     pipelineStageId: str
-    status: str
     monetaryValue: float
     assignedTo: str
-    source: str
     dateCreated: str
     dateUpdated: str
     closeDate: str
-    notes: str
+
+    # Internal format (snake_case) used by EnhancedGHLClient
+    contact_id: str
+    pipeline_id: str
+    pipeline_stage_id: str
+    monetary_value: float
+    assigned_to: str
 
 
 class GHLPipelineStage(TypedDict, total=False):
@@ -247,6 +286,9 @@ class GHLCampaignData(TypedDict, total=False):
     type: str
     startDate: str
     endDate: str
+
+    # Internal format (snake_case) used by EnhancedGHLClient.create_campaign
+    trigger_type: str
 
 
 # ============================================================================

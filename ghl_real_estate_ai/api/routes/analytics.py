@@ -288,7 +288,7 @@ async def get_feature_trends(
         logger.error(f"Feature trends error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate feature trend analysis for {feature_name}",
+            detail="Failed to generate feature trend analysis",
         )
 
 
@@ -387,7 +387,7 @@ async def generate_market_heatmap(
         logger.error(f"Market heatmap error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate market heatmap for {request.metric_type.value}",
+            detail="Failed to generate market heatmap",
         )
 
 
@@ -464,7 +464,7 @@ async def get_comprehensive_market_metrics(
 
         logger.error(f"Market metrics error: {e} [request_id: {request_id}]", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to calculate market metrics for {region}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to calculate market metrics"
         )
 
 

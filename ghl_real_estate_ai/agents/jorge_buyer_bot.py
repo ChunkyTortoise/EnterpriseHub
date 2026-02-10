@@ -75,6 +75,11 @@ OPT_OUT_PHRASES = ["stop", "unsubscribe", "not interested", "opt out", "remove m
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.bot_context_types import (
+    BotMetadata,
+    BuyerBotResponse,
+    ConversationMessage,
+)
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -826,17 +831,14 @@ class JorgeBuyerBot:
                 f"Context: {conversation_summary[:500] if conversation_summary else 'No summary available'}"
             )
 
-            import httpx
-
             endpoint = f"{self.ghl_client.base_url}/contacts/{buyer_id}/notes"
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    endpoint,
-                    json={"body": note_body},
-                    headers=self.ghl_client.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.ghl_client.http_client.post(
+                endpoint,
+                json={"body": note_body},
+                headers=self.ghl_client.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
             escalation_result["note_added"] = True
             logger.info(
@@ -1140,7 +1142,7 @@ class JorgeBuyerBot:
             logger.error(f"Error extracting budget range: {str(e)}")
             return None
 
-    async def _extract_property_preferences(self, conversation_history: List[Dict]) -> Optional[Dict[str, Any]]:
+    async def _extract_property_preferences(self, conversation_history: List[ConversationMessage]) -> Optional[Dict[str, Any]]:
         """Extract property preferences from conversation history."""
         try:
             conversation_text = " ".join(
@@ -1197,11 +1199,11 @@ class JorgeBuyerBot:
         conversation_id: str,
         user_message: str,
         buyer_name: Optional[str] = None,
-        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        conversation_history: Optional[List[ConversationMessage]] = None,
         buyer_phone: Optional[str] = None,
         buyer_email: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: Optional[BotMetadata] = None,
+    ) -> BuyerBotResponse:
         """
         Main entry point for processing buyer conversations.
 

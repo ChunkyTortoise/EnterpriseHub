@@ -527,8 +527,8 @@ async def get_property_analysis(property_id: str, current_user=Depends(get_curre
         return analysis
 
     except Exception as e:
-        logger.error(f"Error fetching property analysis {property_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch property analysis {property_id}")
+        logger.exception("Failed to fetch property analysis")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.put("/properties/{property_id}/update", response_model=PropertyAnalysis)
@@ -549,8 +549,8 @@ async def update_analysis(property_id: str, updates: PropertyAnalysisRequest, cu
         return analysis
 
     except Exception as e:
-        logger.error(f"Error updating property analysis {property_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update property analysis {property_id}")
+        logger.exception("Failed to update property analysis")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.delete("/properties/{property_id}")
@@ -572,8 +572,8 @@ async def delete_analysis(property_id: str, current_user=Depends(get_current_use
         return {"success": True, "propertyId": property_id}
 
     except Exception as e:
-        logger.error(f"Error deleting property analysis {property_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete property analysis {property_id}")
+        logger.exception("Failed to delete property analysis")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -685,8 +685,8 @@ async def get_benchmark_analysis(property_id: str, radius: int = 5, current_user
         return benchmark_data
 
     except Exception as e:
-        logger.error(f"Error generating benchmark analysis for {property_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate benchmark analysis for {property_id}")
+        logger.exception("Failed to generate benchmark analysis")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -737,8 +737,8 @@ async def get_realtime_market_data(property_id: str, current_user=Depends(get_cu
         return realtime_data
 
     except Exception as e:
-        logger.error(f"Error fetching real-time data for {property_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch real-time data for {property_id}")
+        logger.exception("Failed to fetch real-time market data")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================

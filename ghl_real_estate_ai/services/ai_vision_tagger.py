@@ -20,13 +20,14 @@ logger = get_logger(__name__)
 class VisionTagger:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self.http_client = httpx.AsyncClient(timeout=15.0)
         if self.api_key:
             self.client = Anthropic(api_key=self.api_key)
         else:
             self.client = None
             logger.warning("ANTHROPIC_API_KEY not found. Vision tagging will be disabled.")
 
-    def analyze_property_image(self, image_url: str) -> List[str]:
+    async def analyze_property_image(self, image_url: str) -> List[str]:
         """
         Analyzes an image URL and returns a list of lifestyle and feature tags.
         """
@@ -35,7 +36,7 @@ class VisionTagger:
 
         try:
             # 1. Fetch image and convert to base64
-            response = httpx.get(image_url)
+            response = await self.http_client.get(image_url)
             response.raise_for_status()
             image_data = base64.b64encode(response.content).decode("utf-8")
             media_type = response.headers.get("Content-Type", "image/jpeg")
@@ -77,10 +78,14 @@ class VisionTagger:
 
 
 if __name__ == "__main__":
-    # Test with a sample image
-    tagger = VisionTagger()
-    sample_url = (
-        "https://images.unsplash.com/photo-1600585014340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    )
-    tags = tagger.analyze_property_image(sample_url)
-    print(f"Sample Tags: {tags}")
+    import asyncio
+
+    async def _main():
+        tagger = VisionTagger()
+        sample_url = (
+            "https://images.unsplash.com/photo-1600585014340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+        )
+        tags = await tagger.analyze_property_image(sample_url)
+        print(f"Sample Tags: {tags}")
+
+    asyncio.run(_main())

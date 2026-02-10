@@ -12,7 +12,6 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware import get_current_user
-
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.professional_export_engine import (
     get_export_engine,

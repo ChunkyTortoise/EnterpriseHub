@@ -26,6 +26,7 @@ class VoiceOutboundService:
     def __init__(self):
         self.orchestrator = get_claude_orchestrator()
         self.psychology_analyzer = get_seller_psychology_analyzer()
+        self.http_client = httpx.AsyncClient(timeout=10.0)
 
     async def prepare_vapi_payload(
         self, lead_id: str, lead_data: Dict[str, Any], property_data: Dict[str, Any]
@@ -161,13 +162,12 @@ class VoiceOutboundService:
         }
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, json=vapi_payload, headers=headers, timeout=10.0)
-                response.raise_for_status()
-                call_data = response.json()
+            response = await self.http_client.post(url, json=vapi_payload, headers=headers)
+            response.raise_for_status()
+            call_data = response.json()
 
-                logger.info(f"Successfully triggered Vapi call for {customer_number}. Call ID: {call_data.get('id')}")
-                return {"status": "success", "call_id": call_data.get("id"), "vapi_response": call_data}
+            logger.info(f"Successfully triggered Vapi call for {customer_number}. Call ID: {call_data.get('id')}")
+            return {"status": "success", "call_id": call_data.get("id"), "vapi_response": call_data}
         except Exception as e:
             logger.error(f"Failed to trigger Vapi call: {e}")
             return {"status": "error", "message": str(e)}
@@ -183,10 +183,9 @@ class VoiceOutboundService:
         headers = {"Authorization": f"Bearer {settings.vapi_api_key}"}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=headers)
-                response.raise_for_status()
-                return response.json()
+            response = await self.http_client.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
         except Exception as e:
             logger.error(f"Failed to fetch call status for {call_id}: {e}")
             return {"error": str(e)}

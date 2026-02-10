@@ -91,6 +91,7 @@ class CompetitiveAlertSystem:
     """
 
     def __init__(self, cache_service: Optional[CacheService] = None, ghl_client: Optional[GHLClient] = None):
+        self.http_client = httpx.AsyncClient(timeout=10.0)
         self.cache = cache_service or CacheService()
         self.ghl_client = ghl_client or GHLClient()
         self.settings = get_settings()
@@ -419,9 +420,8 @@ class CompetitiveAlertSystem:
         )
 
         # Send to Slack
-        async with httpx.AsyncClient() as client:
-            response = await client.post(config.endpoint, json=slack_message)
-            success = response.status_code == 200
+        response = await self.http_client.post(config.endpoint, json=slack_message)
+        success = response.status_code == 200
 
         if success:
             self._increment_rate_limit(NotificationChannel.SLACK)

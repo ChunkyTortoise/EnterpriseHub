@@ -217,15 +217,15 @@ class WebhookNotificationChannel(NotificationChannel):
     def __init__(self, webhook_url: str, headers: Dict[str, str] = None):
         self.webhook_url = webhook_url
         self.headers = headers or {}
+        self.http_client = httpx.AsyncClient(timeout=10.0)
 
     async def send(self, alert: Alert, message: str) -> bool:
         """Send webhook notification."""
         try:
             payload = {"alert": alert.to_dict(), "message": message, "timestamp": datetime.now().isoformat()}
 
-            async with httpx.AsyncClient() as client:
-                response = await client.post(self.webhook_url, json=payload, headers=self.headers, timeout=10)
-                response.raise_for_status()
+            response = await self.http_client.post(self.webhook_url, json=payload, headers=self.headers)
+            response.raise_for_status()
 
             logger.info(f"Webhook notification sent for alert {alert.alert_id}")
             return True
@@ -240,6 +240,7 @@ class SlackNotificationChannel(NotificationChannel):
 
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
+        self.http_client = httpx.AsyncClient(timeout=10.0)
 
     async def send(self, alert: Alert, message: str) -> bool:
         """Send Slack notification."""
@@ -268,9 +269,8 @@ class SlackNotificationChannel(NotificationChannel):
                 ]
             }
 
-            async with httpx.AsyncClient() as client:
-                response = await client.post(self.webhook_url, json=payload, timeout=10)
-                response.raise_for_status()
+            response = await self.http_client.post(self.webhook_url, json=payload)
+            response.raise_for_status()
 
             logger.info(f"Slack notification sent for alert {alert.alert_id}")
             return True

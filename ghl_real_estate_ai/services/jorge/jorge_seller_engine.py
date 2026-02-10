@@ -315,7 +315,7 @@ class JorgeSellerEngine:
                     from ghl_real_estate_ai.services.vapi_service import VapiService
 
                     vapi = VapiService()
-                    vapi.trigger_outbound_call(
+                    await vapi.trigger_outbound_call(
                         contact_phone=extracted_seller_data.get("phone", ""),
                         lead_name=contact_name,
                         property_address=extracted_seller_data.get("property_address", "your property"),
@@ -1204,7 +1204,7 @@ class JorgeSellerEngine:
                 for attempt in range(max_retries):
                     try:
                         # Deep Persona Handoff: Inject psychographic context into Voice AI
-                        vapi_success = vapi_service.trigger_outbound_call(
+                        vapi_success = await vapi_service.trigger_outbound_call(
                             contact_phone=contact_phone,
                             lead_name=seller_data.get("contact_name", "Lead"),
                             property_address=seller_data.get("property_address", "your property"),

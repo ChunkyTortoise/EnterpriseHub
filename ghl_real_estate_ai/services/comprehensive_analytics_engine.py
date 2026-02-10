@@ -22,6 +22,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.api_analytics_types import ActionItemData
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.predictive_scoring import PredictiveLeadScorer
 from ghl_real_estate_ai.services.proactive_intelligence_engine import ProactiveIntelligenceEngine
@@ -144,7 +145,7 @@ class PredictiveInsight:
     impact_score: float  # 0-100, higher means more impact
     time_horizon: str  # "immediate", "short_term", "medium_term", "long_term"
     reasoning: str
-    recommended_actions: List[Dict[str, Any]]
+    recommended_actions: List[ActionItemData]
     success_metrics: List[str]
     risk_factors: List[str]
     validity_period: timedelta

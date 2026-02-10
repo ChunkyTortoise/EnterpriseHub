@@ -570,8 +570,8 @@ async def get_journey(journey_id: str, current_user=Depends(get_current_user_opt
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching journey {journey_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch journey {journey_id}")
+        logger.exception("Failed to fetch journey")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/journeys", response_model=CustomerJourney)
@@ -684,8 +684,8 @@ async def update_journey(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating journey {journey_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update journey {journey_id}")
+        logger.exception("Failed to update journey")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.delete("/journeys/{journey_id}")
@@ -709,8 +709,8 @@ async def delete_journey(journey_id: str, current_user=Depends(get_current_user_
         return {"success": True, "journeyId": journey_id}
 
     except Exception as e:
-        logger.error(f"Error deleting journey {journey_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete journey {journey_id}")
+        logger.exception("Failed to delete journey")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -743,8 +743,8 @@ async def update_step(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating step {step_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update step {step_id}")
+        logger.exception("Failed to update journey step")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/journeys/{journey_id}/steps/{step_id}/complete", response_model=JourneyStep)
@@ -787,8 +787,8 @@ async def complete_step(
         return step
 
     except Exception as e:
-        logger.error(f"Error completing step {step_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to complete step {step_id}")
+        logger.exception("Failed to complete journey step")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================

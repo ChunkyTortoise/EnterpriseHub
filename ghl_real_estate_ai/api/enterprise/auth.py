@@ -35,6 +35,7 @@ class EnterpriseAuthError(Exception):
 
 from enum import Enum
 
+
 class SSOProvider(str, Enum):
     """Supported SSO providers for enterprise authentication."""
 
