@@ -3,21 +3,49 @@
 Date: 2026-02-10
 Repository: `/Users/cave/Documents/New project/enterprisehub`
 
-## 1) Baseline and Completion Commits
+## 1) Baseline + Final Hardening Commits
+
+Locked baselines:
 
 - Phase 1 closure baseline: `f7109b8d`
 - Phase 2 CI/OpenAPI baseline: `12d2863a`
-- Interview completion commit (contracts + docs + evidence): `5bc2455a`
-- Workflow fix commit (CI dependency pin): `6bd4d7a7`
-- Green workflow run: `portal-api-phase1` run `21859818555`
-- Run URL: `https://github.com/ChunkyTortoise/EnterpriseHub/actions/runs/21859818555`
+- Interview finalization baseline: `3b87d1b8`
 
-## 2) Final Validation Commands and Observed Results
+Hardening commits executed in this run:
 
-Run from repo root:
+- `516bbbba` - deterministic validate/demo scripts + workflow test isolation
+- `8497529f` - request-id middleware, stable error envelope, demo auth guard, full OpenAPI snapshot lock, typed client, P2 helper scripts
+- `54715c82` - cross-version OpenAPI snapshot normalization (`additionalProperties: true` normalization)
+
+## 2) CI Verification (GitHub Actions)
+
+Workflow: `portal-api-phase1`
+
+- Initial post-hardening run (failed, then fixed): `21860545437`
+- Final green run: `21860614337`
+- Final green URL: `https://github.com/ChunkyTortoise/EnterpriseHub/actions/runs/21860614337`
+- Final green job URL: `https://github.com/ChunkyTortoise/EnterpriseHub/actions/runs/21860614337/job/63088473433`
+
+Final green run timing (UTC):
+
+- Started: `2026-02-10T10:10:47Z`
+- Completed: `2026-02-10T10:11:06Z`
+- Duration: ~`19s`
+
+## 3) Validation Bundle Results
+
+Executed from repo root.
+
+Shell syntax:
 
 ```bash
-ruff check main.py portal_api modules
+bash -n scripts/portal_api_validate.sh scripts/portal_api_interview_demo.sh
+```
+
+Lint/compile/tests:
+
+```bash
+ruff check main.py portal_api modules scripts/refresh_portal_openapi_snapshot.py scripts/portal_api_client_example.py scripts/portal_api_latency_sanity.py
 
 python3 -m py_compile \
   main.py \
@@ -32,59 +60,75 @@ python3 -m py_compile \
   modules/inventory_manager.py \
   modules/ghl_sync.py \
   modules/appointment_manager.py \
-  modules/voice_trigger.py
+  modules/voice_trigger.py \
+  scripts/refresh_portal_openapi_snapshot.py \
+  scripts/portal_api_client_example.py
 
-pytest -q -o addopts='' portal_api/tests/test_portal_api.py
+pytest -q -o addopts='' --confcutdir=portal_api/tests portal_api/tests
 ```
 
-Observed output summary:
+Runtime demo:
+
+```bash
+bash scripts/portal_api_interview_demo.sh
+```
+
+Observed outcomes:
 
 - `ruff`: `All checks passed!`
 - `py_compile`: no errors
-- `pytest`: `24 passed in 0.56s`
+- `pytest`: `30 passed`
+- `portal_api_interview_demo.sh`: all `7/7` steps passed with deterministic status/body assertions
 
-## 3) Endpoint Contract Summary (Locked by Tests)
+Note on spec command adaptation:
 
-- `GET /` -> `RootResponse` (`200`)
-- `GET /health` -> `HealthResponse` (`200`)
-- `GET /system/state` -> `StateResponse` (`200`)
-- `GET /system/state/details` -> `DetailedStateResponse` (`200`)
-- `POST /portal/swipe` -> `SwipeResponse` (`200`), validation contract (`422` -> `HTTPValidationError`)
-- `POST /vapi/tools/book-tour` -> `VapiToolResponse` (`200`)
-- `POST /ghl/sync` -> `GHLSyncResponse` (`200`), service-failure contract (`500` -> `ErrorResponse`)
+- The spec’s `ruff check ... scripts/*.sh` form is not supported by Ruff (it parses shell scripts as Python). Validation uses `bash -n` for shell scripts plus Ruff for Python sources.
 
-Additional locked constraints:
+## 4) Contract Hardening Evidence
 
-- `Interaction.action` enum is exactly `like | pass`
-- `/system/state/details?limit` has `minimum=0`, `maximum=100`, default `5`
+- `POST /ghl/sync` `500` now returns `ApiErrorResponse` with stable `code/message/request_id` and no raw internal exception leakage.
+- Mutating routes (`/portal/swipe`, `/vapi/tools/book-tour`, `/ghl/sync`, `/system/reset`) include env-gated demo auth and explicit `401` OpenAPI contracts.
+- `X-Request-ID` middleware behavior is test-locked:
+  - propagates inbound request id
+  - generates request id when absent
+  - returns header on success and error paths
+- Full OpenAPI snapshot lock in place:
+  - snapshot: `portal_api/tests/openapi_snapshot.json`
+  - test: `portal_api/tests/test_portal_api_openapi_snapshot.py`
+  - refresh: `scripts/refresh_portal_openapi_snapshot.py`
 
-## 4) Negative-Path Proofs
+## 5) Typed Client + Optional P2 Proof
 
-- Invalid swipe action (`save`) returns `422`
-- Invalid `limit` query values (`-1`, `101`, `abc`) return `422`
-- Forced service exception in `/ghl/sync` returns `500` with error detail
+Typed client smoke proof:
 
-## 5) Lightweight Performance Sanity Note (Single Local Run)
+```bash
+python3 scripts/portal_api_client_example.py
+```
 
-Command summary:
+Observed sample:
 
-- Reset state
-- Time one `GET /health`
-- Execute swipe + booking
-- Time one `GET /system/state/details?limit=2`
+- `swipe` status `200`, `request_id_sent == request_id_received`
+- `state-details` status `200`, `request_id_sent == request_id_received`
 
-Observed sample timing (local, single run, non-benchmark):
+Optional preflight:
 
-- `health_ms=1.69`
-- `state_details_ms=0.66`
-- `state_details_status=200`
+```bash
+bash scripts/portal_api_preflight.sh
+```
 
-## 6) Interview Demo Script (Deterministic)
+Observed sample: all checks passed.
 
-Use the README block under `Portal API (Phase 1)` -> `Interview Demo Run (5 minutes)`.
+Optional repeated-run latency sanity (`10` samples):
 
-## 7) Remaining Production Tradeoffs to Call Out
+| endpoint | runs | avg_ms | p95_ms | max_ms |
+|---|---:|---:|---:|---:|
+| health | 10 | 1.43 | 11.19 | 11.19 |
+| state_details | 10 | 0.48 | 0.88 | 0.88 |
 
-- Auth/authz not fully implemented for this demo slice
-- External integrations are simulated/simplified in some flows
-- Observability depth is intentionally minimal for interview scope
+## 6) Interview Talk Track Anchors
+
+1. Reliability: one-command validate (`scripts/portal_api_validate.sh`) + one-command deterministic demo (`scripts/portal_api_interview_demo.sh`).
+2. Contract safety: route-level OpenAPI assertions plus full-surface snapshot lock.
+3. Operational traceability: `X-Request-ID` end-to-end in responses and error envelope.
+4. Security posture: env-gated API key guard for mutating actions without breaking default demo flow.
+5. Tradeoff clarity: lightweight, deterministic controls for interview scope, with explicit production-next-paths.
