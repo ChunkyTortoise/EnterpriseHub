@@ -22,6 +22,18 @@ from pydantic import BaseModel, ConfigDict, ValidationInfo, field_validator
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.ghl_webhook_types import (
+    GHLAPIResponse,
+    GHLCampaignData,
+    GHLContactData,
+    GHLContactUpdatePayload,
+    GHLDashboardMetrics,
+    GHLHealthCheckResult,
+    GHLOpportunityData,
+    GHLSearchParams,
+    GHLWebhookPayload,
+    GHLWorkflowData,
+)
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
 from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -214,7 +226,7 @@ class EnhancedGHLClient(GHLClient):
         data: Dict[str, Any] = None,
         params: Dict[str, Any] = None,
         use_rate_limit: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> GHLAPIResponse:
         """Make rate-limited HTTP request to GHL API."""
         if settings.test_mode:
             logger.info(f"[TEST MODE] {method} {endpoint}")
@@ -231,7 +243,7 @@ class EnhancedGHLClient(GHLClient):
 
     async def _execute_request(
         self, method: str, endpoint: str, data: Dict[str, Any] = None, params: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    ) -> GHLAPIResponse:
         """Execute HTTP request with retry logic."""
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
 
@@ -265,7 +277,7 @@ class EnhancedGHLClient(GHLClient):
                 logger.error(f"Unexpected error in GHL API request: {e}")
                 raise GHLAPIException(f"Unexpected error: {e}")
 
-    async def _handle_response(self, response: aiohttp.ClientResponse) -> Dict[str, Any]:
+    async def _handle_response(self, response: aiohttp.ClientResponse) -> GHLAPIResponse:
         """Handle GHL API response."""
         try:
             response_data = await response.json()
@@ -318,7 +330,7 @@ class EnhancedGHLClient(GHLClient):
             logger.error(f"Failed to get contact {contact_id}: {e.message}")
             raise
 
-    async def create_contact(self, contact_data: Dict[str, Any], lead_id: str = None) -> GHLContact:
+    async def create_contact(self, contact_data: GHLContactData, lead_id: str = None) -> GHLContact:
         """Create new contact in GHL."""
         if settings.test_mode:
             mock_id = f"demo_{int(datetime.utcnow().timestamp())}"
@@ -388,7 +400,7 @@ class EnhancedGHLClient(GHLClient):
             logger.error(f"Failed to create contact: {e}")
             raise GHLAPIException(f"Contact creation failed: {e}")
 
-    async def update_contact(self, contact_id: str, updates: Dict[str, Any]) -> bool:
+    async def update_contact(self, contact_id: str, updates: GHLContactUpdatePayload) -> bool:
         """Update existing contact."""
         payload = {}
 
@@ -423,7 +435,7 @@ class EnhancedGHLClient(GHLClient):
             logger.error(f"Failed to update contact {contact_id}: {e}")
             return False
 
-    async def search_contacts(self, search_params: Dict[str, Any]) -> List[GHLContact]:
+    async def search_contacts(self, search_params: GHLSearchParams) -> List[GHLContact]:
         """Search contacts with various criteria."""
         params = {"locationId": self.config.location_id, "limit": search_params.get("limit", 100)}
 
@@ -468,7 +480,7 @@ class EnhancedGHLClient(GHLClient):
     # Opportunity Management
     # ============================================================================
 
-    async def create_opportunity(self, opportunity_data: Dict[str, Any]) -> str:
+    async def create_opportunity(self, opportunity_data: GHLOpportunityData) -> str:
         """Create opportunity in GHL pipeline."""
         payload = {
             "locationId": self.config.location_id,
@@ -549,7 +561,7 @@ class EnhancedGHLClient(GHLClient):
 
     async def send_sms_with_tracking(
         self, contact_id: str, message: str, lead_id: str = None, campaign_id: str = None, template_id: str = None
-    ) -> Dict[str, Any]:
+    ) -> GHLAPIResponse:
         """Send SMS with enhanced tracking."""
         try:
             # Use the base class send_message method
@@ -591,7 +603,7 @@ class EnhancedGHLClient(GHLClient):
         lead_id: str = None,
         campaign_id: str = None,
         template_id: str = None,
-    ) -> Dict[str, Any]:
+    ) -> GHLAPIResponse:
         """Send email with enhanced tracking."""
         try:
             # For now, use basic message sending - can be enhanced with dedicated email API
@@ -658,7 +670,7 @@ class EnhancedGHLClient(GHLClient):
 
     async def trigger_workflow_with_tracking(
         self, contact_id: str, workflow_id: str, lead_id: str = None
-    ) -> Dict[str, Any]:
+    ) -> GHLAPIResponse:
         """Trigger workflow with enhanced tracking."""
         try:
             result = await self.trigger_workflow(contact_id, workflow_id)
@@ -691,7 +703,7 @@ class EnhancedGHLClient(GHLClient):
     # Campaign Management
     # ============================================================================
 
-    async def create_campaign(self, campaign_data: Dict[str, Any]) -> str:
+    async def create_campaign(self, campaign_data: GHLCampaignData) -> str:
         """Create a new campaign in GHL."""
         # GHL uses workflows for campaigns - create a workflow
         payload = {
@@ -731,7 +743,7 @@ class EnhancedGHLClient(GHLClient):
     # Webhook Processing
     # ============================================================================
 
-    async def process_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_webhook(self, webhook_data: GHLWebhookPayload) -> GHLAPIResponse:
         """Process incoming GHL webhook."""
         try:
             webhook_type = webhook_data.get("type")
@@ -762,7 +774,7 @@ class EnhancedGHLClient(GHLClient):
             logger.error(f"Webhook processing failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def _process_contact_create_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _process_contact_create_webhook(self, webhook_data: GHLWebhookPayload) -> GHLAPIResponse:
         """Process contact creation webhook."""
         contact_id = webhook_data.get("contactId")
         contact_data = webhook_data.get("contact", {})
@@ -781,7 +793,7 @@ class EnhancedGHLClient(GHLClient):
         logger.info(f"Processed contact creation webhook for {contact_id}")
         return {"status": "processed", "action": "contact_created"}
 
-    async def _process_inbound_message_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _process_inbound_message_webhook(self, webhook_data: GHLWebhookPayload) -> GHLAPIResponse:
         """Process inbound message webhook."""
         contact_id = webhook_data.get("contactId")
         message_data = webhook_data.get("message", {})
@@ -808,7 +820,7 @@ class EnhancedGHLClient(GHLClient):
     # Analytics & Reporting
     # ============================================================================
 
-    async def get_enhanced_dashboard_data(self) -> Dict[str, Any]:
+    async def get_enhanced_dashboard_data(self) -> GHLDashboardMetrics:
         """Get enhanced dashboard data with Service 6 specific metrics."""
         try:
             # Get base dashboard data
@@ -892,7 +904,7 @@ class EnhancedGHLClient(GHLClient):
     # Health Check
     # ============================================================================
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> GHLHealthCheckResult:
         """Enhanced health check for GHL connectivity."""
         try:
             if settings.test_mode:

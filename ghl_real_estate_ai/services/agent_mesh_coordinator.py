@@ -14,6 +14,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.orchestrator_types import AgentMetricsData, AgentTaskPayload, AgentTaskResult
 from ghl_real_estate_ai.services.mcp_client import get_mcp_client
 from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
 from ghl_real_estate_ai.services.token_tracker import TokenTracker
@@ -633,7 +634,7 @@ class AgentMeshCoordinator:
             # In production, this would be an actual HTTP request
             agent.last_heartbeat = datetime.now()
             return True
-        except:
+        except Exception:
             return False
 
     async def _initialize_agent_metrics(self, agent_id: str):

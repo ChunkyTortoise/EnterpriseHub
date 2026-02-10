@@ -18,6 +18,12 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+from ghl_real_estate_ai.models.bot_context_types import (
+    ConversationMessage,
+    HandoffAnalytics,
+    IntentSignals,
+    LearnedAdjustments,
+)
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 logger = logging.getLogger(__name__)
@@ -382,7 +388,7 @@ class JorgeHandoffService:
             cls._analytics["blocked_by_circular"] += 1
 
     @classmethod
-    def get_analytics_summary(cls) -> Dict[str, Any]:
+    def get_analytics_summary(cls) -> HandoffAnalytics:
         """Return an aggregate summary of handoff analytics.
 
         Returns:
@@ -611,8 +617,8 @@ class JorgeHandoffService:
         self,
         current_bot: str,
         contact_id: str,
-        conversation_history: List[Dict],
-        intent_signals: Dict[str, Any],
+        conversation_history: list[ConversationMessage],
+        intent_signals: IntentSignals,
     ) -> Optional[HandoffDecision]:
         """Evaluate whether a handoff is needed based on intent signals.
 
@@ -781,7 +787,7 @@ class JorgeHandoffService:
             self._release_handoff_lock(contact_id)
 
     @classmethod
-    def extract_intent_signals(cls, message: str) -> Dict[str, Any]:
+    def extract_intent_signals(cls, message: str) -> IntentSignals:
         """Extract intent signals from a user message for handoff evaluation."""
         buyer_matches = []
         for pattern in cls.BUYER_INTENT_PATTERNS:
@@ -890,7 +896,7 @@ class JorgeHandoffService:
         logger.info(f"Recorded handoff outcome: {pair_key} for contact {contact_id} -> {outcome}")
 
     @classmethod
-    def get_learned_adjustments(cls, source_bot: str, target_bot: str) -> Dict[str, Any]:
+    def get_learned_adjustments(cls, source_bot: str, target_bot: str) -> LearnedAdjustments:
         """Calculate confidence threshold adjustments from historical outcomes.
 
         Returns a dict with:
@@ -927,7 +933,7 @@ class JorgeHandoffService:
             "sample_size": sample_size,
         }
 
-    def extract_intent_signals_from_history(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
+    def extract_intent_signals_from_history(self, conversation_history: list[ConversationMessage]) -> dict[str, float]:
         """Scan recent conversation history for intent patterns.
 
         Uses instance-level patterns (wired from IndustryConfig) with
@@ -974,7 +980,7 @@ class JorgeHandoffService:
         return signals
 
     @classmethod
-    def extract_intent_signals_from_history_cls(cls, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
+    def extract_intent_signals_from_history_cls(cls, conversation_history: list[ConversationMessage]) -> dict[str, float]:
         """Backward-compatible classmethod wrapper for extract_intent_signals_from_history.
 
         Uses class-level patterns (no config). Prefer the instance method when

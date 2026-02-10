@@ -27,6 +27,7 @@ from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intellige
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.orchestrator_types import FollowupContext, FollowupRecommendationData, FollowupTaskData
 from ghl_real_estate_ai.services.behavioral_trigger_engine import (
     IntentLevel,
     get_behavioral_trigger_engine,
@@ -127,7 +128,7 @@ class FollowUpAgent:
         if self.blackboard:
             self.blackboard.log_debate(lead_id, self.agent_type.value, thought, action, confidence)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Analyze lead and provide follow-up recommendation."""
         raise NotImplementedError
 
@@ -138,7 +139,7 @@ class TimingOptimizerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.TIMING_OPTIMIZER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Analyze optimal timing for follow-up."""
         try:
             # Analyze lead activity patterns
@@ -202,7 +203,7 @@ class ContentPersonalizerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.CONTENT_PERSONALIZER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Generate personalized follow-up content."""
         try:
             behavioral_score = context.get("behavioral_score")
@@ -297,7 +298,7 @@ class ChannelStrategistAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.CHANNEL_STRATEGIST, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Determine optimal communication channel."""
         try:
             behavioral_score = context.get("behavioral_score")
@@ -354,7 +355,7 @@ class ResponseAnalyzerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.RESPONSE_ANALYZER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Analyze response patterns and recommend strategy adjustments."""
         try:
             follow_up_history = context.get("follow_up_history", [])
@@ -410,7 +411,7 @@ class EscalationManagerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.ESCALATION_MANAGER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Determine if escalation or de-escalation is needed."""
         try:
             behavioral_score = context.get("behavioral_score")
@@ -462,7 +463,7 @@ class SentimentAnalystAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.SENTIMENT_ANALYST, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Analyze sentiment to guide follow-up approach."""
         try:
             response_data = context.get("response_data", {})
@@ -535,7 +536,7 @@ class ObjectionHandlerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.OBJECTION_HANDLER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Detect objections and recommend handling approach."""
         try:
             response_data = context.get("response_data", {})
@@ -618,7 +619,7 @@ class ConversionOptimizerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.CONVERSION_OPTIMIZER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Optimize approach for maximum conversion probability."""
         try:
             behavioral_score = context.get("behavioral_score")
@@ -714,7 +715,7 @@ class MarketContextAgent(FollowUpAgent):
         except ImportError:
             self.market_engine = None
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Incorporate market context into follow-up recommendations."""
         try:
             behavioral_score = context.get("behavioral_score")
@@ -810,7 +811,7 @@ class PerformanceTrackerAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard=None):
         super().__init__(AgentType.PERFORMANCE_TRACKER, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Analyze historical performance to optimize future follow-ups."""
         try:
             follow_up_history = context.get("follow_up_history", [])
@@ -867,7 +868,8 @@ class PerformanceTrackerAgent(FollowUpAgent):
                         try:
                             sent_dt = datetime.fromisoformat(sent_time)
                             response_times.append(sent_dt.hour)
-                        except:
+                        except (ValueError, TypeError) as e:
+                            logger.debug(f"Failed to parse sent_at timestamp '{sent_time}': {e}")
                             pass
 
                 if response_times:
@@ -934,7 +936,7 @@ class SchedulingAgent(FollowUpAgent):
         except ImportError:
             self.scheduler = None
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Analyze if the lead is ready for scheduling and provide slots."""
         try:
             if not self.scheduler:
@@ -1014,7 +1016,7 @@ class VideoAIAgent(FollowUpAgent):
     def __init__(self, llm_client, blackboard: Any = None):
         super().__init__(AgentType.VIDEO_AI_AGENT, llm_client, blackboard)
 
-    async def analyze(self, lead_id: str, context: Dict[str, Any]) -> FollowUpRecommendation:
+    async def analyze(self, lead_id: str, context: FollowupContext) -> FollowUpRecommendation:
         """Decide if a personalized video is appropriate for this lead."""
         try:
             behavioral_score = context.get("behavioral_score")
@@ -1300,7 +1302,8 @@ class AutonomousFollowUpEngine:
                     logger.warning(f"Failed to pre-fetch market data: {e}")
 
             # Create context for agents
-            agent_context = {
+            agent_context: FollowupContext = {
+                "lead_id": lead_id,
                 "activity_data": activity_data,
                 "follow_up_history": follow_up_history,
                 "response_data": response_data,
@@ -1472,8 +1475,8 @@ class AutonomousFollowUpEngine:
                 await db.update_follow_up_task(
                     task.task_id, {"status": FollowUpStatus.FAILED.value, "result": {"success": False, "error": str(e)}}
                 )
-            except:
-                pass
+            except Exception as db_err:
+                logger.error(f"Failed to update task status in database after failure: {db_err}")
 
     async def _build_agent_consensus(
         self, recommendations: List[FollowUpRecommendation], swarm_analysis: Any

@@ -4,13 +4,24 @@ Coordinates all Claude AI functionality across chat, scoring, reports, and scrip
 """
 
 import asyncio
+import hashlib
 import json
+import logging
 import re
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+
+from ghl_real_estate_ai.models.orchestrator_types import (
+    LeadAnalysisContext,
+    MemoryContext,
+    OrchestratorContext,
+    ParsedOrchestratorResponse,
+)
+
+logger = logging.getLogger(__name__)
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.services.market_context_injector import MarketContextInjector
@@ -40,7 +51,7 @@ class ClaudeRequest:
     """Standardized request format for all Claude operations"""
 
     task_type: ClaudeTaskType
-    context: Dict[str, Any]
+    context: OrchestratorContext
     prompt: str
     tenant_id: Optional[str] = None
     model: str = "claude-sonnet-4-5-20250514"
@@ -152,6 +163,13 @@ class ClaudeOrchestrator:
         # In-process cache for memory context (avoids repeated fetches within a request)
         self._memory_context_cache: Dict[str, Any] = {}
 
+        # Response cache with TTL for common query patterns
+        # Maps cache_key -> (ClaudeResponse, expiry_timestamp)
+        self._response_cache: Dict[str, Tuple[Any, float]] = {}
+        self._response_cache_ttl = 300  # 5 minutes default
+        self._response_cache_hits = 0
+        self._response_cache_misses = 0
+
         # Singleton analytics service (avoid re-creating per GHL sync)
         from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 
@@ -244,6 +262,25 @@ class ClaudeOrchestrator:
             Provide clear, data-backed reports with citations where possible.""",
         }
 
+    def _make_response_cache_key(self, request: ClaudeRequest) -> str:
+        """Generate a cache key from the request content hash."""
+        key_parts = f"{request.task_type.value}:{request.prompt}:{json.dumps(request.context, sort_keys=True, default=str)}"
+        return f"resp:{hashlib.sha256(key_parts.encode()).hexdigest()[:16]}"
+
+    def _get_cached_response(self, cache_key: str) -> Optional[ClaudeResponse]:
+        """Check response cache, returning cached value if not expired."""
+        entry = self._response_cache.get(cache_key)
+        if entry is not None:
+            response, expiry = entry
+            if time.time() < expiry:
+                self._response_cache_hits += 1
+                logger.debug(f"Response cache HIT ({self._response_cache_hits} total hits)")
+                return response
+            # Expired, remove it
+            del self._response_cache[cache_key]
+        self._response_cache_misses += 1
+        return None
+
     async def process_request(self, request: ClaudeRequest) -> ClaudeResponse:
         """
         Main entry point for all Claude operations.
@@ -252,6 +289,13 @@ class ClaudeOrchestrator:
         start_time = time.time()
 
         try:
+            # Check response cache for non-streaming, non-tool requests
+            cache_key = self._make_response_cache_key(request)
+            if not request.streaming and not request.use_tools:
+                cached = self._get_cached_response(cache_key)
+                if cached is not None:
+                    cached.metadata["cache_hit"] = True
+                    return cached
             # Determine complexity for intelligent routing
             complexity = self._get_complexity_for_task(request.task_type)
 
@@ -384,6 +428,14 @@ class ClaudeOrchestrator:
 
             # Update performance metrics
             self._update_metrics(response_time, success=True)
+
+            # Store in response cache for non-streaming, non-tool requests
+            if not request.streaming and not request.use_tools:
+                self._response_cache[cache_key] = (
+                    structured_response,
+                    time.time() + self._response_cache_ttl,
+                )
+                logger.debug(f"Response cache MISS - stored (total misses: {self._response_cache_misses})")
 
             return structured_response
 
@@ -559,12 +611,21 @@ class ClaudeOrchestrator:
             provider="simulated",
         )
 
-    async def chat_query(self, query: str, context: Dict[str, Any], lead_id: Optional[str] = None) -> ClaudeResponse:
+    async def chat_query(
+        self, query: str, context: OrchestratorContext, lead_id: Optional[str] = None
+    ) -> ClaudeResponse:
         """Handle interactive chat queries with lead context"""
+
+        # Merge lead_id and query_type into context
+        enhanced_context: OrchestratorContext = {
+            **context,
+            "lead_id": lead_id or context.get("lead_id", ""),
+            "query_type": "interactive_chat",
+        }
 
         request = ClaudeRequest(
             task_type=ClaudeTaskType.CHAT_QUERY,
-            context={**context, "lead_id": lead_id, "query_type": "interactive_chat"},
+            context=enhanced_context,
             prompt=f"Jorge asks: {query}",
             temperature=0.8,  # Slightly more creative for chat
             use_tools=True,
@@ -610,11 +671,10 @@ class ClaudeOrchestrator:
     ) -> ClaudeResponse:
         """Generate narrative reports from quantitative metrics"""
 
-        context = {
-            "metrics": metrics,
-            "report_type": report_type,
-            "market_context": market_context or {},
-            "generated_at": datetime.now().isoformat(),
+        context: OrchestratorContext = {
+            "task_type": report_type,
+            "market_data": {"metrics": metrics, "market_context": market_context or {}},
+            "lead_data": {"generated_at": datetime.now().isoformat()},
         }
 
         prompt = f"""Generate a {report_type} report for Jorge:
@@ -804,9 +864,9 @@ class ClaudeOrchestrator:
         prompt_key = prompt_mapping.get(task_type, "chat_assistant")
         return self.system_prompts.get(prompt_key, self.system_prompts.get("chat_assistant", ""))
 
-    async def _enhance_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enhance_context(self, context: OrchestratorContext) -> OrchestratorContext:
         """Enhance request context with memory and historical data"""
-        enhanced = context.copy()
+        enhanced: OrchestratorContext = context.copy()  # type: ignore[assignment]
 
         # Add semantic memory if lead_id is available
         if "lead_id" in context and context["lead_id"]:
@@ -1498,9 +1558,9 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
     async def _gather_lead_context(
         self, lead_id: str, include_scoring: bool = True, include_churn_analysis: bool = True
-    ) -> Dict[str, Any]:
+    ) -> LeadAnalysisContext:
         """Gather comprehensive context for a lead"""
-        context = {"lead_id": lead_id}
+        context: LeadAnalysisContext = {"lead_id": lead_id}
 
         try:
             # Get memory context
