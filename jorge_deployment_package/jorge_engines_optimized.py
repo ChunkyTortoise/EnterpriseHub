@@ -360,6 +360,11 @@ class JorgeSellerEngineOptimized:
         """Update conversation context with seller data"""
 
         try:
+            seller_temperature = self._calculate_seller_temperature(
+                analysis=analysis,
+                questions_answered=questions_answered + 1,
+                context={}
+            )
             context_update = {
                 "seller_questions_answered": questions_answered + 1,
                 "last_user_message": user_message,
@@ -368,10 +373,26 @@ class JorgeSellerEngineOptimized:
                 "seller_motivation_score": analysis["motivation_score"],
                 "seller_urgency_score": analysis["urgency_score"],
                 "seller_motivation_type": analysis["motivation_type"],
+                "seller_temperature": seller_temperature,
                 "response_confidence": response.confidence_score
             }
 
-            await self.conversation_manager.update_context(contact_id, location_id, context_update)
+            extracted_data = {
+                "lead_type": "seller",
+                "motivation_score": analysis.get("motivation_score"),
+                "urgency_score": analysis.get("urgency_score"),
+                "motivation_type": analysis.get("motivation_type"),
+                "questions_answered": questions_answered + 1
+            }
+
+            await self.conversation_manager.update_context(
+                contact_id=contact_id,
+                user_message=user_message,
+                ai_response=response.message,
+                extracted_data=extracted_data,
+                location_id=location_id,
+                **context_update
+            )
 
         except Exception as e:
             self.logger.error(f"Context update error: {e}")
@@ -718,19 +739,31 @@ class JorgeLeadEngineOptimized:
         """Safely update conversation context"""
 
         try:
+            lead_temperature = self._calculate_lead_temperature(lead_score)
             context_update = {
                 "last_user_message": user_message,
                 "last_ai_response": response.message,
                 "last_ai_response_time": datetime.now().isoformat(),
                 "lead_score": lead_score,
-                "lead_temperature": self._calculate_lead_temperature(lead_score),
+                "lead_temperature": lead_temperature,
                 "budget_max": lead_data.get("budget_max"),
                 "timeline": lead_data.get("timeline"),
                 "financing_status": lead_data.get("financing_status"),
                 "response_confidence": response.confidence_score
             }
 
-            await self.conversation_manager.update_context(contact_id, location_id, context_update)
+            extracted_data = dict(lead_data)
+            extracted_data["lead_type"] = "buyer"
+            extracted_data["lead_score"] = lead_score
+
+            await self.conversation_manager.update_context(
+                contact_id=contact_id,
+                user_message=user_message,
+                ai_response=response.message,
+                extracted_data=extracted_data,
+                location_id=location_id,
+                **context_update
+            )
 
         except Exception as e:
             self.logger.error(f"Context update error: {e}")
