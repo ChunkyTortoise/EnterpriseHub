@@ -644,7 +644,7 @@ class BehavioralProfilerAgent(LeadIntelligenceAgent):
         try:
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
             return (datetime.utcnow() - timestamp).days <= 7
-        except:
+        except Exception:
             return False
 
 
@@ -996,7 +996,7 @@ class MarketAnalystAgent(LeadIntelligenceAgent):
             )
             response = await orchestrator.process_request(request)
             return response.content
-        except:
+        except Exception:
             return f"Hi {lead_data.get('first_name', 'there')}, I noticed a price drop on {change['property_id']}. Let's discuss how this affects our strategy."
 
 

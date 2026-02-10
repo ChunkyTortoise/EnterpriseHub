@@ -572,7 +572,7 @@ class OptimizationAnalyzerAgent(LearningAgent):
                                 correlation = np.corrcoef(system1_values[:min_len], system2_values[:min_len])[0, 1]
                                 if not np.isnan(correlation):
                                     correlations[(system1, system2)] = correlation
-                            except:
+                            except Exception:
                                 pass  # Skip if correlation calculation fails
 
             return correlations

@@ -137,7 +137,7 @@ class RecoveryOrchestrator:
         """Logs a recovery event to the manifest."""
         try:
             governance_auditor.log_recovery_event(action, error, resolution)
-        except:
+        except Exception:
             pass
 
 

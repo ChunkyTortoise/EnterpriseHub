@@ -618,7 +618,7 @@ class OfflineSyncService:
 
             return max(0.0, min(1.0, compression_ratio))
 
-        except:
+        except Exception:
             return 0.5  # Default 50% compression
 
 

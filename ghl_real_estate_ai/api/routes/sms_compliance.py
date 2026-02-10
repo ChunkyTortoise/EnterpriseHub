@@ -85,7 +85,7 @@ async def handle_incoming_sms_webhook(request: IncomingSMSWebhook):
 
     except Exception as e:
         logger.error(f"Error processing incoming SMS webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing SMS: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/webhook/opt-out")
@@ -121,7 +121,7 @@ async def handle_opt_out_webhook(request: Request):
 
     except Exception as e:
         logger.error(f"Error processing opt-out webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing opt-out: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # === API ENDPOINTS ===
@@ -151,7 +151,7 @@ async def validate_sms_send(request: SMSValidationRequest, current_user: Dict = 
 
     except Exception as e:
         logger.error(f"Error validating SMS send: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/record-send")
@@ -179,7 +179,7 @@ async def record_sms_send(request: SMSSendRecord, current_user: Dict = Depends(g
 
     except Exception as e:
         logger.error(f"Error recording SMS send: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Recording error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/manual-opt-out")
@@ -222,7 +222,7 @@ async def manual_opt_out(request: OptOutRequest, current_user: Dict = Depends(ge
 
     except Exception as e:
         logger.error(f"Error processing manual opt-out: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Opt-out error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/status/{phone_number}")
@@ -242,7 +242,7 @@ async def get_compliance_status(
 
     except Exception as e:
         logger.error(f"Error getting compliance status for {phone_number}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Status error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/compliance-report")
@@ -276,7 +276,7 @@ async def get_compliance_report(
 
     except Exception as e:
         logger.error(f"Error generating compliance report: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Report error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # === UTILITY ENDPOINTS ===

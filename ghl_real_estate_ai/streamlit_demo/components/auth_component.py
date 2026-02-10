@@ -131,7 +131,9 @@ def require_permission(user: User, resource: str, action: str) -> bool:
     try:
         require_streamlit_permission(resource, action)
         return True
-    except:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Permission check failed for {resource}:{action}: {e}")
         return False
 
 

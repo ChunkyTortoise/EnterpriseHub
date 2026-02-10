@@ -370,7 +370,7 @@ class ChimeCRMConnector(BaseCRMConnector):
             return None
         try:
             return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-        except:
+        except Exception:
             return None
 
 

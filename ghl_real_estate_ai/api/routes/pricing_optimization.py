@@ -166,7 +166,7 @@ async def calculate_lead_pricing(
         raise
     except Exception as e:
         logger.error(f"Failed to calculate pricing for {request.contact_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Pricing calculation failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/analytics/{location_id}", response_model=PricingAnalyticsResponse, status_code=HTTP_200_OK)
@@ -193,7 +193,7 @@ async def get_pricing_analytics(
         raise
     except Exception as e:
         logger.error(f"Failed to get pricing analytics for {location_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Analytics retrieval failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/configure/{location_id}", status_code=HTTP_201_CREATED)
@@ -235,7 +235,7 @@ async def update_pricing_configuration(
         raise
     except Exception as e:
         logger.error(f"Failed to update pricing config for {location_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Configuration update failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/roi-report/{location_id}", response_model=ROIReportResponse, status_code=HTTP_200_OK)
@@ -265,7 +265,7 @@ async def generate_roi_report(
         raise
     except Exception as e:
         logger.error(f"Failed to generate ROI report for {location_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"ROI report generation failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/savings-calculator", status_code=HTTP_200_OK)
@@ -287,7 +287,7 @@ async def calculate_savings(request: SavingsCalculatorRequest, current_user: Dic
 
     except Exception as e:
         logger.error(f"Failed to calculate savings: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Savings calculation failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/human-vs-ai/{location_id}", status_code=HTTP_200_OK)
@@ -323,7 +323,7 @@ async def get_human_vs_ai_comparison(
         raise
     except Exception as e:
         logger.error(f"Failed to generate comparison for {location_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Comparison generation failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/optimize/{location_id}", status_code=HTTP_200_OK)
@@ -353,7 +353,7 @@ async def optimize_pricing_model(
         raise
     except Exception as e:
         logger.error(f"Failed to optimize pricing for {location_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Pricing optimization failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/export/{location_id}", status_code=HTTP_200_OK)
@@ -401,7 +401,7 @@ async def export_pricing_data(
         raise
     except Exception as e:
         logger.error(f"Failed to export data for {location_id}: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=f"Data export failed: {str(e)}")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 # Health check endpoint
@@ -416,7 +416,7 @@ async def health_check():
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Service unhealthy: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Helper functions

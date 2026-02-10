@@ -1063,7 +1063,7 @@ class CompetitiveDataPipeline:
                     if isinstance(value, str):
                         datetime.fromisoformat(value.replace("Z", "+00:00"))
                         consistency_checks += 1
-                except:
+                except (ValueError, TypeError):
                     pass
 
         return consistency_checks / total_checks if total_checks > 0 else 1.0

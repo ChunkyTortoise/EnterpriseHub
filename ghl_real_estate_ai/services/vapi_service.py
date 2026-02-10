@@ -8,7 +8,7 @@ import json
 import os
 from typing import Any, Dict, Optional
 
-import requests
+import httpx
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -116,7 +116,7 @@ class VapiService:
 
         try:
             url = f"{self.base_url}/call/phone"
-            response = requests.post(url, headers=headers, json=payload)
+            response = httpx.post(url, headers=headers, json=payload)
 
             if response.status_code == 201:
                 logger.info(f"✅ Vapi Call Triggered Successfully for {lead_name}")

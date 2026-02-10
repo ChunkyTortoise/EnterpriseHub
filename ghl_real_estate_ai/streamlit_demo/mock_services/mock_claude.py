@@ -76,7 +76,7 @@ class MockClaudeService:
                 budget_str = budget_match.group(0).replace("$", "").replace("k", "000").replace(",", "")
                 try:
                     extracted_data["budget"] = int(budget_str) if len(budget_str) <= 6 else int(budget_str[:6])
-                except:
+                except Exception:
                     pass
 
         # Extract timeline

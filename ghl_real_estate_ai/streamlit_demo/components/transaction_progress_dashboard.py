@@ -740,7 +740,9 @@ class TransactionProgressDashboard:
             try:
                 event_time = datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00"))
                 time_ago = self._time_ago(event_time)
-            except:
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).debug(f"Activity feed timestamp parsing error: {e}")
                 time_ago = "recently"
 
             priority_colors = {"high": "#ff6b35", "medium": "#00d4ff", "low": "#46d369"}

@@ -254,7 +254,7 @@ async def generate_contextual_guidance(
         return convert_concierge_response(response)
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid parameters: {str(e)}")
+        raise HTTPException(status_code=400, detail="Invalid request parameters")
     except Exception as e:
         logger.error(f"Error generating contextual guidance: {e}")
         raise HTTPException(status_code=500, detail="Internal server error generating guidance")
@@ -360,7 +360,7 @@ async def chat_with_concierge(
             return convert_concierge_response(response)
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid chat parameters: {str(e)}")
+        raise HTTPException(status_code=400, detail="Invalid request parameters")
     except Exception as e:
         logger.error(f"Error in chat with concierge: {e}")
         raise HTTPException(status_code=500, detail="Internal server error in chat")

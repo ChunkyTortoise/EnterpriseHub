@@ -41,11 +41,11 @@ class GHLClient:
             "Content-Type": "application/json",
             "Version": "2021-07-28",
         }
+        self.http_client = httpx.AsyncClient(timeout=30.0)
 
-    def check_health(self):
+    async def check_health(self):
         """
         Check if GHL API is accessible.
-        Synchronous method for Streamlit.
         """
         if settings.test_mode or self.api_key == "dummy":
             # Mock response object
@@ -56,11 +56,10 @@ class GHLClient:
 
         # Simple ping to a lightweight endpoint
         try:
-            with httpx.Client() as client:
-                response = client.get(
-                    f"{self.base_url}/locations/{self.location_id}", headers=self.headers, timeout=5.0
-                )
-                return response
+            response = await self.http_client.get(
+                f"{self.base_url}/locations/{self.location_id}", headers=self.headers, timeout=5.0
+            )
+            return response
         except Exception as e:
             logger.error(f"Health check failed: {e}")
 
@@ -103,19 +102,18 @@ class GHLClient:
             params["contactId"] = contact_id
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
-                response.raise_for_status()
+            response = await self.http_client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
+            response.raise_for_status()
 
-                data = response.json()
-                conversations = data.get("conversations", [])
+            data = response.json()
+            conversations = data.get("conversations", [])
 
-                logger.info(
-                    f"Successfully fetched {len(conversations)} conversations",
-                    extra={"security_event": "fetch_conversations_success", "count": len(conversations)},
-                )
+            logger.info(
+                f"Successfully fetched {len(conversations)} conversations",
+                extra={"security_event": "fetch_conversations_success", "count": len(conversations)},
+            )
 
-                return conversations
+            return conversations
 
         except httpx.TimeoutException as e:
             error_msg = f"Timeout fetching conversations after 30s: {str(e)}"
@@ -151,7 +149,7 @@ class GHLClient:
             )
             raise
 
-    def get_opportunities(self) -> List[Dict[str, Any]]:
+    async def get_opportunities(self) -> List[Dict[str, Any]]:
         """
         Fetch opportunities (pipeline) from GHL.
 
@@ -173,26 +171,25 @@ class GHLClient:
         params = {"locationId": self.location_id}
 
         try:
-            with httpx.Client() as client:
-                response = client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
-                response.raise_for_status()
+            response = await self.http_client.get(endpoint, params=params, headers=self.headers, timeout=30.0)
+            response.raise_for_status()
 
-                data = response.json()
-                opportunities = data.get("opportunities", [])
+            data = response.json()
+            opportunities = data.get("opportunities", [])
 
-                # Calculate revenue for logging
-                total_pipeline = sum(float(opp.get("monetary_value", 0) or 0) for opp in opportunities)
+            # Calculate revenue for logging
+            total_pipeline = sum(float(opp.get("monetary_value", 0) or 0) for opp in opportunities)
 
-                logger.info(
-                    f"Successfully fetched {len(opportunities)} opportunities, total pipeline: ${total_pipeline:,.2f}",
-                    extra={
-                        "security_event": "fetch_opportunities_success",
-                        "count": len(opportunities),
-                        "pipeline_value": total_pipeline,
-                    },
-                )
+            logger.info(
+                f"Successfully fetched {len(opportunities)} opportunities, total pipeline: ${total_pipeline:,.2f}",
+                extra={
+                    "security_event": "fetch_opportunities_success",
+                    "count": len(opportunities),
+                    "pipeline_value": total_pipeline,
+                },
+            )
 
-                return opportunities
+            return opportunities
 
         except httpx.TimeoutException as e:
             error_msg = f"Timeout fetching opportunities after 30s: {str(e)}"
@@ -261,21 +258,20 @@ class GHLClient:
 
         for attempt in range(1, max_retries + 1):
             try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        endpoint,
-                        json=payload,
-                        headers=self.headers,
-                        timeout=settings.webhook_timeout_seconds,
-                    )
-                    response.raise_for_status()
+                response = await self.http_client.post(
+                    endpoint,
+                    json=payload,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
 
-                    logger.info(
-                        f"Sent {channel.value} message to contact {contact_id}",
-                        extra={"contact_id": contact_id, "channel": channel.value},
-                    )
+                logger.info(
+                    f"Sent {channel.value} message to contact {contact_id}",
+                    extra={"contact_id": contact_id, "channel": channel.value},
+                )
 
-                    return response.json()
+                return response.json()
 
             except httpx.HTTPError as e:
                 last_error = e
@@ -312,20 +308,19 @@ class GHLClient:
 
         for attempt in range(1, max_retries + 1):
             try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.put(
-                        endpoint,
-                        json=payload,
-                        headers=self.headers,
-                        timeout=settings.webhook_timeout_seconds,
-                    )
-                    response.raise_for_status()
+                response = await self.http_client.put(
+                    endpoint,
+                    json=payload,
+                    headers=self.headers,
+                    timeout=settings.webhook_timeout_seconds,
+                )
+                response.raise_for_status()
 
-                    logger.info(
-                        f"Added tags to contact {contact_id}: {tags}",
-                        extra={"contact_id": contact_id, "tags": tags},
-                    )
-                    return response.json()
+                logger.info(
+                    f"Added tags to contact {contact_id}: {tags}",
+                    extra={"contact_id": contact_id, "tags": tags},
+                )
+                return response.json()
 
             except httpx.HTTPError as e:
                 last_error = e
@@ -384,59 +379,58 @@ class GHLClient:
             # Step 1: Fetch current contact data to get existing tags
             contact_endpoint = f"{self.base_url}/contacts/{contact_id}"
 
-            async with httpx.AsyncClient() as client:
-                # Get current contact data
-                response = await client.get(
-                    contact_endpoint,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
+            # Get current contact data
+            response = await self.http_client.get(
+                contact_endpoint,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
+
+            contact_data = response.json()
+            current_tags = contact_data.get("tags", [])
+
+            # Step 2: Remove specified tags from current tags
+            if not current_tags:
+                logger.warning(
+                    f"Contact {contact_id} has no tags to remove",
+                    extra={"contact_id": contact_id, "requested_tags": tags},
                 )
-                response.raise_for_status()
+                return {"message": "No tags to remove", "current_tags": []}
 
-                contact_data = response.json()
-                current_tags = contact_data.get("tags", [])
+            # Remove the specified tags (case-insensitive)
+            tags_to_remove_lower = [tag.lower() for tag in tags]
+            updated_tags = [tag for tag in current_tags if tag.lower() not in tags_to_remove_lower]
 
-                # Step 2: Remove specified tags from current tags
-                if not current_tags:
-                    logger.warning(
-                        f"Contact {contact_id} has no tags to remove",
-                        extra={"contact_id": contact_id, "requested_tags": tags},
-                    )
-                    return {"message": "No tags to remove", "current_tags": []}
+            # Step 3: Update contact with new tags list
+            payload = {"tags": updated_tags}
 
-                # Remove the specified tags (case-insensitive)
-                tags_to_remove_lower = [tag.lower() for tag in tags]
-                updated_tags = [tag for tag in current_tags if tag.lower() not in tags_to_remove_lower]
+            update_response = await self.http_client.put(
+                contact_endpoint,
+                json=payload,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            update_response.raise_for_status()
 
-                # Step 3: Update contact with new tags list
-                payload = {"tags": updated_tags}
-
-                update_response = await client.put(
-                    contact_endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                update_response.raise_for_status()
-
-                # Log successful removal with security context
-                removed_tags = [tag for tag in current_tags if tag.lower() in tags_to_remove_lower]
-                logger.info(
-                    f"Successfully removed tags from contact {contact_id}: {removed_tags}",
-                    extra={
-                        "contact_id": contact_id,
-                        "removed_tags": removed_tags,
-                        "remaining_tags": updated_tags,
-                        "security_event": "tag_removal_success",
-                    },
-                )
-
-                return {
-                    "status": "success",
+            # Log successful removal with security context
+            removed_tags = [tag for tag in current_tags if tag.lower() in tags_to_remove_lower]
+            logger.info(
+                f"Successfully removed tags from contact {contact_id}: {removed_tags}",
+                extra={
+                    "contact_id": contact_id,
                     "removed_tags": removed_tags,
                     "remaining_tags": updated_tags,
-                    "contact_id": contact_id,
-                }
+                    "security_event": "tag_removal_success",
+                },
+            )
+
+            return {
+                "status": "success",
+                "removed_tags": removed_tags,
+                "remaining_tags": updated_tags,
+                "contact_id": contact_id,
+            }
 
         except httpx.HTTPError as e:
             error_msg = f"Failed to remove tags from contact {contact_id}: {str(e)}"
@@ -489,25 +483,67 @@ class GHLClient:
         payload = {"customFields": [{"id": field_id, "value": str(value)}]}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.put(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.http_client.put(
+                endpoint,
+                json=payload,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
-                logger.info(
-                    f"Updated custom field {field_id} for contact {contact_id}",
-                    extra={"contact_id": contact_id, "field_id": field_id},
-                )
+            logger.info(
+                f"Updated custom field {field_id} for contact {contact_id}",
+                extra={"contact_id": contact_id, "field_id": field_id},
+            )
 
-                return response.json()
+            return response.json()
 
         except httpx.HTTPError as e:
             logger.error(
                 f"Failed to update custom field for contact {contact_id}: {str(e)}",
+                extra={"contact_id": contact_id, "error": str(e)},
+            )
+            raise
+
+    async def update_custom_fields_batch(self, contact_id: str, fields: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update multiple custom fields on a contact in a single API call.
+
+        Args:
+            contact_id: GHL contact ID
+            fields: Dict mapping field_id to value
+
+        Returns:
+            API response dict
+        """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would batch-update {len(fields)} custom fields for {contact_id}",
+                extra={"contact_id": contact_id, "test_mode": True},
+            )
+            return {"status": "mocked", "fields_updated": len(fields)}
+
+        endpoint = f"{self.base_url}/contacts/{contact_id}"
+        payload = {"customFields": [{"id": fid, "value": str(val)} for fid, val in fields.items()]}
+
+        try:
+            response = await self.http_client.put(
+                endpoint,
+                json=payload,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
+
+            logger.info(
+                f"Batch-updated {len(fields)} custom fields for contact {contact_id}",
+                extra={"contact_id": contact_id, "field_count": len(fields)},
+            )
+            return response.json()
+
+        except httpx.HTTPError as e:
+            logger.error(
+                f"Failed to batch-update custom fields for contact {contact_id}: {str(e)}",
                 extra={"contact_id": contact_id, "error": str(e)},
             )
             raise
@@ -535,21 +571,20 @@ class GHLClient:
         payload = {"contactId": contact_id}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.http_client.post(
+                endpoint,
+                json=payload,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
-                logger.info(
-                    f"Triggered workflow {workflow_id} for contact {contact_id}",
-                    extra={"contact_id": contact_id, "workflow_id": workflow_id},
-                )
+            logger.info(
+                f"Triggered workflow {workflow_id} for contact {contact_id}",
+                extra={"contact_id": contact_id, "workflow_id": workflow_id},
+            )
 
-                return response.json()
+            return response.json()
 
         except httpx.HTTPError as e:
             logger.error(
@@ -593,20 +628,19 @@ class GHLClient:
         params = {"startDate": start_date, "endDate": end_date, "timezone": timezone}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    endpoint,
-                    params=params,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.http_client.get(
+                endpoint,
+                params=params,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
-                data = response.json()
-                # GHL usually returns slots in a dict under 'slots' or directly
-                slots = data.get("slots", []) if isinstance(data, dict) else []
+            data = response.json()
+            # GHL usually returns slots in a dict under 'slots' or directly
+            slots = data.get("slots", []) if isinstance(data, dict) else []
 
-                return slots
+            return slots
 
         except httpx.HTTPError as e:
             logger.error(
@@ -667,21 +701,20 @@ class GHLClient:
             payload["assignedUserId"] = assigned_user_id
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.http_client.post(
+                endpoint,
+                json=payload,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
-                logger.info(
-                    f"Created appointment for contact {contact_id}",
-                    extra={"contact_id": contact_id, "calendar_id": calendar_id},
-                )
+            logger.info(
+                f"Created appointment for contact {contact_id}",
+                extra={"contact_id": contact_id, "calendar_id": calendar_id},
+            )
 
-                return response.json()
+            return response.json()
 
         except httpx.HTTPError as e:
             logger.error(
@@ -818,7 +851,7 @@ class GHLClient:
 
         return results
 
-    def fetch_dashboard_data(self) -> dict:
+    async def fetch_dashboard_data(self) -> dict:
         """
         Fetch real-time dashboard data from GHL API.
 
@@ -843,10 +876,10 @@ class GHLClient:
             logger.info("Fetching live dashboard data from GHL API")
 
             # Fetch conversations (last 50)
-            conversations = self.get_conversations(limit=50)
+            conversations = await self.get_conversations(limit=50)
 
             # Fetch opportunities (pipeline)
-            opportunities = self.get_opportunities()
+            opportunities = await self.get_opportunities()
 
             # Calculate revenue metrics
             total_pipeline = sum(float(opp.get("monetary_value", 0) or 0) for opp in opportunities)
@@ -945,19 +978,18 @@ class GHLClient:
         endpoint = f"{self.base_url}/contacts/{contact_id}"
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    endpoint,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.http_client.get(
+                endpoint,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
-                contact_data = response.json()
+            contact_data = response.json()
 
-                logger.info(f"Successfully fetched contact {contact_id}", extra={"contact_id": contact_id})
+            logger.info(f"Successfully fetched contact {contact_id}", extra={"contact_id": contact_id})
 
-                return contact_data
+            return contact_data
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
@@ -996,20 +1028,19 @@ class GHLClient:
             params["query"] = query
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    endpoint,
-                    params=params,
-                    headers=self.headers,
-                    timeout=settings.webhook_timeout_seconds,
-                )
-                response.raise_for_status()
+            response = await self.http_client.get(
+                endpoint,
+                params=params,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
 
-                data = response.json()
-                contacts = data.get("contacts", [])
+            data = response.json()
+            contacts = data.get("contacts", [])
 
-                logger.info(f"Found {len(contacts)} contacts matching query '{query}'")
-                return contacts
+            logger.info(f"Found {len(contacts)} contacts matching query '{query}'")
+            return contacts
 
         except httpx.HTTPError as e:
             logger.error(f"Failed to search contacts with query '{query}': {str(e)}")

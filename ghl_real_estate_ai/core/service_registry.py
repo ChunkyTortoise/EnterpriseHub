@@ -93,7 +93,7 @@ class ServiceRegistry:
                         # Some services don't take location_id
                         try:
                             self._services[service_name] = service_class()
-                        except:
+                        except Exception:
                             self._services[service_name] = service_class(ghl_location_id=self.location_id)
 
                 logger.debug(f"Initialized service: {service_name}")

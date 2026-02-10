@@ -36,7 +36,9 @@ def get_monitoring_services():
     """Get cached monitoring services."""
     try:
         return {"cache_service": get_cache_service(), "event_publisher": get_event_publisher()}
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).debug(f"Failed to initialize monitoring services: {str(e)}")
         return None
 
 

@@ -568,7 +568,7 @@ class CelebrationEngine:
                     # Fallback to template if AI fails
                     if not message or len(message) > 200:
                         message = template["message"]
-                except:
+                except Exception:
                     message = template["message"]
 
             return CelebrationContent(
@@ -867,7 +867,7 @@ class CelebrationEngine:
             personalized = await self.claude.generate_response(personalization_prompt)
             return personalized if personalized and len(personalized) <= 150 else base_message
 
-        except:
+        except Exception:
             return base_message
 
     async def _personalize_countdown_message(
@@ -888,7 +888,7 @@ class CelebrationEngine:
             personalized = await self.claude.generate_response(personalization_prompt)
             return personalized if personalized and len(personalized) <= 150 else base_message
 
-        except:
+        except Exception:
             return base_message
 
     async def _encourage_social_sharing(

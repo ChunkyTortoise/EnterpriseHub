@@ -19,6 +19,8 @@ from ghl_real_estate_ai.core.llm_client import LLMProvider, LLMResponse
 from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import MLFeatureVector, MLScoringResult
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
 from ghl_real_estate_ai.services.service6_ai_integration import (
+
+@pytest.mark.integration
     AIInferenceError,
     AIPredictiveError,
     AIScoringError,

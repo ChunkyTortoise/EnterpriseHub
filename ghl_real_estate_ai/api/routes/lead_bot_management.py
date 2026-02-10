@@ -137,7 +137,7 @@ async def create_sequence(
 
     except Exception as e:
         logger.error(f"Error creating sequence for lead {request.lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/sequences/{lead_id}", response_model=SequenceStatusResponse)
@@ -221,7 +221,7 @@ async def get_sequence_status(lead_id: str, _auth=Depends(require_auth)):
         raise
     except Exception as e:
         logger.error(f"Error getting sequence status for lead {lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sequences/{lead_id}/pause")
@@ -245,7 +245,7 @@ async def pause_sequence(lead_id: str, _auth=Depends(require_auth)):
         raise
     except Exception as e:
         logger.error(f"Error pausing sequence for lead {lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sequences/{lead_id}/resume")
@@ -269,7 +269,7 @@ async def resume_sequence(lead_id: str, _auth=Depends(require_auth)):
         raise
     except Exception as e:
         logger.error(f"Error resuming sequence for lead {lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sequences/{lead_id}/cancel")
@@ -293,7 +293,7 @@ async def cancel_sequence(lead_id: str, _auth=Depends(require_auth)):
         raise
     except Exception as e:
         logger.error(f"Error cancelling sequence for lead {lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/scheduler/status", response_model=SchedulerHealthResponse)
@@ -317,7 +317,7 @@ async def get_scheduler_status(scheduler_service=Depends(get_scheduler_service),
 
     except Exception as e:
         logger.error(f"Error getting scheduler status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/scheduler/restart")
@@ -334,7 +334,7 @@ async def restart_scheduler(scheduler_service=Depends(get_scheduler_service), _a
 
     except Exception as e:
         logger.error(f"Error restarting scheduler: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/manual-trigger", response_model=Dict[str, Any])
@@ -389,7 +389,7 @@ async def manual_trigger(
         raise
     except Exception as e:
         logger.error(f"Error in manual trigger: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/test-sequence")
@@ -409,7 +409,7 @@ async def test_sequence(
 
     except Exception as e:
         logger.error(f"Error creating test sequence: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/health")

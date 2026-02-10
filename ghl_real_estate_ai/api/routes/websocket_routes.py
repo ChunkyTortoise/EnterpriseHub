@@ -154,7 +154,7 @@ async def get_websocket_status(current_user=Depends(get_current_user)):
 
     except Exception as e:
         logger.error(f"Error getting WebSocket status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get WebSocket status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/connections")
@@ -181,7 +181,7 @@ async def get_active_connections(current_user=Depends(get_current_user)):
 
     except Exception as e:
         logger.error(f"Error getting active connections: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get connection information: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/broadcast")
@@ -262,7 +262,7 @@ async def broadcast_event(event_data: Dict[str, Any], current_user=Depends(get_c
         raise
     except Exception as e:
         logger.error(f"Error broadcasting event: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to broadcast event: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/test-connection")
@@ -326,7 +326,7 @@ async def test_websocket_connection(current_user=Depends(get_current_user)):
 
     except Exception as e:
         logger.error(f"Error testing WebSocket connection: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/start-services")
@@ -356,7 +356,7 @@ async def start_websocket_services(current_user=Depends(get_current_user)):
 
     except Exception as e:
         logger.error(f"Error starting WebSocket services: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to start services: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/stop-services")
@@ -386,7 +386,7 @@ async def stop_websocket_services(current_user=Depends(get_current_user)):
 
     except Exception as e:
         logger.error(f"Error stopping WebSocket services: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to stop services: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/health")

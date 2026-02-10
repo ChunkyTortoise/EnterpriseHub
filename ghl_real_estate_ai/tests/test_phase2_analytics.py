@@ -10,6 +10,8 @@ from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
+@pytest.mark.integration
+
 
 @pytest.fixture
 def analytics_service():

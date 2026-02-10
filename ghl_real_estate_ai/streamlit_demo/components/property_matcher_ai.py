@@ -112,7 +112,9 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool = False, analys
                             property, lead_context.get("extracted_preferences", {})
                         )
                         st.info(f"🤖 **Claude's Psychological Insight:** {deep_reasoning}")
-                    except Exception:
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).debug(f"AI Insight (fallback logic) failed: {str(e)}")
                         pass
                 st.markdown("#### 📊 Match Score Breakdown with Gap Analysis")
                 lead_budget = lead_context.get("extracted_preferences", {}).get("budget", 800000)

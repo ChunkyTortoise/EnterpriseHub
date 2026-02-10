@@ -7,6 +7,8 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
+@pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_root_endpoint():

@@ -486,7 +486,7 @@ def _is_today(date_str: str) -> bool:
     try:
         date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         return date.date() == datetime.utcnow().date()
-    except:
+    except Exception:
         return False
 
 
@@ -498,7 +498,7 @@ def _is_this_week(date_str: str) -> bool:
         date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         week_start = datetime.utcnow() - timedelta(days=7)
         return date >= week_start
-    except:
+    except Exception:
         return False
 
 

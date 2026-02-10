@@ -47,7 +47,7 @@ except ImportError:
 
         try:
             return asyncio.run(coro)
-        except:
+        except Exception:
             return None
 
 
@@ -139,7 +139,7 @@ class UnifiedBotManager:
                     "hot_leads_generated": lead_data.get("immediate_priority", 0),
                     "pipeline_conversion": 34.7,
                 }
-            except:
+            except Exception:
                 pass
 
         # Fallback mock data
@@ -172,7 +172,7 @@ class UnifiedBotManager:
                     "voice_handoffs": seller_data.get("handoffs", 0),
                     "conversion_to_listing": 42.3,
                 }
-            except:
+            except Exception:
                 pass
 
         # Fallback mock data

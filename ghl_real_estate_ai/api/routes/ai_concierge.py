@@ -659,7 +659,8 @@ async def stream_proactive_insights(
         if websocket.client_state.name != "DISCONNECTED":
             try:
                 await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
-            except:
+            except (RuntimeError, ConnectionError) as e:
+                logger.debug(f"WebSocket already closed: {e}")
                 pass
 
     finally:

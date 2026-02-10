@@ -17,6 +17,8 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import ComplianceGuard, ComplianceStatus
 
+@pytest.mark.integration
+
 # ---------------------------------------------------------------------------
 # SMS Truncation Logic (extracted from webhook.py for testability)
 # ---------------------------------------------------------------------------

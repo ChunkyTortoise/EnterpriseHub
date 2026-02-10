@@ -9,6 +9,8 @@ import pytest
 
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 
+@pytest.mark.integration
+
 
 def create_rag(name):
     """Create a RAG engine with a specific directory."""

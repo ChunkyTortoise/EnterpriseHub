@@ -105,7 +105,7 @@ async def transition_lead_stage(location_id: str, transition: StageTransition, b
 
     except Exception as e:
         logger.error(f"Error transitioning lead stage: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to transition stage: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/stages/{location_id}/{contact_id}/history")
@@ -139,7 +139,7 @@ async def get_stage_history(location_id: str, contact_id: str):
 
     except Exception as e:
         logger.error(f"Error fetching stage history: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Lead Health Monitoring
@@ -188,7 +188,7 @@ async def get_lead_health(location_id: str, contact_id: str):
         raise
     except Exception as e:
         logger.error(f"Error calculating lead health: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to calculate health: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/health/{location_id}/at-risk")
@@ -218,7 +218,7 @@ async def get_at_risk_leads(
 
     except Exception as e:
         logger.error(f"Error identifying at-risk leads: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to identify at-risk leads: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Re-engagement Campaigns
@@ -253,7 +253,7 @@ async def create_reengagement_campaign(
 
     except Exception as e:
         logger.error(f"Error creating re-engagement campaign: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to create campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/reengage/{location_id}/eligible")
@@ -282,7 +282,7 @@ async def get_eligible_for_reengagement(
 
     except Exception as e:
         logger.error(f"Error finding eligible leads: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to find eligible leads: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Lifecycle Metrics
@@ -314,7 +314,7 @@ async def get_lifecycle_metrics(
 
     except Exception as e:
         logger.error(f"Error fetching lifecycle metrics: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Automated Nurture Sequences
@@ -350,7 +350,7 @@ async def start_nurture_sequence(
 
     except Exception as e:
         logger.error(f"Error starting nurture sequence: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to start sequence: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/nurture/{sequence_id}/stop")
@@ -373,7 +373,7 @@ async def stop_nurture_sequence(location_id: str, sequence_id: str):
 
     except Exception as e:
         logger.error(f"Error stopping nurture sequence: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to stop sequence: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Health check

@@ -68,7 +68,7 @@ async def analyze_negotiation_intelligence(
 
     except ValueError as e:
         logger.error(f"Validation error in negotiation analysis: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
     except Exception as e:
         logger.error(f"Negotiation analysis failed: {e}")
         raise HTTPException(status_code=500, detail="Analysis failed")
@@ -98,7 +98,7 @@ async def get_realtime_coaching(
 
     except ValueError as e:
         logger.error(f"Coaching validation error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
     except Exception as e:
         logger.error(f"Real-time coaching failed: {e}")
         raise HTTPException(status_code=500, detail="Coaching failed")
@@ -135,7 +135,7 @@ async def update_negotiation_strategy(
 
     except ValueError as e:
         logger.error(f"Strategy update validation error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
     except Exception as e:
         logger.error(f"Strategy update failed: {e}")
         raise HTTPException(status_code=500, detail="Strategy update failed")

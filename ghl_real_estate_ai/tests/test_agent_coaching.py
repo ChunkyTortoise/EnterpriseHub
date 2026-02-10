@@ -6,6 +6,8 @@ import pytest
 
 from ghl_real_estate_ai.services.agent_coaching import AgentCoachingService, CoachingTip
 
+@pytest.mark.unit
+
 
 @pytest.fixture
 def coaching_service():

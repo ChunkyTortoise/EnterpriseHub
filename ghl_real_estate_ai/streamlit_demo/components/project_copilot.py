@@ -20,7 +20,9 @@ def render_welcome_walkthrough():
         try:
             companion = get_claude_platform_companion()
             companion_available = True
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Welcome tour initialization error: {e}")
             companion = None
             companion_available = False
 
@@ -52,7 +54,9 @@ def render_welcome_walkthrough():
                         asyncio.set_event_loop(loop)
                         greeting = run_async(companion.generate_project_greeting("Jorge"))
                         greeting_text = greeting
-                    except Exception:
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).error(f"Tour greeting generation error: {e}")
                         pass
 
             st.session_state.claude_greeting_text = greeting_text
@@ -124,7 +128,9 @@ def render_project_copilot():
     try:
         companion = get_claude_platform_companion()
         companion_available = True
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Project Copilot rendering error: {e}")
         companion = None
         companion_available = False
 
@@ -149,7 +155,9 @@ def render_project_copilot():
                         asyncio.set_event_loop(loop)
                         guidance = run_async(companion.get_hub_guidance(current_hub))
                         st.info(guidance)
-                    except:
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).debug(f"Copilot advice generation error: {e}")
                         st.info(
                             f"The {current_hub} is optimized for Phase 6 operations. Focus on your high-intent leads."
                         )

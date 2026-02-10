@@ -206,7 +206,7 @@ class PerformanceMonitor:
             # Get cache statistics (this would be backend-specific)
             # For demo, return simulated hit rate
             return 0.78  # 78% hit rate
-        except:
+        except Exception:
             return 0.0
 
     async def _store_metrics(self, metrics: Dict[str, Any]):

@@ -25,7 +25,8 @@ class DemoStateManager:
         try:
             with open(self.state_file, "r") as f:
                 return json.load(f)
-        except:
+        except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
+            logger.warning(f"Could not load demo state: {e}. Returning default state.")
             return {"custom_listings": [], "user_actions": []}
 
     def save_state(self, state):

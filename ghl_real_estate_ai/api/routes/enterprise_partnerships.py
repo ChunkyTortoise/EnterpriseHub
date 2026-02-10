@@ -182,7 +182,7 @@ async def create_enterprise_tenant(
         }
     except Exception as e:
         logger.error(f"Failed to create enterprise tenant: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 @router.get("/auth/sso/login")
@@ -214,7 +214,7 @@ async def initiate_sso_login(
         return sso_result
     except Exception as e:
         logger.error(f"SSO initiation failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 @router.post("/auth/sso/callback")
@@ -229,7 +229,7 @@ async def handle_sso_callback(
         return auth_result
     except Exception as e:
         logger.error(f"SSO callback failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 @router.get("/auth/me")
@@ -580,7 +580,7 @@ async def provision_enterprise_user(
         }
     except Exception as e:
         logger.error(f"User provisioning failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 @router.put("/tenants/{tenant_id}/users/{user_email}/roles")
@@ -602,7 +602,7 @@ async def update_user_roles(
         }
     except Exception as e:
         logger.error(f"User role update failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 # ===================================================================

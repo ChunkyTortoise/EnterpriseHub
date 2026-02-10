@@ -261,7 +261,7 @@ async def track_touchpoint(touchpoint: TouchpointRequest):
 
     except Exception as e:
         logger.error(f"Error tracking touchpoint: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to track touchpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/revenue-events", status_code=201, summary="Track Revenue Event")
@@ -297,7 +297,7 @@ async def track_revenue_event(revenue_event: RevenueEventRequest):
 
     except Exception as e:
         logger.error(f"Error tracking revenue event: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to track revenue event: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/attribution-report", response_model=AttributionReportResponse, summary="Generate Attribution Report")
@@ -326,7 +326,7 @@ async def generate_attribution_report(request: AttributionReportRequest):
 
     except Exception as e:
         logger.error(f"Error generating attribution report: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate attribution report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/real-time-metrics", response_model=RealTimeMetricsResponse, summary="Get Real-Time Revenue Metrics")
@@ -343,7 +343,7 @@ async def get_real_time_metrics():
 
     except Exception as e:
         logger.error(f"Error getting real-time metrics: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to get real-time metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================================================
@@ -376,7 +376,7 @@ async def analyze_customer(
         raise
     except Exception as e:
         logger.error(f"Error analyzing customer {customer_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to analyze customer: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/clv-report", response_model=CLVReportResponse, summary="Generate CLV Analysis Report")
@@ -406,7 +406,7 @@ async def generate_clv_report(request: CLVAnalysisRequest):
         raise
     except Exception as e:
         logger.error(f"Error generating CLV report: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate CLV report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/customer-segments", summary="Get Customer Segment Profiles")
@@ -449,7 +449,7 @@ async def get_customer_segments():
 
     except Exception as e:
         logger.error(f"Error getting customer segments: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to get customer segments: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================================================
@@ -485,7 +485,7 @@ async def generate_competitive_intelligence(request: CompetitiveIntelRequest):
         raise
     except Exception as e:
         logger.error(f"Error generating competitive intelligence: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate competitive intelligence: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/competitive-alerts", summary="Get Real-Time Competitive Alerts")
@@ -508,7 +508,7 @@ async def get_competitive_alerts():
 
     except Exception as e:
         logger.error(f"Error getting competitive alerts: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to get competitive alerts: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================================================
@@ -607,7 +607,7 @@ async def get_executive_summary():
 
     except Exception as e:
         logger.error(f"Error generating executive summary: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate executive summary: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/dashboard-data", summary="Get Complete Dashboard Data")
@@ -647,7 +647,7 @@ async def get_dashboard_data(time_range: int = Query(30, description="Time range
 
     except Exception as e:
         logger.error(f"Error getting dashboard data: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to get dashboard data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ================================================================================================
@@ -726,4 +726,4 @@ async def get_analytics_status():
 
     except Exception as e:
         logger.error(f"Error getting analytics status: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to get analytics status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

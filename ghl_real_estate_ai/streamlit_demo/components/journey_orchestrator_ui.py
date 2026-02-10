@@ -161,5 +161,7 @@ def render_journey_orchestrator(lead_id: str, lead_name: str, lead_profile: dict
                     """,
                         unsafe_allow_html=True,
                     )
-        except:
+        except Exception as e:
+            # Import logger if needed or use st.warning
+            st.warning(f"Timing optimization temporarily unavailable: {str(e)}")
             st.info("Timing optimization data loading...")

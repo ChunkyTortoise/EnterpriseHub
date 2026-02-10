@@ -107,7 +107,8 @@ class ConversationOptimizer:
 
         try:
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-        except:
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Failed to parse timestamp '{timestamp_str}': {e}")
             timestamp = datetime.utcnow()
 
         token_count = self.count_tokens(content)

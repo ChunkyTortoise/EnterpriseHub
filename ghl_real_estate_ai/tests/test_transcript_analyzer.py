@@ -19,6 +19,8 @@ import pytest
 
 from ghl_real_estate_ai.services.transcript_analyzer import ConversationMetrics, PatternInsights, TranscriptAnalyzer
 
+@pytest.mark.integration
+
 # ==============================================================================
 # FIXTURES
 # ==============================================================================

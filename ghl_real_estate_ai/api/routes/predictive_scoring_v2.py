@@ -289,7 +289,7 @@ async def score_lead_v2(
             )
         except Exception as fallback_error:
             logger.error(f"Legacy fallback also failed: {fallback_error}")
-            raise HTTPException(status_code=500, detail=f"Scoring system unavailable: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/swarm-analysis", response_model=Dict[str, Any])
@@ -456,7 +456,7 @@ async def score_leads_batch(
 
     except Exception as e:
         logger.error(f"Batch scoring failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Batch scoring failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/behavioral-signals/{lead_id}")
@@ -502,7 +502,7 @@ async def get_behavioral_signals(
 
     except Exception as e:
         logger.error(f"Behavioral signal extraction failed for {lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Signal extraction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/routing-recommendation")
@@ -544,7 +544,7 @@ async def get_routing_recommendation(
 
     except Exception as e:
         logger.error(f"Routing recommendation failed for {lead_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Routing recommendation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/performance-metrics", response_model=PerformanceMetricsResponse)
@@ -606,7 +606,7 @@ async def get_performance_metrics(current_user: dict = Depends(verify_jwt_token)
 
     except Exception as e:
         logger.error(f"Performance metrics retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Performance metrics unavailable: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/warm-cache")
@@ -651,7 +651,7 @@ async def warm_cache(
 
     except Exception as e:
         logger.error(f"Cache warming failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Cache warming failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Backward Compatibility Endpoints
@@ -693,7 +693,7 @@ async def legacy_score_endpoint(
 
     except Exception as e:
         logger.error(f"Legacy scoring failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Legacy scoring failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Helper Functions

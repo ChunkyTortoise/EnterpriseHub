@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-import requests
+import httpx
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
@@ -19,6 +19,7 @@ class AttomClient:
         self.api_key = api_key or os.getenv("ATTOM_API_KEY")
         self.base_url = "https://api.gateway.attomdata.com/propertyapi/v1.0.0"
         self.cache = get_cache_service()
+        self.http_client = httpx.AsyncClient(timeout=10.0)
 
         if not self.api_key:
             logger.warning("ATTOM_API_KEY not found. Data enrichment will be limited.")
@@ -48,7 +49,7 @@ class AttomClient:
         try:
             # We'll use the combined detail endpoint for maximum data
             url = f"{self.base_url}/property/detail"
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response = await self.http_client.get(url, headers=headers, params=params)
 
             if response.status_code == 200:
                 data = response.json()

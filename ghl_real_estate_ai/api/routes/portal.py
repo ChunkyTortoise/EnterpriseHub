@@ -124,9 +124,11 @@ async def handle_swipe(request: SwipeRequest):
 
         return SwipeResponse(**result)
 
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error handling swipe: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error handling swipe")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/stats/{lead_id}")
@@ -164,8 +166,8 @@ async def get_lead_stats(lead_id: str):
         stats = swipe_manager.get_lead_stats(lead_id)
         return stats
     except Exception as e:
-        logger.error(f"Error getting lead stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error getting lead stats")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/feedback-categories")
@@ -213,8 +215,8 @@ async def get_lead_interactions(lead_id: str, limit: int = 50):
         }
 
     except Exception as e:
-        logger.error(f"Error getting lead interactions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error getting lead interactions")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/deck/{lead_id}")
@@ -300,8 +302,8 @@ async def get_smart_deck(lead_id: str, location_id: str, limit: int = 10, min_sc
         }
 
     except Exception as e:
-        logger.error(f"Error getting smart deck: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error getting smart deck")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/smart-deck")
@@ -316,5 +318,5 @@ async def get_smart_deck_legacy(contact_id: str, location_id: Optional[str] = No
         deck = await swipe_manager.get_smart_deck(lead_id=contact_id, location_id=loc_id, limit=10)
         return {"deck": deck}
     except Exception as e:
-        logger.error(f"Error in legacy smart deck: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error in legacy smart deck")
+        raise HTTPException(status_code=500, detail="Internal server error")

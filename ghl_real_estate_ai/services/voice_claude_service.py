@@ -283,7 +283,8 @@ class VoiceClaudeService:
 
                 try:
                     os.unlink(temp_file_path)
-                except:
+                except Exception as e:
+                    logger.debug(f"Failed to unlink temporary audio file {temp_file_path}: {e}")
                     pass
 
         except Exception as e:

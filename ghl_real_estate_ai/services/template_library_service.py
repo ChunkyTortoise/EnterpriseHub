@@ -865,7 +865,7 @@ class TemplateLibraryService:
             content_ast = self.jinja_env.parse(content)
             variables = list(content_ast.find_all_nodes(lambda n: hasattr(n, "name")))
             variable_names = [var.name for var in variables if hasattr(var, "name")]
-        except:
+        except Exception:
             variable_names = []
 
         return {
