@@ -1,233 +1,106 @@
 #!/usr/bin/env python3
 """
-Test Standalone Jorge Bot System
+Assertive standalone validation for Jorge bot package.
 
-This script tests all the standalone modules and bot functionality
-without dependencies on the main EnterpriseHub codebase.
-
-Author: Claude Code Assistant
-Created: 2026-01-22
+This script exits non-zero on any failed runtime check.
 """
 
 import asyncio
-import logging
+import json
 import os
 import sys
-from datetime import datetime
+from pathlib import Path
 
-# Set up basic logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-def test_imports():
-    """Test importing all standalone modules"""
+os.environ.setdefault("TESTING_MODE", "true")
+os.environ.setdefault("GHL_ACCESS_TOKEN", "test-ghl-token")
+os.environ.setdefault("CLAUDE_API_KEY", "test-claude-key")
+os.environ.setdefault("GHL_LOCATION_ID", "test-location")
+os.environ.setdefault("GHL_WEBHOOK_SECRET", "test-webhook-secret")
 
-    print("🧪 Testing Standalone Module Imports")
-    print("=" * 40)
 
-    try:
-        print("Testing config_settings...")
-        from config_settings import settings, get_ghl_token
-        print(f"  ✅ Settings loaded. Testing mode: {settings.testing_mode}")
+def assert_required_imports() -> None:
+    from conversation_manager import ConversationManager  # noqa: F401
+    from ghl_client import GHLClient  # noqa: F401
+    from jorge_engines_optimized import JorgeLeadEngineOptimized, JorgeSellerEngineOptimized  # noqa: F401
+    from jorge_fastapi_lead_bot import _compute_webhook_signature, _verify_webhook_signature  # noqa: F401
 
-        print("Testing ghl_client...")
-        from ghl_client import GHLClient, create_ghl_client
-        print("  ✅ GHL Client imported successfully")
 
-        print("Testing conversation_manager...")
-        from conversation_manager import ConversationManager
-        print("  ✅ Conversation Manager imported successfully")
+def assert_ghl_contract_surface() -> None:
+    from ghl_client import GHLClient
 
-        print("Testing lead_intelligence...")
-        from lead_intelligence import get_enhanced_lead_intelligence, PredictiveLeadScorerV2
-        print("  ✅ Lead Intelligence imported successfully")
-
-        print("Testing jorge_engines...")
-        from jorge_engines import JorgeSellerEngine, JorgeFollowUpEngine, JorgeToneEngine
-        print("  ✅ Jorge Engines imported successfully")
-
-        return True
-
-    except Exception as e:
-        print(f"  ❌ Import failed: {e}")
-        return False
-
-def test_bot_initialization():
-    """Test initializing the bot classes"""
-
-    print("\n🤖 Testing Bot Initialization")
-    print("=" * 40)
-
-    try:
-        print("Testing JorgeLeadBot...")
-        from jorge_lead_bot import JorgeLeadBot, create_jorge_lead_bot
-
-        # Create bot (will use test/mock settings)
-        lead_bot = create_jorge_lead_bot()
-        print("  ✅ Lead Bot initialized successfully")
-
-        print("Testing JorgeSellerBot...")
-        from jorge_seller_bot import JorgeSellerBot, create_jorge_seller_bot
-
-        # Create bot
-        seller_bot = create_jorge_seller_bot()
-        print("  ✅ Seller Bot initialized successfully")
-
-        print("Testing JorgeAutomationSystem...")
-        from jorge_automation import JorgeAutomationSystem, create_jorge_automation
-
-        # Create automation system
-        automation = create_jorge_automation()
-        print("  ✅ Automation System initialized successfully")
-
-        return True, (lead_bot, seller_bot, automation)
-
-    except Exception as e:
-        print(f"  ❌ Bot initialization failed: {e}")
-        return False, None
-
-async def test_bot_functionality(bots):
-    """Test basic bot functionality"""
-
-    print("\n⚡ Testing Bot Functionality")
-    print("=" * 40)
-
-    lead_bot, seller_bot, automation = bots
-
-    try:
-        # Test Lead Bot
-        print("Testing Lead Bot processing...")
-        lead_result = await lead_bot.process_lead_message(
-            contact_id="test_lead_123",
-            location_id="test_location_456",
-            message="I'm looking to buy a house under $500k in Austin"
-        )
-
-        print(f"  ✅ Lead Bot response: {lead_result['response'][:50]}...")
-        print(f"  ✅ Lead score: {lead_result['lead_score']}")
-
-        # Test Seller Bot
-        print("\nTesting Seller Bot processing...")
-        seller_result = await seller_bot.process_seller_message(
-            contact_id="test_seller_789",
-            location_id="test_location_456",
-            message="I'm thinking about selling my house. What's it worth?"
-        )
-
-        print(f"  ✅ Seller Bot response: {seller_result.response_message[:50]}...")
-        print(f"  ✅ Seller temperature: {seller_result.seller_temperature}")
-
-        # Test Analytics
-        print("\nTesting analytics...")
-        lead_analytics = await lead_bot.get_lead_analytics("test_lead_123", "test_location_456")
-        seller_analytics = await seller_bot.get_seller_analytics("test_seller_789", "test_location_456")
-
-        print(f"  ✅ Lead analytics retrieved")
-        print(f"  ✅ Seller analytics retrieved")
-
-        return True
-
-    except Exception as e:
-        print(f"  ❌ Bot functionality test failed: {e}")
-        return False
-
-def test_dashboard_import():
-    """Test dashboard imports"""
-
-    print("\n📊 Testing Dashboard Import")
-    print("=" * 40)
-
-    try:
-        # Test if we can import the dashboard components
-        import importlib.util
-
-        dashboard_spec = importlib.util.spec_from_file_location(
-            "jorge_kpi_dashboard",
-            "jorge_kpi_dashboard.py"
-        )
-
-        if dashboard_spec:
-            print("  ✅ Dashboard module can be imported")
-            return True
-        else:
-            print("  ❌ Dashboard module not found")
-            return False
-
-    except Exception as e:
-        print(f"  ❌ Dashboard import test failed: {e}")
-        return False
-
-async def main():
-    """Run all tests"""
-
-    print("🏠 JORGE'S BOT SYSTEM - STANDALONE TESTING")
-    print("=" * 50)
-    print(f"Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print()
-
-    # Test 1: Imports
-    imports_ok = test_imports()
-
-    if not imports_ok:
-        print("\n❌ FAILED: Import test failed. Cannot proceed.")
-        return False
-
-    # Test 2: Bot initialization
-    bots_ok, bots = test_bot_initialization()
-
-    if not bots_ok:
-        print("\n❌ FAILED: Bot initialization failed.")
-        return False
-
-    # Test 3: Bot functionality
-    functionality_ok = await test_bot_functionality(bots)
-
-    # Test 4: Dashboard
-    dashboard_ok = test_dashboard_import()
-
-    # Summary
-    print("\n" + "=" * 50)
-    print("🏁 TEST SUMMARY")
-    print("=" * 50)
-
-    tests = [
-        ("Module Imports", imports_ok),
-        ("Bot Initialization", bots_ok),
-        ("Bot Functionality", functionality_ok),
-        ("Dashboard Import", dashboard_ok)
+    expected = [
+        "send_sms",
+        "update_contact_custom_fields",
+        "add_contact_tags",
     ]
+    for method_name in expected:
+        assert hasattr(GHLClient, method_name), f"Missing GHLClient method: {method_name}"
 
-    all_passed = True
-    for test_name, result in tests:
-        status = "✅ PASSED" if result else "❌ FAILED"
-        print(f"{test_name:20} {status}")
-        if not result:
-            all_passed = False
 
-    print()
+def assert_webhook_signature_helpers() -> None:
+    from jorge_fastapi_lead_bot import _compute_webhook_signature, _verify_webhook_signature
 
-    if all_passed:
-        print("🎉 ALL TESTS PASSED!")
-        print("Jorge's bot system is ready for deployment.")
-        print()
-        print("Next steps:")
-        print("  1. Configure real GHL and Claude API keys in .env")
-        print("  2. Run: streamlit run jorge_kpi_dashboard.py")
-        print("  3. Set up GHL webhooks per README.md")
-        return True
-    else:
-        print("❌ SOME TESTS FAILED!")
-        print("Please review the errors above before deploying.")
-        return False
+    payload = {"type": "contact.updated", "contact_id": "contact-1"}
+    payload_raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    secret = "test-webhook-secret"
+    signature = _compute_webhook_signature(secret, payload_raw)
+
+    assert _verify_webhook_signature(payload_raw, signature, secret) is True
+    assert _verify_webhook_signature(payload_raw, "bad-signature", secret) is False
+
+
+async def assert_context_persistence_runtime() -> None:
+    from conversation_manager import ConversationManager
+    from jorge_engines_optimized import JorgeLeadEngineOptimized, OptimizedResponse
+
+    class DummyGHL:
+        pass
+
+    storage_dir = Path(__file__).resolve().parent / "data" / "conversations" / "standalone_checks"
+    manager = ConversationManager(storage_dir=str(storage_dir))
+    engine = JorgeLeadEngineOptimized(manager, DummyGHL())
+
+    response = OptimizedResponse(
+        message="Test response",
+        confidence_score=0.9,
+        tone_quality="test",
+        business_context={},
+    )
+
+    await engine._safe_update_context(
+        contact_id="standalone-contact",
+        location_id="standalone-location",
+        user_message="Need a home in Plano",
+        response=response,
+        lead_data={"timeline": "30_days", "budget_max": 600000, "financing_status": "pre_approved"},
+        lead_score=88.0,
+    )
+
+    context = await manager.get_context("standalone-contact", "standalone-location")
+    assert context["lead_score"] == 88.0
+    assert context["lead_temperature"] == "hot"
+    assert len(context["conversation_history"]) >= 1
+
+
+async def main() -> int:
+    assert_required_imports()
+    assert_ghl_contract_surface()
+    assert_webhook_signature_helpers()
+    await assert_context_persistence_runtime()
+
+    print("Standalone validation passed: runtime integrity checks are green.")
+    return 0
+
 
 if __name__ == "__main__":
-    # Load environment variables
     try:
-        from dotenv import load_dotenv
-        load_dotenv()
-    except ImportError:
-        print("Warning: python-dotenv not installed. Install with: pip install python-dotenv")
+        exit_code = asyncio.run(main())
+    except AssertionError as exc:
+        print(f"Standalone validation failed: {exc}")
+        exit_code = 1
+    except Exception as exc:
+        print(f"Standalone validation error: {exc}")
+        exit_code = 1
 
-    # Run tests
-    success = asyncio.run(main())
-    sys.exit(0 if success else 1)
+    sys.exit(exit_code)
