@@ -14,6 +14,8 @@ from src.query.advanced_parser import (
 from src.query.entity_extractor import EntityType
 from src.query.intent_classifier_v2 import IntentType
 
+@pytest.mark.integration
+
 
 class TestParsedQuery:
     """Test ParsedQuery class."""

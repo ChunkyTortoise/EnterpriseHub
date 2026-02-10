@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """
 Unit tests for main application entry point (app.py).
 

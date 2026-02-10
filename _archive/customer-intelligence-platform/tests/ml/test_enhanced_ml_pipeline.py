@@ -57,6 +57,8 @@ from src.ml.historical_data_processor import (
 from src.ml.scoring_pipeline import ModelType, ModelStatus
 from src.ml.synthetic_data_generator import SyntheticDataGenerator
 
+@pytest.mark.integration
+
 
 class TestDataGenerator:
     """Utility class for generating test data."""

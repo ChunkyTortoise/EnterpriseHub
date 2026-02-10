@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.prediction.deep_learning_forecaster import (
+
+@pytest.mark.integration
     DeepLearningForecaster,
     DeepLearningConfig,
     ModelType,

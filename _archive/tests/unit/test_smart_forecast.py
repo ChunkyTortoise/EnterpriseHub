@@ -8,6 +8,8 @@ import pytest
 
 from modules import smart_forecast
 
+@pytest.mark.unit
+
 
 @pytest.fixture
 def sample_stock_data():

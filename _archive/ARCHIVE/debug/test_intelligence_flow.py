@@ -3,6 +3,8 @@ from unittest.mock import MagicMock, patch
 from decimal import Decimal
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 from ghl_real_estate_ai.api.schemas.negotiation import (
+
+@pytest.mark.integration
     SellerPsychologyProfile,
     SellerMotivationType,
     UrgencyLevel,

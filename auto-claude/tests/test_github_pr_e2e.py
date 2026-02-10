@@ -35,6 +35,8 @@ from models import (
 )
 from bot_detection import BotDetector
 
+@pytest.mark.integration
+
 
 # ============================================================================
 # Fixtures

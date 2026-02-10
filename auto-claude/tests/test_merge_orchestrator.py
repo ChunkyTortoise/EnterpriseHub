@@ -31,6 +31,8 @@ from merge import MergeOrchestrator
 from merge.orchestrator import TaskMergeRequest
 
 from test_fixtures import (
+
+@pytest.mark.integration
     SAMPLE_PYTHON_MODULE,
     SAMPLE_PYTHON_WITH_NEW_FUNCTION,
     SAMPLE_PYTHON_WITH_NEW_IMPORT,

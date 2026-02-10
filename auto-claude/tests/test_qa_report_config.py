@@ -24,6 +24,8 @@ setup_qa_report_mocks()
 
 # Import configuration constants after mocking
 from qa.report import (
+
+@pytest.mark.unit
     RECURRING_ISSUE_THRESHOLD,
     ISSUE_SIMILARITY_THRESHOLD,
 )

@@ -20,6 +20,8 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.ghl_utils.config import settings
 
+@pytest.mark.integration
+
 
 class TestJorgeIntegration:
     """Test Jorge's specific GHL integration requirements."""

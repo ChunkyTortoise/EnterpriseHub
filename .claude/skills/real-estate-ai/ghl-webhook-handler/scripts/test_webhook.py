@@ -20,6 +20,8 @@ import pytest
 import httpx
 from fastapi.testclient import TestClient
 
+@pytest.mark.integration
+
 # Test configuration
 TEST_CONFIG = {
     "webhook_secret": "test_secret_key_12345",

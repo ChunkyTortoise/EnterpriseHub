@@ -18,6 +18,8 @@ from datetime import datetime
 import pytest
 
 from merge import (
+
+@pytest.mark.unit
     ChangeType,
     SemanticChange,
     TaskSnapshot,

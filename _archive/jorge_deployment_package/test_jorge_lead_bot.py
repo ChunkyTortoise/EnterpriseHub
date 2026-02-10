@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Test the updated Jorge Lead Bot with the Tesla VP case

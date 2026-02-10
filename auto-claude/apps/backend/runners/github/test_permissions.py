@@ -10,6 +10,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from permissions import GitHubPermissionChecker, PermissionCheckResult, PermissionError
 
+@pytest.mark.integration
+
 
 class MockGitHubClient:
     """Mock GitHub API client for testing."""

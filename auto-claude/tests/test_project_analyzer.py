@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 from project_analyzer import (
+
+@pytest.mark.integration
     BASE_COMMANDS,
     CustomScripts,
     ProjectAnalyzer,

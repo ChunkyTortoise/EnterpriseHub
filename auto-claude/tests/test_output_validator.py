@@ -80,6 +80,8 @@ def validate_input(user_input):
         "tests/test_auth.py": """import pytest
 from src.auth import authenticate_user
 
+@pytest.mark.integration
+
 def test_authentication():
     # Basic test
     assert authenticate_user("test", "password") == True

@@ -23,6 +23,8 @@ setup_qa_report_mocks()
 
 # Import report functions after mocking
 from qa.report import (
+
+@pytest.mark.unit
     create_manual_test_plan,
 )
 

@@ -53,6 +53,8 @@ sys.modules['claude_agent_sdk.types'] = mock_agent_types
 sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 
 from spec.complexity import (
+
+@pytest.mark.integration
     Complexity,
     ComplexityAssessment,
     ComplexityAnalyzer,

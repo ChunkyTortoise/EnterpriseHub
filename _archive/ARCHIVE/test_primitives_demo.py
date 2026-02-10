@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 Demo script to test primitive components.
 Run with: streamlit run test_primitives_demo.py

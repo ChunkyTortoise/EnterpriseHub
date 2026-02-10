@@ -16,6 +16,8 @@ import pytest
 from review import ReviewState
 from tests.review_fixtures import review_spec_dir, complete_spec_dir
 
+@pytest.mark.integration
+
 
 class TestReviewStateFeedback:
     """Tests for feedback functionality."""

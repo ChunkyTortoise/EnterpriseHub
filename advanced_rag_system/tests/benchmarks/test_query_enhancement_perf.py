@@ -13,6 +13,8 @@ import time
 
 import pytest
 from src.retrieval.query import (
+
+@pytest.mark.integration
     ExpansionConfig,
     HyDEConfig,
     HyDEGenerator,

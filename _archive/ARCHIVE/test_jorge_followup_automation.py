@@ -19,6 +19,8 @@ import pytest
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
+@pytest.mark.integration
+
 # Add the project root to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'ghl_real_estate_ai'))
 

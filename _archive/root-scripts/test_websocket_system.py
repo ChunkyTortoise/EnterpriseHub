@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 WebSocket Real-Time System Test Suite.
 

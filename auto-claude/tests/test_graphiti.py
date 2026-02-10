@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 
 from graphiti_config import is_graphiti_enabled, get_graphiti_status, GraphitiConfig
 
+@pytest.mark.integration
+
 
 class TestIsGraphitiEnabled:
     """Tests for is_graphiti_enabled function."""

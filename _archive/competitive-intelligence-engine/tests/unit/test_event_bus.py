@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.core.event_bus import (
+
+@pytest.mark.integration
     Event, EventType, EventPriority, EventHandler, EventBus,
     get_event_bus, publish_intelligence_insight, publish_alert_event
 )

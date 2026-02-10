@@ -48,6 +48,8 @@ sys.modules['claude_agent_sdk'] = mock_agent_sdk
 sys.modules['claude_agent_sdk.types'] = mock_agent_types
 
 from qa_loop import (
+
+@pytest.mark.integration
     load_implementation_plan,
     save_implementation_plan,
     get_qa_signoff_status,

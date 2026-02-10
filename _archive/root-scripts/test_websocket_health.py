@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 WebSocket Health Endpoint Test for Jorge's Real Estate AI Platform.

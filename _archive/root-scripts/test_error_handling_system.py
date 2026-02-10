@@ -39,6 +39,8 @@ from ghl_real_estate_ai.api.middleware.websocket_error_handler import (
     websocket_error_handler
 )
 from ghl_real_estate_ai.services.error_monitoring_service import (
+
+@pytest.mark.integration
     ErrorMonitoringService,
     ErrorCategory,
     get_error_monitoring_service

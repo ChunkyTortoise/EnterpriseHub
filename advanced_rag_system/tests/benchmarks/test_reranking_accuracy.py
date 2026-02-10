@@ -22,6 +22,8 @@ from src.reranking.base import (
 )
 from src.reranking.cross_encoder import CrossEncoderReRanker
 
+@pytest.mark.integration
+
 # ============================================================================
 # Test Data Generators
 # ============================================================================

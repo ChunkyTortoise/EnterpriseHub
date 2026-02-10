@@ -19,6 +19,8 @@ from src.analytics.executive_analytics_engine import (
 from src.core.event_bus import EventType, EventPriority
 from src.core.ai_client import LLMResponse, LLMProvider
 
+@pytest.mark.integration
+
 
 class TestExecutiveAnalyticsEngine:
     """Test suite for Executive Analytics Engine."""

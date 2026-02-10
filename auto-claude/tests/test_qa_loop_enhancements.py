@@ -21,6 +21,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 
 from qa_loop import (
+
+@pytest.mark.integration
     # Iteration tracking
     get_iteration_history,
     record_iteration,

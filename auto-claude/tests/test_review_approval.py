@@ -18,6 +18,8 @@ import pytest
 from review import ReviewState, REVIEW_STATE_FILE
 from tests.review_fixtures import approved_state, pending_state, review_spec_dir
 
+@pytest.mark.integration
+
 
 class TestReviewStateApproval:
     """Tests for approve(), reject(), and related methods."""

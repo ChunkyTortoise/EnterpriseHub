@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, patch
 from modules import market_pulse
 from utils.exceptions import InvalidTickerError, DataFetchError, DataProcessingError
 
+@pytest.mark.unit
+
 
 def create_mock_stock_data(days=10):
     """Create sample OHLCV data for testing."""

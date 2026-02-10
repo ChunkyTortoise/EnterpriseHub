@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 
 from implementation_plan import (
+
+@pytest.mark.unit
     ImplementationPlan,
     Phase,
     Chunk,

@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from gh_client import GHClient, GHCommandError, GHTimeoutError
 
+@pytest.mark.integration
+
 
 class TestGHClient:
     """Test suite for GHClient."""

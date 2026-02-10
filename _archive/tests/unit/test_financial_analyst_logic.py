@@ -4,6 +4,8 @@ import pytest
 import pandas as pd
 import numpy as np
 from modules.financial_analyst_logic import (
+
+@pytest.mark.integration
     DCFModel,
     DCFParameters,
     calculate_yoy_growth,

@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """Tests for roadmap target_audience type validation.
 
 This test verifies the fix for type validation in phases.py that prevents

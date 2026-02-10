@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Jorge Seller Bot Intelligence Integration Validation - Phase 3.3

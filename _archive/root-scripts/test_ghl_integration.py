@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Test GHL Integration - Validates GHL client connectivity and contact information fetching.

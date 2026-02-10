@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 
 import sys
 from pathlib import Path

@@ -25,6 +25,8 @@ setup_qa_report_mocks()
 
 # Import report functions after mocking
 from qa.report import (
+
+@pytest.mark.integration
     check_test_discovery,
     is_no_test_project,
 )

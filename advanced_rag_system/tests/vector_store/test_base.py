@@ -8,6 +8,8 @@ from src.core.exceptions import VectorStoreError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig
 
+@pytest.mark.unit
+
 
 class MockVectorStore(VectorStore):
     """Mock implementation for testing."""

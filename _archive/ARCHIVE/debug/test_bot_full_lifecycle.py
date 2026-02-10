@@ -10,6 +10,8 @@ os.environ["GHL_API_KEY"] = "ghl-test-456"
 from ghl_real_estate_ai.agents.workflow_factory import get_workflow_factory
 from ghl_real_estate_ai.models.workflows import SellerWorkflowState, LeadFollowUpState
 
+@pytest.mark.integration
+
 @pytest.mark.asyncio
 async def test_seller_lifecycle_workflow():
     print("\n🚀 Testing Jorge Seller Full-Lifecycle Workflow...")

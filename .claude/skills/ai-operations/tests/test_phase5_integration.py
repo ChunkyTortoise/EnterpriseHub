@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Phase 5 AI-Enhanced Operations Skills Integration Tests

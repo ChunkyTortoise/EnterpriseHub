@@ -13,6 +13,8 @@ from src.retrieval.dense.dense_retriever import DenseRetriever, _create_vector_s
 from src.vector_store.base import VectorStoreConfig
 from src.vector_store.chroma_store import ChromaVectorStore
 
+@pytest.mark.integration
+
 
 class TestProductionChromaDB:
     """Test production ChromaDB integration."""

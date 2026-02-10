@@ -27,6 +27,8 @@ setup_qa_report_mocks()
 
 # Import report functions after mocking
 from qa.report import (
+
+@pytest.mark.integration
     _normalize_issue_key,
     _issue_similarity,
     has_recurring_issues,

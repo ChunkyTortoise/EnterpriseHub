@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Phase 3.3 Priority 5: Cross-Bot Intelligence Integration Test

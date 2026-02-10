@@ -34,6 +34,8 @@ from security import (
 )
 from project_analyzer import SecurityProfile, BASE_COMMANDS
 
+@pytest.mark.integration
+
 
 class TestCommandExtraction:
     """Tests for command extraction from shell strings."""

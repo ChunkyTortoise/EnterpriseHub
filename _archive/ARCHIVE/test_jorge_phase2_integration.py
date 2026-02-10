@@ -22,6 +22,8 @@ from typing import Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
 
+@pytest.mark.integration
+
 # Add the project root to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'ghl_real_estate_ai'))
 

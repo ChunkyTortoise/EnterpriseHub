@@ -194,6 +194,8 @@ def hello():
 import sys
 import logging
 
+@pytest.mark.integration
+
 def hello():
     print("Modified")
 

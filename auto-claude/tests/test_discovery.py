@@ -21,6 +21,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 
 from test_discovery import (
+
+@pytest.mark.unit
     TestFramework,
     TestDiscoveryResult,
     TestDiscovery,

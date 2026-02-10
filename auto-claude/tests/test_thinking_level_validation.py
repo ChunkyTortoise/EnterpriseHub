@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 
 from phase_config import THINKING_BUDGET_MAP, get_thinking_budget
 
+@pytest.mark.unit
+
 
 class TestThinkingLevelValidation:
     """Test thinking level validation and error handling."""

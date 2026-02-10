@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """Tests for the Agent Logic module."""
 
 import json

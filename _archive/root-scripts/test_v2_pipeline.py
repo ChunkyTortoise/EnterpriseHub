@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """
 Test script for the V2 Agentic Pipeline.
 Verifies Research -> Analysis -> Design -> Executive loop.

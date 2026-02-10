@@ -71,6 +71,8 @@ class TestCombineImportsStrategy:
         baseline = '''import os
 import sys
 
+@pytest.mark.unit
+
 def main():
     pass
 '''

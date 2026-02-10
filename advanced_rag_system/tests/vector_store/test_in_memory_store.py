@@ -14,6 +14,8 @@ from src.core.types import DocumentChunk, Metadata
 from src.vector_store.base import SearchOptions, VectorStoreConfig
 from src.vector_store.in_memory_store import InMemoryVectorStore
 
+@pytest.mark.integration
+
 
 def _make_chunk(content: str, dim: int = 8) -> DocumentChunk:
     """Create a chunk with a deterministic embedding based on content."""
