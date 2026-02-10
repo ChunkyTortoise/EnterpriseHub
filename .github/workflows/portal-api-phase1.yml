@@ -20,6 +20,11 @@ on:
 jobs:
   validate-portal-api-phase1:
     runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: test
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
 
     steps:
       - name: Checkout
