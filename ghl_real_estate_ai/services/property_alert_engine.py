@@ -208,7 +208,7 @@ class PropertyAlertEngine:
                 matching_context = self._preferences_to_matching_context(preferences)
 
                 # Score property using enhanced matcher
-                property_matches = self.property_matcher.find_enhanced_matches(
+                property_matches = await self.property_matcher.find_enhanced_matches(
                     matching_context.to_dict(), min_score=preferences.alert_threshold_score / 100.0, limit=1
                 )
 

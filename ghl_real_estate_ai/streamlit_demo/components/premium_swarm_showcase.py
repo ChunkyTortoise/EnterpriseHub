@@ -101,7 +101,9 @@ class PremiumSwarmShowcase:
         """Get lead intelligence swarm instance."""
         try:
             return LeadIntelligenceSwarm()
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Failed to initialize LeadIntelligenceSwarm: {str(e)}")
             return None
 
     def _initialize_demo_data(self):

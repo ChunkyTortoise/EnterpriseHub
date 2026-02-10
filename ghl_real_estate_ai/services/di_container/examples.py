@@ -421,7 +421,7 @@ class RealEstateServiceComposer:
                 await optimized_container.get_service_async("PropertyDataService")
                 if i % 10 == 0:
                     await optimized_container.get_service_async("ScoringFactory")
-            except:
+            except Exception:
                 pass  # Ignore errors for demo
 
         # Get performance report

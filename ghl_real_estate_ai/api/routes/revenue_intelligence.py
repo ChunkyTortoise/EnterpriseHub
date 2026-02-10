@@ -163,7 +163,7 @@ async def generate_advanced_revenue_forecast(
 
     except Exception as e:
         logger.error(f"Revenue forecasting failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Revenue forecasting failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/deal-probability", response_model=DealProbabilityResponse)
@@ -230,7 +230,7 @@ async def analyze_deal_probabilities(
 
     except Exception as e:
         logger.error(f"Deal probability analysis failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Deal probability analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/optimization-plan", response_model=RevenueOptimizationResponse)
@@ -284,7 +284,7 @@ async def generate_revenue_optimization_plan(
 
     except Exception as e:
         logger.error(f"Revenue optimization planning failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Revenue optimization planning failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Real-time Intelligence Endpoints
@@ -364,7 +364,7 @@ async def get_real_time_revenue_metrics(engine: EnhancedRevenueForecastingEngine
 
     except Exception as e:
         logger.error(f"Real-time metrics fetch failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Real-time metrics fetch failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/stream/forecasts")
@@ -441,7 +441,7 @@ async def get_model_status(engine: EnhancedRevenueForecastingEngine = Depends(ge
 
     except Exception as e:
         logger.error(f"Model status fetch failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Model status fetch failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/models/retrain")
@@ -475,7 +475,7 @@ async def retrain_models(
 
     except Exception as e:
         logger.error(f"Model retraining trigger failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Model retraining trigger failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Business Intelligence Endpoints
@@ -537,7 +537,7 @@ async def get_executive_revenue_insights(
 
     except Exception as e:
         logger.error(f"Executive insights generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Executive insights generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/insights/market-intelligence")
@@ -587,7 +587,7 @@ async def get_market_intelligence_insights(engine: EnhancedRevenueForecastingEng
 
     except Exception as e:
         logger.error(f"Market intelligence generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Market intelligence generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Health check endpoint

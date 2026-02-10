@@ -241,13 +241,15 @@ class SemanticResponseCache:
         if OPENAI_AVAILABLE:
             try:
                 return OpenAIEmbeddingService()
-            except:
+            except (ImportError, ModuleNotFoundError, AttributeError) as e:
+                logger.debug(f"OpenAI embedding service not available: {e}")
                 pass
 
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             try:
                 return SentenceTransformerEmbeddingService()
-            except:
+            except (ImportError, ModuleNotFoundError, AttributeError) as e:
+                logger.debug(f"SentenceTransformer embedding service not available: {e}")
                 pass
 
         # Fallback to mock service
@@ -258,7 +260,8 @@ class SemanticResponseCache:
         if REDIS_AVAILABLE:
             try:
                 return CacheService()
-            except:
+            except (ImportError, ModuleNotFoundError, ConnectionError) as e:
+                logger.debug(f"Redis cache service not available: {e}")
                 pass
 
         # Fallback to in-memory dict
@@ -349,7 +352,8 @@ class SemanticResponseCache:
                 cached_data = await self.cache_backend.get(cache_key)
                 if cached_data:
                     return CachedResponse(**json.loads(cached_data))
-            except:
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.debug(f"Failed to deserialize cached response: {e}")
                 pass
 
         return None
@@ -377,7 +381,8 @@ class SemanticResponseCache:
                         cached_data = await self.cache_backend.get(cached_key)
                         if cached_data:
                             best_match = CachedResponse(**json.loads(cached_data))
-                    except:
+                    except (json.JSONDecodeError, KeyError, TypeError) as e:
+                        logger.debug(f"Failed to deserialize similar cached response: {e}")
                         continue
 
         return best_match, best_similarity
@@ -401,7 +406,8 @@ class SemanticResponseCache:
         else:
             try:
                 await self.cache_backend.set(cache_key, json.dumps(asdict(cached_response), default=str), ttl=ttl)
-            except:
+            except (json.JSONDecodeError, TypeError, ConnectionError) as e:
+                logger.warning(f"Failed to cache response: {e}")
                 pass
 
         # Add to similarity index
@@ -454,7 +460,8 @@ class SemanticResponseCache:
             try:
                 # Clear Redis keys with semantic prefix
                 await self.cache_backend.delete_pattern("semantic_*")
-            except:
+            except (ConnectionError, AttributeError) as e:
+                logger.debug(f"Failed to clear semantic cache: {e}")
                 pass
 
     async def get_similar_queries(self, query_text: str, limit: int = 10) -> List[Tuple[str, float]]:

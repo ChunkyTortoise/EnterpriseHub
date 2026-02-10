@@ -834,7 +834,7 @@ Jorge's Team""",
                         # Get context for CLV calculation
                         try:
                             context = await self.memory_service.get_context(contact_id)
-                        except:
+                        except Exception:
                             context = {}
 
                         # Calculate CLV estimate

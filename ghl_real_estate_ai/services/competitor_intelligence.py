@@ -482,7 +482,7 @@ class CompetitorIntelligenceService:
         try:
             blob = TextBlob(text)
             return blob.sentiment.polarity
-        except:
+        except Exception:
             return 0.0
 
     def _extract_urgency_indicators(self, text: str) -> List[str]:

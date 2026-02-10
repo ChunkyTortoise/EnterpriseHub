@@ -49,7 +49,7 @@ except ImportError:
 
         try:
             return asyncio.run(coro)
-        except:
+        except Exception:
             return None
 
 

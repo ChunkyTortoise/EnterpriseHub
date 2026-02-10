@@ -130,7 +130,7 @@ async def health_check():
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
+        raise HTTPException(status_code=503, detail="Service unhealthy")
 
 
 # --- ENDPOINT 2: GET /api/bots ---

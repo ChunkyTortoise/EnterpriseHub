@@ -514,7 +514,8 @@ class AdvancedPropertyMatchingEngine:
 
             return min(complexity, 1.0)
 
-        except Exception:
+        except (KeyError, ValueError, TypeError) as e:
+            logger.debug(f"Property complexity assessment failed: {e}")
             return 0.5  # Moderate complexity default
 
     async def _predict_engagement(
@@ -569,7 +570,8 @@ class AdvancedPropertyMatchingEngine:
 
             return min(max(conversion, 0.0), 1.0)
 
-        except Exception:
+        except (KeyError, ValueError, AttributeError) as e:
+            logger.debug(f"Conversion likelihood prediction failed: {e}")
             return engagement_prediction * 0.7  # Conservative fallback
 
     def _determine_presentation_strategy(
@@ -599,7 +601,8 @@ class AdvancedPropertyMatchingEngine:
             # Default to value-focused
             return PresentationStrategy.VALUE_FOCUSED
 
-        except Exception:
+        except (KeyError, AttributeError) as e:
+            logger.debug(f"Presentation strategy determination failed: {e}")
             return PresentationStrategy.STREAMLINED
 
     async def _generate_behavioral_reasoning(
@@ -644,7 +647,8 @@ class AdvancedPropertyMatchingEngine:
             else:
                 return "Property matches search criteria with standard behavioral profile."
 
-        except Exception:
+        except (KeyError, AttributeError) as e:
+            logger.debug(f"Behavioral reasoning generation failed: {e}")
             return "Behavioral analysis provides additional match insights."
 
     async def _calculate_ml_confidence(
@@ -674,7 +678,8 @@ class AdvancedPropertyMatchingEngine:
 
             return min(max(confidence, 0.1), 0.95)
 
-        except Exception:
+        except (KeyError, ValueError, AttributeError) as e:
+            logger.debug(f"ML confidence calculation failed: {e}")
             return 0.7  # Default confidence
 
     async def _get_optimal_presentation_time(self, behavioral_prediction: Any) -> Optional[str]:
@@ -691,7 +696,8 @@ class AdvancedPropertyMatchingEngine:
 
             return None
 
-        except Exception:
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.debug(f"Optimal presentation time calculation failed: {e}")
             return None
 
     async def _get_cached_matches(

@@ -260,7 +260,7 @@ async def create_transaction(transaction_data: TransactionCreateRequest) -> Dict
 
     except Exception as e:
         logger.error(f"Failed to create transaction: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create transaction: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{transaction_id}", response_model=Dict[str, Any])
@@ -305,7 +305,7 @@ async def get_transaction(transaction_id: str = Path(..., description="Transacti
         raise
     except Exception as e:
         logger.error(f"Failed to get transaction {transaction_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve transaction: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/", response_model=List[TransactionSummary])
@@ -329,7 +329,7 @@ async def list_transactions(
 
     except Exception as e:
         logger.error(f"Failed to list transactions: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to list transactions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.put("/{transaction_id}/milestones", response_model=Dict[str, Any])
@@ -395,7 +395,7 @@ async def update_milestone(
         raise
     except Exception as e:
         logger.error(f"Failed to update milestone: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update milestone: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -507,7 +507,7 @@ async def get_transaction_predictions(
         raise
     except Exception as e:
         logger.error(f"Failed to get predictions: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get predictions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{transaction_id}/health", response_model=Dict[str, Any])
@@ -535,7 +535,7 @@ async def get_health_analysis(transaction_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error(f"Failed to get health analysis: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get health analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -587,7 +587,7 @@ async def trigger_celebration(transaction_id: str, celebration_request: Celebrat
         raise
     except Exception as e:
         logger.error(f"Failed to trigger celebration: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to trigger celebration: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{transaction_id}/celebrations", response_model=List[Dict[str, Any]])
@@ -630,7 +630,7 @@ async def get_celebrations(
 
     except Exception as e:
         logger.error(f"Failed to get celebrations: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get celebrations: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -707,7 +707,7 @@ async def get_transaction_analytics(
         raise
     except Exception as e:
         logger.error(f"Failed to get analytics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ============================================================================
@@ -756,7 +756,7 @@ async def get_system_status() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get system status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get system status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Error handling is managed by the global exception handler in

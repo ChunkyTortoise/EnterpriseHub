@@ -32,4 +32,4 @@ async def generate_dashboard_summary(
         )
     except Exception as e:
         logger.error(f"Failed to generate dashboard summary PDF: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

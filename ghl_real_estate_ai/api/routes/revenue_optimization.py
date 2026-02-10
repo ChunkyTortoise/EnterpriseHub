@@ -220,7 +220,7 @@ async def optimize_pricing(
 
     except Exception as e:
         logger.error(f"Error in pricing optimization: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/campaigns", response_model=CampaignResponse, status_code=HTTP_201_CREATED)
@@ -270,7 +270,7 @@ async def create_campaign(request: CampaignCreationRequest, current_user: dict =
 
     except Exception as e:
         logger.error(f"Error creating campaign: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/campaigns/{campaign_id}", response_model=CampaignResponse)
@@ -301,7 +301,7 @@ async def get_campaign(campaign_id: str, current_user: dict = Depends(verify_jwt
         raise
     except Exception as e:
         logger.error(f"Error retrieving campaign: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/campaigns", response_model=List[CampaignResponse])
@@ -347,7 +347,7 @@ async def list_campaigns(
 
     except Exception as e:
         logger.error(f"Error listing campaigns: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/campaigns/{campaign_id}/execute")
@@ -381,7 +381,7 @@ async def execute_campaign(
 
     except Exception as e:
         logger.error(f"Error executing campaign: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/ml/train", response_model=MLModelTrainingResponse)
@@ -422,7 +422,7 @@ async def train_ml_model(
 
     except Exception as e:
         logger.error(f"Error starting ML training: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/ml/models/{job_id}/status", response_model=MLModelTrainingResponse)
@@ -451,7 +451,7 @@ async def get_model_training_status(job_id: str, current_user: dict = Depends(ve
         raise
     except Exception as e:
         logger.error(f"Error getting training status: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/competitive/analyze")
@@ -492,7 +492,7 @@ async def analyze_competitive_landscape(
 
     except Exception as e:
         logger.error(f"Error in competitive analysis: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/analytics/revenue")
@@ -534,7 +534,7 @@ async def get_revenue_analytics(
 
     except Exception as e:
         logger.error(f"Error calculating revenue analytics: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.post("/ab-test", status_code=HTTP_201_CREATED)
@@ -578,7 +578,7 @@ async def create_ab_test(request: A_BTestRequest, current_user: dict = Depends(v
 
     except Exception as e:
         logger.error(f"Error creating A/B test: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 @router.get("/dashboard")
@@ -639,7 +639,7 @@ async def get_optimization_dashboard(current_user: dict = Depends(verify_jwt_tok
 
     except Exception as e:
         logger.error(f"Error generating dashboard: {e}")
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
 # Helper Functions

@@ -233,7 +233,9 @@ class JorgeAPIClient:
                     },
                 },
             }
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error getting voice analytics: {e}")
             return {
                 "period_days": days,
                 "analytics": {
@@ -283,7 +285,9 @@ class JorgeAPIClient:
                 },
                 "accuracy_metrics": {"prediction_accuracy": 87.2, "false_positives": 8.1, "false_negatives": 4.7},
             }
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error getting scoring analytics: {e}")
             return {
                 "total_leads_scored": 0,
                 "avg_score": 0,

@@ -872,7 +872,7 @@ class ConsultingDeliveryService:
             end_date = datetime.fromisoformat(planned_end_date.replace("Z", "+00:00"))
             now = datetime.utcnow()
             return (end_date - now).days
-        except:
+        except (ValueError, TypeError):
             return 0
 
     def _generate_status_summary(self, engagement: ConsultingEngagement, dashboard: Dict[str, Any]) -> str:
@@ -994,7 +994,7 @@ class ConsultingDeliveryService:
             now = datetime.utcnow()
             days_elapsed = (now - start_date).days
             return max(1, (days_elapsed // 7) + 1)
-        except:
+        except (ValueError, TypeError):
             return 1
 
 

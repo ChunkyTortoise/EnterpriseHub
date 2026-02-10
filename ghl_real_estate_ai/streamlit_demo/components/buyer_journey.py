@@ -451,7 +451,9 @@ async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversat
                 matched_properties=result.get("matched_properties", []),
                 next_actions=result.get("recommended_actions", []),
             )
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Buyer qualification event publishing failed: {e}")
             pass  # Event publishing is optional
 
         return {

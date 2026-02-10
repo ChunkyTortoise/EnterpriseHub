@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -51,6 +51,7 @@ from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 
 from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, enterprise_auth_service
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
@@ -438,7 +439,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(analytics.router)
     app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(claude_chat.router, prefix="/api")
-    app.include_router(leads.router, prefix="/api")
+    app.include_router(leads.router, prefix="/api", dependencies=[Depends(get_current_user)])
     app.include_router(lead_lifecycle.router, prefix="/api")
     app.include_router(health.router, prefix="/api")
     app.include_router(sms_compliance.router, prefix="/api")
@@ -474,9 +475,9 @@ def _setup_routers(app: FastAPI):
 
     # Other routers
     app.include_router(auth.router, prefix="/api/auth")
-    app.include_router(properties.router, prefix="/api")
-    app.include_router(portal.router, prefix="/api")
-    app.include_router(team.router, prefix="/api")
+    app.include_router(properties.router, prefix="/api", dependencies=[Depends(get_current_user)])
+    app.include_router(portal.router, prefix="/api", dependencies=[Depends(get_current_user)])
+    app.include_router(team.router, prefix="/api", dependencies=[Depends(get_current_user)])
     app.include_router(crm.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(voice.router, prefix="/api")
     app.include_router(lead_intelligence.router, prefix="/api")

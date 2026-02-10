@@ -118,8 +118,8 @@ async def list_leads(
         return formatted_leads
 
     except Exception as e:
-        logger.error(f"Error listing leads: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error listing leads")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # --- ENDPOINT 2: PATCH /api/leads/{lead_id}/status ---
@@ -184,8 +184,8 @@ async def update_lead_status(
         return {"success": True, "leadId": lead_id, "updates": updates_performed}
 
     except Exception as e:
-        logger.error(f"Error updating lead status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error updating lead status")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # --- ENDPOINT 3: GET /api/leads/{lead_id}/property-matches ---
@@ -231,8 +231,8 @@ async def get_lead_property_matches(
         return formatted_matches
 
     except Exception as e:
-        logger.error(f"Error matching properties: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error matching properties")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # --- ENDPOINT 4: GET /api/conversations/{conversation_id}/messages ---

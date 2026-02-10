@@ -10,9 +10,12 @@ Extends the basic PropertyMatcher with:
 """
 
 import json
+import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import aiofiles
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.matching_models import (
@@ -57,16 +60,13 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         self.enable_ml = enable_ml
         self.buyer_scoring = PredictiveBuyerScoring()
 
-        # Load behavioral data and interaction history
-        self._load_interaction_data()
-
         # Initialize specialized component services
         self.lifestyle_service = LifestyleIntelligenceService()
         self.behavioral_engine = BehavioralWeightingEngine()
         self.market_timing_service = MarketTimingService()
         self.reasoning_engine = MatchReasoningEngine()
 
-    def find_enhanced_matches(
+    async def find_enhanced_matches(
         self,
         preferences: Dict[str, Any],
         behavioral_profile: Optional[BehavioralProfile] = None,
@@ -94,7 +94,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         # 1. Analyze behavioral profile if not provided
         if not context.behavioral_profile:
-            context.behavioral_profile = self.behavioral_engine.analyze_behavioral_profile(
+            context.behavioral_profile = await self.behavioral_engine.analyze_behavioral_profile(
                 context.lead_id, context.preferences
             )
 
@@ -1011,15 +1011,17 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
     # Data loading methods
 
-    def _load_interaction_data(self):
+    async def _load_interaction_data(self):
         """Load interaction history for behavioral analysis."""
         try:
             interaction_path = Path(__file__).parent.parent / "data" / "portal_interactions" / "lead_interactions.json"
-            if interaction_path.exists():
-                with open(interaction_path, "r") as f:
-                    self.interaction_data = json.load(f)
-            else:
+            if not interaction_path.exists():
                 self.interaction_data = {"interactions": []}
+                return
+
+            async with aiofiles.open(interaction_path, "r") as f:
+                content = await f.read()
+                self.interaction_data = json.loads(content)
         except Exception as e:
             logger.error(f"Failed to load interaction data: {e}")
             self.interaction_data = {"interactions": []}

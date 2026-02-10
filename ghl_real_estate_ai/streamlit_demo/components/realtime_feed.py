@@ -218,7 +218,9 @@ class RealTimeActivityFeed:
         try:
             dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             time_str = dt.strftime("%H:%M:%S")
-        except:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Timestamp parsing error: {e}")
             time_str = timestamp
 
         # Activity container
@@ -347,6 +349,8 @@ class RealTimeActivityFeed:
 
         except Exception as e:
             logger.error(f"WebSocket connection error: {e}")
+            import logging
+            logging.getLogger(__name__).error(f"WebSocket connection error: {e}")
             st.session_state.rt_connection_status = "disconnected"
 
     async def _heartbeat_sender(self, websocket):

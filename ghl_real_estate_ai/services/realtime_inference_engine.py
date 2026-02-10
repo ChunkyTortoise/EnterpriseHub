@@ -1355,7 +1355,7 @@ if __name__ == "__main__":
         try:
             uvloop.install()
             print("   🚀 Using uvloop for enhanced performance")
-        except:
+        except Exception:
             print("   📊 Using standard asyncio event loop")
 
     # Run test

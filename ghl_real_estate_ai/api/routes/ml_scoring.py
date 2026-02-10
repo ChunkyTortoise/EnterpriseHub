@@ -338,7 +338,7 @@ class MLScoringService:
 
         except Exception as e:
             logger.error(f"ML prediction error: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"ML prediction failed: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
     async def _build_scoring_response(
         self, request: LeadScoringRequest, ml_result: Dict[str, Any], processing_time_ms: float, cache_hit: bool
@@ -353,7 +353,8 @@ class MLScoringService:
                 price = self._extract_price_from_range(request.budget_range)
                 if price:
                     estimated_commission = price * self.jorge_commission_rate
-            except:
+            except (ValueError, AttributeError) as e:
+                logger.debug(f"Failed to calculate commission: {e}")
                 pass
 
         # Determine confidence level
@@ -422,7 +423,8 @@ class MLScoringService:
                 return (low + high) / 2
             elif len(numbers) == 1:
                 return float(numbers[0].replace(",", ""))
-        except:
+        except (ValueError, IndexError, AttributeError) as e:
+            logger.debug(f"Failed to extract price from range '{budget_range}': {e}")
             pass
         return None
 
@@ -787,7 +789,7 @@ class MLScoringService:
 
         except Exception as e:
             logger.error(f"Optimized ML prediction error: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"ML prediction failed: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
     async def _build_error_response(
         self, request: LeadScoringRequest, error: str, processing_time_ms: float

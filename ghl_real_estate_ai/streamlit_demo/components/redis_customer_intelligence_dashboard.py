@@ -246,7 +246,9 @@ class RedisCustomerIntelligenceDashboard:
             # Since we can't use async directly, we'll call the health check method
             # In a real implementation, you'd want to handle this differently
             health_status = run_async(self.analytics_connector.health_check()) if self.analytics_connector else {}
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error fetching health status: {e}")
             health_status = {"redis_connection": "error", "data_available": False}
 
         with col1:
@@ -313,7 +315,9 @@ class RedisCustomerIntelligenceDashboard:
                 try:
                     run_async(st.session_state.redis_connector.cache_service.clear())
                     st.success("Cache cleared, data will refresh")
-                except:
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Error clearing cache: {e}")
                     st.info("Data refresh initiated")
             st.rerun()
 

@@ -15,6 +15,8 @@ os.environ["GHL_LOCATION_ID"] = "loc-test-123"
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 
+@pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_property_recommendation_for_warm_lead():

@@ -438,7 +438,7 @@ class RealEstateServiceOrchestrator:
             try:
                 performance_monitor = await self.container.get_service_async("PerformanceMonitor")
                 context["performance_monitor"] = performance_monitor
-            except:
+            except Exception:
                 pass
 
             return context

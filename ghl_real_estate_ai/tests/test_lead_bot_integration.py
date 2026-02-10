@@ -42,6 +42,8 @@ from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
 )
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
+@pytest.mark.integration
+
 # =============================================================================
 # MOCK SERVICES
 # =============================================================================

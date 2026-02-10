@@ -33,6 +33,8 @@ from .query_builder import FluentPropertyQuery, PropertyQueryBuilder
 from .repository_factory import RepositoryBuilder, RepositoryFactory
 from .strategy_integration import RepositoryPropertyMatcher, enhanced_generate_property_matches
 
+@pytest.mark.integration
+
 
 class TestPropertyQuery:
     """Test PropertyQuery data structure and validation"""

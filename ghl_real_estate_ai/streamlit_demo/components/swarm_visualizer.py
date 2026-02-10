@@ -27,8 +27,9 @@ def load_claude_assets():
             with open(manifest_path, "r") as f:
                 manifest = yaml.safe_load(f)
                 skills = manifest.get("skills", [])
-        except Exception as e:
-            print(f"Error loading skills manifest: {e}")
+        except (IOError, yaml.YAMLError) as e:
+            # st.error might be too disruptive here as it's a cached function returning data
+            print(f"Error loading skills manifest: {str(e)}")
     agents = []
     agents_dir = project_root / ".claude" / "agents"
     if agents_dir.exists():
@@ -56,7 +57,9 @@ def render_agent_debate_log(lead_id: str = None):
         engine = get_autonomous_followup_engine()
         blackboard = engine.blackboard
         debates = blackboard.read("agent_debates") or []
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).debug(f"Failed to fetch agent debates from blackboard: {str(e)}")
         # Fallback mock data
         debates = [
             {

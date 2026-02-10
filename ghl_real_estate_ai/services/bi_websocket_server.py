@@ -283,7 +283,7 @@ class BIWebSocketManager:
             logger.error(f"Failed to connect BI client: {e}")
             try:
                 await websocket.close()
-            except:
+            except Exception:
                 pass
             raise
 
@@ -297,7 +297,7 @@ class BIWebSocketManager:
         try:
             # Close WebSocket connection
             await connection.websocket.close()
-        except:
+        except Exception:
             pass  # Connection might already be closed
 
         # Remove from channel subscriptions

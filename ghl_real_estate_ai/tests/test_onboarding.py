@@ -19,6 +19,8 @@ sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(), "ghl-real-estate-ai"))
 
 from scripts.onboard_partner import (
+
+@pytest.mark.integration
     check_duplicate_tenant,
     interactive_onboard,
     validate_api_key,

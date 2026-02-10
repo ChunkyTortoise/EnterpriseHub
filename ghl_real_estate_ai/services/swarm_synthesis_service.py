@@ -61,7 +61,7 @@ class StrategicAdvisorAgent:
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
             return json.loads(content)
-        except:
+        except Exception:
             return {"raw_synthesis": content}
 
 

@@ -468,7 +468,7 @@ def get_tenant_id(request: Request) -> str:
             body = request.state._body  # Set by middleware
             data = json.loads(body)
             return f"tenant_{data.get('location_id', 'unknown')}"
-        except:
+        except Exception:
             pass
 
     # Fallback to IP-based
