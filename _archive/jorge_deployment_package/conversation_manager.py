@@ -110,6 +110,41 @@ class ConversationManager:
         except Exception as e:
             self.logger.error(f"Error updating context for {contact_id}: {e}")
 
+    async def update_context_compact(
+        self,
+        contact_id: str,
+        location_id: str,
+        context_update: Dict[str, Any],
+        user_message: str = "",
+        ai_response: str = ""
+    ) -> None:
+        """
+        Compatibility wrapper for callers that pass a compact context payload.
+
+        This keeps the canonical `update_context` API intact while allowing
+        legacy/optimized paths to provide a single context dict.
+        """
+
+        if not isinstance(context_update, dict):
+            self.logger.error("Compact context update rejected: payload must be a dict")
+            return
+
+        extracted_data = context_update.get("extracted_data", {})
+        passthrough_updates = {
+            key: value
+            for key, value in context_update.items()
+            if key != "extracted_data"
+        }
+
+        await self.update_context(
+            contact_id=contact_id,
+            user_message=user_message,
+            ai_response=ai_response,
+            extracted_data=extracted_data if isinstance(extracted_data, dict) else {},
+            location_id=location_id,
+            **passthrough_updates
+        )
+
     async def save_context(self, contact_id: str, context: Dict[str, Any], location_id: str) -> None:
         """Save conversation context to storage"""
 
