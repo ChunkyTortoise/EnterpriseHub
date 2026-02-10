@@ -236,6 +236,14 @@ def dispatch_hub(
         from ghl_real_estate_ai.streamlit_demo.components.deep_research import render_deep_research_hub
 
         render_deep_research_hub()
+    elif selected_hub == "Services Portfolio":
+        from ghl_real_estate_ai.streamlit_demo.services_portfolio import render_services_portfolio
+
+        render_services_portfolio()
+    elif selected_hub == "Case Studies":
+        from ghl_real_estate_ai.streamlit_demo.case_studies import render_case_studies
+
+        render_case_studies()
 
     # Floating Claude Assistant (always rendered)
     render_floating_claude()

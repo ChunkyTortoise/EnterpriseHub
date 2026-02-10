@@ -64,6 +64,7 @@ HUB_CATEGORIES = {
         "SMS Compliance Dashboard",
     ],
     "Customer Journey": ["Buyer Journey Hub", "Seller Journey Hub"],
+    "Portfolio Showcase": ["Services Portfolio", "Case Studies"],
 }
 
 CATEGORY_DESCRIPTIONS = {
@@ -72,6 +73,7 @@ CATEGORY_DESCRIPTIONS = {
     "AI & Automation": "Intelligent agents and automation systems",
     "Bot Management": "Bot monitoring, testing and compliance",
     "Customer Journey": "Buyer and seller experience optimization",
+    "Portfolio Showcase": "Professional services and proven implementations",
 }
 
 COUNSEL_MESSAGES = {
@@ -94,6 +96,8 @@ COUNSEL_MESSAGES = {
     "Sales Copilot": "Preparing talking points for your 2pm call. Client prefers a direct, data-driven approach.",
     "Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month.",
     "Deep Research": "Perplexity-powered search is active. Ask me to research any market or property.",
+    "Services Portfolio": "31 production-grade AI services with transparent pricing and ROI models. 19 certifications, 1,768 training hours.",
+    "Case Studies": "EnterpriseHub: 87% reduction in manual review, $240K savings. AgentForge: 3x qualified leads, 45% response improvement.",
 }
 
 
