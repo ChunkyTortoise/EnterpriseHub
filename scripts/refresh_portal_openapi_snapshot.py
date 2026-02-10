@@ -18,7 +18,12 @@ SORTED_LIST_KEYS = {"enum", "required", "tags"}
 
 def _normalize(value: Any, key: str | None = None) -> Any:
     if isinstance(value, dict):
-        return {k: _normalize(v, k) for k, v in sorted(value.items(), key=lambda item: item[0])}
+        filtered = {
+            k: v
+            for k, v in value.items()
+            if not (k == "additionalProperties" and isinstance(v, bool) and v is True)
+        }
+        return {k: _normalize(v, k) for k, v in sorted(filtered.items(), key=lambda item: item[0])}
     if isinstance(value, list):
         normalized = [_normalize(item, key) for item in value]
         if key in SORTED_LIST_KEYS and all(isinstance(item, str) for item in normalized):
