@@ -23,6 +23,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 from workspace import ParallelMergeTask, ParallelMergeResult
 from core.workspace import _run_parallel_merges
 
+@pytest.mark.integration
+
 
 class TestParallelMergeDataclasses:
     """Tests for parallel merge data structures."""

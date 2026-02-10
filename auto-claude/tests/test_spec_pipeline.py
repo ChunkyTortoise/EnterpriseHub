@@ -87,6 +87,8 @@ sys.modules['validate_spec'] = mock_validate_spec
 # Now import the module under test
 from spec.pipeline import SpecOrchestrator, get_specs_dir
 
+@pytest.mark.integration
+
 
 # Cleanup fixture to restore original modules after all tests in this module
 @pytest.fixture(scope="module", autouse=True)

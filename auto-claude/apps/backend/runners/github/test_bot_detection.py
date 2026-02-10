@@ -20,6 +20,8 @@ if str(_github_dir) not in sys.path:
 
 from bot_detection import BotDetectionState, BotDetector
 
+@pytest.mark.unit
+
 
 @pytest.fixture
 def temp_state_dir(tmp_path):

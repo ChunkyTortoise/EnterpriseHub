@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Test ML Scoring API Endpoints

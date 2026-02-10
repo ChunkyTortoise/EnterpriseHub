@@ -22,6 +22,8 @@ from ghl_real_estate_ai.agents.enhanced_bot_orchestrator import (
 )
 from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile, FinancialReadinessScore, PsychologicalCommitmentScore
 
+@pytest.mark.integration
+
 class TestAdaptiveJorgeBot:
     """Test suite for AdaptiveJorgeBot enhancements."""
 

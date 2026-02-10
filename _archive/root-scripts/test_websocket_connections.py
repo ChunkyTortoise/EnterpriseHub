@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Quick WebSocket Connection Test for Jorge's BI Dashboard

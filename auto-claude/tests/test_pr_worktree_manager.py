@@ -18,6 +18,8 @@ import pytest
 import sys
 import importlib.util
 
+@pytest.mark.unit
+
 backend_path = Path(__file__).parent.parent / "apps" / "backend"
 module_path = backend_path / "runners" / "github" / "services" / "pr_worktree_manager.py"
 

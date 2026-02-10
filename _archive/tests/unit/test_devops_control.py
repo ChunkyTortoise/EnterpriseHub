@@ -7,6 +7,8 @@ import sys
 
 from modules import devops_control
 
+@pytest.mark.unit
+
 class TestDevOpsControl:
     
     @patch("modules.devops_control.px")

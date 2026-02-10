@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Test script to validate the requesting-code-review skill.

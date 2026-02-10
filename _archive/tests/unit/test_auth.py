@@ -8,6 +8,8 @@ import pytest
 from unittest.mock import patch, MagicMock
 from modules import auth
 
+@pytest.mark.integration
+
 # Use a temporary database for testing
 TEST_DB_PATH = "data/test_users.db"
 

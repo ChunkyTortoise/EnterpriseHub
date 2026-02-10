@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Test script to verify all Jorge's enhanced lead bot fixes are working.

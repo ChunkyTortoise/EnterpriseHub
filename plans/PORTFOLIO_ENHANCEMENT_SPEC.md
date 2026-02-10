@@ -320,6 +320,8 @@
 
 ## Part 6: Execution Roadmap
 
+> **⚠️ Note:** Update the dates in the Gantt chart below before execution. The dates shown are placeholders from the initial planning session (February 2026). Adjust to your current start date.
+
 ### Phase 1: Unblock Revenue Channels (Week 1)
 
 ```mermaid
@@ -411,12 +413,12 @@ gantt
 
 | Repo | GitHub | Demo | Key Selling Point |
 |------|--------|------|-------------------|
-| EnterpriseHub | [Link] | ct-enterprise-ai.streamlit.app | Multi-agent AI platform |
-| docqa-engine | [Link] | ct-document-engine.streamlit.app | Production RAG system |
-| insight-engine | [Link] | ct-insight-engine.streamlit.app | Analytics dashboards |
-| scrape-and-serve | [Link] | ct-scrape-and-serve.streamlit.app | Web scraping |
-| mcp-toolkit | [Link] | ct-mcp-toolkit.streamlit.app | MCP expertise |
-| ai-orchestrator | [Link] | PENDING | LLM orchestration |
+| EnterpriseHub | [github.com/ChunkyTortoise/EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) | ct-enterprise-ai.streamlit.app | Multi-agent AI platform |
+| docqa-engine | [github.com/ChunkyTortoise/docqa-engine](https://github.com/ChunkyTortoise/docqa-engine) | ct-document-engine.streamlit.app | Production RAG system |
+| insight-engine | [github.com/ChunkyTortoise/insight-engine](https://github.com/ChunkyTortoise/insight-engine) | ct-insight-engine.streamlit.app | Analytics dashboards |
+| scrape-and-serve | [github.com/ChunkyTortoise/scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve) | ct-scrape-and-serve.streamlit.app | Web scraping |
+| mcp-toolkit | [github.com/ChunkyTortoise/mcp-toolkit](https://github.com/ChunkyTortoise/mcp-toolkit) | ct-mcp-toolkit.streamlit.app | MCP expertise |
+| ai-orchestrator | [github.com/ChunkyTortoise/ai-orchestrator](https://github.com/ChunkyTortoise/ai-orchestrator) | PENDING | LLM orchestration |
 
 ---
 

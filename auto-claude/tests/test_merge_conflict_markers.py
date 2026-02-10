@@ -449,6 +449,8 @@ def foo():
 import os
 import sys
 
+@pytest.mark.integration
+
 <<<<<<< HEAD
 CONFIG = {"version": "1.0"}
 =======

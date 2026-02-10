@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 from modules import marketing_analytics
 from utils.data_source_faker import (
+
+@pytest.mark.integration
     generate_campaign_data,
 )  # Import for actual data generation in tests
 

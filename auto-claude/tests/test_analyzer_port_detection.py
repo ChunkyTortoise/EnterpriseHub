@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Test port detection in analyzer.py

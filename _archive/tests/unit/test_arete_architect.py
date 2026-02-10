@@ -7,6 +7,8 @@ import sys
 
 from modules import arete_architect
 
+@pytest.mark.unit
+
 class TestAreteArchitect:
     
     @patch("modules.arete_architect.st")
@@ -67,4 +69,3 @@ class TestAreteArchitect:
             assert "Time Savings" in calls
             assert "Cost Reduction" in calls
             assert "ROI Multiple" in calls
-

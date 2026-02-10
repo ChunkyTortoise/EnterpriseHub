@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 
 import asyncio
 from ghl_real_estate_ai.database.connection_manager import DatabaseConnectionManager

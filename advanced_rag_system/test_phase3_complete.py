@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """Comprehensive Phase 3 integration test.
 
 This test validates the complete advanced RAG system with all components:

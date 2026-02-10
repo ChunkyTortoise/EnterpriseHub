@@ -40,6 +40,8 @@ from jorge_claude_intelligence import (
 )
 from config_settings import settings
 
+@pytest.mark.integration
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

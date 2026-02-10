@@ -65,6 +65,8 @@ sys.modules['client'] = mock_client
 # Now import the phases module directly (bypasses __init__.py issues)
 from spec.phases import PhaseExecutor, PhaseResult, MAX_RETRIES
 
+@pytest.mark.integration
+
 
 # Cleanup fixture to restore original modules after all tests in this module
 @pytest.fixture(scope="module", autouse=True)

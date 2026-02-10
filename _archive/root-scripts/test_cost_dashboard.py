@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 Test Script for Claude Cost Tracking Dashboard
 Standalone test to verify dashboard functionality before integration

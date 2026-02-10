@@ -139,6 +139,8 @@ SAMPLE_PYTHON_WITH_NEW_FUNCTION = '''"""Sample Python module."""
 import os
 from pathlib import Path
 
+@pytest.mark.integration
+
 def hello():
     """Say hello."""
     print("Hello")

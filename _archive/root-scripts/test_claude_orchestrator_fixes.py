@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Test script for Claude Orchestrator Priority 1 & 2 fixes.

@@ -3,6 +3,8 @@
 
 import pytest
 from src.query.entity_extractor import (
+
+@pytest.mark.unit
     Entity,
     EntityExtractor,
     EntityType,

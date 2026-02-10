@@ -22,6 +22,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "apps" / "backend"))
 
 from core.phase_event import (
+
+@pytest.mark.integration
     PHASE_MARKER_PREFIX,
     ExecutionPhase,
     emit_phase,

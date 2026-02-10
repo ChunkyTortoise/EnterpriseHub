@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Simple Jorge Bot Track 3.1 Enhancement Test

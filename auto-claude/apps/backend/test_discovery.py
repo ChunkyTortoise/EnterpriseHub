@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 """Backward compatibility shim - import from analysis.test_discovery instead."""
 
 from analysis.test_discovery import (

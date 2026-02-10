@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Simple validation test for Bot Intelligence Middleware - Phase 3.3

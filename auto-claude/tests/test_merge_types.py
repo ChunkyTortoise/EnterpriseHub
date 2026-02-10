@@ -31,6 +31,8 @@ from merge import (
 )
 from merge.types import compute_content_hash, sanitize_path_for_storage
 
+@pytest.mark.unit
+
 
 class TestContentHashing:
     """Tests for content hash computation."""

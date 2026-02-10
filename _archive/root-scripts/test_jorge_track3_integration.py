@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Test Jorge Bot Track 3.1 Integration

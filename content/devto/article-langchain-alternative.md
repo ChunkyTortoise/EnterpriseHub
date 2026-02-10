@@ -2,7 +2,9 @@
 title: Why I Built a RAG System Without LangChain
 published: true
 tags: python, ai, rag, langchain, llm
-canonical_url: https://dev.to/chunkytortoise/why-i-built-a-rag-system-without-langchain
+# TODO: Update canonical_url with your actual Dev.to username path before publishing
+# Format: https://dev.to/{your-username}/why-i-built-a-rag-system-without-langchain
+canonical_url: https://dev.to/your-username/why-i-built-a-rag-system-without-langchain
 ---
 
 # Why I Built a RAG System Without LangChain
@@ -104,6 +106,63 @@ In 6 months of LangChain usage, I tracked 8 breaking changes:
 
 Each required code changes, retesting, and deployment cycles.
 
+Let me share a few concrete migration nightmares I experienced:
+
+**The RetrievalQA Migration (0.1.0)**
+
+My original code was straightforward:
+
+```python
+# Before 0.1.0 - worked perfectly
+from langchain.chains import RetrievalQA
+
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=vectorstore.as_retriever()
+)
+result = qa_chain.run(query)
+```
+
+After the deprecation, I had to rewrite to the new chain API:
+
+```python
+# After 0.1.0 - completely different API
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+
+prompt = ChatPromptTemplate.from_template("""Answer based on context:
+{context}
+
+Question: {input}""")
+
+document_chain = create_stuff_documents_chain(llm, prompt)
+retrieval_chain = create_retrieval_chain(vectorstore.as_retriever(), document_chain)
+result = retrieval_chain.invoke({"input": query})
+```
+
+This wasn't a simple find-and-replace. It required understanding the new abstraction model, rewriting the prompt handling, and updating all downstream code that expected the old response format.
+
+**The Package Split (0.1.5)**
+
+When `ChatOpenAI` moved from `langchain` to `langchain-openai`, my CI pipeline suddenly failed. The fix seemed simple — just change the import:
+
+```python
+# Before
+from langchain.chat_models import ChatOpenAI
+
+# After
+from langchain_openai import ChatOpenAI
+```
+
+But this required adding a new dependency, updating `requirements.txt`, and dealing with version conflicts between `langchain-openai` and other LangChain packages that hadn't been updated yet. For three days, different team members had different behavior depending on which packages they'd updated.
+
+**The Document Schema Change (0.1.10)**
+
+This one was particularly painful. The `Document` class changed its attribute from `page_content` to `text`. My custom document loaders broke silently — no errors, just empty content in retrieval results. I spent two days debugging why my RAG pipeline returned no context before discovering the schema change buried in a minor version release.
+
+These experiences taught me that framework abstractions come with hidden maintenance costs. Every layer between your code and the LLM is a potential point of failure you can't control.
+
 ## What You Actually Need for RAG
 
 RAG isn't complicated. You need four components:
@@ -167,6 +226,8 @@ def chunk_by_semantic(text: str, similarity_threshold: float = 0.7) -> Iterator[
     if chunk:
         yield {'text': '. '.join(chunk) + '.', 'strategy': 'semantic'}
 ```
+
+> **📝 Note:** The `chunk_by_semantic` function above is illustrative pseudo-code. A production implementation would compute actual embedding similarities between sentences using a model like `sentence-transformers` and group sentences based on semantic coherence scores. See the [full implementation](https://github.com/ChunkyTortoise/docqa-engine) for a working example.
 
 ### 2. Embedding Generation (With TF-IDF Fallback)
 

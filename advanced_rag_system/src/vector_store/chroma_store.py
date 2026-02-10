@@ -407,7 +407,8 @@ class ChromaVectorStore(VectorStore):
             count_result = self._collection.count()
             return int(count_result) if count_result is not None else 0
 
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to get chunk count from ChromaDB: {e}")
             return 0
 
     async def clear(self) -> None:
@@ -450,7 +451,8 @@ class ChromaVectorStore(VectorStore):
             self._client.heartbeat()
             return True
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"ChromaDB health check failed: {e}")
             return False
 
     def _map_distance_metric(self, metric: str) -> str:

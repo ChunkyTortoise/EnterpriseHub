@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """Tests for UI/UX module (utils/ui.py)."""
 
 from unittest.mock import MagicMock, patch

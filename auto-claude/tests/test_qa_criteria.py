@@ -105,6 +105,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "Apps" / "backend"))
 # Import criteria functions directly to avoid going through qa/__init__.py
 # which imports reviewer and fixer that need the SDK
 from qa.criteria import (
+
+@pytest.mark.integration
     load_implementation_plan,
     save_implementation_plan,
     get_qa_signoff_status,

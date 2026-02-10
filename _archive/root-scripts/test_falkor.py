@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 
 import asyncio
 from falkordb import FalkorDB

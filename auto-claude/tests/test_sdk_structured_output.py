@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.integration
 """
 Test Claude Agent SDK Structured Output functionality.
 

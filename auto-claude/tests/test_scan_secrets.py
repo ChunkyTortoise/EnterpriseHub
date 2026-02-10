@@ -289,6 +289,8 @@ class TestScanFiles:
         content = """# Config file
 import os
 
+@pytest.mark.integration
+
 # API Key
 API_KEY = "sk-1234567890abcdefghijklmnop"
 """

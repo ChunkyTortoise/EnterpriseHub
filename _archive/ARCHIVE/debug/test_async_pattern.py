@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 
 import asyncio
 

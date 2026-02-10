@@ -14,6 +14,8 @@ import time
 import numpy as np
 import pytest
 
+@pytest.mark.integration
+
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 

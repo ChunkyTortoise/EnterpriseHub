@@ -1,3 +1,6 @@
+import pytest
+
+@pytest.mark.unit
 import asyncio
 import json
 from ghl_real_estate_ai.agent_system.v2.conductor import process_request
