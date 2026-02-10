@@ -15,6 +15,14 @@ def _reset_state() -> None:
     assert response.status_code == 200
 
 
+def _openapi_response_ref(paths: dict, route: str, method: str) -> str:
+    return paths[route][method]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+
+
+def _openapi_request_ref(paths: dict, route: str, method: str) -> str:
+    return paths[route][method]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+
+
 def test_root_endpoint() -> None:
     response = client.get("/")
     assert response.status_code == 200
@@ -25,19 +33,35 @@ def test_root_endpoint() -> None:
     assert payload["state_details"] == "/system/state/details"
 
 
-def test_openapi_contract_models_bound_for_core_routes() -> None:
+def test_openapi_contract_models_bound_for_critical_routes() -> None:
     openapi = app.openapi()
     paths = openapi["paths"]
 
-    root_ref = paths["/"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
-    health_ref = paths["/health"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
-    details_ref = paths["/system/state/details"]["get"]["responses"]["200"]["content"]["application/json"]["schema"][
-        "$ref"
-    ]
+    expected_response_refs = {
+        ("/", "get"): "RootResponse",
+        ("/health", "get"): "HealthResponse",
+        ("/system/state", "get"): "StateResponse",
+        ("/system/state/details", "get"): "DetailedStateResponse",
+        ("/portal/swipe", "post"): "SwipeResponse",
+        ("/vapi/tools/book-tour", "post"): "VapiToolResponse",
+        ("/ghl/sync", "post"): "GHLSyncResponse",
+    }
 
-    assert root_ref.endswith("/RootResponse")
-    assert health_ref.endswith("/HealthResponse")
-    assert details_ref.endswith("/DetailedStateResponse")
+    for (route, method), schema_name in expected_response_refs.items():
+        assert _openapi_response_ref(paths, route, method).endswith(f"/{schema_name}")
+
+    assert _openapi_request_ref(paths, "/portal/swipe", "post").endswith("/Interaction")
+    assert _openapi_request_ref(paths, "/vapi/tools/book-tour", "post").endswith("/VapiToolPayload")
+    assert "requestBody" not in paths["/ghl/sync"]["post"]
+
+
+def test_openapi_interaction_schema_constraints_locked() -> None:
+    interaction_schema = app.openapi()["components"]["schemas"]["Interaction"]
+    action_schema = interaction_schema["properties"]["action"]
+
+    assert set(interaction_schema["required"]) == {"contact_id", "property_id", "action"}
+    assert set(action_schema["enum"]) == {"like", "pass"}
+    assert len(action_schema["enum"]) == 2
 
 
 def test_openapi_state_details_limit_parameter_bounds() -> None:
