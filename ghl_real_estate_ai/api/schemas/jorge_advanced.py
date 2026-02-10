@@ -14,6 +14,13 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ghl_real_estate_ai.models.api_analytics_types import (
+    ActionItemData,
+    ErrorRecord,
+    PerformanceAlertData,
+    PerformanceMetrics,
+)
+
 # ================== ENUMS ==================
 
 
@@ -468,7 +475,7 @@ class DashboardMetrics(BaseModel):
     market_predictions: Dict[str, Any] = Field(default_factory=dict)
     integration_health: Dict[str, Any] = Field(default_factory=dict)
     summary_insights: List[str] = Field(default_factory=list)
-    action_items: List[Dict[str, Any]] = Field(default_factory=list)
+    action_items: List[ActionItemData] = Field(default_factory=list)
     last_updated: datetime = Field(default_factory=datetime.now)
     refresh_interval_seconds: int = Field(default=300)
 
@@ -481,9 +488,9 @@ class ModuleHealthStatus(BaseModel):
     last_check: datetime
     uptime_percentage: float = Field(ge=0.0, le=100.0)
     response_time_ms: float = Field(ge=0.0)
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict)
+    performance_metrics: PerformanceMetrics = Field(default_factory=dict)
     issues: List[str] = Field(default_factory=list)
-    recent_errors: List[Dict[str, Any]] = Field(default_factory=list)
+    recent_errors: List[ErrorRecord] = Field(default_factory=list)
     resource_usage: Dict[str, float] = Field(default_factory=dict)
 
 
@@ -492,8 +499,8 @@ class SystemHealthResponse(BaseModel):
 
     overall_status: str = Field(description="Overall system health status")
     modules: List[ModuleHealthStatus]
-    system_metrics: Dict[str, Any] = Field(default_factory=dict)
-    alerts: List[Dict[str, Any]] = Field(default_factory=list)
+    system_metrics: PerformanceMetrics = Field(default_factory=dict)
+    alerts: List[PerformanceAlertData] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
     last_check: datetime = Field(default_factory=datetime.now)
 

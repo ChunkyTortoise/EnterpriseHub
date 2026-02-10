@@ -51,12 +51,12 @@ from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 
 from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, enterprise_auth_service
-from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
 from ghl_real_estate_ai.api.middleware.error_handler import ErrorHandlerMiddleware
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.routes import (
     agent_ecosystem,  # NEW: Agent ecosystem API for frontend integration
@@ -67,6 +67,7 @@ from ghl_real_estate_ai.api.routes import (
     auth,
     behavioral_triggers,
     bi_websocket_routes,  # NEW: BI WebSocket routes
+    billing,  # Stripe billing management
     bot_management,  # Bot Management API for frontend integration
     bulk_operations,
     business_intelligence,  # NEW: BI Dashboard API routes
@@ -509,6 +510,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(rc_market_intelligence.router)
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
+    app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
 
 
 # Import OpenAPI tag metadata for enhanced documentation

@@ -476,6 +476,384 @@ class ComparisonData(TypedDict, total=False):
 
 
 # =============================================================================
+# Enterprise Billing & Contract
+# =============================================================================
+
+
+class ContractTermsData(TypedDict, total=False):
+    """Enterprise contract terms."""
+
+    start_date: str
+    end_date: str
+    auto_renewal: bool
+    payment_terms: str
+    billing_frequency: str
+    currency: str
+    special_conditions: list[str]
+
+
+class BillingContactData(TypedDict, total=False):
+    """Billing contact information."""
+
+    primary_email: str
+    secondary_email: str
+    name: str
+    phone: str
+    department: str
+
+
+class VolumeCommitmentData(TypedDict, total=False):
+    """Volume commitment details."""
+
+    minimum_monthly: int
+    maximum_monthly: int
+    shortfall_penalty: float
+    current_usage: int
+    compliance_rate: float
+
+
+class VolumeSummary(TypedDict, total=False):
+    """Volume billing summary."""
+
+    total_volume: int
+    billable_volume: int
+    volume_tier: str
+    discount_applied: float
+    period: str
+
+
+class BillingCalculation(TypedDict, total=False):
+    """Billing calculation breakdown."""
+
+    subtotal: float
+    discounts: float
+    taxes: float
+    total_amount: float
+    currency: str
+    line_items: list[dict[str, Any]]
+
+
+class InvoiceData(TypedDict, total=False):
+    """Invoice details."""
+
+    invoice_id: str
+    amount: float
+    status: str
+    due_date: str
+    issued_date: str
+    line_items: list[dict[str, Any]]
+
+
+class PaymentResult(TypedDict, total=False):
+    """Payment processing result."""
+
+    payment_id: str
+    status: str
+    amount: float
+    method: str
+    processed_at: str
+    transaction_id: str
+
+
+class AdjustmentItem(TypedDict, total=False):
+    """Billing/revenue adjustment."""
+
+    adjustment_type: str
+    amount: float
+    reason: str
+    applied_at: str
+    approved_by: str
+
+
+class DestinationData(TypedDict, total=False):
+    """Relocation destination details."""
+
+    city: str
+    state: str
+    zip_code: str
+    neighborhood: str
+    housing_type: str
+
+
+class StatusIndicators(TypedDict, total=False):
+    """Status indicator data."""
+
+    status: str
+    last_updated: str
+    progress_percentage: float
+    milestones_completed: int
+    blockers: list[str]
+
+
+# =============================================================================
+# Dashboard Portfolio
+# =============================================================================
+
+
+class PortfolioSummaryData(TypedDict, total=False):
+    """Partnership portfolio summary."""
+
+    total_partnerships: int
+    active_partnerships: int
+    total_revenue: float
+    avg_health_score: float
+    growth_rate: float
+    top_tier_count: int
+
+
+class PartnerPerformer(TypedDict, total=False):
+    """Top-performing partner data."""
+
+    partnership_id: str
+    company_name: str
+    revenue: float
+    health_score: float
+    volume: int
+    growth_rate: float
+
+
+class GrowthOpportunity(TypedDict, total=False):
+    """Growth opportunity data."""
+
+    opportunity_type: str
+    description: str
+    potential_revenue: float
+    confidence: float
+    timeline: str
+    required_actions: list[str]
+
+
+class JorgeCommissionData(TypedDict, total=False):
+    """Jorge's commission calculation."""
+
+    rate: float
+    pipeline_value: float
+    commission_amount: float
+    monthly_target: float
+    progress_percentage: float
+
+
+class BotMetricData(TypedDict, total=False):
+    """Bot performance metric."""
+
+    bot_type: str
+    display_name: str
+    current_status: str
+    avg_response_time_ms: float
+    success_rate: float
+    total_conversations: int
+    satisfaction_score: float
+
+
+class CoordinationMetricsData(TypedDict, total=False):
+    """Bot coordination metrics."""
+
+    handoff_success_rate: float
+    avg_handoff_time_ms: float
+    coordination_events: int
+    context_preservation_rate: float
+    multi_bot_conversations: int
+
+
+class PerformanceAlertData(TypedDict, total=False):
+    """Performance alert."""
+
+    bot_type: str
+    alert_type: str
+    severity: str
+    message: str
+    timestamp: str
+
+
+# =============================================================================
+# Competitive Intelligence Response
+# =============================================================================
+
+
+class CompetitorDataPoint(TypedDict, total=False):
+    """Competitor data point."""
+
+    data_id: str
+    data_source: str
+    data_type: str
+    collected_at: str
+    confidence_score: float
+    summary: str
+
+
+class CollectionSummaryData(TypedDict, total=False):
+    """Data collection summary."""
+
+    total_data_points: int
+    data_sources_used: int
+    collection_time_range: str
+    most_recent_collection: str
+
+
+class ThreatDataItem(TypedDict, total=False):
+    """Competitive threat item."""
+
+    threat_id: str
+    competitor_id: str
+    threat_type: str
+    threat_level: str
+    description: str
+    potential_impact: str
+    confidence_level: float
+    recommended_response: str
+    response_urgency: str
+    evidence_count: int
+
+
+class RiskSummaryData(TypedDict, total=False):
+    """Risk assessment summary."""
+
+    total_threats: int
+    high_priority_threats: int
+    overall_risk_level: str
+    immediate_action_required: int
+    threat_categories: list[str]
+
+
+class ResponseStrategy(TypedDict, total=False):
+    """Competitive response strategy."""
+
+    strategy: str
+    description: str
+    timeline: str
+    cost_impact: str
+    effectiveness: str
+
+
+class CompetitiveLandscape(TypedDict, total=False):
+    """Competitive landscape analysis."""
+
+    total_competitors: int
+    market_concentration: str
+    pricing_pressure: str
+    differentiation_opportunities: list[str]
+    threat_level: str
+    competitive_advantages: list[str]
+
+
+class CollectionMetricsData(TypedDict, total=False):
+    """Collection performance metrics."""
+
+    data_points_collected_24h: int
+    collection_success_rate: float
+    active_collectors: int
+    monitored_competitors: int
+    average_collection_time_ms: float
+    collection_errors_24h: int
+    data_sources_active: int
+
+
+class ProcessingMetricsData(TypedDict, total=False):
+    """Processing performance metrics."""
+
+    average_processing_time: float
+    processing_queue_length: int
+    processed_items_24h: int
+    processing_errors_24h: int
+    ai_enrichment_rate: float
+    batch_processing_efficiency: float
+
+
+class UptimeStatsData(TypedDict, total=False):
+    """Uptime statistics."""
+
+    system_uptime_hours: float
+    monitoring_uptime_percent: float
+    api_availability_percent: float
+    last_restart: str
+    scheduled_maintenance: str
+
+
+# =============================================================================
+# Module & Integration
+# =============================================================================
+
+
+class ModuleMetricsData(TypedDict, total=False):
+    """Module-specific metrics."""
+
+    status: str
+    total_processed: int
+    success_rate: float
+    avg_processing_time_ms: float
+    error_count: int
+
+
+class ActionItemData(TypedDict, total=False):
+    """Action item data."""
+
+    action_id: str
+    title: str
+    priority: str
+    status: str
+    due_date: str
+    assigned_to: str
+
+
+class ErrorRecord(TypedDict, total=False):
+    """Error record."""
+
+    error_id: str
+    error_type: str
+    message: str
+    timestamp: str
+    severity: str
+    resolved: bool
+
+
+class CompetitiveAdvantageItem(TypedDict, total=False):
+    """Competitive advantage item."""
+
+    advantage_type: str
+    description: str
+    impact_score: float
+    sustainability: str
+
+
+# =============================================================================
+# BI Report & Insight
+# =============================================================================
+
+
+class BIReportSection(TypedDict, total=False):
+    """BI report section."""
+
+    section_id: str
+    title: str
+    content: str
+    data: dict[str, Any]
+    visualizations: list[dict[str, Any]]
+
+
+class InsightData(TypedDict, total=False):
+    """Business intelligence insight."""
+
+    insight_type: str
+    title: str
+    description: str
+    confidence: float
+    impact_score: float
+    recommended_actions: list[str]
+    data_points: list[dict[str, Any]]
+
+
+class RecommendationData(TypedDict, total=False):
+    """Business recommendation."""
+
+    title: str
+    description: str
+    priority: str
+    impact: str
+    timeline: str
+    resources_required: list[str]
+
+
+# =============================================================================
 # Export all types
 # =============================================================================
 
@@ -527,4 +905,42 @@ __all__ = [
     # Benchmark & Comparison
     "BenchmarkData",
     "ComparisonData",
+    # Enterprise Billing & Contract
+    "ContractTermsData",
+    "BillingContactData",
+    "VolumeCommitmentData",
+    "VolumeSummary",
+    "BillingCalculation",
+    "InvoiceData",
+    "PaymentResult",
+    "AdjustmentItem",
+    "DestinationData",
+    "StatusIndicators",
+    # Dashboard Portfolio
+    "PortfolioSummaryData",
+    "PartnerPerformer",
+    "GrowthOpportunity",
+    "JorgeCommissionData",
+    "BotMetricData",
+    "CoordinationMetricsData",
+    "PerformanceAlertData",
+    # Competitive Intelligence Response
+    "CompetitorDataPoint",
+    "CollectionSummaryData",
+    "ThreatDataItem",
+    "RiskSummaryData",
+    "ResponseStrategy",
+    "CompetitiveLandscape",
+    "CollectionMetricsData",
+    "ProcessingMetricsData",
+    "UptimeStatsData",
+    # Module & Integration
+    "ModuleMetricsData",
+    "ActionItemData",
+    "ErrorRecord",
+    "CompetitiveAdvantageItem",
+    # BI Report & Insight
+    "BIReportSection",
+    "InsightData",
+    "RecommendationData",
 ]

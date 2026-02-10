@@ -505,10 +505,10 @@ async def record_usage(
         # Record usage through billing service with retry logic for revenue protection
         stripe_usage_record = await retry_with_exponential_backoff(
             billing_service.add_usage_record,
+            request,
             max_retries=3,
             base_delay=1.0,
             max_delay=10.0,
-            request
         )
 
         # TODO: Store in database

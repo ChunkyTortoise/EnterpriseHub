@@ -47,6 +47,7 @@ class SalesforceAdapter(CRMProtocol):
         self._base_url = (base_url or instance_url).rstrip("/")
         self._access_token: str | None = None
         self._token_expires_at: float = 0.0
+        self._http_client = httpx.AsyncClient(timeout=30.0)
 
     # ------------------------------------------------------------------
     # OAuth 2.0 authentication
@@ -66,8 +67,7 @@ class SalesforceAdapter(CRMProtocol):
             "client_id": self._client_id,
             "client_secret": self._client_secret,
         }
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(url, data=payload)
+        resp = await self._http_client.post(url, data=payload)
 
         if resp.status_code != 200:
             raise SalesforceError(resp.status_code, "Authentication failed")
@@ -101,10 +101,9 @@ class SalesforceAdapter(CRMProtocol):
         """Execute an HTTP request against Salesforce REST API."""
         url = f"{self._base_url}/services/data/v59.0{path}"
         headers = await self._headers()
-        async with httpx.AsyncClient() as client:
-            resp = await client.request(
-                method, url, headers=headers, json=json_body, params=params,
-            )
+        resp = await self._http_client.request(
+            method, url, headers=headers, json=json_body, params=params,
+        )
         if resp.status_code == 401:
             # Token may have expired — clear cache and re-raise
             self._access_token = None

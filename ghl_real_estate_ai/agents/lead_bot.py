@@ -16,6 +16,10 @@ from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.integrations.retell import RetellClient
+from ghl_real_estate_ai.models.bot_context_types import (
+    BotMetadata,
+    ConversationMessage,
+)
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
@@ -2490,11 +2494,11 @@ class LeadBotWorkflow:
         conversation_id: str,
         user_message: str,
         lead_name: Optional[str] = None,
-        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        conversation_history: Optional[List[ConversationMessage]] = None,
         sequence_day: int = 0,
         lead_phone: Optional[str] = None,
         lead_email: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[BotMetadata] = None,
     ) -> Dict[str, Any]:
         """
         Main entry point for processing lead conversations.

@@ -24,6 +24,7 @@ class WeaviateClient:
         self.url = url or os.getenv("WEAVIATE_URL", "http://localhost:8080")
         self.api_key = api_key or os.getenv("WEAVIATE_API_KEY")
         self.base_url = f"{self.url}/v1"
+        self.http_client = httpx.AsyncClient(timeout=10.0)
 
         if not self.api_key and "localhost" not in self.url:
             logger.warning("WEAVIATE_API_KEY not found for non-local instance.")
@@ -76,17 +77,16 @@ class WeaviateClient:
             return self._get_mock_properties(query)
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.base_url}/graphql",
-                    json={"query": gql_query},
-                    headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    return data.get("data", {}).get("Get", {}).get("Property", [])
-                else:
-                    return self._get_mock_properties(query)
+            response = await self.http_client.post(
+                f"{self.base_url}/graphql",
+                json={"query": gql_query},
+                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
+            )
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("data", {}).get("Get", {}).get("Property", [])
+            else:
+                return self._get_mock_properties(query)
         except Exception as e:
             logger.error(f"Weaviate search failed: {e}")
             return self._get_mock_properties(query)
