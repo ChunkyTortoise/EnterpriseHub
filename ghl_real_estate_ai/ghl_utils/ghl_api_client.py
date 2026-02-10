@@ -3,12 +3,18 @@ GoHighLevel API Client
 Wrapper for GHL API v2 with Jorge's credentials integration.
 """
 
-import os
 import asyncio
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 import httpx
+
+from ghl_real_estate_ai.models.ghl_webhook_types import (
+    GHLAPIResponse,
+    GHLContactData,
+    GHLOpportunityData,
+)
 
 
 class GHLAPIClient:
@@ -62,7 +68,7 @@ class GHLAPIClient:
 
     async def _make_request(
         self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None
-    ) -> Dict:
+    ) -> GHLAPIResponse:
         """
         Make API request to GHL.
 
@@ -109,7 +115,7 @@ class GHLAPIClient:
 
     # ========== CONTACTS/LEADS ==========
 
-    async def get_contacts(self, limit: int = 100, skip: int = 0, query: Optional[str] = None) -> Dict:
+    async def get_contacts(self, limit: int = 100, skip: int = 0, query: Optional[str] = None) -> GHLAPIResponse:
         """
         Get contacts/leads from GHL.
 
@@ -128,7 +134,7 @@ class GHLAPIClient:
 
         return await self._make_request("GET", "contacts", params=params)
 
-    async def get_contact(self, contact_id: str) -> Dict:
+    async def get_contact(self, contact_id: str) -> GHLAPIResponse:
         """
         Get single contact by ID.
 
@@ -140,7 +146,7 @@ class GHLAPIClient:
         """
         return await self._make_request("GET", f"contacts/{contact_id}")
 
-    async def create_contact(self, contact_data: Dict) -> Dict:
+    async def create_contact(self, contact_data: GHLContactData) -> GHLAPIResponse:
         """
         Create new contact in GHL.
 
@@ -153,7 +159,7 @@ class GHLAPIClient:
         contact_data["locationId"] = self.location_id
         return await self._make_request("POST", "contacts", data=contact_data)
 
-    async def update_contact(self, contact_id: str, updates: Dict) -> Dict:
+    async def update_contact(self, contact_id: str, updates: GHLContactData) -> GHLAPIResponse:
         """
         Update contact information.
 
@@ -166,7 +172,7 @@ class GHLAPIClient:
         """
         return await self._make_request("PUT", f"contacts/{contact_id}", data=updates)
 
-    async def add_tag_to_contact(self, contact_id: str, tag: str) -> Dict:
+    async def add_tag_to_contact(self, contact_id: str, tag: str) -> GHLAPIResponse:
         """
         Add tag to contact.
 
@@ -181,7 +187,7 @@ class GHLAPIClient:
 
     # ========== OPPORTUNITIES ==========
 
-    async def get_opportunities(self, pipeline_id: Optional[str] = None, status: Optional[str] = None) -> Dict:
+    async def get_opportunities(self, pipeline_id: Optional[str] = None, status: Optional[str] = None) -> GHLAPIResponse:
         """
         Get opportunities (deals) from GHL.
 
@@ -201,7 +207,7 @@ class GHLAPIClient:
 
         return await self._make_request("GET", "opportunities", params=params)
 
-    async def get_opportunity(self, opportunity_id: str) -> Dict:
+    async def get_opportunity(self, opportunity_id: str) -> GHLAPIResponse:
         """
         Get single opportunity by ID.
 
@@ -213,7 +219,7 @@ class GHLAPIClient:
         """
         return await self._make_request("GET", f"opportunities/{opportunity_id}")
 
-    async def create_opportunity(self, opportunity_data: Dict) -> Dict:
+    async def create_opportunity(self, opportunity_data: GHLOpportunityData) -> GHLAPIResponse:
         """
         Create new opportunity.
 
@@ -226,7 +232,7 @@ class GHLAPIClient:
         opportunity_data["locationId"] = self.location_id
         return await self._make_request("POST", "opportunities", data=opportunity_data)
 
-    async def update_opportunity(self, opportunity_id: str, updates: Dict) -> Dict:
+    async def update_opportunity(self, opportunity_id: str, updates: GHLOpportunityData) -> GHLAPIResponse:
         """
         Update opportunity.
 
@@ -241,7 +247,7 @@ class GHLAPIClient:
 
     # ========== PIPELINES ==========
 
-    async def get_pipelines(self) -> Dict:
+    async def get_pipelines(self) -> GHLAPIResponse:
         """
         Get all pipelines for location.
 
@@ -252,7 +258,7 @@ class GHLAPIClient:
 
     # ========== CONVERSATIONS ==========
 
-    async def get_conversations(self, contact_id: str) -> Dict:
+    async def get_conversations(self, contact_id: str) -> GHLAPIResponse:
         """
         Get conversations for a contact.
 
@@ -264,7 +270,7 @@ class GHLAPIClient:
         """
         return await self._make_request("GET", f"conversations", params={"contactId": contact_id})
 
-    async def send_message(self, contact_id: str, message: str, message_type: str = "SMS") -> Dict:
+    async def send_message(self, contact_id: str, message: str, message_type: str = "SMS") -> GHLAPIResponse:
         """
         Send message to contact.
 
@@ -282,7 +288,7 @@ class GHLAPIClient:
 
     # ========== CUSTOM FIELDS ==========
 
-    async def get_custom_fields(self) -> Dict:
+    async def get_custom_fields(self) -> GHLAPIResponse:
         """
         Get custom fields for location.
 
@@ -291,7 +297,7 @@ class GHLAPIClient:
         """
         return await self._make_request("GET", "custom-fields", params={"locationId": self.location_id})
 
-    async def update_custom_field(self, contact_id: str, field_id: str, field_value: Any) -> Dict:
+    async def update_custom_field(self, contact_id: str, field_id: str, field_value: Any) -> GHLAPIResponse:
         """
         Update custom field value for contact.
 
@@ -307,7 +313,7 @@ class GHLAPIClient:
 
     # ========== HELPER METHODS ==========
 
-    async def search_contacts_by_email(self, email: str) -> Dict:
+    async def search_contacts_by_email(self, email: str) -> GHLAPIResponse:
         """
         Search for contact by email.
 
@@ -319,7 +325,7 @@ class GHLAPIClient:
         """
         return await self.get_contacts(query=email, limit=1)
 
-    async def get_hot_leads(self, days: int = 7) -> Dict:
+    async def get_hot_leads(self, days: int = 7) -> GHLAPIResponse:
         """
         Get recently created leads (hot leads).
 
@@ -348,7 +354,7 @@ class GHLAPIClient:
 
         return {"success": True, "data": {"contacts": recent_contacts, "count": len(recent_contacts)}}
 
-    async def get_deal_pipeline_summary(self) -> Dict:
+    async def get_deal_pipeline_summary(self) -> GHLAPIResponse:
         """
         Get summary of all deals in pipeline.
 
@@ -381,7 +387,7 @@ class GHLAPIClient:
 
         return {"success": True, "data": summary}
 
-    async def health_check(self) -> Dict:
+    async def health_check(self) -> GHLAPIResponse:
         """
         Check API connection health.
 

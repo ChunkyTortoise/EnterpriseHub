@@ -6,6 +6,8 @@ Bridges V2 Agents with GoHighLevel for lead retrieval and campaign triggering.
 import logging
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.models.ghl_webhook_types import GHLContactData
+
 from .ghl_client import GHLClient
 
 logger = logging.getLogger(__name__)
@@ -15,7 +17,7 @@ class GHLIntegrationService:
     def __init__(self, ghl_client: Optional[GHLClient] = None):
         self.client = ghl_client or GHLClient()
 
-    async def get_mock_leads(self) -> List[Dict[str, Any]]:
+    async def get_mock_leads(self) -> List[GHLContactData]:
         """Return a list of mock leads for demonstration purposes."""
         return [
             {
@@ -60,7 +62,7 @@ class GHLIntegrationService:
             },
         ]
 
-    async def get_active_leads(self, limit: int = 50) -> List[Dict[str, Any]]:
+    async def get_active_leads(self, limit: int = 50) -> List[GHLContactData]:
         """Fetch active leads from GHL (falls back to mock if API fails)."""
         try:
             contacts = await self.client.search_contacts(limit=limit)

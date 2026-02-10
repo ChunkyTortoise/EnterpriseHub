@@ -34,6 +34,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.models.bot_context_types import (
+    ABTestExperimentResult,
+    ABTestOutcome,
+)
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 logger = logging.getLogger(__name__)
@@ -239,8 +243,8 @@ class ABTestingService:
         self,
         experiment_id: str,
         variants: List[str],
-        traffic_split: Optional[Dict[str, float]] = None,
-    ) -> Dict[str, Any]:
+        traffic_split: Optional[dict[str, float]] = None,
+    ) -> dict[str, Any]:
         """Create a new A/B experiment.
 
         Args:
@@ -295,7 +299,7 @@ class ABTestingService:
             "status": ExperimentStatus.ACTIVE.value,
         }
 
-    def deactivate_experiment(self, experiment_id: str) -> Dict[str, Any]:
+    def deactivate_experiment(self, experiment_id: str) -> dict[str, Any]:
         """Stop an active experiment.
 
         Args:
@@ -319,7 +323,7 @@ class ABTestingService:
             "duration_hours": round(duration_hours, 2),
         }
 
-    def list_experiments(self) -> List[Dict[str, Any]]:
+    def list_experiments(self) -> list[dict[str, Any]]:
         """List all active experiments.
 
         Returns:
@@ -397,7 +401,7 @@ class ABTestingService:
                     bucket_value=bucket_value,
                 )
             except Exception as exc:
-                logger.debug(
+                logger.warning(
                     "DB write-through failed for assignment (experiment=%s, contact=%s): %s",
                     experiment_id,
                     contact_id,
@@ -416,7 +420,7 @@ class ABTestingService:
         variant: str,
         outcome: str,
         value: float = 1.0,
-    ) -> Dict[str, Any]:
+    ) -> ABTestOutcome:
         """Record a conversion/outcome event for a variant.
 
         Args:
@@ -465,7 +469,7 @@ class ABTestingService:
                     value=value,
                 )
             except Exception as exc:
-                logger.debug(
+                logger.warning(
                     "DB write-through failed for outcome (experiment=%s, contact=%s): %s",
                     experiment_id,
                     contact_id,

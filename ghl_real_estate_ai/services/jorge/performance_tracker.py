@@ -39,6 +39,10 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
+from ghl_real_estate_ai.models.bot_context_types import (
+    PerformanceMetrics,
+    SLAComplianceResult,
+)
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 logger = logging.getLogger(__name__)
@@ -284,7 +288,8 @@ class PerformanceTracker:
         success = True
         try:
             yield
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Async operation tracking failed for {bot_name}.{operation}: {e}")
             success = False
             raise
         finally:
@@ -330,7 +335,7 @@ class PerformanceTracker:
         self,
         bot_name: str,
         window: str = "1h",
-    ) -> Dict[str, Any]:
+    ) -> PerformanceMetrics:
         """Get comprehensive statistics for a specific bot.
 
         Args:
@@ -396,7 +401,7 @@ class PerformanceTracker:
             "success_rate": round(success_count / len(entries), 4) if entries else 0.0,
         }
 
-    async def get_all_stats(self, window: str = "1h") -> Dict[str, Any]:
+    async def get_all_stats(self, window: str = "1h") -> dict[str, PerformanceMetrics]:
         """Get statistics for all bots.
 
         Args:
@@ -413,7 +418,7 @@ class PerformanceTracker:
         return stats
 
     @trace_operation("jorge.performance", "check_sla_compliance")
-    async def check_sla_compliance(self, window: str = "1h") -> List[Dict[str, Any]]:
+    async def check_sla_compliance(self, window: str = "1h") -> list[SLAComplianceResult]:
         """Check SLA compliance for all registered SLAs.
 
         Args:
@@ -576,7 +581,8 @@ def track_performance(bot_name: str, operation: str):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Performance tracking decorator failed for {bot_name}.{operation}: {e}")
                 success = False
                 raise
             finally:
@@ -591,7 +597,7 @@ def track_performance(bot_name: str, operation: str):
 # ── Convenience Functions ─────────────────────────────────────────────
 
 
-async def get_performance_summary(window: str = "1h") -> Dict[str, Any]:
+async def get_performance_summary(window: str = "1h") -> dict[str, Any]:
     """Get a performance summary for all bots.
 
     Args:

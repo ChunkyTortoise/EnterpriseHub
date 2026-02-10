@@ -26,6 +26,11 @@ from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.api_analytics_types import (
+    AnalyticsMetrics,
+    PerformanceMetrics,
+    RevenueMetrics,
+)
 from ghl_real_estate_ai.services.auth_service import UserRole
 from ghl_real_estate_ai.services.bi_cache_service import get_bi_cache_service
 from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_processor
@@ -167,7 +172,7 @@ async def get_dashboard_kpis(
 
     except Exception as e:
         logger.error(f"Dashboard KPIs fetch error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch dashboard KPIs: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/revenue-intelligence", response_model=RevenueIntelligenceResponse)
@@ -228,7 +233,7 @@ async def get_revenue_intelligence(
 
     except Exception as e:
         logger.error(f"Revenue intelligence fetch error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch revenue intelligence: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/bot-performance", response_model=BotPerformanceResponse)
@@ -277,7 +282,7 @@ async def get_bot_performance_matrix(
 
     except Exception as e:
         logger.error(f"Bot performance matrix fetch error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch bot performance: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Interactive Drill-Down Endpoints
@@ -325,7 +330,7 @@ async def drill_down_analytics(
         raise
     except Exception as e:
         logger.error(f"Drill-down error: {e}")
-        raise HTTPException(status_code=500, detail=f"Drill-down failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Predictive Analytics Endpoints
@@ -366,7 +371,7 @@ async def get_predictive_insights(
 
     except Exception as e:
         logger.error(f"Predictive insights error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get predictive insights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/anomaly-detection")
@@ -409,7 +414,7 @@ async def detect_anomalies(
 
     except Exception as e:
         logger.error(f"Anomaly detection error: {e}")
-        raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Real-time Metrics Endpoints
@@ -444,7 +449,7 @@ async def get_real_time_metrics(
 
     except Exception as e:
         logger.error(f"Real-time metrics error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get real-time metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/trigger-aggregation")
@@ -479,7 +484,7 @@ async def trigger_manual_aggregation(
         raise
     except Exception as e:
         logger.error(f"Manual aggregation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Aggregation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Cache Management Endpoints
@@ -497,7 +502,7 @@ async def get_cache_analytics(current_user: Any = Depends(get_current_user)):
 
     except Exception as e:
         logger.error(f"Cache analytics error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get cache analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/warm-cache")
@@ -527,7 +532,7 @@ async def warm_dashboard_cache(
 
     except Exception as e:
         logger.error(f"Cache warming error: {e}")
-        raise HTTPException(status_code=500, detail=f"Cache warming failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Input Validation Helpers

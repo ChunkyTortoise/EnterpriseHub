@@ -21,6 +21,13 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.types import confloat, conint, constr
 
+from ghl_real_estate_ai.models.api_analytics_types import (
+    ConversationInsights,
+    MatchingWeights,
+    PreferenceData,
+    TimeSeriesData,
+)
+
 # =====================================================================================
 # Enums for Type Safety and Validation
 # =====================================================================================
@@ -208,7 +215,7 @@ class BehavioralMatchWeightsAPI(PerformanceModel):
     lifestyle_weight: confloat(ge=0.0, le=1.0) = Field(description="Weight for lifestyle alignment")
 
     # Behavioral insights from conversation analysis
-    conversation_insights: Dict[str, Any] = Field(
+    conversation_insights: ConversationInsights = Field(
         default_factory=dict, description="Insights from conversation analysis"
     )
     adjusted_feature_priorities: Dict[str, float] = Field(

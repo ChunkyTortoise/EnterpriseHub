@@ -16,6 +16,15 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
     SellerPsychologyProfile,
     UrgencyLevel,
 )
+from ghl_real_estate_ai.models.bot_context_types import (
+    AIInsights,
+    BehavioralAnalysis,
+    FlexibilityAnalysis,
+    MarketResponseAnalysis,
+    MotivationAnalysis,
+    PriceDropAnalysis,
+    UrgencyAnalysis,
+)
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
@@ -81,7 +90,7 @@ class SellerPsychologyAnalyzer:
         )
         return psychology_profile
 
-    async def _analyze_listing_behavior(self, listing_history: ListingHistory) -> Dict[str, Any]:
+    async def _analyze_listing_behavior(self, listing_history: ListingHistory) -> BehavioralAnalysis:
         """Analyze behavioral patterns from listing history"""
 
         price_drop_analysis = self._analyze_price_drops(listing_history.price_drops)
@@ -97,7 +106,7 @@ class SellerPsychologyAnalyzer:
             "listing_persistence": self._calculate_listing_persistence(listing_history),
         }
 
-    def _analyze_price_drops(self, price_drops: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_price_drops(self, price_drops: list[dict[str, Any]]) -> PriceDropAnalysis:
         """Analyze price reduction patterns for psychological insights"""
 
         if not price_drops:
@@ -138,7 +147,7 @@ class SellerPsychologyAnalyzer:
             "flexibility_signal": min(total_reduction / 10, 1.0),  # 0-1 scale
         }
 
-    def _analyze_market_response(self, listing_history: ListingHistory) -> Dict[str, Any]:
+    def _analyze_market_response(self, listing_history: ListingHistory) -> MarketResponseAnalysis:
         """Analyze seller's response to market feedback"""
 
         days_on_market = listing_history.days_on_market
@@ -170,7 +179,7 @@ class SellerPsychologyAnalyzer:
         }
 
     def _classify_behavioral_pattern(
-        self, listing_history: ListingHistory, price_analysis: Dict[str, Any]
+        self, listing_history: ListingHistory, price_analysis: PriceDropAnalysis
     ) -> ListingBehaviorPattern:
         """Classify overall behavioral pattern"""
 
@@ -190,8 +199,8 @@ class SellerPsychologyAnalyzer:
             return ListingBehaviorPattern.TESTING_MARKET
 
     async def _analyze_urgency_indicators(
-        self, listing_history: ListingHistory, communication_data: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, listing_history: ListingHistory, communication_data: Optional[dict[str, Any]]
+    ) -> UrgencyAnalysis:
         """Analyze indicators of seller urgency"""
 
         urgency_signals = []
@@ -250,8 +259,8 @@ class SellerPsychologyAnalyzer:
         }
 
     async def _analyze_seller_motivation(
-        self, listing_history: ListingHistory, communication_data: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, listing_history: ListingHistory, communication_data: Optional[dict[str, Any]]
+    ) -> MotivationAnalysis:
         """Determine primary seller motivation type"""
 
         motivation_scores = {
@@ -296,8 +305,8 @@ class SellerPsychologyAnalyzer:
         }
 
     async def _analyze_negotiation_flexibility(
-        self, listing_history: ListingHistory, market_context: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, listing_history: ListingHistory, market_context: Optional[dict[str, Any]]
+    ) -> FlexibilityAnalysis:
         """Analyze seller's flexibility in negotiations"""
 
         flexibility_score = 50.0  # Start neutral
@@ -342,9 +351,9 @@ class SellerPsychologyAnalyzer:
     async def _get_ai_psychological_insights(
         self,
         listing_history: ListingHistory,
-        behavioral_analysis: Dict[str, Any],
-        communication_data: Optional[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        behavioral_analysis: BehavioralAnalysis,
+        communication_data: Optional[dict[str, Any]],
+    ) -> AIInsights:
         """Get AI-enhanced psychological insights using Claude"""
 
         context = f"""
@@ -392,12 +401,12 @@ class SellerPsychologyAnalyzer:
 
     def _synthesize_psychology_profile(
         self,
-        behavioral_analysis: Dict[str, Any],
-        urgency_analysis: Dict[str, Any],
-        motivation_analysis: Dict[str, Any],
-        flexibility_analysis: Dict[str, Any],
-        ai_insights: Dict[str, Any],
-        communication_data: Optional[Dict[str, Any]],
+        behavioral_analysis: BehavioralAnalysis,
+        urgency_analysis: UrgencyAnalysis,
+        motivation_analysis: MotivationAnalysis,
+        flexibility_analysis: FlexibilityAnalysis,
+        ai_insights: AIInsights,
+        communication_data: Optional[dict[str, Any]],
     ) -> SellerPsychologyProfile:
         """Synthesize all analyses into comprehensive psychology profile"""
 
@@ -444,7 +453,7 @@ class SellerPsychologyAnalyzer:
         )
 
     def _calculate_emotional_attachment(
-        self, motivation_analysis: Dict, ai_insights: Dict, behavioral_analysis: Dict
+        self, motivation_analysis: MotivationAnalysis, ai_insights: AIInsights, behavioral_analysis: BehavioralAnalysis
     ) -> float:
         """Calculate emotional attachment score (0-100)"""
 
@@ -470,7 +479,7 @@ class SellerPsychologyAnalyzer:
         return max(0, min(100, base_score))
 
     def _calculate_financial_pressure(
-        self, motivation_analysis: Dict, urgency_analysis: Dict, behavioral_analysis: Dict
+        self, motivation_analysis: MotivationAnalysis, urgency_analysis: UrgencyAnalysis, behavioral_analysis: BehavioralAnalysis
     ) -> float:
         """Calculate financial pressure score (0-100)"""
 
@@ -491,7 +500,7 @@ class SellerPsychologyAnalyzer:
 
         return max(0, min(100, base_score))
 
-    def _calculate_listing_persistence(self, listing_history: ListingHistory) -> Dict[str, Any]:
+    def _calculate_listing_persistence(self, listing_history: ListingHistory) -> dict[str, Any]:
         """Calculate how persistent seller has been with listing"""
 
         persistence_score = 50.0  # Base persistence

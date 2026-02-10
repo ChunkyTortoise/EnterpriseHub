@@ -228,7 +228,7 @@ async def start_competitive_monitoring(
 
     except Exception as e:
         logger.error(f"Error starting competitive monitoring: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/monitoring/stop", response_model=Dict[str, Any])
@@ -261,7 +261,7 @@ async def stop_competitive_monitoring(user: dict = Depends(require_permission("w
 
     except Exception as e:
         logger.error(f"Error stopping competitive monitoring: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/competitors/{competitor_id}/data", response_model=CompetitorDataResponse)
@@ -289,7 +289,7 @@ async def get_competitor_data(
             try:
                 source_filters = [DataSource(ds) for ds in data_sources]
             except ValueError as e:
-                raise HTTPException(status_code=400, detail=f"Invalid data source: {e}")
+                raise HTTPException(status_code=400, detail="Invalid data source")
 
         # Collect competitor data
         data_points = await data_pipeline.collect_competitor_data(
@@ -338,7 +338,7 @@ async def get_competitor_data(
 
     except Exception as e:
         logger.error(f"Error retrieving competitor data: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Market Analysis and Intelligence Endpoints
@@ -440,7 +440,7 @@ async def analyze_market_trends(
 
     except Exception as e:
         logger.error(f"Error analyzing market trends: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Threat Detection and Assessment Endpoints
@@ -563,7 +563,7 @@ async def detect_competitive_threats(
 
     except Exception as e:
         logger.error(f"Error detecting competitive threats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Response Automation Endpoints
@@ -611,7 +611,7 @@ async def configure_competitive_response(
 
     except Exception as e:
         logger.error(f"Error configuring competitive response: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # System Performance and Health Endpoints
@@ -691,7 +691,7 @@ async def get_system_performance_metrics(user: dict = Depends(require_permission
 
     except Exception as e:
         logger.error(f"Error retrieving performance metrics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/system/health", response_model=Dict[str, Any])
@@ -711,7 +711,8 @@ async def get_system_health(user: dict = Depends(require_permission("read:compet
         pipeline_healthy = True
         try:
             await data_pipeline.get_pipeline_performance_metrics()
-        except:
+        except (ConnectionError, TimeoutError, AttributeError) as e:
+            logger.debug(f"Pipeline health check failed: {e}")
             pipeline_healthy = False
 
         # Test cache connectivity
@@ -720,7 +721,8 @@ async def get_system_health(user: dict = Depends(require_permission("read:compet
             await cache.set("health_check", "ok", ttl=60)
             test_value = await cache.get("health_check")
             cache_healthy = test_value == "ok"
-        except:
+        except (ConnectionError, TimeoutError, AttributeError) as e:
+            logger.debug(f"Cache health check failed: {e}")
             cache_healthy = False
 
         # Component status
@@ -806,7 +808,7 @@ async def cleanup_expired_data(
 
     except Exception as e:
         logger.error(f"Error during data cleanup: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/reports/intelligence", response_model=Dict[str, Any])
@@ -911,7 +913,7 @@ async def generate_intelligence_report(
 
     except Exception as e:
         logger.error(f"Error generating intelligence report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Add router to main application
