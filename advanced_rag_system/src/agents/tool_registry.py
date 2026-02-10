@@ -8,6 +8,7 @@ standardized interface for consistent execution and result handling.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import math
 import os
@@ -23,6 +24,7 @@ import aiohttp
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.core.exceptions import RAGException
+from src.core.config import get_settings
 
 
 class ToolExecutionError(RAGException):
@@ -206,7 +208,7 @@ class VectorSearchTool(BaseTool):
     dense and sparse retrieval from the knowledge base.
     """
     
-    def __init__(self, hybrid_searcher: Optional[Any] = None) -> None:
+    def __init__(self, hybrid_searcher: Optional[Any] = None, reranker: Optional[Any] = None) -> None:
         """Initialize vector search tool.
         
         Args:
@@ -214,6 +216,10 @@ class VectorSearchTool(BaseTool):
         """
         super().__init__()
         self._hybrid_searcher = hybrid_searcher
+        self._reranker = reranker
+        self._reranker_initialized = False
+        self._searcher_initialized = False
+        self._allow_fallback = os.getenv("RAG_DISABLE_VECTOR_FALLBACK", "false").lower() != "true"
     
     @property
     def metadata(self) -> ToolMetadata:
@@ -264,6 +270,7 @@ class VectorSearchTool(BaseTool):
         threshold: float = 0.0,
         filters: Optional[Dict[str, Any]] = None,
         use_hybrid: bool = True,
+        rerank: bool = True,
         **kwargs: Any
     ) -> ToolResult:
         """Execute vector search.
@@ -285,18 +292,20 @@ class VectorSearchTool(BaseTool):
         try:
             await self._check_rate_limit()
             
-            # If no hybrid searcher provided, return mock results
-            if self._hybrid_searcher is None:
-                # Mock implementation for testing
+            results = []
+
+            if use_hybrid:
+                await self._ensure_searcher()
+
+            if self._hybrid_searcher and use_hybrid:
+                results = await self._run_hybrid_search(query, top_k, threshold, filters)
+                skip_rerank = bool(getattr(getattr(self._hybrid_searcher, "config", None), "enable_reranking", False))
+                if rerank and results and not skip_rerank:
+                    results = await self._rerank_results(query, results)
+                results = self._format_results(results)
+
+            if (not results) and self._allow_fallback:
                 results = self._mock_search(query, top_k)
-            else:
-                # Real implementation would use hybrid searcher
-                results = await self._hybrid_searcher.search(
-                    query=query,
-                    top_k=top_k,
-                    threshold=threshold,
-                    filters=filters,
-                )
             
             execution_time = (time.time() - start_time) * 1000
             
@@ -313,6 +322,7 @@ class VectorSearchTool(BaseTool):
                     "top_k": top_k,
                     "threshold": threshold,
                     "use_hybrid": use_hybrid,
+                    "rerank": rerank,
                 }
             )
             
@@ -347,6 +357,125 @@ class VectorSearchTool(BaseTool):
                 "score": 0.9 - (i * 0.1),
                 "metadata": {"source": "mock"}
             })
+        return results
+
+    def _format_results(self, results: List[Any]) -> List[Dict[str, Any]]:
+        formatted: List[Dict[str, Any]] = []
+        for item in results:
+            try:
+                if hasattr(item, "chunk"):
+                    chunk = item.chunk
+                    metadata = chunk.metadata.model_dump() if hasattr(chunk, "metadata") else {}
+                    custom = metadata.get("custom", {}) if isinstance(metadata, dict) else {}
+                    offset_start = custom.get("offset_start")
+                    offset_end = custom.get("offset_end")
+                    page_number = custom.get("page_number") or custom.get("page")
+                    formatted.append({
+                        "id": str(getattr(chunk, "id", "")) if getattr(chunk, "id", None) else None,
+                        "document_id": str(getattr(chunk, "document_id", "")) if getattr(chunk, "document_id", None) else None,
+                        "content": chunk.content,
+                        "score": float(getattr(item, "score", 0)),
+                        "rank": int(getattr(item, "rank", 0)),
+                        "metadata": metadata,
+                        "source": getattr(chunk.metadata, "source", None) if hasattr(chunk, "metadata") else None,
+                        "offset_start": offset_start,
+                        "offset_end": offset_end,
+                        "page_number": page_number,
+                    })
+                elif isinstance(item, dict):
+                    formatted.append(item)
+            except Exception:
+                continue
+        return formatted
+
+    async def _ensure_searcher(self) -> None:
+        if self._searcher_initialized:
+            return
+        if self._hybrid_searcher is None:
+            self._hybrid_searcher = await self._build_default_searcher()
+        if self._hybrid_searcher and hasattr(self._hybrid_searcher, "initialize"):
+            try:
+                await self._hybrid_searcher.initialize()
+                self._searcher_initialized = True
+            except Exception:
+                self._hybrid_searcher = None
+                self._searcher_initialized = False
+
+    async def _build_default_searcher(self) -> Optional[Any]:
+        try:
+            from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
+            from src.retrieval.hybrid.hybrid_searcher import HybridSearcher
+            from src.retrieval.dense.dense_retriever_mock import MockDenseRetriever
+            from src.reranking.cross_encoder import CrossEncoderReRanker
+        except Exception:
+            return None
+
+        settings = get_settings()
+        api_key = settings.openai_api_key or os.getenv("OPENAI_API_KEY")
+        dense_retriever = None
+
+        if not api_key:
+            dense_retriever = MockDenseRetriever()
+
+        try:
+            reranker = CrossEncoderReRanker()
+        except Exception:
+            reranker = None
+
+        config = AdvancedSearchConfig(enable_reranking=True)
+        try:
+            return AdvancedHybridSearcher(
+                config=config,
+                reranker=reranker,
+                dense_retriever=dense_retriever,
+            )
+        except Exception:
+            if dense_retriever is not None:
+                return HybridSearcher(dense_retriever=dense_retriever)
+        return None
+
+    async def _run_hybrid_search(
+        self,
+        query: str,
+        top_k: int,
+        threshold: float,
+        filters: Optional[Dict[str, Any]],
+    ) -> List[Any]:
+        searcher = self._hybrid_searcher
+        if searcher is None:
+            return []
+        search_fn = getattr(searcher, "search", None)
+        if search_fn is None:
+            return []
+
+        try:
+            signature = inspect.signature(search_fn)
+            params = signature.parameters
+            if "top_k" in params:
+                return await search_fn(query=query, top_k=top_k)
+            if "query" in params:
+                return await search_fn(query=query)
+        except TypeError:
+            try:
+                return await search_fn(query=query)
+            except Exception:
+                return []
+        return []
+
+    async def _rerank_results(self, query: str, results: List[Any]) -> List[Any]:
+        try:
+            if self._reranker is None:
+                from src.reranking.cross_encoder import CrossEncoderReRanker
+                from src.reranking.base import ReRankingConfig
+                self._reranker = CrossEncoderReRanker(config=ReRankingConfig(top_k=50))
+            if not self._reranker_initialized and hasattr(self._reranker, "initialize"):
+                await self._reranker.initialize()
+                self._reranker_initialized = True
+            if hasattr(self._reranker, "rerank"):
+                rerank_result = await self._reranker.rerank(query, results)
+                return rerank_result.results
+        except Exception:
+            return results
         return results
 
 

@@ -90,7 +90,13 @@ jobs:
 
     strategy:
       matrix:
-        component: [backend, frontend, worker]
+        include:
+          - component: backend
+            dockerfile: Dockerfile.api
+          - component: frontend
+            dockerfile: Dockerfile
+          - component: worker
+            dockerfile: Dockerfile.worker
 
     steps:
       - name: Checkout code
@@ -121,7 +127,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.${{ matrix.component }}
+          file: ./${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

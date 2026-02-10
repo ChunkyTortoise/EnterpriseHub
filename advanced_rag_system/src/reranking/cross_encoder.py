@@ -7,12 +7,15 @@ that can directly score query-document pairs for improved relevance ranking.
 from __future__ import annotations
 
 import asyncio
+import json
+import os
 import time
 from typing import List, Optional, Dict, Any, Tuple
 import warnings
 
 from src.core.exceptions import RetrievalError
 from src.core.types import SearchResult
+from src.core.config import get_settings
 from .base import BaseReRanker, ReRankingConfig, ReRankingResult
 
 # Optional imports for cross-encoder functionality
@@ -353,6 +356,10 @@ class CrossEncoderReRanker(BaseReRanker):
         Returns:
             List of relevance scores
         """
+        llm_scores = await self._llm_fallback_scoring(query, results)
+        if llm_scores:
+            return llm_scores
+
         scores = []
         query_words = set(query.lower().split())
 
@@ -378,6 +385,73 @@ class CrossEncoderReRanker(BaseReRanker):
             scores.append(min(final_score, 1.0))
 
         return scores
+
+    async def _llm_fallback_scoring(self, query: str, results: List[SearchResult]) -> Optional[List[float]]:
+        """Attempt LLM-based re-ranking when cross-encoder models are unavailable."""
+        if not results:
+            return None
+
+        settings = get_settings()
+        api_key = settings.openai_api_key or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return None
+
+        try:
+            from openai import AsyncOpenAI
+        except Exception:
+            return None
+
+        model = os.getenv("RAG_RERANK_MODEL", "gpt-4o-mini")
+        client = AsyncOpenAI(api_key=api_key, base_url=settings.openai_base_url or None)
+
+        max_items = min(len(results), self.config.top_k)
+        payload_lines = []
+        for idx, result in enumerate(results[:max_items], start=1):
+            content = result.chunk.content.replace("\n", " ").strip()
+            if len(content) > 300:
+                content = content[:300] + "..."
+            payload_lines.append(f"{idx}) {content}")
+
+        prompt = (
+            "You are a relevance scorer. Return a JSON array of floats between 0 and 1, "
+            "one score per passage in the same order. Do not include extra text.\n\n"
+            f"Query: {query}\n\n"
+            "Passages:\n"
+            + "\n".join(payload_lines)
+        )
+
+        response = await client.responses.create(
+            model=model,
+            input=prompt,
+            temperature=0.0,
+            max_output_tokens=300,
+        )
+
+        text = getattr(response, "output_text", None)
+        if not text and hasattr(response, "output"):
+            try:
+                text = response.output[0].content[0].text
+            except Exception:
+                text = None
+
+        if not text:
+            return None
+
+        try:
+            scores = json.loads(text.strip())
+            if not isinstance(scores, list):
+                return None
+            cleaned = []
+            for score in scores[:max_items]:
+                try:
+                    cleaned.append(float(score))
+                except Exception:
+                    cleaned.append(0.5)
+            if len(cleaned) < max_items:
+                cleaned.extend([0.5] * (max_items - len(cleaned)))
+            return cleaned
+        except Exception:
+            return None
 
     def batch_size_recommendation(self, num_results: int) -> int:
         """Recommend optimal batch size based on number of results and device.

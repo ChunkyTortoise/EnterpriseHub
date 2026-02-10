@@ -115,7 +115,11 @@ class NotificationChannel:
         notification_type: str = "alert"
     ) -> bool:
         """Send notification via this channel"""
-        raise NotImplementedError
+        logger.warning(
+            "NotificationChannel.send_notification not implemented",
+            extra={"alert_id": getattr(alert, "alert_id", None), "type": notification_type}
+        )
+        return False
 
 
 class EmailNotificationChannel(NotificationChannel):

@@ -52,6 +52,16 @@ from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])
 
+# Explicit phrase blacklist for outbound tone hardening
+FORBIDDEN_TONE_REPLACEMENTS: tuple[tuple[str, str], ...] = (
+    (r"\bhit[\s-]*list\b", "priority list"),
+    (r"\byou(?:\s+are|'re)\s+lying\b", "that does not match the details"),
+    (r"\bstupid\b", "off track"),
+    (r"\bidiot\b", "off track"),
+    (r"\bwaste of time\b", "not a fit right now"),
+    (r"\bdon'?t be difficult\b", "let's keep this straightforward"),
+)
+
 # Initialize dependencies (singletons)
 conversation_manager = ConversationManager()
 ghl_client_default = GHLClient()
@@ -71,31 +81,192 @@ calendar_scheduler = CalendarScheduler()
 lead_source_tracker = LeadSourceTracker()
 attribution_analytics = AttributionAnalytics()
 subscription_manager = SubscriptionManager()
-handoff_service = JorgeHandoffService(analytics_service=analytics_service)
+handoff_service = JorgeHandoffService(
+    analytics_service=analytics_service,
+    thresholds=jorge_settings.HANDOFF_THRESHOLDS,
+    lead_conflict_priority=jorge_settings.HANDOFF_LEAD_CONFLICT_PRIORITY,
+)
 mls_client = MLSClient()
 
 
 # P3 FIX: Safe wrappers for background tasks to prevent silent delivery failures
-async def safe_send_message(ghl_client, contact_id: str, message: str, channel=None):
-    """Wrapper for send_message that handles errors and tags contact on failure."""
+def _apply_outbound_tone_guardrails(message: str) -> str:
+    """Apply blacklist-based tone guardrails before outbound delivery."""
+    sanitized = message or ""
+    for pattern, replacement in FORBIDDEN_TONE_REPLACEMENTS:
+        sanitized = re.sub(pattern, replacement, sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(r"[ \t]{2,}", " ", sanitized)
+    sanitized = re.sub(r"\n{3,}", "\n\n", sanitized)
+    return sanitized.strip()
+
+
+def _build_handoff_confidence(
+    mode: str,
+    handoff_signals: dict | None,
+    existing: dict | None = None,
+) -> dict:
+    """Return a normalized handoff confidence payload with WS3 schema fields."""
+    required = {"mode", "score", "reason", "evidence"}
+    if isinstance(existing, dict) and required.issubset(existing.keys()):
+        return {
+            "mode": existing["mode"],
+            "score": float(existing["score"]),
+            "reason": str(existing["reason"]),
+            "evidence": dict(existing.get("evidence") or {}),
+        }
+    return JorgeHandoffService.build_signal_confidence(
+        mode=mode,
+        intent_signals=handoff_signals or {},
+    )
+
+
+async def _resolve_client_for_tenant(
+    ghl_client: GHLClient,
+    location_id: str | None,
+    contact_id: str,
+    operation: str,
+) -> tuple[GHLClient, str]:
+    """Validate tenant attribution and self-heal client mismatch when possible."""
+    if not location_id:
+        logger.error(
+            "Tenant attribution missing for outbound operation",
+            extra={"contact_id": contact_id, "operation": operation},
+        )
+        return ghl_client, "missing_location_id"
+
+    client_location_id = getattr(ghl_client, "location_id", None)
+    if client_location_id == location_id:
+        return ghl_client, "matched"
+
+    logger.warning(
+        "Tenant client mismatch detected; resolving tenant-scoped client",
+        extra={
+            "contact_id": contact_id,
+            "operation": operation,
+            "expected_location_id": location_id,
+            "client_location_id": client_location_id,
+        },
+    )
     try:
-        await ghl_client.send_message(contact_id, message, channel=channel)
+        tenant_client = await _get_tenant_ghl_client(location_id)
+        resolved_location_id = getattr(tenant_client, "location_id", None)
+        status = (
+            "recovered_with_tenant_client"
+            if resolved_location_id == location_id
+            else "mismatch_unresolved"
+        )
+        return tenant_client, status
+    except Exception as err:
+        logger.error(
+            "Failed to resolve tenant-scoped client; using original client",
+            extra={
+                "contact_id": contact_id,
+                "operation": operation,
+                "location_id": location_id,
+                "error": str(err),
+            },
+        )
+        return ghl_client, "tenant_resolution_failed"
+
+
+async def _track_tenant_usage_check(
+    contact_id: str,
+    location_id: str | None,
+    operation: str,
+    status: str,
+) -> None:
+    """Emit tenant attribution check telemetry for billing traceability."""
+    try:
+        await analytics_service.track_event(
+            event_type="tenant_usage_attribution_checked",
+            location_id=location_id or "unknown",
+            contact_id=contact_id,
+            data={
+                "operation": operation,
+                "status": status,
+            },
+        )
+    except Exception as err:
+        logger.warning(
+            "Failed to emit tenant attribution telemetry",
+            extra={
+                "contact_id": contact_id,
+                "operation": operation,
+                "location_id": location_id,
+                "error": str(err),
+            },
+        )
+
+
+async def safe_send_message(
+    ghl_client,
+    contact_id: str,
+    message: str,
+    channel=None,
+    location_id: str | None = None,
+):
+    """Wrapper for send_message with tone guardrails and attribution checks."""
+    guarded_message = _apply_outbound_tone_guardrails(message)
+    resolved_client, attribution_status = await _resolve_client_for_tenant(
+        ghl_client=ghl_client,
+        location_id=location_id,
+        contact_id=contact_id,
+        operation="send_message",
+    )
+    await _track_tenant_usage_check(
+        contact_id=contact_id,
+        location_id=location_id,
+        operation="send_message",
+        status=attribution_status,
+    )
+
+    try:
+        await resolved_client.send_message(contact_id, guarded_message, channel=channel)
     except Exception as e:
         logger.error(f"Message delivery failed for contact {contact_id}: {e}")
         try:
-            await ghl_client.add_tags(contact_id, ["Delivery-Failed"])
+            await resolved_client.add_tags(contact_id, ["Delivery-Failed"])
         except Exception as tag_error:
             logger.error(f"Failed to add Delivery-Failed tag for {contact_id}: {tag_error}")
 
 
-async def safe_apply_actions(ghl_client, contact_id: str, actions: list):
-    """Wrapper for apply_actions that handles errors and tags contact on failure."""
+async def safe_apply_actions(
+    ghl_client,
+    contact_id: str,
+    actions: list,
+    location_id: str | None = None,
+):
+    """Wrapper for apply_actions with tone guardrails and attribution checks."""
+    sanitized_actions = []
+    for action in actions:
+        if isinstance(action, GHLAction) and action.type == ActionType.SEND_MESSAGE and action.message:
+            sanitized_actions.append(
+                action.model_copy(
+                    update={"message": _apply_outbound_tone_guardrails(action.message)}
+                )
+            )
+        else:
+            sanitized_actions.append(action)
+
+    resolved_client, attribution_status = await _resolve_client_for_tenant(
+        ghl_client=ghl_client,
+        location_id=location_id,
+        contact_id=contact_id,
+        operation="apply_actions",
+    )
+    await _track_tenant_usage_check(
+        contact_id=contact_id,
+        location_id=location_id,
+        operation="apply_actions",
+        status=attribution_status,
+    )
+
     try:
-        await ghl_client.apply_actions(contact_id, actions)
+        await resolved_client.apply_actions(contact_id, sanitized_actions)
     except Exception as e:
         logger.error(f"Action application failed for contact {contact_id}: {e}")
         try:
-            await ghl_client.add_tags(contact_id, ["Delivery-Failed"])
+            await resolved_client.add_tags(contact_id, ["Delivery-Failed"])
         except Exception as tag_error:
             logger.error(f"Failed to add Delivery-Failed tag for {contact_id}: {tag_error}")
 
@@ -166,7 +337,9 @@ async def handle_ghl_tag_webhook(
 
     contact_name = event.contact.first_name if event.contact and event.contact.first_name else "there"
     outreach_template = random.choice(rancho_config.INITIAL_OUTREACH_MESSAGES)
-    outreach_message = outreach_template.format(name=contact_name)
+    outreach_message = _apply_outbound_tone_guardrails(
+        outreach_template.format(name=contact_name)
+    )
 
     current_ghl_client = await _get_tenant_ghl_client(location_id)
 
@@ -177,6 +350,7 @@ async def handle_ghl_tag_webhook(
         contact_id,
         outreach_message,
         MessageType.SMS,
+        location_id,
     )
 
     # Track analytics
@@ -322,18 +496,41 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     msg_lower = user_message.lower().strip()
     if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
         logger.info(f"Opt-out detected for contact {contact_id}")
-        opt_out_msg = "No problem at all, reach out whenever you're ready"
+        opt_out_msg = "Understood. We will not contact you again unless you reach out first."
+        current_ghl_client = await _get_tenant_ghl_client(location_id)
+        opt_out_actions = [
+            GHLAction(type=ActionType.ADD_TAG, tag="AI-Off"),
+            GHLAction(type=ActionType.ADD_TAG, tag="Do Not Contact"),
+            GHLAction(type=ActionType.REMOVE_TAG, tag="Needs Qualifying"),
+        ]
+        if jorge_settings.BUYER_ACTIVATION_TAG:
+            opt_out_actions.append(
+                GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.BUYER_ACTIVATION_TAG)
+            )
+        if jorge_settings.LEAD_ACTIVATION_TAG:
+            opt_out_actions.append(
+                GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG)
+            )
+
         background_tasks.add_task(
-            ghl_client_default.send_message,
-            contact_id=contact_id,
-            message=opt_out_msg,
-            channel=event.message.type,
+            safe_send_message,
+            current_ghl_client,
+            contact_id,
+            opt_out_msg,
+            event.message.type,
+            location_id,
         )
-        background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
+        background_tasks.add_task(
+            safe_apply_actions,
+            current_ghl_client,
+            contact_id,
+            opt_out_actions,
+            location_id,
+        )
         return GHLWebhookResponse(
             success=True,
             message=opt_out_msg,
-            actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
+            actions=opt_out_actions,
         )
 
     # Pending appointment selection flow (slot offer -> confirmation)
@@ -393,6 +590,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                         contact_id,
                         response_message,
                         event.message.type,
+                        location_id,
                     )
 
                     if booking_result.confirmation_actions:
@@ -401,6 +599,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                             current_ghl_client,
                             contact_id,
                             booking_result.confirmation_actions,
+                            location_id,
                         )
 
                     context["pending_appointment"] = None
@@ -431,12 +630,14 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     contact_id,
                     fallback_message,
                     event.message.type,
+                    location_id,
                 )
                 background_tasks.add_task(
                     safe_apply_actions,
                     current_ghl_client,
                     contact_id,
                     [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                    location_id,
                 )
 
                 context["pending_appointment"] = None
@@ -471,6 +672,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     contact_id,
                     response_message,
                     event.message.type,
+                    location_id,
                 )
                 return GHLWebhookResponse(success=True, message=response_message, actions=[])
 
@@ -483,12 +685,14 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 contact_id,
                 fallback_message,
                 event.message.type,
+                location_id,
             )
             background_tasks.add_task(
                 safe_apply_actions,
                 current_ghl_client,
                 contact_id,
                 [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                location_id,
             )
             context["pending_appointment"] = None
             await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
@@ -565,21 +769,15 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     elif action_data["type"] == "update_custom_field":
                         actions.append(GHLAction(
                             type=ActionType.UPDATE_CUSTOM_FIELD,
-                            field_id=action_data["field"],
+                            field=action_data["field"],
                             value=action_data["value"]
                         ))
 
-            # Track Jorge seller analytics
-            background_tasks.add_task(
-                analytics_service.track_event,
-                event_type="jorge_seller_interaction",
-                location_id=location_id,
-                contact_id=contact_id,
-                data={
-                    "temperature": seller_result["temperature"],
-                    "questions_answered": seller_result.get("questions_answered", 0),
-                    "message_length": len(seller_result["message"])
-                }
+            # Build baseline seller handoff confidence (may be refined by deterministic routing).
+            seller_handoff_confidence = _build_handoff_confidence(
+                mode="seller",
+                handoff_signals=seller_result.get("handoff_signals"),
+                existing=seller_result.get("handoff_confidence"),
             )
 
             # SMS length guard (seller mode)
@@ -605,21 +803,45 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
+            final_seller_msg = _apply_outbound_tone_guardrails(final_seller_msg)
+
             # --- CROSS-BOT HANDOFF CHECK ---
-            if seller_result.get("handoff_signals"):
-                handoff = await handoff_service.evaluate_handoff(
-                    current_bot="seller",
-                    contact_id=contact_id,
-                    conversation_history=[],
-                    intent_signals=seller_result["handoff_signals"],
-                )
+            if seller_handoff_confidence.get("score", 0.0) > 0:
+                handoff = None
+                try:
+                    handoff = await handoff_service.evaluate_handoff(
+                        current_bot="seller",
+                        contact_id=contact_id,
+                        conversation_history=[],
+                        intent_signals=seller_result.get("handoff_signals", {}),
+                    )
+                except Exception as handoff_error:
+                    logger.warning(
+                        "Seller handoff evaluation failed; emitting baseline handoff confidence",
+                        extra={"contact_id": contact_id, "error": str(handoff_error)},
+                    )
                 if handoff:
+                    seller_handoff_confidence = handoff.to_confidence_schema()
                     handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
                     for ha in handoff_actions:
                         if ha["type"] == "add_tag":
                             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
                         elif ha["type"] == "remove_tag":
                             actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+
+            # Track seller analytics after handoff evaluation so telemetry reflects final routing.
+            background_tasks.add_task(
+                analytics_service.track_event,
+                event_type="jorge_seller_interaction",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={
+                    "temperature": seller_result["temperature"],
+                    "questions_answered": seller_result.get("questions_answered", 0),
+                    "message_length": len(final_seller_msg),
+                    "handoff_confidence": seller_handoff_confidence,
+                }
+            )
 
             logger.info(
                 f"Jorge seller processing completed for {contact_id}",
@@ -628,7 +850,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "temperature": seller_result["temperature"],
                     "questions_answered": seller_result.get("questions_answered", 0),
                     "actions_count": len(actions),
-                    "compliance_status": status.value
+                    "compliance_status": status.value,
+                    "handoff_confidence": seller_handoff_confidence,
                 }
             )
 
@@ -639,6 +862,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 contact_id,
                 final_seller_msg,
                 event.message.type,
+                location_id,
             )
 
             # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
@@ -648,6 +872,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     current_ghl_client,
                     contact_id,
                     actions,
+                    location_id,
                 )
 
             return GHLWebhookResponse(
@@ -658,18 +883,41 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
 
         except Exception as e:
             logger.error(f"Jorge seller mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
-            # P1 FIX: Add return statement to prevent fall-through to buyer mode
-            # Tag contact with Bot-Fallback-Active for monitoring
-            try:
-                await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
-            except Exception as tag_error:
-                logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
-            
-            return GHLWebhookResponse(
-                success=True,
-                message="I'm here to help! Let me connect you with the right specialist.",
-                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
+            can_fallback_to_buyer = (
+                jorge_settings.BUYER_ACTIVATION_TAG in tags
+                and jorge_settings.JORGE_BUYER_MODE
+                and not should_deactivate
             )
+            if can_fallback_to_buyer:
+                logger.warning(
+                    f"Seller mode failed for {contact_id}; attempting buyer mode fallback"
+                )
+            else:
+                fallback_msg = "I'm here to help! Let me connect you with the right specialist."
+                # Tag contact with Bot-Fallback-Active for monitoring
+                try:
+                    await ghl_client_default.add_tags(contact_id, ["Bot-Fallback-Active"])
+                except Exception as tag_error:
+                    logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
+
+                try:
+                    fallback_client = await _get_tenant_ghl_client(location_id)
+                    background_tasks.add_task(
+                        safe_send_message,
+                        fallback_client,
+                        contact_id,
+                        fallback_msg,
+                        event.message.type,
+                        location_id,
+                    )
+                except Exception as send_err:
+                    logger.error(f"Failed to queue fallback seller message: {send_err}")
+
+                return GHLWebhookResponse(
+                    success=True,
+                    message=fallback_msg,
+                    actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
+                )
 
     # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
     jorge_buyer_mode = (
@@ -720,18 +968,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             if buyer_result.get("is_qualified"):
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
 
-            # Track buyer analytics
-            background_tasks.add_task(
-                analytics_service.track_event,
-                event_type="jorge_buyer_interaction",
-                location_id=location_id,
-                contact_id=contact_id,
-                data={
-                    "buyer_temperature": buyer_temp,
-                    "is_qualified": buyer_result.get("is_qualified", False),
-                    "financial_readiness": buyer_result.get("financial_readiness_score", 0),
-                    "message_length": len(buyer_result.get("response_content", ""))
-                }
+            # Build baseline buyer handoff confidence (may be refined by deterministic routing).
+            buyer_handoff_confidence = _build_handoff_confidence(
+                mode="buyer",
+                handoff_signals=buyer_result.get("handoff_signals"),
+                existing=buyer_result.get("handoff_confidence"),
             )
 
             # SMS length guard (buyer mode)
@@ -760,21 +1001,46 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 final_buyer_msg = "I'd love to help you find your next home. What's most important to you in a property?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
+            final_buyer_msg = _apply_outbound_tone_guardrails(final_buyer_msg)
+
             # --- CROSS-BOT HANDOFF CHECK ---
-            if buyer_result.get("handoff_signals"):
-                handoff = await handoff_service.evaluate_handoff(
-                    current_bot="buyer",
-                    contact_id=contact_id,
-                    conversation_history=conversation_history,
-                    intent_signals=buyer_result["handoff_signals"],
-                )
+            if buyer_handoff_confidence.get("score", 0.0) > 0:
+                handoff = None
+                try:
+                    handoff = await handoff_service.evaluate_handoff(
+                        current_bot="buyer",
+                        contact_id=contact_id,
+                        conversation_history=conversation_history,
+                        intent_signals=buyer_result.get("handoff_signals", {}),
+                    )
+                except Exception as handoff_error:
+                    logger.warning(
+                        "Buyer handoff evaluation failed; emitting baseline handoff confidence",
+                        extra={"contact_id": contact_id, "error": str(handoff_error)},
+                    )
                 if handoff:
+                    buyer_handoff_confidence = handoff.to_confidence_schema()
                     handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
                     for ha in handoff_actions:
                         if ha["type"] == "add_tag":
                             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
                         elif ha["type"] == "remove_tag":
                             actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+
+            # Track buyer analytics after handoff evaluation so telemetry reflects final routing.
+            background_tasks.add_task(
+                analytics_service.track_event,
+                event_type="jorge_buyer_interaction",
+                location_id=location_id,
+                contact_id=contact_id,
+                data={
+                    "buyer_temperature": buyer_temp,
+                    "is_qualified": buyer_result.get("is_qualified", False),
+                    "financial_readiness": buyer_result.get("financial_readiness_score", 0),
+                    "message_length": len(final_buyer_msg),
+                    "handoff_confidence": buyer_handoff_confidence,
+                }
+            )
 
             logger.info(
                 f"Jorge buyer processing completed for {contact_id}",
@@ -783,7 +1049,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "buyer_temperature": buyer_temp,
                     "is_qualified": buyer_result.get("is_qualified", False),
                     "actions_count": len(actions),
-                    "compliance_status": status.value
+                    "compliance_status": status.value,
+                    "handoff_confidence": buyer_handoff_confidence,
                 }
             )
 
@@ -794,6 +1061,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 contact_id,
                 final_buyer_msg,
                 event.message.type,
+                location_id,
             )
 
             # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
@@ -803,6 +1071,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     current_ghl_client,
                     contact_id,
                     actions,
+                    location_id,
                 )
 
             return GHLWebhookResponse(
@@ -1131,9 +1400,15 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             final_message = "Thanks for reaching out! I'd love to help. What are you looking for in your next home?"
             actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
+        final_message = _apply_outbound_tone_guardrails(final_message)
+
         # --- CROSS-BOT HANDOFF CHECK ---
         lead_intent_signals = JorgeHandoffService.extract_intent_signals(user_message)
-        if lead_intent_signals.get("buyer_intent_score", 0) > 0 or lead_intent_signals.get("seller_intent_score", 0) > 0:
+        lead_handoff_confidence = JorgeHandoffService.build_signal_confidence(
+            mode="lead",
+            intent_signals=lead_intent_signals,
+        )
+        if lead_handoff_confidence.get("score", 0.0) > 0:
             handoff = await handoff_service.evaluate_handoff(
                 current_bot="lead",
                 contact_id=contact_id,
@@ -1141,12 +1416,21 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 intent_signals=lead_intent_signals,
             )
             if handoff:
+                lead_handoff_confidence = handoff.to_confidence_schema()
                 handoff_actions = await handoff_service.execute_handoff(handoff, contact_id, location_id=location_id)
                 for ha in handoff_actions:
                     if ha["type"] == "add_tag":
                         actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
                     elif ha["type"] == "remove_tag":
                         actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="jorge_lead_handoff_evaluation",
+            location_id=location_id,
+            contact_id=contact_id,
+            data={"handoff_confidence": lead_handoff_confidence},
+        )
 
         # P3 FIX: Use safe wrappers for background tasks to handle delivery failures
         background_tasks.add_task(
@@ -1155,13 +1439,15 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             contact_id,
             final_message,
             event.message.type,
+            location_id,
         )
 
         background_tasks.add_task(
             safe_apply_actions,
             current_ghl_client,
             contact_id,
-            actions
+            actions,
+            location_id,
         )
 
         logger.info(
@@ -1201,10 +1487,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             fallback_msg = "Hey, give me just a moment — I want to make sure I get you the right info. I'll circle back shortly!"
             try:
                 background_tasks.add_task(
-                    ghl_client_default.send_message,
-                    contact_id=contact_id,
-                    message=fallback_msg,
-                    channel=event.message.type if event and event.message else "SMS",
+                    safe_send_message,
+                    ghl_client_default,
+                    contact_id,
+                    fallback_msg,
+                    event.message.type if event and event.message else MessageType.SMS,
+                    location_id,
                 )
             except Exception:
                 logger.warning(f"Failed to send fallback message for {contact_id}")

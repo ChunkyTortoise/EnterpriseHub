@@ -99,6 +99,8 @@ class AdvancedHybridSearcher:
         self,
         config: Optional[AdvancedSearchConfig] = None,
         reranker: Optional[BaseReRanker] = None,
+        dense_retriever: Optional[Any] = None,
+        sparse_retriever: Optional[Any] = None,
     ):
         """Initialize advanced hybrid searcher.
 
@@ -112,6 +114,8 @@ class AdvancedHybridSearcher:
         # Initialize base hybrid searcher
         self.hybrid_searcher = HybridSearcher(
             hybrid_config=self.config.hybrid_config,
+            dense_retriever=dense_retriever,
+            sparse_retriever=sparse_retriever,
         )
 
         # Initialize query enhancement components

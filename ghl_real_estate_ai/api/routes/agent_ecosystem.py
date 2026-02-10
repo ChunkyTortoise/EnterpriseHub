@@ -30,6 +30,21 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/api/agents", tags=["agent-ecosystem"])
 
 # ============================================================================
+# DATA PROVENANCE
+# ============================================================================
+
+def build_data_provenance(source: str, demo_mode: bool, note: Optional[str] = None) -> Dict[str, Any]:
+    """Standardize provenance metadata for enterprise credibility."""
+    payload = {
+        "source": source,
+        "timestamp": datetime.now().isoformat(),
+        "demo_mode": demo_mode,
+    }
+    if note:
+        payload["note"] = note
+    return payload
+
+# ============================================================================
 # RESPONSE MODELS (Match Frontend TypeScript Interfaces)
 # ============================================================================
 
@@ -48,6 +63,7 @@ class AgentStatus(BaseModel):
     coordination: Optional[Dict[str, Any]] = None
     lastActivity: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    data_provenance: Optional[Dict[str, Any]] = None
 
 class SimpleAgentStatus(BaseModel):
     """Lightweight agent status for dashboard polling."""
@@ -64,6 +80,7 @@ class AgentMetrics(BaseModel):
     avgAccuracy: int
     totalHandoffs: int
     systemHealth: int
+    data_provenance: Optional[Dict[str, Any]] = None
 
 class PlatformActivity(BaseModel):
     """Platform activity matching frontend interface."""
@@ -96,6 +113,7 @@ class AgentCoordination(BaseModel):
 
 def generate_mock_agent_data() -> List[AgentStatus]:
     """Generate mock agent data for the 43+ agent ecosystem."""
+    provenance = build_data_provenance(source="synthetic", demo_mode=True, note="Mock agent ecosystem data")
 
     # Core Intelligence Agents
     agents = [
@@ -228,6 +246,10 @@ def generate_mock_agent_data() -> List[AgentStatus]:
             lastActivity=(datetime.now() - timedelta(minutes=i % 30)).isoformat()
         ))
 
+    for agent in agents:
+        if agent.data_provenance is None:
+            agent.data_provenance = provenance
+
     return agents
 
 def generate_mock_platform_activities() -> List[PlatformActivity]:
@@ -302,6 +324,7 @@ async def get_real_agent_statuses() -> List[AgentStatus]:
     try:
         cache = get_cache_service()
         agent_statuses = []
+        provenance = build_data_provenance(source="sandbox_cache", demo_mode=False)
 
         # 1. Jorge Seller Bot - Unified Enterprise Agent
         try:
@@ -449,6 +472,9 @@ async def get_real_agent_statuses() -> List[AgentStatus]:
             logger.warning(f"Failed to get Property Intelligence status: {e}")
 
         logger.info(f"✅ Collected real status from {len(agent_statuses)} agents")
+        for agent in agent_statuses:
+            if agent.data_provenance is None:
+                agent.data_provenance = provenance
         return agent_statuses
 
     except Exception as e:
@@ -467,7 +493,12 @@ async def get_real_agent_statuses() -> List[AgentStatus]:
                 totalInteractions=0,
                 specialization="System Health and Fallback Management",
                 lastActivity=datetime.now().isoformat(),
-                metadata={"version": "fallback", "error": str(e)}
+                metadata={"version": "fallback", "error": str(e)},
+                data_provenance=build_data_provenance(
+                    source="fallback",
+                    demo_mode=True,
+                    note="Agent status fallback due to collection error"
+                )
             )
         ]
 
@@ -543,13 +574,22 @@ async def get_agent_metrics(
         # Calculate system health (simplified algorithm)
         health_score = min(100, int((active_agents / total_agents) * 100 + avg_accuracy) / 2) if total_agents > 0 else 0
 
+        demo_mode = any(
+            (a.data_provenance or {}).get("demo_mode") for a in agent_data
+        )
+
         metrics = AgentMetrics(
             totalAgents=total_agents,
             activeAgents=active_agents,
             totalInteractions=total_interactions,
             avgAccuracy=avg_accuracy,
             totalHandoffs=total_handoffs,
-            systemHealth=health_score
+            systemHealth=health_score,
+            data_provenance=build_data_provenance(
+                source="sandbox_cache",
+                demo_mode=demo_mode,
+                note="Aggregated from agent status cache"
+            )
         )
 
         logger.info(f"Agent ecosystem metrics calculated: {metrics.dict()}")

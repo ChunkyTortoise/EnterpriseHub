@@ -67,6 +67,13 @@ class ConversationManager:
     - Lead scoring (Rule-based & Predictive)
     """
 
+    SELLER_REQUIRED_FIELDS = (
+        "motivation",
+        "timeline_acceptable",
+        "property_condition",
+        "price_expectation",
+    )
+
     def __init__(self):
         """Initialize conversation manager with dependencies."""
         # Initialize LLM client for Claude Sonnet 4.5
@@ -426,6 +433,17 @@ PRICE EXPECTATIONS:
 - price_expectation: Numeric price they mentioned (dollars)
 - price_flexibility: "firm", "negotiable", or "unknown"
 
+ADDITIONAL QUALIFICATION CONTEXT (extract if explicitly mentioned):
+- property_address: Full property address
+- property_type: single_family, condo, townhouse, multifamily, land, other
+- timeline_days: numeric target timeline in days
+- asking_price: numeric expected asking price (same as price_expectation if only one number given)
+- mortgage_balance: numeric outstanding loan/lien balance
+- prior_listing_history: "yes" or "no" if they mention prior listing attempts
+- decision_maker_confirmed: true/false if they confirm all decision makers are involved
+- preferred_contact_method: sms, phone, email
+- contact_availability: best callback/meeting window (e.g., mornings, after 5pm)
+
 RESPONSE QUALITY METRICS:
 - response_quality: 0.0-1.0 based on completeness and specificity
 - responsiveness: 0.0-1.0 based on engagement level
@@ -449,7 +467,7 @@ Count questions_answered based on how many of the 4 main categories have data.
                 prompt=extraction_prompt,
                 system_prompt="You are a seller data extraction specialist for real estate. Return only valid JSON.",
                 temperature=0,
-                max_tokens=500,
+                max_tokens=700,
                 images=images
             )
 
@@ -495,6 +513,31 @@ Count questions_answered based on how many of the 4 main categories have data.
                 extra={"error": str(e), "user_message": user_message}
             )
             return current_seller_data
+
+    @staticmethod
+    def validate_seller_required_fields(seller_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validate completeness for Jorge seller qualification required fields.
+
+        Returns a compact payload that downstream seller turn logic can attach
+        to context/analytics without re-implementing field checks.
+        """
+        missing_fields = [
+            field
+            for field in ConversationManager.SELLER_REQUIRED_FIELDS
+            if seller_data.get(field) is None
+        ]
+        required_count = len(ConversationManager.SELLER_REQUIRED_FIELDS)
+        completion_ratio = (
+            (required_count - len(missing_fields)) / required_count if required_count else 1.0
+        )
+
+        return {
+            "required_fields": list(ConversationManager.SELLER_REQUIRED_FIELDS),
+            "missing_fields": missing_fields,
+            "is_complete": not missing_fields,
+            "completion_ratio": completion_ratio,
+        }
 
     def _assess_seller_response_quality(self, user_message: str) -> float:
         """

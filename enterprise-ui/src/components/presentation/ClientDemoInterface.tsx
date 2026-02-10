@@ -62,7 +62,15 @@ interface DemoSession {
   demo_properties: any[];
   demo_conversations: any[];
   roi_calculation: any;
+  roi_assumptions: Record<string, any>;
   performance_metrics: any;
+  data_source: string;
+  data_provenance: {
+    source: string;
+    timestamp: string;
+    demo_mode: boolean;
+    note?: string;
+  };
   created_at: string;
   expires_at: string;
   status: string;
@@ -253,7 +261,10 @@ export function ClientDemoInterface() {
       const exportData = {
         client_profile: demoSession.client_profile,
         roi_calculation: demoSession.roi_calculation,
+        roi_assumptions: demoSession.roi_assumptions,
         performance_metrics: demoSession.performance_metrics,
+        data_source: demoSession.data_source,
+        data_provenance: demoSession.data_provenance,
         session_info: {
           session_id: demoSession.session_id,
           scenario: selectedScenario,
@@ -426,9 +437,19 @@ export function ClientDemoInterface() {
                 <Badge variant="secondary" className="ml-3">
                   {scenarios[selectedScenario].name}
                 </Badge>
+                <Badge
+                  variant={demoSession.data_provenance?.demo_mode ? 'destructive' : 'outline'}
+                  className="ml-2"
+                >
+                  {demoSession.data_source?.toUpperCase() || 'UNKNOWN'} DATA
+                </Badge>
               </h1>
               <p className="text-gray-400 mt-2">
                 {demoSession.client_profile.agency_name} • {demoSession.client_profile.geographic_market}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Data provenance: {demoSession.data_provenance?.source || 'unknown'} • {demoSession.data_provenance?.timestamp || 'n/a'}
+                {demoSession.data_provenance?.note ? ` • ${demoSession.data_provenance.note}` : ''}
               </p>
             </div>
 
@@ -618,6 +639,23 @@ export function ClientDemoInterface() {
                         value={demoSession.roi_calculation.summary?.cost_reduction_percentage || 0}
                         className="h-2"
                       />
+                    </div>
+
+                    <div className="mt-8 border-t border-slate-700 pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-white font-semibold">ROI Model Inputs</div>
+                        <Badge variant="outline">Assumptions</Badge>
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-4 text-sm">
+                        {Object.entries(demoSession.roi_assumptions || {}).map(([key, value]) => (
+                          <div key={key} className="bg-slate-700/50 rounded-lg p-3">
+                            <div className="text-gray-400 uppercase tracking-wide text-[10px]">{key.replace(/_/g, ' ')}</div>
+                            <div className="text-white mt-1">
+                              {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

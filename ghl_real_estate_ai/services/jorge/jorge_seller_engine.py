@@ -16,7 +16,8 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime
+import re
+from datetime import datetime, timezone
 
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine, MessageType
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
@@ -114,6 +115,13 @@ class JorgeSellerEngine:
     Handles the 4-question sequence with confrontational tone.
     """
 
+    NUMERIC_PARSE_MAX_RETRIES = 3
+    NUMERIC_PARSE_CLEANING_STEPS = (
+        lambda value: value.strip(),
+        lambda value: value.replace(",", "").replace("$", "").strip(),
+        lambda value: re.sub(r"[^0-9.kK-]", "", value).strip(),
+    )
+
     def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None, mls_client=None):
         """Initialize with existing conversation manager and GHL client
 
@@ -209,6 +217,9 @@ class JorgeSellerEngine:
             except Exception as ee:
                 self.logger.warning(f"Seller data extraction failed, using existing context: {ee}")
                 extracted_seller_data = current_seller_data
+
+            # 2b. Validate required-field completeness for seller turn handoff quality
+            extracted_seller_data = await self._evaluate_required_field_completeness(extracted_seller_data)
 
             # 3. Calculate seller temperature (Hot/Warm/Cold)
             temperature_result = await self._calculate_seller_temperature(extracted_seller_data)
@@ -335,7 +346,7 @@ class JorgeSellerEngine:
                     scheduler = get_smart_scheduler(self.ghl_client)
 
                     available_slots = await scheduler.get_available_slots(
-                        appointment_type=AppointmentType.LISTING_APPOINTMENT,
+                        appointment_type=AppointmentType.SELLER_CONSULTATION,
                         days_ahead=7
                     )
 
@@ -444,6 +455,10 @@ class JorgeSellerEngine:
             # P0 FIX: Extract handoff signals for cross-bot handoff detection
             from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
             handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+            handoff_confidence = JorgeHandoffService.build_signal_confidence(
+                mode="seller",
+                intent_signals=handoff_signals,
+            )
 
             return {
                 "message": final_message,
@@ -452,6 +467,7 @@ class JorgeSellerEngine:
                 "seller_data": extracted_seller_data,
                 "questions_answered": extracted_seller_data.get("questions_answered", 0),
                 "handoff_signals": handoff_signals,  # P0 FIX: Add handoff signals to return dict
+                "handoff_confidence": handoff_confidence,
                 "analytics": {
                     **temperature_result["analytics"],
                     "closing_probability": predictive_result.closing_probability,
@@ -474,7 +490,13 @@ class JorgeSellerEngine:
                 "actions": [],
                 "temperature": "cold",
                 "error": str(e),
-                "handoff_signals": {}  # P0 FIX: Include empty handoff_signals in error case
+                "handoff_signals": {},  # P0 FIX: Include empty handoff_signals in error case
+                "handoff_confidence": {
+                    "mode": "fallback",
+                    "score": 0.0,
+                    "reason": "seller_processing_error",
+                    "evidence": {"error": str(e)},
+                },
             }
 
     async def handle_vapi_booking(self, contact_id: str, location_id: str, booking_details: Dict[str, Any]) -> bool:
@@ -536,32 +558,63 @@ class JorgeSellerEngine:
 
             # --- LOCAL REGEX ENHANCEMENT (Pillar 1: NLP Optimization) ---
             # Fallback/Validation if ConversationManager missed it
-            import re
             msg_lower = user_message.lower()
 
             # 1. Timeline (30-45 days)
             if extracted_data.get("timeline_acceptable") is None:
-                if re.search(r'(Union[yes, yeah]|Union[sure, fine]|Union[ok, works]|doable)', msg_lower):
-                    # Check if context implies agreement to timeline
-                    # (This assumes the bot just asked Q2)
-                    pass  # Hard to be sure without knowing previous question context explicitly here, rely on flow
-                if re.search(r'(Union[no, nope]|Union[cant, impossible]|too fast)', msg_lower):
+                if re.search(r"\b(no|nope|cant|can't|impossible)\b|too fast", msg_lower):
                     extracted_data["timeline_acceptable"] = False
-                elif re.search(r'(Union[30, 45]|Union[thirty, forty])', msg_lower) and not re.search(r'(Union[no, not])', msg_lower):
+                elif re.search(r"\b(yes|yeah|sure|fine|ok|works|doable)\b", msg_lower):
                     extracted_data["timeline_acceptable"] = True
+                elif re.search(r"\b(30|45|thirty|forty)\b", msg_lower) and not re.search(r"\b(no|not)\b", msg_lower):
+                    extracted_data["timeline_acceptable"] = True
+
+            if extracted_data.get("timeline_days") is None:
+                day_match = re.search(r"(\d+)\s*(day|days|week|weeks|month|months)", msg_lower)
+                if day_match:
+                    raw_days = int(day_match.group(1))
+                    unit = day_match.group(2)
+                    if unit.startswith("week"):
+                        raw_days *= 7
+                    elif unit.startswith("month"):
+                        raw_days *= 30
+                    extracted_data["timeline_days"] = raw_days
+                elif "asap" in msg_lower or "urgent" in msg_lower:
+                    extracted_data["timeline_days"] = 30
 
             # 2. Price
             if not extracted_data.get("price_expectation"):
-                price_match = re.search(r'\$?(\d{1,3}(?:,\d{3})*(?:k)?)', user_message)
+                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?[kK]?)", user_message)
                 if price_match:
-                    extracted_data["price_expectation"] = price_match.group(1)
+                    parsed_price = self._parse_amount_with_retry(price_match.group(1))
+                    if parsed_price is not None:
+                        extracted_data["price_expectation"] = parsed_price
+                        extracted_data["asking_price"] = parsed_price
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r'(move.?in.?Union[ready, perfect]|Union[great, good]|excellent)', msg_lower):
+                if re.search(r"\b(move[\s-]?in[\s-]?ready|perfect|great|good|excellent)\b", msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
-                elif re.search(r'(needs?.?Union[work, fixer]|Union[repairs, bad]|rough)', msg_lower):
+                elif re.search(r"\b(needs?\s*work|fixer|repairs?|bad|rough|major work)\b", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
+
+            # 4. Mortgage / Liens
+            if extracted_data.get("mortgage_balance") is None:
+                if any(keyword in msg_lower for keyword in ["mortgage", "owe", "loan", "lien", "balance"]):
+                    mortgage_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?[kK]?)", user_message)
+                    if mortgage_match:
+                        parsed_mortgage = self._parse_amount_with_retry(mortgage_match.group(1))
+                        if parsed_mortgage is not None:
+                            extracted_data["mortgage_balance"] = parsed_mortgage
+
+            # 5. Repair estimate
+            if extracted_data.get("repair_estimate") is None:
+                if any(keyword in msg_lower for keyword in ["repair", "repairs", "fix", "renovat", "update"]):
+                    repair_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?[kK]?)", user_message)
+                    if repair_match:
+                        parsed_repairs = self._parse_amount_with_retry(repair_match.group(1))
+                        if parsed_repairs is not None:
+                            extracted_data["repair_estimate"] = parsed_repairs
 
             # --- VAGUE ANSWER TRACKING (Pillar 1: NLP Optimization) ---
 
@@ -590,7 +643,8 @@ class JorgeSellerEngine:
             
             extracted_data["newly_answered_count"] = len(newly_answered)
             extracted_data["questions_answered"] = questions_answered
-            
+            extracted_data["qualification_complete"] = questions_answered >= 4
+
             # Store current user message for follow-up handling
             extracted_data["last_user_message"] = user_message
 
@@ -604,6 +658,88 @@ class JorgeSellerEngine:
         except Exception as e:
             self.logger.error(f"Seller data extraction failed: {e}")
             return current_seller_data
+
+    async def _evaluate_required_field_completeness(self, seller_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Attach required-field completeness metadata after each seller turn.
+        """
+        fallback_required_fields = [
+            "motivation",
+            "timeline_acceptable",
+            "property_condition",
+            "price_expectation",
+        ]
+        fallback_missing = [
+            field for field in fallback_required_fields if seller_data.get(field) is None
+        ]
+        fallback = {
+            "required_fields": fallback_required_fields,
+            "missing_fields": fallback_missing,
+            "is_complete": not fallback_missing,
+            "completion_ratio": (
+                (len(fallback_required_fields) - len(fallback_missing))
+                / len(fallback_required_fields)
+            ),
+        }
+
+        validator = getattr(self.conversation_manager, "validate_seller_required_fields", None)
+        completeness = fallback
+        if callable(validator):
+            try:
+                result = validator(seller_data)
+                if asyncio.iscoroutine(result):
+                    result = await result
+                if isinstance(result, dict):
+                    completeness = {
+                        "required_fields": result.get("required_fields", fallback_required_fields),
+                        "missing_fields": result.get("missing_fields", fallback_missing),
+                        "is_complete": bool(result.get("is_complete", not fallback_missing)),
+                        "completion_ratio": float(
+                            result.get(
+                                "completion_ratio",
+                                fallback["completion_ratio"],
+                            )
+                        ),
+                    }
+            except Exception as exc:
+                self.logger.warning(f"Seller completeness validator failed, using fallback: {exc}")
+
+        seller_data["missing_required_fields"] = completeness["missing_fields"]
+        seller_data["required_fields_complete"] = completeness["is_complete"]
+        seller_data["qualification_completeness"] = completeness["completion_ratio"]
+        return seller_data
+
+    def _parse_amount_once(self, normalized_amount: str) -> int:
+        """Parse a normalized monetary amount and raise ValueError on invalid input."""
+        normalized = normalized_amount.lower()
+        multiplier = 1
+        if normalized.endswith("k"):
+            multiplier = 1000
+            normalized = normalized[:-1]
+        return int(float(normalized) * multiplier)
+
+    def _parse_amount_with_retry(self, raw_value: str) -> Optional[int]:
+        """
+        Parse monetary text with bounded normalization retries.
+
+        The retry count is fixed by NUMERIC_PARSE_MAX_RETRIES to keep runtime bounded.
+        """
+        if not raw_value:
+            return None
+
+        max_attempts = min(
+            self.NUMERIC_PARSE_MAX_RETRIES,
+            len(self.NUMERIC_PARSE_CLEANING_STEPS),
+        )
+        for attempt in range(max_attempts):
+            normalized = self.NUMERIC_PARSE_CLEANING_STEPS[attempt](raw_value)
+            if not normalized:
+                continue
+            try:
+                return self._parse_amount_once(normalized)
+            except ValueError:
+                continue
+        return None
 
     async def _calculate_seller_temperature(self, seller_data: Dict) -> Dict:
         """Calculate Jorge's seller temperature classification
@@ -1111,6 +1247,8 @@ class JorgeSellerEngine:
     ) -> List[Dict]:
         """Create Jorge's seller-specific GHL actions"""
         actions = []
+        persona_data = persona_data or {}
+        questions_answered = int(seller_data.get("questions_answered", 0) or 0)
 
         # Apply temperature tag
         actions.append({
@@ -1124,6 +1262,11 @@ class JorgeSellerEngine:
             roi_field = JorgeSellerConfig.get_ghl_custom_field_id("expected_roi") or "expected_roi"
             tier_field = JorgeSellerConfig.get_ghl_custom_field_id("lead_value_tier") or "lead_value_tier"
             price_field = JorgeSellerConfig.get_ghl_custom_field_id("ai_valuation_price") or "ai_valuation_price"
+            lead_value_tier = self._map_lead_value_tier(
+                temperature=temperature,
+                questions_answered=questions_answered,
+                pricing_tier=getattr(pricing_result, "tier", None),
+            )
 
             actions.append({
                 "type": "update_custom_field",
@@ -1133,7 +1276,7 @@ class JorgeSellerEngine:
             actions.append({
                 "type": "update_custom_field",
                 "field": tier_field,
-                "value": pricing_result.tier.upper()
+                "value": lead_value_tier
             })
             actions.append({
                 "type": "update_custom_field",
@@ -1276,6 +1419,12 @@ class JorgeSellerEngine:
                 "field": field_id,
                 "value": str(seller_data["price_expectation"])
             })
+            asking_price_field = JorgeSellerConfig.get_ghl_custom_field_id("asking_price") or "asking_price"
+            actions.append({
+                "type": "update_custom_field",
+                "field": asking_price_field,
+                "value": str(seller_data["price_expectation"])
+            })
 
         # Condition
         if seller_data.get("property_condition"):
@@ -1288,7 +1437,10 @@ class JorgeSellerEngine:
             
         # Motivation
         if seller_data.get("motivation"):
-            field_id = JorgeSellerConfig.get_ghl_custom_field_id("seller_motivation") or "motivation"
+            field_id = (
+                JorgeSellerConfig.get_ghl_custom_field_id("seller_motivation")
+                or "seller_motivation"
+            )
             actions.append({
                 "type": "update_custom_field",
                 "field": field_id,
@@ -1305,7 +1457,135 @@ class JorgeSellerEngine:
                 "value": val
             })
 
+        # Standardized scope fields
+        seller_temp_field = JorgeSellerConfig.get_ghl_custom_field_id("seller_temperature") or "seller_temperature"
+        actions.append({
+            "type": "update_custom_field",
+            "field": seller_temp_field,
+            "value": str(temperature).upper()
+        })
+
+        last_interaction_field = JorgeSellerConfig.get_ghl_custom_field_id("last_bot_interaction") or "last_bot_interaction"
+        actions.append({
+            "type": "update_custom_field",
+            "field": last_interaction_field,
+            "value": datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
+        })
+
+        qualification_complete = questions_answered >= 4
+        qualification_complete_field = (
+            JorgeSellerConfig.get_ghl_custom_field_id("qualification_complete") or "qualification_complete"
+        )
+        actions.append({
+            "type": "update_custom_field",
+            "field": qualification_complete_field,
+            "value": "Yes" if qualification_complete else "No"
+        })
+
+        # Ensure lead value tier is always populated even without pricing payload.
+        if not pricing_result:
+            tier_field = JorgeSellerConfig.get_ghl_custom_field_id("lead_value_tier") or "lead_value_tier"
+            actions.append({
+                "type": "update_custom_field",
+                "field": tier_field,
+                "value": self._map_lead_value_tier(temperature, questions_answered, None)
+            })
+
+        timeline_days = self._derive_timeline_days(seller_data)
+        if timeline_days is not None:
+            timeline_days_field = JorgeSellerConfig.get_ghl_custom_field_id("timeline_days") or "timeline_days"
+            actions.append({
+                "type": "update_custom_field",
+                "field": timeline_days_field,
+                "value": str(timeline_days)
+            })
+
+        if seller_data.get("mortgage_balance") is not None:
+            mortgage_field = JorgeSellerConfig.get_ghl_custom_field_id("mortgage_balance") or "mortgage_balance"
+            actions.append({
+                "type": "update_custom_field",
+                "field": mortgage_field,
+                "value": str(seller_data["mortgage_balance"])
+            })
+
+        if seller_data.get("repair_estimate") is not None:
+            repair_field = JorgeSellerConfig.get_ghl_custom_field_id("repair_estimate") or "repair_estimate"
+            actions.append({
+                "type": "update_custom_field",
+                "field": repair_field,
+                "value": str(seller_data["repair_estimate"])
+            })
+
         return actions
+
+    def _derive_timeline_days(self, seller_data: Dict[str, Any]) -> Optional[int]:
+        """Derive numeric timeline days from extracted seller timeline context."""
+        if seller_data.get("timeline_days") is not None:
+            try:
+                return int(seller_data["timeline_days"])
+            except (TypeError, ValueError):
+                pass
+
+        if seller_data.get("timeline_acceptable") is True:
+            return 30
+        if seller_data.get("timeline_acceptable") is False:
+            return 90
+
+        timeline_text = str(seller_data.get("timeline_urgency", "")).lower()
+        if not timeline_text:
+            return None
+
+        match = re.search(r"(\d+)\s*(day|days|week|weeks|month|months)", timeline_text)
+        if match:
+            value = int(match.group(1))
+            unit = match.group(2)
+            if unit.startswith("week"):
+                return value * 7
+            if unit.startswith("month"):
+                return value * 30
+            return value
+
+        if "urgent" in timeline_text or "asap" in timeline_text:
+            return 30
+        if "flexible" in timeline_text:
+            return 60
+        if "long" in timeline_text:
+            return 120
+
+        return None
+
+    def _map_lead_value_tier(
+        self,
+        temperature: str,
+        questions_answered: int,
+        pricing_tier: Optional[str]
+    ) -> str:
+        """Normalize lead value tier to A/B/C/D for CRM consistency."""
+        if pricing_tier:
+            normalized = str(pricing_tier).strip().upper()
+            if normalized in {"A", "B", "C", "D"}:
+                return normalized
+            tier_map = {
+                "PREMIUM": "A",
+                "HIGH": "A",
+                "HOT": "A",
+                "STANDARD": "B",
+                "MEDIUM": "B",
+                "WARM": "B",
+                "LOW": "C",
+                "COLD": "C",
+            }
+            if normalized in tier_map:
+                return tier_map[normalized]
+
+        temperature = str(temperature).lower()
+        if temperature == "hot":
+            return "A"
+        if temperature == "warm":
+            return "B"
+        if questions_answered >= 2:
+            return "C"
+        return "D"
 
     def _create_nurture_message(self, seller_data: Dict, temperature: str) -> str:
         """Create nurture message for qualified but not hot sellers"""

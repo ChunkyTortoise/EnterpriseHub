@@ -19,6 +19,9 @@ AI agents (like Antigravity) should read `.beads/issues.jsonl` to:
 2. Identify blocked or ready tasks.
 3. Record progress and new discoveries.
 
+## Recent Updates
+- **2026-02-06:** Revenue-Sprint Spec 2 completion recorded (logging, metrics, Docker, CI/CD). If tracking in Beads, add an issue noting Spec 2 status and any remaining blockers (e.g., test env setup for gspread).
+
 ### Adding an Issue
 Issues should be added as JSON lines to `.beads/issues.jsonl`.
 ```json

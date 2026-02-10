@@ -28,6 +28,43 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def enhanced_error_handler(func):
+    """Decorator for consistent async/sync error handling.
+
+    Returns a structured error payload instead of raising, while logging details.
+    """
+    if asyncio.iscoroutinefunction(func):
+        async def _async_wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as exc:
+                logger.exception(
+                    "Enhanced error handler caught exception",
+                    extra={"function": getattr(func, "__name__", "unknown"), "error": str(exc)}
+                )
+                return {
+                    "status": "failed",
+                    "error": str(exc),
+                    "error_type": type(exc).__name__,
+                }
+        return _async_wrapper
+
+    def _sync_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as exc:
+            logger.exception(
+                "Enhanced error handler caught exception",
+                extra={"function": getattr(func, "__name__", "unknown"), "error": str(exc)}
+            )
+            return {
+                "status": "failed",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            }
+    return _sync_wrapper
+
+
 class ErrorCategory(Enum):
     """Error categories for proper escalation and handling"""
     TRANSIENT = "transient"          # Retry possible (network timeouts, rate limits)

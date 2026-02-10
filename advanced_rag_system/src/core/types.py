@@ -161,11 +161,19 @@ class Document(BaseModel):
         Returns:
             The created DocumentChunk
         """
+        metadata = metadata or Metadata()
+        if metadata.custom is None:
+            metadata.custom = {}
+        offset_start = sum(len(chunk.content) for chunk in self.chunks)
+        offset_end = offset_start + len(content)
+        metadata.custom.setdefault("offset_start", offset_start)
+        metadata.custom.setdefault("offset_end", offset_end)
+
         chunk = DocumentChunk(
             document_id=self.id,
             content=content,
             index=index,
-            metadata=metadata or Metadata(),
+            metadata=metadata,
             embedding=embedding,
         )
         self.chunks.append(chunk)

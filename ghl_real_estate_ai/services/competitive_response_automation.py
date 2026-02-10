@@ -215,7 +215,28 @@ class ResponseActionExecutor:
         execution: ResponseExecution
     ) -> Dict[str, Any]:
         """Execute a specific response action."""
-        raise NotImplementedError
+        try:
+            if not await self.validate_action(action):
+                return {"success": False, "error": "Action validation failed", "channel": self.channel.value}
+
+            # Default executor: log intent and return structured failure for unimplemented channels
+            self.execution_stats["total_executions"] += 1
+            self.execution_stats["failed_executions"] += 1
+            logger.warning(
+                "No concrete executor implemented for channel",
+                extra={"channel": self.channel.value, "action": action.get("type")}
+            )
+            return {
+                "success": False,
+                "error": f"No executor implemented for channel {self.channel.value}",
+                "channel": self.channel.value,
+                "action": action,
+            }
+        except Exception as e:
+            logger.error(f"ResponseActionExecutor execute_action failed: {e}")
+            self.execution_stats["total_executions"] += 1
+            self.execution_stats["failed_executions"] += 1
+            return {"success": False, "error": str(e), "channel": self.channel.value}
 
     async def validate_action(self, action: Dict[str, Any]) -> bool:
         """Validate action parameters before execution."""

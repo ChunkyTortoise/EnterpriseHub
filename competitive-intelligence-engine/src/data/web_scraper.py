@@ -34,6 +34,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import httpx
+try:
+    from playwright.async_api import async_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except Exception:
+    async_playwright = None
+    PLAYWRIGHT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -175,8 +181,23 @@ class CompetitorWebScraper:
             return await self._scrape_with_requests(website)
         elif website.scraping_method == ScrapingMethod.SELENIUM:
             return await self._scrape_with_selenium(website)
+        elif website.scraping_method == ScrapingMethod.PLAYWRIGHT:
+            return await self._scrape_with_playwright(website)
+        elif website.scraping_method == ScrapingMethod.API:
+            # Placeholder for API-based scraping; fall back to requests.
+            return await self._scrape_with_requests(website)
         else:
-            raise NotImplementedError(f"Scraping method {website.scraping_method} not implemented yet")
+            return ScrapingResult(
+                website=website.name,
+                url=website.pricing_page_url,
+                timestamp=datetime.now(),
+                content_hash="",
+                extracted_data={},
+                changes_detected=[],
+                scraping_method=website.scraping_method,
+                success=False,
+                error_message=f"Scraping method {website.scraping_method} not supported"
+            )
 
     async def _scrape_with_requests(self, website: CompetitorWebsite) -> ScrapingResult:
         """Scrape website using requests + BeautifulSoup."""
@@ -270,6 +291,59 @@ class CompetitorWebScraper:
                 extracted_data={},
                 changes_detected=[],
                 scraping_method=ScrapingMethod.SELENIUM,
+                success=False,
+                error_message=str(e)
+            )
+
+    async def _scrape_with_playwright(self, website: CompetitorWebsite) -> ScrapingResult:
+        """Scrape website using Playwright for dynamic/SPAs."""
+        if not PLAYWRIGHT_AVAILABLE:
+            return ScrapingResult(
+                website=website.name,
+                url=website.pricing_page_url,
+                timestamp=datetime.now(),
+                content_hash="",
+                extracted_data={},
+                changes_detected=[],
+                scraping_method=ScrapingMethod.PLAYWRIGHT,
+                success=False,
+                error_message="Playwright not available"
+            )
+
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+                await page.goto(website.pricing_page_url, wait_until="networkidle", timeout=30000)
+
+                content = await page.content()
+                await browser.close()
+
+            soup = BeautifulSoup(content, "html.parser")
+            extracted_data = self._extract_data_with_selectors(soup, website.selectors)
+            content_hash = hashlib.md5(content.encode()).hexdigest()
+            changes = self._detect_changes(website.name, extracted_data, content_hash)
+
+            return ScrapingResult(
+                website=website.name,
+                url=website.pricing_page_url,
+                timestamp=datetime.now(),
+                content_hash=content_hash,
+                extracted_data=extracted_data,
+                changes_detected=changes,
+                scraping_method=ScrapingMethod.PLAYWRIGHT,
+                success=True
+            )
+        except Exception as e:
+            logger.error(f"Error scraping {website.name} with Playwright: {str(e)}")
+            return ScrapingResult(
+                website=website.name,
+                url=website.pricing_page_url,
+                timestamp=datetime.now(),
+                content_hash="",
+                extracted_data={},
+                changes_detected=[],
+                scraping_method=ScrapingMethod.PLAYWRIGHT,
                 success=False,
                 error_message=str(e)
             )

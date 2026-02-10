@@ -103,6 +103,7 @@ from ghl_real_estate_ai.api.routes import (
     export_engine,
     commission_forecast,
     sms_compliance,
+    metrics,
 )
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.middleware import (
@@ -114,6 +115,11 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service, EnterpriseAuthError
 from fastapi.responses import JSONResponse
+from ghl_real_estate_ai.api.versioning import (
+    include_versioned_router,
+    ApiVersionRewriteMiddleware,
+    LegacyDeprecationMiddleware,
+)
 
 class OptimizedJSONResponse(JSONResponse):
     """Optimized JSON response with null value removal and compression."""
@@ -139,6 +145,7 @@ async def lifespan(app: FastAPI):
     """Lifespan event handler for FastAPI."""
     # Startup logic
     logger = get_logger(__name__)
+    app.state.startup_complete = False
     logger.info(
         f"Starting {settings.app_name} v{settings.version}",
         extra={"environment": settings.environment, "model": settings.claude_model},
@@ -227,8 +234,10 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Failed to start Lead Sequence Scheduler: {e}")
         logger.warning("Lead Bot automation will not function - sequences must be triggered manually")
 
+    app.state.startup_complete = True
     yield
 
+    app.state.startup_complete = False
     # Shutdown logic ... (kept as is)
 
 def _verify_admin_api_key():
@@ -259,7 +268,7 @@ def _setup_routers(app: FastAPI):
         websocket_performance, external_webhooks, agent_ecosystem,
         claude_concierge, claude_concierge_integration, customer_journey,
         property_intelligence, business_intelligence, bi_websocket_routes,
-        error_monitoring, security
+        error_monitoring, security, kpi_export, evidence_pack
     )
     from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 
@@ -279,6 +288,9 @@ def _setup_routers(app: FastAPI):
     app.include_router(property_intelligence.router)
     app.include_router(error_monitoring.router)
     app.include_router(security.router)
+    app.include_router(metrics.router)
+    app.include_router(kpi_export.router)
+    app.include_router(evidence_pack.router)
     app.include_router(webhook.router, prefix="/api")
     app.include_router(analytics.router, prefix="/api")
     app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])
@@ -368,6 +380,10 @@ app.router.route_class = UnionCompatibleRoute
 
 # Override default JSON response
 app.default_response_class = OptimizedJSONResponse
+
+# API versioning: rewrite /api/v1 -> /api and add deprecation headers on legacy paths
+app.add_middleware(ApiVersionRewriteMiddleware)
+app.add_middleware(LegacyDeprecationMiddleware)
 
 # Setup routers immediately so they are registered before server starts
 _setup_routers(app)

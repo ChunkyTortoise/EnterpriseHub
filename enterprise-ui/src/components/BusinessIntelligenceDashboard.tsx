@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   CheckCircle,
   RefreshCw,
+  Download,
   Calendar,
   BarChart3,
   PieChart,
@@ -82,6 +83,13 @@ interface StrategicAlert {
   created_at: string;
 }
 
+interface DataProvenance {
+  source: string;
+  timestamp: string;
+  demo_mode: boolean;
+  note?: string;
+}
+
 export function BusinessIntelligenceDashboard({
   locationId = 'default',
   autoRefresh = true,
@@ -96,6 +104,8 @@ export function BusinessIntelligenceDashboard({
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [dashboardHealth, setDashboardHealth] = useState<'excellent' | 'good' | 'warning' | 'error'>('excellent');
+  const [dataProvenance, setDataProvenance] = useState<DataProvenance | null>(null);
+  const [kpiSnapshot, setKpiSnapshot] = useState<Record<string, any>>({});
 
   // Fetch executive dashboard data from Phase 7 backend
   const fetchExecutiveDashboard = useCallback(async () => {
@@ -114,6 +124,10 @@ export function BusinessIntelligenceDashboard({
 
       if (data.strategic_alerts) {
         setStrategicAlerts(data.strategic_alerts);
+      }
+
+      if (data.data_provenance) {
+        setDataProvenance(data.data_provenance);
       }
 
       // Update dashboard health based on data
@@ -137,10 +151,82 @@ export function BusinessIntelligenceDashboard({
       // Use mock data on error
       setExecutiveSummary(generateMockExecutiveSummary());
       setStrategicAlerts(generateMockStrategicAlerts());
+      setDataProvenance({
+        source: 'synthetic_fallback',
+        timestamp: new Date().toISOString(),
+        demo_mode: true,
+        note: 'Fallback to mock data due to API error'
+      });
     } finally {
       setIsLoading(false);
     }
   }, [locationId, timeframe, isLoading, addEntry]);
+
+  const exportExecutiveSummary = useCallback(() => {
+    if (!executiveSummary) return;
+
+    const rows = [
+      ['metric', 'value'],
+      ['performance_score', executiveSummary.performance_score],
+      ['current_month_projection', executiveSummary.revenue_summary.current_month_projection],
+      ['quarter_projection', executiveSummary.revenue_summary.quarter_projection],
+      ['growth_rate', executiveSummary.revenue_summary.growth_rate],
+      ['commission_total', executiveSummary.revenue_summary.commission_total],
+      ['total_conversations', executiveSummary.conversation_summary.total_conversations],
+      ['conversion_rate', executiveSummary.conversation_summary.conversion_rate],
+      ['avg_sentiment', executiveSummary.conversation_summary.avg_sentiment],
+      ['market_health_score', executiveSummary.market_summary.market_health_score],
+      ['active_trends', executiveSummary.market_summary.active_trends],
+      ['critical_alerts', executiveSummary.market_summary.critical_alerts],
+      ['opportunities_identified', executiveSummary.market_summary.opportunities_identified]
+    ];
+
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `executive-summary-${timeframe}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [executiveSummary, timeframe]);
+
+  const exportKpiSnapshot = useCallback(async () => {
+    try {
+      const backendBase = process.env.NEXT_PUBLIC_ENTERPRISE_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${backendBase}/api/metrics/kpi-export`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch KPI snapshot');
+      }
+      const data = await response.json();
+      if (data?.kpis) {
+        setKpiSnapshot(data.kpis);
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kpi-snapshot-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('KPI export failed:', error);
+    }
+  }, []);
+
+  const fetchKpiSnapshot = useCallback(async () => {
+    try {
+      const backendBase = process.env.NEXT_PUBLIC_ENTERPRISE_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${backendBase}/api/metrics/kpi-export`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data?.kpis) {
+        setKpiSnapshot(data.kpis);
+      }
+    } catch (error) {
+      console.error('Failed to fetch KPI snapshot:', error);
+    }
+  }, []);
 
   // Enhanced Real-time WebSocket connection via useAgentStore
   useEffect(() => {
@@ -202,12 +288,13 @@ export function BusinessIntelligenceDashboard({
   // Auto-refresh executive data
   useEffect(() => {
     fetchExecutiveDashboard();
+    fetchKpiSnapshot();
 
     if (autoRefresh) {
       const interval = setInterval(fetchExecutiveDashboard, 300000); // 5 minutes
       return () => clearInterval(interval);
     }
-  }, [fetchExecutiveDashboard, autoRefresh]);
+  }, [fetchExecutiveDashboard, fetchKpiSnapshot, autoRefresh]);
 
   const generateMockExecutiveSummary = (): ExecutiveSummary => ({
     period: "Last 30 days",
@@ -320,9 +407,20 @@ export function BusinessIntelligenceDashboard({
             <Text className="text-slate-400 mt-2 text-lg">
               Phase 7 Advanced AI Intelligence - Real-time business insights and strategic analytics
             </Text>
+            {dataProvenance && (
+              <Text className="text-slate-500 mt-1 text-sm">
+                Data provenance: {dataProvenance.source} • {dataProvenance.timestamp}
+                {dataProvenance.note ? ` • ${dataProvenance.note}` : ''}
+              </Text>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
+            {dataProvenance && (
+              <Badge color={dataProvenance.demo_mode ? 'rose' : 'emerald'} size="lg">
+                {dataProvenance.demo_mode ? 'DEMO DATA' : 'SANDBOX DATA'}
+              </Badge>
+            )}
             <div className="text-sm text-slate-500">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </div>
@@ -330,6 +428,21 @@ export function BusinessIntelligenceDashboard({
               {getHealthIcon(dashboardHealth)}
               {dashboardHealth.toUpperCase()}
             </Badge>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={exportExecutiveSummary}
+              icon={Download}
+            >
+              Export CSV
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={exportKpiSnapshot}
+            >
+              Export KPI Snapshot
+            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -609,6 +722,23 @@ export function BusinessIntelligenceDashboard({
                     </div>
                   </div>
                 </Callout>
+
+                <Card className="bg-slate-900 border-slate-800">
+                  <Title className="text-slate-100 mb-4">KPI Snapshot (Latest)</Title>
+                  {Object.keys(kpiSnapshot).length === 0 ? (
+                    <Text className="text-slate-400 text-sm">No KPI snapshot available.</Text>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      {Object.entries(kpiSnapshot).slice(0, 10).map(([key, value]) => (
+                        <div key={key} className="bg-slate-800 border border-slate-700 rounded-lg p-3">
+                          <div className="text-slate-400 uppercase text-[10px] tracking-wide">{key}</div>
+                          <div className="text-slate-100 mt-1">{value?.value ?? '—'}</div>
+                          <div className="text-slate-500 text-[10px] mt-1">{value?.timestamp ?? ''}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </div>
             </TabPanel>
           </TabPanels>
