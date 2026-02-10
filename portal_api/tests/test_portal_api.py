@@ -3,12 +3,20 @@ from __future__ import annotations
 import json
 import os
 
+import pytest
 from fastapi.testclient import TestClient
 
 from portal_api import app
+from portal_api.app import reset_idempotency_store
 from portal_api.dependencies import get_services
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _portal_api_defaults(monkeypatch) -> None:
+    monkeypatch.delenv("PORTAL_API_AUTH_MODE", raising=False)
+    reset_idempotency_store()
 
 
 def _reset_state(api_key: str | None = None) -> None:
@@ -95,6 +103,56 @@ def test_openapi_401_contracts_locked_for_mutating_routes() -> None:
         assert _openapi_error_ref(paths, route, method, "401").endswith("/ApiErrorResponse")
 
 
+def test_openapi_409_contracts_locked_for_idempotent_mutating_routes() -> None:
+    openapi = app.openapi()
+    paths = openapi["paths"]
+    idempotent_routes = [
+        ("/portal/swipe", "post"),
+        ("/vapi/tools/book-tour", "post"),
+        ("/ghl/sync", "post"),
+        ("/system/reset", "post"),
+    ]
+
+    for route, method in idempotent_routes:
+        responses = paths[route][method]["responses"]
+        assert "409" in responses
+        assert responses["409"]["description"] == "Idempotency key conflict"
+        assert _openapi_error_ref(paths, route, method, "409").endswith("/ApiErrorResponse")
+
+
+def test_openapi_idempotency_header_is_optional_on_idempotent_routes() -> None:
+    openapi = app.openapi()
+    paths = openapi["paths"]
+    idempotent_routes = [
+        ("/portal/swipe", "post"),
+        ("/vapi/tools/book-tour", "post"),
+        ("/ghl/sync", "post"),
+        ("/system/reset", "post"),
+    ]
+
+    for route, method in idempotent_routes:
+        params = paths[route][method]["parameters"]
+        idempotency_param = next(param for param in params if param.get("name") == "Idempotency-Key")
+        assert idempotency_param["in"] == "header"
+        assert idempotency_param["required"] is False
+
+
+def test_openapi_500_auth_misconfigured_contracts_locked_for_guarded_routes() -> None:
+    openapi = app.openapi()
+    paths = openapi["paths"]
+    guarded_routes = [
+        ("/portal/swipe", "post"),
+        ("/vapi/tools/book-tour", "post"),
+        ("/system/reset", "post"),
+    ]
+
+    for route, method in guarded_routes:
+        responses = paths[route][method]["responses"]
+        assert "500" in responses
+        assert responses["500"]["description"] == "Authentication is misconfigured"
+        assert _openapi_error_ref(paths, route, method, "500").endswith("/ApiErrorResponse")
+
+
 def test_openapi_422_validation_contracts_locked_on_selected_routes() -> None:
     openapi = app.openapi()
     paths = openapi["paths"]
@@ -142,6 +200,18 @@ def test_request_id_header_propagates_when_supplied() -> None:
     response = client.get("/health", headers={"X-Request-ID": "demo-request-123"})
     assert response.status_code == 200
     _assert_request_id_header(response, expected="demo-request-123")
+
+
+def test_request_logging_emits_request_id(caplog) -> None:
+    request_id = "demo-log-request-1"
+    with caplog.at_level("INFO", logger="portal_api.request"):
+        response = client.get("/health", headers={"X-Request-ID": request_id})
+
+    assert response.status_code == 200
+    assert any(
+        "portal_api.request_completed" in record.getMessage() and f"request_id={request_id}" in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def test_portal_deck_endpoint() -> None:
@@ -466,6 +536,111 @@ def test_swipe_pass_does_not_trigger_high_intent_or_ghl_actions() -> None:
     assert state["appointments"] == 0
 
 
+def test_swipe_idempotency_replay_returns_same_result_without_duplicate_effects() -> None:
+    _reset_state()
+    headers = {"Idempotency-Key": "idem-swipe-001"}
+    payload = {
+        "contact_id": "lead_001",
+        "property_id": "prop_001",
+        "action": "like",
+    }
+
+    first = client.post("/portal/swipe", headers=headers, json=payload)
+    assert first.status_code == 200
+    _assert_request_id_header(first)
+    assert first.headers.get("X-Idempotency-Replayed") is None
+    first_payload = first.json()
+
+    state_after_first = client.get("/system/state").json()["state"]
+    assert state_after_first["inventory_interactions"] == 1
+    assert state_after_first["ghl_actions"] == 3
+    assert state_after_first["appointments"] == 0
+
+    replay = client.post("/portal/swipe", headers=headers, json=payload)
+    assert replay.status_code == 200
+    _assert_request_id_header(replay)
+    assert replay.headers.get("X-Idempotency-Replayed") == "true"
+    assert replay.json() == first_payload
+
+    state_after_replay = client.get("/system/state").json()["state"]
+    assert state_after_replay["inventory_interactions"] == 1
+    assert state_after_replay["ghl_actions"] == 3
+    assert state_after_replay["appointments"] == 0
+
+
+def test_book_tour_idempotency_conflict_returns_409_and_preserves_side_effects() -> None:
+    _reset_state()
+    headers = {"Idempotency-Key": "idem-book-001"}
+    first_payload = {
+        "toolCall": {
+            "id": "idem-book-call",
+            "function": {
+                "arguments": {
+                    "contact_id": "lead_001",
+                    "slot_time": "2026-02-15T10:00:00",
+                    "property_address": "123 Palm Ave",
+                },
+            },
+        }
+    }
+    second_payload = {
+        "toolCall": {
+            "id": "idem-book-call",
+            "function": {
+                "arguments": {
+                    "contact_id": "lead_001",
+                    "slot_time": "2026-02-15T11:00:00",
+                    "property_address": "123 Palm Ave",
+                },
+            },
+        }
+    }
+
+    first = client.post("/vapi/tools/book-tour", headers=headers, json=first_payload)
+    assert first.status_code == 200
+
+    conflict = client.post("/vapi/tools/book-tour", headers=headers, json=second_payload)
+    assert conflict.status_code == 409
+    _assert_request_id_header(conflict)
+    conflict_payload = conflict.json()
+    assert conflict_payload["error"]["code"] == "idempotency_conflict"
+    assert conflict_payload["error"]["request_id"] == conflict.headers["X-Request-ID"]
+    assert "different request payload" in conflict_payload["error"]["message"]
+
+    state_after_conflict = client.get("/system/state").json()["state"]
+    assert state_after_conflict["appointments"] == 1
+
+
+def test_reset_alias_idempotency_replay_avoids_duplicate_reset_side_effects() -> None:
+    _reset_state()
+    base_payload = {
+        "contact_id": "lead_001",
+        "property_id": "prop_001",
+        "action": "like",
+    }
+    seed = client.post("/portal/swipe", json=base_payload)
+    assert seed.status_code == 200
+
+    headers = {"Idempotency-Key": "idem-reset-alias-001"}
+    first = client.post("/admin/reset", headers=headers)
+    assert first.status_code == 200
+    first_payload = first.json()
+    assert first_payload["reset"]["inventory_interactions_cleared"] == 1
+
+    post_reset_swipe = client.post("/portal/swipe", json=base_payload)
+    assert post_reset_swipe.status_code == 200
+    before_replay_state = client.get("/system/state").json()["state"]
+    assert before_replay_state["inventory_interactions"] == 1
+
+    replay = client.post("/admin/reset", headers=headers)
+    assert replay.status_code == 200
+    assert replay.headers.get("X-Idempotency-Replayed") == "true"
+    assert replay.json() == first_payload
+
+    after_replay_state = client.get("/system/state").json()["state"]
+    assert after_replay_state["inventory_interactions"] == 1
+
+
 def test_vapi_tool_endpoints() -> None:
     _reset_state()
     availability = client.post(
@@ -633,6 +808,7 @@ def test_ghl_sync_returns_500_on_service_exception(monkeypatch) -> None:
 
 def test_demo_api_key_guard_disabled_when_env_unset(monkeypatch) -> None:
     _reset_state()
+    monkeypatch.delenv("PORTAL_API_AUTH_MODE", raising=False)
     monkeypatch.delenv("PORTAL_API_DEMO_KEY", raising=False)
 
     response = client.post(
@@ -690,3 +866,48 @@ def test_demo_api_key_guard_protects_reset_and_allows_valid_key(monkeypatch) -> 
     authorized = client.post("/system/reset", headers={"X-API-Key": "demo-secret"})
     assert authorized.status_code == 200
     _assert_request_id_header(authorized)
+
+
+def test_required_auth_mode_enforces_api_key_when_configured(monkeypatch) -> None:
+    _reset_state()
+    monkeypatch.setenv("PORTAL_API_AUTH_MODE", "required")
+    monkeypatch.setenv("PORTAL_API_DEMO_KEY", "demo-secret")
+
+    unauthorized = client.post(
+        "/portal/swipe",
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert unauthorized.status_code == 401
+    unauthorized_payload = unauthorized.json()
+    assert unauthorized_payload["error"]["code"] == "unauthorized"
+    assert unauthorized_payload["error"]["message"] == "Invalid API key"
+
+    authorized = client.post(
+        "/portal/swipe",
+        headers={"X-API-Key": "demo-secret"},
+        json={
+            "contact_id": "lead_001",
+            "property_id": "prop_001",
+            "action": "like",
+        },
+    )
+    assert authorized.status_code == 200
+
+
+def test_required_auth_mode_returns_500_when_demo_key_missing(monkeypatch) -> None:
+    _reset_state()
+    monkeypatch.setenv("PORTAL_API_AUTH_MODE", "required")
+    monkeypatch.delenv("PORTAL_API_DEMO_KEY", raising=False)
+
+    response = client.post("/system/reset")
+    assert response.status_code == 500
+    _assert_request_id_header(response)
+    payload = response.json()
+    assert payload["error"]["code"] == "auth_misconfigured"
+    assert payload["error"]["request_id"] == response.headers["X-Request-ID"]
+    assert "PORTAL_API_DEMO_KEY" in payload["error"]["message"]
+    assert "Traceback" not in json.dumps(payload)

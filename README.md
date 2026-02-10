@@ -164,14 +164,26 @@ Standalone FastAPI module used for the client showcase and deterministic API val
 | GET | `/system/state` | Aggregate service counters |
 | GET | `/system/state/details` | Detailed counters + recent records |
 
+### Business Flow Mapping
+
+- `GET /portal/deck`: serves prioritized inventory so agents can respond fast without manual list curation.
+- `POST /portal/swipe`: captures buyer intent; `like` drives CRM tagging/field updates and proactive outreach.
+- `POST /vapi/tools/check-availability` + `POST /vapi/tools/book-tour`: turns intent into scheduled tours.
+- `POST /ghl/sync` + `GET /ghl/fields`: keeps CRM contact data and custom-field mapping aligned.
+- `GET /system/state` + `GET /system/state/details`: gives deterministic counters for QA, demos, and operator checks.
+
 ### Contract Guarantees
 
 - Typed request/response contracts are enforced with Pydantic models and locked OpenAPI schema assertions.
 - `POST /portal/swipe` accepts only `action` values `like` or `pass`.
 - `GET /system/state/details` enforces `limit` bounds: `ge=0`, `le=100`, default `5`.
 - `POST /ghl/sync` documents both success (`200`) and service-failure (`500`) contracts with `ApiErrorResponse`.
-- Demo auth guard is env-gated on mutating routes: unset `PORTAL_API_DEMO_KEY` keeps current behavior; set it to require matching `X-API-Key`.
+- Mutating routes support optional `Idempotency-Key`; replays return the original response with `X-Idempotency-Replayed: true`, and key/body mismatches return `409` `ApiErrorResponse` (`code: idempotency_conflict`).
+- Auth mode is env-gated via `PORTAL_API_AUTH_MODE=optional|required` (default `optional`):
+  - `optional` preserves current behavior: no `PORTAL_API_DEMO_KEY` means open mutating routes; setting it requires matching `X-API-Key`.
+  - `required` always enforces `X-API-Key`; missing `PORTAL_API_DEMO_KEY` returns `500` `ApiErrorResponse` (`code: auth_misconfigured`).
 - Every response includes an `X-Request-ID` header (propagated when provided, generated when absent).
+- Request lifecycle logs include method/path/status/request-id/duration for quick triage during demos.
 - Full `portal_api` OpenAPI schema is snapshot-locked at `portal_api/tests/openapi_snapshot.json`.
 
 ### Alias Map
@@ -194,6 +206,11 @@ bash scripts/portal_api_validate.sh
 bash scripts/portal_api_interview_demo.sh
 ```
 
+Notes:
+
+- If `PORTAL_API_BASE_URL` points to localhost and `/health` is unreachable, the script auto-starts `uvicorn` for you.
+- Set `PORTAL_API_AUTO_START=0` to disable auto-start and require a manually running API server.
+
 ### OpenAPI Snapshot Refresh
 
 Use this only when an API contract change is intentional:
@@ -213,6 +230,13 @@ If demo auth is enabled:
 
 ```bash
 PORTAL_API_DEMO_KEY=demo-secret python3 scripts/portal_api_client_example.py --api-key demo-secret
+```
+
+If forcing production-style auth in local runs:
+
+```bash
+PORTAL_API_AUTH_MODE=required PORTAL_API_DEMO_KEY=demo-secret \
+  python3 scripts/portal_api_client_example.py --api-key demo-secret
 ```
 
 ### Optional P2 Helpers

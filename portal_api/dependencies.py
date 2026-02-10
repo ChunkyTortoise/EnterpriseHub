@@ -27,6 +27,23 @@ class DemoAuthError(Exception):
     pass
 
 
+class AuthMisconfiguredError(Exception):
+    """Raised when required auth mode is enabled without a configured API key."""
+
+    pass
+
+
+AUTH_MODE_OPTIONAL = "optional"
+AUTH_MODE_REQUIRED = "required"
+
+
+def _get_auth_mode() -> str:
+    auth_mode = os.getenv("PORTAL_API_AUTH_MODE", AUTH_MODE_OPTIONAL).strip().lower()
+    if auth_mode not in {AUTH_MODE_OPTIONAL, AUTH_MODE_REQUIRED}:
+        return AUTH_MODE_OPTIONAL
+    return auth_mode
+
+
 @lru_cache(maxsize=1)
 def get_services() -> Services:
     return Services(
@@ -70,8 +87,19 @@ def get_detailed_service_state(recent_limit: int = 5) -> Dict[str, Any]:
     }
 
 
+def get_idempotency_key(idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")) -> str | None:
+    return idempotency_key
+
+
 def require_demo_api_key(request: Request, x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
+    auth_mode = _get_auth_mode()
     expected_api_key = os.getenv("PORTAL_API_DEMO_KEY")
+    if auth_mode == AUTH_MODE_REQUIRED:
+        if not expected_api_key:
+            raise AuthMisconfiguredError("Authentication is required but PORTAL_API_DEMO_KEY is not configured")
+        if x_api_key == expected_api_key:
+            return
+        raise DemoAuthError("Invalid API key")
     if not expected_api_key:
         return
     if x_api_key == expected_api_key:

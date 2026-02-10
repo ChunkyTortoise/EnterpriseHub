@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 
-from portal_api.dependencies import get_detailed_service_state, get_service_state, require_demo_api_key, reset_services
+from portal_api.dependencies import (
+    get_detailed_service_state,
+    get_idempotency_key,
+    get_service_state,
+    require_demo_api_key,
+    reset_services,
+)
 from portal_api.models import ApiErrorResponse, DetailedStateResponse, ResetResponse, StateResponse
 
 router = APIRouter(tags=["admin"])
@@ -9,34 +15,58 @@ router = APIRouter(tags=["admin"])
 @router.post(
     "/admin/reset",
     response_model=ResetResponse,
-    dependencies=[Depends(require_demo_api_key)],
+    dependencies=[Depends(require_demo_api_key), Depends(get_idempotency_key)],
     responses={
         401: {
             "model": ApiErrorResponse,
             "description": "API key missing or invalid",
-        }
+        },
+        409: {
+            "model": ApiErrorResponse,
+            "description": "Idempotency key conflict",
+        },
+        500: {
+            "model": ApiErrorResponse,
+            "description": "Authentication is misconfigured",
+        },
     },
 )
 @router.post(
     "/reset",
     response_model=ResetResponse,
-    dependencies=[Depends(require_demo_api_key)],
+    dependencies=[Depends(require_demo_api_key), Depends(get_idempotency_key)],
     responses={
         401: {
             "model": ApiErrorResponse,
             "description": "API key missing or invalid",
-        }
+        },
+        409: {
+            "model": ApiErrorResponse,
+            "description": "Idempotency key conflict",
+        },
+        500: {
+            "model": ApiErrorResponse,
+            "description": "Authentication is misconfigured",
+        },
     },
 )
 @router.post(
     "/system/reset",
     response_model=ResetResponse,
-    dependencies=[Depends(require_demo_api_key)],
+    dependencies=[Depends(require_demo_api_key), Depends(get_idempotency_key)],
     responses={
         401: {
             "model": ApiErrorResponse,
             "description": "API key missing or invalid",
-        }
+        },
+        409: {
+            "model": ApiErrorResponse,
+            "description": "Idempotency key conflict",
+        },
+        500: {
+            "model": ApiErrorResponse,
+            "description": "Authentication is misconfigured",
+        },
     },
 )
 async def reset_demo_state() -> ResetResponse:

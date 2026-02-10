@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 
-from portal_api.dependencies import Services, get_services, require_demo_api_key
+from portal_api.dependencies import Services, get_idempotency_key, get_services, require_demo_api_key
 from portal_api.models import ApiErrorResponse, VapiToolCallPayload, VapiToolPayload, VapiToolResponse
 
 router = APIRouter(prefix="/vapi/tools", tags=["vapi"])
@@ -34,12 +34,20 @@ async def vapi_check_availability(payload: VapiToolPayload, services: Services =
 @router.post(
     "/book-tour",
     response_model=VapiToolResponse,
-    dependencies=[Depends(require_demo_api_key)],
+    dependencies=[Depends(require_demo_api_key), Depends(get_idempotency_key)],
     responses={
         401: {
             "model": ApiErrorResponse,
             "description": "API key missing or invalid",
-        }
+        },
+        409: {
+            "model": ApiErrorResponse,
+            "description": "Idempotency key conflict",
+        },
+        500: {
+            "model": ApiErrorResponse,
+            "description": "Authentication is misconfigured",
+        },
     },
 )
 async def vapi_book_tour(payload: VapiToolPayload, services: Services = Depends(get_services)) -> VapiToolResponse:

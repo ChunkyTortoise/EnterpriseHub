@@ -1,7 +1,9 @@
+import logging
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
-from portal_api.dependencies import Services, get_services, require_demo_api_key
+from portal_api.dependencies import Services, get_idempotency_key, get_services, require_demo_api_key
 from portal_api.models import (
     ApiErrorDetail,
     ApiErrorResponse,
@@ -11,16 +13,21 @@ from portal_api.models import (
 )
 
 router = APIRouter(prefix="/ghl", tags=["ghl"])
+logger = logging.getLogger("portal_api.ghl")
 
 
 @router.post(
     "/sync",
     response_model=GHLSyncResponse,
-    dependencies=[Depends(require_demo_api_key)],
+    dependencies=[Depends(require_demo_api_key), Depends(get_idempotency_key)],
     responses={
         401: {
             "model": ApiErrorResponse,
             "description": "API key missing or invalid",
+        },
+        409: {
+            "model": ApiErrorResponse,
+            "description": "Idempotency key conflict",
         },
         500: {
             "model": ApiErrorResponse,
@@ -34,6 +41,10 @@ async def sync_ghl(request: Request, services: Services = Depends(get_services))
         return GHLSyncResponse(status="success", synced_count=count)
     except Exception:
         request_id = getattr(request.state, "request_id", None)
+        logger.exception(
+            "portal_api.ghl_sync_failed request_id=%s",
+            request_id,
+        )
         payload = ApiErrorResponse(
             error=ApiErrorDetail(code="ghl_sync_failed", message="GoHighLevel sync failed", request_id=request_id)
         ).model_dump()

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from portal_api.dependencies import Services, get_services, require_demo_api_key
+from portal_api.dependencies import Services, get_idempotency_key, get_services, require_demo_api_key
 from portal_api.models import ApiErrorResponse, DeckResponse, Interaction, SwipeResponse
 
 router = APIRouter(prefix="/portal", tags=["portal"])
@@ -15,12 +15,20 @@ async def get_smart_deck(contact_id: str, services: Services = Depends(get_servi
 @router.post(
     "/swipe",
     response_model=SwipeResponse,
-    dependencies=[Depends(require_demo_api_key)],
+    dependencies=[Depends(require_demo_api_key), Depends(get_idempotency_key)],
     responses={
         401: {
             "model": ApiErrorResponse,
             "description": "API key missing or invalid",
-        }
+        },
+        409: {
+            "model": ApiErrorResponse,
+            "description": "Idempotency key conflict",
+        },
+        500: {
+            "model": ApiErrorResponse,
+            "description": "Authentication is misconfigured",
+        },
     },
 )
 async def log_swipe(interaction: Interaction, services: Services = Depends(get_services)) -> SwipeResponse:
