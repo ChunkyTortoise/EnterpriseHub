@@ -7,7 +7,10 @@ Repository: `/Users/cave/Documents/New project/enterprisehub`
 
 - Phase 1 closure baseline: `f7109b8d`
 - Phase 2 CI/OpenAPI baseline: `12d2863a`
-- Interview completion commit: `TO_BE_FILLED_AFTER_COMMIT`
+- Interview completion commit (contracts + docs + evidence): `5bc2455a`
+- Workflow fix commit (CI dependency pin): `6bd4d7a7`
+- Green workflow run: `portal-api-phase1` run `21859818555`
+- Run URL: `https://github.com/ChunkyTortoise/EnterpriseHub/actions/runs/21859818555`
 
 ## 2) Final Validation Commands and Observed Results
 
