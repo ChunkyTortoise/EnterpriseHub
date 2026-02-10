@@ -22,6 +22,7 @@ from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.ghl_webhook_types import ConversationContext
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
@@ -115,7 +116,7 @@ class ConversationManager:
 
         logger.info("Conversation manager initialized")
 
-    async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
+    async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> ConversationContext:
         """
         Retrieve conversation context for a contact.
 
@@ -569,7 +570,7 @@ Count questions_answered based on how many of the 4 main categories have data.
         self,
         user_message: str,
         contact_info: Dict[str, Any],
-        context: Dict[str, Any],
+        context: ConversationContext,
         is_buyer: bool = True,
         tenant_config: Optional[Dict[str, Any]] = None,
         ghl_client: Optional[Any] = None,

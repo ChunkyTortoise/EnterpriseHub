@@ -170,7 +170,7 @@ async def analyze_property_matches(
             error=str(e),
             user_id=current_user.get("user_id"),
         )
-        raise HTTPException(status_code=500, detail=f"Property matching analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/property-matching/{lead_id}/behavioral-weights")
@@ -212,7 +212,7 @@ async def get_behavioral_matching_weights(
 
     except Exception as e:
         logger.error("behavioral_weights_retrieval_failed", location_id=location_id, lead_id=lead_id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve behavioral weights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.put("/{location_id}/property-matching/{lead_id}/feedback")
@@ -271,7 +271,7 @@ async def record_matching_feedback(
         logger.error(
             "matching_feedback_failed", location_id=location_id, lead_id=lead_id, property_id=property_id, error=str(e)
         )
-        raise HTTPException(status_code=500, detail=f"Failed to record matching feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # =====================================================================================
@@ -394,7 +394,7 @@ async def analyze_conversation(
             location_id=location_id,
             error=str(e),
         )
-        raise HTTPException(status_code=500, detail=f"Conversation analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/conversation-intelligence/{conversation_id}/insights")
@@ -451,7 +451,7 @@ async def get_conversation_insights(
             location_id=location_id,
             error=str(e),
         )
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve conversation insights: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/conversation-intelligence/coaching-opportunities")
@@ -488,7 +488,7 @@ async def get_coaching_opportunities(
 
     except Exception as e:
         logger.error("coaching_opportunities_retrieval_failed", location_id=location_id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve coaching opportunities: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # =====================================================================================
@@ -568,7 +568,7 @@ async def analyze_preferences_from_conversation(
 
     except Exception as e:
         logger.error("preference_learning_failed", client_id=request.client_id, location_id=location_id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Preference learning failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/{location_id}/preference-learning/{client_id}/profile")
@@ -619,7 +619,7 @@ async def get_client_preference_profile(
         raise
     except Exception as e:
         logger.error("preference_profile_retrieval_failed", client_id=client_id, location_id=location_id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve preference profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/{location_id}/preference-learning/{client_id}/predict-match")
@@ -651,7 +651,7 @@ async def predict_preference_match(
 
     except Exception as e:
         logger.error("preference_match_prediction_failed", client_id=client_id, location_id=location_id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Preference match prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # =====================================================================================
@@ -754,7 +754,7 @@ async def coordinate_lead_to_client_handoff(
             location_id=location_id,
             error=str(e),
         )
-        raise HTTPException(status_code=500, detail=f"Cross-track handoff failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # =====================================================================================

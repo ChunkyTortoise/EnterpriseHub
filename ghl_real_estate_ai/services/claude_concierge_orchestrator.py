@@ -12,6 +12,8 @@ from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.orchestrator_types import ConciergeGuidanceContext
+from ghl_real_estate_ai.models.orchestrator_types import ConciergeResponse as ConciergeResponseDict
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_orchestrator import (
@@ -1015,7 +1017,8 @@ class ClaudeConciergeOrchestrator:
 
             try:
                 context_data = json.loads(context_str) if context_str else {}
-            except:
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                logger.debug(f"Failed to parse handoff context: {e}")
                 context_data = {}
 
             return {
@@ -1409,7 +1412,7 @@ class JorgeMemorySystem:
             return False
 
         except Exception as e:
-            logger.error(f"Error learning from decision: {e}")
+            logger.error(f"Error learning from decision: {type(e).__name__}: {e}")
             return False
 
     async def predict_jorge_preference(self, situation: Dict[str, Any], context: PlatformContext) -> Dict[str, Any]:

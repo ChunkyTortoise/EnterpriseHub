@@ -5,6 +5,8 @@ GHL Service Wrapper - Interface for Churn Prediction System
 import logging
 from typing import Any, Dict
 
+from ghl_real_estate_ai.models.ghl_webhook_types import GHLAPIResponse
+
 from .ghl_client import GHLClient
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class GHLService:
 
     async def trigger_workflow(
         self, contact_id: str, workflow_id: str, custom_data: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    ) -> GHLAPIResponse:
         """
         Trigger a workflow for a contact in GHL.
 
@@ -34,13 +36,12 @@ class GHLService:
         """
         logger.info(f"Triggering GHL workflow {workflow_id} for contact {contact_id}")
 
-        # If custom_data is provided, we might want to update custom fields first
+        # If custom_data is provided, batch-update all fields in one API call
         if custom_data:
-            for field_id, value in custom_data.items():
-                try:
-                    await self.client.update_custom_field(contact_id, field_id, value)
-                except Exception as e:
-                    logger.error(f"Failed to update custom field {field_id}: {e}")
+            try:
+                await self.client.update_custom_fields_batch(contact_id, custom_data)
+            except Exception as e:
+                logger.error(f"Failed to batch-update custom fields: {e}")
 
         return await self.client.trigger_workflow(contact_id, workflow_id)
 

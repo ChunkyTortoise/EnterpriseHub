@@ -26,6 +26,11 @@ from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.bot_context_types import (
+    ConversationMessage,
+    QualificationData,
+    SellerBotResponse,
+)
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
