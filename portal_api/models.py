@@ -136,6 +136,10 @@ class GHLSyncResponse(BaseModel):
     synced_count: int
 
 
+class ErrorResponse(BaseModel):
+    detail: str
+
+
 class GHLField(BaseModel):
     id: str
     name: str

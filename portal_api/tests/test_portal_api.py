@@ -19,6 +19,10 @@ def _openapi_response_ref(paths: dict, route: str, method: str) -> str:
     return paths[route][method]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
 
 
+def _openapi_error_ref(paths: dict, route: str, method: str, status_code: str) -> str:
+    return paths[route][method]["responses"][status_code]["content"]["application/json"]["schema"]["$ref"]
+
+
 def _openapi_request_ref(paths: dict, route: str, method: str) -> str:
     return paths[route][method]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
 
@@ -53,6 +57,31 @@ def test_openapi_contract_models_bound_for_critical_routes() -> None:
     assert _openapi_request_ref(paths, "/portal/swipe", "post").endswith("/Interaction")
     assert _openapi_request_ref(paths, "/vapi/tools/book-tour", "post").endswith("/VapiToolPayload")
     assert "requestBody" not in paths["/ghl/sync"]["post"]
+
+
+def test_openapi_ghl_sync_500_contract_locked() -> None:
+    openapi = app.openapi()
+    responses = openapi["paths"]["/ghl/sync"]["post"]["responses"]
+
+    assert "500" in responses
+    assert responses["500"]["description"] == "GoHighLevel sync failed"
+    assert _openapi_error_ref(openapi["paths"], "/ghl/sync", "post", "500").endswith("/ErrorResponse")
+
+
+def test_openapi_422_validation_contracts_locked_on_selected_routes() -> None:
+    openapi = app.openapi()
+    paths = openapi["paths"]
+
+    selected_routes = [
+        ("/portal/swipe", "post"),
+        ("/system/state/details", "get"),
+    ]
+
+    for route, method in selected_routes:
+        responses = paths[route][method]["responses"]
+        assert "422" in responses
+        assert responses["422"]["description"] == "Validation Error"
+        assert _openapi_error_ref(paths, route, method, "422").endswith("/HTTPValidationError")
 
 
 def test_openapi_interaction_schema_constraints_locked() -> None:

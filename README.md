@@ -164,6 +164,14 @@ Standalone FastAPI module used for the client showcase and deterministic API val
 | GET | `/system/state` | Aggregate service counters |
 | GET | `/system/state/details` | Detailed counters + recent records |
 
+### Contract Guarantees
+
+- Typed request/response contracts are enforced with Pydantic models and locked OpenAPI schema assertions.
+- `POST /portal/swipe` accepts only `action` values `like` or `pass`.
+- `GET /system/state/details` enforces `limit` bounds: `ge=0`, `le=100`, default `5`.
+- `POST /ghl/sync` documents both success (`200`) and service-failure (`500`) contracts.
+- CI gate for this surface is deterministic and scoped to lint + compile + `portal_api` tests.
+
 ### Alias Map
 
 - `POST /system/reset` aliases: `POST /admin/reset`, `POST /reset`
@@ -194,6 +202,37 @@ python3 -m py_compile \
 
 pytest -q -o addopts='' portal_api/tests/test_portal_api.py
 ```
+
+### Interview Demo Run (5 minutes)
+
+```bash
+# 1) Reset deterministic in-memory state
+curl -s -X POST http://127.0.0.1:8000/system/reset | jq
+
+# 2) Load a deck
+curl -s "http://127.0.0.1:8000/portal/deck?contact_id=lead_001" | jq
+
+# 3) Perform a valid swipe
+curl -s -X POST http://127.0.0.1:8000/portal/swipe \
+  -H "content-type: application/json" \
+  -d '{"contact_id":"lead_001","property_id":"prop_001","action":"like"}' | jq
+
+# 4) Book a tour via Vapi tool payload
+curl -s -X POST http://127.0.0.1:8000/vapi/tools/book-tour \
+  -H "content-type: application/json" \
+  -d '{"toolCall":{"id":"demo-1","function":{"arguments":{"contact_id":"lead_001","slot_time":"2026-02-15T10:00:00","property_address":"123 Palm Ave"}}}}' | jq
+
+# 5) Show aggregate + detailed state
+curl -s http://127.0.0.1:8000/system/state | jq
+curl -s "http://127.0.0.1:8000/system/state/details?limit=2" | jq
+
+# 6) Negative-path proof: invalid swipe action returns 422
+curl -s -X POST http://127.0.0.1:8000/portal/swipe \
+  -H "content-type: application/json" \
+  -d '{"contact_id":"lead_001","property_id":"prop_001","action":"save"}' | jq
+```
+
+Known limitations / next steps: auth and authorization layers, real external integrations, and deeper observability/telemetry are intentionally simplified in this demo slice.
 
 ### Client Showcase (Streamlit + enterprise-ui)
 
