@@ -22,6 +22,7 @@ from langgraph.graph import END, StateGraph
 
 from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
+from ghl_real_estate_ai.services.buyer_persona_service import BuyerPersonaService
 
 
 # Custom exceptions for proper error handling and escalation
@@ -260,6 +261,10 @@ class JorgeBuyerBot:
         self.ab_testing = ABTestingService()
         self._init_ab_experiments()
 
+        # Phase 1.4: Buyer Persona Classification
+        self.buyer_persona_service = BuyerPersonaService()
+
+
         # Performance tracking for intelligence enhancements
         self.workflow_stats = {
             "total_interactions": 0,
@@ -289,6 +294,10 @@ class JorgeBuyerBot:
         if self.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_buyer_intelligence", self.gather_buyer_intelligence)
 
+
+        # Phase 1.4: Buyer Persona Classification
+        workflow.add_node("classify_buyer_persona", self.classify_buyer_persona)
+
         workflow.add_node("assess_financial_readiness", self.assess_financial_readiness)
         workflow.add_node("calculate_affordability", self.calculate_affordability)
         workflow.add_node("qualify_property_needs", self.qualify_property_needs)
@@ -303,10 +312,11 @@ class JorgeBuyerBot:
         # Conditional routing for intelligence gathering
         if self.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_edge("analyze_buyer_intent", "gather_buyer_intelligence")
-            workflow.add_edge("gather_buyer_intelligence", "assess_financial_readiness")
+            workflow.add_edge("gather_buyer_intelligence", "classify_buyer_persona")
+            workflow.add_edge("classify_buyer_persona", "assess_financial_readiness")
         else:
-            workflow.add_edge("analyze_buyer_intent", "assess_financial_readiness")
-        workflow.add_edge("assess_financial_readiness", "calculate_affordability")
+            workflow.add_edge("analyze_buyer_intent", "classify_buyer_persona")
+            workflow.add_edge("classify_buyer_persona", "assess_financial_readiness")
         workflow.add_edge("calculate_affordability", "qualify_property_needs")
         workflow.add_edge("qualify_property_needs", "match_properties")
 
@@ -1732,3 +1742,70 @@ class JorgeBuyerBot:
                 }
 
         return metrics
+
+    # ================================
+    # PHASE 1.4: BUYER PERSONA CLASSIFICATION
+    # ================================
+
+    async def classify_buyer_persona(self, state: BuyerBotState) -> Dict:
+        """Classify buyer persona based on conversation analysis (Phase 1.4)."""
+        try:
+            conversation_history = state.get("conversation_history", [])
+            buyer_id = state.get("buyer_id", "unknown")
+            lead_data = state.get("lead_data", {})
+
+            # Classify buyer persona
+            persona_classification = await self.buyer_persona_service.classify_buyer_type(
+                conversation_history=conversation_history,
+                lead_data=lead_data,
+            )
+
+            # Get persona insights for response tailoring
+            persona_insights = await self.buyer_persona_service.get_persona_insights(
+                persona_classification.persona_type
+            )
+
+            # Sync persona to GHL as tags if confidence is high enough
+            if persona_classification.confidence >= 0.6:
+                await self._sync_buyer_persona_to_ghl(
+                    buyer_id, persona_classification
+                )
+
+            logger.info(
+                f"Buyer persona classified for {buyer_id}: "
+                f"{persona_classification.persona_type.value} "
+                f"(confidence: {persona_classification.confidence:.2f})"
+            )
+
+            return {
+                "buyer_persona": persona_classification.persona_type.value,
+                "buyer_persona_confidence": persona_classification.confidence,
+                "buyer_persona_signals": persona_classification.detected_signals,
+                "buyer_persona_insights": persona_insights.model_dump(),
+            }
+        except Exception as e:
+            logger.error(f"Error classifying buyer persona for {state.get('buyer_id')}: {str(e)}")
+            return {
+                "buyer_persona": "unknown",
+                "buyer_persona_confidence": 0.0,
+                "buyer_persona_signals": [],
+                "buyer_persona_insights": {},
+            }
+
+    async def _sync_buyer_persona_to_ghl(
+        self, buyer_id: str, persona_classification
+    ) -> None:
+        """Sync buyer persona to GHL as tags (Phase 1.4)."""
+        try:
+            persona_tag = f"Buyer-{persona_classification.persona_type.value}"
+            confidence_tag = f"Persona-Conf-{int(persona_classification.confidence * 100)}%"
+
+            # Add tags to contact in GHL
+            await self.ghl_client.add_contact_tags(
+                contact_id=buyer_id,
+                tags=[persona_tag, confidence_tag]
+            )
+
+            logger.info(f"Synced buyer persona tags to GHL for {buyer_id}: {persona_tag}")
+        except Exception as e:
+            logger.warning(f"Failed to sync buyer persona to GHL for {buyer_id}: {str(e)}")
