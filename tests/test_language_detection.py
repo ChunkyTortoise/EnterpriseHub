@@ -19,8 +19,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
     ProcessingContext,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror import (
-
-@pytest.mark.unit
     LanguageMirrorProcessor,
 )
 
@@ -130,6 +128,44 @@ class TestLanguageDetectionServiceWithModel:
 
         result = service.detect("Quiero comprar una casa")
         assert result.language == "es"
+        assert result.confidence == 0.95
+
+    def test_hybrid_spanish_correction_from_italian(self):
+        """Test that hybrid approach corrects Italian misclassification to Spanish."""
+        service = _create_fresh_service()
+        # Model predicts Italian with medium confidence
+        mock_pipeline = MagicMock(return_value=[{"label": "it", "score": 0.79}])
+        service._pipeline = mock_pipeline
+        service._pipeline_loaded = True
+
+        result = service.detect("Quiero comprar una casa en Rancho Cucamonga")
+        # Should be corrected to Spanish by heuristic validation
+        assert result.language == "es"
+        assert result.confidence >= 0.79
+
+    def test_hybrid_spanish_correction_from_portuguese(self):
+        """Test that hybrid approach corrects Portuguese misclassification to Spanish."""
+        service = _create_fresh_service()
+        # Model predicts Portuguese with medium confidence
+        mock_pipeline = MagicMock(return_value=[{"label": "pt", "score": 0.85}])
+        service._pipeline = mock_pipeline
+        service._pipeline_loaded = True
+
+        result = service.detect("Necesito ayuda con mi hipoteca")
+        # Should be corrected to Spanish by heuristic validation
+        assert result.language == "es"
+
+    def test_hybrid_no_correction_for_high_confidence(self):
+        """Test that hybrid approach doesn't override high-confidence predictions."""
+        service = _create_fresh_service()
+        # Model predicts Italian with HIGH confidence (>0.9)
+        mock_pipeline = MagicMock(return_value=[{"label": "it", "score": 0.95}])
+        service._pipeline = mock_pipeline
+        service._pipeline_loaded = True
+
+        result = service.detect("Voglio comprare una casa")  # Actual Italian
+        # Should keep Italian since confidence is high
+        assert result.language == "it"
         assert result.confidence == 0.95
 
     def test_code_switching_detection(self):
