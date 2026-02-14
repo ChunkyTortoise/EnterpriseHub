@@ -24,8 +24,9 @@ class JorgeSellerConfig:
     # ========== SIMPLE MODE ==========
     # Simple mode: disables enterprise features (investor arbitrage, loss aversion,
     # psychology profiling, Voss negotiation, drift detection, market insights)
-    # When True, bot follows strict 4-question flow only
-    JORGE_SIMPLE_MODE: bool = True
+    # When True, bot follows strict 4-question flow (high conversion)
+    # When False, bot follows full 10-question flow (deep qualification)
+    JORGE_SIMPLE_MODE: bool = True  # Default to high-conversion 4-question flow
 
     # ========== ACTIVATION/DEACTIVATION TAGS ==========
     ACTIVATION_TAGS = ["Needs Qualifying"]
@@ -48,14 +49,26 @@ class JorgeSellerConfig:
     TIMELINE_URGENCY_WEIGHT = 0.35  # 35% weight for timeline in scoring
 
     # ========== TEMPERATURE CLASSIFICATION THRESHOLDS (Configurable) ==========
-    # Hot seller criteria (strictest)
-    HOT_QUESTIONS_REQUIRED = 4  # Must answer all 4 questions
+    # Hot seller criteria - Simple Mode (4 questions)
+    HOT_QUESTIONS_REQUIRED_SIMPLE = 4  # Must answer all 4 questions
     HOT_QUALITY_THRESHOLD = 0.7  # Minimum response quality for hot
     HOT_TIMELINE_REQUIRED = True  # Must accept 30-45 day timeline
 
-    # Warm seller criteria
-    WARM_QUESTIONS_REQUIRED = 3  # Must answer at least 3 questions
+    # Warm seller criteria - Simple Mode (4 questions)
+    WARM_QUESTIONS_REQUIRED_SIMPLE = 3  # Must answer at least 3 questions
     WARM_QUALITY_THRESHOLD = 0.5  # Minimum response quality for warm
+
+    # Hot seller criteria - Full Mode (10 questions)
+    HOT_QUESTIONS_REQUIRED_FULL = 10  # Must answer all 10 questions
+    HOT_QUALITY_THRESHOLD_FULL = 0.7  # High quality responses required
+
+    # Warm seller criteria - Full Mode (10 questions)
+    WARM_QUESTIONS_REQUIRED_FULL = 7  # Must answer at least 7 questions
+    WARM_QUALITY_THRESHOLD_FULL = 0.5  # Decent responses required
+
+    # Dynamic thresholds based on mode
+    HOT_QUESTIONS_REQUIRED = HOT_QUESTIONS_REQUIRED_SIMPLE  # Default to simple
+    WARM_QUESTIONS_REQUIRED = WARM_QUESTIONS_REQUIRED_SIMPLE  # Default to simple
 
     # ========== FOLLOW-UP SETTINGS ==========
     # Active follow-up phase (first 30 days)
@@ -92,6 +105,16 @@ class JorgeSellerConfig:
         "detected_persona": "",
         "psychology_type": "",
         "urgency_level": "",
+        # Phase 2: Additional fields from original spec
+        "mortgage_balance": "",
+        "repair_estimate": "",
+        "listing_history": "",
+        "decision_maker_confirmed": "",
+        "preferred_contact_method": "",
+        "property_address": "",
+        "property_type": "",
+        "last_bot_interaction": "",
+        "qualification_complete": "",
     }
 
     # ========== MESSAGE SETTINGS ==========
@@ -106,22 +129,57 @@ class JorgeSellerConfig:
     RESPONSE_TIME_TARGET_SECONDS = 2  # Webhook processing under 2 seconds
     MESSAGE_DELIVERY_TARGET = 0.99  # 99% delivery success rate
 
-    # ========== JORGE'S 4 QUESTIONS ==========
-    # Exact questions in Jorge's preferred order
-    SELLER_QUESTIONS = {
+    # ========== JORGE'S QUESTIONS ==========
+    # Full 10-question qualification flow (original spec)
+    # Can be configured via JORGE_SIMPLE_MODE to use 4-question flow
+    SELLER_QUESTIONS_FULL = {
+        1: "What's the address of the property you're thinking about selling?",
+        2: "What's got you considering wanting to sell, where would you move to?",
+        3: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
+        4: "How would you describe your home, would you say it's move-in ready or would it need some work?",
+        5: "What price would incentivize you to sell?",
+        6: "Do you have any existing mortgage or liens on the property?",
+        7: "Are there any repairs or improvements needed before listing?",
+        8: "Have you tried listing this property before?",
+        9: "Are you the primary decision-maker, or would anyone else need to be involved?",
+        10: "What's the best way to reach you - call, text, or email?",
+    }
+
+    # Simplified 4-question flow (friendly/high-conversion)
+    SELLER_QUESTIONS_SIMPLE = {
         1: "What's got you considering wanting to sell, where would you move to?",
         2: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
         3: "How would you describe your home, would you say it's move-in ready or would it need some work?",
         4: "What price would incentivize you to sell?",
     }
 
-    # Question field mapping for data extraction
-    QUESTION_FIELD_MAPPING = {
+    # Default to simple mode (configured via JORGE_SIMPLE_MODE)
+    SELLER_QUESTIONS = SELLER_QUESTIONS_SIMPLE
+
+    # Question field mapping for data extraction (full flow)
+    QUESTION_FIELD_MAPPING_FULL = {
+        1: {"field": "property_address", "secondary": "property_type"},
+        2: {"field": "motivation", "secondary": "relocation_destination"},
+        3: {"field": "timeline_acceptable", "secondary": "timeline_urgency"},
+        4: {"field": "property_condition", "secondary": "repair_estimate"},
+        5: {"field": "price_expectation", "secondary": "price_flexibility"},
+        6: {"field": "mortgage_balance", "secondary": "has_liens"},
+        7: {"field": "repair_needs", "secondary": "repair_estimate"},
+        8: {"field": "listing_history", "secondary": "previous_asking_price"},
+        9: {"field": "decision_maker_confirmed", "secondary": "other_decision_makers"},
+        10: {"field": "preferred_contact_method", "secondary": "best_contact_times"},
+    }
+
+    # Question field mapping for simple flow
+    QUESTION_FIELD_MAPPING_SIMPLE = {
         1: {"field": "motivation", "secondary": "relocation_destination"},
         2: {"field": "timeline_acceptable", "secondary": "timeline_urgency"},
         3: {"field": "property_condition", "secondary": "repair_estimate"},
         4: {"field": "price_expectation", "secondary": "price_flexibility"},
     }
+
+    # Default to simple mode mapping
+    QUESTION_FIELD_MAPPING = QUESTION_FIELD_MAPPING_SIMPLE
 
     # ========== FRIENDLY CONSULTATION TEMPLATES ==========
     # Jorge's helpful messaging style
@@ -162,14 +220,26 @@ class JorgeSellerConfig:
     BUYER_TEMPERATURE_TAGS = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
 
     # ========== ANALYTICS & MONITORING ==========
-    # Success metrics and KPIs
-    SUCCESS_METRICS = {
+    # Success metrics and KPIs (Simple Mode - 4 questions)
+    SUCCESS_METRICS_SIMPLE = {
         "qualification_completion_rate": 0.60,  # 60% complete all 4 questions
         "hot_lead_conversion_rate": 0.15,  # 15% become hot leads
         "agent_handoff_rate": 0.20,  # 20% advance to agent calls
         "followup_engagement_rate": 0.30,  # 30% engage with follow-ups
         "opt_out_rate": 0.05,  # <5% request no contact
     }
+
+    # Success metrics and KPIs (Full Mode - 10 questions)
+    SUCCESS_METRICS_FULL = {
+        "qualification_completion_rate": 0.40,  # 40% complete all 10 questions (more challenging)
+        "hot_lead_conversion_rate": 0.20,  # 20% become hot leads (deeper qualification)
+        "agent_handoff_rate": 0.25,  # 25% advance to agent calls (better qualified)
+        "followup_engagement_rate": 0.30,  # 30% engage with follow-ups
+        "opt_out_rate": 0.08,  # <8% request no contact (longer flow = slightly higher drop)
+    }
+
+    # Default to simple mode metrics
+    SUCCESS_METRICS = SUCCESS_METRICS_SIMPLE
 
     # Performance thresholds
     PERFORMANCE_THRESHOLDS = {
@@ -183,8 +253,26 @@ class JorgeSellerConfig:
     @classmethod
     def get_environment_config(cls) -> Dict:
         """Get environment-specific configuration"""
+        # Check if simple mode is enabled (default: True)
+        simple_mode = os.getenv("JORGE_SIMPLE_MODE", "true").lower() == "true"
+
+        # Set questions and thresholds based on mode
+        if simple_mode:
+            questions = cls.SELLER_QUESTIONS_SIMPLE
+            field_mapping = cls.QUESTION_FIELD_MAPPING_SIMPLE
+            hot_questions = cls.HOT_QUESTIONS_REQUIRED_SIMPLE
+            warm_questions = cls.WARM_QUESTIONS_REQUIRED_SIMPLE
+        else:
+            questions = cls.SELLER_QUESTIONS_FULL
+            field_mapping = cls.QUESTION_FIELD_MAPPING_FULL
+            hot_questions = cls.HOT_QUESTIONS_REQUIRED_FULL
+            warm_questions = cls.WARM_QUESTIONS_REQUIRED_FULL
+
         return {
             "jorge_seller_mode": os.getenv("JORGE_SELLER_MODE", "false").lower() == "true",
+            "simple_mode": simple_mode,
+            "seller_questions": questions,
+            "field_mapping": field_mapping,
             "friendly_approach": os.getenv("FRIENDLY_APPROACH", "true").lower() == "true",
             "max_sms_length": int(os.getenv("MAX_SMS_LENGTH", "160")),
             "hot_seller_threshold": float(os.getenv("HOT_SELLER_THRESHOLD", "1.0")),
@@ -194,9 +282,9 @@ class JorgeSellerConfig:
             "hot_seller_workflow_id": os.getenv("HOT_SELLER_WORKFLOW_ID"),
             "warm_seller_workflow_id": os.getenv("WARM_SELLER_WORKFLOW_ID"),
             # Temperature classification thresholds (configurable via environment)
-            "hot_questions_required": int(os.getenv("HOT_QUESTIONS_REQUIRED", str(cls.HOT_QUESTIONS_REQUIRED))),
+            "hot_questions_required": int(os.getenv("HOT_QUESTIONS_REQUIRED", str(hot_questions))),
             "hot_quality_threshold": float(os.getenv("HOT_QUALITY_THRESHOLD", str(cls.HOT_QUALITY_THRESHOLD))),
-            "warm_questions_required": int(os.getenv("WARM_QUESTIONS_REQUIRED", str(cls.WARM_QUESTIONS_REQUIRED))),
+            "warm_questions_required": int(os.getenv("WARM_QUESTIONS_REQUIRED", str(warm_questions))),
             "warm_quality_threshold": float(os.getenv("WARM_QUALITY_THRESHOLD", str(cls.WARM_QUALITY_THRESHOLD))),
         }
 
@@ -331,6 +419,52 @@ class JorgeSellerConfig:
         """Check if performance threshold is met"""
         threshold = cls.PERFORMANCE_THRESHOLDS.get(metric, 0.0)
         return value >= threshold
+
+    # ========== MODE SWITCHING METHODS ==========
+    @classmethod
+    def get_questions_for_mode(cls, simple_mode: bool = True) -> Dict[int, str]:
+        """Get seller questions based on mode"""
+        return cls.SELLER_QUESTIONS_SIMPLE if simple_mode else cls.SELLER_QUESTIONS_FULL
+
+    @classmethod
+    def get_field_mapping_for_mode(cls, simple_mode: bool = True) -> Dict:
+        """Get question field mapping based on mode"""
+        return cls.QUESTION_FIELD_MAPPING_SIMPLE if simple_mode else cls.QUESTION_FIELD_MAPPING_FULL
+
+    @classmethod
+    def get_thresholds_for_mode(cls, simple_mode: bool = True) -> Dict:
+        """Get temperature classification thresholds based on mode"""
+        if simple_mode:
+            return {
+                "hot_questions_required": cls.HOT_QUESTIONS_REQUIRED_SIMPLE,
+                "warm_questions_required": cls.WARM_QUESTIONS_REQUIRED_SIMPLE,
+                "hot_threshold": cls.HOT_SELLER_THRESHOLD,
+                "warm_threshold": cls.WARM_SELLER_THRESHOLD,
+            }
+        else:
+            return {
+                "hot_questions_required": cls.HOT_QUESTIONS_REQUIRED_FULL,
+                "warm_questions_required": cls.WARM_QUESTIONS_REQUIRED_FULL,
+                "hot_threshold": 1.0,  # 10/10 = 100%
+                "warm_threshold": 0.70,  # 7/10 = 70%
+            }
+
+    @classmethod
+    def get_success_metrics_for_mode(cls, simple_mode: bool = True) -> Dict:
+        """Get success metrics based on mode"""
+        return cls.SUCCESS_METRICS_SIMPLE if simple_mode else cls.SUCCESS_METRICS_FULL
+
+    @classmethod
+    def set_mode(cls, simple_mode: bool = True) -> None:
+        """Switch between simple and full qualification modes"""
+        cls.JORGE_SIMPLE_MODE = simple_mode
+        cls.SELLER_QUESTIONS = cls.get_questions_for_mode(simple_mode)
+        cls.QUESTION_FIELD_MAPPING = cls.get_field_mapping_for_mode(simple_mode)
+        thresholds = cls.get_thresholds_for_mode(simple_mode)
+        cls.HOT_QUESTIONS_REQUIRED = thresholds["hot_questions_required"]
+        cls.WARM_QUESTIONS_REQUIRED = thresholds["warm_questions_required"]
+        cls.SUCCESS_METRICS = cls.get_success_metrics_for_mode(simple_mode)
+        logger.info(f"Jorge bot mode switched to: {'SIMPLE (4 questions)' if simple_mode else 'FULL (10 questions)'}")
 
 
 # ========== ENVIRONMENT CONFIGURATION ==========
