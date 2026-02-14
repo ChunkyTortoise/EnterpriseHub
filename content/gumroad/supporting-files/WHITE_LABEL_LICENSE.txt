@@ -1,0 +1,271 @@
+# AgentForge Enterprise - White-Label & Resale License
+
+**Effective Date**: Date of Purchase
+**Licensor**: Cayman Roden (caymanroden@gmail.com)
+**Licensee**: [Purchaser Name]
+**Product**: AgentForge Multi-LLM Orchestration Framework
+
+---
+
+## 1. Grant of Rights
+
+By purchasing AgentForge Enterprise, you are granted the following rights:
+
+### 1.1 White-Label Rights
+You may:
+- Remove all AgentForge branding, logos, and attribution
+- Rebrand the software with your own company name
+- Modify the software's name, documentation, and visual identity
+- Present the software as your own creation (subject to Section 3)
+
+### 1.2 Commercial Use Rights
+You may:
+- Use AgentForge in unlimited commercial projects
+- Deploy in client applications without per-project fees
+- Sell access to applications built with AgentForge
+- Include AgentForge in Software-as-a-Service (SaaS) offerings
+- Bundle AgentForge with other products/services
+
+### 1.3 Resale Rights
+You may:
+- Resell AgentForge as part of a larger product/service
+- Include AgentForge in consulting deliverables
+- Offer AgentForge-based solutions to multiple clients
+- Create derivative products based on AgentForge
+- Keep 100% of revenue from sales (no royalties)
+
+### 1.4 Modification Rights
+You may:
+- Modify, extend, and customize the source code
+- Add new features and integrations
+- Remove features you don't need
+- Adapt the code to your specific requirements
+- Create derivative works
+
+### 1.5 Distribution Rights
+You may:
+- Distribute modified or unmodified versions to clients
+- Include AgentForge in deliverables to customers
+- Share with team members and contractors
+- Deploy across multiple servers/environments
+
+---
+
+## 2. Restrictions
+
+You may NOT:
+
+### 2.1 Reselling Source Code
+- Resell the AgentForge source code as a standalone product
+- Offer AgentForge as a competing framework/library
+- Sell unmodified versions on marketplaces (Gumroad, GitHub, etc.)
+- Create "white-label versions" to resell to other developers
+
+**Allowed**: Selling applications/services BUILT WITH AgentForge
+**Not Allowed**: Selling AgentForge ITSELF as a standalone product
+
+**Example - ALLOWED**:
+- "LegalMind AI" (your product) uses AgentForge under the hood
+- You sell "LegalMind AI" to law firms for $5K/client
+- Clients don't know AgentForge exists
+
+**Example - NOT ALLOWED**:
+- Rebranding AgentForge as "SuperOrchestrator"
+- Selling "SuperOrchestrator" on Gumroad for $99
+- Marketing it as your own LLM orchestration framework
+
+### 2.2 Claiming Original Authorship
+- You may not claim to be the original author of AgentForge
+- You may not file patents on core AgentForge concepts
+- Internal/client-facing: You can present it as your solution
+- Public/marketing: You should attribute if directly referencing
+
+### 2.3 Sublicensing
+- You may not grant these white-label rights to others
+- Clients receiving your applications DO NOT get resale rights
+- This license is non-transferable
+
+### 2.4 Liability
+- You may not sue Licensor for damages arising from use
+- Software is provided "AS IS" without warranty
+- You assume all liability when reselling/deploying
+
+---
+
+## 3. Attribution Guidelines
+
+**Internal/Client-Facing** (Optional):
+- No attribution required in client deliverables
+- No attribution required in internal documentation
+- No attribution required in white-labeled applications
+
+**Public/Marketing** (Recommended but not required):
+- If blogging about your solution: "Built with AgentForge"
+- If presenting at conferences: Brief acknowledgment
+- If creating tutorials: "Based on AgentForge framework"
+
+**Code Comments** (Recommended but not required):
+- Retain original MIT License notice in source files
+- Add your own copyright for modifications
+- Clear separation of original vs custom code
+
+---
+
+## 4. Support & Updates
+
+### 4.1 Included Support
+- 90-day Slack support channel (4hr SLA)
+- Email support for lifetime (48hr SLA after Slack period)
+- Access to all updates during support period
+
+### 4.2 Updates
+- Quarterly updates with new features/providers
+- Early access to beta releases
+- Lifetime access to bug fixes and security patches
+- Optional: Extend Slack support at $400/month
+
+### 4.3 Custom Development
+- 2-3 custom code examples included with purchase
+- Additional custom development available at $150/hour
+- Priority scheduling for Enterprise customers
+
+---
+
+## 5. Compliance & Legal
+
+### 5.1 Indemnification
+You agree to indemnify and hold harmless Licensor from:
+- Claims by your clients related to AgentForge-based products
+- Legal disputes arising from your use/resale
+- Compliance violations (HIPAA, SOC2, etc.) in your implementations
+
+### 5.2 Warranty Disclaimer
+```
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+```
+
+### 5.3 Limitation of Liability
+Licensor's total liability shall not exceed the amount paid for the Enterprise license ($999).
+
+---
+
+## 6. Termination
+
+### 6.1 License Perpetual
+This license is perpetual and does not expire.
+- You retain rights even if you stop paying for support
+- Updates may cease, but existing code remains licensed
+
+### 6.2 Termination for Breach
+Licensor may terminate this license if you:
+- Resell AgentForge source code as a standalone product
+- File patents on core AgentForge concepts
+- Violate the restrictions in Section 2
+
+### 6.3 Effect of Termination
+Upon termination:
+- You must stop distributing AgentForge source code
+- Existing client deployments can continue operating
+- You retain right to use for internal purposes only
+
+---
+
+## 7. Refund Policy
+
+### 7.1 30-Day Money-Back Guarantee
+- Full refund if requested within 30 days of purchase
+- No questions asked
+- Email: caymanroden@gmail.com with subject "Enterprise Refund Request"
+
+### 7.2 After 30 Days
+- No refunds after 30-day period
+- Support and updates continue for lifetime
+
+---
+
+## 8. Governing Law
+
+This license is governed by the laws of the State of California, USA.
+
+---
+
+## 9. Entire Agreement
+
+This license, together with the AgentForge MIT License for the base code, constitutes the entire agreement between Licensor and Licensee.
+
+---
+
+## 10. Contact
+
+**Questions about this license?**
+
+Email: caymanroden@gmail.com
+Subject: "Enterprise License - Question"
+
+**Want to extend/modify this license?**
+Custom licensing arrangements available. Email to discuss.
+
+---
+
+## Accepted By
+
+**Licensee**: [Automatically filled on purchase]
+**Date**: [Purchase date]
+**License Type**: AgentForge Enterprise - White-Label & Resale
+**Amount Paid**: $999 USD
+
+---
+
+**Signature**: By completing your purchase on Gumroad, you agree to these terms.
+
+---
+
+## Appendix A: Common Scenarios
+
+### ✅ ALLOWED
+
+**Scenario 1: Agency Reselling**
+- You're a dev agency building AI tools for clients
+- You use AgentForge in 10 different client projects
+- You charge $10K-50K per client
+- Clients don't know AgentForge exists
+- **Result**: ALLOWED, no additional fees
+
+**Scenario 2: SaaS Product**
+- You build "LegalMind AI" using AgentForge
+- You sell subscriptions at $99/month
+- You have 100 customers = $9,900/month revenue
+- **Result**: ALLOWED, no royalties to Cayman
+
+**Scenario 3: White-Label Platform**
+- You rebrand AgentForge as "SuperOrch"
+- You integrate it into your platform
+- You sell platform access to enterprises
+- **Result**: ALLOWED, as long as you're not reselling source code
+
+### ❌ NOT ALLOWED
+
+**Scenario 1: Direct Code Resale**
+- You rebrand AgentForge as "QuickOrch"
+- You list it on Gumroad/GitHub for $79
+- **Result**: NOT ALLOWED, this violates Section 2.1
+
+**Scenario 2: Sublicensing**
+- Your client asks for source code resale rights
+- You grant them the same Enterprise rights
+- **Result**: NOT ALLOWED, rights are non-transferable
+
+**Scenario 3: Patent Filing**
+- You file a patent on "multi-LLM orchestration"
+- **Result**: NOT ALLOWED, violates Section 2.2
+
+---
+
+For clarifications, email caymanroden@gmail.com

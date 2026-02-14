@@ -1,0 +1,200 @@
+# AgentForge Enterprise - Custom Code Examples Request Form
+
+## Google Form Link (Create This)
+https://forms.gle/[CREATE_THIS_FORM]
+
+---
+
+## Form Questions (To Create in Google Forms)
+
+### Section 1: Contact Information
+
+**Q1: Your Name** (Short answer, required)
+_This should match your Gumroad purchase name_
+
+**Q2: Email Address** (Email, required)
+_Where should we send your custom examples?_
+
+**Q3: Company/Project Name** (Short answer, optional)
+_If applicable_
+
+---
+
+### Section 2: Your Domain & Use Cases
+
+**Q4: What industry/domain are you building for?** (Short answer, required)
+
+Examples:
+- Legal (contract analysis, case law research)
+- Healthcare (medical records, clinical notes)
+- Finance (fraud detection, financial analysis)
+- E-commerce (product descriptions, customer support)
+- Real estate (property analysis, market intelligence)
+- Education (content generation, grading)
+- Insurance (claims processing, risk assessment)
+- Other (please specify)
+
+**Q5: Describe your top 3 use cases** (Paragraph, required)
+
+For each use case, include:
+1. What task you want to accomplish
+2. Sample input (what data goes in)
+3. Expected output (what you want back)
+4. Any special requirements (speed, cost, accuracy)
+
+Example:
+```
+Use Case 1: Contract Classification
+- Task: Classify legal contracts into 10 types (NDA, Employment, Lease, etc.)
+- Input: PDF or text of contract (1-50 pages)
+- Output: Contract type + confidence score + key metadata
+- Requirements: 95%+ accuracy, <5 seconds per contract
+
+Use Case 2: Key Term Extraction
+- Task: Extract parties, dates, amounts, obligations from contracts
+- Input: Classified contract from Use Case 1
+- Output: Structured JSON with extracted terms
+- Requirements: Handle multi-party contracts, international dates
+
+Use Case 3: Risk Scoring
+- Task: Score contracts for regulatory compliance risks
+- Input: Contract + applicable regulations (SEC, state law)
+- Output: Risk score 0-100, flagged clauses, remediation suggestions
+- Requirements: Explainable AI (show why score is what it is)
+```
+
+---
+
+### Section 3: Technical Requirements
+
+**Q6: What Python version are you using?** (Multiple choice, required)
+- [ ] Python 3.9
+- [ ] Python 3.10
+- [ ] Python 3.11
+- [ ] Python 3.12+
+- [ ] Not sure (we'll use latest stable)
+
+**Q7: What coding standards should we follow?** (Checkboxes, multiple allowed)
+- [ ] Type hints (mypy-compatible)
+- [ ] Black formatter (default settings)
+- [ ] Ruff linter (default rules)
+- [ ] Google-style docstrings
+- [ ] PEP 8 compliance
+- [ ] Specific company style guide (attach link)
+- [ ] No preference (use AgentForge defaults)
+
+**Q8: What testing framework?** (Multiple choice, required)
+- [ ] pytest (recommended)
+- [ ] unittest
+- [ ] No tests needed
+- [ ] Match our existing tests (I'll share examples)
+
+**Q9: Do you have existing code we should match?** (Paragraph, optional)
+
+If yes, please share:
+- GitHub repo link (if public)
+- Code snippets in pastebin/gist
+- Architecture diagram
+- Naming conventions
+
+We'll match your style for consistency.
+
+---
+
+### Section 4: Performance & Cost Targets
+
+**Q10: What's your expected request volume?** (Multiple choice, required)
+- [ ] <100 requests/day (hobby/testing)
+- [ ] 100-1,000 requests/day (small production)
+- [ ] 1,000-10,000 requests/day (medium production)
+- [ ] 10,000+ requests/day (high volume)
+- [ ] Variable/unpredictable
+
+**Q11: What's your LLM budget constraint?** (Multiple choice, required)
+- [ ] Cost is not a primary concern (optimize for quality)
+- [ ] Moderate budget (balance cost and quality)
+- [ ] Tight budget (optimize for cost)
+- [ ] Specific budget: $_____ per month
+
+**Q12: What's your latency requirement?** (Multiple choice, required)
+- [ ] <1 second (real-time)
+- [ ] 1-5 seconds (interactive)
+- [ ] 5-30 seconds (acceptable)
+- [ ] 30+ seconds (batch processing)
+- [ ] No strict requirement
+
+---
+
+### Section 5: Compliance & Security
+
+**Q13: Do you have compliance requirements?** (Checkboxes, multiple allowed)
+- [ ] HIPAA (healthcare)
+- [ ] SOC 2 (security/privacy)
+- [ ] GDPR (EU data protection)
+- [ ] CCPA (California privacy)
+- [ ] PCI DSS (payment cards)
+- [ ] None
+- [ ] Other: _____
+
+**Q14: Data handling preferences** (Checkboxes, multiple allowed)
+- [ ] No PII/PHI should leave our infrastructure
+- [ ] Must use on-prem/self-hosted models
+- [ ] Can use cloud APIs with BAA/DPA
+- [ ] No restrictions
+
+---
+
+### Section 6: Delivery
+
+**Q15: When do you need these examples?** (Multiple choice, required)
+- [ ] ASAP (we'll prioritize, ~7 days)
+- [ ] Standard (2 weeks, default)
+- [ ] Flexible (3-4 weeks is fine)
+- [ ] Specific date: _____
+
+**Q16: How should we deliver?** (Multiple choice, required)
+- [ ] Via Slack (recommended)
+- [ ] Via email (ZIP file)
+- [ ] Private GitHub repo
+- [ ] Other: _____
+
+**Q17: Anything else we should know?** (Paragraph, optional)
+
+Edge cases, constraints, integrations, team preferences, etc.
+
+---
+
+## After Submission
+
+**What Happens Next**:
+
+1. **Confirmation Email** (within 4 hours)
+   - We received your request
+   - Estimated delivery date
+   - Any clarifying questions
+
+2. **Kickoff Call** (within 3 days, optional)
+   - 15-minute Slack/Zoom call
+   - Confirm requirements
+   - Discuss edge cases
+
+3. **Development** (7-14 days)
+   - We build your examples
+   - Share drafts via Slack for feedback
+   - Iterate based on your input
+
+4. **Delivery** (2 weeks)
+   - Production-ready code
+   - Unit tests
+   - README with usage examples
+   - Optional: 15-min code walkthrough
+
+5. **Support** (ongoing)
+   - Your Slack channel stays active for 90 days
+   - Questions about custom examples welcome
+
+---
+
+**Questions about this form?**
+Email: caymanroden@gmail.com
+Subject: "Enterprise Custom Examples - Question"
