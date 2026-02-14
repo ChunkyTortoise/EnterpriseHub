@@ -1,8 +1,10 @@
 # Fiverr Gig: AI Chatbot with Multi-Agent Handoff
 
 **Category:** AI Services > AI Chatbots
-**Gig Title:** I Will Integrate Claude/GPT Chatbot into Your Website
+**Gig Title:** I will integrate Claude or GPT chatbot into your website with CRM sync
 **Price Range:** $400 - $1,500 USD
+
+**SEO Keywords**: AI chatbot, chatbot development, customer support bot, lead generation, CRM integration, GoHighLevel, HubSpot, Salesforce, multi-agent chatbot, conversational AI
 
 ---
 
@@ -206,11 +208,18 @@ The chatbot uses a swarm architecture where specialized agents handle different 
 
 ---
 
-## Tags (SEO Optimized — High-Volume Keywords)
+## Fiverr Search Tags (5 max)
 
-`ai chatbot`, `chatbot development`, `lead generation`, `customer support`, `crm integration`, `gohighlevel`, `hubspot`, `salesforce`, `virtual assistant`, `business automation`, `conversational ai`, `nlp`, `chatgpt`, `ai assistant`, `live chat bot`
+1. `chatbot development`
+2. `ai chatbot`
+3. `lead generation`
+4. `automation`
+5. `customer support`
 
-**Search Intent Keywords:**
+**SEO Keywords for Description** (already embedded above):
+ai chatbot, chatbot development, lead generation, customer support, crm integration, gohighlevel, hubspot, salesforce, virtual assistant, business automation, conversational ai, nlp, chatgpt, ai assistant, live chat bot
+
+**Search Intent Keywords** (high-volume):
 - "ai chatbot" (50K+ searches/month)
 - "chatbot development" (20K+ searches/month)
 - "lead generation bot" (8K+ searches/month)
@@ -231,10 +240,34 @@ The chatbot uses a swarm architecture where specialized agents handle different 
 
 ---
 
+## Requirements from Buyer
+
+To ensure fast delivery, please provide:
+1. Industry and use case — Real estate? E-commerce? Healthcare? What's the goal?
+2. Bot personality preferences — Formal? Friendly? Professional?
+3. CRM system (if any) — GoHighLevel, HubSpot, Salesforce, or custom webhook?
+4. Website platform — WordPress, React, Vue, or custom HTML?
+5. FAQ content — 10-20 common questions your team answers repeatedly
+6. Escalation workflow — When should bot hand off to human? Who gets notified?
+
+---
+
+## Delivery Timeline
+
+| Package | Delivery | Revisions | Support |
+|---------|----------|-----------|---------|
+| Basic | 5 days | 3 rounds | 1 month |
+| Standard | 10 days | 5 rounds | 2 months |
+| Premium | 14 days | Unlimited | 3 months |
+
+**Rush delivery available**: +$200 for 3-day delivery acceleration
+
+---
+
 ## Ordering Instructions
 
-1. Select your package
-2. Describe your use case (industry, use goals, integrations needed)
-3. Specify any custom bot personalities or conversation flows
-4. I'll send a custom offer with architecture review
-5. We'll iterate on bot behavior before final delivery
+1. Select your package (Basic/Standard/Premium)
+2. Click "Continue" and provide requirements listed above
+3. I'll send a custom offer with bot personality mockup within 12 hours
+4. Upon acceptance, work begins immediately
+5. Demo bot delivered at day 3 for feedback before final integration
