@@ -1,7 +1,7 @@
 # Production Database Module
 from .connection_manager import DatabaseConnectionManager, get_db_manager
 
-# TODO: Implement missing database modules
+# ROADMAP-086: Implement missing database modules (models, migrations, health_monitor)
 # from .models import *
 # from .migrations import DatabaseMigrator
 # from .health_monitor import DatabaseHealthMonitor
@@ -11,7 +11,7 @@ from .connection_manager import DatabaseConnectionManager, get_db_manager
 __all__ = [
     "DatabaseConnectionManager",
     "get_db_manager",
-    # TODO: Add when implemented
+    # ROADMAP-086: Add when database modules are implemented
     # 'DatabaseMigrator',
     # 'DatabaseHealthMonitor',
     # 'QueryBuilder',

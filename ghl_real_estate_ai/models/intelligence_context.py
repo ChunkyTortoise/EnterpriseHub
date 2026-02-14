@@ -17,14 +17,68 @@ Author: Jorge's Real Estate AI Platform - Phase 3.3 Bot Workflow Integration
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
+
+
+class TopPropertyMatch(TypedDict, total=False):
+    """TypedDict for top property match data."""
+    property_id: str
+    address: str
+    price: float
+    bedrooms: int
+    bathrooms: float
+    sqft: int
+    match_score: float
+    match_reasons: List[str]
+    image_url: Optional[str]
+
+
+class ObjectionDetected(TypedDict, total=False):
+    """TypedDict for detected objection data."""
+    objection_type: str
+    objection_text: str
+    confidence: float
+    detected_at: str
+    resolved: bool
+
+
+class CoachingOpportunity(TypedDict, total=False):
+    """TypedDict for coaching opportunity data."""
+    opportunity_type: str
+    description: str
+    priority: str
+    suggested_action: str
+
+
+class ResponseRecommendation(TypedDict, total=False):
+    """TypedDict for response recommendation data."""
+    recommendation_type: str
+    message: str
+    confidence: float
+    context: str
+
+
+class BudgetRange(TypedDict, total=False):
+    """TypedDict for budget range data."""
+    min: float
+    max: float
+    currency: str
+    pre_approved: bool
+
+
+class FeaturePreference(TypedDict, total=False):
+    """TypedDict for feature preference data."""
+    feature_name: str
+    importance: float  # 0.0-1.0
+    value: Any
+    must_have: bool
 
 
 @dataclass
 class PropertyIntelligence:
     """Property matching intelligence context for bot enhancement."""
 
-    top_matches: List[Dict[str, Any]] = field(default_factory=list)
+    top_matches: List[TopPropertyMatch] = field(default_factory=list)
     match_count: int = 0
     best_match_score: float = 0.0
     presentation_strategy: Optional[str] = None
@@ -57,12 +111,12 @@ class PropertyIntelligence:
 class ConversationIntelligence:
     """Conversation analysis intelligence context for bot enhancement."""
 
-    objections_detected: List[Dict[str, Any]] = field(default_factory=list)
+    objections_detected: List[ObjectionDetected] = field(default_factory=list)
     overall_sentiment: float = 0.0
     sentiment_trend: str = "stable"
     conversation_quality_score: float = 50.0
-    coaching_opportunities: List[Dict[str, Any]] = field(default_factory=list)
-    response_recommendations: List[Dict[str, Any]] = field(default_factory=list)
+    coaching_opportunities: List[CoachingOpportunity] = field(default_factory=list)
+    response_recommendations: List[ResponseRecommendation] = field(default_factory=list)
     next_best_action: Optional[str] = None
     urgency_indicators: List[str] = field(default_factory=list)
 
@@ -94,12 +148,12 @@ class ConversationIntelligence:
 class PreferenceIntelligence:
     """Preference learning intelligence context for bot enhancement."""
 
-    preference_profile: Dict[str, Any] = field(default_factory=dict)
+    preference_profile: Dict[str, FeaturePreference] = field(default_factory=dict)
     profile_completeness: float = 0.0
-    budget_range: Optional[Dict[str, Any]] = None
+    budget_range: Optional[BudgetRange] = None
     urgency_level: float = 0.5
     location_preferences: Dict[str, float] = field(default_factory=dict)
-    feature_preferences: Dict[str, Any] = field(default_factory=dict)
+    feature_preferences: Dict[str, FeaturePreference] = field(default_factory=dict)
     timeline_preference: Optional[str] = None
     confidence_score: float = 0.0
     preference_gaps: List[str] = field(default_factory=list)

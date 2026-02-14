@@ -18,7 +18,6 @@ import pytest
 
 from src.caching import (
 
-@pytest.mark.integration
     CacheAnalytics,
     DeduplicationStrategy,
     EvictionPolicy,

@@ -97,7 +97,7 @@ class ClaudeAssistantOptimized:
                 "Explain why this property matches this lead's needs",
                 "Analyze lead investment potential",
                 "Draft SMS for property tour",
-                "Summarize Austin market conditions",
+                "Summarize Rancho Cucamonga market conditions",
                 "Generate churn recovery script",
             ]
 
@@ -115,7 +115,7 @@ class ClaudeAssistantOptimized:
         PERFORMANCE: Ultra-fast minimal market context (20ms vs 150ms).
         Returns essential context immediately, loads full context in background.
         """
-        target_market_id = market_id or self.market_id or "austin"
+        target_market_id = market_id or self.market_id or "rancho_cucamonga"
 
         # Check minimal cache first
         if target_market_id in self._market_context_cache_minimal:
@@ -159,7 +159,7 @@ class ClaudeAssistantOptimized:
         Full market context (150ms).
         Called in background after minimal context is returned.
         """
-        target_market_id = market_id or self.market_id or "austin"
+        target_market_id = market_id or self.market_id or "rancho_cucamonga"
 
         # Check full cache first
         if target_market_id in self._market_context_cache_full:
@@ -476,7 +476,7 @@ class ClaudeAssistantOptimized:
 
         if "Executive" in clean_hub:
             hot_leads = sum(1 for l in leads.values() if l and l.get("classification") == "hot")
-            return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Austin downtown cluster."
+            return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Rancho Cucamonga downtown cluster."
 
         elif "Lead Intelligence" in clean_hub:
             selected = st.session_state.get("selected_lead_name", "-- Select a Lead --")

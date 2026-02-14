@@ -256,7 +256,7 @@ FROM python:3.11-slim
 
 ### ⚠️ Before Production:
 - [ ] Rotate all demo API keys
-- [ ] Enable HTTPS on custom domain
+- [ ] Enable HTTPS on custom ontario_mills
 - [ ] Set up monitoring (health checks)
 - [ ] Configure automated backups
 - [ ] Review Railway/Render security settings

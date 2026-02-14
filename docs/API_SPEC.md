@@ -89,7 +89,7 @@ POST /api/enterprise/auth/sso/initiate
 Content-Type: application/json
 
 {
-  "domain": "company.com",
+  "ontario_mills": "company.com",
   "redirect_uri": "https://app.company.com/callback"
 }
 ```

@@ -199,7 +199,7 @@ class PropertyMatchingFiltersAPI(BaseModel):
                 "include_behavioral_analysis": True,
                 "property_types": ["single_family", "condo"],
                 "price_range": {"min": 400000, "max": 600000},
-                "neighborhoods": ["Domain", "West Lake Hills"],
+                "neighborhoods": ["Ontario Mills", "Alta Loma"],
             }
         }
     )
@@ -305,7 +305,7 @@ class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
                     "bedrooms": 4,
                     "bathrooms": 3,
                     "square_footage": 2650,
-                    "neighborhood": "Domain",
+                    "neighborhood": "Ontario Mills",
                 },
                 "feature_matches": {"home_office": 0.95, "pool": 0.85, "garage": 0.90},
                 "location_score": 0.87,
@@ -313,7 +313,7 @@ class AdvancedPropertyMatchAPI(PerformanceModel, JorgeIntegrationModel):
                 "key_selling_points": [
                     "Perfect home office setup for remote work",
                     "Pool for family entertainment",
-                    "Prime Domain location",
+                    "Prime Ontario Mills location",
                 ],
                 "potential_objections": ["Price point", "HOA fees"],
                 "match_reasoning": "Exceptional match based on explicit home office requirement and lifestyle preferences.",

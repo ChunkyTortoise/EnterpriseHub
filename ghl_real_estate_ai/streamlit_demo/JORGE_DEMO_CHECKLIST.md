@@ -56,7 +56,7 @@
 - [ ] Predictive deal scoring and win/loss analysis
 
 ### Business Impact
-- [ ] Austin market scenarios worth $136,700 in commissions
+- [ ] Rancho Cucamonga market scenarios worth $136,700 in commissions
 - [ ] 25% improvement in conversion rates
 - [ ] 40% increase in agent productivity
 - [ ] $700K+ annual value across 31 AI services

@@ -486,7 +486,7 @@ async def health_check():
         service = get_predictive_behavior_service()
 
         # Test basic prediction capability
-        test_prediction_time = datetime.now(timezone.utc)
+        datetime.now(timezone.utc)
 
         # Basic health metrics
         health_data = {

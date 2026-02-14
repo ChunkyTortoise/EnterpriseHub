@@ -11,10 +11,8 @@ Usage:
     recommendations = await calculator.get_optimization_recommendations()
 """
 
-import asyncio
-import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.jorge.source_tracker import SourceTracker, get_source_tracker

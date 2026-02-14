@@ -8,7 +8,7 @@ Tests the complete flow:
 1. Enhanced conversation manager with competitive intelligence
 2. End-to-end competitor detection and response
 3. Alert system integration
-4. Austin market intelligence integration
+4. Rancho Cucamonga market intelligence integration
 5. Recovery workflow testing
 """
 
@@ -17,8 +17,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.core.enhanced_conversation_manager import EnhancedAIResponse, EnhancedConversationManager
@@ -53,14 +51,14 @@ class TestCompetitorIntelligenceIntegration:
         """Sample conversation context for testing"""
         return {
             "conversation_history": [
-                {"role": "user", "content": "I'm looking for a house in Austin", "timestamp": "2024-01-15T10:00:00"},
+                {"role": "user", "content": "I'm looking for a house in Rancho Cucamonga", "timestamp": "2024-01-15T10:00:00"},
                 {
                     "role": "assistant",
-                    "content": "I'd be happy to help you find a home in Austin",
+                    "content": "I'd be happy to help you find a home in Rancho Cucamonga",
                     "timestamp": "2024-01-15T10:00:30",
                 },
             ],
-            "extracted_preferences": {"budget": 500000, "location": ["Austin"], "bedrooms": 3},
+            "extracted_preferences": {"budget": 500000, "location": ["Rancho Cucamonga"], "bedrooms": 3},
             "created_at": "2024-01-15T09:00:00",
         }
 
@@ -116,15 +114,15 @@ class TestCompetitorIntelligenceIntegration:
             mock_alert.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_austin_market_intelligence_integration(
+    async def test_rancho_cucamonga_market_intelligence_integration(
         self, enhanced_conversation_manager, sample_contact_info, sample_context
     ):
-        """Test Austin market intelligence integration"""
-        # Mention specific Austin competitor
-        message = "My Keller Williams agent showed me houses in Domain"
+        """Test Rancho Cucamonga market intelligence integration"""
+        # Mention specific Rancho Cucamonga competitor
+        message = "My Keller Williams agent showed me houses in Ontario Mills"
 
-        # Update context with Austin location
-        sample_context["extracted_preferences"]["location"] = ["Domain", "Arboretum"]
+        # Update context with Rancho Cucamonga location
+        sample_context["extracted_preferences"]["location"] = ["Ontario Mills", "Arboretum"]
 
         response = await enhanced_conversation_manager.generate_response(
             user_message=message, contact_info=sample_contact_info, context=sample_context, is_buyer=True
@@ -132,8 +130,8 @@ class TestCompetitorIntelligenceIntegration:
 
         # Should have competitive analysis
         assert response.competitive_analysis is not None
-        # Should apply Austin-specific competitive positioning
-        assert "austin" in response.message.lower() or "domain" in response.message.lower()
+        # Should apply Rancho Cucamonga-specific competitive positioning
+        assert "rancho_cucamonga" in response.message.lower() or "ontario_mills" in response.message.lower()
 
     @pytest.mark.asyncio
     async def test_lead_profile_targeting(self, enhanced_conversation_manager, sample_contact_info, sample_context):
@@ -221,7 +219,7 @@ class TestCompetitorIntelligenceIntegration:
         """Test that normal conversation doesn't trigger false competitive alerts"""
         normal_messages = [
             "I'm interested in 3 bedroom homes",
-            "What's the market like in Austin?",
+            "What's the market like in Rancho Cucamonga?",
             "Can you help me understand the buying process?",
             "I'm pre-approved for $500k",
             "When can we schedule a showing?",
@@ -271,7 +269,7 @@ class TestCompetitorIntelligenceIntegration:
         tech_context = sample_context.copy()
         tech_context["extracted_preferences"].update(
             {
-                "location": ["Domain", "Cedar Park"],
+                "location": ["Ontario Mills", "Cedar Park"],
                 "timeline": "need to close before Apple start date",
                 "budget": 650000,
             }

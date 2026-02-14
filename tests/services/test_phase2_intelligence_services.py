@@ -29,8 +29,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-@pytest.mark.integration
-
 # Import Phase 2 Intelligence Layer services
 try:
     from ghl_real_estate_ai.services.advanced_property_matching_engine import (
@@ -76,7 +74,7 @@ class TestAdvancedPropertyMatchingEngine:
             "bathrooms": {"min": 2, "ideal": 3, "max": 4},
             "square_footage": {"min": 2000, "ideal": 2800, "max": 3500},
             "location_preferences": {
-                "neighborhoods": ["Domain", "West Lake Hills", "Tarrytown"],
+                "neighborhoods": ["Ontario Mills", "Alta Loma", "North Rancho"],
                 "max_commute_time": 25,
             },
             "lifestyle_features": {"pool": 0.8, "garage": 0.9, "home_office": 0.7, "yard": 0.6},
@@ -117,7 +115,7 @@ class TestAdvancedPropertyMatchingEngine:
                 "bedrooms": 4,
                 "bathrooms": 3,
                 "square_footage": 2650,
-                "neighborhood": "Domain",
+                "neighborhood": "Ontario Mills",
                 "features": ["pool", "home_office", "garage"],
                 "property_style": "modern",
                 "listing_date": "2025-01-20",
@@ -130,7 +128,7 @@ class TestAdvancedPropertyMatchingEngine:
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "square_footage": 2200,
-                "neighborhood": "West Lake Hills",
+                "neighborhood": "Alta Loma",
                 "features": ["garage", "yard"],
                 "property_style": "traditional",
                 "listing_date": "2025-01-18",
@@ -143,7 +141,7 @@ class TestAdvancedPropertyMatchingEngine:
                 "bedrooms": 4,
                 "bathrooms": 3.5,
                 "square_footage": 2950,
-                "neighborhood": "Tarrytown",
+                "neighborhood": "North Rancho",
                 "features": ["pool", "home_office", "garage", "yard"],
                 "property_style": "contemporary",
                 "listing_date": "2025-01-22",
@@ -181,7 +179,7 @@ class TestAdvancedPropertyMatchingEngine:
             assert len(matches) <= 3
             assert all(isinstance(match, AdvancedPropertyMatch) for match in matches)
 
-            # Find the best match (should be prop_003 - Tarrytown contemporary with all features)
+            # Find the best match (should be prop_003 - North Rancho contemporary with all features)
             best_match = matches[0]
             assert best_match.property_id == "prop_003"
             assert best_match.overall_score >= 0.8  # High scoring due to feature alignment
@@ -919,7 +917,7 @@ class TestClientPreferenceLearningEngine:
             "style": "modern",
             "features": ["home_office", "garage", "backyard"],
             "square_footage": 2400,
-            "neighborhood": "Domain",
+            "neighborhood": "Ontario Mills",
         }
 
         with (

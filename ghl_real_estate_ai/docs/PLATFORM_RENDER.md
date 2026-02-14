@@ -107,7 +107,7 @@ curl -X POST "https://your-app.onrender.com/api/analytics/experiments?location_i
 - ✅ 512 MB RAM
 - ✅ Auto-deploy on git push
 - ✅ Free SSL certificate
-- ✅ Custom domain support
+- ✅ Custom ontario_mills support
 - ⚠️ Spins down after 15 mins of inactivity (cold starts ~30 seconds)
 
 **Paid Tier ($7/month):**

@@ -6,7 +6,7 @@ st.markdown("### Industry-Specific Demo Environments")
 
 industries = {
     "Real Estate": {
-        "customers": ["Premier Realty Group", "Austin Metro Realty", "Texas Property Partners"],
+        "customers": ["Premier Realty Group", "Rancho Cucamonga Metro Realty", "Texas Property Partners"],
         "features": ["Lead Scoring", "Property Matching", "Agent Analytics"],
         "roi": "3,500%"
     },

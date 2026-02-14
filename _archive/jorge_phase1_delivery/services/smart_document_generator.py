@@ -562,7 +562,7 @@ if __name__ == "__main__":
         DocumentType.PURCHASE_AGREEMENT,
         "template_purchase_ca",
         {
-            "property_address": "123 Main St, Austin, TX 78701",
+            "property_address": "123 Main St, Rancho Cucamonga, CA 78701",
             "purchase_price": 450000,
             "buyer_name": "John Doe",
             "seller_name": "Jane Smith",
@@ -577,7 +577,7 @@ if __name__ == "__main__":
     print("\n📋 Generating disclosure packet...")
     packet = service.generate_disclosure_packet(
         {
-            "address": "123 Main St, Austin, TX 78701",
+            "address": "123 Main St, Rancho Cucamonga, CA 78701",
             "year_built": 2015,
             "has_pool": True,
             "in_hoa": True

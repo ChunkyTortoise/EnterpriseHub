@@ -113,8 +113,8 @@ def test_lead_bot_intelligence_integration():
             lead_id = "test_lead_123"
             sequence_day = 3
             conversation_history = [
-                {"role": "user", "content": "I'm looking for a 3-bedroom house in Austin"},
-                {"role": "assistant", "content": "I can help you find properties in Austin. What's your budget range?"}
+                {"role": "user", "content": "I'm looking for a 3-bedroom house in Rancho Cucamonga"},
+                {"role": "assistant", "content": "I can help you find properties in Rancho Cucamonga. What's your budget range?"}
             ]
 
             # This would invoke the workflow - we'll just test the state preparation

@@ -400,8 +400,8 @@ class MobileNotificationService:
         try:
             current_time = datetime.utcnow()
 
-            # TODO: Implement scheduled notification processing
-            # This would typically scan all scheduled notifications and send those due
+            # ROADMAP-062: Implement scheduled notification processor
+            # Background job to scan and send due notifications
 
             logger.info(f"Processed scheduled notifications at {current_time}")
 
@@ -415,7 +415,8 @@ class MobileNotificationService:
 
     async def _get_user_devices(self, user_id: str) -> List[str]:
         """Get all devices for a specific user."""
-        # TODO: Implement user device lookup
+        # ROADMAP-060: Get user device tokens from device registry
+        # Requires user-to-device mapping table
         return []
 
     async def _should_send_notification(self, device_reg: DeviceRegistration, payload: NotificationPayload) -> bool:
@@ -430,7 +431,8 @@ class MobileNotificationService:
                     return False
 
             # Check quiet hours (basic implementation)
-            # TODO: Implement timezone-aware quiet hours
+            # ROADMAP-061: Implement timezone-aware quiet hours
+            # Store user timezone, convert UTC to local time
 
             # Check if device is active recently
             if device_reg.last_active:
@@ -451,8 +453,8 @@ class MobileNotificationService:
         Send notifications via Firebase Cloud Messaging (Android).
         """
         try:
-            # TODO: Implement actual FCM sending
-            # For now, simulate success
+            # ROADMAP-058: Implement actual FCM notification sending
+            # FCM API integration, token management, batch sending
             success_count = len(android_devices)
             failure_count = 0
 
@@ -471,8 +473,8 @@ class MobileNotificationService:
         Send notifications via Apple Push Notification Service (iOS).
         """
         try:
-            # TODO: Implement actual APNS sending
-            # For now, simulate success
+            # ROADMAP-059: Implement actual APNS notification sending
+            # APNS HTTP/2 API, certificate/token authentication
             success_count = len(ios_devices)
             failure_count = 0
 

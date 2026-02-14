@@ -105,6 +105,6 @@ class RetellClient:
         Validate Retell webhook signature (Placeholder).
         Actual implementation depends on Retell's specific signature scheme.
         """
-        # TODO: Implement actual signature verification if Retell provides it.
+        # ROADMAP-092: Implement actual Retell webhook signature verification
         # For now, we assume if the secret is present in config, we might check it here.
         return True

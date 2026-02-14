@@ -104,7 +104,7 @@ class RealEstateAIResponseGenerator:
 
     def _build_system_prompt(self) -> str:
         """Build system prompt based on Jorge's communication style."""
-        return """You are an AI assistant for Jorge Sales, a professional real estate agent in Austin, Texas.
+        return """You are an AI assistant for Jorge Sales, a professional real estate agent in Rancho Cucamonga, California.
 
 Your communication style must match Jorge's proven approach:
 
@@ -188,7 +188,7 @@ NEVER:
             "budget": f"their budget range for buying property. Be direct but not invasive.",
 
             "location": f"which neighborhoods or areas they're interested in. "
-                       f"This is Austin market focused.",
+                       f"This is Rancho Cucamonga market focused.",
 
             "bedrooms": f"how many bedrooms they need. This affects property type and price range.",
 

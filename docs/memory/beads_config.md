@@ -20,10 +20,10 @@ AI agents should read `.beads/issues.jsonl` to:
 3. Record progress and new discoveries.
 
 ## Claude Code Integration
-- **17 domain-agnostic agents** in `.claude/agents/` — all have "Project-Specific Guidance" sections
+- **17 ontario_mills-agnostic agents** in `.claude/agents/` — all have "Project-Specific Guidance" sections
 - **5 MCP servers**: memory, postgres, redis, stripe, playwright
 - **11 GitHub Actions workflows** (consolidated from 17)
-- Agents adapt to project domain via `CLAUDE.md` and `.claude/reference/` files
+- Agents adapt to project ontario_mills via `CLAUDE.md` and `.claude/reference/` files
 
 ## jorge_real_estate_bots (Standalone Repo)
 - **Repo**: `ChunkyTortoise/jorge_real_estate_bots` (private)

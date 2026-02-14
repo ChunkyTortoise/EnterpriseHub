@@ -14,6 +14,6 @@
 
 ## Long-Term Goals
 1. **Enterprise Scaling:** Transition from Modular Monolith to a distributed k8s/ECS architecture for 100k+ MAU.
-2. **Global Market Expansion:** Integrate data for international real estate markets (beyond Austin/Phoenix).
+2. **Global Market Expansion:** Integrate data for international real estate markets (beyond Rancho Cucamonga/Phoenix).
 3. **AI-Driven Predictive Alerts:** Implement APScheduler-based pipeline for 1,000+ properties/hour.
 4. **Self-Evolution Loop:** Enhance the ARETE-Architect agent to autonomously patch and deploy minor UI refinements.

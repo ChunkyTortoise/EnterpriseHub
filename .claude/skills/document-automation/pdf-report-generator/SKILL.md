@@ -38,7 +38,7 @@ performance_report = pdf_gen.generate_lead_performance_report(
 
 # Market comparison study
 market_study = pdf_gen.generate_market_comparison_report(
-    target_area='Austin_TX',
+    target_area='Rancho Cucamonga_TX',
     comparable_areas=['Dallas_TX', 'San_Antonio_TX'],
     analysis_period='12_months',
     visualizations=['price_trends', 'inventory_levels', 'days_on_market']
@@ -260,7 +260,7 @@ performance_report = pdf_gen.generate_lead_performance_report(
 ### Market Analysis Integration
 ```python
 # Market timing analysis report
-market_data = market_timing_service.analyze_market_conditions('Austin_TX')
+market_data = market_timing_service.analyze_market_conditions('Rancho Cucamonga_TX')
 market_report = pdf_gen.generate_market_analysis_report(
     market_data=market_data,
     forecast_period='12_months',

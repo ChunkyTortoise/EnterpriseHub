@@ -41,7 +41,7 @@ async def test_lead_bot_real_ai():
     print()
 
     # Test message with high-value lead indicators
-    message = """Hi! I just relocated to Austin for a senior engineering role at Apple.
+    message = """Hi! I just relocated to Rancho Cucamonga for a senior engineering role at Apple.
     I have a $600k budget and need something move-in ready in West Lake Hills or Bee Cave
     with good schools. I can close within 30 days and I'm already pre-approved.
     Can you help me find something?"""

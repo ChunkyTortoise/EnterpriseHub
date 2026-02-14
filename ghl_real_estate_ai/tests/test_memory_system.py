@@ -18,8 +18,6 @@ sys.path.append(os.path.join(os.getcwd(), "ghl-real-estate-ai"))
 from ghl_real_estate_ai.core.conversation_manager import AIResponse, ConversationManager
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_memory_persistence():
@@ -45,10 +43,10 @@ async def test_memory_persistence():
 
     # 3. First interaction
     print("--- Turn 1 ---")
-    user_msg_1 = "Hi, my name is John and I'm looking for a 3-bedroom house in Austin."
+    user_msg_1 = "Hi, my name is John and I'm looking for a 3-bedroom house in Rancho Cucamonga."
 
     # We need to mock extract_data too or it will try to call LLM
-    cm.extract_data = AsyncMock(return_value={"bedrooms": 3, "location": "Austin"})
+    cm.extract_data = AsyncMock(return_value={"bedrooms": 3, "location": "Rancho Cucamonga"})
 
     response = await cm.generate_response(
         user_message=user_msg_1, contact_info={"first_name": "John"}, context=await cm.get_context(test_contact_id)
@@ -71,7 +69,7 @@ async def test_memory_persistence():
     cm2 = ConversationManager()
     cm2.llm_client = AsyncMock()
     cm2.llm_client.agenerate.return_value = MagicMock(
-        content="I see you're still looking for that house in Austin!", provider="claude", model="test-model"
+        content="I see you're still looking for that house in Rancho Cucamonga!", provider="claude", model="test-model"
     )
     cm2.rag_engine = MagicMock()
     cm2.rag_engine.search.return_value = []

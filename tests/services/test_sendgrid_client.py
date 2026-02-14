@@ -46,8 +46,6 @@ except (ImportError, TypeError, AttributeError):
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockSendGridClient
 
-@pytest.mark.integration
-
 
 class TestSendGridConfig:
     """Test SendGrid configuration management"""
@@ -233,7 +231,7 @@ class TestEmailSending:
             to_email="lead@example.com",
             subject="Market Update",
             template_id="d-abc123",
-            dynamic_template_data={"name": "John", "location": "Austin"},
+            dynamic_template_data={"name": "John", "location": "Rancho Cucamonga"},
         )
 
         assert isinstance(result, EmailMessage)
@@ -688,17 +686,17 @@ class TestBulkEmailOperations:
         emails = [
             {
                 "to_email": "lead1@example.com",
-                "subject": "Austin Market Update for North Austin",
+                "subject": "Rancho Cucamonga Market Update for North Rancho Cucamonga",
                 "html_content": "<h1>Hi John</h1><p>Market update</p>",
             },
             {
                 "to_email": "lead2@example.com",
-                "subject": "Austin Market Update for South Austin",
+                "subject": "Rancho Cucamonga Market Update for South Rancho Cucamonga",
                 "html_content": "<h1>Hi Jane</h1><p>Market update</p>",
             },
             {
                 "to_email": "lead3@example.com",
-                "subject": "Austin Market Update for East Austin",
+                "subject": "Rancho Cucamonga Market Update for East Rancho Cucamonga",
                 "html_content": "<h1>Hi Bob</h1><p>Market update</p>",
             },
         ]

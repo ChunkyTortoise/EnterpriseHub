@@ -11,8 +11,6 @@ import pytest
 
 from ghl_real_estate_ai.services.offer_advisor import OfferAdvisor, OfferStrategy
 
-@pytest.mark.unit
-
 
 @pytest.fixture
 def advisor():

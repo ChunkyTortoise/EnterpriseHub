@@ -307,7 +307,6 @@ class AgentCoachingService:
             return {"error": "No conversations to analyze"}
 
         # Metrics
-        response_times = []
         questions_asked = 0
         appointments_set = 0
         jorge_style_usage = 0

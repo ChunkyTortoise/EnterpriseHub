@@ -31,9 +31,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
     MessageType,
 )
 from ghl_real_estate_ai.core.conversation_manager import AIResponse
-from ghl_real_estate_ai.services.calendar_scheduler import AUSTIN_TZ, AppointmentType
-
-@pytest.mark.integration
+from ghl_real_estate_ai.services.calendar_scheduler import RC_TZ, AppointmentType
 
 
 @pytest.fixture
@@ -45,7 +43,7 @@ def qualified_lead_webhook_event():
         locationId="location_jorge_456",
         message=GHLMessage(
             type=MessageType.SMS,
-            body="Yes, I'm pre-approved and ready to see homes in Austin. My budget is $450k and I need to move by next month.",
+            body="Yes, I'm pre-approved and ready to see homes in Rancho Cucamonga. My budget is $450k and I need to move by next month.",
             direction=MessageDirection.INBOUND,
         ),
         contact=GHLContact(
@@ -94,10 +92,10 @@ def mock_conversation_manager():
 
     # Mock AI response for qualified lead
     manager.generate_response.return_value = AIResponse(
-        message="That's great! I can see you're ready to start looking. Let me help you find the perfect home in Austin within your budget.",
+        message="That's great! I can see you're ready to start looking. Let me help you find the perfect home in Rancho Cucamonga within your budget.",
         extracted_data={
             "budget": 450000,
-            "location": ["Austin"],
+            "location": ["Rancho Cucamonga"],
             "timeline": "next month",
             "bedrooms": 3,
             "bathrooms": 2,
@@ -116,16 +114,16 @@ def mock_ghl_client():
     client = AsyncMock()
 
     # Mock calendar availability
-    austin_time = datetime(2024, 1, 18, 14, 0, 0, tzinfo=AUSTIN_TZ)
+    rancho_cucamonga_time = datetime(2024, 1, 18, 14, 0, 0, tzinfo=RC_TZ)
     client.get_available_slots.return_value = [
         {
-            "start_time": austin_time.isoformat(),
-            "end_time": (austin_time + timedelta(minutes=60)).isoformat(),
+            "start_time": rancho_cucamonga_time.isoformat(),
+            "end_time": (rancho_cucamonga_time + timedelta(minutes=60)).isoformat(),
             "available": True,
         },
         {
-            "start_time": (austin_time + timedelta(hours=2)).isoformat(),
-            "end_time": (austin_time + timedelta(hours=3)).isoformat(),
+            "start_time": (rancho_cucamonga_time + timedelta(hours=2)).isoformat(),
+            "end_time": (rancho_cucamonga_time + timedelta(hours=3)).isoformat(),
             "available": True,
         },
     ]
@@ -134,7 +132,7 @@ def mock_ghl_client():
     client.create_appointment.return_value = {
         "id": "apt_sarah_123456",
         "status": "confirmed",
-        "startTime": austin_time.isoformat(),
+        "startTime": rancho_cucamonga_time.isoformat(),
         "contactId": "contact_qualified_123",
         "calendarId": "cal_jorge_456",
         "title": "Buyer Consultation - Sarah Thompson",
@@ -458,19 +456,19 @@ class TestSmartAppointmentSchedulingIntegration:
         scheduler = CalendarScheduler()
 
         # Test Monday 10 AM (should be valid)
-        monday_10am = datetime(2024, 1, 15, 10, 0, 0, tzinfo=AUSTIN_TZ)
+        monday_10am = datetime(2024, 1, 15, 10, 0, 0, tzinfo=RC_TZ)
         assert scheduler._is_during_business_hours(monday_10am) is True
 
         # Test Monday 8 AM (should be invalid - too early)
-        monday_8am = datetime(2024, 1, 15, 8, 0, 0, tzinfo=AUSTIN_TZ)
+        monday_8am = datetime(2024, 1, 15, 8, 0, 0, tzinfo=RC_TZ)
         assert scheduler._is_during_business_hours(monday_8am) is False
 
         # Test Saturday 2 PM (should be valid)
-        saturday_2pm = datetime(2024, 1, 20, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        saturday_2pm = datetime(2024, 1, 20, 14, 0, 0, tzinfo=RC_TZ)
         assert scheduler._is_during_business_hours(saturday_2pm) is True
 
         # Test Sunday 2 PM (should be invalid - closed)
-        sunday_2pm = datetime(2024, 1, 21, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        sunday_2pm = datetime(2024, 1, 21, 14, 0, 0, tzinfo=RC_TZ)
         assert scheduler._is_during_business_hours(sunday_2pm) is False
 
     def test_appointment_duration_mapping(self):
@@ -485,8 +483,8 @@ class TestSmartAppointmentSchedulingIntegration:
         assert AppointmentDuration.FOLLOW_UP_CALL.value == 15  # 15 minutes
 
     @pytest.mark.asyncio
-    async def test_timezone_handling_austin(self):
-        """Test proper timezone handling for Jorge's Austin market."""
+    async def test_timezone_handling_rancho_cucamonga(self):
+        """Test proper timezone handling for Jorge's Rancho Cucamonga market."""
         from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, TimeSlot
 
         # Create UTC time
@@ -499,12 +497,12 @@ class TestSmartAppointmentSchedulingIntegration:
             appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
-        # Convert to Austin time
-        austin_time = slot.to_austin_time()
+        # Convert to Rancho Cucamonga time
+        rancho_cucamonga_time = slot.to_rancho_cucamonga_time()
 
         # UTC 20:00 should be Rancho (PT) 12:00
-        assert austin_time.hour == 12
-        assert austin_time.tzinfo.zone == "America/Los_Angeles"
+        assert rancho_cucamonga_time.hour == 12
+        assert rancho_cucamonga_time.tzinfo.zone == "America/Los_Angeles"
 
         # Format for lead display
         formatted = slot.format_for_lead()
@@ -541,7 +539,7 @@ async def test_performance_40_percent_faster_target():
 
     extracted_data = {
         "budget": 400000,
-        "location": ["Austin"],
+        "location": ["Rancho Cucamonga"],
         "timeline": "urgent",
         "bedrooms": 3,
         "financing": "pre-approved",

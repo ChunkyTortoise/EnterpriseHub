@@ -20,7 +20,6 @@ import pytest
 
 from ghl_real_estate_ai.services.national_market_intelligence import (
 
-@pytest.mark.unit
     CompetitiveAnalysis,
     MarketMetrics,
     MarketTrend,
@@ -258,9 +257,9 @@ class TestNationalMarketIntelligence:
     async def test_generate_migration_patterns(self, intelligence_service):
         """Test migration patterns generation"""
         # Setup market metrics
-        intelligence_service.market_metrics["austin"] = MarketMetrics(
-            market_id="austin",
-            market_name="Austin",
+        intelligence_service.market_metrics["rancho_cucamonga"] = MarketMetrics(
+            market_id="rancho_cucamonga",
+            market_name="Rancho Cucamonga",
             population=2000000,
             median_home_price=500000,
             price_appreciation_1y=10.0,

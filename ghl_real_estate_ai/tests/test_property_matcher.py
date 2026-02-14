@@ -9,21 +9,19 @@ import pytest
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.property_matching_strategy import BasicFilteringStrategy
 
-@pytest.mark.unit
-
 
 def test_load_listings():
     """Test that listings are loaded correctly."""
     matcher = PropertyMatcher()
     assert len(matcher.listings) > 0
-    # Accept either Austin (prop_) or Rancho Cucamonga (rc_) prefixes
+    # Accept either Rancho Cucamonga (prop_) or Rancho Cucamonga (rc_) prefixes
     assert matcher.listings[0]["id"].startswith(("prop_", "rc_"))
 
 
 def test_find_matches_budget():
     """Test matching by budget."""
     matcher = PropertyMatcher()
-    # Use higher budget to work with both Austin and Rancho Cucamonga markets
+    # Use higher budget to work with both Rancho Cucamonga and Rancho Cucamonga markets
     matches = matcher.find_matches({"budget": 700000}, limit=1)
     assert len(matches) >= 1
     assert matches[0]["price"] <= 700000
@@ -53,7 +51,7 @@ def test_calculate_match_score():
     strategy = BasicFilteringStrategy()
     prop = {
         "price": 400000,
-        "address": {"city": "Austin", "neighborhood": "Circle C"},
+        "address": {"city": "Rancho Cucamonga", "neighborhood": "Circle C"},
         "bedrooms": 3,
         "property_type": "Single Family",
     }

@@ -317,7 +317,7 @@ opportunities = await market_engine.identify_investment_opportunities(
 
 ### Base URL
 ```
-Production: https://your-domain.com/api/jorge-advanced
+Production: https://your-ontario_mills.com/api/jorge-advanced
 Development: http://localhost:8000/api/jorge-advanced
 ```
 

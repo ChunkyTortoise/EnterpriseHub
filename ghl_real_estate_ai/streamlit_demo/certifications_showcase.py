@@ -4,7 +4,7 @@
 ========================================
 
 Interactive showcase of 19 professional certifications across AI/ML, Data Analytics,
-Business Intelligence, and Digital Marketing domains.
+Business Intelligence, and Digital Marketing ontario_millss.
 
 Dashboard Features:
 - Visual certification cards with provider branding
@@ -359,7 +359,7 @@ def main():
     **Cave Howell** | AI/ML Engineer | Data Analytics & Business Intelligence Specialist
 
     Comprehensive professional development across AI/ML, Data Analytics, Business Intelligence,
-    and Digital Marketing domains from leading institutions and technology companies.
+    and Digital Marketing ontario_millss from leading institutions and technology companies.
     """
     )
 

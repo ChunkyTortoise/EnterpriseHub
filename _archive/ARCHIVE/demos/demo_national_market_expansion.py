@@ -211,7 +211,7 @@ class NationalExpansionDemo:
                         'name': 'Sarah Chen',
                         'email': 'sarah.chen@amazon.com',
                         'level': 'vp_director',
-                        'current_location': 'Austin, TX',
+                        'current_location': 'Rancho Cucamonga, CA',
                         'family_size': 3
                     },
                     'requirements': {
@@ -346,7 +346,7 @@ class NationalExpansionDemo:
         try:
             # Sample cross-market comparisons
             market_pairs = [
-                ('austin', 'denver'),
+                ('rancho_cucamonga', 'denver'),
                 ('dallas', 'seattle'),
                 ('houston', 'phoenix')
             ]

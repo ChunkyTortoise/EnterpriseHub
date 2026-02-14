@@ -104,7 +104,7 @@ Transform GHL's real estate AI capabilities into a comprehensive, intelligent pl
 4. **Mobile Optimization**: Agent mobile app features
 
 ### **Medium Term (3-6 Months)**
-1. **Multi-Market Expansion**: Beyond Austin market
+1. **Multi-Market Expansion**: Beyond Rancho Cucamonga market
 2. **Advanced Analytics**: Market trend prediction
 3. **Team Collaboration**: Multi-agent team features
 4. **API Marketplace**: Third-party integrations

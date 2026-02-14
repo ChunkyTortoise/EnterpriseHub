@@ -526,7 +526,7 @@ class EnhancedHandoffOrchestrator:
 
         try:
             # Prepare introduction script based on agent type and context
-            introduction_script = self._generate_introduction_script(handoff_context, source_agent, target_agent)
+            self._generate_introduction_script(handoff_context, source_agent, target_agent)
 
             # Log introduction for monitoring
             logger.info(
@@ -727,7 +727,7 @@ if __name__ == "__main__":
 
         # Sample analysis
         intent_result = await analyze_customer_intent(
-            "I'm pre-approved for $800k and need to buy in West Lake Hills ASAP - my lease ends in 3 weeks!"
+            "I'm pre-approved for $800k and need to buy in Alta Loma ASAP - my lease ends in 3 weeks!"
         )
 
         conversation_context = ConversationContext()  # Simplified for example

@@ -76,7 +76,7 @@ def render_executive_dashboard(mock_data: bool = True):
             go.Indicator(
                 mode="gauge+number",
                 value=velocity_score,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "MARKET VELOCITY", "font": {"size": 12, "color": "#8B949E", "family": "Space Grotesk"}},
                 gauge={
                     "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "#8B949E"},
@@ -107,7 +107,7 @@ def render_executive_dashboard(mock_data: bool = True):
                 "name": "Sarah Martinez",
                 "score": 5,
                 "budget": "$425K",
-                "location": "Round Rock",
+                "location": "Fontana",
                 "timeline": "ASAP - Pre-approved",
                 "last_message": "Can we see it this weekend?",
                 "minutes_ago": 12,
@@ -116,7 +116,7 @@ def render_executive_dashboard(mock_data: bool = True):
                 "name": "Mike Johnson",
                 "score": 4,
                 "budget": "$380K",
-                "location": "Pflugerville",
+                "location": "Ontario",
                 "timeline": "End of month",
                 "last_message": "What's your cash offer?",
                 "minutes_ago": 45,
@@ -125,7 +125,7 @@ def render_executive_dashboard(mock_data: bool = True):
                 "name": "Jennifer Wu",
                 "score": 4,
                 "budget": "$500K",
-                "location": "Hyde Park",
+                "location": "Alta Loma",
                 "timeline": "Flexible",
                 "last_message": "Love that area. Let's talk.",
                 "minutes_ago": 120,
@@ -237,18 +237,18 @@ def render_executive_dashboard(mock_data: bool = True):
             <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
                 <!-- Row 1 -->
                 <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);" title="Downtown: 42 leads"></div>
-                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.8;" title="Domain: 28 leads"></div>
-                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.5;" title="Zilker: 15 leads"></div>
-                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Mueller: 5 leads"></div>
-                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.9;" title="East Austin: 31 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.8;" title="Ontario Mills: 28 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.5;" title="Victoria Gardens: 15 leads"></div>
+                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Haven City: 5 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.9;" title="East Rancho Cucamonga: 31 leads"></div>
                 <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.4;" title="Rainey: 12 leads"></div>
-                <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);" title="Round Rock: 38 leads"></div>
+                <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);" title="Fontana: 38 leads"></div>
                 <!-- Row 2 -->
-                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.6;" title="Pflugerville: 19 leads"></div>
-                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Cedar Park: 8 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.6;" title="Ontario: 19 leads"></div>
+                <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Upland: 8 leads"></div>
                 <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.7;" title="Lakeway: 24 leads"></div>
                 <div style="aspect-ratio: 1; background: #ef4444; border-radius: 4px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);" title="South Lamar: 45 leads"></div>
-                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.4;" title="Barton Hills: 14 leads"></div>
+                <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.4;" title="Grapeland: 14 leads"></div>
                 <div style="aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px;" title="Circle C: 6 leads"></div>
                 <div style="aspect-ratio: 1; background: #6366F1; border-radius: 4px; opacity: 0.3;" title="Avery Ranch: 11 leads"></div>
             </div>
@@ -332,7 +332,7 @@ def render_executive_dashboard(mock_data: bool = True):
             {
                 "type": "message",
                 "icon": "💬",
-                "message": "Inbound signal: David Chen querying Hyde Park",
+                "message": "Inbound signal: David Chen querying Alta Loma",
                 "time": "3h ago",
             },
             {"type": "warm", "icon": "⚡", "message": "Emma Davis synchronized - status WARM", "time": "4h ago"},

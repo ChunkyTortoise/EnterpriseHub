@@ -57,11 +57,9 @@ class PerformanceMonitor:
         """Collect AI response time and caching metrics."""
         try:
             # Test AI response time with cache check
-            test_start = time.perf_counter()
+            time.perf_counter()
 
             # Mock AI request for performance testing
-            test_property = {"id": "perf_test", "price": 400000}
-            test_preferences = {"budget": 450000}
 
             # This would call actual AI service in production
             # For monitoring, we simulate or use lightweight test
@@ -90,7 +88,7 @@ class PerformanceMonitor:
 
             # Test service warming
             warm_start = time.perf_counter()
-            services = self.performance_service.get_warmed_services()
+            self.performance_service.get_warmed_services()
             warm_time = time.perf_counter() - warm_start
 
             return {
@@ -350,7 +348,7 @@ def render_performance_dashboard():
                 go.Indicator(
                     mode="gauge+number+delta",
                     value=response_time,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Response Time (ms)"},
                     delta={"reference": target_time},
                     gauge={
@@ -496,7 +494,6 @@ def render_performance_dashboard():
             hit_ratio = cache_metrics.get("hit_ratio", 0)
             healthy = cache_metrics.get("cache_healthy", False)
 
-            status_color = "green" if healthy else "red"
             status_text = "Healthy" if healthy else "Needs Attention"
 
             st.metric("Cache Status", status_text, f"Hit Rate: {hit_ratio:.1%}")

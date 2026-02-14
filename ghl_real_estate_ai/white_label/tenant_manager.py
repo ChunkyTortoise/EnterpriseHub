@@ -43,7 +43,7 @@ class BrandConfiguration:
     primary_color: str = "#1a365d"
     secondary_color: str = "#2d3748"
     accent_color: str = "#3182ce"
-    custom_domain: Optional[str] = None
+    custom_ontario_mills: Optional[str] = None
     email_signature: Optional[str] = None
     marketing_message: str = "Powered by Jorge's AI Technology"
 
@@ -237,7 +237,7 @@ class GlobalTenantManager:
                 company_name=company_name,
                 primary_color=custom_config.get("primary_color", "#1a365d") if custom_config else "#1a365d",
                 secondary_color=custom_config.get("secondary_color", "#2d3748") if custom_config else "#2d3748",
-                custom_domain=custom_config.get("custom_domain") if custom_config else None,
+                custom_ontario_mills=custom_config.get("custom_ontario_mills") if custom_config else None,
             )
 
             # Get feature configuration from template
@@ -328,7 +328,7 @@ class GlobalTenantManager:
     async def _deploy_tenant_customizations(self, tenant_config: TenantConfiguration):
         """Deploy tenant-specific UI and branding customizations"""
         # Apply brand colors and logo
-        # Configure custom domain if provided
+        # Configure custom ontario_mills if provided
         # Deploy feature-specific UI components
         logger.info(f"Deploying customizations for tenant: {tenant_config.tenant_id}")
 
@@ -402,7 +402,7 @@ class GlobalTenantManager:
         # Update UI theme and colors
         # Deploy new logo and assets
         # Update email templates
-        # Configure custom domain if provided
+        # Configure custom ontario_mills if provided
         pass
 
     async def get_tenant_metrics(self, tenant_id: str) -> Dict[str, Any]:

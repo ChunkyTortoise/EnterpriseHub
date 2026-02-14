@@ -314,7 +314,7 @@ class MarketAnalyzerAgent(IntelligenceAgent):
     ) -> Optional[IntelligenceInsight]:
         """Analyze market share dynamics."""
         try:
-            market_share_data = market_data.get("market_share", {})
+            market_data.get("market_share", {})
 
             # Calculate market concentration
             total_competitors = len(competitors)
@@ -548,7 +548,7 @@ class SocialMonitorAgent(IntelligenceAgent):
     ) -> Optional[IntelligenceInsight]:
         """Analyze social media sentiment around competitors."""
         try:
-            social_data = context.get("social_media_data", {})
+            context.get("social_media_data", {})
 
             sentiment_summary = """
             Social Media Sentiment Analysis:
@@ -739,7 +739,7 @@ class StrategicSynthesizerAgent(IntelligenceAgent):
             synthesis = f"""
             Strategic Intelligence Synthesis Report:
 
-            Cross-Domain Analysis:
+            Cross-Ontario Mills Analysis:
             - Intelligence sources analyzed: {len(insights)}
             - High-threat indicators: {int(avg_threat * 100)}% of insights
             - Significant opportunities: {int(avg_opportunity * 100)}% of insights
@@ -966,7 +966,7 @@ class CompetitiveIntelligenceSystem:
             Competitive Intelligence Report for {", ".join(market_areas)}
 
             Key Findings:
-            - {len(insights)} intelligence insights gathered across {len(set(i.agent_type for i in insights))} analysis domains
+            - {len(insights)} intelligence insights gathered across {len(set(i.agent_type for i in insights))} analysis ontario_millss
             - {len(high_priority_insights)} immediate action items identified
             - {len(threat_insights)} high-priority competitive threats detected
             - {len(opportunity_insights)} significant market opportunities discovered

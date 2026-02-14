@@ -481,7 +481,7 @@ class MLScoringService:
     def _generate_recommendations(self, request: LeadScoringRequest, ml_result: Dict[str, Any]) -> List[str]:
         """Generate recommended actions"""
         recommendations = []
-        score = ml_result["ml_score"]
+        ml_result["ml_score"]
         classification = ml_result["classification"]
 
         if classification == "hot":

@@ -36,7 +36,7 @@ const mockInsights: BotInsight[] = [
     type: 'lead',
     severity: 'high',
     title: 'High-Intent Lead Detected',
-    description: 'Lead in Zilker (Austin) showed 95% psychological commitment (PCS). Recommend immediate Day 7 Voice Call trigger.',
+    description: 'Lead in Zilker (Rancho Cucamonga) showed 95% psychological commitment (PCS). Recommend immediate Day 7 Voice Call trigger.',
     actionLabel: 'Trigger Voice Call',
     botId: 'intent-decoder',
     timestamp: new Date().toISOString()

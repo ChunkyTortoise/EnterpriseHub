@@ -216,18 +216,18 @@ class EnhancedPropertyScorer(PropertyScorer):
         area_clusters = {
             "downtown": {
                 "core": ["downtown", "central", "urban core"],
-                "adjacent": ["east austin", "south congress", "rainey district"],
+                "adjacent": ["east rancho_cucamonga", "day creek", "rainey district"],
                 "similar": ["deep ellum", "uptown"],
             },
             "westlake": {
                 "core": ["westlake", "west lake"],
-                "adjacent": ["rollingwood", "bee cave", "lakeway"],
-                "similar": ["tarrytown", "pemberton heights"],
+                "adjacent": ["deer creek", "bee cave", "lakeway"],
+                "similar": ["north rancho", "alta loma estates"],
             },
-            "domain": {
-                "core": ["domain", "north austin"],
+            "ontario_mills": {
+                "core": ["ontario_mills", "north rancho_cucamonga"],
                 "adjacent": ["round rock", "cedar park", "pflugerville"],
-                "similar": ["arboretum", "great hills"],
+                "similar": ["arboretum", "north rancho"],
             },
         }
 

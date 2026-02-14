@@ -10,8 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def mock_conversation_manager():
@@ -82,7 +80,7 @@ async def test_vague_short_answer_low_quality(seller_engine):
 @pytest.mark.asyncio
 async def test_informative_answer_high_quality(seller_engine):
     """Test that informative answers get high quality regardless of length"""
-    informative_message = "I'm relocating to Austin for work in 6 weeks"
+    informative_message = "I'm relocating to Rancho Cucamonga for work in 6 weeks"
 
     quality = await seller_engine._assess_response_quality_semantic(informative_message)
 

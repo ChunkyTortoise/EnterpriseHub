@@ -196,7 +196,7 @@ class StagingEnvironmentTester:
                     "qualification_progress": {
                         "budget_confirmed": conversation_id % 2 == 0,
                         "timeline_discussed": conversation_id % 3 == 0,
-                        "location_preferences": ["Austin", "Cedar Park", "Round Rock"],
+                        "location_preferences": ["Rancho Cucamonga", "Cedar Park", "Round Rock"],
                         "interaction_history": [f"Message {i}" for i in range(10)]
                     },
                     "ai_context": {"last_response": f"Based on your budget...", "intent": "buying"},

@@ -9,7 +9,7 @@
     "Market Configurations": {
       "status": "PASS",
       "validated_configs": [
-        "austin.yaml",
+        "rancho_cucamonga.yaml",
         "dallas.yaml",
         "houston.yaml",
         "san_antonio.yaml",
@@ -66,7 +66,7 @@
     "Service Dependencies": {
       "status": "PASS",
       "validated_services": [
-        "austin_market_service.py",
+        "rancho_cucamonga_market_service.py",
         "rancho_cucamonga_market_service.py",
         "churn_prediction_engine.py",
         "market_prediction_engine.py"
@@ -76,7 +76,7 @@
     "Backward Compatibility": {
       "status": "PASS",
       "compatibility_checks": [
-        "AustinMarketService - PASS",
+        "RanchoCucamongaMarketService - PASS",
         "ContactData schema - PASS"
       ],
       "warnings": []
@@ -85,7 +85,7 @@
       "status": "WARNING",
       "security_checks": [
         "dallas.yaml - Clean",
-        "austin.yaml - Clean",
+        "rancho_cucamonga.yaml - Clean",
         "san_antonio.yaml - Clean",
         "rancho_cucamonga.yaml - Clean",
         "houston.yaml - Clean"
@@ -108,7 +108,7 @@
   ],
   "errors": [],
   "market_configs": {
-    "austin": {
+    "rancho_cucamonga": {
       "neighborhoods": 8,
       "employers": 6,
       "demographics": [

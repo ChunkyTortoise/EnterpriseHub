@@ -220,7 +220,7 @@ railway add --database redis
 ENVIRONMENT=production
 REALTIME_ENABLED=true
 WEBSOCKET_SECURE=true
-WEBSOCKET_ORIGINS=your-domain.com
+WEBSOCKET_ORIGINS=your-ontario_mills.com
 
 # Redis settings (auto-provided by Railway)
 REDIS_URL=redis://default:password@host:port
@@ -415,7 +415,7 @@ htop
 #### Production (Railway)
 - **Environment variables**: Verify in Railway dashboard
 - **Redis timeout**: Increase REDIS_SOCKET_TIMEOUT for slower networks
-- **WebSocket CORS**: Update WEBSOCKET_ORIGINS for your domain
+- **WebSocket CORS**: Update WEBSOCKET_ORIGINS for your ontario_mills
 
 #### Docker
 - **Network isolation**: Use service names in REDIS_URL

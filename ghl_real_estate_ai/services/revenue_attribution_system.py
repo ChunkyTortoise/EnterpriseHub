@@ -685,7 +685,6 @@ class ROIOptimizerAgent(AttributionAgent):
 
             # Allocate budget based on performance (simplified approach)
             recommended_allocation = {}
-            remaining_budget = total_budget
 
             # Allocate 70% to top performers, 30% to others for diversification
             top_performers = sorted_channels[: len(sorted_channels) // 2 + 1]
@@ -908,10 +907,10 @@ class PredictiveModelerAgent(AttributionAgent):
         """Predict optimal future channel allocation."""
         try:
             # Analyze current channel performance trends
-            channel_performance = defaultdict(list)
+            defaultdict(list)
 
             # Group touchpoints by time periods to identify trends
-            touchpoints_sorted = sorted(touchpoints, key=lambda x: x.timestamp)
+            sorted(touchpoints, key=lambda x: x.timestamp)
 
             # Simple trend analysis for each channel
             channel_scores = {}
@@ -1404,7 +1403,7 @@ class RevenueAttributionSystem:
 
     async def _get_touchpoint_data(self, analysis_period: str) -> List[TouchpointEvent]:
         """Get touchpoint data for analysis period (placeholder implementation)."""
-        # TODO: Implement real touchpoint data retrieval
+        # ROADMAP-077: Implement real touchpoint data retrieval from analytics database
         sample_touchpoints = []
 
         # Generate sample touchpoint data
@@ -1431,7 +1430,7 @@ class RevenueAttributionSystem:
 
     async def _get_conversion_data(self, analysis_period: str) -> Dict[str, Any]:
         """Get conversion data for analysis period (placeholder implementation)."""
-        # TODO: Implement real conversion data retrieval
+        # ROADMAP-077: Implement real conversion data retrieval from CRM/sales database
         conversions = {}
         for i in range(15):  # 15 conversions out of 50 leads
             conversions[f"lead_{i}"] = {

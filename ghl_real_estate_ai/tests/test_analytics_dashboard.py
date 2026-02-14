@@ -19,7 +19,6 @@ sys.path.insert(0, str(project_root / "streamlit_demo"))
 
 from analytics import (
 
-@pytest.mark.unit
     calculate_aggregate_metrics,
     create_classification_pie_chart,
     create_conversation_timeline,

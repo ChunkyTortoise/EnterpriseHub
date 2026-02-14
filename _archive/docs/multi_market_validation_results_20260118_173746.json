@@ -6,13 +6,13 @@
       "status": "FAIL",
       "available_markets": [
         "dallas",
-        "austin",
+        "rancho_cucamonga",
         "san_antonio",
         "rancho_cucamonga",
         "houston"
       ],
       "expected_markets": [
-        "austin",
+        "rancho_cucamonga",
         "dallas",
         "houston",
         "san_antonio",
@@ -21,7 +21,7 @@
       "missing_markets": [],
       "errors": [
         "Failed to create service for dallas: Invalid service type for dallas",
-        "Failed to create service for austin: Invalid service type for austin",
+        "Failed to create service for rancho_cucamonga: Invalid service type for rancho_cucamonga",
         "Failed to create service for san_antonio: Invalid service type for san_antonio",
         "Failed to create service for rancho_cucamonga: Invalid service type for rancho_cucamonga",
         "Failed to create service for houston: Invalid service type for houston"
@@ -30,7 +30,7 @@
     "Market Configurations": {
       "status": "PASS",
       "validated_configs": [
-        "austin.yaml",
+        "rancho_cucamonga.yaml",
         "dallas.yaml",
         "houston.yaml",
         "san_antonio.yaml",
@@ -87,7 +87,7 @@
     "Service Dependencies": {
       "status": "PASS",
       "validated_services": [
-        "austin_market_service.py",
+        "rancho_cucamonga_market_service.py",
         "rancho_cucamonga_market_service.py",
         "churn_prediction_engine.py",
         "market_prediction_engine.py"
@@ -97,7 +97,7 @@
     "Backward Compatibility": {
       "status": "PASS",
       "compatibility_checks": [
-        "AustinMarketService - PASS",
+        "RanchoCucamongaMarketService - PASS",
         "ContactData schema - PASS"
       ],
       "warnings": []
@@ -106,7 +106,7 @@
       "status": "WARNING",
       "security_checks": [
         "dallas.yaml - Clean",
-        "austin.yaml - Clean",
+        "rancho_cucamonga.yaml - Clean",
         "san_antonio.yaml - Clean",
         "rancho_cucamonga.yaml - Clean",
         "houston.yaml - Clean"
@@ -129,13 +129,13 @@
   ],
   "errors": [
     "Failed to create service for dallas: Invalid service type for dallas",
-    "Failed to create service for austin: Invalid service type for austin",
+    "Failed to create service for rancho_cucamonga: Invalid service type for rancho_cucamonga",
     "Failed to create service for san_antonio: Invalid service type for san_antonio",
     "Failed to create service for rancho_cucamonga: Invalid service type for rancho_cucamonga",
     "Failed to create service for houston: Invalid service type for houston"
   ],
   "market_configs": {
-    "austin": {
+    "rancho_cucamonga": {
       "neighborhoods": 8,
       "employers": 6,
       "demographics": [

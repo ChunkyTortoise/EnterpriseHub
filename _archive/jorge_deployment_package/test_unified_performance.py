@@ -383,9 +383,9 @@ class UnifiedPerformanceValidator:
                 "expected_commission": 45000
             },
             {
-                "scenario": "Austin $300k lead (out of area)",
+                "scenario": "Rancho Cucamonga $300k lead (out of area)",
                 "budget": 300000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "expected_qualified": False,
                 "expected_commission": 0
             },

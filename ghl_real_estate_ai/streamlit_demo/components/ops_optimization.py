@@ -107,7 +107,7 @@ class OpsOptimizationHub:
         # Mock data for arbitrage map - In production, this pulls from QuantAgent logs
         arbitrage_data = pd.DataFrame(
             {
-                "Zip Code": ["78701", "78704", "78745", "78751", "78758", "78702"],
+                "Zip Code": ["91730", "91730", "91730", "91737", "91758", "91739"],
                 "Market Price": [850000, 750000, 450000, 680000, 390000, 520000],
                 "Predicted Margin": [125000, 110000, 85000, 95000, 75000, 105000],
                 "Net Yield %": [14.7, 14.6, 18.8, 13.9, 19.2, 20.1],
@@ -137,7 +137,7 @@ class OpsOptimizationHub:
         with c1:
             st.markdown("#### 💎 High-Yield Clusters")
             st.info(
-                "**78758 & 78702**: Identified as 'Prime Arbitrage' zones. Low competition combined with high predicted Net Yield (>19%)."
+                "**91758 & 91739**: Identified as 'Prime Arbitrage' zones. Low competition combined with high predicted Net Yield (>19%)."
             )
             st.success("Recommendation: Deploy 'The Hunter' to aggressive CRAG scanning in these sectors.")
 
@@ -337,7 +337,7 @@ class OpsOptimizationHub:
             else:
                 tenant_costs = pd.DataFrame(
                     {
-                        "tenant_id": ["loc_austin", "loc_rancho", "loc_miami", "loc_dallas"],
+                        "tenant_id": ["loc_rancho_cucamonga", "loc_rancho", "loc_miami", "loc_dallas"],
                         "cost_usd": [45.20, 32.10, 28.50, 37.05],
                     }
                 )

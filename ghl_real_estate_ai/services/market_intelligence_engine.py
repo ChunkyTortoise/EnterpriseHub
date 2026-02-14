@@ -1,8 +1,8 @@
 """
-Market Intelligence Engine for Austin Real Estate Market Analysis
+Market Intelligence Engine for Rancho Cucamonga Real Estate Market Analysis
 
 Provides comprehensive geospatial analytics, market heatmap generation, and real-time
-market intelligence for Jorge's Real Estate AI Platform. Optimized for Austin, Texas
+market intelligence for Jorge's Real Estate AI Platform. Optimized for Rancho Cucamonga, California
 market with neighborhood-level granularity and lead density analysis.
 
 Performance Targets:
@@ -107,30 +107,30 @@ class MarketTrend(str, Enum):
 
 class MarketIntelligenceEngine:
     """
-    Comprehensive market intelligence engine for Austin real estate market.
+    Comprehensive market intelligence engine for Rancho Cucamonga real estate market.
 
     Provides geospatial analytics, lead density analysis, conversion tracking,
     and automated hot zone detection with real-time alerting capabilities.
     """
 
     def __init__(self):
-        """Initialize market intelligence engine with Austin-specific configuration."""
+        """Initialize market intelligence engine with Rancho Cucamonga-specific configuration."""
 
         self.cache_service = get_cache_service()
         self.event_publisher = get_event_publisher()
 
-        # Austin market boundaries (expanded for metro area coverage)
-        self.austin_bounds = GeoBounds(
-            north=30.5168,  # North Austin/Round Rock
-            south=30.0986,  # South Austin/Buda
-            east=-97.5684,  # East Austin
-            west=-97.9383,  # West Lake Hills
+        # Rancho Cucamonga market boundaries (expanded for metro area coverage)
+        self.rancho_cucamonga_bounds = GeoBounds(
+            north=30.5168,  # North Rancho Cucamonga/Fontana
+            south=30.0986,  # South Rancho Cucamonga/Buda
+            east=-97.5684,  # East Rancho Cucamonga
+            west=-97.9383,  # Alta Loma
             center_lat=30.2672,
             center_lng=-97.7431,
         )
 
-        # Austin neighborhood definitions with market intelligence
-        self.neighborhoods = self._initialize_austin_neighborhoods()
+        # Rancho Cucamonga neighborhood definitions with market intelligence
+        self.neighborhoods = self._initialize_rancho_cucamonga_neighborhoods()
 
         # Hot zone detection thresholds
         self.hot_zone_thresholds = {
@@ -150,69 +150,69 @@ class MarketIntelligenceEngine:
         }
 
         logger.info(
-            f"MarketIntelligenceEngine initialized for Austin market with {len(self.neighborhoods)} neighborhoods"
+            f"MarketIntelligenceEngine initialized for Rancho Cucamonga market with {len(self.neighborhoods)} neighborhoods"
         )
 
-    def _initialize_austin_neighborhoods(self) -> List[NeighborhoodProfile]:
-        """Initialize Austin neighborhood profiles with current market data."""
+    def _initialize_rancho_cucamonga_neighborhoods(self) -> List[NeighborhoodProfile]:
+        """Initialize Rancho Cucamonga neighborhood profiles with current market data."""
 
         neighborhoods_data = [
             {
-                "name": "Downtown Austin",
+                "name": "Downtown Rancho Cucamonga",
                 "centroid_lat": 30.2672,
                 "centroid_lng": -97.7431,
                 "bounds": {"north": 30.2750, "south": 30.2594, "east": -97.7300, "west": -97.7562},
             },
             {
-                "name": "South Congress",
+                "name": "Day Creek",
                 "centroid_lat": 30.2515,
                 "centroid_lng": -97.7481,
                 "bounds": {"north": 30.2600, "south": 30.2430, "east": -97.7350, "west": -97.7612},
             },
             {
-                "name": "East Austin",
+                "name": "East Rancho Cucamonga",
                 "centroid_lat": 30.2713,
                 "centroid_lng": -97.7156,
                 "bounds": {"north": 30.2850, "south": 30.2576, "east": -97.7000, "west": -97.7312},
             },
             {
-                "name": "West Lake Hills",
+                "name": "Alta Loma",
                 "centroid_lat": 30.2733,
                 "centroid_lng": -97.8089,
                 "bounds": {"north": 30.2900, "south": 30.2566, "east": -97.7800, "west": -97.8378},
             },
             {
-                "name": "North Austin",
+                "name": "North Rancho Cucamonga",
                 "centroid_lat": 30.3878,
                 "centroid_lng": -97.7272,
                 "bounds": {"north": 30.4100, "south": 30.3656, "east": -97.7000, "west": -97.7544},
             },
             {
-                "name": "Zilker/Barton Hills",
+                "name": "Victoria Gardens/Grapeland",
                 "centroid_lat": 30.2669,
                 "centroid_lng": -97.7731,
                 "bounds": {"north": 30.2800, "south": 30.2538, "east": -97.7550, "west": -97.7912},
             },
             {
-                "name": "Mueller",
+                "name": "Haven City",
                 "centroid_lat": 30.2936,
                 "centroid_lng": -97.7069,
                 "bounds": {"north": 30.3050, "south": 30.2822, "east": -97.6900, "west": -97.7238},
             },
             {
-                "name": "Tarrytown",
+                "name": "North Rancho",
                 "centroid_lat": 30.2869,
                 "centroid_lng": -97.7661,
                 "bounds": {"north": 30.2980, "south": 30.2758, "east": -97.7500, "west": -97.7822},
             },
             {
-                "name": "Cedar Park",
+                "name": "Upland",
                 "centroid_lat": 30.5052,
                 "centroid_lng": -97.8203,
                 "bounds": {"north": 30.5200, "south": 30.4904, "east": -97.8000, "west": -97.8406},
             },
             {
-                "name": "Round Rock",
+                "name": "Fontana",
                 "centroid_lat": 30.5083,
                 "centroid_lng": -97.6789,
                 "bounds": {"north": 30.5250, "south": 30.4916, "east": -97.6500, "west": -97.7078},
@@ -341,7 +341,7 @@ class MarketIntelligenceEngine:
             logger.error(f"Lead density heatmap generation failed: {e} (took {processing_time_ms:.1f}ms)")
             raise RuntimeError(f"Failed to generate lead density heatmap: {str(e)}")
 
-    async def calculate_market_metrics(self, region: str = "austin_tx", time_range_days: int = 30) -> Dict[str, Any]:
+    async def calculate_market_metrics(self, region: str = "rancho_cucamonga_tx", time_range_days: int = 30) -> Dict[str, Any]:
         """
         Calculate comprehensive market intelligence metrics with parallel processing.
 
@@ -464,11 +464,11 @@ class MarketIntelligenceEngine:
 
                 # Generate realistic ML score with neighborhood bias
                 base_score = {
-                    "Downtown Austin": 78.5,
-                    "West Lake Hills": 82.3,
-                    "South Congress": 75.2,
-                    "East Austin": 69.8,
-                    "Mueller": 81.4,
+                    "Downtown Rancho Cucamonga": 78.5,
+                    "Alta Loma": 82.3,
+                    "Day Creek": 75.2,
+                    "East Rancho Cucamonga": 69.8,
+                    "Haven City": 81.4,
                 }.get(neighborhood.name, 72.0)
 
                 ml_score = np.random.normal(base_score, 8.0)
@@ -493,7 +493,7 @@ class MarketIntelligenceEngine:
         return leads
 
     async def _aggregate_by_neighborhood(self, leads: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Aggregate lead data by Austin neighborhoods with market intelligence."""
+        """Aggregate lead data by Rancho Cucamonga neighborhoods with market intelligence."""
 
         aggregated = []
 
@@ -541,15 +541,15 @@ class MarketIntelligenceEngine:
         return aggregated
 
     async def _aggregate_by_zipcode(self, leads: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Aggregate lead data by ZIP code (simplified for Austin market)."""
+        """Aggregate lead data by ZIP code (simplified for Rancho Cucamonga market)."""
 
-        # Austin ZIP code mappings (simplified)
+        # Rancho Cucamonga ZIP code mappings (simplified)
         zipcode_centers = {
-            "78701": {"lat": 30.2672, "lng": -97.7431, "name": "Downtown Austin"},
-            "78704": {"lat": 30.2515, "lng": -97.7481, "name": "South Austin"},
-            "78702": {"lat": 30.2713, "lng": -97.7156, "name": "East Austin"},
-            "78746": {"lat": 30.2733, "lng": -97.8089, "name": "West Lake Hills"},
-            "78759": {"lat": 30.3878, "lng": -97.7272, "name": "North Austin"},
+            "91730": {"lat": 30.2672, "lng": -97.7431, "name": "Downtown Rancho Cucamonga"},
+            "91730": {"lat": 30.2515, "lng": -97.7481, "name": "South Rancho Cucamonga"},
+            "91739": {"lat": 30.2713, "lng": -97.7156, "name": "East Rancho Cucamonga"},
+            "91737": {"lat": 30.2733, "lng": -97.8089, "name": "Alta Loma"},
+            "91739": {"lat": 30.3878, "lng": -97.7272, "name": "North Rancho Cucamonga"},
         }
 
         aggregated = []
@@ -583,12 +583,12 @@ class MarketIntelligenceEngine:
         return aggregated
 
     async def _aggregate_by_city(self, leads: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Aggregate lead data by city level (Austin metro area)."""
+        """Aggregate lead data by city level (Rancho Cucamonga metro area)."""
 
         cities = {
-            "Austin": {"bounds": self.austin_bounds, "leads": []},
-            "Round Rock": {"bounds": GeoBounds(30.49, 30.53, -97.65, -97.72, 30.51, -97.685), "leads": []},
-            "Cedar Park": {"bounds": GeoBounds(30.48, 30.52, -97.80, -97.85, 30.50, -97.825), "leads": []},
+            "Rancho Cucamonga": {"bounds": self.rancho_cucamonga_bounds, "leads": []},
+            "Fontana": {"bounds": GeoBounds(30.49, 30.53, -97.65, -97.72, 30.51, -97.685), "leads": []},
+            "Upland": {"bounds": GeoBounds(30.48, 30.52, -97.80, -97.85, 30.50, -97.825), "leads": []},
         }
 
         # Assign leads to cities
@@ -703,7 +703,7 @@ class MarketIntelligenceEngine:
             "overall_market_direction": "increasing",
             "lead_volume_trend": "stable",
             "quality_trend": "increasing",
-            "geographic_shifts": ["East Austin growth", "West Lake Hills premium demand"],
+            "geographic_shifts": ["East Rancho Cucamonga growth", "Alta Loma premium demand"],
             "seasonal_factors": ["Spring buying season", "Low inventory pressure"],
         }
 

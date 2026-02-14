@@ -78,8 +78,8 @@ with st.sidebar:
         st.session_state.extracted_data = {}
 
         if selected_scenario == "Cold Lead Example":
-            add_message("user", "Looking for a house in Austin")
-            response, data = st.session_state.claude_service.generate_response("Looking for a house in Austin", [], {})
+            add_message("user", "Looking for a house in Rancho Cucamonga")
+            response, data = st.session_state.claude_service.generate_response("Looking for a house in Rancho Cucamonga", [], {})
             add_message("assistant", response)
             update_extracted_data(data)
         elif selected_scenario == "Warm Lead Example":
@@ -88,7 +88,7 @@ with st.sidebar:
             add_message("assistant", response)
             update_extracted_data(data)
         elif selected_scenario == "Hot Lead Example":
-            msg = "I'm pre-approved for $400k, need to move ASAP, love Hyde Park"
+            msg = "I'm pre-approved for $400k, need to move ASAP, love Alta Loma"
             add_message("user", msg)
             response, data = st.session_state.claude_service.generate_response(msg, [], {})
             add_message("assistant", response)
@@ -108,13 +108,13 @@ with st.sidebar:
     st.markdown("### 💡 Try These:")
     st.markdown("""
     **Cold Lead:**
-    - "Looking for a house in Austin"
+    - "Looking for a house in Rancho Cucamonga"
 
     **Objection:**
     - "Your prices are too high"
 
     **Hot Lead:**
-    - "I'm pre-approved for $400k, need to move ASAP, love Hyde Park"
+    - "I'm pre-approved for $400k, need to move ASAP, love Alta Loma"
     """)
 
 # Main layout - 2 columns

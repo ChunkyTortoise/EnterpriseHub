@@ -134,14 +134,14 @@ QUALIFICATION_PROMPT_BUYER = """You are in lead qualification mode for a potenti
 ### 2. LOCATION (Priority: High)
 **Goal:** Narrow down target neighborhoods/areas
 **Questions to ask:**
-- "Are you open to suburbs like Round Rock or Pflugerville, or strictly Austin proper?"
+- "Are you open to suburbs like Fontana or Ontario, or strictly Rancho Cucamonga proper?"
 - "Any specific neighborhoods you love? Or areas to avoid?"
-- "What's your commute situation—need to be near downtown, Domain, or flexible?"
+- "What's your commute situation—need to be near Victoria Gardens, Ontario Mills, or flexible?"
 
 **Qualifying Signals:**
-✅ Specific: "Hyde Park or Clarksville" or "Round Rock with good schools"
+✅ Specific: "Etiwanda or Alta Loma" or "North Rancho with good schools"
 ✅ Flexible but with criteria: "Anywhere with Walk Score >70"
-⚠️ Too broad: "Anywhere in Texas" (not serious or needs more education)
+⚠️ Too broad: "Anywhere in California" (not serious or needs more education)
 
 ### 3. TIMELINE (Priority: Critical)
 **Goal:** Understand urgency and readiness to act
@@ -187,17 +187,17 @@ After each response, count how many qualifying questions have been answered (Bud
 
 ## RESPONSE EXAMPLE (Buyer Qualification)
 
-**User:** "I'm looking for a house in Austin"
+**User:** "I'm looking for a house in Rancho Cucamonga"
 
 **Your Response:**
-"Hey! Austin's market is moving fast. Quick question: are you open to suburbs like Round Rock or Pflugerville (more house for the money), or looking specifically in Austin proper?"
+"Hey! Rancho Cucamonga's market is moving fast. Quick question: are you open to suburbs like Fontana or Ontario (more house for the money), or looking specifically in Rancho Cucamonga proper?"
 
 [Wait for response, then ask about budget or timeline based on their answer]
 
 **User:** "Open to suburbs. Need good schools."
 
 **Your Response:**
-"Perfect! Pflugerville and Round Rock both have excellent schools. What's your budget? That'll help me point you to the best neighborhoods."
+"Perfect! Fontana and Ontario both have excellent schools in certain areas. What's your budget? That'll help me point you to the best neighborhoods."
 
 [Continue gathering: budget → timeline → bedrooms/must-haves → financing status]
 """
@@ -251,10 +251,10 @@ After each response, count how many qualifying questions have been answered (Add
 
 [Wait for response, then ask about timeline and motivation]
 
-**User:** "Hyde Park. 3 bed, 2 bath. Built in the 40s but updated."
+**User:** "Etiwanda. 3 bed, 2 bath. Built in the 90s but updated."
 
 **Your Response:**
-"Nice—Hyde Park homes are in high demand right now. What's prompting the move? Just helps me understand your timeline."
+"Nice—Etiwanda homes are in high demand right now. What's prompting the move? Just helps me understand your timeline."
 
 [Continue gathering: motivation → timeline → condition → price expectations]
 """
@@ -461,7 +461,7 @@ def _get_next_seller_question(seller_data: dict) -> str:
 OBJECTION_HANDLERS = {
     "price_too_high": {
         "trigger_phrases": ["too expensive", "out of my budget", "can't afford", "price is high", "overpriced"],
-        "response_template": """I totally understand—Austin prices can feel steep. Here's some context:
+        "response_template": """I totally understand—Rancho Cucamonga prices can feel steep. Here's some context:
 
 {property_name} is actually priced {percentage_vs_market} compared to similar homes in {neighborhood}. {Comparable_sales_data}.
 
@@ -527,7 +527,7 @@ Want me to connect you with a lender who specializes in credit rebuilding? They 
         "response_template": """I get it—timing the market is tempting. Here's the reality:
 
 **If you wait for prices to drop:**
-- Austin prices have risen 8% annually for 10 years (even during downturns, dips were short)
+- Rancho Cucamonga prices have risen 8% annually for 10 years (even during downturns, dips were short)
 - If rates drop, demand surges → prices rise from competition
 
 **If you wait for rates to drop:**
@@ -584,7 +584,7 @@ Want me to connect you with {agent_name} to strategize the best approach?""",
 
 Also, you can get creative:
 - Gift from family (parents can gift down payment tax-free)
-- Down payment assistance programs (Texas offers several)
+- Down payment assistance programs (California offers several like GSFA and CalHFA)
 - IRA withdrawal (up to $10k penalty-free for first home)
 
 Want me to connect you with a lender who can walk through your specific options?""",
@@ -860,12 +860,12 @@ if __name__ == "__main__":
         conversation_stage="qualifying",
         lead_score=65,
         extracted_preferences={
-            "budget": "$400k max",
-            "location": "Round Rock or Pflugerville",
+            "budget": "$800k max",
+            "location": "Fontana or Ontario",
             "timeline": "End of June",
             "must_haves": "3 bedrooms, good schools",
         },
-        relevant_knowledge="Pflugerville has excellent schools (8-9/10 ratings). Median home price is $375k. Low property taxes compared to Austin.",
+        relevant_knowledge="Fontana has excellent schools in the Etiwanda district. Median home price is $675k. Great commute options via I-15 and I-210.",
         is_buyer=True,
     )
 
@@ -879,11 +879,11 @@ if __name__ == "__main__":
     objection_response = get_objection_response(
         "price_too_high",
         context={
-            "property_name": "4512 Duval St",
+            "property_name": "12345 Victoria Gardens Ln",
             "percentage_vs_market": "3% below market average",
-            "neighborhood": "Hyde Park",
-            "comparable_sales_data": "3 similar homes sold for $680k-700k in the past 60 days",
-            "nearby_affordable": "Mueller or North Loop",
+            "neighborhood": "Etiwanda",
+            "comparable_sales_data": "3 similar homes sold for $880k-900k in the past 60 days",
+            "nearby_affordable": "Fontana or Ontario",
         },
     )
 

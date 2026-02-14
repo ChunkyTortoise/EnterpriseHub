@@ -288,7 +288,7 @@ def main():
         "First-Time Buyer": {
             "extracted_preferences": {
                 "budget": "$450,000",
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "next 6 months",
                 "bedrooms": 3,
                 "financing": "need pre-approval",
@@ -302,12 +302,12 @@ def main():
         "Investor": {
             "extracted_preferences": {
                 "budget": "$800,000",
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "ASAP",
                 "motivation": "investment property",
             },
             "conversation_history": [
-                {"content": "Looking for investment properties in Austin"},
+                {"content": "Looking for investment properties in Rancho Cucamonga"},
                 {"content": "Need positive cash flow, $800k budget"},
                 {"content": "Can close quickly if numbers work"},
             ],
@@ -315,7 +315,7 @@ def main():
         "Luxury Buyer": {
             "extracted_preferences": {
                 "budget": "$2,500,000",
-                "location": "Austin, TX - Westlake",
+                "location": "Rancho Cucamonga, CA - Westlake",
                 "timeline": "within a year",
                 "bedrooms": 5,
                 "must_haves": "pool, wine cellar",

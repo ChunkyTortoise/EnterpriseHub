@@ -526,7 +526,7 @@ class JorgePerformanceValidator:
                 "expected": {"jorge_fit": True, "priority": "high"}
             },
             {
-                "message": "Need house in Austin for $400k",
+                "message": "Need house in Rancho Cucamonga for $400k",
                 "expected": {"jorge_fit": False, "priority": "normal"}  # Outside service area
             },
             {

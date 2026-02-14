@@ -21,22 +21,22 @@ st.markdown("---")
 # Define conversation flows
 conversations = {
     "🏠 Buyer Inquiry": [
-        {"role": "user", "message": "I'm looking for a 3-bedroom home in Austin under $800K"},
+        {"role": "user", "message": "I'm looking for a 3-bedroom home in Rancho Cucamonga under $800K"},
         {
             "role": "ai",
-            "message": "Great! Austin is a hot market right now. I have 4 properties that match your criteria. The Domain area has 2 new listings at $750K and $780K - both 3bed/2.5bath with modern kitchens and home offices.\n\nThe West Lake area also has 2 options at $775K and $795K with larger yards.\n\nWhen would you like to see them? I can schedule showings as early as tomorrow.",
+            "message": "Great! Rancho Cucamonga is a hot market right now. I have 4 properties that match your criteria. The Ontario Mills area has 2 new listings at $750K and $780K - both 3bed/2.5bath with modern kitchens and home offices.\n\nThe West Lake area also has 2 options at $775K and $795K with larger yards.\n\nWhen would you like to see them? I can schedule showings as early as tomorrow.",
         },
-        {"role": "user", "message": "What about the Domain properties? Tell me more"},
+        {"role": "user", "message": "What about the Ontario Mills properties? Tell me more"},
         {
             "role": "ai",
-            "message": "Perfect choice! Here are the details:\n\n**123 Oak Street** - $750,000\n• 3 bed, 2.5 bath, 2,100 sq ft\n• Built 2020, open floor plan\n• Smart home features, chef's kitchen\n• Walking distance to Domain shops\n• HOA: $150/month\n\n**456 Maple Ave** - $780,000\n• 3 bed, 2.5 bath, 2,300 sq ft  \n• Built 2021, luxury finishes\n• Pool, covered patio, 2-car garage\n• Top-rated schools nearby\n• HOA: $200/month\n\nBoth are move-in ready. Would you like me to send you the full listing details and schedule a showing?",
+            "message": "Perfect choice! Here are the details:\n\n**123 Oak Street** - $750,000\n• 3 bed, 2.5 bath, 2,100 sq ft\n• Built 2020, open floor plan\n• Smart home features, chef's kitchen\n• Walking distance to Ontario Mills shops\n• HOA: $150/month\n\n**456 Maple Ave** - $780,000\n• 3 bed, 2.5 bath, 2,300 sq ft  \n• Built 2021, luxury finishes\n• Pool, covered patio, 2-car garage\n• Top-rated schools nearby\n• HOA: $200/month\n\nBoth are move-in ready. Would you like me to send you the full listing details and schedule a showing?",
         },
     ],
     "💰 Seller Valuation": [
-        {"role": "user", "message": "What's my home worth? I'm in Downtown Austin"},
+        {"role": "user", "message": "What's my home worth? I'm in Downtown Rancho Cucamonga"},
         {
             "role": "ai",
-            "message": "I'd love to help you! Based on recent sales in Downtown Austin, similar homes have been selling for $650K-$750K depending on size and condition.\n\nTo give you an accurate valuation, can you share:\n• Your address (or cross streets)\n• Square footage\n• Number of bedrooms/bathrooms\n• Any recent upgrades?\n\nI'll run a detailed Comparative Market Analysis (CMA) for you right away.",
+            "message": "I'd love to help you! Based on recent sales in Downtown Rancho Cucamonga, similar homes have been selling for $650K-$750K depending on size and condition.\n\nTo give you an accurate valuation, can you share:\n• Your address (or cross streets)\n• Square footage\n• Number of bedrooms/bathrooms\n• Any recent upgrades?\n\nI'll run a detailed Comparative Market Analysis (CMA) for you right away.",
         },
         {"role": "user", "message": "789 Congress Ave, 2000 sq ft, 2 bed 2 bath, renovated kitchen last year"},
         {
@@ -48,7 +48,7 @@ conversations = {
         {"role": "user", "message": "That's way too expensive. I saw similar homes for $100K less"},
         {
             "role": "ai",
-            "message": "I totally understand - pricing is important! Let me explain what you're getting with this property:\n\n**Why the price difference:**\n• This home was renovated in 2021 (new HVAC, roof, appliances)\n• Those $100K cheaper listings are likely 15-20 years older\n• This neighborhood appreciated 8% last year vs 3% city average\n• Schools here are top 10% in Austin (huge value driver)\n\n**Here's what I recommend:**\n1. Let me show you both - you'll see the difference\n2. I can pull comparable sales data to justify the price\n3. If you love it, we can negotiate - sellers just reduced $15K\n\nWhat's your target budget? I want to make sure I'm showing you the best value for your money.",
+            "message": "I totally understand - pricing is important! Let me explain what you're getting with this property:\n\n**Why the price difference:**\n• This home was renovated in 2021 (new HVAC, roof, appliances)\n• Those $100K cheaper listings are likely 15-20 years older\n• This neighborhood appreciated 8% last year vs 3% city average\n• Schools here are top 10% in Rancho Cucamonga (huge value driver)\n\n**Here's what I recommend:**\n1. Let me show you both - you'll see the difference\n2. I can pull comparable sales data to justify the price\n3. If you love it, we can negotiate - sellers just reduced $15K\n\nWhat's your target budget? I want to make sure I'm showing you the best value for your money.",
         },
         {"role": "user", "message": "My max is $700K"},
         {

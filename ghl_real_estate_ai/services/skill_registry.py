@@ -13,11 +13,12 @@ class SkillCategory(Enum):
     STRATEGY = "Strategy"
     ACTION = "Action"
     GOVERNANCE = "Governance"
+    RESEARCH = "Research"
 
 
 class SkillRegistry:
     """
-    Registry that manages tool access based on 5 core skill categories.
+    Registry that manages tool access based on 6 core skill categories.
     Used by ClaudeOrchestrator to filter and organize tools for specialist agents.
     """
 
@@ -51,6 +52,14 @@ class SkillRegistry:
 
         # Governance: ROI and platform health
         self._register("get_llm_roi", SkillCategory.GOVERNANCE, "AnalyticsIntelligence")
+
+        # Research: Perplexity and NotebookLM capabilities
+        self._register("web_research", SkillCategory.RESEARCH, "ResearchIntelligence")
+        self._register("market_trends_lookup", SkillCategory.RESEARCH, "ResearchIntelligence")
+        self._register("create_research_notebook", SkillCategory.RESEARCH, "ResearchIntelligence")
+        self._register("add_to_notebook", SkillCategory.RESEARCH, "ResearchIntelligence")
+        self._register("query_notebook", SkillCategory.RESEARCH, "ResearchIntelligence")
+        self._register("generate_notebook_summary", SkillCategory.RESEARCH, "ResearchIntelligence")
 
     def _register(self, tool_name: str, category: SkillCategory, server_name: str):
         if tool_name not in self.categories[category]:

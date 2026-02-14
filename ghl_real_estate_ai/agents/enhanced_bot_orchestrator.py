@@ -399,7 +399,7 @@ class EnhancedBotOrchestrator:
         """Fallback to original lead bot."""
         from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
-        original_lead_bot = LeadBotWorkflow()
+        LeadBotWorkflow()
         # Mock sequence execution for fallback
 
         return {"bot_type": "original_lead", "enhancement_level": "fallback", "fallback_reason": "Enhanced bot failure"}

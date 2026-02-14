@@ -868,7 +868,7 @@ class IntelligenceContextService:
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get current performance metrics."""
-        total_operations = self.metrics["total_preservations"] + self.metrics["total_retrievals"]
+        self.metrics["total_preservations"] + self.metrics["total_retrievals"]
         cache_operations = self.metrics["cache_hits"] + self.metrics["cache_misses"]
 
         cache_hit_rate = self.metrics["cache_hits"] / cache_operations * 100 if cache_operations > 0 else 0.0

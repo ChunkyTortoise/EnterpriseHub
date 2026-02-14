@@ -14,6 +14,7 @@ from ghl_real_estate_ai.models.buyer_persona import (
     BuyerPersonaType,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 
 logger = logging.getLogger(__name__)
 
@@ -238,8 +239,9 @@ class BuyerPersonaService:
         ),
     }
 
-    def __init__(self):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         self.cache_service = get_cache_service()
+        self.llm = llm_client or LLMClient(provider=LLMProvider.CLAUDE)
 
     async def classify_buyer_type(
         self,
@@ -264,37 +266,135 @@ class BuyerPersonaService:
             logger.info("Returning cached buyer persona classification")
             return BuyerPersonaClassification.model_validate(cached_result)
 
-        logger.info("Classifying buyer persona from conversation")
+        logger.info("Classifying buyer persona from conversation using LLM")
 
-        # Analyze conversation for persona signals
-        persona_scores = self._analyze_persona_signals(conversation_history)
+        # Primary Strategy: LLM Semantic Analysis
+        llm_result = await self._classify_persona_llm(conversation_history, lead_data)
+        
+        if llm_result and llm_result.persona_type != BuyerPersonaType.UNKNOWN and llm_result.confidence > 0.6:
+            classification = llm_result
+        else:
+            # Fallback Strategy: Keyword and Behavioral Analysis
+            logger.info("LLM classification low confidence or failed, falling back to heuristics")
+            persona_scores = self._analyze_persona_signals(conversation_history)
 
-        # Determine primary persona
-        primary_persona = max(persona_scores, key=persona_scores.get)
-        confidence = persona_scores[primary_persona]
+            # Determine primary persona
+            primary_persona = max(persona_scores, key=persona_scores.get)
+            confidence = persona_scores[primary_persona]
 
-        # Get detected signals
-        detected_signals = self._get_detected_signals(
-            conversation_history, primary_persona
+            # Get detected signals
+            detected_signals = self._get_detected_signals(
+                conversation_history, primary_persona
+            )
+
+            # Analyze behavioral signals
+            behavioral_signals = self._analyze_behavioral_signals(conversation_history)
+
+            # Classify indicators
+            primary_indicators, secondary_indicators = self._classify_indicators(
+                detected_signals, behavioral_signals
+            )
+
+            # Build classification result
+            classification = BuyerPersonaClassification(
+                persona_type=primary_persona,
+                confidence=confidence,
+                detected_signals=detected_signals,
+                behavioral_signals=behavioral_signals,
+                primary_indicators=primary_indicators,
+                secondary_indicators=secondary_indicators,
+            )
+
+        # Cache result for 1 hour (personas can change as conversation progresses)
+        await self.cache_service.set(cache_key, classification.model_dump(), ttl=3600)
+
+        logger.info(
+            f"Buyer persona classified: {classification.persona_type.value} (confidence: {classification.confidence:.2f})"
         )
 
-        # Analyze behavioral signals
-        behavioral_signals = self._analyze_behavioral_signals(conversation_history)
+        return classification
 
-        # Classify indicators
-        primary_indicators, secondary_indicators = self._classify_indicators(
-            detected_signals, behavioral_signals
-        )
+    async def _classify_persona_llm(
+        self,
+        conversation_history: List[Dict[str, Any]],
+        lead_data: Optional[Dict[str, Any]] = None,
+    ) -> Optional[BuyerPersonaClassification]:
+        """
+        Use LLM for semantic persona classification.
+        """
+        prompt = f"""
+        Analyze the following real estate conversation and lead data to classify the buyer persona.
+        
+        CONVERSATION:
+        {json.dumps(conversation_history, indent=2)}
+        
+        LEAD DATA:
+        {json.dumps(lead_data, indent=2)}
+        
+        PERSONA DEFINITIONS:
+        - first_time: Never owned property, needs education, cautious, validation-seeking.
+        - upsizer: Moving to larger property, growing family, space needs, equity leverage.
+        - downsizer: Reducing living space, empty nest, maintenance reduction, equity access.
+        - investor: Purchasing for ROI, cash flow focus, numbers-driven, deal-focused.
+        - relocator: Job/region change, time pressure, area unfamiliarity.
+        - luxury: High-end purchase, amenity focus, lifestyle vision, premium features.
+        
+        Return ONLY a JSON object:
+        {{
+            "persona": "one of the above keys",
+            "confidence": 0.0 to 1.0,
+            "signals": ["detected keyword or signal 1", "signal 2"],
+            "behavioral_insights": {{
+                "urgency": 0.0 to 1.0,
+                "data_focus": 0.0 to 1.0,
+                "emotional_engagement": 0.0 to 1.0
+            }},
+            "reasoning": "Brief explanation of the classification"
+        }}
+        """
 
-        # Build classification result
-        classification = BuyerPersonaClassification(
-            persona_type=primary_persona,
-            confidence=confidence,
-            detected_signals=detected_signals,
-            behavioral_signals=behavioral_signals,
-            primary_indicators=primary_indicators,
-            secondary_indicators=secondary_indicators,
-        )
+        try:
+            response = await self.llm.agenerate(
+                prompt=prompt,
+                system_prompt="You are an expert Real Estate Behavioral Analyst specializing in buyer segmentation.",
+                complexity=TaskComplexity.COMPLEX,
+                max_tokens=500,
+                temperature=0.0,
+            )
+
+            content = response.content.strip()
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            
+            data = json.loads(content)
+            
+            persona_map = {
+                "first_time": BuyerPersonaType.FIRST_TIME,
+                "upsizer": BuyerPersonaType.UPSIZER,
+                "downsizer": BuyerPersonaType.DOWNSIZER,
+                "investor": BuyerPersonaType.INVESTOR,
+                "relocator": BuyerPersonaType.RELOCATOR,
+                "luxury": BuyerPersonaType.LUXURY,
+            }
+            
+            persona_type = persona_map.get(data.get("persona"), BuyerPersonaType.UNKNOWN)
+            
+            return BuyerPersonaClassification(
+                persona_type=persona_type,
+                confidence=data.get("confidence", 0.0),
+                detected_signals=data.get("signals", []),
+                behavioral_signals={
+                    "urgency": data.get("behavioral_insights", {}).get("urgency", 0.0),
+                    "data_focus": data.get("behavioral_insights", {}).get("data_focus", 0.0),
+                    "emotional_engagement": data.get("behavioral_insights", {}).get("emotional_engagement", 0.0),
+                },
+                primary_indicators=data.get("signals", [])[:3],
+                secondary_indicators=[f"Reasoning: {data.get('reasoning', '')}"]
+            )
+        except Exception as e:
+            logger.error(f"Error in LLM persona classification: {e}")
+            return None
+
 
         # Cache result for 1 hour (personas can change as conversation progresses)
         await self.cache_service.set(cache_key, classification.model_dump(), ttl=3600)

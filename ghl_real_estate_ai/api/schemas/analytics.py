@@ -140,7 +140,7 @@ class FeatureTrendResponse(BaseModel):
 class MarketHeatmapRequest(BaseModel):
     """Request for geospatial market intelligence heatmap data."""
 
-    region: str = Field(default="austin_tx", description="Geographic region identifier")
+    region: str = Field(default="rancho_cucamonga_tx", description="Geographic region identifier")
     metric_type: AnalyticsMetric = Field(default=AnalyticsMetric.LEAD_DENSITY, description="Market metric to visualize")
     time_range_days: int = Field(default=30, ge=1, le=365, description="Time range for data aggregation")
     granularity: Granularity = Field(default=Granularity.NEIGHBORHOOD, description="Geographic granularity level")
@@ -180,7 +180,7 @@ class MarketHeatmapDataPoint(BaseModel):
                 "lat": 30.2672,
                 "lng": -97.7431,
                 "value": 85.5,
-                "label": "Downtown Austin",
+                "label": "Downtown Rancho Cucamonga",
                 "metadata": {"avg_score": 78.5, "hot_leads": 12, "conversion_rate": 0.15, "total_leads": 80},
             }
         }
@@ -212,7 +212,7 @@ class MarketMetricsResponse(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "region": "austin_tx",
+                "region": "rancho_cucamonga_tx",
                 "metrics": {
                     "lead_density": {"avg": 45.2, "max": 120.5, "hot_zones": 8},
                     "conversion_rates": {"avg": 0.12, "best_zone": 0.28},
@@ -281,7 +281,7 @@ class MarketChangeEvent(AnalyticsWebSocketEvent):
                 "event_id": "market_change_123456",
                 "event_type": "market_change",
                 "data": {
-                    "region": "austin_tx",
+                    "region": "rancho_cucamonga_tx",
                     "metric": "lead_density",
                     "zone": "Downtown",
                     "old_value": 45.2,
@@ -307,7 +307,7 @@ class HotZoneDetectionEvent(AnalyticsWebSocketEvent):
                 "event_id": "hot_zone_123456",
                 "event_type": "hot_zone_detection",
                 "data": {
-                    "zone_name": "South Congress",
+                    "zone_name": "Day Creek",
                     "zone_lat": 30.2515,
                     "zone_lng": -97.7481,
                     "hot_zone_score": 88.5,

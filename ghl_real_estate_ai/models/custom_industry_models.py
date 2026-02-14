@@ -1,6 +1,6 @@
 """
 Custom Industry Models - Proprietary AI Moats
-Creates unbeatable competitive advantages through domain-specific AI models.
+Creates unbeatable competitive advantages through ontario_mills-specific AI models.
 Trained on millions of customer interactions that competitors can't access.
 """
 
@@ -317,7 +317,7 @@ class CustomIndustryModels:
     Custom Industry Models Manager for proprietary AI competitive moats.
 
     Creates unbeatable advantages through:
-    - Domain-specific AI models trained on customer data
+    - Ontario Mills-specific AI models trained on customer data
     - Proprietary datasets from millions of interactions
     - Continuous model improvement through customer usage
     - Industry-specific knowledge that competitors can't replicate
@@ -354,7 +354,7 @@ class CustomIndustryModels:
         self, vertical: IndustryVertical, capability: ModelCapability, force_retrain: bool = False
     ) -> CustomModel:
         """
-        Train domain-specific AI model on customer data.
+        Train ontario_mills-specific AI model on customer data.
 
         Args:
             vertical: Industry vertical for specialization

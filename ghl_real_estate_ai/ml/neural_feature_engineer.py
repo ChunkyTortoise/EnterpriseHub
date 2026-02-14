@@ -9,7 +9,7 @@ Features:
 - Neural network-based feature embedding and transformation
 - Automated feature engineering with genetic programming
 - Real-time feature pipeline with caching optimization
-- Domain-specific feature engineering for real estate
+- Ontario Mills-specific feature engineering for real estate
 - Privacy-preserving feature processing
 
 Business Impact: Enhanced property matching accuracy through advanced feature engineering
@@ -159,8 +159,8 @@ class NeuralTextEncoder(nn.Module):
             nn.Linear(bert_dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 64)
         )
 
-        # Domain-specific real estate extractor
-        self.domain_extractor = nn.Sequential(nn.Linear(bert_dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 64))
+        # Ontario Mills-specific real estate extractor
+        self.ontario_mills_extractor = nn.Sequential(nn.Linear(bert_dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 64))
 
     def forward(self, texts: List[str]) -> Dict[str, torch.Tensor]:
         """Extract neural text features."""
@@ -178,12 +178,12 @@ class NeuralTextEncoder(nn.Module):
         # Extract different types of features
         semantic_features = self.semantic_extractor(pooled_output)
         syntactic_features = self.syntactic_extractor(pooled_output)
-        domain_features = self.domain_extractor(pooled_output)
+        ontario_mills_features = self.ontario_mills_extractor(pooled_output)
 
         return {
             "semantic": semantic_features,
             "syntactic": syntactic_features,
-            "domain": domain_features,
+            "ontario_mills": ontario_mills_features,
             "raw_embeddings": pooled_output,
         }
 
@@ -513,14 +513,14 @@ class NeuralFeatureEngineer:
                     all_types[name] = FeatureType.GEOSPATIAL
                 extraction_metadata["geospatial"] = geo_metadata
 
-            # 6. Extract domain-specific features
-            domain_features, domain_names, domain_metadata = await self._extract_domain_features(data, data_type)
-            if domain_features.size > 0:
-                all_features.append(domain_features)
-                all_names.extend(domain_names)
-                for name in domain_names:
+            # 6. Extract ontario_mills-specific features
+            ontario_mills_features, ontario_mills_names, ontario_mills_metadata = await self._extract_ontario_mills_features(data, data_type)
+            if ontario_mills_features.size > 0:
+                all_features.append(ontario_mills_features)
+                all_names.extend(ontario_mills_names)
+                for name in ontario_mills_names:
                     all_types[name] = FeatureType.DERIVED_INTERACTION
-                extraction_metadata["domain_specific"] = domain_metadata
+                extraction_metadata["ontario_mills_specific"] = ontario_mills_metadata
 
             # Combine all features
             if all_features:
@@ -696,10 +696,10 @@ class NeuralFeatureEngineer:
             all_text_features.extend(syntactic_feat)
             feature_names.extend([f"text_syntactic_{i}" for i in range(len(syntactic_feat))])
 
-            # Domain-specific features
-            domain_feat = text_features["domain"].cpu().numpy().flatten()
-            all_text_features.extend(domain_feat)
-            feature_names.extend([f"text_domain_{i}" for i in range(len(domain_feat))])
+            # Ontario Mills-specific features
+            ontario_mills_feat = text_features["ontario_mills"].cpu().numpy().flatten()
+            all_text_features.extend(ontario_mills_feat)
+            feature_names.extend([f"text_ontario_mills_{i}" for i in range(len(ontario_mills_feat))])
 
             # Traditional text features
             traditional_features, traditional_names = self._extract_traditional_text_features(combined_text)
@@ -711,7 +711,7 @@ class NeuralFeatureEngineer:
             metadata = {
                 "text_length": len(combined_text),
                 "num_sources": len(text_content),
-                "neural_features": len(semantic_feat) + len(syntactic_feat) + len(domain_feat),
+                "neural_features": len(semantic_feat) + len(syntactic_feat) + len(ontario_mills_feat),
                 "traditional_features": len(traditional_features),
             }
 
@@ -882,14 +882,14 @@ class NeuralFeatureEngineer:
                 # Neighborhood quality encoding
                 neighborhood = address.get("neighborhood", "").lower()
 
-                # Austin-specific neighborhood quality scores (example)
+                # Rancho Cucamonga-specific neighborhood quality scores (example)
                 neighborhood_scores = {
                     "downtown": [0.9, 0.8, 0.9, 0.7],  # [desirability, safety, schools, commute]
                     "westlake": [0.95, 0.9, 0.95, 0.6],
-                    "domain": [0.8, 0.8, 0.8, 0.8],
-                    "south congress": [0.85, 0.7, 0.7, 0.8],
-                    "mueller": [0.8, 0.8, 0.8, 0.8],
-                    "east austin": [0.6, 0.6, 0.6, 0.9],
+                    "ontario_mills": [0.8, 0.8, 0.8, 0.8],
+                    "day creek": [0.85, 0.7, 0.7, 0.8],
+                    "haven city": [0.8, 0.8, 0.8, 0.8],
+                    "east rancho_cucamonga": [0.6, 0.6, 0.6, 0.9],
                     "circle c": [0.7, 0.8, 0.7, 0.6],
                 }
 
@@ -927,16 +927,16 @@ class NeuralFeatureEngineer:
 
             # Coordinate-based features
             if lat is not None and lng is not None:
-                # Austin-centric coordinates (normalize around Austin)
-                austin_lat, austin_lng = 30.2672, -97.7431
+                # Rancho Cucamonga-centric coordinates (normalize around Rancho Cucamonga)
+                rancho_cucamonga_lat, rancho_cucamonga_lng = 30.2672, -97.7431
 
                 # Distance from city center
-                distance_from_center = np.sqrt((lat - austin_lat) ** 2 + (lng - austin_lng) ** 2)
+                distance_from_center = np.sqrt((lat - rancho_cucamonga_lat) ** 2 + (lng - rancho_cucamonga_lng) ** 2)
                 geo_features.append(distance_from_center)
                 feature_names.append("distance_from_center")
 
                 # Cardinal direction from center
-                angle = np.arctan2(lat - austin_lat, lng - austin_lng)
+                angle = np.arctan2(lat - rancho_cucamonga_lat, lng - rancho_cucamonga_lng)
                 geo_features.extend([np.sin(angle), np.cos(angle)])
                 feature_names.extend(["direction_sin", "direction_cos"])
 
@@ -963,13 +963,13 @@ class NeuralFeatureEngineer:
             logger.error(f"Error extracting geospatial features: {e}")
             return np.array([]).reshape(1, 0), [], {"error": str(e)}
 
-    async def _extract_domain_features(
+    async def _extract_ontario_mills_features(
         self, data: Dict[str, Any], data_type: str
     ) -> Tuple[np.ndarray, List[str], Dict[str, Any]]:
-        """Extract real estate domain-specific features and interactions."""
+        """Extract real estate ontario_mills-specific features and interactions."""
 
         try:
-            domain_features = []
+            ontario_mills_features = []
             feature_names = []
 
             if data_type == "property":
@@ -986,7 +986,7 @@ class NeuralFeatureEngineer:
                 bathroom_bedroom_ratio = bathrooms / max(bedrooms, 1)
                 age = datetime.now().year - year_built
 
-                domain_features.extend(
+                ontario_mills_features.extend(
                     [
                         price_per_sqft / 500.0,  # Normalized
                         price_per_bedroom / 200000.0,  # Normalized
@@ -1015,7 +1015,7 @@ class NeuralFeatureEngineer:
                     1.0 if price_per_sqft > 400 else 0.0,  # Premium property
                 ]
 
-                domain_features.extend(market_positioning)
+                ontario_mills_features.extend(market_positioning)
                 feature_names.extend(["hot_property", "stale_listing", "value_property", "premium_property"])
 
             else:  # client
@@ -1039,7 +1039,7 @@ class NeuralFeatureEngineer:
                     1.0 if "downsize" in motivation else 0.0,  # Downsizing
                 ]
 
-                domain_features.extend(buyer_profile)
+                ontario_mills_features.extend(buyer_profile)
                 feature_names.extend(
                     ["cash_buyer", "investor", "first_time_buyer", "relocation", "upgrade", "downsize"]
                 )
@@ -1052,7 +1052,7 @@ class NeuralFeatureEngineer:
                     budget / 1000000.0,  # Budget readiness (normalized)
                 ]
 
-                domain_features.extend(urgency_indicators)
+                ontario_mills_features.extend(urgency_indicators)
                 feature_names.extend(["immediate_timeline", "monthly_timeline", "preapproved", "budget_level"])
 
             # Market context features (common)
@@ -1067,7 +1067,7 @@ class NeuralFeatureEngineer:
                 0.1,  # Market appreciation rate (mock)
             ]
 
-            domain_features.extend(market_context)
+            ontario_mills_features.extend(market_context)
             feature_names.extend(
                 [
                     "spring_season",
@@ -1080,17 +1080,17 @@ class NeuralFeatureEngineer:
                 ]
             )
 
-            if domain_features:
-                final_features = np.array(domain_features).reshape(1, -1)
+            if ontario_mills_features:
+                final_features = np.array(ontario_mills_features).reshape(1, -1)
             else:
                 final_features = np.array([]).reshape(1, 0)
 
-            metadata = {"domain_specific_features": len(domain_features), "data_type": data_type}
+            metadata = {"ontario_mills_specific_features": len(ontario_mills_features), "data_type": data_type}
 
             return final_features, feature_names, metadata
 
         except Exception as e:
-            logger.error(f"Error extracting domain features: {e}")
+            logger.error(f"Error extracting ontario_mills features: {e}")
             return np.array([]).reshape(1, 0), [], {"error": str(e)}
 
     def _prepare_property_structured_data(self, data: Dict[str, Any]) -> pd.DataFrame:
@@ -1334,8 +1334,8 @@ async def test_neural_feature_engineer():
         "year_built": 2015,
         "property_type": "Single Family",
         "amenities": ["pool", "garage", "garden"],
-        "address": {"neighborhood": "Downtown", "city": "Austin", "latitude": 30.2672, "longitude": -97.7431},
-        "description": "Beautiful modern home in downtown Austin with pool and spacious garden. Recently updated kitchen and bathrooms.",
+        "address": {"neighborhood": "Downtown", "city": "Rancho Cucamonga", "latitude": 30.2672, "longitude": -97.7431},
+        "description": "Beautiful modern home in downtown Rancho Cucamonga with pool and spacious garden. Recently updated kitchen and bathrooms.",
         "listed_date": datetime.now() - timedelta(days=15),
     }
 
@@ -1343,7 +1343,7 @@ async def test_neural_feature_engineer():
         "id": "test_client_1",
         "preferences": {
             "budget": 800000,
-            "location": "downtown austin",
+            "location": "downtown rancho_cucamonga",
             "bedrooms": 3,
             "property_type": "single family",
             "must_haves": ["pool", "garage"],
@@ -1352,7 +1352,7 @@ async def test_neural_feature_engineer():
             "motivation": "relocation for job",
         },
         "conversation_history": [
-            {"role": "user", "text": "I'm looking for a 3-bedroom house in downtown Austin with a pool"},
+            {"role": "user", "text": "I'm looking for a 3-bedroom house in downtown Rancho Cucamonga with a pool"},
             {"role": "user", "text": "My budget is around $800,000 and I need to move by March"},
         ],
         "created_at": datetime.now() - timedelta(days=5),

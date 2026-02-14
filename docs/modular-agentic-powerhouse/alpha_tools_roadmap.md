@@ -24,7 +24,7 @@ User → OpenAI ChatGPT Interface → (your API) → Gemini Agent
 Problem: Users see OpenAI branding, rate limits, data sharing concerns
 
 Dify flow:
-User → YOUR BRANDED INTERFACE (Dify hosted on your domain)
+User → YOUR BRANDED INTERFACE (Dify hosted on your ontario_mills)
          → (your API) → Gemini Agent
 Result: White-label, privacy-first, professional appearance
 ```
@@ -49,7 +49,7 @@ git clone https://github.com/langgenius/dify.git
 
 **Competitive Advantages:**
 1. **No dependency on third-party interfaces** (ChatGPT, Claude UI)
-2. **Full brand control** (logo, colors, custom domain)
+2. **Full brand control** (logo, colors, custom ontario_mills)
 3. **Data stays on your servers** (if self-hosted)
 4. **Free tier** if self-hosted (Docker)
 5. **Export conversation history** (for compliance, audits)

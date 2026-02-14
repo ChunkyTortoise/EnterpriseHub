@@ -142,7 +142,7 @@ class RepositoryPropertyMatcher:
         scoring_context = ScoringContext(
             lead_id=context.get("lead_id") if context else None,
             agent_id=context.get("agent_id") if context else None,
-            market_area=lead_preferences.get("location", "austin"),
+            market_area=lead_preferences.get("location", "rancho_cucamonga"),
             performance_priority="balanced",
             enable_learning=True,
             min_confidence=60.0,
@@ -283,7 +283,7 @@ class RepositoryPropertyMatcher:
             "beds": property_data.get("bedrooms", property_data.get("beds", 3)),
             "baths": property_data.get("bathrooms", property_data.get("baths", 2.5)),
             "sqft": property_data.get("sqft", property_data.get("square_feet", 2100)),
-            "neighborhood": property_data.get("neighborhood", "Austin Area"),
+            "neighborhood": property_data.get("neighborhood", "Rancho Cucamonga Area"),
             "icon": self._get_property_icon(property_data),
             "match_score": int(overall_score),
             "budget_match": budget_match,

@@ -22,7 +22,7 @@ def render_neighborhood_explorer(lead_profile: dict = None):
     col1, col2 = st.columns(2)
     with col1:
         target_address = st.text_input(
-            "Enter Address or Neighborhood", placeholder="1234 Oak Street, Austin, TX or 'West Lake Hills'"
+            "Enter Address or Neighborhood", placeholder="1234 Oak Street, Rancho Cucamonga, CA or 'Alta Loma'"
         )
     with col2:
         analysis_radius = st.selectbox("Analysis Radius", ["0.5 miles", "1 mile", "2 miles", "5 miles"])
@@ -53,7 +53,7 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                     {"School": "Westlake Elementary", "Rating": "10/10", "Distance": "0.3 mi", "Type": "Public"},
                     {"School": "Hill Country Middle", "Rating": "9/10", "Distance": "0.7 mi", "Type": "Public"},
                     {"School": "Westlake High School", "Rating": "10/10", "Distance": "1.2 mi", "Type": "Public"},
-                    {"School": "Austin Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"},
+                    {"School": "Rancho Cucamonga Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"},
                 ]
                 schools_df = pd.DataFrame(schools_data)
                 st.dataframe(schools_df, use_container_width=True)
@@ -62,13 +62,13 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                 st.markdown("##### Commute Analysis")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.markdown("**To Downtown Austin:**")
+                    st.markdown("**To Downtown Rancho Cucamonga:**")
                     st.markdown("• 🚗 Driving: 25-40 minutes")
                     st.markdown("• 🚌 Public Transit: 45-60 minutes")
                     st.markdown("• 🚴 Biking: Not recommended")
 
                 with col2:
-                    st.markdown("**To Austin Airport:**")
+                    st.markdown("**To Rancho Cucamonga Airport:**")
                     st.markdown("• 🚗 Driving: 35-50 minutes")
                     st.markdown("• 🚌 Public Transit: 60-75 minutes")
                     st.markdown("• 🚕 Rideshare: $45-65")
@@ -83,10 +83,10 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                         "Barton Creek Mall (2.1 mi)",
                         "Hill Country Galleria (1.5 mi)",
                     ],
-                    "🏥 Healthcare": ["Austin Regional (2.3 mi)", "Urgent Care Plus (0.7 mi)", "CVS Pharmacy (0.4 mi)"],
+                    "🏥 Healthcare": ["Rancho Cucamonga Regional (2.3 mi)", "Urgent Care Plus (0.7 mi)", "CVS Pharmacy (0.4 mi)"],
                     "🎯 Recreation": [
-                        "Zilker Park (3.2 mi)",
-                        "Austin Country Club (1.1 mi)",
+                        "Victoria Gardens Park (3.2 mi)",
+                        "Rancho Cucamonga Country Club (1.1 mi)",
                         "Greenbelt Trail (0.5 mi)",
                     ],
                 }

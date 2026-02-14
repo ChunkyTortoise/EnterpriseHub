@@ -12,7 +12,7 @@
 - **Integrated `render_property_swipe`**: Added the high-impact Tinder-style swipe UI into the Phase 3 Buyer Portal tab.
 
 ### 2. **Dynamic Demo Data Integration** 📊
-- **Persona-Driven Property Matching**: Updated `property_matcher_ai.py` to dynamically load properties from `austin_market_demo_data.json`.
+- **Persona-Driven Property Matching**: Updated `property_matcher_ai.py` to dynamically load properties from `rancho_cucamonga_market_demo_data.json`.
 - **Consistent Lead Profiles**: Updated `get_lead_options` in `app.py` to use curated personas (Sarah Chen, David Kim, Mike Rodriguez, and Jennifer).
 - **Executive Dashboard Realism**: Updated `mock_analytics.json` to include these personas, showing $2.4M+ in pipeline value linked directly to the demo leads.
 
@@ -26,7 +26,7 @@
 ## 🔧 **TECHNICAL VERIFICATION**
 
 - **Dashboard Port**: Standardized at `http://localhost:8501`.
-- **Data Integrity**: Checked all JSON paths; components now successfully load Austin-specific market data.
+- **Data Integrity**: Checked all JSON paths; components now successfully load Rancho Cucamonga-specific market data.
 - **UI Consistency**: Verified that lead selection in one tab propagates to others (Lead Intelligence -> Journey Hubs).
 
 ---

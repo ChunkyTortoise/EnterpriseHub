@@ -236,7 +236,7 @@ Railway will:
 
 ### Via CLI:
 ```bash
-railway domain
+railway ontario_mills
 ```
 
 Output:
@@ -248,7 +248,7 @@ https://ghl-real-estate-ai-production.up.railway.app
 1. Go to your project
 2. Click on your service
 3. Go to "Settings" tab
-4. Under "Domains", click "Generate Domain"
+4. Under "Ontario Millss", click "Generate Ontario Mills"
 5. Railway provides a URL like: `https://your-app.railway.app`
 
 **Copy this URL for the next step!**
@@ -355,7 +355,7 @@ Expected response:
 ### 2. Send Test SMS to GHL Number
 Text your GHL number:
 ```
-"Hi, I'm looking for a 3-bedroom house in Austin under $400k"
+"Hi, I'm looking for a 3-bedroom house in Rancho Cucamonga under $400k"
 ```
 
 **Expected:**

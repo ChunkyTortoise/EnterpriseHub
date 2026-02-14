@@ -388,7 +388,7 @@ def sample_lead_data():
         "phone": "+1-555-0123",
         "created_at": "2026-01-19T10:00:00Z",
         "preferences": {
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "budget_max": 500000,
             "property_type": "Single Family",
             "bedrooms": 3,
@@ -398,7 +398,7 @@ def sample_lead_data():
             {
                 "timestamp": "2026-01-19T10:00:00Z",
                 "type": "initial_contact",
-                "content": "Looking for a 3-bedroom house in Austin",
+                "content": "Looking for a 3-bedroom house in Rancho Cucamonga",
             }
         ],
     }

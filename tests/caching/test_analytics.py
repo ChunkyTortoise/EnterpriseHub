@@ -19,7 +19,6 @@ import pytest
 
 from src.caching.analytics import (
 
-@pytest.mark.integration
     CacheAnalytics,
     CacheMetrics,
     CostAnalysis,

@@ -69,7 +69,7 @@ Execute these two tracks simultaneously for maximum efficiency:
        "phone": "+1-555-0123",
        "email": "sarah@example.com"
      },
-     "property_address": "123 Test Street, Austin, TX"
+     "property_address": "123 Test Street, Rancho Cucamonga, CA"
    }
    ```
 
@@ -125,7 +125,7 @@ Execute these two tracks simultaneously for maximum efficiency:
      contextType: 'conversation_intelligence',
      conversationHistory: jorgeConversation,
      leadData: qualificationResults,
-     marketData: austinMarketData
+     marketData: rancho_cucamongaMarketData
    }
    ```
 

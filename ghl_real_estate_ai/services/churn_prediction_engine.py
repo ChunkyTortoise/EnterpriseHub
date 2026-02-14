@@ -350,7 +350,7 @@ class ChurnFeatureExtractor:
     def _extract_behavioral_patterns(self, behavioral_data: Dict) -> Dict[str, float]:
         """Extract behavioral pattern features"""
         engagement_metrics = behavioral_data.get("engagement_metrics", {})
-        event_patterns = behavioral_data.get("event_patterns", {})
+        behavioral_data.get("event_patterns", {})
 
         return {
             "engagement_trend": engagement_metrics.get("trend", 0.0),
@@ -607,7 +607,7 @@ class ChurnRiskPredictor:
             rf_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, class_weight="balanced")
 
             # Gradient Boosting for performance
-            gb_model = GradientBoostingClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42)
+            GradientBoostingClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42)
 
             # For demo purposes, use RF model
             self.models[horizon] = rf_model

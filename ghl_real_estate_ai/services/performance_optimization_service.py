@@ -76,7 +76,7 @@ class PerformanceOptimizationService:
         return services
 
     @st.cache_data(ttl=60)  # 1-minute cache for dynamic dashboard data
-    def load_dashboard_data(_self, agent_id: str = "demo_agent", market: str = "Austin") -> Dict[str, Any]:
+    def load_dashboard_data(_self, agent_id: str = "demo_agent", market: str = "Rancho Cucamonga") -> Dict[str, Any]:
         """Pre-load all critical dashboard data using parallel processing."""
         start_time = time.time()
 
@@ -137,7 +137,7 @@ class PerformanceOptimizationService:
             "avg_match_score": 78.4,
             "top_matches": [
                 {"address": "1234 Hill Country Dr", "score": 94, "price": 485000},
-                {"address": "5678 Austin Blvd", "score": 89, "price": 325000},
+                {"address": "5678 Rancho Cucamonga Blvd", "score": 89, "price": 325000},
             ],
         }
 
@@ -183,7 +183,7 @@ class PerformanceOptimizationService:
         }
         return fallbacks.get(data_type, {"status": "error"})
 
-    def warm_cache_on_startup(self, agent_id: str = "demo_agent", market: str = "Austin"):
+    def warm_cache_on_startup(self, agent_id: str = "demo_agent", market: str = "Rancho Cucamonga"):
         """Warm the cache during app startup for instant first-load performance."""
         if "cache_warmed" not in st.session_state or not st.session_state.cache_warmed:
             with st.spinner("🚀 Warming Jorge's AI intelligence systems..."):

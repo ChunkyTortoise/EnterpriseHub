@@ -112,7 +112,7 @@ class CompetitorIntelligenceService:
     - Real-time NLP analysis for competitor mentions
     - Pattern recognition with 95%+ accuracy
     - Risk level assessment and competitive positioning
-    - Austin market-specific intelligence
+    - Rancho Cucamonga market-specific intelligence
     """
 
     def __init__(self, cache_service: Optional[CacheService] = None):
@@ -244,7 +244,7 @@ class CompetitorIntelligenceService:
         }
 
     def _load_rc_competitors(self) -> Dict[str, Dict]:
-        """Load Austin-specific competitor intelligence"""
+        """Load Rancho Cucamonga-specific competitor intelligence"""
         return {
             "major_brokerages": {
                 "keller_williams": {
@@ -371,7 +371,7 @@ class CompetitorIntelligenceService:
     async def _detect_competitor_mentions(self, text: str) -> List[CompetitorMention]:
         """Detect competitor mentions using NLP and pattern matching"""
         mentions = []
-        text_lower = text.lower()
+        text.lower()
 
         # NLP-based detection if available
         if self._nlp and self._matcher:
@@ -647,7 +647,7 @@ class CompetitorIntelligenceService:
 
         insights = {}
 
-        # Find competitor in Austin data
+        # Find competitor in Rancho Cucamonga data
         for category, competitors in self.rc_competitors.items():
             if category == "major_brokerages":
                 for comp_key, comp_data in competitors.items():

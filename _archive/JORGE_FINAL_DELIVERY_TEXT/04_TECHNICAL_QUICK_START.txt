@@ -41,7 +41,7 @@ DEMO WALKTHROUGH (15 Minutes)
 2. Lead Intelligence (5 min): Review Sarah Chen's profile and try the Swipe UI.
 3. AI Chat Interface (3 min): Ask questions like "Who is ready to buy?"
 4. Automation Studio (2 min): Explore pre-built workflows.
-5. Document Generation (2 min): Generate a CMA for an Austin property.
+5. Document Generation (2 min): Generate a CMA for an Rancho Cucamonga property.
 
 ================================================================================
 Ready to scale? Run ./setup_demo.sh to get started!

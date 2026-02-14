@@ -131,7 +131,7 @@ st.markdown(
 
 # Sidebar - Settings (Early for service init)
 def update_market():
-    m_key = "Austin" if "Austin" in st.session_state.market_selector else "Rancho"
+    m_key = "Rancho Cucamonga" if "Rancho Cucamonga" in st.session_state.market_selector else "Rancho"
     st.session_state.lead_options = get_lead_options(m_key)
     st.session_state.selected_lead_name = "-- Select a Lead --"
     st.session_state.selected_market = st.session_state.market_selector
@@ -143,13 +143,13 @@ with st.sidebar:
     # Persist market selection
     selected_market = st.selectbox(
         "Select Market:",
-        ["Austin, TX", "Rancho Cucamonga, CA"],
-        index=["Austin, TX", "Rancho Cucamonga, CA"].index(st.session_state.get("selected_market", "Austin, TX")),
+        ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"],
+        index=["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"].index(st.session_state.get("selected_market", "Rancho Cucamonga, CA")),
         key="market_selector",
         on_change=update_market,
     )
     st.session_state.selected_market = selected_market
-    market_key = "Austin" if "Austin" in selected_market else "Rancho"
+    market_key = "Rancho Cucamonga" if "Rancho Cucamonga" in selected_market else "Rancho"
 
     # Persist AI tone
     ai_tone = st.select_slider(
@@ -310,10 +310,10 @@ def get_lead_options(market_key):
         "Sarah Chen (Apple Engineer)": {
             "lead_id": "tech_professional_sarah",
             "occupation": "Apple Engineer",
-            "location": "North Austin / Round Rock",
+            "location": "North Rancho Cucamonga / Round Rock",
             "extracted_preferences": {
                 "budget": 550000,
-                "location": "North Austin / Round Rock",
+                "location": "North Rancho Cucamonga / Round Rock",
                 "timeline": "URGENT - 45 days",
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -336,7 +336,7 @@ def get_lead_options(market_key):
                 "timeline": "Immediate",
                 "must_haves": ["Positive cash flow", "Rental potential"],
                 "financing": "Cash Buyer",
-                "motivation": "Expanding Austin portfolio",
+                "motivation": "Expanding Rancho Cucamonga portfolio",
                 "property_type": "Single Family or Duplex",
             },
             "overall_score": 95,
@@ -364,16 +364,16 @@ def get_lead_options(market_key):
         "Robert & Linda Williams (Luxury Downsizer)": {
             "lead_id": "luxury_downsizer_robert",
             "occupation": "Retired Business Owners",
-            "location": "Downtown / Clarksville",
+            "location": "Downtown / Central Rancho",
             "extracted_preferences": {
                 "budget": 1200000,
-                "location": "Downtown / Clarksville",
+                "location": "Downtown / Central Rancho",
                 "timeline": "Flexible",
                 "bedrooms": 2,
                 "bathrooms": 2.5,
                 "must_haves": ["Luxury finishes", "Walkable"],
                 "financing": "High equity / Cash",
-                "motivation": "Empty nesters downsizing from Steiner Ranch",
+                "motivation": "Empty nesters downsizing from Rancho Etiwanda",
                 "property_type": "Luxury Condo / Townhome",
             },
             "overall_score": 88,
@@ -398,7 +398,7 @@ def get_meeting_briefing(lead_name):
     briefings = {
         "Sarah Chen (Apple Engineer)": {
             "hook": "Relocating from SF for Apple. Very urgent 45-day timeline.",
-            "objection": "Concerned about Austin market knowledge and internet reliability for remote work.",
+            "objection": "Concerned about Rancho Cucamonga market knowledge and internet reliability for remote work.",
             "closer": "Round Rock has the tech community she wants. Under her $550k SF-adjusted budget.",
         },
         "Mike & Jessica Rodriguez (Growing Family)": {
@@ -407,18 +407,18 @@ def get_meeting_briefing(lead_name):
             "closer": "Pflugerville offers the safety and yard they need within their reach.",
         },
         "David Kim (Investor)": {
-            "hook": "Seasoned Dallas investor expanding to Austin. 100% Cash buyer.",
+            "hook": "Seasoned Dallas investor expanding to Rancho Cucamonga. 100% Cash buyer.",
             "objection": "Only interested in properties with >$200/mo positive cash flow.",
             "closer": "Manor/Del Valle hotspots provide the cap rates he requires. Show him off-market deals.",
         },
         "Robert & Linda Williams (Luxury Downsizer)": {
-            "hook": "Empty nesters downsizing from 4,500sqft Steiner Ranch home.",
+            "hook": "Empty nesters downsizing from 4,500sqft Rancho Etiwanda home.",
             "objection": "Want to ensure they don't lose luxury amenities when moving to a condo.",
             "closer": "Downtown 'Lock-and-leave' lifestyle allows them to travel. Highlight concierge services.",
         },
         "Sarah Johnson": {
             "hook": "Wants to move by March for school start. Focused on the Avery Ranch school district.",
-            "objection": "Concerned about Austin property tax spikes and recent HOA changes in the area.",
+            "objection": "Concerned about Rancho Cucamonga property tax spikes and recent HOA changes in the area.",
             "closer": "Ready to sign if we find 4BR in Avery Ranch under $800k with a pool.",
         },
         "Mike Chen": {
@@ -1032,7 +1032,7 @@ def render_enhanced_property_search():
             if use_enhanced_ai:
                 properties = [
                     {
-                        "address": "1234 Oak Street, Austin, TX 78704",
+                        "address": "1234 Oak Street, Rancho Cucamonga, CA 91730",
                         "price": "$485,000",
                         "beds": 3,
                         "baths": 2,
@@ -1048,7 +1048,7 @@ def render_enhanced_property_search():
                         "ai_reasoning": "Excellent match: High school ratings, optimal commute time, strong lifestyle factors",
                     },
                     {
-                        "address": "5678 Pine Avenue, Austin, TX 78745",
+                        "address": "5678 Pine Avenue, Rancho Cucamonga, CA 91730",
                         "price": "$425,000",
                         "beds": 3,
                         "baths": 2.5,
@@ -1064,7 +1064,7 @@ def render_enhanced_property_search():
                         "ai_reasoning": "Strong match: Good value, decent schools, moderate commute",
                     },
                     {
-                        "address": "9012 Elm Drive, Austin, TX 78758",
+                        "address": "9012 Elm Drive, Rancho Cucamonga, CA 91758",
                         "price": "$399,000",
                         "beds": 4,
                         "baths": 2,
@@ -1083,7 +1083,7 @@ def render_enhanced_property_search():
             else:
                 properties = [
                     {
-                        "address": "1234 Oak Street, Austin, TX 78704",
+                        "address": "1234 Oak Street, Rancho Cucamonga, CA 91730",
                         "price": "$485,000",
                         "beds": 3,
                         "baths": 2,
@@ -1094,7 +1094,7 @@ def render_enhanced_property_search():
                         "days_on_market": 12,
                     },
                     {
-                        "address": "5678 Pine Avenue, Austin, TX 78745",
+                        "address": "5678 Pine Avenue, Rancho Cucamonga, CA 91730",
                         "price": "$425,000",
                         "beds": 3,
                         "baths": 2.5,
@@ -1105,7 +1105,7 @@ def render_enhanced_property_search():
                         "days_on_market": 5,
                     },
                     {
-                        "address": "9012 Elm Drive, Austin, TX 78758",
+                        "address": "9012 Elm Drive, Rancho Cucamonga, CA 91758",
                         "price": "$399,000",
                         "beds": 4,
                         "baths": 2,
@@ -1225,7 +1225,7 @@ if CLAUDE_COMPANION_AVAILABLE:
                         "**Claude Context Summary:**\n\n"
                         + f"- Current Hub: {st.session_state.current_hub}\n"
                         + f"- Session Duration: {(datetime.datetime.now() - st.session_state.get('session_start', datetime.datetime.now())).seconds // 60} minutes\n"
-                        + f"- Active Market: {st.session_state.get('selected_market', 'Austin')}\n"
+                        + f"- Active Market: {st.session_state.get('selected_market', 'Rancho Cucamonga')}\n"
                         + "- Claude is context-aware and ready to assist"
                     )
 

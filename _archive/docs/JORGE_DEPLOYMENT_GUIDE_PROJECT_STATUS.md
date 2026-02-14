@@ -128,7 +128,7 @@ This tests:
 Contact: "Hi, I want to sell my house"
 AI: "Hey! I can help with that. Where's the property located?"
 
-Contact: "Austin, 3 bed 2 bath, built in 1995, good condition, moving for job, need to sell by June, hoping for around $450k"
+Contact: "Rancho Cucamonga, 3 bed 2 bath, built in 1995, good condition, moving for job, need to sell by June, hoping for around $450k"
 AI: "Perfect! I'll have someone from our team call you today. Are you pre-approved for your next purchase or paying cash?"
 
 Contact: "Pre-approved for $500k"

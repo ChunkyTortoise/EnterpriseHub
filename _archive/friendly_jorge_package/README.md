@@ -4,10 +4,10 @@
 
 ## 🤝 Overview
 
-This package contains Jorge's friendly, customer service-focused real estate bots designed specifically for the Rancho Cucamonga, California market. This is a complete replacement of the previous confrontational Austin approach with warm, consultative customer service that builds long-term relationships.
+This package contains Jorge's friendly, customer service-focused real estate bots designed specifically for the Rancho Cucamonga, California market. This is a complete replacement of the previous confrontational Rancho Cucamonga approach with warm, consultative customer service that builds long-term relationships.
 
 ### Key Transformation
-- **FROM**: Confrontational, aggressive Austin TX approach
+- **FROM**: Confrontational, aggressive Rancho Cucamonga TX approach
 - **TO**: Friendly, helpful Rancho Cucamonga CA customer service
 - **FOCUS**: Relationship building and customer satisfaction
 - **MARKET**: Inland Empire real estate expertise

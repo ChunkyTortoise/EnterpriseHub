@@ -44,7 +44,7 @@ def render_ai_lead_insights(lead_data):
             go.Indicator(
                 mode="gauge+number",
                 value=health_score,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={
                     "text": "ENGAGEMENT HEALTH",
                     "font": {"size": 12, "color": "#8B949E", "family": "Space Grotesk"},

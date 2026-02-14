@@ -22,8 +22,6 @@ from ghl_real_estate_ai.security.auth_manager import (
 )
 from ghl_real_estate_ai.security.security_middleware import SecurityHeaders, SecurityMiddleware
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 class TestAuthManager:

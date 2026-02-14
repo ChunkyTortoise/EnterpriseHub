@@ -54,8 +54,6 @@ import psutil
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-@pytest.mark.integration
-
 try:
     from ghl_real_estate_ai.api.routes import bot_management as _bot_management_module
 

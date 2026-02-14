@@ -1,17 +1,14 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 """Tests for CRM Protocol ABC and CRMContact model."""
-
-from __future__ import annotations
 
 from typing import Any
 
 import pytest
 
 from ghl_real_estate_ai.services.crm.protocol import CRMContact, CRMProtocol
-
-@pytest.mark.unit
 
 
 class TestCRMContactDefaults:

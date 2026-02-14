@@ -8,11 +8,10 @@ geographic regions.
 
 from .base_market_service import BaseMarketService, MarketMetrics
 from .concrete_services import (
-    AustinMarketService,
+    RanchoCucamongaMarketService,
     ConcreteMarketService,
     DallasMarketService,
     HoustonMarketService,
-    RanchoCucamongaMarketService,
     SanAntonioMarketService,
 )
 from .config_schemas import EmployerConfig, MarketConfig, NeighborhoodConfig
@@ -32,7 +31,6 @@ __all__ = [
     "EmployerConfig",
     # Concrete services
     "ConcreteMarketService",
-    "AustinMarketService",
     "DallasMarketService",
     "HoustonMarketService",
     "SanAntonioMarketService",

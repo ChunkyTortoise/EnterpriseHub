@@ -124,13 +124,13 @@ class MarketIntelligenceDashboard:
         st.sidebar.selectbox(
             "📍 Geographic Focus",
             [
-                "Austin Metro",
-                "Central Austin",
-                "North Austin",
-                "South Austin",
-                "West Austin",
-                "Cedar Park",
-                "Round Rock",
+                "Rancho Cucamonga Metro",
+                "Central Rancho Cucamonga",
+                "North Rancho Cucamonga",
+                "South Rancho Cucamonga",
+                "West Rancho Cucamonga",
+                "Upland",
+                "Fontana",
             ],
             index=0,
         )

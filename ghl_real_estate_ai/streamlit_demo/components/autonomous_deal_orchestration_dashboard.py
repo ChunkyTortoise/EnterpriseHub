@@ -910,8 +910,8 @@ def get_transactions_data(stage_filter: str, status_filter: str, urgency_filter:
     """Get filtered transactions data."""
     return [
         {
-            "transaction_id": "TXN-20260118-001",
-            "property_address": "123 Main St, Austin TX",
+            "transaction_id": "CAN-20260118-001",
+            "property_address": "123 Main St, Rancho Cucamonga CA",
             "buyer_name": "John Smith",
             "stage": "Due Diligence",
             "health_score": 92,
@@ -921,8 +921,8 @@ def get_transactions_data(stage_filter: str, status_filter: str, urgency_filter:
             "urgency": "Medium",
         },
         {
-            "transaction_id": "TXN-20260118-002",
-            "property_address": "456 Oak Ave, Austin TX",
+            "transaction_id": "CAN-20260118-002",
+            "property_address": "456 Oak Ave, Rancho Cucamonga CA",
             "buyer_name": "Sarah Johnson",
             "stage": "Financing",
             "health_score": 78,

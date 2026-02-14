@@ -734,7 +734,7 @@ async def compliance_monitoring_websocket(websocket):
 
             await websocket.send_json(status_update)
 
-    except Exception as e:
+    except Exception:
         logger.info("Client disconnected from compliance monitoring WebSocket")
         await ws_manager.disconnect(websocket, "compliance_monitoring")
 
@@ -786,17 +786,41 @@ async def continuous_compliance_monitoring():
     """
     while True:
         try:
-            # Monitor compliance status
-            # TODO: Implement real-time compliance monitoring
+            # ROADMAP-041: Implement real-time compliance monitoring
+            # Current: Placeholder with 5-minute sleep
+            # Required:
+            #   1. Scan for compliance violations (DRE, Fair Housing, TCPA)
+            #   2. Check opt-out rates against thresholds
+            #   3. Validate data retention policies
+            #   4. Alert on critical violations
+            # Status: Infrastructure ready, algorithms needed
 
-            # Check for security events
-            # TODO: Implement security event monitoring
+            # ROADMAP-042: Implement security event monitoring
+            # Current: Placeholder
+            # Required:
+            #   1. Monitor for suspicious access patterns
+            #   2. Detect PII access anomalies
+            #   3. Track failed authentication attempts
+            #   4. Alert security team on critical events
+            # Dependencies: ROADMAP-041
 
-            # Process privacy requests
-            # TODO: Implement privacy request processing
+            # ROADMAP-043: Implement privacy request processing
+            # Current: Placeholder
+            # Required:
+            #   1. Poll privacy_requests table for pending requests
+            #   2. Process data deletion requests (GDPR/CCPA)
+            #   3. Handle data export requests
+            #   4. Update request status and notify requester
+            # SLA: 30 days for deletion, 7 days for export
 
-            # Update audit trails
-            # TODO: Implement audit trail updates
+            # ROADMAP-044: Implement audit trail updates
+            # Current: Placeholder
+            # Required:
+            #   1. Aggregate audit events from all services
+            #   2. Archive events older than 90 days
+            #   3. Generate compliance reports for auditors
+            #   4. Maintain tamper-evident logs
+            # Dependencies: All other ROADMAP compliance items
 
             await asyncio.sleep(300)  # 5 minutes
 

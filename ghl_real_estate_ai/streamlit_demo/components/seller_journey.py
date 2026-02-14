@@ -1612,7 +1612,7 @@ def render_seller_journey_hub(
             </div>
             <div style="text-align: right;">
                 <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3); letter-spacing: 0.1em;">
-                    MARKET: {st.session_state.get('selected_market', 'AUSTIN').upper()}
+                    MARKET: {st.session_state.get('selected_market', 'RANCHO_CUCAMONGA').upper()}
                 </div>
             </div>
         </div>
@@ -1648,7 +1648,7 @@ def render_seller_journey_hub(
                     "active_listings": 3,
                     "avg_dom": 12,
                     "market_trend": "rising",
-                    "market": st.session_state.get("selected_market", "Austin"),
+                    "market": st.session_state.get("selected_market", "Rancho Cucamonga"),
                 }
 
                 # Use chat_query for inventory advice

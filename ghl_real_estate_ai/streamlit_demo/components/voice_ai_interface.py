@@ -134,8 +134,8 @@ class VoiceAIInterface:
 
         # Demo transcript input
         demo_inputs = [
-            "Hi, I'm looking for a 3-bedroom house in Austin under $500k",
-            "Can you show me some properties in the Cedar Park area?",
+            "Hi, I'm looking for a 3-bedroom house in Rancho Cucamonga under $500k",
+            "Can you show me some properties in the Upland area?",
             "What's the market like right now? Are prices going up?",
             "I need to move by the end of next month, can you help?",
             "Do you have any properties with a good school district?",
@@ -308,11 +308,11 @@ class VoiceAIInterface:
 
             # Simulate AI response generation
             ai_responses = [
-                "That's a great budget range for Austin! I have several 3-bedroom properties under $500K that would be perfect for you. Let me show you some options in areas with excellent value.",
-                "Cedar Park is an excellent choice! It's known for great schools and family-friendly neighborhoods. I have 8 properties there that match your criteria. Would you like to see them?",
-                "The Austin market is quite dynamic right now. While there's been some appreciation, we're seeing good opportunities for buyers with your budget. Interest rates are favorable too.",
+                "That's a great budget range for Rancho Cucamonga! I have several 3-bedroom properties under $500K that would be perfect for you. Let me show you some options in areas with excellent value.",
+                "Upland is an excellent choice! It's known for great schools and family-friendly neighborhoods. I have 8 properties there that match your criteria. Would you like to see them?",
+                "The Rancho Cucamonga market is quite dynamic right now. While there's been some appreciation, we're seeing good opportunities for buyers with your budget. Interest rates are favorable too.",
                 "Absolutely! With your timeline, we'll want to move quickly. I can arrange viewings this week and have you under contract within 2 weeks if we find the right property.",
-                "School districts are definitely important! Cedar Park and Round Rock ISD are top-rated. I have several properties in those areas that would be perfect for your family.",
+                "School districts are definitely important! Upland and Fontana ISD are top-rated. I have several properties in those areas that would be perfect for your family.",
             ]
 
             # Select appropriate response (simplified logic)

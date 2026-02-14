@@ -301,7 +301,7 @@ class ClientJourneyMappingService:
             await self._apply_personalization(client_id, location_id, health_metrics, personalization)
 
             # 6. Generate Optimization Recommendations
-            recommendations = await self._generate_optimization_recommendations(
+            await self._generate_optimization_recommendations(
                 client_id, location_id, health_metrics, journey_data
             )
 

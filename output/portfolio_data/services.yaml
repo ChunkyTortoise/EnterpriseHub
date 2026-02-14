@@ -1,0 +1,1007 @@
+# Canonical Service Catalog
+# Version: 1.0
+# Last Updated: 2026-02-11
+# Total Services: 33 (26 core + 7 quick-wins)
+
+- id: S01
+  name: AI Strategy & Readiness Assessment
+  category: Strategy
+  buyer_persona: "CTOs, VPs of Engineering, and business leaders planning AI initiatives"
+  core_problem: "Organizations lack clarity on AI readiness, use case prioritization, and implementation roadmap"
+  deliverables:
+    - "AI readiness scorecard (technical, data, process, people)"
+    - "Use case prioritization matrix with ROI estimates"
+    - "Implementation roadmap with milestones and resource requirements"
+    - "Technology stack recommendations"
+    - "Risk assessment and mitigation strategies"
+  timeline: "2-3 weeks"
+  price_min: 5000
+  price_max: 12000
+  hourly_equivalent_min: 125
+  hourly_equivalent_max: 175
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  status: needs-proof
+  priority: P1
+  description: "Comprehensive AI strategy assessment covering technical readiness, data infrastructure, use case identification, and implementation planning"
+  tags:
+    - "strategy"
+    - "readiness"
+    - "roadmap"
+    - "ai-adoption"
+
+- id: S02
+  name: Technical Due Diligence
+  category: Strategy
+  buyer_persona: "VCs, PE firms, and corporate acquirers evaluating AI/ML companies"
+  core_problem: "Investors need deep technical validation of AI/ML claims, architecture quality, and scalability"
+  deliverables:
+    - "Technical architecture review and scoring"
+    - "Code quality and engineering practices assessment"
+    - "ML model validation and performance analysis"
+    - "Scalability and infrastructure evaluation"
+    - "Risk register with technical debt quantification"
+  timeline: "1-2 weeks"
+  price_min: 7500
+  price_max: 15000
+  hourly_equivalent_min: 150
+  hourly_equivalent_max: 200
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  status: needs-proof
+  priority: P1
+  description: "Deep technical due diligence for AI/ML investments, covering architecture, code quality, model validation, and scalability"
+  tags:
+    - "due-diligence"
+    - "technical-audit"
+    - "investment"
+    - "risk-assessment"
+
+- id: S03
+  name: Custom RAG Conversational Agents
+  category: Agentic AI
+  buyer_persona: "Product managers and engineering leads building knowledge-based AI assistants"
+  core_problem: "Generic chatbots lack domain knowledge, source citations, and reliable answers from proprietary documents"
+  deliverables:
+    - "RAG pipeline with hybrid retrieval (BM25 + dense vectors)"
+    - "Document ingestion and chunking pipeline"
+    - "Conversational interface with source citations"
+    - "Prompt engineering lab for optimization"
+    - "Evaluation framework with accuracy metrics"
+  timeline: "3-5 weeks"
+  price_min: 6000
+  price_max: 15000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/docqa-engine"
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  certifications:
+    - "C003"
+    - "C006"
+    - "C012"
+  status: ready
+  priority: P1
+  description: "Production RAG systems with hybrid retrieval, source citations, and prompt optimization for domain-specific knowledge bases"
+  tags:
+    - "rag"
+    - "conversational-ai"
+    - "knowledge-base"
+    - "retrieval"
+
+- id: S04
+  name: Multi-Agent Workflows
+  category: Agentic AI
+  buyer_persona: "CTOs and engineering leads building AI agent systems"
+  core_problem: "Manual coordination between AI agents leads to errors, race conditions, and poor user experience"
+  deliverables:
+    - "Agent architecture design document"
+    - "Multi-agent orchestration framework"
+    - "Handoff logic and state management"
+    - "Monitoring and observability setup"
+    - "Documentation and deployment guide"
+  timeline: "2-4 weeks"
+  price_min: 5000
+  price_max: 15000
+  hourly_equivalent_min: 90
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+  case_studies:
+    - "CS001"
+    - "CS002"
+  certifications:
+    - "C003"
+    - "C006"
+  status: ready
+  priority: P1
+  description: "Design and implement multi-agent AI systems with proper handoff orchestration, context management, and monitoring"
+  tags:
+    - "agents"
+    - "orchestration"
+    - "automation"
+    - "handoff"
+
+- id: S05
+  name: Prompt Engineering & Optimization
+  category: Agentic AI
+  buyer_persona: "Product teams and developers optimizing LLM performance and cost"
+  core_problem: "Poor prompts lead to inconsistent outputs, high token costs, and unreliable AI behavior"
+  deliverables:
+    - "Prompt library with templates and patterns"
+    - "A/B testing framework for prompt comparison"
+    - "Temperature and parameter optimization guide"
+    - "Cost tracking and token usage analysis"
+    - "Evaluation metrics and scoring system"
+  timeline: "1-2 weeks"
+  price_min: 3000
+  price_max: 8000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/docqa-engine"
+    - "https://github.com/ChunkyTortoise/prompt-engineering-lab"
+  case_studies:
+    - "CS002"
+  certifications:
+    - "C002"
+    - "C010"
+  status: ready
+  priority: P2
+  description: "Systematic prompt optimization with A/B testing, cost tracking, and evaluation frameworks for production LLM applications"
+  tags:
+    - "prompt-engineering"
+    - "optimization"
+    - "a-b-testing"
+    - "cost-optimization"
+
+- id: S06
+  name: Automation & Workflow Engineering
+  category: Agentic AI
+  buyer_persona: "Operations managers and founders automating repetitive business processes"
+  core_problem: "Manual workflows are slow, error-prone, and don't scale with business growth"
+  deliverables:
+    - "Workflow automation architecture"
+    - "Integration with existing tools (CRM, email, APIs)"
+    - "Error handling and retry logic"
+    - "Monitoring and alerting setup"
+    - "Documentation and runbooks"
+  timeline: "2-4 weeks"
+  price_min: 4000
+  price_max: 10000
+  hourly_equivalent_min: 80
+  hourly_equivalent_max: 120
+  repos:
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+  case_studies:
+    - "CS001"
+    - "CS002"
+  status: ready
+  priority: P1
+  description: "End-to-end workflow automation with AI agents, API integrations, error handling, and monitoring"
+  tags:
+    - "automation"
+    - "workflows"
+    - "integration"
+    - "efficiency"
+
+- id: S07
+  name: Deep Learning & Custom ML Models
+  category: Data/BI
+  buyer_persona: "Data science leads and product managers needing custom ML solutions"
+  core_problem: "Off-the-shelf models don't capture domain-specific patterns or business requirements"
+  deliverables:
+    - "Custom model architecture design"
+    - "Training pipeline with data preprocessing"
+    - "Model evaluation and validation framework"
+    - "Deployment infrastructure and monitoring"
+    - "Model documentation and API interface"
+  timeline: "4-8 weeks"
+  price_min: 8000
+  price_max: 20000
+  hourly_equivalent_min: 120
+  hourly_equivalent_max: 180
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/insight-engine"
+  certifications:
+    - "C009"
+    - "C019"
+  status: needs-proof
+  priority: P2
+  description: "Custom deep learning and ML models tailored to specific business problems with full training and deployment pipelines"
+  tags:
+    - "deep-learning"
+    - "ml-models"
+    - "custom-models"
+    - "training"
+
+- id: S08
+  name: Interactive BI Dashboards
+  category: Data/BI
+  buyer_persona: "Business analysts and executives needing real-time data visibility"
+  core_problem: "Static reports and spreadsheets don't provide real-time insights or interactive exploration"
+  deliverables:
+    - "Interactive dashboard with filters and drill-downs"
+    - "Data profiling and cleaning pipeline"
+    - "KPI tracking and trend analysis"
+    - "Export functionality (PDF, Excel, scheduled reports)"
+    - "User authentication and role-based access"
+  timeline: "2-3 weeks"
+  price_min: 4000
+  price_max: 10000
+  hourly_equivalent_min: 80
+  hourly_equivalent_max: 120
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/insight-engine"
+  case_studies:
+    - "CS001"
+  certifications:
+    - "C007"
+    - "C011"
+    - "C014"
+    - "C015"
+  status: ready
+  priority: P1
+  description: "Real-time interactive BI dashboards with auto-profiling, KPI tracking, and scheduled reporting"
+  tags:
+    - "bi"
+    - "dashboards"
+    - "analytics"
+    - "visualization"
+
+- id: S09
+  name: Automated Reporting Pipelines
+  category: Data/BI
+  buyer_persona: "Operations teams and executives automating regular reporting"
+  core_problem: "Manual report generation is time-consuming, error-prone, and delays decision-making"
+  deliverables:
+    - "Automated data extraction and transformation"
+    - "Template-based report generation"
+    - "Scheduled delivery (email, Slack, dashboard)"
+    - "Version control and change tracking"
+    - "Error handling and alerting"
+  timeline: "2-3 weeks"
+  price_min: 3500
+  price_max: 8000
+  hourly_equivalent_min: 75
+  hourly_equivalent_max: 110
+  repos:
+    - "https://github.com/ChunkyTortoise/insight-engine"
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+  certifications:
+    - "C007"
+    - "C011"
+  status: ready
+  priority: P2
+  description: "Fully automated reporting pipelines with scheduled delivery, template customization, and error handling"
+  tags:
+    - "reporting"
+    - "automation"
+    - "scheduling"
+    - "etl"
+
+- id: S10
+  name: Predictive Analytics & Lead Scoring
+  category: Data/BI
+  buyer_persona: "Sales leaders and marketing directors optimizing conversion"
+  core_problem: "Manual lead qualification misses high-value prospects and wastes time on low-potential leads"
+  deliverables:
+    - "Predictive model training and validation"
+    - "Lead scoring algorithm with feature importance"
+    - "Integration with CRM and marketing tools"
+    - "Real-time scoring API"
+    - "Performance monitoring and retraining pipeline"
+  timeline: "3-5 weeks"
+  price_min: 5000
+  price_max: 12000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/insight-engine"
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+  case_studies:
+    - "CS001"
+    - "CS002"
+  certifications:
+    - "C009"
+    - "C013"
+    - "C019"
+  status: ready
+  priority: P1
+  description: "Machine learning-powered lead scoring and predictive analytics to prioritize high-value prospects"
+  tags:
+    - "predictive-analytics"
+    - "lead-scoring"
+    - "ml"
+    - "conversion"
+
+- id: S11
+  name: Data Engineering & Pipelines
+  category: Data/BI
+  buyer_persona: "Data engineers and technical founders building data infrastructure"
+  core_problem: "Manual data movement and transformation is unreliable and doesn't scale"
+  deliverables:
+    - "ETL/ELT pipeline architecture"
+    - "Data quality validation and monitoring"
+    - "Schema evolution and migration handling"
+    - "Orchestration and scheduling"
+    - "Documentation and data lineage"
+  timeline: "3-5 weeks"
+  price_min: 5000
+  price_max: 12000
+  hourly_equivalent_min: 90
+  hourly_equivalent_max: 130
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/insight-engine"
+  certifications:
+    - "C001"
+    - "C007"
+  status: needs-proof
+  priority: P2
+  description: "Robust data engineering pipelines with quality validation, monitoring, and orchestration"
+  tags:
+    - "data-engineering"
+    - "etl"
+    - "pipelines"
+    - "data-quality"
+
+- id: S12
+  name: Programmatic SEO Content Engine
+  category: Marketing
+  buyer_persona: "Marketing teams and content managers scaling content production"
+  core_problem: "Manual content creation is slow, expensive, and doesn't scale for SEO programs"
+  deliverables:
+    - "Content generation pipeline with templates"
+    - "SEO optimization and keyword integration"
+    - "Quality scoring and human review workflow"
+    - "Bulk generation and scheduling"
+    - "Performance tracking and iteration"
+  timeline: "2-3 weeks"
+  price_min: 4000
+  price_max: 10000
+  hourly_equivalent_min: 80
+  hourly_equivalent_max: 120
+  repos:
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+  certifications:
+    - "C008"
+    - "C018"
+  status: ready
+  priority: P2
+  description: "AI-powered programmatic SEO content engine with templates, optimization, and quality control"
+  tags:
+    - "seo"
+    - "content-generation"
+    - "marketing"
+    - "automation"
+
+- id: S13
+  name: Email & Outreach Automation
+  category: Marketing
+  buyer_persona: "Sales teams and founders automating prospecting and follow-up"
+  core_problem: "Manual outreach is inconsistent, doesn't scale, and misses follow-up opportunities"
+  deliverables:
+    - "Email sequence builder with personalization"
+    - "CRM integration and lead tracking"
+    - "A/B testing for subject lines and content"
+    - "Automated follow-up and drip campaigns"
+    - "Performance analytics and optimization"
+  timeline: "2-3 weeks"
+  price_min: 3500
+  price_max: 8000
+  hourly_equivalent_min: 75
+  hourly_equivalent_max: 110
+  repos:
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+    - "https://github.com/ChunkyTortoise/linkedin_engine"
+  case_studies:
+    - "CS002"
+  certifications:
+    - "C008"
+    - "C018"
+  status: ready
+  priority: P2
+  description: "Automated email and outreach sequences with personalization, CRM integration, and performance tracking"
+  tags:
+    - "email-automation"
+    - "outreach"
+    - "sales"
+    - "crm"
+
+- id: S14
+  name: Social Media Content Automation
+  category: Marketing
+  buyer_persona: "Marketing teams and social media managers scaling content"
+  core_problem: "Manual social media posting is time-consuming and inconsistent across platforms"
+  deliverables:
+    - "Multi-platform content scheduler"
+    - "Content calendar and planning tools"
+    - "Automated posting and engagement tracking"
+    - "Analytics and performance reporting"
+    - "Template library for different content types"
+  timeline: "2-3 weeks"
+  price_min: 3000
+  price_max: 7000
+  hourly_equivalent_min: 70
+  hourly_equivalent_max: 100
+  repos:
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+  certifications:
+    - "C008"
+    - "C018"
+  status: needs-proof
+  priority: P3
+  description: "Automated social media content scheduling, posting, and analytics across multiple platforms"
+  tags:
+    - "social-media"
+    - "content-automation"
+    - "marketing"
+    - "scheduling"
+
+- id: S15
+  name: Marketing Attribution Analysis
+  category: Marketing
+  buyer_persona: "Marketing directors and CMOs measuring campaign effectiveness"
+  core_problem: "Unclear attribution makes it impossible to optimize marketing spend and ROI"
+  deliverables:
+    - "Multi-touch attribution model"
+    - "Campaign performance dashboard"
+    - "ROI analysis and optimization recommendations"
+    - "Channel comparison and budget allocation"
+    - "Automated reporting and alerts"
+  timeline: "3-4 weeks"
+  price_min: 5000
+  price_max: 12000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 140
+  repos:
+    - "https://github.com/ChunkyTortoise/insight-engine"
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+  case_studies:
+    - "CS002"
+  certifications:
+    - "C001"
+    - "C007"
+    - "C011"
+  status: ready
+  priority: P2
+  description: "Multi-touch marketing attribution with ROI analysis, channel optimization, and automated reporting"
+  tags:
+    - "attribution"
+    - "marketing-analytics"
+    - "roi"
+    - "optimization"
+
+- id: S16
+  name: Competitor Intelligence & Monitoring
+  category: Marketing
+  buyer_persona: "Product managers and competitive intelligence teams"
+  core_problem: "Manual competitor research is slow, incomplete, and misses real-time changes"
+  deliverables:
+    - "Automated competitor monitoring system"
+    - "Price and feature tracking"
+    - "Change detection and alerts"
+    - "Competitive analysis dashboard"
+    - "Historical trend analysis"
+  timeline: "2-3 weeks"
+  price_min: 4000
+  price_max: 9000
+  hourly_equivalent_min: 85
+  hourly_equivalent_max: 120
+  repos:
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+  case_studies:
+    - "CS002"
+  status: ready
+  priority: P2
+  description: "Automated competitor intelligence with price monitoring, change detection, and competitive analysis"
+  tags:
+    - "competitive-intelligence"
+    - "monitoring"
+    - "scraping"
+    - "analysis"
+
+- id: S17
+  name: MLOps & Model Deployment
+  category: Infra/MLOps
+  buyer_persona: "ML engineers and data science leads deploying models to production"
+  core_problem: "Manual model deployment is unreliable, lacks monitoring, and doesn't scale"
+  deliverables:
+    - "Model deployment pipeline (CI/CD)"
+    - "Monitoring and observability setup"
+    - "A/B testing framework for model comparison"
+    - "Automated retraining and rollback"
+    - "Infrastructure as code and documentation"
+  timeline: "3-5 weeks"
+  price_min: 6000
+  price_max: 15000
+  hourly_equivalent_min: 110
+  hourly_equivalent_max: 160
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/ai-orchestrator"
+  certifications:
+    - "C006"
+    - "C017"
+  status: ready
+  priority: P1
+  description: "Production MLOps pipeline with automated deployment, monitoring, A/B testing, and retraining"
+  tags:
+    - "mlops"
+    - "deployment"
+    - "monitoring"
+    - "ci-cd"
+
+- id: S18
+  name: API Development & Integration
+  category: Infra/MLOps
+  buyer_persona: "Engineering leads and product managers building API-first products"
+  core_problem: "Poor API design leads to integration issues, security vulnerabilities, and maintenance burden"
+  deliverables:
+    - "RESTful API design and documentation"
+    - "Authentication and authorization (JWT, OAuth)"
+    - "Rate limiting and error handling"
+    - "API versioning and deprecation strategy"
+    - "Testing suite and monitoring"
+  timeline: "2-4 weeks"
+  price_min: 4000
+  price_max: 10000
+  hourly_equivalent_min: 90
+  hourly_equivalent_max: 130
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/ai-orchestrator"
+  status: ready
+  priority: P2
+  description: "Production-grade API development with authentication, rate limiting, documentation, and monitoring"
+  tags:
+    - "api"
+    - "integration"
+    - "rest"
+    - "security"
+
+- id: S19
+  name: Excel to Web App Modernization
+  category: Infra/MLOps
+  buyer_persona: "Business teams and operations managers modernizing spreadsheets"
+  core_problem: "Excel spreadsheets don't scale, lack collaboration, and have security risks"
+  deliverables:
+    - "Web application with CRUD operations"
+    - "User authentication and role-based access"
+    - "Data validation and error handling"
+    - "Import/export functionality"
+    - "Deployment and hosting setup"
+  timeline: "1-2 weeks"
+  price_min: 2500
+  price_max: 6000
+  hourly_equivalent_min: 80
+  hourly_equivalent_max: 120
+  repos:
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+    - "https://github.com/ChunkyTortoise/insight-engine"
+  status: ready
+  priority: P2
+  description: "Convert Excel spreadsheets to modern web applications with authentication, validation, and collaboration"
+  tags:
+    - "modernization"
+    - "web-app"
+    - "excel"
+    - "crud"
+
+- id: S20
+  name: Cloud Infrastructure & DevOps
+  category: Infra/MLOps
+  buyer_persona: "CTOs and DevOps engineers building scalable infrastructure"
+  core_problem: "Manual infrastructure management is error-prone, slow, and doesn't scale"
+  deliverables:
+    - "Infrastructure as code (Terraform, Docker Compose)"
+    - "CI/CD pipeline setup"
+    - "Monitoring and alerting (Prometheus, Grafana)"
+    - "Security hardening and compliance"
+    - "Documentation and runbooks"
+  timeline: "3-5 weeks"
+  price_min: 6000
+  price_max: 15000
+  hourly_equivalent_min: 110
+  hourly_equivalent_max: 160
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  status: needs-proof
+  priority: P2
+  description: "Scalable cloud infrastructure with IaC, CI/CD, monitoring, and security hardening"
+  tags:
+    - "devops"
+    - "infrastructure"
+    - "cloud"
+    - "ci-cd"
+
+- id: S21
+  name: AI Compliance & Governance
+  category: Ops/Governance
+  buyer_persona: "Compliance officers and legal teams managing AI risk"
+  core_problem: "AI systems lack proper governance, audit trails, and compliance controls"
+  deliverables:
+    - "AI governance framework and policies"
+    - "Audit logging and monitoring"
+    - "Bias detection and mitigation"
+    - "Data privacy and security controls"
+    - "Compliance documentation and reporting"
+  timeline: "3-4 weeks"
+  price_min: 6000
+  price_max: 14000
+  hourly_equivalent_min: 120
+  hourly_equivalent_max: 170
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  certifications:
+    - "C003"
+    - "C006"
+  status: needs-proof
+  priority: P2
+  description: "AI compliance and governance framework with audit trails, bias detection, and privacy controls"
+  tags:
+    - "compliance"
+    - "governance"
+    - "audit"
+    - "ethics"
+
+- id: S22
+  name: Knowledge Management Systems
+  category: Ops/Governance
+  buyer_persona: "Knowledge managers and operations teams organizing information"
+  core_problem: "Knowledge is scattered across documents, emails, and people, making it hard to find and reuse"
+  deliverables:
+    - "Centralized knowledge base with search"
+    - "Document classification and tagging"
+    - "Version control and change tracking"
+    - "Access control and permissions"
+    - "Integration with existing tools"
+  timeline: "3-5 weeks"
+  price_min: 5000
+  price_max: 12000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 140
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/docqa-engine"
+    - "https://github.com/ChunkyTortoise/mcp-toolkit"
+  certifications:
+    - "C003"
+    - "C006"
+  status: ready
+  priority: P2
+  description: "Centralized knowledge management system with search, classification, and integration capabilities"
+  tags:
+    - "knowledge-management"
+    - "search"
+    - "documentation"
+    - "collaboration"
+
+- id: S23
+  name: Training & Enablement
+  category: Ops/Governance
+  buyer_persona: "HR managers and team leads upskilling teams on AI tools"
+  core_problem: "Teams lack AI literacy and can't effectively use new tools and processes"
+  deliverables:
+    - "Custom training curriculum and materials"
+    - "Hands-on workshops and exercises"
+    - "Assessment and certification tracking"
+    - "Ongoing support and Q&A"
+    - "Train-the-trainer program"
+  timeline: "2-4 weeks"
+  price_min: 4000
+  price_max: 10000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  status: needs-proof
+  priority: P3
+  description: "Custom AI training programs with curriculum, workshops, assessments, and ongoing support"
+  tags:
+    - "training"
+    - "enablement"
+    - "education"
+    - "upskilling"
+
+- id: S24
+  name: Process Optimization & Automation
+  category: Ops/Governance
+  buyer_persona: "Operations managers and process improvement teams"
+  core_problem: "Inefficient processes waste time, increase costs, and reduce quality"
+  deliverables:
+    - "Process mapping and analysis"
+    - "Bottleneck identification and optimization"
+    - "Automation recommendations and implementation"
+    - "KPI tracking and measurement"
+    - "Continuous improvement framework"
+  timeline: "3-5 weeks"
+  price_min: 5000
+  price_max: 12000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 140
+  repos:
+    - "https://github.com/ChunkyTortoise/Revenue-Sprint"
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  status: ready
+  priority: P2
+  description: "End-to-end process optimization with automation, KPI tracking, and continuous improvement"
+  tags:
+    - "process-optimization"
+    - "automation"
+    - "efficiency"
+    - "lean"
+
+- id: S25
+  name: Fractional AI Leadership
+  category: Ops/Governance
+  buyer_persona: "Startups and SMBs needing AI expertise without full-time hire"
+  core_problem: "Organizations need AI strategy and execution but can't afford or don't need full-time leadership"
+  deliverables:
+    - "AI strategy and roadmap"
+    - "Team building and hiring support"
+    - "Project oversight and delivery"
+    - "Vendor evaluation and selection"
+    - "Ongoing advisory and guidance"
+  timeline: "3-6 months (retainer)"
+  price_min: 8000
+  price_max: 20000
+  hourly_equivalent_min: 150
+  hourly_equivalent_max: 200
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  certifications:
+    - "C002"
+    - "C003"
+    - "C006"
+  status: needs-proof
+  priority: P2
+  description: "Fractional AI leadership providing strategy, team building, project oversight, and ongoing advisory"
+  tags:
+    - "leadership"
+    - "strategy"
+    - "advisory"
+    - "fractional"
+
+- id: S26
+  name: Custom AI Solutions
+  category: Ops/Governance
+  buyer_persona: "Business leaders with unique AI needs not covered by standard services"
+  core_problem: "Off-the-shelf AI solutions don't address specific business requirements or constraints"
+  deliverables:
+    - "Requirements analysis and solution design"
+    - "Custom AI/ML development"
+    - "Integration with existing systems"
+    - "Testing and validation"
+    - "Documentation and handoff"
+  timeline: "4-12 weeks (varies)"
+  price_min: 10000
+  price_max: 50000
+  hourly_equivalent_min: 125
+  hourly_equivalent_max: 200
+  repos:
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+    - "https://github.com/ChunkyTortoise/ai-orchestrator"
+  status: needs-proof
+  priority: P3
+  description: "Fully custom AI solutions designed and built to address unique business requirements"
+  tags:
+    - "custom"
+    - "bespoke"
+    - "tailored"
+    - "end-to-end"
+
+# Quick-Win Services (QW1-QW7)
+
+- id: QW1
+  name: CSV to Dashboard
+  category: Quick-Win
+  buyer_persona: "Business analysts and managers needing quick data visualization"
+  core_problem: "Data trapped in spreadsheets without easy visualization or sharing"
+  deliverables:
+    - "Interactive Streamlit dashboard"
+    - "Data profiling and cleaning"
+    - "Charts and visualizations"
+    - "PDF export functionality"
+    - "Deployment link"
+  timeline: "3-5 days"
+  price_min: 500
+  price_max: 1500
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/insight-engine"
+  status: ready
+  priority: P2
+  description: "Transform CSV data into interactive dashboard with auto-profiling, charts, and PDF export"
+  tags:
+    - "quick-win"
+    - "dashboard"
+    - "csv"
+    - "visualization"
+
+- id: QW2
+  name: LLM API Integration
+  category: Quick-Win
+  buyer_persona: "Developers adding AI capabilities to existing applications"
+  core_problem: "Integrating LLM APIs requires handling authentication, rate limits, and error cases"
+  deliverables:
+    - "LLM client with fallback routing"
+    - "Authentication and configuration"
+    - "Error handling and retries"
+    - "Cost tracking and logging"
+    - "Example usage and documentation"
+  timeline: "2-3 days"
+  price_min: 300
+  price_max: 800
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/ai-orchestrator"
+  certifications:
+    - "C006"
+  status: ready
+  priority: P2
+  description: "Quick LLM API integration with provider fallback, error handling, and cost tracking"
+  tags:
+    - "quick-win"
+    - "llm"
+    - "api"
+    - "integration"
+
+- id: QW3
+  name: Prompt Audit & Optimization
+  category: Quick-Win
+  buyer_persona: "Product teams improving LLM prompt performance"
+  core_problem: "Poor prompts lead to inconsistent outputs and high token costs"
+  deliverables:
+    - "Prompt analysis and recommendations"
+    - "A/B test results with metrics"
+    - "Optimized prompt versions"
+    - "Cost comparison analysis"
+    - "Best practices guide"
+  timeline: "2-3 days"
+  price_min: 400
+  price_max: 1000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/docqa-engine"
+    - "https://github.com/ChunkyTortoise/prompt-engineering-lab"
+  certifications:
+    - "C002"
+    - "C010"
+  status: ready
+  priority: P2
+  description: "Audit and optimize up to 10 prompts with A/B testing, cost analysis, and best practices"
+  tags:
+    - "quick-win"
+    - "prompt"
+    - "optimization"
+    - "a-b-testing"
+
+- id: QW4
+  name: Excel to Web App
+  category: Quick-Win
+  buyer_persona: "Business teams modernizing spreadsheet workflows"
+  core_problem: "Excel spreadsheets lack collaboration, security, and mobile access"
+  deliverables:
+    - "Streamlit web application"
+    - "CRUD operations for data"
+    - "User authentication"
+    - "Data validation"
+    - "Deployment and hosting"
+  timeline: "3-5 days"
+  price_min: 800
+  price_max: 2000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+    - "https://github.com/ChunkyTortoise/insight-engine"
+  status: ready
+  priority: P2
+  description: "Convert Excel spreadsheet to modern web app with authentication, validation, and collaboration"
+  tags:
+    - "quick-win"
+    - "excel"
+    - "web-app"
+    - "modernization"
+
+- id: QW5
+  name: Web Scraping Setup
+  category: Quick-Win
+  buyer_persona: "Business teams needing automated data collection"
+  core_problem: "Manual data collection is slow, error-prone, and doesn't scale"
+  deliverables:
+    - "YAML-configurable scraper"
+    - "Data extraction and storage"
+    - "Scheduling and automation"
+    - "Change detection and alerts"
+    - "Documentation and examples"
+  timeline: "2-4 days"
+  price_min: 600
+  price_max: 1500
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/scrape-and-serve"
+  status: ready
+  priority: P2
+  description: "YAML-configurable web scraper with scheduling, change detection, and automated alerts"
+  tags:
+    - "quick-win"
+    - "scraping"
+    - "automation"
+    - "data-collection"
+
+- id: QW6
+  name: RAG Quick Start
+  category: Quick-Win
+  buyer_persona: "Teams needing basic document Q&A capabilities"
+  core_problem: "Information locked in documents without easy search or Q&A"
+  deliverables:
+    - "Basic RAG pipeline setup"
+    - "Document ingestion (PDF, DOCX)"
+    - "Simple Q&A interface"
+    - "Source citations"
+    - "Deployment instructions"
+  timeline: "3-5 days"
+  price_min: 800
+  price_max: 2000
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/docqa-engine"
+  certifications:
+    - "C003"
+    - "C006"
+  status: ready
+  priority: P2
+  description: "Quick RAG setup for document Q&A with ingestion, search, and source citations"
+  tags:
+    - "quick-win"
+    - "rag"
+    - "document-qa"
+    - "search"
+
+- id: QW7
+  name: BI Dashboard Template
+  category: Quick-Win
+  buyer_persona: "Business teams needing dashboard starting point"
+  core_problem: "Building dashboards from scratch takes time and requires expertise"
+  deliverables:
+    - "Customizable dashboard template"
+    - "Sample data and examples"
+    - "Common chart types included"
+    - "Filter and drill-down capabilities"
+    - "Deployment guide"
+  timeline: "2-3 days"
+  price_min: 500
+  price_max: 1200
+  hourly_equivalent_min: 100
+  hourly_equivalent_max: 150
+  repos:
+    - "https://github.com/ChunkyTortoise/insight-engine"
+    - "https://github.com/ChunkyTortoise/EnterpriseHub"
+  certifications:
+    - "C007"
+    - "C011"
+    - "C014"
+    - "C015"
+  status: ready
+  priority: P2
+  description: "Customizable BI dashboard template with charts, filters, and deployment guide"
+  tags:
+    - "quick-win"
+    - "dashboard"
+    - "template"
+    - "bi"

@@ -43,7 +43,7 @@ class MarketCondition(Enum):
 class MarketType(Enum):
     """Market type classification"""
 
-    TECH_HUB = "tech_hub"  # Austin, Seattle, SF
+    TECH_HUB = "tech_hub"  # Rancho Cucamonga, Seattle, SF
     ENERGY_HUB = "energy_hub"  # Houston, Dallas
     LOGISTICS_HUB = "logistics_hub"  # Inland Empire
     MIXED_ECONOMY = "mixed_economy"  # San Antonio

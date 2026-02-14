@@ -68,7 +68,7 @@ class NeuralPropertyMatchingDemo:
                 "address": {
                     "street": "2047 Rainey Street",
                     "neighborhood": "Rainey District",
-                    "city": "Austin",
+                    "city": "Rancho Cucamonga",
                     "state": "TX",
                     "zip": "78701",
                     "coordinates": {"lat": 30.2599, "lng": -97.7434}
@@ -89,7 +89,7 @@ class NeuralPropertyMatchingDemo:
                     "floor_to_ceiling_windows", "italian_marble", "elevator"
                 ],
                 "nearby_features": [
-                    "downtown_austin", "ladybird_lake", "music_venues",
+                    "downtown_rancho_cucamonga", "ladybird_lake", "music_venues",
                     "fine_dining", "cultural_district", "tech_corridor"
                 ],
                 "investment_metrics": {
@@ -113,7 +113,7 @@ class NeuralPropertyMatchingDemo:
                 "address": {
                     "street": "1205 Barton Hills Drive",
                     "neighborhood": "Barton Hills",
-                    "city": "Austin",
+                    "city": "Rancho Cucamonga",
                     "state": "TX",
                     "zip": "78704",
                     "coordinates": {"lat": 30.2515, "lng": -97.7739}
@@ -146,7 +146,7 @@ class NeuralPropertyMatchingDemo:
                 "school_info": {
                     "elementary": "Barton Hills Elementary (9/10)",
                     "middle": "O. Henry Middle School (8/10)",
-                    "high": "Austin High School (7/10)"
+                    "high": "Rancho Cucamonga High School (7/10)"
                 },
                 "media": {
                     "images": [
@@ -162,7 +162,7 @@ class NeuralPropertyMatchingDemo:
                 "address": {
                     "street": "308 Brackenridge Street",
                     "neighborhood": "Tarrytown",
-                    "city": "Austin",
+                    "city": "Rancho Cucamonga",
                     "state": "TX",
                     "zip": "78703",
                     "coordinates": {"lat": 30.2937, "lng": -97.7731}
@@ -183,7 +183,7 @@ class NeuralPropertyMatchingDemo:
                     "guest_suite", "office", "library", "formal_dining"
                 ],
                 "nearby_features": [
-                    "historic_tarrytown", "lake_austin", "country_clubs",
+                    "historic_tarrytown", "lake_rancho_cucamonga", "country_clubs",
                     "prestigious_neighborhood", "mature_trees", "private_setting"
                 ],
                 "investment_metrics": {

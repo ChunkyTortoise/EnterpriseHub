@@ -673,7 +673,7 @@ if __name__ == "__main__":
         "risk_tier": "critical",
         "top_risk_factor": "days_since_last_interaction",
         "days_since_interaction": "12",
-        "preferred_locations": "Austin, TX",
+        "preferred_locations": "Rancho Cucamonga, CA",
         "budget_range": "$350K - $450K",
         "property_types": "Single-family homes",
         "last_property_viewed": "3-bedroom home in Cedar Park",

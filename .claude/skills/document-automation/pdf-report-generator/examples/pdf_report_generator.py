@@ -1098,7 +1098,7 @@ def demo_pdf_generation():
         'price': 625000,
         'address': {
             'street': '123 Oak Hill Dr',
-            'city': 'Austin',
+            'city': 'Rancho Cucamonga',
             'state': 'TX',
             'zip': '78745'
         },
@@ -1182,7 +1182,7 @@ def demo_pdf_generation():
 
         print("\n🌍 Generating market comparison report...")
         market_report_path, market_metadata = generator.generate_market_comparison_report(
-            target_area="Austin, TX",
+            target_area="Rancho Cucamonga, CA",
             comparable_areas=["Dallas, TX", "San Antonio, TX"],
             analysis_period="12_months",
             visualizations=['price_trends', 'inventory_levels']

@@ -634,10 +634,10 @@ class RiskDetector:
             if prohibited.replace("_", " ") in intended_use_lower:
                 return RiskLevel.UNACCEPTABLE
 
-        # Check for high-risk domains
+        # Check for high-risk ontario_millss
         use_case_lower = model.use_case_category.lower()
-        for high_risk_domain in self.EU_AI_ACT_HIGH_RISK_DOMAINS:
-            if high_risk_domain.replace("_", " ") in use_case_lower:
+        for high_risk_ontario_mills in self.EU_AI_ACT_HIGH_RISK_DOMAINS:
+            if high_risk_ontario_mills.replace("_", " ") in use_case_lower:
                 return RiskLevel.HIGH
 
         # Score-based classification

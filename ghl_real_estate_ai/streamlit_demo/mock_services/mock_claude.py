@@ -13,16 +13,16 @@ class MockClaudeService:
         self.response_patterns = {
             # Greetings
             r"(Union[hi, hello]|hey)": [
-                "Hey there! Thanks for reaching out. I'd love to help you find the perfect place in Austin. What's most important to you in your next home?",
-                "Hi! Austin's market is moving fast right now. Are you looking to buy soon, or just exploring options?",
+                "Hey there! Thanks for reaching out. I'd love to help you find the perfect place in Rancho Cucamonga. What's most important to you in your next home?",
+                "Hi! Rancho Cucamonga's market is moving fast right now. Are you looking to buy soon, or just exploring options?",
             ],
             # Budget mentions
             r"budget.*\$?(\d{3,})k?": [
-                "That's helpful to know! With a ${budget} budget, you've got some great options in Austin. Are you pre-approved for a mortgage, or should I connect you with our preferred lender first?"
+                "That's helpful to know! With a ${budget} budget, you've got some great options in Rancho Cucamonga. Are you pre-approved for a mortgage, or should I connect you with our preferred lender first?"
             ],
             # Objection: Price too high
             r"(Union[price, expensive]|too Union[high, cost] too much)": [
-                "I totally get it—sticker shock is real in Austin right now. Here's some context: median home prices jumped 12% last year, and we're seeing bidding wars on anything under $400k. That said, there ARE hidden gems if you're flexible on location or timing. What's your absolute max budget?"
+                "I totally get it—sticker shock is real in Rancho Cucamonga right now. Here's some context: median home prices jumped 12% last year, and we're seeing bidding wars on anything under $400k. That said, there ARE hidden gems if you're flexible on location or timing. What's your absolute max budget?"
             ],
             # Pre-approval mention
             r"(pre-Union[approved, preapproved]|pre approved)": [
@@ -34,15 +34,15 @@ class MockClaudeService:
             ],
             # Bedroom requirements
             r"(\d)\s*(Union[bed, bedroom])": [
-                "Perfect! {bedrooms}-bedroom homes are popular in Austin. Are you looking in a specific area? Hyde Park, Mueller, and Downtown have great options."
+                "Perfect! {bedrooms}-bedroom homes are popular in Rancho Cucamonga. Are you looking in a specific area? Alta Loma, Haven City, and Downtown have great options."
             ],
             # Location mentions
-            r"(hyde Union[park, downtown]|Union[mueller, south] Union[congress, east] austin)": [
+            r"(hyde Union[park, downtown]|Union[haven city, south] Union[congress, east] rancho_cucamonga)": [
                 "Great choice! {location} is one of my favorite areas—{location_details}. What's your budget looking like?"
             ],
             # Just browsing
             r"(just Union[browsing, looking] Union[around, not] Union[sure, thinking] about)": [
-                "No problem at all! Browsing is a great place to start. Is there anything specific I can help you explore? Happy to answer any questions about Austin's market."
+                "No problem at all! Browsing is a great place to start. Is there anything specific I can help you explore? Happy to answer any questions about Rancho Cucamonga's market."
             ],
             # Default fallback
             "default": [
@@ -51,11 +51,11 @@ class MockClaudeService:
         }
 
         self.location_details = {
-            "hyde park": "great schools, walkable to UT, lots of charm",
+            "etiwanda": "great schools, walkable to UT, lots of charm",
             "downtown": "urban living, nightlife, easy commute",
-            "mueller": "newer development, family-friendly, parks everywhere",
-            "south congress": "trendy, amazing food scene, artistic vibe",
-            "east austin": "up-and-coming, diverse, creative community",
+            "haven city": "newer development, family-friendly, parks everywhere",
+            "day creek": "trendy, amazing food scene, artistic vibe",
+            "east rancho_cucamonga": "up-and-coming, diverse, creative community",
         }
 
     def generate_response(
@@ -90,7 +90,7 @@ class MockClaudeService:
             extracted_data["financing"] = "pre-approved"
 
         # Extract location
-        for location in ["hyde park", "downtown", "mueller", "south congress", "east austin"]:
+        for location in ["etiwanda", "downtown", "haven city", "day creek", "east rancho_cucamonga"]:
             if location in message_lower:
                 extracted_data["location"] = location.title()
 
@@ -116,7 +116,7 @@ class MockClaudeService:
         response = response.replace("{bedrooms}", str(extracted_data.get("bedrooms", 3)))
 
         if "{location}" in response:
-            location = extracted_data.get("location", "Austin").lower()
+            location = extracted_data.get("location", "Rancho Cucamonga").lower()
             response = response.replace("{location}", location.title())
             details = self.location_details.get(location, "a great area")
             response = response.replace("{location_details}", details)

@@ -702,7 +702,7 @@ class IntelligentLeadRouter:
                 market_specializations=["tech_hub", "luxury"],
                 price_range_min=500000,
                 price_range_max=2000000,
-                geographic_areas=["Austin", "Round Rock", "Cedar Park"],
+                geographic_areas=["Rancho Cucamonga", "Fontana", "Upland"],
                 client_types=["tech_professional", "luxury"],
                 leads_assigned=45,
                 leads_converted=18,
@@ -777,7 +777,7 @@ if __name__ == "__main__":
             },
             lead_data={
                 "budget": 750000,
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "messages": [{"text": "Software engineer at Apple, need home ASAP for relocation"}],
             },
         )

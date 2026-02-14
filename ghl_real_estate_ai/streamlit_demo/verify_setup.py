@@ -88,7 +88,7 @@ def verify_mock_rag():
         rag = MockRAGService()
 
         # Test property search
-        preferences = {"budget": 400000, "bedrooms": 3, "location": "Hyde Park"}
+        preferences = {"budget": 400000, "bedrooms": 3, "location": "Alta Loma"}
 
         results = rag.search_properties(preferences, top_k=3)
         assert len(results) > 0

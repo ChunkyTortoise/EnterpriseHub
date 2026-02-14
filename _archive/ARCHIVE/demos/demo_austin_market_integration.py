@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Austin Market Integration Demo Script
+Rancho Cucamonga Market Integration Demo Script
 
-Demonstrates the comprehensive Austin real estate market integration
+Demonstrates the comprehensive Rancho Cucamonga real estate market integration
 for Jorge's lead bot including:
 
 1. Market Intelligence Analysis
@@ -11,7 +11,7 @@ for Jorge's lead bot including:
 4. AI-Powered Neighborhood Matching
 5. Market Timing Recommendations
 
-Run this script to see the Austin market expertise in action.
+Run this script to see the Rancho Cucamonga market expertise in action.
 """
 
 import asyncio
@@ -25,31 +25,31 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Import our Austin market services
-from ghl_real_estate_ai.services.austin_market_service import (
-    get_austin_market_service, PropertyType
+# Import our Rancho Cucamonga market services
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
+    get_rancho_cucamonga_market_service, PropertyType
 )
 from ghl_real_estate_ai.services.property_alerts import (
     get_property_alert_system, AlertCriteria
 )
-from ghl_real_estate_ai.services.austin_ai_assistant import (
-    get_austin_ai_assistant, AustinConversationContext
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
+    get_rancho_cucamonga_ai_assistant, Rancho CucamongaConversationContext
 )
 
 
-class AustinMarketDemo:
-    """Comprehensive demonstration of Austin market integration capabilities."""
+class Rancho CucamongaMarketDemo:
+    """Comprehensive demonstration of Rancho Cucamonga market integration capabilities."""
 
     def __init__(self):
-        self.market_service = get_austin_market_service()
+        self.market_service = get_rancho_cucamonga_market_service()
         self.alert_system = get_property_alert_system()
-        self.ai_assistant = get_austin_ai_assistant()
+        self.ai_assistant = get_rancho_cucamonga_ai_assistant()
 
     async def run_full_demo(self):
-        """Run comprehensive Austin market integration demo."""
+        """Run comprehensive Rancho Cucamonga market integration demo."""
         print("\n🏠 AUSTIN REAL ESTATE MARKET INTEGRATION DEMO")
         print("=" * 60)
-        print("Demonstrating Jorge's Austin Market Expertise System")
+        print("Demonstrating Jorge's Rancho Cucamonga Market Expertise System")
         print("=" * 60)
 
         # Demo scenarios for different types of leads
@@ -112,10 +112,10 @@ class AustinMarketDemo:
 
         print("\n✅ DEMO COMPLETE")
         print("=" * 60)
-        print("Austin Market Integration System Ready for Production!")
+        print("Rancho Cucamonga Market Integration System Ready for Production!")
 
     async def _demo_scenario(self, lead_data: Dict[str, Any]):
-        """Demonstrate Austin market analysis for a specific lead scenario."""
+        """Demonstrate Rancho Cucamonga market analysis for a specific lead scenario."""
         lead_name = lead_data["name"]
         employer = lead_data["employer"]
 
@@ -147,8 +147,8 @@ class AustinMarketDemo:
     async def _demo_market_intelligence(self, lead_data: Dict[str, Any]):
         """Demonstrate market intelligence capabilities."""
         try:
-            # Get overall Austin market metrics
-            print("• Analyzing Austin market conditions...")
+            # Get overall Rancho Cucamonga market metrics
+            print("• Analyzing Rancho Cucamonga market conditions...")
             metrics = await self.market_service.get_market_metrics()
 
             print(f"  📊 Market Condition: {metrics.market_condition.value.replace('_', ' ').title()}")
@@ -161,7 +161,7 @@ class AustinMarketDemo:
             employer_neighborhoods = {
                 "Apple": ["Round Rock", "Cedar Park"],
                 "Google": ["Downtown", "South Lamar"],
-                "Tesla": ["East Austin", "Mueller"],
+                "Tesla": ["East Rancho Cucamonga", "Mueller"],
                 "Meta": ["Domain", "Downtown"]
             }
 
@@ -190,7 +190,7 @@ class AustinMarketDemo:
             insights = await self.market_service.get_corporate_relocation_insights(employer, position)
 
             if insights:
-                print(f"  🏢 {employer} Presence in Austin:")
+                print(f"  🏢 {employer} Presence in Rancho Cucamonga:")
                 if "market_overview" in insights:
                     overview = insights["market_overview"]
                     print(f"     👥 Total Tech Workers: {overview.get('total_tech_workers', 'N/A'):,}")
@@ -219,7 +219,7 @@ class AustinMarketDemo:
             print("• Generating AI-powered neighborhood recommendations...")
 
             # Build conversation context
-            context = AustinConversationContext(
+            context = Rancho CucamongaConversationContext(
                 lead_id=lead_data["lead_id"],
                 employer=lead_data["employer"],
                 family_situation=lead_data["family_status"],
@@ -227,8 +227,8 @@ class AustinMarketDemo:
                 lifestyle_preferences=lead_data["priorities"]
             )
 
-            # Analyze lead with Austin context
-            analysis = await self.ai_assistant.analyze_lead_with_austin_context(
+            # Analyze lead with Rancho Cucamonga context
+            analysis = await self.ai_assistant.analyze_lead_with_rancho_cucamonga_context(
                 lead_data, []  # Empty conversation history for demo
             )
 
@@ -246,7 +246,7 @@ class AustinMarketDemo:
             sample_query = f"What neighborhoods would be best for a {lead_data['employer']} {lead_data['position']} with {lead_data['family_status']}?"
 
             print(f"  💬 Sample AI Response to: '{sample_query[:50]}...'")
-            ai_response = await self.ai_assistant.generate_austin_response(
+            ai_response = await self.ai_assistant.generate_rancho_cucamonga_response(
                 sample_query, context, []
             )
 
@@ -272,7 +272,7 @@ class AustinMarketDemo:
             employer_neighborhoods = {
                 "Apple": ["Round Rock", "Cedar Park", "Domain"],
                 "Google": ["Downtown", "South Lamar", "Mueller"],
-                "Tesla": ["East Austin", "Mueller", "Manor"],
+                "Tesla": ["East Rancho Cucamonga", "Mueller", "Manor"],
                 "Meta": ["Domain", "Downtown", "Round Rock"]
             }
 
@@ -317,7 +317,7 @@ class AustinMarketDemo:
             print("• Analyzing optimal market timing...")
 
             # Build context for timing analysis
-            context = AustinConversationContext(
+            context = Rancho CucamongaConversationContext(
                 lead_id=lead_data["lead_id"],
                 employer=lead_data["employer"],
                 relocation_timeline=lead_data["timeline"],
@@ -368,7 +368,7 @@ class AustinMarketDemo:
         capabilities = [
             {
                 "feature": "Real-time Market Data",
-                "description": "Live Austin MLS integration with market metrics",
+                "description": "Live Rancho Cucamonga MLS integration with market metrics",
                 "benefit": "Always current market insights for conversations"
             },
             {
@@ -378,7 +378,7 @@ class AustinMarketDemo:
             },
             {
                 "feature": "Neighborhood Expertise",
-                "description": "Comprehensive analysis of 8+ Austin neighborhoods",
+                "description": "Comprehensive analysis of 8+ Rancho Cucamonga neighborhoods",
                 "benefit": "Perfect match recommendations based on lifestyle"
             },
             {
@@ -423,7 +423,7 @@ class AustinMarketDemo:
         # Competitive advantages
         print("\n🏆 COMPETITIVE ADVANTAGES:")
         advantages = [
-            "Only Austin realtor with dedicated tech relocation expertise",
+            "Only Rancho Cucamonga realtor with dedicated tech relocation expertise",
             "Real-time market intelligence in every conversation",
             "Corporate-specific neighborhood recommendations",
             "Proactive property alerts matching exact preferences",
@@ -437,12 +437,12 @@ class AustinMarketDemo:
 
 async def main():
     """Main demo execution function."""
-    print("🚀 Starting Austin Market Integration Demo...")
+    print("🚀 Starting Rancho Cucamonga Market Integration Demo...")
 
     # Add delay to simulate system startup
     await asyncio.sleep(1)
 
-    demo = AustinMarketDemo()
+    demo = Rancho CucamongaMarketDemo()
 
     try:
         await demo.run_full_demo()

@@ -469,7 +469,7 @@ export function JorgeCommandCenter() {
           leadId: 'demo-lead-1',
           leadName: 'John Seller',
           phone: '+15125551234',
-          propertyAddress: '123 Main St, Austin TX',
+          propertyAddress: '123 Main St, Rancho Cucamonga TX',
           email: 'john.seller@example.com'
         })
 
@@ -1017,7 +1017,7 @@ export function JorgeCommandCenter() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Map className="w-4 h-4 text-jorge-glow" />
-                  Heatmap of Opportunity (Austin, TX)
+                  Heatmap of Opportunity (Rancho Cucamonga, TX)
                 </CardTitle>
               </CardHeader>
               <CardContent>

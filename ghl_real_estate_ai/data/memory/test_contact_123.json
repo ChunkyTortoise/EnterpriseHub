@@ -4,7 +4,7 @@
   "conversation_history": [
     {
       "role": "user",
-      "content": "Hi, my name is John and I'm looking for a 3-bedroom house in Austin.",
+      "content": "Hi, my name is John and I'm looking for a 3-bedroom house in Rancho Cucamonga.",
       "timestamp": "2026-01-08T01:20:22.862018"
     },
     {
@@ -19,13 +19,13 @@
     },
     {
       "role": "assistant",
-      "content": "I see you're still looking for that house in Austin!",
+      "content": "I see you're still looking for that house in Rancho Cucamonga!",
       "timestamp": "2026-01-08T01:20:25.459369"
     }
   ],
   "extracted_preferences": {
     "bedrooms": 3,
-    "location": "Austin",
+    "location": "Rancho Cucamonga",
     "budget": 500000
   },
   "lead_score": 0,

@@ -55,7 +55,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
             "pipeline_value": "$2.4M",
             "hot_leads": 5,
             "avg_response_time": "1.8m",
-            "market": st.session_state.get("selected_market", "Austin"),
+            "market": st.session_state.get("selected_market", "Rancho Cucamonga"),
         }
 
         with st.spinner("Synthesizing strategic intelligence..."):
@@ -423,7 +423,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
         market_perf = exec_summary.get(
             "market_performance",
             {
-                "Austin": {"leads": 45, "revenue": 1200000},
+                "Rancho Cucamonga": {"leads": 45, "revenue": 1200000},
                 "Miami": {"leads": 35, "revenue": 800000},
                 "Other": {"leads": 20, "revenue": 400000},
             },
@@ -610,7 +610,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
         st.markdown("---")
         st.markdown("#### 🧬 Market-wide Lifestyle DNA Topology")
         st.markdown(
-            f"*Aggregate priority dimensions across all leads in {st.session_state.get('selected_market', 'Austin')}*"
+            f"*Aggregate priority dimensions across all leads in {st.session_state.get('selected_market', 'Rancho Cucamonga')}*"
         )
 
         market_dna_data = {
@@ -624,11 +624,11 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                 "Family",
                 "Commute",
             ],
-            "Austin": [85, 72, 90, 65, 50, 88, 70, 82],
+            "Rancho Cucamonga": [85, 72, 90, 65, 50, 88, 70, 82],
             "Rancho": [70, 85, 60, 75, 80, 55, 92, 65],
         }
 
-        current_market = "Austin" if "Austin" in st.session_state.get("selected_market", "Austin") else "Rancho"
+        current_market = "Rancho Cucamonga" if "Rancho Cucamonga" in st.session_state.get("selected_market", "Rancho Cucamonga") else "Rancho"
 
         fig_market_radar = go.Figure()
         fig_market_radar.add_trace(
@@ -652,7 +652,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
         )
         st.plotly_chart(style_obsidian_chart(fig_market_radar), use_container_width=True)
         st.info(
-            f"✨ **Strategic Insight:** The {current_market} market shows a high concentration of {'Investment & Tech' if current_market == 'Austin' else 'Security & Family'} focused leads. Tailor market-wide campaigns accordingly."
+            f"✨ **Strategic Insight:** The {current_market} market shows a high concentration of {'Investment & Tech' if current_market == 'Rancho Cucamonga' else 'Security & Family'} focused leads. Tailor market-wide campaigns accordingly."
         )
 
     with tab4:
@@ -675,7 +675,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                             orchestrator.synthesize_report(
                                 metrics=report_data,
                                 report_type="executive_quarterly_projection",
-                                market_context={"location": st.session_state.get("selected_market", "Austin")},
+                                market_context={"location": st.session_state.get("selected_market", "Rancho Cucamonga")},
                             )
                         )
 
@@ -739,24 +739,24 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
             with col_exp1:
                 st.markdown("#### 🧬 Source Market DNA Synthesis")
                 st.write(
-                    "Aggregating conversion clusters from Austin and Rancho to identify Jorge's 'Winning Lead Profile'."
+                    "Aggregating conversion clusters from Rancho Cucamonga and Rancho to identify Jorge's 'Winning Lead Profile'."
                 )
 
                 # DNA Comparison Chart
                 dna_metrics = ["Investment", "Security", "Status", "Family", "Convenience", "Privacy"]
-                austin_dna = [0.9, 0.7, 0.6, 0.7, 0.8, 0.5]
+                rancho_cucamonga_dna = [0.9, 0.7, 0.6, 0.7, 0.8, 0.5]
                 rancho_dna = [0.6, 0.85, 0.75, 0.9, 0.7, 0.8]
 
                 # Weighted "Winning Profile" based on conversion
-                winning_profile = [(a * 0.6 + r * 0.4) for a, r in zip(austin_dna, rancho_dna)]
+                winning_profile = [(a * 0.6 + r * 0.4) for a, r in zip(rancho_cucamonga_dna, rancho_dna)]
 
                 fig_exp = go.Figure()
                 fig_exp.add_trace(
                     go.Scatterpolar(
-                        r=austin_dna,
+                        r=rancho_cucamonga_dna,
                         theta=dna_metrics,
                         fill="toself",
-                        name="Austin Cluster",
+                        name="Rancho Cucamonga Cluster",
                         line_color="rgba(99, 102, 241, 0.4)",
                     )
                 )
@@ -793,7 +793,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                 st.plotly_chart(fig_exp, use_container_width=True)
 
             with col_exp2:
-                st.markdown("#### 🎯 Predicted Expansion Target: **Dallas, TX**")
+                st.markdown("#### 🎯 Predicted Expansion Target: **Dallas, CA**")
                 st.write(
                     "Based on Jorge's high success rate with **'Status-Conscious Investors'** and **'Security-First Families'**, Claude predicts high resonance in the following Dallas pockets:"
                 )
@@ -809,7 +809,7 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                         "zip": "75201",
                         "area": "Uptown/Downtown",
                         "match": "89%",
-                        "reason": "Matches 'Investment + Tech' cluster from Austin.",
+                        "reason": "Matches 'Investment + Tech' cluster from Rancho Cucamonga.",
                     },
                     {
                         "zip": "75024",
@@ -828,17 +828,17 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                             st.markdown(f"**{target['area']} ({target['zip']})**")
                             st.caption(target["reason"])
 
-                if st.button("📊 Generate Dallas Market Entry Strategy", type="primary", use_container_width=True):
+                if st.button("📊 Generate Orange County Market Entry Strategy", type="primary", use_container_width=True):
                     with st.spinner("Claude is drafting market entry scripts..."):
                         time.sleep(2)
-                        st.success("Dallas Strategy Dossier Generated.")
+                        st.success("Orange County Strategy Dossier Generated.")
                         st.info(
-                            "💡 **Key Insight:** Dallas leads in 75205 respond 30% better to 'Prestige-First' messaging than 'Value-First' messaging."
+                            "💡 **Key Insight:** Orange County leads in 92660 respond 30% better to 'Prestige-First' messaging than 'Value-First' messaging."
                         )
 
         st.markdown("---")
         st.markdown("#### 🔮 Geographic Migration Logic")
-        st.write("Claude is tracking lead migration patterns from California to Texas to predict future demand.")
+        st.write("Claude is tracking lead migration patterns from Coastal California to the Inland Empire to predict future demand.")
         st.image(
             "https://img.freepik.com/free-vector/world-map-with-lines-connection_1017-14238.jpg?size=626&ext=jpg",
             caption="Simulated Migration Heatmap",
@@ -854,10 +854,10 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
             with col_digest1:
                 st.markdown("#### ⚙️ Configuration")
                 digest_market = st.selectbox(
-                    "Target Market", ["Austin, TX", "Rancho Cucamonga, CA"], key="digest_market_sel"
+                    "Target Market", ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"], key="digest_market_sel"
                 )
-                digest_zips = st.text_input("Focus ZIP Codes (comma-separated)", "78704, 78745, 78701")
-                agency_name = st.text_input("Agency Name", "Lyrio AI Austin")
+                digest_zips = st.text_input("Focus ZIP Codes (comma-separated)", "91730, 91730, 91730")
+                agency_name = st.text_input("Agency Name", "Lyrio AI Rancho Cucamonga")
 
                 if st.button("🪄 Generate Weekly Digest", type="primary", use_container_width=True):
                     st.session_state.digest_requested = True

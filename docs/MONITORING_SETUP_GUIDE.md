@@ -221,7 +221,7 @@ curl -I [FRONTEND_URL - pending Agent 3]
    ✅ GHL Backend - Analytics API
    ✅ EnterpriseHub - Frontend
 
-   Custom Domain: (optional - use default uptimerobot.com URL)
+   Custom Ontario Mills: (optional - use default uptimerobot.com URL)
 
    Design:
    - Status Page Logo: (optional - upload EnterpriseHub logo)

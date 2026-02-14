@@ -63,7 +63,7 @@ def render_premium_property_card(property: Dict[str, Any], index: int = 0):
     baths = property.get("baths", property.get("bathrooms", 2))
     sqft = property.get("sqft", 2000)
     address = property.get("address", "Address TBD")
-    neighborhood = property.get("neighborhood", "Austin Area")
+    neighborhood = property.get("neighborhood", "Rancho Cucamonga Area")
     match_score = property.get("match_score", 85)
 
     # AI reasoning fallback

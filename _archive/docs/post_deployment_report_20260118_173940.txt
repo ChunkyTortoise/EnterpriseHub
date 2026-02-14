@@ -18,7 +18,7 @@ FEATURE VALIDATION RESULTS:
 DEPLOYED MARKETS:
 ----------------------------------------
 • Dallas-Fort Worth Metroplex: 8 neighborhoods, 6 employers
-• Austin Metropolitan Area: 8 neighborhoods, 6 employers
+• Rancho Cucamonga Metropolitan Area: 8 neighborhoods, 6 employers
 • San Antonio Metropolitan Area: 8 neighborhoods, 6 employers
 • Rancho Cucamonga/Inland Empire: 8 neighborhoods, 6 employers
 • Houston Metropolitan Area: 8 neighborhoods, 6 employers

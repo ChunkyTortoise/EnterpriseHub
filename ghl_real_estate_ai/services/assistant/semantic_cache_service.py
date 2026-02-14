@@ -47,7 +47,7 @@ class SemanticCacheMatchService:
                     "property": property_data,
                     "preferences": lead_preferences,
                     "conversation_history": conversation_history or [],
-                    "market": self.market_id or "austin",
+                    "market": self.market_id or "rancho_cucamonga",
                 }
 
                 response_obj = await self.orchestrator.chat_query(
@@ -81,7 +81,7 @@ class SemanticCacheMatchService:
             "price_range": self._normalize_price(property_data.get("price", 0)),
             "bedrooms": property_data.get("bedrooms", 0),
             "bathrooms": property_data.get("bathrooms", 0),
-            "location_zone": self._normalize_location(property_data.get("zip_code", "78701")),
+            "location_zone": self._normalize_location(property_data.get("zip_code", "91730")),
             "property_type": property_data.get("property_type", "single_family"),
             "preferences": sorted([str(k) for k in lead_preferences.keys()])
             if isinstance(lead_preferences, dict)
@@ -111,18 +111,18 @@ class SemanticCacheMatchService:
     def _normalize_location(self, zip_code: str) -> str:
         """Normalize zip codes to general zones for semantic similarity."""
         zip_str = str(zip_code)
-        austin_zones = {
-            "787": "central_austin",
-            "786": "north_austin",
-            "785": "south_austin",
-            "783": "west_austin",
-            "781": "east_austin",
+        rancho_cucamonga_zones = {
+            "917": "central_rancho_cucamonga",
+            "786": "north_rancho_cucamonga",
+            "785": "south_rancho_cucamonga",
+            "783": "west_rancho_cucamonga",
+            "781": "east_rancho_cucamonga",
         }
 
-        for prefix, zone in austin_zones.items():
+        for prefix, zone in rancho_cucamonga_zones.items():
             if zip_str.startswith(prefix):
                 return zone
-        return "general_austin"
+        return "general_rancho_cucamonga"
 
 
 class SemanticResponseCache:

@@ -70,8 +70,8 @@ class ConcreteMarketService(BaseMarketService):
 
 
 # Market-specific service factories
-class AustinMarketService(ConcreteMarketService):
-    """Austin-specific market service implementation"""
+class RanchoCucamongaMarketService(ConcreteMarketService):
+    """Rancho Cucamonga-specific market service implementation"""
 
     pass
 
@@ -90,11 +90,5 @@ class HoustonMarketService(ConcreteMarketService):
 
 class SanAntonioMarketService(ConcreteMarketService):
     """San Antonio-specific market service implementation"""
-
-    pass
-
-
-class RanchoCucamongaMarketService(ConcreteMarketService):
-    """Rancho Cucamonga-specific market service implementation"""
 
     pass

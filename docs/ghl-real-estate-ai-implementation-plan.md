@@ -128,7 +128,7 @@ ghl-real-estate-ai/
   "locationId": "location_xyz789",
   "message": {
     "type": "SMS",
-    "body": "Hi, I'm looking for a 3-bedroom house in Austin under $400k",
+    "body": "Hi, I'm looking for a 3-bedroom house in Rancho Cucamonga under $400k",
     "direction": "inbound"
   },
   "contact": {
@@ -145,7 +145,7 @@ ghl-real-estate-ai/
 ```json
 {
   "success": true,
-  "message": "Hey Jane! Austin's market is hot right now—let me help you find the perfect fit. Just to make sure I point you to the best options:\n- Are you open to suburbs like Round Rock or Pflugerville, or strictly Austin proper?\n- What's your ideal move-in timeline?\n- Any must-haves? (pool, good schools, walkable neighborhood)",
+  "message": "Hey Jane! Rancho Cucamonga's market is hot right now—let me help you find the perfect fit. Just to make sure I point you to the best options:\n- Are you open to suburbs like Round Rock or Pflugerville, or strictly Rancho Cucamonga proper?\n- What's your ideal move-in timeline?\n- Any must-haves? (pool, good schools, walkable neighborhood)",
   "actions": [
     {
       "type": "send_message",
@@ -154,7 +154,7 @@ ghl-real-estate-ai/
     },
     {
       "type": "add_tags",
-      "tags": ["AI-Engaged", "Budget-Under-400k", "Location-Austin"]
+      "tags": ["AI-Engaged", "Budget-Under-400k", "Location-Rancho Cucamonga"]
     },
     {
       "type": "update_custom_field",
@@ -188,12 +188,12 @@ CREATE TABLE conversations (
 [
   {
     "role": "user",
-    "content": "Hi, I'm looking for a 3-bedroom house in Austin under $400k",
+    "content": "Hi, I'm looking for a 3-bedroom house in Rancho Cucamonga under $400k",
     "timestamp": "2025-01-02T10:00:00Z"
   },
   {
     "role": "assistant",
-    "content": "Hey! Austin's market is hot...",
+    "content": "Hey! Rancho Cucamonga's market is hot...",
     "timestamp": "2025-01-02T10:00:05Z"
   }
 ]
@@ -210,7 +210,7 @@ CREATE TABLE conversations (
   "conversation_history": [...],
   "extracted_data": {
     "budget": 400000,
-    "location": "Austin",
+    "location": "Rancho Cucamonga",
     "bedrooms": 3,
     "timeline": "June 2025",
     "must_haves": ["good schools"]
@@ -244,17 +244,17 @@ CREATE TABLE conversations (
     "id": "prop_12345",
     "embedding": [0.123, -0.456, ...],  # 1536-dim vector
     "metadata": {
-        "address": "123 Main St, Austin, TX 78701",
+        "address": "123 Main St, Rancho Cucamonga, CA 91701",
         "price": 385000,
         "bedrooms": 3,
         "bathrooms": 2,
         "sqft": 1850,
-        "neighborhood": "Hyde Park",
-        "schools": ["Hyde Park Elementary (9/10)", "McCallum HS (8/10)"],
+        "neighborhood": "Etiwanda",
+        "schools": ["Etiwanda Elementary (9/10)", "McCallum HS (8/10)"],
         "features": ["pool", "updated kitchen", "walkable"],
         "listing_url": "https://example.com/listing/12345"
     },
-    "document": "Beautiful 3-bedroom home in Hyde Park with updated kitchen..."
+    "document": "Beautiful 3-bedroom home in Etiwanda with updated kitchen..."
 }
 ```
 
@@ -280,7 +280,7 @@ CREATE TABLE conversations (
         "type": "objection_handler",
         "trigger": "price too high"
     },
-    "document": "I totally understand—Austin prices can feel steep. Here's the thing: this property is actually 8% under market average for the neighborhood..."
+    "document": "I totally understand—Rancho Cucamonga prices can feel steep. Here's the thing: this property is actually 8% under market average for the neighborhood..."
 }
 ```
 
@@ -305,7 +305,7 @@ CREATE TABLE conversation_context (
   "contact_id": "contact_abc123",
   "extracted_preferences": {
     "budget": {"min": 350000, "max": 400000},
-    "location": ["Austin", "Round Rock", "Pflugerville"],
+    "location": ["Rancho Cucamonga", "Round Rock", "Pflugerville"],
     "bedrooms": 3,
     "bathrooms": {"min": 2},
     "must_haves": ["good schools", "walkable"],
@@ -630,7 +630,7 @@ LOG_LEVEL=info
 railway up
 
 # Get deployment URL
-railway domain
+railway ontario_mills
 # Output: https://your-app.railway.app
 ```
 
@@ -660,7 +660,7 @@ def test_lead_scorer_high_score():
         "extracted_preferences": {
             "budget": 400000,
             "timeline": "ASAP",
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "financing": "pre-approved"
         },
         "conversation_history": [{"role": "user"}] * 8
@@ -677,12 +677,12 @@ def test_lead_scorer_high_score():
 async def test_webhook_end_to_end():
     payload = {
         "contactId": "test_123",
-        "message": {"body": "Looking for 3bed house in Austin"},
+        "message": {"body": "Looking for 3bed house in Rancho Cucamonga"},
         "contact": {"firstName": "Test"}
     }
     response = await client.post("/api/ghl/webhook", json=payload)
     assert response.status_code == 200
-    assert "Austin" in response.json()["message"]
+    assert "Rancho Cucamonga" in response.json()["message"]
 ```
 
 ---

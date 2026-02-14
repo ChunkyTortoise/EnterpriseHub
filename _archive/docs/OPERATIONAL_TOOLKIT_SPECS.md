@@ -46,7 +46,7 @@ To power the **Extensive Claude Hooks (V2)**, you need concrete utility scripts 
 **Powers:** The "Market Oracle" hook.
 
 ### Functional Spec
-*   **Input:** Zip Code or Neighborhood Name (e.g., "Hyde Park, Austin").
+*   **Input:** Zip Code or Neighborhood Name (e.g., "Hyde Park, Rancho Cucamonga").
 *   **Logic:**
     1.  **Search:** Uses Google Search API (or `browsing` tool) for:
         *   "[Neighborhood] real estate market stats [Current Month]"

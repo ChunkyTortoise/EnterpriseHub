@@ -292,15 +292,15 @@ class QueryPlanner:
 
         # Analyze intent
         intent = planner.analyze_intent(
-            "What is the average price of houses in Austin vs Dallas?"
+            "What is the average price of houses in Rancho Cucamonga vs Dallas?"
         )
         # Intent: COMPARISON with CALCULATION
 
         # Create execution plan
         plan = planner.create_plan(
-            "What is the average price of houses in Austin vs Dallas?"
+            "What is the average price of houses in Rancho Cucamonga vs Dallas?"
         )
-        # Plan: 2 steps (retrieve Austin prices, retrieve Dallas prices, compare)
+        # Plan: 2 steps (retrieve Rancho Cucamonga prices, retrieve Dallas prices, compare)
         ```
     """
 

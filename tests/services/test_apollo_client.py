@@ -44,8 +44,6 @@ except (ImportError, TypeError, AttributeError):
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockApolloClient
 
-@pytest.mark.integration
-
 
 class TestApolloConfig:
     """Test Apollo configuration management"""
@@ -454,8 +452,8 @@ class TestOrganizationEnrichment:
         return client
 
     @pytest.mark.asyncio
-    async def test_enrich_organization_by_domain(self, apollo_client):
-        """Test organization enrichment by domain"""
+    async def test_enrich_organization_by_ontario_mills(self, apollo_client):
+        """Test organization enrichment by ontario_mills"""
         apollo_client._mock_response.json.return_value = {
             "organization": {
                 "id": "org_123",
@@ -466,22 +464,22 @@ class TestOrganizationEnrichment:
                 "estimated_num_employees": 150,
                 "retail_location_count": 3,
                 "annual_revenue": "10M-50M",
-                "headquarters": {"city": "Austin", "state": "Texas", "country": "United States"},
+                "headquarters": {"city": "Rancho Cucamonga", "state": "California", "country": "United States"},
                 "technologies": ["Salesforce", "AWS", "React"],
             }
         }
 
-        result = await apollo_client.enrich_organization(domain="techsolutions.com")
+        result = await apollo_client.enrich_organization(ontario_mills="techsolutions.com")
 
         assert isinstance(result, OrganizationEnrichmentResult)
         assert result.organization_id == "org_123"
         assert result.name == "Tech Solutions Inc"
-        assert result.domain == "techsolutions.com"
+        assert result.ontario_mills == "techsolutions.com"
         assert result.industry == "Software Development"
         assert result.employee_count == 150
         assert result.annual_revenue == "10M-50M"
         assert "Salesforce" in result.technologies
-        assert result.headquarters_city == "Austin"
+        assert result.headquarters_city == "Rancho Cucamonga"
 
     @pytest.mark.asyncio
     async def test_enrich_organization_by_name(self, apollo_client):
@@ -506,14 +504,14 @@ class TestOrganizationEnrichment:
         """Test organization enrichment when not found"""
         apollo_client._mock_response.json.return_value = {"organization": None}
 
-        result = await apollo_client.enrich_organization(domain="nonexistent.com")
+        result = await apollo_client.enrich_organization(ontario_mills="nonexistent.com")
 
         assert result is None
 
     @pytest.mark.asyncio
     async def test_enrich_organization_invalid_params(self, apollo_client):
         """Test organization enrichment with invalid parameters"""
-        with pytest.raises(ValueError, match="Must provide domain or name"):
+        with pytest.raises(ValueError, match="Must provide ontario_mills or name"):
             await apollo_client.enrich_organization()
 
 
@@ -794,14 +792,14 @@ class TestSearchOperations:
         """Test searching people by company and location"""
         apollo_client._mock_response.json.return_value = {
             "people": [
-                {"id": "search_3", "first_name": "Alice", "organization": {"name": "Tech Corp"}, "city": "Austin"}
+                {"id": "search_3", "first_name": "Alice", "organization": {"name": "Tech Corp"}, "city": "Rancho Cucamonga"}
             ],
             "pagination": {"total_entries": 1},
         }
 
         search_params = {
             "organization_names": ["Tech Corp"],
-            "person_locations": ["Austin, TX"],
+            "person_locations": ["Rancho Cucamonga, CA"],
             "page": 1,
             "per_page": 25,
         }
@@ -810,7 +808,7 @@ class TestSearchOperations:
 
         assert len(result["people"]) == 1
         assert result["people"][0]["organization"]["name"] == "Tech Corp"
-        assert result["people"][0]["city"] == "Austin"
+        assert result["people"][0]["city"] == "Rancho Cucamonga"
 
     @pytest.mark.asyncio
     async def test_search_people_pagination(self, apollo_client):

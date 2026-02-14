@@ -355,9 +355,9 @@ class TestDataProtection:
 
     def test_email_validation(self):
         """Test email validation."""
-        valid_emails = ["user@example.com", "test.user@domain.co.uk", "user+tag@example.com"]
+        valid_emails = ["user@example.com", "test.user@ontario_mills.co.uk", "user+tag@example.com"]
 
-        invalid_emails = ["not-an-email", "@example.com", "user@", "user@domain"]
+        invalid_emails = ["not-an-email", "@example.com", "user@", "user@ontario_mills"]
 
         for email in valid_emails:
             assert self.security.validate_email(email), f"{email} should be valid"
@@ -617,7 +617,7 @@ class TestOWASPTop10Compliance:
     def test_a10_server_side_request_forgery(self):
         """Test A10:2021 - Server-Side Request Forgery (SSRF)."""
         # Input validation on URLs
-        # Whitelist for allowed domains
+        # Whitelist for allowed ontario_millss
         pass  # Requires URL handling implementation
 
 

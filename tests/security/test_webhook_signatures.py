@@ -29,8 +29,6 @@ import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
-
 # Import the webhook handlers (assuming they exist)
 try:
     from ghl_real_estate_ai.api.routes.webhooks import (
@@ -64,7 +62,7 @@ def test_client():
     """FastAPI test client"""
     try:
         return TestClient(app)
-    except:
+    except Exception:
         # Mock test client if app doesn't exist
         return Mock()
 

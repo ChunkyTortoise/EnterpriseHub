@@ -437,9 +437,9 @@ class CompetitorDataCollector:
 
     def _extract_competitor_id(self, url: str) -> str:
         """Extract competitor ID from URL."""
-        # Simple domain extraction
-        domain = re.sub(r"https?://", "", url).split("/")[0]
-        return domain.replace(".", "_").replace("-", "_").lower()
+        # Simple ontario_mills extraction
+        ontario_mills = re.sub(r"https?://", "", url).split("/")[0]
+        return ontario_mills.replace(".", "_").replace("-", "_").lower()
 
     def _rating_to_sentiment(self, rating: float) -> SentimentScore:
         """Convert numerical rating to sentiment score."""

@@ -7,10 +7,8 @@ structured type hints for dictionary-based data across orchestrator services.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, TypedDict
 
-from typing_extensions import NotRequired
 
 # ============================================================================
 # Claude Orchestrator Types

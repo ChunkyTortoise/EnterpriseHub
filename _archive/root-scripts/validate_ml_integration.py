@@ -122,12 +122,12 @@ async def test_ml_lead_analyzer():
         # Test prediction
         test_context = {
             "conversations": [
-                {"timestamp": 1640995200, "content": "Hi, I'm looking for a 3 bedroom house in Austin for around $400k"},
+                {"timestamp": 1640995200, "content": "Hi, I'm looking for a 3 bedroom house in Rancho Cucamonga for around $400k"},
                 {"timestamp": 1640995800, "content": "Yes, I'm pre-approved for financing and need to move by March"}
             ],
             "extracted_preferences": {
                 "budget": 400000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "bedrooms": 3
             }
         }
@@ -196,7 +196,7 @@ async def test_integration_flow():
             ],
             "extracted_preferences": {
                 "budget": 500000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "timeline": "urgent"
             }
         }

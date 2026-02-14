@@ -1,0 +1,189 @@
+# Plan Configuration for EnterpriseHub
+# =====================================
+# Defines subscription tiers, pricing, and feature availability
+# 
+# Usage: This file is loaded by billing/__init__.py to configure plans
+# Environment variables can override Stripe price IDs
+
+metadata:
+  product: "EnterpriseHub"
+  version: "1.0.0"
+  currency: "USD"
+  trial_days: 14
+  grace_period_hours: 48
+
+plans:
+  # Starter Plan - $49/month
+  # Perfect for small teams getting started with AI-powered real estate
+  starter:
+    name: "Starter"
+    description: "Perfect for small teams getting started with AI-powered real estate"
+    price_monthly_cents: 4900  # $49.00
+    price_annual_cents: 47040  # $470.40 (20% discount = $39.20/mo)
+    lead_quota: 100
+    query_quota: 100
+    features:
+      lead_management: true
+      buyer_bot: false
+      seller_bot: false
+      market_analysis: false
+      cma_reports: false
+      white_label: false
+      api_access: false
+      dedicated_support: false
+      priority_processing: false
+      custom_integrations: false
+      advanced_analytics: false
+      team_collaboration: false
+      property_alerts: false
+      mls_integration: false
+    limits:
+      team_members: 1
+      concurrent_conversations: 10
+      api_calls_per_day: 100
+      exports_per_month: 5
+      saved_templates: 3
+      saved_searches: 5
+    support:
+      email: true
+      chat: false
+      phone: false
+      response_time_hours: 48
+      sla: false
+    stripe_price_ids:
+      monthly: "STRIPE_STARTER_PRICE_ID"
+      annual: "STRIPE_STARTER_ANNUAL_PRICE_ID"
+
+  # Professional Plan - $149/month
+  # For growing teams ready to automate their entire pipeline
+  professional:
+    name: "Professional"
+    description: "For growing teams ready to automate their entire real estate pipeline"
+    price_monthly_cents: 14900  # $149.00
+    price_annual_cents: 143040  # $1,430.40 (20% discount = $119.20/mo)
+    lead_quota: 500
+    query_quota: 500
+    features:
+      lead_management: true
+      buyer_bot: true
+      seller_bot: true
+      market_analysis: true
+      cma_reports: true
+      white_label: false
+      api_access: true
+      dedicated_support: false
+      priority_processing: true
+      custom_integrations: false
+      advanced_analytics: true
+      team_collaboration: true
+      property_alerts: true
+      mls_integration: false
+    limits:
+      team_members: 5
+      concurrent_conversations: 50
+      api_calls_per_day: 1000
+      exports_per_month: 25
+      saved_templates: 20
+      saved_searches: 25
+    support:
+      email: true
+      chat: true
+      phone: false
+      response_time_hours: 24
+      sla: false
+    stripe_price_ids:
+      monthly: "STRIPE_PROFESSIONAL_PRICE_ID"
+      annual: "STRIPE_PROFESSIONAL_ANNUAL_PRICE_ID"
+
+  # Enterprise Plan - $499/month
+  # White-label solution for brokerages and large teams
+  enterprise:
+    name: "Enterprise"
+    description: "White-label solution for brokerages and large teams with unlimited usage"
+    price_monthly_cents: 49900  # $499.00
+    price_annual_cents: 479040  # $4,790.40 (20% discount = $399.20/mo)
+    lead_quota: -1  # Unlimited
+    query_quota: -1  # Unlimited
+    features:
+      lead_management: true
+      buyer_bot: true
+      seller_bot: true
+      market_analysis: true
+      cma_reports: true
+      white_label: true
+      api_access: true
+      dedicated_support: true
+      priority_processing: true
+      custom_integrations: true
+      advanced_analytics: true
+      team_collaboration: true
+      property_alerts: true
+      mls_integration: true
+    limits:
+      team_members: -1  # Unlimited
+      concurrent_conversations: -1  # Unlimited
+      api_calls_per_day: -1  # Unlimited
+      exports_per_month: -1  # Unlimited
+      saved_templates: -1  # Unlimited
+      saved_searches: -1  # Unlimited
+    support:
+      email: true
+      chat: true
+      phone: true
+      response_time_hours: 4
+      sla: true
+      dedicated_manager: true
+    stripe_price_ids:
+      monthly: "STRIPE_ENTERPRISE_PRICE_ID"
+      annual: "STRIPE_ENTERPRISE_ANNUAL_PRICE_ID"
+
+# Feature descriptions for UI display
+feature_descriptions:
+  lead_management: "Comprehensive lead tracking and management system"
+  buyer_bot: "AI-powered buyer consultation and property matching"
+  seller_bot: "Automated seller consultation and listing preparation"
+  market_analysis: "Real-time market analysis and pricing insights"
+  cma_reports: "Automated Comparative Market Analysis reports"
+  white_label: "Custom branding with your logo, colors, and domain"
+  api_access: "Full REST API access for custom integrations"
+  dedicated_support: "Dedicated account manager and priority support"
+  priority_processing: "Priority queue for all AI operations"
+  custom_integrations: "Custom integration development support"
+  advanced_analytics: "Advanced reporting and analytics dashboard"
+  team_collaboration: "Multi-user access with role-based permissions"
+  property_alerts: "Automated property match alerts for clients"
+  mls_integration: "Direct MLS data feed integration"
+
+# Upgrade/downgrade rules
+billing_rules:
+  allow_immediate_upgrades: true
+  downgrade_timing: "period_end"  # Downgrades take effect at period end
+  proration: "prorate"  # Stripe handles proration for upgrades
+  trial_conversion_grace_days: 3  # Grace period after trial ends
+
+# Notification settings
+notifications:
+  trial_ending_days: 3  # Send notification 3 days before trial ends
+  quota_warning_threshold: 80  # Warn at 80% quota usage
+  payment_retry_attempts: 3
+  payment_retry_interval_days: 2
+
+# Add-on products (optional extras)
+addons:
+  additional_leads:
+    name: "Additional Leads Pack"
+    description: "100 additional leads per month"
+    price_cents: 1900  # $19.00
+    quantity_type: "leads"
+  
+  sms_pack:
+    name: "SMS Pack"
+    description: "500 additional SMS messages"
+    price_cents: 2500  # $25.00
+    quantity_type: "sms"
+  
+  white_label_setup:
+    name: "White Label Setup"
+    description: "One-time white label customization setup"
+    price_cents: 49900  # $499.00 one-time
+    one_time: true

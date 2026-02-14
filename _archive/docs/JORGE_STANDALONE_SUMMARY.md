@@ -82,7 +82,7 @@ asyncio-mqtt>=0.13.0
 ### 🏠 Buyer Bot
 - Property matching algorithms
 - Financial readiness assessment
-- Austin market integration
+- Rancho Cucamonga market integration
 - Showing coordination tracking
 
 ## Deployment Ready ✅

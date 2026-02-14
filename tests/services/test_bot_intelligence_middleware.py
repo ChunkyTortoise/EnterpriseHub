@@ -47,7 +47,6 @@ from ghl_real_estate_ai.models.intelligence_context import (
 # Import service under test
 from ghl_real_estate_ai.services.bot_intelligence_middleware import (
 
-@pytest.mark.integration
     BotIntelligenceMiddleware,
     get_bot_intelligence_middleware,
 )
@@ -144,7 +143,7 @@ class TestBotIntelligenceMiddleware:
         mock_profile.bathrooms_max = None
         mock_profile.move_timeline = "3_months"
         mock_profile.profile_completeness = 0.75
-        mock_profile.location_preferences = {"austin_central": 0.8, "austin_south": 0.6}
+        mock_profile.location_preferences = {"rancho_cucamonga_central": 0.8, "rancho_cucamonga_south": 0.6}
         mock_profile.feature_preferences = {"pool": True, "garage": True}
         mock_profile.urgency_level = 0.7
 
@@ -172,7 +171,7 @@ class TestBotIntelligenceMiddleware:
     @pytest.fixture
     def sample_preferences(self) -> Dict[str, Any]:
         """Sample preferences for testing."""
-        return {"budget_max": 600000, "bedrooms": 3, "location": "austin_central", "timeline": "3_months"}
+        return {"budget_max": 600000, "bedrooms": 3, "location": "rancho_cucamonga_central", "timeline": "3_months"}
 
     @pytest.fixture
     def middleware_service(
@@ -202,7 +201,7 @@ class TestBotIntelligenceMiddleware:
         """Test successful intelligence gathering on cache miss."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-seller"
 
         # Ensure cache miss
@@ -257,7 +256,7 @@ class TestBotIntelligenceMiddleware:
         """Test cache hit scenario with quick response."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-buyer"
 
         # Create cached context
@@ -301,7 +300,7 @@ class TestBotIntelligenceMiddleware:
         """Test parallel execution performance of Phase 2 services."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-seller"
 
         # Add artificial delays to services to test parallel execution
@@ -365,7 +364,7 @@ class TestBotIntelligenceMiddleware:
         """Test graceful fallback when Phase 2 services fail."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-buyer"
 
         # Make services fail
@@ -403,7 +402,7 @@ class TestBotIntelligenceMiddleware:
         """Test partial service failure with some services working."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "lead-bot"
 
         # Only property matching fails
@@ -437,7 +436,7 @@ class TestBotIntelligenceMiddleware:
         """Test behavior when cache service fails."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-seller"
 
         # Make cache operations fail
@@ -468,7 +467,7 @@ class TestBotIntelligenceMiddleware:
         """Test behavior when event publishing fails."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-buyer"
 
         # Make event publishing fail
@@ -520,7 +519,7 @@ class TestBotIntelligenceMiddleware:
     async def test_different_bot_types(self, middleware_service, sample_conversation_context, sample_preferences):
         """Test intelligence gathering for different bot types."""
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_types = ["jorge-seller", "jorge-buyer", "lead-bot"]
 
         for bot_type in bot_types:
@@ -544,7 +543,7 @@ class TestBotIntelligenceMiddleware:
         """Test behavior with empty conversation context."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-seller"
         empty_conversation = []
 
@@ -571,7 +570,7 @@ class TestBotIntelligenceMiddleware:
         """Test behavior when no preferences are provided."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-buyer"
 
         # Act
@@ -600,7 +599,7 @@ class TestBotIntelligenceMiddleware:
         """Test handling of service timeouts."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         bot_type = "jorge-seller"
 
         # Make services timeout (simulate with long delays)
@@ -665,7 +664,7 @@ class TestIntelligenceContextModels:
         """Test BotIntelligenceContext JSON serialization/deserialization."""
         # Arrange
         original_context = BotIntelligenceContext.create_fallback(
-            lead_id="lead_123", location_id="austin", bot_type="jorge-seller"
+            lead_id="lead_123", location_id="rancho_cucamonga", bot_type="jorge-seller"
         )
 
         # Act
@@ -736,12 +735,12 @@ class TestIntelligenceContextModels:
         """Test fallback context creation for error scenarios."""
         # Act
         fallback_context = BotIntelligenceContext.create_fallback(
-            lead_id="lead_123", location_id="austin", bot_type="jorge-buyer"
+            lead_id="lead_123", location_id="rancho_cucamonga", bot_type="jorge-buyer"
         )
 
         # Assert
         assert fallback_context.lead_id == "lead_123"
-        assert fallback_context.location_id == "austin"
+        assert fallback_context.location_id == "rancho_cucamonga"
         assert fallback_context.bot_type == "jorge-buyer"
 
         # Fallback should have empty intelligence

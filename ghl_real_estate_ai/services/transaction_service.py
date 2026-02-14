@@ -1075,7 +1075,6 @@ class TransactionService:
         """Invalidate dashboard summary caches."""
         # For simplicity, we'll clear common dashboard cache patterns
         # In production, you'd want more sophisticated cache invalidation
-        cache_patterns = ["dashboard:summary:*"]
 
         # Redis-specific cache clearing would go here
         # For now, we'll just log the invalidation

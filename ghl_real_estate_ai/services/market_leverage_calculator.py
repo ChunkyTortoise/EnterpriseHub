@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory, MarketCondition, MarketLeverage
-from ghl_real_estate_ai.services.austin_market_service import AustinMarketService
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.competitive_data_pipeline import get_competitive_data_pipeline
 
@@ -25,7 +25,7 @@ class MarketLeverageCalculator:
 
     def __init__(self):
         self.cache_service = get_cache_service()
-        self.market_service = AustinMarketService()
+        self.market_service = RanchoCucamongaMarketService()
         self.competitive_pipeline = get_competitive_data_pipeline()
 
     async def calculate_market_leverage(
@@ -91,7 +91,7 @@ class MarketLeverageCalculator:
 
         try:
             # Get market metrics from market service
-            market_metrics = await self.market_service.get_market_metrics(property_data.get("zip_code", "78701"))
+            market_metrics = await self.market_service.get_market_metrics(property_data.get("zip_code", "91730"))
 
             # Determine market condition
             avg_days_on_market = market_metrics.get("avg_days_on_market", 30)
@@ -140,7 +140,7 @@ class MarketLeverageCalculator:
         try:
             property_price = property_data.get("list_price", 500000)
             property_type = property_data.get("property_type", "single_family")
-            zip_code = property_data.get("zip_code", "78701")
+            zip_code = property_data.get("zip_code", "91730")
 
             # Define price ranges relative to property price
             price_ranges = {
@@ -280,7 +280,7 @@ class MarketLeverageCalculator:
         try:
             # Get comparable sales data
             property_price = listing_history.current_price
-            zip_code = property_data.get("zip_code", "78701")
+            zip_code = property_data.get("zip_code", "91730")
 
             # Get recent comparable sales
             comps_data = await self.market_service.get_comparable_sales(
@@ -295,10 +295,10 @@ class MarketLeverageCalculator:
 
             if comparable_sales:
                 avg_sale_price = sum(sale.get("sale_price", 0) for sale in comparable_sales) / len(comparable_sales)
-                price_per_sqft_comps = sum(sale.get("price_per_sqft", 0) for sale in comparable_sales) / len(
+                sum(sale.get("price_per_sqft", 0) for sale in comparable_sales) / len(
                     comparable_sales
                 )
-                property_price_per_sqft = float(property_price) / property_data.get("sqft", 2000)
+                float(property_price) / property_data.get("sqft", 2000)
 
                 # Price positioning analysis
                 price_variance = (float(property_price) - avg_sale_price) / avg_sale_price * 100

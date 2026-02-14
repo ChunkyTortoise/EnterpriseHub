@@ -44,8 +44,6 @@ except (ImportError, TypeError, AttributeError):
 # Import test utilities
 from tests.mocks.external_services import MockTwilioClient, MockWebhookPayloads
 
-@pytest.mark.integration
-
 
 class TestTwilioConfig:
     """Test Twilio configuration management"""
@@ -354,7 +352,7 @@ class TestSMSSending:
         """Test SMS sending adds compliance footer automatically"""
         result = await twilio_client.send_sms(
             to="+15557890123",
-            message="Property update for North Austin",
+            message="Property update for North Rancho Cucamonga",
         )
 
         # The service always adds the compliance footer via _add_compliance_footer

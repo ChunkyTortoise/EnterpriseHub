@@ -24,7 +24,6 @@ import pytest
 
 from ghl_real_estate_ai.services.langgraph_orchestrator import (
 
-@pytest.mark.integration
     LeadQualificationOrchestrator,
     LeadType,
     QualificationResult,

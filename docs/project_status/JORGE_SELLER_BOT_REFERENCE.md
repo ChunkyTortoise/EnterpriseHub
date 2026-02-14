@@ -434,7 +434,7 @@ ALTER TABLE conversation_contexts ADD COLUMN followup_phase VARCHAR(20);
 -- Seller preferences JSONB structure:
 {
     "motivation": "relocation",
-    "relocation_destination": "Austin, TX",
+    "relocation_destination": "Rancho Cucamonga, CA",
     "timeline_urgency": "30-45 days",
     "timeline_acceptable": true,
     "property_condition": "move-in ready",

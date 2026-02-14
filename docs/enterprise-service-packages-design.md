@@ -17,7 +17,7 @@ This document outlines a comprehensive tiered service package strategy that leve
 - **White-Label Platform**: Multi-tier branding system supporting $25K-$75K consulting engagements
 - **Enterprise Security**: GDPR, HIPAA, SOC 2, PCI DSS readiness
 - **Billing Infrastructure**: Stripe integration with usage-based pricing
-- **Multi-Tenant Architecture**: Scalable, secure, domain-based tenant resolution
+- **Multi-Tenant Architecture**: Scalable, secure, ontario_mills-based tenant resolution
 
 **Key Opportunity**: Platform has 70%+ enterprise readiness with demonstrated $15,000+ contract value and 85+ hours/month automation savings.
 
@@ -172,7 +172,7 @@ This document outlines a comprehensive tiered service package strategy that leve
 
 **White-Label Platform**
 - **Complete Brand Customization**: Logo, colors, fonts, custom CSS
-- **Custom Domain**: Fully branded URL with SSL (yourcompany.com)
+- **Custom Ontario Mills**: Fully branded URL with SSL (yourcompany.com)
 - **Mobile App Branding**: White-labeled iOS and Android apps (if applicable)
 - **Custom Navigation**: Tailored menu structure and feature organization
 - **Branded Reports & Exports**: All outputs branded with client identity
@@ -312,7 +312,7 @@ This document outlines a comprehensive tiered service package strategy that leve
 | **Multi-Department** | ❌ | ✅ 3 departments | ✅ Unlimited | ✅ + Custom hierarchies |
 | **Workflow Automation** | ❌ | ✅ No-code builder | ✅ Advanced + approval | ✅ + Unlimited custom |
 | **White-Label Branding** | ❌ | ❌ | ✅ Full branding | ✅ + Mobile apps |
-| **Custom Domain** | ❌ | ❌ | ✅ Included | ✅ + CDN |
+| **Custom Ontario Mills** | ❌ | ❌ | ✅ Included | ✅ + CDN |
 | **API Access** | ❌ | 100K calls/month | Unlimited | Unlimited + custom endpoints |
 | **Integrations** | Basic (GHL) | Pre-built (5+) | Enterprise (10+) | Custom unlimited |
 | **SSO/SAML** | ❌ | ✅ Basic | ✅ Enterprise | ✅ + Custom IdP |

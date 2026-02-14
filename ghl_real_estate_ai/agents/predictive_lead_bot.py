@@ -604,7 +604,7 @@ class PredictiveLeadBot(LeadBotWorkflow):
         """Day 14 with Track 3.1 adaptive messaging and channel selection."""
         # Use Track 3.1 enhanced optimization
         optimization = state.get("enhanced_optimization", state["sequence_optimization"])
-        personality = state["personality_type"]
+        state["personality_type"]
         journey_analysis = state.get("journey_analysis")
         conversion_analysis = state.get("conversion_analysis")
 

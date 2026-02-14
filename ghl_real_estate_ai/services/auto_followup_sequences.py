@@ -455,7 +455,7 @@ class AutoFollowUpSequences:
         orchestrator = get_claude_orchestrator()
 
         first_name = contact_data.get("first_name", "Friend")
-        market = custom_fields.get("market", "Austin") if custom_fields else "Austin"
+        market = custom_fields.get("market", "Rancho Cucamonga") if custom_fields else "Rancho Cucamonga"
 
         prompt = f"""
         Generate a personalized real estate follow-up message for {first_name} in {market}.

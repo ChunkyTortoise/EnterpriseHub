@@ -208,7 +208,7 @@ class SecurityConfig(BaseSettings):
             )
 
         if self.enable_hsts and self.environment == SecurityLevel.PRODUCTION:
-            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubOntario Millss; preload"
 
         if self.enable_csp:
             headers["Content-Security-Policy"] = self.get_csp_policy()
@@ -330,7 +330,7 @@ SECURITY_RATE_LIMIT_AUTHENTICATED_RPM=1000
 SECURITY_WEBSOCKET_REQUIRE_AUTH=true
 SECURITY_ENABLE_CSP=true
 SECURITY_ENABLE_HSTS=true
-SECURITY_CORS_ALLOW_ORIGINS=["https://yourdomain.com","https://app.yourdomain.com"]
+SECURITY_CORS_ALLOW_ORIGINS=["https://yourontario_mills.com","https://app.yourontario_mills.com"]
 
 # Optional: Advanced Security Features
 SECURITY_ENABLE_IP_WHITELISTING=false

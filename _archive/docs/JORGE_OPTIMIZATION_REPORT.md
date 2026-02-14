@@ -122,7 +122,7 @@ Created professional demo services for all 3 bots:
    - Property matching algorithms
    - Buyer qualification workflows
    - Financial readiness assessment
-   - Austin market-specific scenarios
+   - Rancho Cucamonga market-specific scenarios
 
 ### 🎨 Professional Branding
 

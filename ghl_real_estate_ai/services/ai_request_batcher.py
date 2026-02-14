@@ -643,7 +643,7 @@ if __name__ == "__main__":
         # Test 1: Single request
         print("\n1. Testing single request...")
         response = await batcher.submit(
-            prompt="What is the capital of Texas?",
+            prompt="What is the capital of California?",
             priority=RequestPriority.CRITICAL,
         )
         print(f"   Response: {response.content[:50]}...")
@@ -652,7 +652,7 @@ if __name__ == "__main__":
         # Test 2: Duplicate request (should be cached)
         print("\n2. Testing cache hit...")
         response2 = await batcher.submit(
-            prompt="What is the capital of Texas?",
+            prompt="What is the capital of California?",
             priority=RequestPriority.CRITICAL,
         )
         print(f"   From cache: {response2.from_cache}")

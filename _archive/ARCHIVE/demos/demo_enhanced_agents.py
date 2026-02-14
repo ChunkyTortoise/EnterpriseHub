@@ -31,7 +31,7 @@ async def demo():
     # 2. Local Memory Persistence
     print("\n--- 2. Memory Layer ---")
     lead_id = "demo_lead_123"
-    await memory_manager.save_interaction(lead_id, "I am looking for a 3-bedroom house in Austin with a budget of $600,000.", role="user")
+    await memory_manager.save_interaction(lead_id, "I am looking for a 3-bedroom house in Rancho Cucamonga with a budget of $600,000.", role="user")
     await memory_manager.save_interaction(lead_id, "I also hate houses with no backyard.", role="user")
     
     context = await memory_manager.retrieve_context(lead_id)
@@ -44,7 +44,7 @@ async def demo():
     orchestrator = SwarmOrchestrator(Path("."))
     
     # We'll mock a task execution that uses our new skills
-    task_description = "Find a 3-bedroom house in Austin for $600k and prepare a pitch."
+    task_description = "Find a 3-bedroom house in Rancho Cucamonga for $600k and prepare a pitch."
     print(f"Executing Swarm Task: {task_description}")
     
     # In a real run, the orchestrator would use LLM to pick tools.
@@ -54,7 +54,7 @@ async def demo():
     
     if search_skill and pitch_skill:
         # Step 1: Search
-        results = search_skill.execute(budget=600000, location="Austin", bedrooms=3)
+        results = search_skill.execute(budget=600000, location="Rancho Cucamonga", bedrooms=3)
         print(f"Found {len(results)} matches.")
         
         if results:

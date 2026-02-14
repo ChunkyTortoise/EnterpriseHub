@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 try:
-    from ghl_real_estate_ai.services.austin_market_service import PropertyListing, PropertyType
+    from ghl_real_estate_ai.services.rancho_cucamonga_market_service import PropertyListing, PropertyType
     from ghl_real_estate_ai.services.property_alerts import (
         AlertCriteria,
         AlertPriority,
@@ -45,7 +45,7 @@ class TestAlertCriteria:
             max_price=800000,
             min_beds=2,
             property_types=[PropertyType.SINGLE_FAMILY],
-            neighborhoods=["Round Rock", "Domain"],
+            neighborhoods=["Round Rock", "Ontario Mills"],
             work_location="Apple",
         )
 
@@ -408,7 +408,7 @@ class TestPropertyAlertSystem:
                 lead_id=f"lead_{i:03d}",
                 min_price=300000 + i * 50000,
                 max_price=700000 + i * 100000,
-                neighborhoods=["Round Rock", "Domain"][i % 2 : i % 2 + 1],
+                neighborhoods=["Round Rock", "Ontario Mills"][i % 2 : i % 2 + 1],
             )
             criteria_list.append(criteria)
             await alert_system.setup_lead_alerts(criteria)
@@ -563,7 +563,7 @@ class TestPropertyAlertsIntegration:
             AlertCriteria(
                 lead_id="lead_tesla",
                 work_location="Tesla",
-                neighborhoods=["East Austin", "Mueller"],
+                neighborhoods=["East Rancho Cucamonga", "Haven City"],
                 min_price=300000,
                 max_price=600000,
             ),
@@ -594,7 +594,7 @@ class TestPropertyAlertsIntegration:
                 min_price=300000 + i * 25000,
                 max_price=600000 + i * 50000,
                 min_beds=2 + (i % 3),
-                neighborhoods=["Round Rock", "Cedar Park", "Domain", "Downtown"][i % 4 : i % 4 + 1],
+                neighborhoods=["Round Rock", "Cedar Park", "Ontario Mills", "Downtown"][i % 4 : i % 4 + 1],
             )
             await alert_system.setup_lead_alerts(criteria)
 

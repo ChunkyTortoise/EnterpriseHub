@@ -203,7 +203,7 @@ class ScenarioSimulationEngine:
         for i in range(250):  # 250 deals in past year
             deal_date = base_date + timedelta(days=i * 1.5)
 
-            # Austin market pricing characteristics
+            # Rancho Cucamonga market pricing characteristics
             price_base = np.random.lognormal(12.9, 0.3)  # ~$400K average
             price = max(250000, min(2000000, price_base))
 

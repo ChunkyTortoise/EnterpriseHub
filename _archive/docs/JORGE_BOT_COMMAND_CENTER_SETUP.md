@@ -163,7 +163,7 @@ WS /ws (when available)
 # Check the input validation
 curl -X POST http://localhost:8002/api/jorge-seller/process \
   -H "Content-Type: application/json" \
-  -d '{"contact_id": "test", "location_id": "austin", "message": "test message"}'
+  -d '{"contact_id": "test", "location_id": "rancho_cucamonga", "message": "test message"}'
 ```
 
 ### **If Streamlit Dashboard Has Runtime Errors**

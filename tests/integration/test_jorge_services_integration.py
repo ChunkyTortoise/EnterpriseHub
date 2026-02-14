@@ -22,8 +22,6 @@ from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 
-@pytest.mark.integration
-
 
 @pytest.fixture(autouse=True)
 def reset_all():

@@ -72,10 +72,10 @@ class PredictiveLeadScorerV2Optimized:
         }
 
         self.location_keywords = {
-            # Austin proper
-            "central_austin": ["central austin", "downtown", "east austin", "south austin"],
-            "north_austin": ["north austin", "domain", "arboretum", "tech ridge"],
-            "west_austin": ["west austin", "zilker", "barton hills", "rollingwood"],
+            # Rancho Cucamonga proper
+            "central_rancho_cucamonga": ["central rancho_cucamonga", "downtown", "east rancho_cucamonga", "south rancho_cucamonga"],
+            "north_rancho_cucamonga": ["north rancho_cucamonga", "domain", "arboretum", "tech ridge"],
+            "west_rancho_cucamonga": ["west rancho_cucamonga", "zilker", "barton hills", "rollingwood"],
 
             # Suburbs
             "round_rock": ["round rock"],
@@ -93,8 +93,8 @@ class PredictiveLeadScorerV2Optimized:
 
             # Specific neighborhoods
             "mueller": ["mueller"],
-            "east_austin": ["east austin", "cherrywood", "windsor park"],
-            "south_austin": ["south austin", "slaughter", "sunset valley"]
+            "east_rancho_cucamonga": ["east rancho_cucamonga", "cherrywood", "windsor park"],
+            "south_rancho_cucamonga": ["south rancho_cucamonga", "slaughter", "sunset valley"]
         }
 
         self.financing_keywords = {

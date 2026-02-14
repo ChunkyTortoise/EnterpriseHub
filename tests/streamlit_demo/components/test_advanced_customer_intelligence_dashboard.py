@@ -11,8 +11,6 @@ import pandas as pd
 import pytest
 import streamlit as st
 
-@pytest.mark.integration
-
 # Import the component under test
 try:
     from ghl_real_estate_ai.streamlit_demo.components.advanced_customer_intelligence_dashboard import (

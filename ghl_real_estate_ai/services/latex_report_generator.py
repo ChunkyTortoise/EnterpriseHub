@@ -93,7 +93,7 @@ Days on Market (Avg) & <<DOM>> Days & <<DOM_DELTA>>\% \\
             "<<VALUATION>>": f"${data.get('valuation', 500000):,.0f}",
             "<<FRS>>": str(data.get("frs_score", 75)),
             "<<ALIGNMENT>>": data.get("alignment", "High-Velocity Professional"),
-            "<<ZIP_CODE>>": data.get("zip_code", "78701"),
+            "<<ZIP_CODE>>": data.get("zip_code", "91730"),
             "<<ABSORPTION>>": str(data.get("absorption", 12.5)),
             "<<DELTA_ABS>>": str(data.get("delta_abs", 2.1)),
             "<<AVG_PRICE>>": f"${data.get('avg_price', 650000):,.0f}",

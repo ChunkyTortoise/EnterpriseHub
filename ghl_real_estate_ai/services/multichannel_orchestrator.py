@@ -224,7 +224,7 @@ class MultiChannelOrchestrator:
 
         # Get lead's channel preferences from history
         prefs = self.channel_preferences.get(lead_id, {})
-        engagement = self.engagement_history.get(lead_id, [])
+        self.engagement_history.get(lead_id, [])
 
         # Calculate channel scores
         channel_scores = {}

@@ -22,14 +22,14 @@ Security audit identified 5 critical vulnerabilities in the EnterpriseHub codeba
 `allow_origins=["*"]` combined with `allow_credentials=True` allows any origin to make authenticated requests.
 
 ### Fix
-Replace wildcard with explicit domain list from environment variable:
+Replace wildcard with explicit ontario_mills list from environment variable:
 
 ```python
 import os
 
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
 if not CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGINS == [""]:
-    CORS_ALLOWED_ORIGINS = ["https://yourdomain.com"]  # Safe default
+    CORS_ALLOWED_ORIGINS = ["https://yourontario_mills.com"]  # Safe default
 
 app.add_middleware(
     CORSMiddleware,

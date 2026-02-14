@@ -14,22 +14,22 @@ async def verify_cache_roi():
     client = LLMClient(provider="claude", model="claude-3-5-sonnet-20241022")
     
     # High-context system prompt (> 2000 chars to ensure caching trigger) 
-    system_prompt = "You are an elite Real Estate AI specialized in the Austin, Texas market. " * 50
+    system_prompt = "You are an elite Real Estate AI specialized in the Rancho Cucamonga, California market. " * 50
     system_prompt += "\nYour knowledge includes deep zoning laws, neighborhood psychographics, and 2026 investment trends."
     
     print(f"System Prompt Length: {len(system_prompt)} characters.")
     
     queries = [
         "What is the investment outlook for South Lamar in 2026?",
-        "How do zoning changes in East Austin affect multi-family development?",
-        "Compare Teravista and Steiner Ranch for tech families.",
-        "What are the top 3 luxury zip codes in Austin right now?",
+        "How do zoning changes in East Rancho Cucamonga affect multi-family development?",
+        "Compare Teravista and Rancho Etiwanda for tech families.",
+        "What are the top 3 luxury zip codes in Rancho Cucamonga right now?",
         "Analyze the impact of the new tech corridor on Manor property values.",
         "Is Del Valle a good spot for short-term rentals in 2026?",
-        "Explain the tax benefits of 1031 exchanges for Austin properties.",
-        "What is the average price per square foot in Tarrytown?",
-        "How has the recent interest rate shift affected Austin buyer sentiment?",
-        "Give me a closing pitch for a high-intent buyer in West Lake Hills."
+        "Explain the tax benefits of 1031 exchanges for Rancho Cucamonga properties.",
+        "What is the average price per square foot in North Rancho?",
+        "How has the recent interest rate shift affected Rancho Cucamonga buyer sentiment?",
+        "Give me a closing pitch for a high-intent buyer in Alta Loma."
     ]
     
     results = []

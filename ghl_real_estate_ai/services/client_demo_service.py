@@ -314,7 +314,7 @@ class ClientDemoService:
                     "Inconsistent client communication",
                     "Manual administrative tasks reducing selling time",
                 ],
-                "geographic_market": "Austin, TX Metro Area",
+                "geographic_market": "Rancho Cucamonga, CA Metro Area",
                 "experience_level": "experienced",
                 "tech_adoption": "medium",
             },
@@ -529,17 +529,6 @@ class ClientDemoService:
         """Calculate ROI demonstration using existing ROI calculator"""
         try:
             # Use existing ROI calculator with demo parameters
-            demo_params = {
-                "monthly_leads": client_profile.monthly_leads,
-                "avg_deal_size": client_profile.avg_deal_size,
-                "commission_rate": client_profile.commission_rate,
-                "current_conversion_rate": 0.15,  # Industry average
-                "target_conversion_rate": 0.25,  # With Jorge AI
-                "current_response_time_hours": 3.5,
-                "jorge_response_time_seconds": 30,
-                "current_accuracy": 0.65,
-                "jorge_accuracy": 0.95,
-            }
 
             roi_calculation = {
                 "scenario": client_profile.market_segment.value,

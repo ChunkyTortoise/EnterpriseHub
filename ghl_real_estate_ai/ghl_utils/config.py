@@ -170,6 +170,10 @@ class Settings(BaseSettings):
     custom_field_timeline_urgency: Optional[str] = None
     custom_field_property_condition: Optional[str] = None
     custom_field_price_expectation: Optional[str] = None
+    custom_field_seller_liens: Optional[str] = None
+    custom_field_seller_repairs: Optional[str] = None
+    custom_field_seller_listing_history: Optional[str] = None
+    custom_field_seller_decision_maker: Optional[str] = None
 
     # Calendar & Appointment Settings (Jorge's Rancho Cucamonga Business)
     appointment_auto_booking_enabled: bool = True

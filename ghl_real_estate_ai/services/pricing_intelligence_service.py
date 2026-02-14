@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant  # Optional dependency
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.austin_market_service import AustinMarketService, MarketCondition
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService, MarketCondition
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
     ValuationConfidence,
@@ -164,7 +164,7 @@ class PricingIntelligenceService:
     def __init__(self):
         self.cache = get_cache_service()
         self.valuation_engine = get_dynamic_valuation_engine()
-        self.market_service = AustinMarketService()
+        self.market_service = RanchoCucamongaMarketService()
         # Optional Claude Assistant integration
         try:
             from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -615,7 +615,7 @@ class PricingIntelligenceService:
 
         # Property characteristics
         price = property_data.get("price", 500000)
-        if 300000 <= price <= 800000:  # Sweet spot for Austin market
+        if 300000 <= price <= 800000:  # Sweet spot for Rancho Cucamonga market
             score += 15
         elif price < 300000 or price > 1200000:
             score -= 10

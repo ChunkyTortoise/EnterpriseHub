@@ -100,9 +100,9 @@ class EnterpriseAuthService:
             },
             SSOProvider.OKTA: {
                 "name": "Okta",
-                "auth_url": "https://{domain}.okta.com/oauth2/v1/authorize",
-                "token_url": "https://{domain}.okta.com/oauth2/v1/token",
-                "userinfo_url": "https://{domain}.okta.com/oauth2/v1/userinfo",
+                "auth_url": "https://{ontario_mills}.okta.com/oauth2/v1/authorize",
+                "token_url": "https://{ontario_mills}.okta.com/oauth2/v1/token",
+                "userinfo_url": "https://{ontario_mills}.okta.com/oauth2/v1/userinfo",
                 "scopes": ["openid", "profile", "email", "groups"],
                 "supports_groups": True,
             },
@@ -138,7 +138,7 @@ class EnterpriseAuthService:
             logger.info(f"Creating enterprise tenant for {tenant_data.get('company_name')} (ID: {tenant_id})")
 
             # Validate tenant data
-            required_fields = ["company_name", "domain", "sso_provider"]
+            required_fields = ["company_name", "ontario_mills", "sso_provider"]
             missing_fields = [field for field in required_fields if field not in tenant_data]
             if missing_fields:
                 raise EnterpriseAuthError(
@@ -147,10 +147,10 @@ class EnterpriseAuthService:
                     tenant_id=tenant_id,
                 )
 
-            # Validate domain uniqueness
-            if await self._is_domain_already_registered(tenant_data["domain"]):
+            # Validate ontario_mills uniqueness
+            if await self._is_ontario_mills_already_registered(tenant_data["ontario_mills"]):
                 raise EnterpriseAuthError(
-                    f"Domain {tenant_data['domain']} already registered",
+                    f"Ontario Mills {tenant_data['ontario_mills']} already registered",
                     error_code="DOMAIN_ALREADY_EXISTS",
                     tenant_id=tenant_id,
                 )
@@ -168,14 +168,14 @@ class EnterpriseAuthService:
             tenant_config = {
                 "tenant_id": tenant_id,
                 "company_name": tenant_data["company_name"],
-                "domain": tenant_data["domain"],
+                "ontario_mills": tenant_data["ontario_mills"],
                 "sso_provider": sso_provider,
                 "sso_config": tenant_data.get("sso_config", {}),
                 "partnership_id": tenant_data.get("partnership_id"),
                 "status": "pending_setup",
                 "created_at": datetime.now(timezone.utc),
                 "admin_email": tenant_data.get("admin_email"),
-                "allowed_domains": tenant_data.get("allowed_domains", [tenant_data["domain"]]),
+                "allowed_ontario_millss": tenant_data.get("allowed_ontario_millss", [tenant_data["ontario_mills"]]),
                 "max_users": tenant_data.get("max_users", 1000),
                 "session_timeout_hours": tenant_data.get("session_timeout_hours", 8),
                 "require_mfa": tenant_data.get("require_mfa", True),
@@ -197,9 +197,9 @@ class EnterpriseAuthService:
                 ttl=86400 * 365,  # 1 year
             )
 
-            # Store domain -> tenant mapping
+            # Store ontario_mills -> tenant mapping
             await self.cache_service.set(
-                f"domain_tenant_mapping:{tenant_data['domain']}",
+                f"ontario_mills_tenant_mapping:{tenant_data['ontario_mills']}",
                 tenant_id,
                 ttl=86400 * 365,  # 1 year
             )
@@ -226,18 +226,18 @@ class EnterpriseAuthService:
                 tenant_id=tenant_id if "tenant_id" in locals() else None,
             )
 
-    async def get_tenant_by_domain(self, domain: str) -> Optional[Dict[str, Any]]:
+    async def get_tenant_by_ontario_mills(self, ontario_mills: str) -> Optional[Dict[str, Any]]:
         """
-        Retrieve tenant configuration by domain.
+        Retrieve tenant configuration by ontario_mills.
 
         Args:
-            domain: Company domain
+            ontario_mills: Company ontario_mills
 
         Returns:
             Tenant configuration or None if not found
         """
         try:
-            tenant_id = await self.cache_service.get(f"domain_tenant_mapping:{domain}")
+            tenant_id = await self.cache_service.get(f"ontario_mills_tenant_mapping:{ontario_mills}")
             if not tenant_id:
                 return None
 
@@ -245,7 +245,7 @@ class EnterpriseAuthService:
             return tenant_config
 
         except Exception as e:
-            logger.error(f"Error retrieving tenant for domain {domain}: {e}")
+            logger.error(f"Error retrieving tenant for ontario_mills {ontario_mills}: {e}")
             return None
 
     async def update_tenant_configuration(self, tenant_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
@@ -290,21 +290,21 @@ class EnterpriseAuthService:
     # SSO Authentication Flow
     # ===================================================================
 
-    async def initiate_sso_login(self, domain: str, redirect_uri: str) -> Dict[str, Any]:
+    async def initiate_sso_login(self, ontario_mills: str, redirect_uri: str) -> Dict[str, Any]:
         """
         Initiate SSO login flow for enterprise user.
 
         Args:
-            domain: Company domain
+            ontario_mills: Company ontario_mills
             redirect_uri: Callback URL after authentication
 
         Returns:
             SSO authorization URL and state token
         """
         try:
-            tenant_config = await self.get_tenant_by_domain(domain)
+            tenant_config = await self.get_tenant_by_ontario_mills(ontario_mills)
             if not tenant_config:
-                raise EnterpriseAuthError(f"No tenant configured for domain {domain}", error_code="TENANT_NOT_FOUND")
+                raise EnterpriseAuthError(f"No tenant configured for ontario_mills {ontario_mills}", error_code="TENANT_NOT_FOUND")
 
             tenant_id = tenant_config["tenant_id"]
             sso_provider = tenant_config["sso_provider"]
@@ -317,7 +317,7 @@ class EnterpriseAuthService:
             # Store SSO session state
             sso_session = {
                 "tenant_id": tenant_id,
-                "domain": domain,
+                "ontario_mills": ontario_mills,
                 "redirect_uri": redirect_uri,
                 "nonce": nonce,
                 "created_at": datetime.now(timezone.utc),
@@ -333,7 +333,7 @@ class EnterpriseAuthService:
             # Build authorization URL
             auth_url = await self._build_authorization_url(sso_provider, sso_config, state_token, nonce, redirect_uri)
 
-            logger.info(f"SSO login initiated for domain {domain}, tenant {tenant_id}")
+            logger.info(f"SSO login initiated for ontario_mills {ontario_mills}, tenant {tenant_id}")
 
             return {
                 "authorization_url": auth_url,
@@ -343,7 +343,7 @@ class EnterpriseAuthService:
             }
 
         except Exception as e:
-            logger.error(f"Failed to initiate SSO login for domain {domain}: {e}")
+            logger.error(f"Failed to initiate SSO login for ontario_mills {ontario_mills}: {e}")
             raise EnterpriseAuthError(f"SSO initiation failed: {str(e)}", error_code="SSO_INITIATION_FAILED")
 
     async def handle_sso_callback(self, code: str, state: str) -> Dict[str, Any]:
@@ -376,9 +376,9 @@ class EnterpriseAuthService:
                 tenant_config["sso_provider"], tenant_config["sso_config"], tokens["access_token"]
             )
 
-            # Validate user belongs to tenant domain
+            # Validate user belongs to tenant ontario_mills
             user_email = user_info.get("email")
-            if not user_email or not self._validate_user_domain(user_email, tenant_config["allowed_domains"]):
+            if not user_email or not self._validate_user_ontario_mills(user_email, tenant_config["allowed_ontario_millss"]):
                 raise EnterpriseAuthError(
                     f"User email {user_email} not authorized for this tenant",
                     error_code="USER_DOMAIN_NOT_AUTHORIZED",
@@ -481,8 +481,8 @@ class EnterpriseAuthService:
                     f"Tenant {tenant_id} not found", error_code="TENANT_NOT_FOUND", tenant_id=tenant_id
                 )
 
-            # Validate user email domain
-            if not self._validate_user_domain(user_email, tenant_config["allowed_domains"]):
+            # Validate user email ontario_mills
+            if not self._validate_user_ontario_mills(user_email, tenant_config["allowed_ontario_millss"]):
                 raise EnterpriseAuthError(
                     f"User email {user_email} not authorized for this tenant",
                     error_code="USER_DOMAIN_NOT_AUTHORIZED",
@@ -655,9 +655,9 @@ class EnterpriseAuthService:
     # Private Helper Methods
     # ===================================================================
 
-    async def _is_domain_already_registered(self, domain: str) -> bool:
-        """Check if domain is already registered to a tenant."""
-        tenant_id = await self.cache_service.get(f"domain_tenant_mapping:{domain}")
+    async def _is_ontario_mills_already_registered(self, ontario_mills: str) -> bool:
+        """Check if ontario_mills is already registered to a tenant."""
+        tenant_id = await self.cache_service.get(f"ontario_mills_tenant_mapping:{ontario_mills}")
         return tenant_id is not None
 
     async def _generate_tenant_secrets(self, tenant_id: str) -> Dict[str, str]:
@@ -691,7 +691,7 @@ class EnterpriseAuthService:
         if provider == SSOProvider.AZURE_AD:
             auth_url = auth_url.format(tenant_id=sso_config.get("tenant_id", "common"))
         elif provider == SSOProvider.OKTA:
-            auth_url = auth_url.format(domain=sso_config.get("domain"))
+            auth_url = auth_url.format(ontario_mills=sso_config.get("ontario_mills"))
 
         params = {
             "client_id": sso_config.get("client_id"),
@@ -716,7 +716,7 @@ class EnterpriseAuthService:
         if provider == SSOProvider.AZURE_AD:
             token_url = token_url.format(tenant_id=sso_config.get("tenant_id", "common"))
         elif provider == SSOProvider.OKTA:
-            token_url = token_url.format(domain=sso_config.get("domain"))
+            token_url = token_url.format(ontario_mills=sso_config.get("ontario_mills"))
 
         token_data = {
             "grant_type": "authorization_code",
@@ -740,7 +740,7 @@ class EnterpriseAuthService:
 
         # Replace placeholders
         if provider == SSOProvider.OKTA:
-            userinfo_url = userinfo_url.format(domain=sso_config.get("domain"))
+            userinfo_url = userinfo_url.format(ontario_mills=sso_config.get("ontario_mills"))
 
         headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -749,13 +749,13 @@ class EnterpriseAuthService:
             response.raise_for_status()
             return response.json()
 
-    def _validate_user_domain(self, email: str, allowed_domains: List[str]) -> bool:
-        """Validate user email belongs to allowed domains."""
+    def _validate_user_ontario_mills(self, email: str, allowed_ontario_millss: List[str]) -> bool:
+        """Validate user email belongs to allowed ontario_millss."""
         if not email or "@" not in email:
             return False
 
-        user_domain = email.split("@")[1].lower()
-        return user_domain in [domain.lower() for domain in allowed_domains]
+        user_ontario_mills = email.split("@")[1].lower()
+        return user_ontario_mills in [ontario_mills.lower() for ontario_mills in allowed_ontario_millss]
 
     async def _provision_enterprise_user(
         self, tenant_id: str, user_info: Dict[str, Any], tenant_config: Dict[str, Any]

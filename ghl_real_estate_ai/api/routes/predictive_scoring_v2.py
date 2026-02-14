@@ -20,6 +20,7 @@ Date: 2026-01-18
 
 import time
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
@@ -50,15 +51,13 @@ signal_processor = BehavioralSignalProcessor()
 market_router = MarketSpecificModelRouter()
 
 # Legacy scorer for backward compatibility
-# Lazy singleton — defer initialization until first request
-_legacy_scorer = None
+# FastAPI dependency injection - using @lru_cache for singleton behavior
 
 
-def _get_legacy_scorer():
-    global _legacy_scorer
-    if _legacy_scorer is None:
-        _legacy_scorer = PredictiveLeadScorer()
-    return _legacy_scorer
+@lru_cache(maxsize=1)
+def _get_legacy_scorer() -> PredictiveLeadScorer:
+    """Get PredictiveLeadScorer singleton instance."""
+    return PredictiveLeadScorer()
 
 
 router = APIRouter(prefix="/api/v2/predictive-scoring", tags=["Predictive Scoring V2"])
@@ -813,7 +812,7 @@ async def health_check():
             mode=InferenceMode.REAL_TIME,
         )
 
-        result = await inference_engine.predict(test_request)
+        await inference_engine.predict(test_request)
         response_time = (time.time() - start_time) * 1000
 
         # Get performance metrics

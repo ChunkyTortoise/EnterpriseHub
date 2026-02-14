@@ -5,7 +5,7 @@ San Bernardino County Permit Data Service
 Real permit data integration for Rancho Cucamonga and San Bernardino County area.
 Provides development pressure indicators affecting real estate markets.
 
-Replaces Travis County service for California market focus.
+Replaces San Bernardino County service for California market focus.
 
 Author: Geographic Migration - January 2026
 """

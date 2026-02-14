@@ -769,7 +769,6 @@ class AdvancedWorkflowDesigner:
         layers = self._calculate_node_layers(design)
 
         layer_width = 200
-        node_height = 80
         layer_spacing = 150
 
         for layer_index, nodes_in_layer in enumerate(layers):

@@ -3,7 +3,6 @@ pytestmark = pytest.mark.integration
 
 import pytest
 
-@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Comprehensive tests for consolidated PredictiveLeadScorer
@@ -37,12 +36,12 @@ def get_sample_lead_data():
         "conversation_history": [
             {
                 "role": "user",
-                "content": "Hi, I'm looking for a 3 bedroom house in Austin. My budget is around $500k.",
+                "content": "Hi, I'm looking for a 3 bedroom house in Rancho Cucamonga. My budget is around $500k.",
                 "timestamp": (datetime.utcnow() - timedelta(minutes=10)).isoformat(),
             },
             {
                 "role": "assistant",
-                "content": "Hi! Austin is a great choice. Are you pre-approved for a loan?",
+                "content": "Hi! Rancho Cucamonga is a great choice. Are you pre-approved for a loan?",
                 "timestamp": (datetime.utcnow() - timedelta(minutes=9)).isoformat(),
             },
             {
@@ -52,7 +51,7 @@ def get_sample_lead_data():
             },
         ],
         "extracted_preferences": {
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "budget": 500000,
             "bedrooms": 3,
             "financing": "pre-approved",

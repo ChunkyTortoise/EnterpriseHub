@@ -489,7 +489,7 @@ class AILeadInsightsService:
 
         Returns 0-100 health score with breakdown
         """
-        score = lead_data.get("score", 0)
+        lead_data.get("score", 0)
         conversations = lead_data.get("conversations", [])
         metadata = lead_data.get("metadata", {})
 

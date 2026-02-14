@@ -93,7 +93,7 @@ class DemoDataGenerator:
                 "features": {
                     "budget_ranges": ["200000-300000", "300000-400000", "400000-500000", "500000-750000", "750000+"],
                     "property_types": ["single_family", "townhouse", "condo", "luxury_home"],
-                    "locations": ["Downtown Austin", "Cedar Park", "Round Rock", "Lakeway", "Westlake"],
+                    "locations": ["Downtown Rancho Cucamonga", "Cedar Park", "Round Rock", "Lakeway", "Westlake"],
                     "family_sizes": [1, 2, 3, 4, 5],
                     "timelines": ["immediate", "3_months", "6_months", "12_months"]
                 },
@@ -257,8 +257,8 @@ class DemoDataGenerator:
                     "metadata": {"title": "AI Property Matching", "type": "feature_guide", "category": "property_matching"}
                 },
                 {
-                    "content": "Austin real estate market analysis shows inventory down 12% month-over-month, median home prices up 3.2% this quarter, and average days on market at 23 days. Buyers in the $400K-$500K range face high competition with 47 active buyers per listing.",
-                    "metadata": {"title": "Austin Market Intelligence", "type": "market_data", "category": "local_market"}
+                    "content": "Rancho Cucamonga real estate market analysis shows inventory down 12% month-over-month, median home prices up 3.2% this quarter, and average days on market at 23 days. Buyers in the $400K-$500K range face high competition with 47 active buyers per listing.",
+                    "metadata": {"title": "Rancho Cucamonga Market Intelligence", "type": "market_data", "category": "local_market"}
                 },
                 {
                     "content": "Agent performance optimization focuses on response time, lead qualification efficiency, and conversion rates. Top-performing agents respond within 30 minutes, qualify leads in under 10 minutes, and maintain 25%+ conversion rates through systematic follow-up.",

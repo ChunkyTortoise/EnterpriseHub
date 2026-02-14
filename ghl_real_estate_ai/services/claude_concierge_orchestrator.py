@@ -12,8 +12,6 @@ from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.models.orchestrator_types import ConciergeGuidanceContext
-from ghl_real_estate_ai.models.orchestrator_types import ConciergeResponse as ConciergeResponseDict
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_orchestrator import (
@@ -446,7 +444,7 @@ class ClaudeConciergeOrchestrator:
         """
 
         # Build coaching-specific prompt
-        coaching_prompt = f"""
+        f"""
         Jorge needs immediate coaching for this situation:
 
         Current Situation: {json.dumps(current_situation, indent=2)}
@@ -593,7 +591,7 @@ class ClaudeConciergeOrchestrator:
         """
 
         # Build field assistance prompt with location intelligence
-        field_prompt = f"""
+        f"""
         Jorge is in the field and needs mobile assistance:
 
         Current Location: {location_data.get("address", "Unknown")}
@@ -636,7 +634,7 @@ class ClaudeConciergeOrchestrator:
         """
 
         # Build presentation support prompt
-        presentation_prompt = f"""
+        f"""
         Jorge is presenting to a client and needs intelligent presentation support:
 
         Client Profile:
@@ -1651,7 +1649,7 @@ class JorgeBusinessRules:
             "qualification_threshold": 70,  # Jorge's minimum lead score
             "max_concurrent_deals": 15,
             "preferred_price_range": (300000, 1500000),
-            "target_markets": ["austin", "cedar_park", "round_rock"],
+            "target_markets": ["rancho_cucamonga", "cedar_park", "round_rock"],
         }
 
     async def update_rule(self, pattern: Dict[str, Any]) -> bool:

@@ -28,7 +28,7 @@ class Comparable(BaseModel):
 
 
 class MarketContext(BaseModel):
-    market_name: str = "Austin, TX"
+    market_name: str = "Rancho Cucamonga, CA"
     price_trend: float  # Percentage
     dom_average: int
     inventory_level: int

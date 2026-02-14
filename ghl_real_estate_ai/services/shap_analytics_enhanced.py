@@ -325,7 +325,7 @@ class SHAPAnalyticsEnhanced:
 
         # Determine aggregation interval
         interval_map = {"hourly": "1 hour", "daily": "1 day", "weekly": "1 week"}
-        interval = interval_map.get(granularity, "1 day")
+        interval_map.get(granularity, "1 day")
 
         # Mock query structure - in production this would query the actual database
         # where ML scoring history is stored

@@ -369,7 +369,7 @@ async def extract_seller_data(
     Example response:
     {{
         "motivation": "relocation",
-        "relocation_destination": "Austin, TX",
+        "relocation_destination": "Rancho Cucamonga, CA",
         "timeline_acceptable": true,
         "timeline_urgency": "urgent",
         "property_condition": "move-in ready",

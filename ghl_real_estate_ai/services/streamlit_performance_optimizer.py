@@ -666,8 +666,7 @@ def cached_data_loader(ttl: int = 600, key_prefix: str = "data"):
         def wrapper(*args, **kwargs):
             # Generate cache key
             key_data = {"func": func.__name__, "args": args, "kwargs": kwargs}
-            key_hash = hashlib.md5(str(key_data).encode()).hexdigest()
-            cache_key = f"{key_prefix}:{key_hash}"
+            hashlib.md5(str(key_data).encode()).hexdigest()
 
             # Use Streamlit's built-in caching
             @st.cache_data(ttl=ttl)

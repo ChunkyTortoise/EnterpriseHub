@@ -428,7 +428,7 @@ class DatabaseShardingService:
         logger.warning(
             f"Data migration not yet implemented: {location_id} from shard {current_shard_id} to {target_shard_id}"
         )
-        # TODO: Implement data migration logic
+        # ROADMAP-080: Implement data migration logic between shards
         raise NotImplementedError("Data migration between shards not yet implemented")
 
 

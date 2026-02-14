@@ -47,6 +47,8 @@ from ghl_real_estate_ai.analytics.customer_lifetime_analytics import (
 )
 
 # Enterprise Analytics imports
+from functools import lru_cache
+
 from ghl_real_estate_ai.analytics.revenue_attribution_engine import (
     AttributionModel,
     RevenueAttributionEngine,
@@ -59,16 +61,13 @@ from ghl_real_estate_ai.services.cache_service import CacheService
 logger = get_logger(__name__)
 router = APIRouter(prefix="/enterprise-analytics", tags=["enterprise-analytics"])
 
-# Initialize analytics engines
-# Lazy singleton — defer initialization until first request
-_cache_service = None
+# FastAPI dependency injection - using @lru_cache for singleton behavior
 
 
-def _get_cache_service():
-    global _cache_service
-    if _cache_service is None:
-        _cache_service = CacheService()
-    return _cache_service
+@lru_cache(maxsize=1)
+def _get_cache_service() -> CacheService:
+    """Get CacheService singleton instance."""
+    return CacheService()
 
 
 revenue_attribution = RevenueAttributionEngine()

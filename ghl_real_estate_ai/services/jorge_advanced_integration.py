@@ -574,7 +574,7 @@ class JorgeAdvancedIntegration:
 
     async def _create_listing_campaigns(self, event: IntegrationEvent) -> str:
         """Create comprehensive listing marketing campaigns"""
-        campaign_id = event.data.get("campaign_id")
+        event.data.get("campaign_id")
 
         # Generate additional campaign variants
         listing_data = event.data.get("listing_data", {})
@@ -614,7 +614,7 @@ class JorgeAdvancedIntegration:
 
     async def _create_success_campaigns(self, event: IntegrationEvent) -> str:
         """Create success story marketing campaigns"""
-        campaign_id = event.data.get("campaign_id")
+        event.data.get("campaign_id")
 
         # Create referral-focused campaign
         closing_data = event.data.get("closing_data", {})
@@ -799,7 +799,7 @@ class JorgeAdvancedIntegration:
     async def _analyze_listing_market_position(self, listing_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze market position for new listing"""
         neighborhood = listing_data.get("neighborhood", "rancho_cucamonga")
-        price = listing_data.get("price", 0)
+        listing_data.get("price", 0)
 
         # Get price prediction for neighborhood
         price_prediction = await self.prediction_engine.predict_price_appreciation(neighborhood, TimeHorizon.SHORT_TERM)
@@ -838,7 +838,7 @@ class JorgeAdvancedIntegration:
     async def _analyze_closing_market_impact(self, closing_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze market impact of successful closing"""
         neighborhood = closing_data.get("neighborhood", "rancho_cucamonga")
-        sale_price = closing_data.get("sale_price", 0)
+        closing_data.get("sale_price", 0)
 
         # Get current market predictions
         market_prediction = await self.prediction_engine.predict_price_appreciation(

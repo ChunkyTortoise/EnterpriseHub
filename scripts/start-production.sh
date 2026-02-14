@@ -68,7 +68,7 @@ async def warm_cache():
     warm_items = {
         'lead_templates:hot': ({'score_threshold': 80}, 3600),
         'lead_templates:warm': ({'score_threshold': 60}, 3600),
-        'property_filters:austin': ({'city': 'austin', 'active': True}, 1800),
+        'property_filters:rancho_cucamonga': ({'city': 'rancho_cucamonga', 'active': True}, 1800),
         'ai_models:scoring': ({'model': 'claude-3-5-sonnet', 'version': 'latest'}, 7200)
     }
     

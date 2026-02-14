@@ -395,7 +395,7 @@ def render_growth_scenario_panel():
     # Growth scenario selector
     growth_scenarios = {
         "Geographic Expansion": {
-            "description": "Expand to adjacent markets (Round Rock, Cedar Park)",
+            "description": "Expand to adjacent markets (Fontana, Upland)",
             "investment": 75000,
             "timeframe": 6,
             "risk_level": "Medium",
@@ -454,7 +454,7 @@ def render_growth_scenario_panel():
             baseline_metrics = {
                 "Annual Revenue": "$2.4M",
                 "Monthly Deal Volume": "20-25 deals",
-                "Market Share (Austin)": "2.8%",
+                "Market Share (Rancho Cucamonga)": "2.8%",
                 "Team Size": "3 agents",
                 "Operating Margin": "22%",
             }

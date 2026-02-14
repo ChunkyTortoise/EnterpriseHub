@@ -31,7 +31,7 @@ EnterpriseHub is positioned to become the **Intelligence Layer** for elite real 
 
 #### 1.2 Linguistic Markers: The Jorge Qualification Pillars
 
-Research reveals these specific linguistic patterns distinguish **Lookers** from **Motivated Sellers** in high-stakes markets (Austin, Denver, Phoenix corridors):
+Research reveals these specific linguistic patterns distinguish **Lookers** from **Motivated Sellers** in high-stakes markets (Rancho Cucamonga, Denver, Phoenix corridors):
 
 **PILLAR 1: Motivation Signals** (Linguistic Markers)
 - ✅ **High Intent:** "I need to sell *fast*," "We're relocating *in 30 days*," "Behind on payments," "Divorced/estate scenario"
@@ -106,7 +106,7 @@ mcp_call(
     input={
         "conversation_history": [...],
         "pillars": ["motivation", "timeline", "condition", "price"],
-        "market_context": "Austin_TX_2026",
+        "market_context": "Rancho Cucamonga_CA_2026",
         "target_persona": "jorge_motivated_seller"
     },
     output_schema=LeadIntentSchema  # Pydantic model
@@ -694,10 +694,10 @@ export default PropertyDigitalTwin;
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ JORGE WAR ROOM | Austin Market Heat                         │
+│ JORGE WAR ROOM | Rancho Cucamonga Market Heat                         │
 ├─────────────────┬────────────────────────────────────────────┤
 │ TOP 10 HOT LEADS  │       │                   │       │
-│ │  (Three.js Map)      │      │ 1. 📍 Zilker Area │       │
+│ │  (Three.js Map)      │      │ 1. 📍 Victoria Gardens Area │       │
 │ │  🔴 🔴 🔴            │      │    FRS: 89 🔥    │       │
 │ │    🟡  🟠             │      │    Timeline: 30d  │       │
 │ │      🟢              │      │    Est. Close: Wed│       │
@@ -850,7 +850,7 @@ POST /api/lyrio/custom-objects/properties
 Body:
 {
   "property_id": "ghl_prop_123",
-  "address": "123 Main St, Austin, TX",
+  "address": "123 Main St, Rancho Cucamonga, CA",
   "mls_id": "TX-2026-123456",
   "price": 850000,
   "ai_insights": {"market_heat": 87, "buyer_fit": "high"}
@@ -1192,7 +1192,7 @@ for homes like yours."
 <body>
     <div class="header">
         <h1>Comparative Market Analysis (CMA)</h1>
-        <p>{{ subject_address }} | Austin, TX</p>
+        <p>{{ subject_address }} | Rancho Cucamonga, CA</p>
     </div>
     
     <div class="property-overview">

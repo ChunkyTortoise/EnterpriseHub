@@ -23,8 +23,6 @@ from fastapi.testclient import TestClient
 from ghl_real_estate_ai.api.routes.predictive_scoring_v2 import router
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import InferenceResult, MarketSegment
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def mock_user():
@@ -69,7 +67,7 @@ def sample_request_data():
         "lead_id": "test_lead_123",
         "lead_data": {
             "budget": 750000,
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "source": "organic",
             "timeline": "immediate",
             "email_opens": 10,
@@ -290,7 +288,7 @@ class TestPredictiveScoringV2Routes:
         client = TestClient(app)
 
         # Note: This is a simplified test - actual endpoint would need proper query parameters
-        lead_data = {"budget": 750000, "location": "Austin"}
+        lead_data = {"budget": 750000, "location": "Rancho Cucamonga"}
 
         # For testing purposes, we'll test the function logic directly
         # since the actual endpoint uses complex query parameters
@@ -324,7 +322,7 @@ class TestPredictiveScoringV2Routes:
             "lead_id": "test_lead",
             "lead_score": 85.5,
             "behavioral_signals": {"tech_company_association": 1.0},
-            "lead_data": {"budget": 750000, "location": "Austin"},
+            "lead_data": {"budget": 750000, "location": "Rancho Cucamonga"},
             "routing_strategy": "hybrid_intelligent",
         }
 
@@ -428,7 +426,7 @@ class TestPredictiveScoringV2Routes:
         legacy_request = {
             "lead_id": "legacy_lead",
             "budget": 500000,
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "conversation_history": [{"text": "Looking for a home"}],
         }
 

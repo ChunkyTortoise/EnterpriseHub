@@ -554,7 +554,7 @@ class TestRetryMechanism:
 
     @pytest.mark.asyncio
     async def test_retry_fails_after_max_retries(self, mock_dependencies):
-        """Retry mechanism raises after exhausting all retries."""
+        """Retry mechanism raises after exhrancho_cucamongag all retries."""
         from ghl_real_estate_ai.agents.jorge_buyer_bot import ClaudeAPIError, RetryConfig, async_retry_with_backoff
 
         call_count = 0

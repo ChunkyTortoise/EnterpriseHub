@@ -163,7 +163,7 @@ transform your lead conversion and agent productivity.
 Premier Realty Group, I know you're struggling with lead response times averaging 
 over 4 hours and inconsistent follow-up that's costing you potential closings. 
 
-Today I'm going to show you exactly how Austin Metro Realty increased their conversion 
+Today I'm going to show you exactly how Rancho Cucamonga Metro Realty increased their conversion 
 rate by 31% and reduced response time to under 30 minutes using our platform. By the 
 end of our session, you'll see precisely how your 47 agents can close more deals with 
 less manual work.
@@ -322,7 +322,7 @@ This is why agents using our platform see 31% higher conversion rates."
 
 **Customer Validation:**
 ```
-"Austin Metro Realty told us this intelligence alone saved each agent 2 hours per day 
+"Rancho Cucamonga Metro Realty told us this intelligence alone saved each agent 2 hours per day 
 and helped them focus on the leads most likely to close."
 ```
 
@@ -564,7 +564,7 @@ payback in 1.5 days."
 Common objections and responses:
 
 "This seems too good to be true..."
-→ "I understand the skepticism. That's why I'd like to connect you with Austin Metro 
+→ "I understand the skepticism. That's why I'd like to connect you with Rancho Cucamonga Metro 
 Realty who achieved these exact results. Would a reference call help validate this?"
 
 "We're not ready to make a decision now..."
@@ -628,7 +628,7 @@ for your team?"
 
 #### The Reference Close
 ```
-"I'd love to have you speak with Austin Metro Realty about their results. They're 
+"I'd love to have you speak with Rancho Cucamonga Metro Realty about their results. They're 
 just 2 hours south of you and face identical challenges. Would a call with their 
 VP of Sales help with your decision?"
 ```

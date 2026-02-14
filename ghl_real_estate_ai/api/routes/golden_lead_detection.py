@@ -10,6 +10,7 @@ Created: 2026-01-17
 
 import logging
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
@@ -33,19 +34,34 @@ from ghl_real_estate_ai.services.tenant_service import TenantService
 logger = logging.getLogger(__name__)
 
 # Initialize services
-detector_service: Optional[GoldenLeadDetector] = None
 tenant_service = TenantService()
 
 # Create router
 router = APIRouter(prefix="/api/golden-leads", tags=["golden-leads"])
 
+# FastAPI dependency injection - using @lru_cache for singleton behavior
+# Note: detector_service requires async initialization, using global var for that case
 
-async def get_detector_service() -> GoldenLeadDetector:
-    """Dependency injection for golden lead detector service"""
-    global detector_service
-    if detector_service is None:
-        detector_service = await create_golden_lead_detector()
-    return detector_service
+
+@lru_cache(maxsize=1)
+def get_detector_service() -> GoldenLeadDetector:
+    """Get GoldenLeadDetector singleton instance."""
+    # Note: detector_service requires async initialization
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If loop is running, we might need a different approach for true async,
+            # but for FastAPI Depends this sync wrapper with run_until_complete 
+            # is often used for lazy singleton initialization of async objects.
+            # In a production environment, you'd typically initialize this on startup.
+            return loop.run_until_complete(create_golden_lead_detector())
+        else:
+            return asyncio.run(create_golden_lead_detector())
+    except Exception as e:
+        logger.error(f"Failed to initialize GoldenLeadDetector: {e}")
+        # Fallback to direct creation if loop access fails
+        return asyncio.run(create_golden_lead_detector())
 
 
 # Pydantic models for request/response
@@ -395,8 +411,15 @@ async def filter_golden_leads(
             f"jorge_score>={min_jorge_score} (tenant: {tenant_id})"
         )
 
-        # TODO: Implement actual filtering from storage/cache
-        # This endpoint would be used to retrieve previously analyzed leads
+        # ROADMAP-046: Implement Golden Lead Filtering from Storage
+        # Current: Returns empty array
+        # Required:
+        #   1. Query leads table with filters (temperature, budget, jorge_score)
+        #   2. Check Redis cache for hot leads first
+        #   3. Support pagination for large result sets
+        #   4. Sort by composite score (jorge_score + temperature + urgency)
+        # Dependencies: None
+
         return []
 
     except Exception as e:
@@ -546,7 +569,7 @@ async def health_check():
 async def optimize_detector_performance():
     """Background task to optimize detector performance"""
     try:
-        detector = await get_detector_service()
+        await get_detector_service()
 
         # Clean up expired cache entries
         # Optimize behavioral signal weights

@@ -161,7 +161,7 @@ async for chunk in response:
 @st.cache_resource
 def initialize_optimized_assistant():
     """Initialize assistant with warmed cache."""
-    assistant = ClaudeAssistantOptimized(market_id="austin")
+    assistant = ClaudeAssistantOptimized(market_id="rancho_cucamonga")
 
     # Warm cache with common demo queries
     asyncio.run(assistant._warm_demo_cache_background())

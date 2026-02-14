@@ -10,8 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def temp_storage(tmp_path):
@@ -60,7 +58,7 @@ async def test_comprehensive_report_integration(temp_storage):
             {"role": "assistant", "content": "That is great! When are you looking to move?"},
             {"role": "user", "content": "ASAP, relocatig for work.", "response_time_seconds": 45},
             {"role": "assistant", "content": "I can help with that. Any specific neighborhood?"},
-            {"role": "user", "content": "Hyde Park area preferred.", "response_time_seconds": 60},
+            {"role": "user", "content": "Alta Loma area preferred.", "response_time_seconds": 60},
             {"role": "assistant", "content": "Good choice. How many bedrooms?"},
         ],
         "extracted_preferences": {
@@ -68,7 +66,7 @@ async def test_comprehensive_report_integration(temp_storage):
             "budget": 500000,
             "financing": "pre-approved",
             "timeline": "ASAP",
-            "location": "Hyde Park",
+            "location": "Alta Loma",
         },
     }
 

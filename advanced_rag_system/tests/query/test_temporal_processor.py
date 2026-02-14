@@ -5,13 +5,15 @@ from datetime import datetime, timedelta
 import pytest
 from src.query.temporal_processor import (
 
-@pytest.mark.unit
     RecencyBoostConfig,
     TemporalConstraint,
     TemporalConstraintType,
     TemporalProcessor,
     TimeAwareRetriever,
 )
+
+
+@pytest.mark.unit
 
 
 class TestTemporalConstraint:

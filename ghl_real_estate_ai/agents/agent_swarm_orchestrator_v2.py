@@ -121,7 +121,7 @@ class AgentSwarmOrchestratorV2:
             leads_to_analyze = []  # self.memory.get_leads_needing_quant(tenant_id)
 
             for lead in leads_to_analyze:
-                analysis = await self.quant.analyze_deal(lead)
+                await self.quant.analyze_deal(lead)
                 # Save analysis back to lead metadata
                 # await self.memory.update_lead_metadata(lead['id'], {"quant_analysis": analysis}, tenant_id)
                 agent.actions_taken += 1
@@ -143,7 +143,7 @@ class AgentSwarmOrchestratorV2:
         try:
             # 1. Analyze gemini_metrics.csv for engagement drops (Tenant-aware in prod)
             if os.path.exists(self.metrics_file):
-                df = pd.read_csv(self.metrics_file)
+                pd.read_csv(self.metrics_file)
 
             # 2. Identify 'cooling' leads for this tenant (Simulated)
             cooling_leads = []  # self.memory.get_leads_at_risk_of_churn(tenant_id)
@@ -189,7 +189,7 @@ class AgentSwarmOrchestratorV2:
             )
 
             # Logic for optimization: If cost per task is high, suggest model switching
-            optimization_report = f"[{tenant_id}] Token Analysis Report:\n{json.dumps(summary, indent=2)}"
+            logger.info(f"[{tenant_id}] Token Analysis Report:\n{json.dumps(summary, indent=2)}")
 
             # Log autonomous operation
             log_metrics(
@@ -249,7 +249,7 @@ class AgentSwarmOrchestratorV2:
                     )
 
                     # 4. GOVERNANCE ENFORCEMENT
-                    sanitized_script = self.governance.enforce(
+                    self.governance.enforce(
                         script_response.content,
                         {"market_id": zip_code, "task": "leverage_script", "tenant_id": tenant_id},
                     )
@@ -412,7 +412,8 @@ class AgentSwarmOrchestratorV2:
                         )
 
                         # 4. GOVERNANCE ENFORCEMENT
-                        sanitized_pitch = self.governance.enforce(
+                        # 4. GOVERNANCE ENFORCEMENT
+                        self.governance.enforce(
                             outreach_script.content,
                             {
                                 "market_id": pattern.destination_market,
@@ -513,7 +514,7 @@ class AgentSwarmOrchestratorV2:
 
             for deal in dormant_deals:
                 # 2. Apply Governance to the Resurrection Script
-                sanitized_script = self.governance.enforce(
+                self.governance.enforce(
                     deal["resurrection_script"],
                     {"contact_id": deal["id"], "task": "resurrection", "tenant_id": tenant_id},
                 )

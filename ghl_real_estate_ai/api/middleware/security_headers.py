@@ -128,7 +128,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HSTS for HTTPS
         if self.enable_hsts and (request.url.scheme == "https" or self.environment == "production"):
-            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubOntario Millss; preload"
 
         # Content Security Policy
         if self.enable_csp:

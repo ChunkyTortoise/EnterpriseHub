@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 """
 Socket.IO Scale Testing Utility
 ===============================

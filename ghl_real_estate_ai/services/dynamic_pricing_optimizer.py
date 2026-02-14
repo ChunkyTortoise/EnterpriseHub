@@ -293,7 +293,6 @@ class DynamicPricingOptimizer:
 
             # Generate optimization recommendations
             recommendations = []
-            total_revenue_impact = 0
 
             for tier, analysis in tier_analysis.items():
                 if analysis["improvement_potential"] > 0.1:  # Meaningful improvement
@@ -528,7 +527,7 @@ class DynamicPricingOptimizer:
         """Calculate optimal pricing multiplier based on conversion data"""
         # Simplified optimization - would use more sophisticated ML in production
         conversion_rate = tier_data.get("conversion_rate", 0)
-        revenue_per_lead = tier_data.get("revenue_per_lead", 0)
+        tier_data.get("revenue_per_lead", 0)
 
         # Price elasticity estimation
         if conversion_rate > 0.8:  # Very high conversion - can increase price

@@ -303,7 +303,7 @@ class BulkOperationsManager:
         }
 
         action = operation["parameters"].get("action", "add")  # add or remove
-        tags = operation["parameters"].get("tags", [])
+        operation["parameters"].get("tags", [])
 
         for contact_id in operation["target_leads"]:
             try:
@@ -338,7 +338,7 @@ class BulkOperationsManager:
             "errors": [],
         }
 
-        assigned_to = operation["parameters"].get("assigned_to", "")
+        operation["parameters"].get("assigned_to", "")
 
         for contact_id in operation["target_leads"]:
             try:
@@ -368,8 +368,8 @@ class BulkOperationsManager:
             "errors": [],
         }
 
-        new_stage = operation["parameters"].get("stage", "")
-        reason = operation["parameters"].get("reason", "Bulk stage update")
+        operation["parameters"].get("stage", "")
+        operation["parameters"].get("reason", "Bulk stage update")
 
         for contact_id in operation["target_leads"]:
             try:
@@ -401,7 +401,7 @@ class BulkOperationsManager:
         }
 
         export_format = operation["parameters"].get("format", "csv")
-        fields = operation["parameters"].get("fields", [])
+        operation["parameters"].get("fields", [])
 
         export_data = []
 

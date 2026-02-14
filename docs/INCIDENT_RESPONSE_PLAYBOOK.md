@@ -288,7 +288,7 @@ Backend API unreachable
    Verify: GHL_BACKEND_URL=[correct backend URL]
    ```
 3. If incorrect or missing, update and redeploy
-4. Check backend CORS settings (should allow frontend domain)
+4. Check backend CORS settings (should allow frontend ontario_mills)
 
 **Time to Resolution**: 10-20 minutes
 
@@ -530,7 +530,7 @@ Cayman
 
 #### Scenario A: CORS Error
 
-**Root Cause**: Backend CORS middleware blocking frontend domain
+**Root Cause**: Backend CORS middleware blocking frontend ontario_mills
 
 **Symptoms**:
 ```
@@ -542,7 +542,7 @@ has been blocked by CORS policy
 1. Check backend CORS configuration in `api/main.py`:
    ```python
    # Should have:
-   allow_origins=["*"]  # or specific frontend domain
+   allow_origins=["*"]  # or specific frontend ontario_mills
    ```
 2. If code change needed:
    - Update `api/main.py` CORS settings

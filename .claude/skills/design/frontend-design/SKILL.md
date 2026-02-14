@@ -1170,7 +1170,7 @@ ui_components.alert("Welcome to the application!", AlertType.SUCCESS)
 
 real_estate_ui.property_card({
     'id': 1,
-    'address': '123 Main St, Austin, TX',
+    'address': '123 Main St, Rancho Cucamonga, CA',
     'price': 450000,
     'bedrooms': 3,
     'bathrooms': 2,

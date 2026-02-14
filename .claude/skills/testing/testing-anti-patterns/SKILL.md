@@ -731,12 +731,12 @@ class TestStreamlitComponents:
         test_preferences = {
             "budget_max": 500000,
             "bedrooms": 3,
-            "location": "Austin, TX"
+            "location": "Rancho Cucamonga, CA"
         }
 
         # Act: Render component with test data
         with patch('streamlit.selectbox') as mock_selectbox:
-            mock_selectbox.return_value = "Austin, TX"
+            mock_selectbox.return_value = "Rancho Cucamonga, CA"
 
             result = component.render_preferences_form()
 

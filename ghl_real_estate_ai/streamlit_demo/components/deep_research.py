@@ -49,7 +49,7 @@ def render_deep_research_hub():
         st.subheader("Market Intelligence")
         col1, col2 = st.columns([2, 1])
         with col1:
-            market_query = st.text_input("Location", placeholder="Ex: Austin, TX or Miami, FL", key="market_loc")
+            market_query = st.text_input("Location", placeholder="Ex: Rancho Cucamonga, CA or Miami, FL", key="market_loc")
         with col2:
             period = st.selectbox(
                 "Period", ["Current", "Last Quarter", "2025 Review", "2026 Forecast"], key="market_period"
@@ -69,7 +69,7 @@ def render_deep_research_hub():
     with tabs[1]:
         st.subheader("Property Deep Dive")
         property_address = st.text_input(
-            "Property Address", placeholder="Ex: 123 Maple Ave, Austin, TX", key="prop_address"
+            "Property Address", placeholder="Ex: 123 Maple Ave, Rancho Cucamonga, CA", key="prop_address"
         )
 
         if st.button("🔍 Analyze Property", type="primary"):
@@ -87,9 +87,9 @@ def render_deep_research_hub():
         st.subheader("Neighborhood Analysis")
         col1, col2 = st.columns(2)
         with col1:
-            nb_name = st.text_input("Neighborhood", placeholder="Ex: Zilker", key="nb_name")
+            nb_name = st.text_input("Neighborhood", placeholder="Ex: Victoria Gardens", key="nb_name")
         with col2:
-            nb_city = st.text_input("City", placeholder="Ex: Austin", key="nb_city")
+            nb_city = st.text_input("City", placeholder="Ex: Rancho Cucamonga", key="nb_city")
 
         if st.button("🏙️ Analyze Neighborhood", type="primary"):
             if nb_name and nb_city:
@@ -129,7 +129,7 @@ def render_deep_research_hub():
         st.info("This mode uses Perplexity for real-time data and Claude for strategic architectural synthesis.")
 
         hybrid_topic = st.text_input(
-            "Strategic Research Topic", placeholder="Ex: Impact of Apple's expansion on North Austin property values"
+            "Strategic Research Topic", placeholder="Ex: Impact of Apple's expansion on North Rancho Cucamonga property values"
         )
 
         if st.button("🚀 Run Hybrid Analysis", type="primary"):
@@ -162,7 +162,7 @@ def render_deep_research_hub():
         st.markdown("### 📜 Research History")
         st.caption("Recent Perplexity Queries")
         st.markdown("""
-        - *Austin Market Trends (Jan 2026)*
-        - *Zilker Park Neighborhood Analysis*
-        - *78704 Zip Code Investment Potential*
+        - *Rancho Cucamonga Market Trends (Jan 2026)*
+        - *Victoria Gardens Park Neighborhood Analysis*
+        - *91730 Zip Code Investment Potential*
         """)

@@ -1,9 +1,8 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 """Tests for Jorge Prompt Experiment Runner."""
-
-from __future__ import annotations
 
 import os
 import sys
@@ -14,7 +13,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.prompt_experiment_runner import (
 
-@pytest.mark.unit
     ExperimentResult,
     PromptExperiment,
     PromptExperimentRunner,

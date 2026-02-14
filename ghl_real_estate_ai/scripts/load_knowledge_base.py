@@ -60,7 +60,7 @@ def load_property_listings(location_id: str = "global"):
         address_dict = prop.get('address', {})
         street = address_dict.get('street', 'Unknown')
         neighborhood = address_dict.get('neighborhood', 'Unknown')
-        full_address = f"{street}, {address_dict.get('city', 'Austin')}, {address_dict.get('state', 'TX')} {address_dict.get('zip', '')}"
+        full_address = f"{street}, {address_dict.get('city', 'Rancho Cucamonga')}, {address_dict.get('state', 'CA')} {address_dict.get('zip', '')}"
 
         # Create rich document text
         doc_text = f"""Property: {full_address}

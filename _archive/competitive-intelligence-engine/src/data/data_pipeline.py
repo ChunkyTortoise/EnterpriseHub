@@ -371,7 +371,7 @@ class RealEstateDataPipeline:
             property_id=property_id,
             mls_number=f"MLS{property_id[:6]}",
             address=f"123 Main St {property_id[:3]}",
-            city="Austin",
+            city="Rancho Cucamonga",
             state="TX",
             zip_code="78701",
             latitude=30.2672,
@@ -395,9 +395,9 @@ class RealEstateDataPipeline:
                 f"https://photos.example.com/prop_{property_id}_1.jpg",
                 f"https://photos.example.com/prop_{property_id}_2.jpg"
             ],
-            description="Beautiful modern home in downtown Austin",
+            description="Beautiful modern home in downtown Rancho Cucamonga",
             features=["granite_counters", "hardwood_floors", "updated_kitchen"],
-            school_district="Austin ISD",
+            school_district="Rancho Cucamonga ISD",
             source=DataSourceType.MLS,
             last_updated=datetime.utcnow(),
             data_quality_score=0.92
@@ -435,7 +435,7 @@ class RealEstateDataPipeline:
                 property_id=property_id,
                 mls_number=f"MLS{property_id[-6:]}",
                 address=f"{100 + i * 10} Sample St",
-                city=criteria.get("city", "Austin"),
+                city=criteria.get("city", "Rancho Cucamonga"),
                 state="TX",
                 zip_code=criteria.get("zip_code", "78701"),
                 latitude=30.2672 + (i * 0.001),
@@ -458,7 +458,7 @@ class RealEstateDataPipeline:
                 photos=[f"https://photos.example.com/search_{i}_1.jpg"],
                 description=f"Property {i+1} matching your search criteria",
                 features=["updated_kitchen", "hardwood_floors"],
-                school_district="Austin ISD",
+                school_district="Rancho Cucamonga ISD",
                 source=DataSourceType.MLS,
                 last_updated=datetime.utcnow(),
                 data_quality_score=0.85 + (i * 0.01)

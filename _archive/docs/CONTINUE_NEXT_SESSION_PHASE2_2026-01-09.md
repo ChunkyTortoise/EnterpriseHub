@@ -31,7 +31,7 @@
 - 🧠 **Multi-dimensional Confidence Scoring**: Budget 35%, Location 30%, Features 25%, Market 10%
 - 🎯 **Visual ML Interface**: Color-coded confidence indicators (🟢🟡🔴)
 - 📊 **Component Breakdown Charts**: Transparent AI decision factors
-- 🏆 **Demo Scenarios**: 5 Austin market scenarios ready for presentation
+- 🏆 **Demo Scenarios**: 5 Rancho Cucamonga market scenarios ready for presentation
 
 ---
 
@@ -90,7 +90,7 @@ IPropertyRepository Interface
 ### **PRIORITY 4: Business Intelligence** (2-3 hours)
 
 #### **Competitive Intelligence Dashboard** (2 hours)
-- **Market Share Tracking**: Position vs competitors in Austin market
+- **Market Share Tracking**: Position vs competitors in Rancho Cucamonga market
 - **Feature Gap Analysis**: What competitors lack vs our AI capabilities
 - **Pricing Intelligence**: Market rates for similar AI services
 
@@ -128,7 +128,7 @@ IPropertyRepository Interface
 ### **Immediate Enhancements** (Next session start)
 1. **Live Behavioral Learning**: Show preference adaptation during demo
 2. **A/B Testing Display**: "Strategy A vs Strategy B performance in real-time"
-3. **Market Intelligence**: "Austin market trends affecting this property"
+3. **Market Intelligence**: "Rancho Cucamonga market trends affecting this property"
 4. **Voice Integration**: Demo AI phone reception capabilities
 
 ### **Advanced Demo Scenarios**

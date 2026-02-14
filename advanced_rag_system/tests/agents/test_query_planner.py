@@ -4,8 +4,6 @@ from uuid import uuid4
 
 import pytest
 from src.agents.query_planner import (
-
-@pytest.mark.unit
     IntentAnalysis,
     QueryIntent,
     QueryPlanner,
@@ -14,6 +12,9 @@ from src.agents.query_planner import (
     StepStatus,
     ToolSelection,
 )
+
+
+@pytest.mark.unit
 
 
 class TestIntentAnalysis:
@@ -78,12 +79,12 @@ class TestQueryDecomposition:
     def test_query_decomposition_comparison(self):
         """Test comparison query decomposition."""
         planner = QueryPlanner()
-        query = "Compare Austin and Dallas housing prices"
+        query = "Compare Rancho Cucamonga and Dallas housing prices"
         sub_queries = planner.decompose_query(query)
 
         assert len(sub_queries) >= 2
         # Should have sub-queries for each city
-        assert any("Austin" in sq for sq in sub_queries)
+        assert any("Rancho Cucamonga" in sq for sq in sub_queries)
         assert any("Dallas" in sq for sq in sub_queries)
 
     def test_query_decomposition_calculation(self):
@@ -147,7 +148,7 @@ class TestToolSelection:
     def test_tool_selection_multi_tool(self):
         """Test multiple tool selection."""
         planner = QueryPlanner()
-        query = "What is the average price difference between Austin and Dallas?"
+        query = "What is the average price difference between Rancho Cucamonga and Dallas?"
         intent = planner.analyze_intent(query)
         selections = planner.select_tools(query, intent)
 

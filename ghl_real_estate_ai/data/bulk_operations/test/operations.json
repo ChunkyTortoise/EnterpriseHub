@@ -1706,7 +1706,7 @@
       "operation_id": "bulk_20260106_182032",
       "location_id": "test",
       "operation_type": "invalid_type",
-      "created_at": "2026-01-06T18:20:32.778707",
+      "created_at": "2026-01-06T18:20:32.791707",
       "created_by": "test",
       "status": "pending",
       "target_count": 1,
@@ -3085,6 +3085,154 @@
       "location_id": "test",
       "operation_type": "tag",
       "created_at": "2026-02-08T18:47:40.224603",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead@#$%",
+        "lead!@#"
+      ],
+      "parameters": {
+        "tags": [
+          "test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260212_195322",
+      "location_id": "test",
+      "operation_type": "invalid_type",
+      "created_at": "2026-02-12T19:53:22.403678",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": {},
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260212_195322",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-12T19:53:22.406477",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": null,
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260212_195322",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-12T19:53:22.408751",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 2,
+      "target_leads": [
+        "lead@#$%",
+        "lead!@#"
+      ],
+      "parameters": {
+        "tags": [
+          "test"
+        ]
+      },
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260212_201640",
+      "location_id": "test",
+      "operation_type": "invalid_type",
+      "created_at": "2026-02-12T20:16:40.878590",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": {},
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260212_201640",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-12T20:16:40.881435",
+      "created_by": "test",
+      "status": "pending",
+      "target_count": 1,
+      "target_leads": [
+        "lead1"
+      ],
+      "parameters": null,
+      "results": {
+        "processed": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": []
+      },
+      "started_at": null,
+      "completed_at": null,
+      "duration_seconds": 0
+    },
+    {
+      "operation_id": "bulk_20260212_201640",
+      "location_id": "test",
+      "operation_type": "tag",
+      "created_at": "2026-02-12T20:16:40.884181",
       "created_by": "test",
       "status": "pending",
       "target_count": 2,

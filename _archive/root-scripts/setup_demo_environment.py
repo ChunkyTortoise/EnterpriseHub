@@ -53,7 +53,7 @@ class DemoEnvironmentSetup:
             {
                 "lead_id": "demo_michael_thompson",
                 "name": "Michael Thompson",
-                "property": "2847 Westlake Hills Dr, Austin, TX",
+                "property": "2847 Westlake Hills Dr, Rancho Cucamonga, CA",
                 "value": 1200000,
                 "personality": "analytical_skeptical",
                 "temperature": "warm"
@@ -69,7 +69,7 @@ class DemoEnvironmentSetup:
             {
                 "lead_id": "demo_jennifer_walsh",
                 "name": "Jennifer Walsh",
-                "property": "892 Mueller Blvd, Austin, TX",
+                "property": "892 Mueller Blvd, Rancho Cucamonga, CA",
                 "value": 625000,
                 "personality": "independent_diy",
                 "temperature": "hot"

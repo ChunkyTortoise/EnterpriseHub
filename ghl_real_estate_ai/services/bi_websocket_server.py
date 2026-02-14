@@ -178,7 +178,11 @@ class BIWebSocketManager:
 
         # Wait for tasks to complete
         if self.background_tasks:
-            await asyncio.gather(*self.background_tasks, return_exceptions=True)
+            try:
+                await asyncio.gather(*self.background_tasks, return_exceptions=True)
+            except ValueError as e:
+                # Handle "future belongs to a different loop" error during testing
+                logger.warning(f"Could not gather BI background tasks: {e}")
 
         self.background_tasks.clear()
         logger.info("BI WebSocket Manager stopped")
@@ -670,6 +674,27 @@ class BIWebSocketManager:
                 logger.error(f"Message processor error: {e}")
                 await asyncio.sleep(30)
 
+    def getBIConnectionHealth(self) -> Dict[str, Any]:
+        """
+        Get connection health summary for monitoring.
+        Used by integration tests and health endpoints.
+        """
+        total = len(self.bi_connections)
+        connected = sum(1 for conn in self.bi_connections.values() if conn.connection_quality > 0.8)
+
+        status = "healthy"
+        if total > 0 and connected / total < 0.5:
+            status = "degraded"
+        elif total > 0 and connected == 0:
+            status = "unhealthy"
+
+        return {
+            "total": total,
+            "connected": connected,
+            "status": status,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get comprehensive BI WebSocket metrics."""
         return {
@@ -771,6 +796,12 @@ def get_bi_websocket_manager() -> BIWebSocketManager:
     if _bi_websocket_manager is None:
         _bi_websocket_manager = BIWebSocketManager()
     return _bi_websocket_manager
+
+
+def reset_bi_websocket_manager():
+    """Reset the BI WebSocket manager singleton (mainly for testing)."""
+    global _bi_websocket_manager
+    _bi_websocket_manager = None
 
 
 # Integration with existing event publisher

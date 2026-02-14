@@ -219,7 +219,7 @@ class BehavioralSignalExtractor:
         """Extract engagement-related signals."""
 
         signals = []
-        lead_id = lead_data.get("id", "unknown")
+        lead_data.get("id", "unknown")
 
         # Website engagement
         page_views = lead_data.get("website_activity", {}).get("page_views", 0)
@@ -1071,10 +1071,12 @@ class PredictiveCLVEngine:
         city = location.get("city", "").lower()
         state = location.get("state", "").lower()
 
-        if state in ["texas", "california", "florida"]:
+        if state in ["california", "texas", "florida"]:
             return 80
-        elif city in ["austin", "dallas", "houston", "san antonio"]:
-            return 90
+        elif city in ["rancho_cucamonga", "ontario", "fontana", "upland"]:
+            return 95
+        elif city in ["dallas", "houston", "san antonio"]:
+            return 85
         else:
             return 60
 

@@ -79,14 +79,14 @@ const DEMO_CONTEXTS = {
     location_context: {
       current_latitude: 30.2672,
       current_longitude: -97.7431,
-      current_address: '1234 Austin Heights Dr, Austin, TX 78704',
+      current_address: '1234 Rancho Cucamonga Heights Dr, Rancho Cucamonga, TX 78704',
       nearby_properties: [
-        { id: 'prop_001', address: '1240 Austin Heights Dr', price: 485000, status: 'available' },
-        { id: 'prop_002', address: '1228 Austin Heights Dr', price: 525000, status: 'pending' }
+        { id: 'prop_001', address: '1240 Rancho Cucamonga Heights Dr', price: 485000, status: 'available' },
+        { id: 'prop_002', address: '1228 Rancho Cucamonga Heights Dr', price: 525000, status: 'pending' }
       ]
     },
     active_properties: [
-      { id: 'prop_showing_001', address: '1234 Austin Heights Dr', client: 'Sarah Chen', time: '2:00 PM' }
+      { id: 'prop_showing_001', address: '1234 Rancho Cucamonga Heights Dr', client: 'Sarah Chen', time: '2:00 PM' }
     ]
   },
 
@@ -94,7 +94,7 @@ const DEMO_CONTEXTS = {
     current_page: '/presentation/client/demo',
     user_role: 'client',
     active_properties: [
-      { id: 'presentation_001', address: '567 Lake Austin Blvd', price: 750000, features: ['waterfront', 'updated_kitchen'] }
+      { id: 'presentation_001', address: '567 Lake Rancho Cucamonga Blvd', price: 750000, features: ['waterfront', 'updated_kitchen'] }
     ],
     client_profile: {
       name: 'Michael & Sarah Thompson',
@@ -623,7 +623,7 @@ export function OmnipresentConciergeDemo() {
                 onClick={() => enableFieldMode({
                   latitude: 30.2672,
                   longitude: -97.7431,
-                  address: '1234 Austin Heights Dr, Austin, TX 78704',
+                  address: '1234 Rancho Cucamonga Heights Dr, Rancho Cucamonga, TX 78704',
                   property_type: 'single_family',
                   visit_purpose: 'client_showing',
                   client_name: 'Sarah Chen'

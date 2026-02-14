@@ -11,7 +11,6 @@ import pytest
 
 from ghl_real_estate_ai.services.saved_search import (
 
-@pytest.mark.unit
     SavedSearchService,
     SearchCriteria,
 )

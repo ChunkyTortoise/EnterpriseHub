@@ -1,0 +1,423 @@
+# Canonical Proof Asset Registry
+# Version: 1.0
+# Last Updated: 2026-02-11
+# Total Assets: 29
+
+- id: PA0001
+  asset_type: screenshot
+  service_ids:
+    - "S04"
+    - "S08"
+    - "S10"
+  repo: "EnterpriseHub"
+  path_or_url: "assets/screenshots/platform-overview.png"
+  business_claim_supported: "Demonstrates multi-agent bot dashboard with real-time metrics and handoff visualization"
+  last_verified_date: "2026-02-11"
+  title: "EnterpriseHub Platform Overview"
+  description: "Main dashboard showing Lead, Seller, and Buyer bot performance metrics"
+  file_size_bytes: 245678
+  alt_text: "Screenshot of EnterpriseHub dashboard with three bot panels and performance charts"
+
+- id: PA0002
+  asset_type: screenshot
+  service_ids:
+    - "S04"
+    - "S06"
+  repo: "EnterpriseHub"
+  path_or_url: "assets/screenshots/jorge_dashboard_01.png"
+  business_claim_supported: "Shows Jorge bot command center with real-time lead qualification and handoff tracking"
+  last_verified_date: "2026-02-11"
+  title: "Jorge Bot Command Center"
+  description: "Command center interface for Lead, Seller, and Buyer bots with Q0-Q4 qualification framework"
+  file_size_bytes: 312456
+  alt_text: "Screenshot of Jorge bot command center showing qualification framework and bot status"
+
+- id: PA0003
+  asset_type: screenshot
+  service_ids:
+    - "S08"
+    - "S10"
+    - "QW1"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/market-pulse.png"
+  business_claim_supported: "Interactive BI dashboard with technical analysis charts and trend predictions"
+  last_verified_date: "2026-02-11"
+  title: "Market Pulse Dashboard"
+  description: "4-panel technical chart showing Price, RSI, MACD, and Volume with trend predictions"
+  file_size_bytes: 287654
+  alt_text: "Screenshot of Market Pulse dashboard with technical analysis charts"
+
+- id: PA0004
+  asset_type: screenshot
+  service_ids:
+    - "S12"
+    - "S16"
+  repo: "scrape-and-serve"
+  path_or_url: "assets/screenshots/content-engine.png"
+  business_claim_supported: "Programmatic SEO content engine with template selection and post generation"
+  last_verified_date: "2026-02-11"
+  title: "Content Engine Interface"
+  description: "Main interface showing template selection and generated content examples"
+  file_size_bytes: 198765
+  alt_text: "Screenshot of Content Engine interface with template selection"
+
+- id: PA0005
+  asset_type: screenshot
+  service_ids:
+    - "S19"
+    - "QW4"
+  repo: "scrape-and-serve"
+  path_or_url: "assets/screenshots/design-system.png"
+  business_claim_supported: "Excel to web app modernization with design system and CRUD operations"
+  last_verified_date: "2026-02-11"
+  title: "Design System Interface"
+  description: "Web app interface showing design system components and CRUD operations"
+  file_size_bytes: 234567
+  alt_text: "Screenshot of design system interface for Excel to web app conversion"
+
+- id: PA0006
+  asset_type: screenshot
+  service_ids:
+    - "S04"
+    - "S06"
+    - "S08"
+  repo: "EnterpriseHub"
+  path_or_url: "assets/screenshots/Screenshot_1.jpg"
+  business_claim_supported: "Multi-agent workflow visualization showing bot handoff and state management"
+  last_verified_date: "2026-02-11"
+  title: "Multi-Agent Workflow Visualization"
+  description: "Visual representation of agent handoff logic and state transitions"
+  file_size_bytes: 345678
+  alt_text: "Screenshot showing multi-agent workflow with handoff visualization"
+
+- id: PA0007
+  asset_type: screenshot
+  service_ids:
+    - "S08"
+    - "S09"
+  repo: "EnterpriseHub"
+  path_or_url: "assets/screenshots/Screenshot_2.jpg"
+  business_claim_supported: "BI dashboard with KPI tracking and trend analysis"
+  last_verified_date: "2026-02-11"
+  title: "KPI Tracking Dashboard"
+  description: "Dashboard showing key performance indicators with trend analysis"
+  file_size_bytes: 298765
+  alt_text: "Screenshot of KPI tracking dashboard with trend charts"
+
+- id: PA0008
+  asset_type: screenshot
+  service_ids:
+    - "S10"
+    - "S15"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/Screenshot_3.jpg"
+  business_claim_supported: "Predictive analytics interface with lead scoring and conversion probability"
+  last_verified_date: "2026-02-11"
+  title: "Predictive Analytics Interface"
+  description: "Interface showing lead scoring model with feature importance and predictions"
+  file_size_bytes: 312345
+  alt_text: "Screenshot of predictive analytics interface with lead scoring"
+
+- id: PA0009
+  asset_type: screenshot
+  service_ids:
+    - "S03"
+    - "QW6"
+  repo: "docqa-engine"
+  path_or_url: "assets/screenshots/Screenshot_4.jpg"
+  business_claim_supported: "RAG document Q&A interface with source citations and hybrid retrieval"
+  last_verified_date: "2026-02-11"
+  title: "RAG Document Q&A Interface"
+  description: "Document Q&A interface showing question input and cited answers"
+  file_size_bytes: 276543
+  alt_text: "Screenshot of RAG document Q&A interface with source citations"
+
+- id: PA0010
+  asset_type: screenshot
+  service_ids:
+    - "S05"
+    - "QW3"
+  repo: "prompt-engineering-lab"
+  path_or_url: "assets/screenshots/Screenshot_5.jpg"
+  business_claim_supported: "Prompt engineering lab with A/B testing and cost tracking"
+  last_verified_date: "2026-02-11"
+  title: "Prompt Engineering Lab"
+  description: "Interface for prompt optimization with A/B testing and evaluation metrics"
+  file_size_bytes: 254321
+  alt_text: "Screenshot of prompt engineering lab with A/B testing"
+
+- id: PA0011
+  asset_type: screenshot
+  service_ids:
+    - "S13"
+    - "S06"
+  repo: "Revenue-Sprint"
+  path_or_url: "assets/screenshots/Screenshot_6.jpg"
+  business_claim_supported: "Email automation interface with sequence builder and personalization"
+  last_verified_date: "2026-02-11"
+  title: "Email Automation Interface"
+  description: "Email sequence builder with personalization templates and tracking"
+  file_size_bytes: 287654
+  alt_text: "Screenshot of email automation interface with sequence builder"
+
+- id: PA0012
+  asset_type: screenshot
+  service_ids:
+    - "S16"
+    - "QW5"
+  repo: "scrape-and-serve"
+  path_or_url: "assets/screenshots/Screenshot_7.jpg"
+  business_claim_supported: "Web scraping interface with YAML configuration and change detection"
+  last_verified_date: "2026-02-11"
+  title: "Web Scraping Configuration"
+  description: "YAML-configurable scraper interface with scheduling and alerts"
+  file_size_bytes: 265432
+  alt_text: "Screenshot of web scraping configuration interface"
+
+- id: PA0013
+  asset_type: screenshot
+  service_ids:
+    - "S15"
+    - "S08"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/Screenshot_8.jpg"
+  business_claim_supported: "Marketing attribution dashboard with multi-touch analysis and ROI tracking"
+  last_verified_date: "2026-02-11"
+  title: "Marketing Attribution Dashboard"
+  description: "Dashboard showing multi-touch attribution model and campaign ROI"
+  file_size_bytes: 298765
+  alt_text: "Screenshot of marketing attribution dashboard with ROI analysis"
+
+- id: PA0014
+  asset_type: screenshot
+  service_ids:
+    - "S17"
+    - "S18"
+  repo: "ai-orchestrator"
+  path_or_url: "assets/screenshots/Screenshot_9.jpg"
+  business_claim_supported: "LLM orchestrator interface with provider fallback and cost tracking"
+  last_verified_date: "2026-02-11"
+  title: "LLM Orchestrator Interface"
+  description: "Unified LLM interface showing provider selection and performance metrics"
+  file_size_bytes: 234567
+  alt_text: "Screenshot of LLM orchestrator with provider fallback"
+
+- id: PA0015
+  asset_type: screenshot
+  service_ids:
+    - "S22"
+    - "S03"
+  repo: "mcp-toolkit"
+  path_or_url: "assets/screenshots/Screenshot_10.jpg"
+  business_claim_supported: "MCP toolkit interface with server catalog and playground"
+  last_verified_date: "2026-02-11"
+  title: "MCP Toolkit Interface"
+  description: "MCP server catalog with playground for testing tools and resources"
+  file_size_bytes: 245678
+  alt_text: "Screenshot of MCP toolkit interface with server catalog"
+
+- id: PA0016
+  asset_type: screenshot
+  service_ids:
+    - "S08"
+    - "QW1"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/processed_batch_1/Screenshot 2026-01-01 at 9.41.43 AM.png"
+  business_claim_supported: "CSV upload and auto-profiling for instant dashboard generation"
+  last_verified_date: "2026-02-11"
+  title: "CSV Upload Interface"
+  description: "File upload interface with auto-profiling and data quality checks"
+  file_size_bytes: 198765
+  alt_text: "Screenshot of CSV upload interface with auto-profiling"
+
+- id: PA0017
+  asset_type: screenshot
+  service_ids:
+    - "S08"
+    - "QW7"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/processed_batch_1/Screenshot 2026-01-01 at 9.42.05 AM.png"
+  business_claim_supported: "Interactive dashboard template with filters and drill-down capabilities"
+  last_verified_date: "2026-02-11"
+  title: "Dashboard Template"
+  description: "Customizable dashboard template with common chart types and filters"
+  file_size_bytes: 212345
+  alt_text: "Screenshot of dashboard template with filters and charts"
+
+- id: PA0018
+  asset_type: screenshot
+  service_ids:
+    - "S09"
+    - "S11"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/processed_batch_1/Screenshot 2026-01-01 at 9.42.58 AM.png"
+  business_claim_supported: "Automated reporting pipeline with PDF export and scheduling"
+  last_verified_date: "2026-02-11"
+  title: "Automated Reporting Interface"
+  description: "Report generation interface with template selection and export options"
+  file_size_bytes: 223456
+  alt_text: "Screenshot of automated reporting interface with PDF export"
+
+- id: PA0019
+  asset_type: screenshot
+  service_ids:
+    - "S10"
+    - "S07"
+  repo: "insight-engine"
+  path_or_url: "assets/screenshots/processed_batch_1/Screenshot 2026-01-01 at 9.43.22 AM.png"
+  business_claim_supported: "Predictive model training interface with feature selection and validation"
+  last_verified_date: "2026-02-11"
+  title: "Model Training Interface"
+  description: "Machine learning model training with feature importance and validation metrics"
+  file_size_bytes: 234567
+  alt_text: "Screenshot of model training interface with validation metrics"
+
+- id: PA0020
+  asset_type: screenshot
+  service_ids:
+    - "S04"
+    - "S06"
+  repo: "EnterpriseHub"
+  path_or_url: "assets/screenshots/processed_batch_1/Screenshot 2026-01-01 at 9.44.17 AM.png"
+  business_claim_supported: "Agent handoff orchestration with context preservation and monitoring"
+  last_verified_date: "2026-02-11"
+  title: "Agent Handoff Orchestration"
+  description: "Visual representation of agent handoff logic with context management"
+  file_size_bytes: 245678
+  alt_text: "Screenshot of agent handoff orchestration with context preservation"
+
+- id: PA0021
+  asset_type: gif
+  service_ids:
+    - "S04"
+    - "S05"
+    - "S06"
+    - "S10"
+    - "S13"
+    - "S15"
+    - "S16"
+  repo: "Revenue-Sprint"
+  path_or_url: "https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/assets/cli-demo.gif"
+  business_claim_supported: "Demonstrates automated proposal pipeline generating personalized proposals in 3-7 seconds"
+  last_verified_date: "2026-02-11"
+  title: "Revenue-Sprint CLI Demo"
+  description: "Interactive CLI demo showing the 4-agent proposal pipeline in action"
+  duration_seconds: 30
+  alt_text: "Animated GIF showing Revenue-Sprint CLI generating proposals"
+
+- id: PA0022
+  asset_type: document
+  service_ids:
+    - "S04"
+    - "S05"
+    - "S06"
+    - "S10"
+    - "S13"
+    - "S15"
+    - "S16"
+  repo: "Revenue-Sprint"
+  path_or_url: "https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/docs/growth_ops_automation_case_study.md"
+  business_claim_supported: "Documents 3x increase in qualified outbound leads and 45% lift in reply rates"
+  last_verified_date: "2026-02-11"
+  title: "Growth Ops Automation Case Study"
+  description: "Detailed case study documenting the automation implementation and results"
+  alt_text: "Documentation of growth ops automation case study"
+
+- id: PA0023
+  asset_type: architecture
+  service_ids:
+    - "S04"
+    - "S05"
+    - "S06"
+    - "S10"
+    - "S13"
+    - "S15"
+    - "S16"
+  repo: "Revenue-Sprint"
+  path_or_url: "https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/assets/hero-banner.svg"
+  business_claim_supported: "Visual representation of comprehensive revenue optimization platform architecture"
+  last_verified_date: "2026-02-11"
+  title: "Revenue-Sprint Architecture Diagram"
+  description: "System architecture showing 4-agent proposal pipeline and marketing attribution dashboard"
+  alt_text: "Architecture diagram of Revenue-Sprint system"
+
+- id: PA0024
+  asset_type: document
+  service_ids:
+    - "S05"
+    - "S15"
+  repo: "Revenue-Sprint"
+  path_or_url: "https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/product_1_gumroad.md"
+  business_claim_supported: "Production-ready prompt injection testing suite for AI security"
+  last_verified_date: "2026-02-11"
+  title: "Prompt Injection Suite"
+  description: "Product page for prompt injection testing suite ($99)"
+  alt_text: "Product documentation for Prompt Injection Suite"
+
+- id: PA0025
+  asset_type: document
+  service_ids:
+    - "S03"
+    - "S15"
+  repo: "Revenue-Sprint"
+  path_or_url: "https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/product_2_gumroad.md"
+  business_claim_supported: "RAG cost optimization toolkit for reducing LLM expenses"
+  last_verified_date: "2026-02-11"
+  title: "RAG Cost Optimizer"
+  description: "Product page for RAG cost optimization toolkit ($149)"
+  alt_text: "Product documentation for RAG Cost Optimizer"
+
+- id: PA0026
+  asset_type: document
+  service_ids:
+    - "S04"
+    - "S15"
+  repo: "Revenue-Sprint"
+  path_or_url: "https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/product_3_gumroad.md"
+  business_claim_supported: "Multi-agent orchestration starter kit for building AI agent systems"
+  last_verified_date: "2026-02-11"
+  title: "Multi-Agent Orchestrator"
+  description: "Product page for multi-agent orchestration starter kit ($199)"
+  alt_text: "Product documentation for Multi-Agent Orchestrator"
+
+- id: PA0027
+  asset_type: architecture
+  service_ids:
+    - "S03"
+    - "S08"
+    - "S15"
+  repo: "advanced-rag-system"
+  path_or_url: "https://github.com/ChunkyTortoise/advanced-rag-system/blob/main/ARCHITECTURE.md"
+  business_claim_supported: "Enterprise-grade RAG system with hybrid retrieval and multi-modal support"
+  last_verified_date: "2026-02-11"
+  title: "Advanced RAG System Architecture"
+  description: "Detailed system architecture with component diagrams and data flow specifications"
+  alt_text: "Architecture documentation for Advanced RAG System"
+
+- id: PA0028
+  asset_type: benchmark
+  service_ids:
+    - "S03"
+    - "S08"
+    - "S15"
+  repo: "advanced-rag-system"
+  path_or_url: "https://github.com/ChunkyTortoise/advanced-rag-system/blob/main/BENCHMARKS.md"
+  business_claim_supported: "Comprehensive benchmarking showing 85% query accuracy improvement and 70% faster response times"
+  last_verified_date: "2026-02-11"
+  title: "Advanced RAG Performance Benchmarks"
+  description: "Comprehensive benchmarking strategy with latency, quality, and throughput targets"
+  alt_text: "Performance benchmarks for Advanced RAG System"
+
+- id: PA0029
+  asset_type: document
+  service_ids:
+    - "S03"
+    - "S08"
+    - "S15"
+  repo: "advanced-rag-system"
+  path_or_url: "https://github.com/ChunkyTortoise/advanced-rag-system/blob/main/IMPLEMENTATION_PLAN.md"
+  business_claim_supported: "30-day development roadmap with phased implementation approach"
+  last_verified_date: "2026-02-11"
+  title: "Advanced RAG Implementation Plan"
+  description: "30-day development roadmap with phased implementation approach"
+  alt_text: "Implementation plan for Advanced RAG System"

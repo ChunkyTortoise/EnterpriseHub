@@ -93,19 +93,19 @@ class EnhancedIntentDecoder:
 
     Features:
     - Multi-modal analysis (voice, text, behavioral)
-    - Austin market context understanding
+    - Rancho Cucamonga market context understanding
     - Predictive intent modeling
     - Real-time decision engine
     """
 
     def __init__(self):
-        self.austin_neighborhoods = {
-            "high_value": ["west lake hills", "tarrytown", "rollingwood", "westlake"],
-            "emerging": ["mueller", "east austin", "riverside", "govalle"],
+        self.rancho_cucamonga_neighborhoods = {
+            "high_value": ["alta loma", "north rancho", "deer creek", "westlake"],
+            "emerging": ["haven city", "east rancho_cucamonga", "riverside", "govalle"],
             "family_focused": ["cedar park", "round rock", "pflugerville", "lakeway"],
-            "urban_core": ["downtown", "soco", "rainey street", "south first"],
-            "tech_corridor": ["domain", "arboretum", "northwest hills"],
-            "creative": ["south austin", "east cesar chavez", "holly"],
+            "urban_core": ["downtown", "day creek", "rainey street", "south first"],
+            "tech_corridor": ["ontario_mills", "arboretum", "northwest hills"],
+            "creative": ["south rancho_cucamonga", "east cesar chavez", "holly"],
         }
 
         self.intent_patterns = {
@@ -394,12 +394,12 @@ class EnhancedIntentDecoder:
         return max(sensitivity_scores, key=sensitivity_scores.get)
 
     async def _extract_location_preferences(self, text_content: str) -> List[str]:
-        """Extract Austin-specific location preferences"""
+        """Extract Rancho Cucamonga-specific location preferences"""
 
         text_lower = text_content.lower()
         found_locations = []
 
-        for category, neighborhoods in self.austin_neighborhoods.items():
+        for category, neighborhoods in self.rancho_cucamonga_neighborhoods.items():
             for neighborhood in neighborhoods:
                 if neighborhood in text_lower:
                     found_locations.append(neighborhood)
@@ -557,7 +557,7 @@ class EnhancedIntentDecoder:
                     else:
                         price = int(match.replace(",", ""))
 
-                    # Only consider realistic Austin price ranges
+                    # Only consider realistic Rancho Cucamonga price ranges
                     if 100000 <= price <= 5000000:
                         prices.append(price)
                 except ValueError:
@@ -776,7 +776,7 @@ if __name__ == "__main__":
     # Example usage
     async def main():
         # Test the enhanced intent decoder
-        sample_text = "Hi, I'm pre-approved for a $650k mortgage and looking to buy in West Lake Hills. Need to close before my lease ends in 6 weeks."
+        sample_text = "Hi, I'm pre-approved for a $650k mortgage and looking to buy in Alta Loma. Need to close before my lease ends in 6 weeks."
 
         result = await analyze_customer_intent(sample_text)
 

@@ -75,7 +75,7 @@ One-click deployment system that:
 ## 🏢 Industry-Specific Demo Environments
 
 ### Real Estate
-- **Sample Companies**: Premier Realty Group, Austin Metro Realty, Texas Property Partners
+- **Sample Companies**: Premier Realty Group, Rancho Cucamonga Metro Realty, Texas Property Partners
 - **Key Features**: Lead scoring, property matching, agent analytics
 - **ROI Projection**: 3,500%+ annually
 - **Use Cases**: Lead prioritization, response time optimization, conversion tracking

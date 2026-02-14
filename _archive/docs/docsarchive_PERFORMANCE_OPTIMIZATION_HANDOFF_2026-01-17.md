@@ -788,7 +788,7 @@ async def my_endpoint():
 ## 11. Contact & Support
 
 **Performance Team**:
-- Platform Lead: Jorge (Austin, TX)
+- Platform Lead: Jorge (Rancho Cucamonga, CA)
 - Performance Engineer: Claude Code Agent
 - DevOps Support: [Contact Information]
 

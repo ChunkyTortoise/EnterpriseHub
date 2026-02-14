@@ -313,7 +313,7 @@ class CostTrackingDashboard:
                 go.Indicator(
                     mode="gauge+number+delta",
                     value=metrics.avg_response_time,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Avg Response Time (ms)"},
                     delta={"reference": 300, "position": "top"},
                     gauge={
@@ -337,7 +337,7 @@ class CostTrackingDashboard:
                 go.Indicator(
                     mode="gauge+number",
                     value=metrics.active_connections,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Active DB Connections"},
                     gauge={
                         "axis": {"range": [None, 20]},

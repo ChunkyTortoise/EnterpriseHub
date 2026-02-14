@@ -777,7 +777,7 @@ class EnterprisePerformanceOptimizer:
 
             # Calculate overall improvement
             if query_stats:
-                avg_time_before = sum(q.get("execution_time", 0) for q in query_stats) / len(query_stats)
+                sum(q.get("execution_time", 0) for q in query_stats) / len(query_stats)
                 estimated_improvement = min(0.5, len(slow_queries) * 0.1)  # Max 50% improvement
                 optimization_results["performance_improvement"] = estimated_improvement
 

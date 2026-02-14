@@ -192,9 +192,9 @@ class TestJorgeValidators:
         """Test complete property request validation."""
         # Valid request
         valid_request = {
-            "address": "123 Main St, Austin, TX 78701",
+            "address": "123 Main St, Rancho Cucamonga, CA 78701",
             "property_type": "single_family",
-            "market": "austin",
+            "market": "rancho_cucamonga",
             "estimated_value": 450000,
             "commission_rate": 0.06
         }
@@ -206,9 +206,9 @@ class TestJorgeValidators:
         # Invalid request - bad commission
         with pytest.raises(ValidationError) as exc_info:
             JorgePropertyRequest(
-                address="123 Main St, Austin, TX 78701",
+                address="123 Main St, Rancho Cucamonga, CA 78701",
                 property_type="single_family",
-                market="austin",
+                market="rancho_cucamonga",
                 estimated_value=450000,
                 commission_rate=0.12  # Too high
             )

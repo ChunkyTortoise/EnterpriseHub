@@ -839,7 +839,7 @@ if __name__ == "__main__":
             "avg_response_time_hours": 3.5,
             "avg_message_length": 180,
             "page_views": 15,
-            "searched_locations": ["North Austin", "Round Rock", "Cedar Park"],
+            "searched_locations": ["North Rancho Cucamonga", "Fontana", "Upland"],
             "viewed_property_prices": [525000, 545000, 560000, 580000],
             "messages_per_day": 1.8,
             "questions_asked": 4,
@@ -884,8 +884,8 @@ if __name__ == "__main__":
         print("\n   💬 Testing Enhanced Chat")
 
         conversation_history = [
-            {"role": "user", "content": "I am looking for a home in North Austin with good schools."},
-            {"role": "assistant", "content": "I can help you find great options in North Austin..."},
+            {"role": "user", "content": "I am looking for a home in North Rancho Cucamonga with good schools."},
+            {"role": "assistant", "content": "I can help you find great options in North Rancho Cucamonga..."},
             {"role": "user", "content": "What about the market trends? Should I wait or buy now?"},
         ]
 

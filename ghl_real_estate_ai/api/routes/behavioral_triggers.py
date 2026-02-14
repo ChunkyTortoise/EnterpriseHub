@@ -134,7 +134,7 @@ async def analyze_messages_batch(request: BatchAnalyzeRequest):
 async def behavioral_health():
     """Health check for the behavioral trigger detector."""
     try:
-        detector = get_behavioral_detector()
+        get_behavioral_detector()
         return {
             "status": "healthy",
             "service": "behavioral_trigger_detector",

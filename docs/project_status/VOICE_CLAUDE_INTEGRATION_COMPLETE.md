@@ -120,7 +120,7 @@ Unlike generic voice assistants, Claude knows:
 - Your performance metrics and trends
 - Market conditions and timing
 
-### **2. Real Estate Domain Intelligence**
+### **2. Real Estate Ontario Mills Intelligence**
 Claude provides intelligent responses about:
 - Lead qualification and prioritization
 - Market trends and opportunities
@@ -267,7 +267,7 @@ Based on the handoff document, here are the immediate next priorities:
 
 ### **Revolutionary Features:**
 🎤 **"Hey Claude" wake word activation**
-🧠 **Real estate domain intelligence**
+🧠 **Real estate ontario_mills intelligence**
 🎯 **Context-aware responses**
 📱 **Mobile-ready voice interface**
 ⚡ **Real-time action execution**

@@ -3,13 +3,43 @@
 **File:** `showcase_landing.py`  
 **Purpose:** Professional portfolio landing page for client acquisition  
 **Status:** Production-ready  
-**Created:** February 10, 2026
+**Created:** February 10, 2026  
+**Updated:** February 13, 2026
 
 ---
 
 ## Overview
 
-The showcase landing page is the primary entry point for the EnterpriseHub professional portfolio. It presents certifications, services, case studies, and technical achievements in a clean, conversion-optimized layout.
+The showcase landing page is the primary entry point for the EnterpriseHub professional portfolio. It presents certifications, services, case studies, and technical achievements in a clean, conversion-optimized layout. This page also serves as the foundation for the **Signature Offers** gig strategy.
+
+## Key Business Metrics
+
+### Impact Highlights
+| Metric | Value | Context |
+|--------|-------|----------|
+| **Cost Reduction** | 89% | Token/AI cost savings vs. baseline |
+| **Faster Response** | 95% | Lead response time improvement |
+| **Conversion Increase** | 133% | Lead-to-deal conversion lift |
+| **Annual Savings** | $240K | EnterpriseHub case study |
+
+### Gig Strategy (Signature Offers)
+The portfolio is organized around four premium service bundles:
+
+1. **The Lead Qual Agent (EnterpriseHub)**: $1,500 - $5,000
+   - AI qualification + CRM (GHL) sync
+   - Jorge Bot Lite/Pro implementation
+
+2. **The RAG Pro (docqa-engine)**: $7,500
+   - Compliance-grade document intelligence
+   - Citation-accurate Q&A systems
+
+3. **The BI Engine (insight-engine)**: $5,000 - $10,000
+   - Predictive analytics + marketing attribution
+   - Real-time dashboard solutions
+
+4. **The MCP Specialist (mcp-toolkit)**: Custom pricing
+   - Custom MCP server development
+   - AI workflow automation
 
 ## Key Features
 
@@ -28,10 +58,10 @@ Professional stat cards showcasing:
 
 ### 3. Case Study Highlights
 EnterpriseHub results broken into 4 categories:
-- Performance Optimization (89% token cost reduction)
-- Cost Savings ($240K annual savings)
-- AI Orchestration (multi-LLM coordination)
-- Business Intelligence (80+ dashboard components)
+- **Performance Optimization**: 89% token cost reduction
+- **Cost Savings**: $240K annual savings
+- **AI Orchestration**: Multi-LLM coordination (95% faster response)
+- **Business Intelligence**: 80+ dashboard components (133% conversion increase)
 
 ### 4. Service Categories
 6 service categories with descriptions:

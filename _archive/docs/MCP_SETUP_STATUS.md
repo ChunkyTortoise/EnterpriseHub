@@ -34,7 +34,7 @@
 - **Status**: Placeholder in `.mcp.json` line 46
 - **Needed**: API key starting with `fc-`
 - **Get From**: https://firecrawl.dev → Dashboard → API Keys
-- **Purpose**: Austin property listing scraping
+- **Purpose**: Rancho Cucamonga property listing scraping
 
 ## 🎯 Next Actions
 
@@ -52,10 +52,10 @@
 "List recent leads from GoHighLevel and show lead scores"
 
 # Test property search integration
-"Use Firecrawl to find 3 Austin properties under $600k in Cedar Park"
+"Use Firecrawl to find 3 Rancho Cucamonga properties under $600k in Cedar Park"
 
 # Test full AI workflow
-"Query GHL for high-value leads, match with Austin luxury properties, create follow-up strategy using Sequential Thinking"
+"Query GHL for high-value leads, match with Rancho Cucamonga luxury properties, create follow-up strategy using Sequential Thinking"
 ```
 
 ## 🔧 Current .mcp.json Configuration
@@ -97,7 +97,7 @@
 ## 📊 Expected Capabilities Once Complete
 
 - **CRM Automation**: Query Jorge's GHL leads, update contact statuses
-- **Property Intelligence**: Scrape MLS/Zillow data for Austin market analysis
+- **Property Intelligence**: Scrape MLS/Zillow data for Rancho Cucamonga market analysis
 - **Lead Matching**: AI-powered matching of leads to property inventory
 - **Strategic Planning**: Sequential reasoning for complex real estate decisions
 - **Database Analytics**: Direct PostgreSQL queries for BI dashboards
@@ -107,4 +107,4 @@
 
 **Last Updated**: January 25, 2026 - 5:50 PM
 **Status**: 🎉 100% COMPLETE - ALL MCP TOOLS CONFIGURED
-**Priority**: Restart Claude Code and test full Jorge GHL + Austin property automation
+**Priority**: Restart Claude Code and test full Jorge GHL + Rancho Cucamonga property automation

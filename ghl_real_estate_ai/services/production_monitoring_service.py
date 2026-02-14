@@ -881,7 +881,7 @@ def monitor_performance(endpoint_name: str = None):
                 await track_performance(endpoint, response_time, 200)
                 return result
 
-            except Exception as e:
+            except Exception:
                 response_time = (time.time() - start_time) * 1000
                 await track_performance(endpoint, response_time, 500)
                 raise

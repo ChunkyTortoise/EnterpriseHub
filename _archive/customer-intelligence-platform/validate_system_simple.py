@@ -144,7 +144,7 @@ def validate_demo_data_structure():
         industries = ["real_estate", "saas", "ecommerce", "financial_services"]
         
         sample_customers = {
-            "real_estate": ["Premier Realty Group", "Austin Metro Realty"],
+            "real_estate": ["Premier Realty Group", "Rancho Cucamonga Metro Realty"],
             "saas": ["CloudTech Solutions", "ScaleUp Systems"],
             "ecommerce": ["Fashion Forward", "SportsTech Store"],
             "financial_services": ["Wealth Advisors Inc", "Premier Financial"]

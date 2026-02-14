@@ -450,7 +450,7 @@ class FeatureEngineeringPipeline:
         behavioral_features = self._extract_behavioral_features(lead_data, messages)
         financial_features = self._extract_financial_features(lead_data, messages)
         intent_features = await self._extract_intent_features(messages, lead_data)
-        temporal_features = self._extract_temporal_features(messages)
+        self._extract_temporal_features(messages)
 
         return MLFeatureVector(
             # Engagement
@@ -1479,7 +1479,7 @@ if __name__ == "__main__":
             "messages": [
                 {
                     "role": "user",
-                    "content": "I am looking for a 3-bedroom home in North Austin with good schools. My budget is around $500k and I need to move by March. I am pre-approved for financing.",
+                    "content": "I am looking for a 3-bedroom home in North Rancho Cucamonga with good schools. My budget is around $500k and I need to move by March. I am pre-approved for financing.",
                     "timestamp": (datetime.now() - timedelta(days=2)).isoformat(),
                 },
                 {

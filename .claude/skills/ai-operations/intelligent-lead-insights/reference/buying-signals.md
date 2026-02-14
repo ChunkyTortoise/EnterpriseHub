@@ -50,7 +50,7 @@ Comprehensive guide to identifying and weighting buying signals in real estate c
 - **General inquiries**: "Just starting to look"
 - **Educational questions**: "How does buying work?"
 - **Timeline uncertainty**: "Maybe in the next year or so"
-- **Broad criteria**: "Somewhere in the Austin area"
+- **Broad criteria**: "Somewhere in the Rancho Cucamonga area"
 
 #### Hesitation Indicators
 - **Need to consult**: "I need to talk to my spouse"

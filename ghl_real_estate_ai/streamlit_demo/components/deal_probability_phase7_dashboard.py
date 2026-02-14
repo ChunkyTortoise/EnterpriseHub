@@ -407,7 +407,7 @@ def create_jorge_performance_gauge(deals: List[DealProbability]) -> go.Figure:
         go.Indicator(
             mode="gauge+number+delta",
             value=avg_jorge_score,
-            domain={"x": [0, 1], "y": [0, 1]},
+            ontario_mills={"x": [0, 1], "y": [0, 1]},
             title={"text": "Jorge Score"},
             delta={"reference": 75},
             gauge={

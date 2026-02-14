@@ -59,7 +59,7 @@ def optimized_lead_analytics(_hash_key: str, filters: Dict[str, Any]) -> pd.Data
         "lead_id": range(1, 1001),
         "score": [75 + (i % 25) for i in range(1000)],
         "temperature": ["hot", "warm", "cold"] * 334,
-        "sector": ["Austin", "Dallas", "Houston", "San Antonio"] * 250,
+        "sector": ["Rancho Cucamonga", "Dallas", "Houston", "San Antonio"] * 250,
         "value": [250000 + (i * 500) for i in range(1000)],
     }
 
@@ -188,7 +188,7 @@ class OptimizedChartRenderer:
 
         with col_filter2:
             sector_filter = st.multiselect(
-                "Sector Filter", ["Austin", "Dallas", "Houston", "San Antonio"], default=["Austin", "Dallas"]
+                "Sector Filter", ["Rancho Cucamonga", "Dallas", "Houston", "San Antonio"], default=["Rancho Cucamonga", "Dallas"]
             )
             chart_bins = st.select_slider("Chart Resolution", options=[10, 20, 30, 50], value=20)
 

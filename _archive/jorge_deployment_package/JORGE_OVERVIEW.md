@@ -223,7 +223,7 @@ Follow the simple webhook setup in README.md
 
 ## 🎯 SUCCESS STORIES (Similar Systems)
 
-### Real Estate Agent in Austin
+### Real Estate Agent in Rancho Cucamonga
 - **Before:** Manual qualification, 40% lead response rate
 - **After:** 95% automated response, 65% qualification rate
 - **Result:** 3x more appointments, 2x closing rate

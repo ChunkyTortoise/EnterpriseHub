@@ -46,6 +46,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import aiohttp
 
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
+from ghl_real_estate_ai.services.service_types import PerformanceStats
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class Alert:
     severity: str
     message: str
     triggered_at: float
-    performance_stats: Dict[str, Any]
+    performance_stats: PerformanceStats
     channels_sent: List[str] = field(default_factory=list)
     acknowledged: bool = False
     acknowledged_at: Optional[float] = None

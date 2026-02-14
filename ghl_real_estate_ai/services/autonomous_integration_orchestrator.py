@@ -307,7 +307,7 @@ class AutonomousIntegrationOrchestrator:
                 workflow_type = "seller" if is_seller else "buyer"
 
                 try:
-                    workflow = self.workflow_factory.get_workflow(workflow_type)
+                    self.workflow_factory.get_workflow(workflow_type)
 
                     # Prepare state for workflow
                     # Note: This is a simplified state mapping, in prod it would be more robust

@@ -62,9 +62,9 @@ class AIContentPersonalizationService:
     async def _property_recommendations(self, lead_id: str, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate personalized property recommendations"""
 
-        preferences = lead_data.get("preferences", {})
+        lead_data.get("preferences", {})
         budget = lead_data.get("budget", 0)
-        behavior = lead_data.get("behavior", {})
+        lead_data.get("behavior", {})
 
         # Score properties based on preferences
         recommendations = []
@@ -245,8 +245,8 @@ class AIContentPersonalizationService:
 
     def _optimal_send_time(self, lead_data: Dict[str, Any]) -> str:
         """Calculate optimal send time"""
-        timezone = lead_data.get("timezone", "EST")
-        engagement_history = lead_data.get("engagement_history", {})
+        lead_data.get("timezone", "EST")
+        lead_data.get("engagement_history", {})
 
         # Simple heuristic - best times are usually morning or lunch
         return "9:00 AM local time"
@@ -355,7 +355,7 @@ async def demo_personalization():
         "budget": 650000,
         "engagement_score": 78,
         "last_activity_days_ago": 2,
-        "location": "Austin, TX",
+        "location": "Rancho Cucamonga, CA",
         "device": "mobile",
         "source": "paid",
         "preferences": {

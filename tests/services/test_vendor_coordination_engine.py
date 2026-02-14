@@ -15,7 +15,6 @@ import pytest
 
 from ghl_real_estate_ai.services.vendor_coordination_engine import (
 
-@pytest.mark.integration
     AppointmentStatus,
     ServiceRequest,
     ServiceType,
@@ -46,7 +45,7 @@ class TestVendorProfile:
             response_time_hours=2.0,
             average_cost_index=1.05,
             status=VendorStatus.PREFERRED,
-            service_areas=["78701", "78702", "78703"],
+            service_areas=["91701", "91702", "91703"],
             minimum_notice_hours=24,
             maximum_distance_miles=30,
             license_number="LIC123456",
@@ -107,7 +106,7 @@ class TestVendorAppointment:
             scheduled_date=datetime.now() + timedelta(days=2),
             duration_minutes=180,
             status=AppointmentStatus.SCHEDULED,
-            property_address="789 Pine Street, Austin, TX",
+            property_address="789 Pine Street, Rancho Cucamonga, CA",
             special_instructions="Check HVAC system thoroughly",
             quoted_price=475.00,
         )
@@ -138,7 +137,7 @@ class TestVendorAppointment:
             scheduled_date=datetime.now() + timedelta(days=1),
             duration_minutes=120,
             status=AppointmentStatus.PENDING,
-            property_address="456 Oak Avenue, Austin, TX",
+            property_address="456 Oak Avenue, Rancho Cucamonga, CA",
         )
 
         # Simulate status progression
@@ -222,7 +221,7 @@ class TestVendorCoordinationEngine:
             transaction_id="deal_123",
             vendor_type=VendorType.HOME_INSPECTOR,
             service_type=ServiceType.COMPREHENSIVE_INSPECTION,
-            property_address="123 Main Street, Austin, TX",
+            property_address="123 Main Street, Rancho Cucamonga, CA",
             preferences={"urgency": 3, "contact_person": "John Doe"},
         )
 
@@ -251,7 +250,7 @@ class TestVendorCoordinationEngine:
             transaction_id="deal_456",
             vendor_type=VendorType.APPRAISER,
             service_type=ServiceType.PROPERTY_APPRAISAL,
-            property_address="456 Oak Street, Austin, TX",
+            property_address="456 Oak Street, Rancho Cucamonga, CA",
             preferences=preferences,
         )
 
@@ -319,7 +318,7 @@ class TestVendorCoordinationEngine:
             transaction_id="deal_456",
             vendor_type=VendorType.HOME_INSPECTOR,
             service_type=ServiceType.COMPREHENSIVE_INSPECTION,
-            property_address="789 Elm Street, Austin, TX",
+            property_address="789 Elm Street, Rancho Cucamonga, CA",
             contact_person="Jane Smith",
             contact_phone="(555) 333-4444",
         )
@@ -389,7 +388,7 @@ class TestVendorCoordinationEngine:
             service_type=ServiceType.COMPREHENSIVE_INSPECTION,
             scheduled_date=datetime.now() + timedelta(hours=2),
             status=AppointmentStatus.CONFIRMED,
-            property_address="321 Pine Street, Austin, TX",
+            property_address="321 Pine Street, Rancho Cucamonga, CA",
         )
 
         engine.appointments["appt_update_test"] = appointment

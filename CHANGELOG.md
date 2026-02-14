@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI Pipeline**: 6 deploy workflows consolidated into 1 unified pipeline; 8 broken workflows removed (referenced non-existent infrastructure)
 - **Linting**: Replaced black/isort/flake8 with ruff for faster, unified linting
 - **LLM References**: All bot LLM references migrated to Claude Sonnet 4.5
-- **Market Focus**: Corrected all Austin market references to Rancho Cucamonga
+- **Market Focus**: Corrected all Rancho Cucamonga market references to Rancho Cucamonga
 - SMS compliance service: expanded STOP keywords, cache integration, event publishing, error boundaries
 - README overhauled with problem statement, screenshots, and cross-links
 - Archived 369 stale root docs and consolidated subdir artifacts
@@ -251,7 +251,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Bot Test Infrastructure**: Comprehensive testing foundation (`tests/fixtures/bot_test_fixtures.py`, 435 lines)
     - 9 mock services (Claude, GHL, MLS, Perplexity, Stripe, Analytics, Email)
     - 6 realistic conversation scenarios reflecting Jorge's confrontational methodology
-    - Austin market context with realistic property data ($300k-$1.25M range)
+    - Rancho Cucamonga market context with realistic property data ($300k-$1.25M range)
     - Fair Housing & TREC compliance validation scenarios
     - Performance monitoring and analytics fixtures
 

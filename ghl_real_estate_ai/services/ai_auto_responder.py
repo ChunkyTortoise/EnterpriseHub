@@ -240,7 +240,7 @@ class AIAutoResponderService:
         """Generate contextual response with confidence score"""
 
         intent = analysis["intent"]
-        stage = analysis["stage"]
+        analysis["stage"]
         sentiment = analysis["sentiment"]
         urgency = analysis["urgency"]
 

@@ -28,7 +28,6 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import (
 
-@pytest.mark.integration
     ComplianceGuard,
     ComplianceStatus,
 )

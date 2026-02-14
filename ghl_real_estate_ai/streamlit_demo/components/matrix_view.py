@@ -13,11 +13,11 @@ def render_matrix_view():
     st.markdown("### 🧬 The Matrix: 3D Pipeline Intelligence")
     st.markdown("*Real-time holographic visualization of lead quality, urgency, and geographical clusters.*")
 
-    # Generate Mock Data for Austin Market
+    # Generate Mock Data for Rancho Cucamonga Market
     num_leads = 40
     np.random.seed(42)
 
-    # Coordinates (Approx Austin area)
+    # Coordinates (Approx Rancho Cucamonga area)
     lat = np.random.uniform(30.2, 30.4, num_leads)
     lon = np.random.uniform(-97.8, -97.6, num_leads)
 
@@ -77,7 +77,7 @@ def render_matrix_view():
     )
 
     fig.update_layout(
-        title="3D Lead Intensity Map (Austin Metro)",
+        title="3D Lead Intensity Map (Rancho Cucamonga Metro)",
         scene=dict(
             xaxis_title="Longitude",
             yaxis_title="Latitude",
@@ -97,7 +97,7 @@ def render_matrix_view():
     # Matrix Insights
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("🧬 Cluster Density", "High (West Austin)", delta="+14%")
+        st.metric("🧬 Cluster Density", "High (West Rancho Cucamonga)", delta="+14%")
     with col2:
         st.metric("🔥 Avg Urgency", "72/100", delta="Strategic Shift")
     with col3:

@@ -19,8 +19,6 @@ import pytest
 
 from ghl_real_estate_ai.services.transcript_analyzer import ConversationMetrics, PatternInsights, TranscriptAnalyzer
 
-@pytest.mark.integration
-
 # ==============================================================================
 # FIXTURES
 # ==============================================================================
@@ -378,7 +376,7 @@ class TestPatternAnalysis:
                     "message": "What area?",
                     "metadata": {"question_type": "location"},
                 },
-                {"timestamp": "2025-12-15T14:26:00Z", "speaker": "user", "message": "Austin", "metadata": {}},
+                {"timestamp": "2025-12-15T14:26:00Z", "speaker": "user", "message": "Rancho Cucamonga", "metadata": {}},
             ],
         }
 

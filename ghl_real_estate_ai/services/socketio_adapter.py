@@ -383,7 +383,7 @@ class JorgeSocketNamespace(AsyncNamespace):
             if sid not in self.socketio_sessions:
                 return
 
-            session = self.socketio_sessions[sid]
+            self.socketio_sessions[sid]
 
             # Mock coordination metrics - would integrate with actual coordination engine
             metrics = {
@@ -572,7 +572,7 @@ class JorgeSocketNamespace(AsyncNamespace):
             import random
 
             names = ["Alice Smith", "Bob Johnson", "Carol Williams", "David Brown", "Eve Davis"]
-            locations = ["Austin, TX", "Dallas, TX", "San Antonio, TX", "Houston, TX"]
+            locations = ["Rancho Cucamonga, CA", "Dallas, TX", "San Antonio, TX", "Houston, TX"]
             actions = ["SCHEDULE_SHOWING", "ACCELERATE_SEQUENCE", "RE_ENGAGEMENT_REQUIRED", "SOFT_FOLLOWUP"]
 
             lead_name = random.choice(names)

@@ -15,8 +15,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.tiered_cache_service import CacheItem, TieredCacheService
 
-@pytest.mark.integration
-
 
 @pytest_asyncio.fixture
 async def tiered_cache():

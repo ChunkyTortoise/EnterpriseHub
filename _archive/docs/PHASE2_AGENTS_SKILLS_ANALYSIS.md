@@ -251,7 +251,7 @@ Annual Savings: $767 (at 1000 interactions)
 ### **🎯 Domain Expertise**
 - **Jorge's methodology** implemented with precision
 - **Real estate workflows** deeply integrated
-- **Austin market specialization** with compliance
+- **Rancho Cucamonga market specialization** with compliance
 - **Professional sales psychology** automated
 
 ---

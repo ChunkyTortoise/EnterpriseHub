@@ -17,8 +17,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 try:
     from ghl_real_estate_ai.services.consulting_delivery_service import (
         ConsultingDeliveryService,

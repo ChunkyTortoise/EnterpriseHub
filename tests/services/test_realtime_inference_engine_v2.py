@@ -21,7 +21,6 @@ import pytest
 
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
 
-@pytest.mark.integration
     InferenceMode,
     InferenceRequest,
     InferenceResult,
@@ -97,7 +96,7 @@ class TestInferenceRequest:
         """Test inference request creation and validation"""
         request = InferenceRequest(
             lead_id="test_123",
-            lead_data={"budget": 500000, "location": "Austin"},
+            lead_data={"budget": 500000, "location": "Rancho Cucamonga"},
             conversation_history=[{"text": "Looking for a home"}],
             mode=InferenceMode.REAL_TIME,
         )
@@ -111,13 +110,13 @@ class TestInferenceRequest:
         """Test stable cache key generation"""
         request1 = InferenceRequest(
             lead_id="test_123",
-            lead_data={"budget": 500000, "location": "Austin"},
+            lead_data={"budget": 500000, "location": "Rancho Cucamonga"},
             conversation_history=[{"text": "Looking for a home"}],
         )
 
         request2 = InferenceRequest(
             lead_id="test_123",
-            lead_data={"budget": 500000, "location": "Austin"},
+            lead_data={"budget": 500000, "location": "Rancho Cucamonga"},
             conversation_history=[{"text": "Looking for a home"}],
         )
 
@@ -127,7 +126,7 @@ class TestInferenceRequest:
         # Different data should generate different cache key
         request3 = InferenceRequest(
             lead_id="test_123",
-            lead_data={"budget": 600000, "location": "Austin"},  # Different budget
+            lead_data={"budget": 600000, "location": "Rancho Cucamonga"},  # Different budget
             conversation_history=[{"text": "Looking for a home"}],
         )
 
@@ -149,7 +148,7 @@ class TestRealTimeInferenceEngineV2:
             lead_id="test_lead_123",
             lead_data={
                 "budget": 750000,
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "source": "organic",
                 "timeline": "immediate",
                 "email_opens": 8,
@@ -158,7 +157,7 @@ class TestRealTimeInferenceEngineV2:
             conversation_history=[
                 {"text": "I'm a software engineer at Apple looking for a home", "timestamp": "2026-01-15T10:00:00Z"},
                 {"text": "Budget is $750K, need to move ASAP for new job", "timestamp": "2026-01-15T10:15:00Z"},
-                {"text": "Prefer Austin area near tech companies", "timestamp": "2026-01-15T11:00:00Z"},
+                {"text": "Prefer Rancho Cucamonga area near tech companies", "timestamp": "2026-01-15T11:00:00Z"},
             ],
             mode=InferenceMode.REAL_TIME,
         )
@@ -257,7 +256,7 @@ class TestRealTimeInferenceEngineV2:
         for i in range(5):
             request = InferenceRequest(
                 lead_id=f"batch_lead_{i}",
-                lead_data={"budget": 500000 + i * 50000, "location": "Austin"},
+                lead_data={"budget": 500000 + i * 50000, "location": "Rancho Cucamonga"},
                 conversation_history=[{"text": f"Lead {i} looking for home"}],
                 mode=InferenceMode.BATCH_FAST,
             )

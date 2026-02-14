@@ -1,9 +1,8 @@
-import pytest
-pytestmark = pytest.mark.integration
-
 """Tests for the conversation repair engine (Phase 2B)."""
 
 import pytest
+
+pytestmark = pytest.mark.integration
 
 from ghl_real_estate_ai.services.jorge.repair_strategies import (
     REPAIR_LADDER,
@@ -17,8 +16,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
     ProcessingContext,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.conversation_repair import (
-
-@pytest.mark.unit
     ConversationRepairProcessor,
     _word_overlap_ratio,
 )

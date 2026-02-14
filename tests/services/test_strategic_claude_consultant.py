@@ -19,7 +19,6 @@ pytestmark = pytest.mark.timeout(60)
 
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
 
-@pytest.mark.integration
     AutonomousWorkflowResult,
     BusinessImpactLevel,
     ConsultingTier,

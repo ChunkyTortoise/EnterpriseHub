@@ -47,7 +47,7 @@ teams are using AI to turn more leads into closings with our Customer Intelligen
    ```
    Lead: Jennifer Martinez
    Budget: $400K-$500K
-   Location: Austin, TX
+   Location: Rancho Cucamonga, CA
    Family: 2 adults, 2 children
    Timeline: 3-6 months
    ```
@@ -75,7 +75,7 @@ teams are using AI to turn more leads into closings with our Customer Intelligen
    Recommended approach:
    - Schedule showing within 24 hours (leads like Jennifer convert 3x higher with fast response)
    - Focus on school districts (family with children)
-   - Highlight commute times to downtown Austin
+   - Highlight commute times to downtown Rancho Cucamonga
    - Prepare 3-4 comparable properties in her price range"
    ```
 
@@ -105,7 +105,7 @@ teams are using AI to turn more leads into closings with our Customer Intelligen
 
 2. **Market Intelligence Dashboard**:
    ```
-   Austin Market Insights:
+   Rancho Cucamonga Market Insights:
    - Inventory: Down 12% month-over-month
    - Price trends: +3.2% this quarter
    - Days on market: 23 average

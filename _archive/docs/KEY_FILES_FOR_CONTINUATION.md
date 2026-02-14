@@ -45,7 +45,7 @@ ghl_real_estate_ai/api/main.py                            # FastAPI application
 ```
 ghl_real_estate_ai/ml/closing_probability_model.py        # ML scoring pipeline
 ghl_real_estate_ai/services/analytics_service.py          # SHAP analytics
-ghl_real_estate_ai/services/market_intelligence.py        # Austin market analysis
+ghl_real_estate_ai/services/market_intelligence.py        # Rancho Cucamonga market analysis
 bots/shared/ml_analytics_engine.py                        # 28-feature ML pipeline
 ```
 

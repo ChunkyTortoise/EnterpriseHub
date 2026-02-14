@@ -38,7 +38,7 @@ class SecuritySentry:
 class EdgeCaseGenerator:
     """Generates rare or difficult scenarios for agent testing."""
 
-    def generate_scenario(self, domain: str) -> str:
+    def generate_scenario(self, ontario_mills: str) -> str:
         scenarios = {
             "real_estate": [
                 "Lead is a sovereign citizen who refuses to use standard contracts.",
@@ -51,5 +51,5 @@ class EdgeCaseGenerator:
                 "Lead is actually a minor posing as an adult.",
             ],
         }
-        domain_scenarios = scenarios.get(domain, scenarios["real_estate"])
-        return random.choice(domain_scenarios)
+        ontario_mills_scenarios = scenarios.get(ontario_mills, scenarios["real_estate"])
+        return random.choice(ontario_mills_scenarios)

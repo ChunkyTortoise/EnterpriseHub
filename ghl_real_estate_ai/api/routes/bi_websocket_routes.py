@@ -174,7 +174,7 @@ async def bot_performance_websocket(
         logger.info(f"Bot Performance WebSocket connection for location: {location_id}")
 
         # Parse bot type filters
-        bot_filter = (
+        (
             bot_types.split(",") if bot_types else ["jorge-seller", "jorge-buyer", "lead-bot", "intent-decoder"]
         )
 
@@ -232,7 +232,7 @@ async def business_intelligence_websocket(
         logger.info(f"Business Intelligence WebSocket connection for location: {location_id}")
 
         # Parse intelligence type filters
-        intel_types = (
+        (
             intelligence_types.split(",")
             if intelligence_types
             else ["executive_insights", "market_analysis", "competitive_intel", "performance_trends"]
@@ -289,7 +289,7 @@ async def ai_concierge_websocket(
         logger.info(f"AI Concierge WebSocket connection for location: {location_id}")
 
         # Parse concierge feature filters
-        features = (
+        (
             concierge_features.split(",")
             if concierge_features
             else ["proactive_coaching", "conversation_quality", "strategic_insights", "performance_guidance"]
@@ -335,21 +335,21 @@ async def advanced_analytics_websocket(
     Provides advanced ML-powered analytics including:
     - SHAP explainability analysis
     - Predictive modeling updates
-    - Austin market intelligence
+    - Rancho Cucamonga market intelligence
     - Advanced performance metrics
     - ML model insights
 
     WebSocket Events:
         - ADVANCED_ANALYTICS_UPDATE: ML analytics updates
         - SHAP_ANALYSIS_COMPLETE: Feature importance analysis
-        - MARKET_INTELLIGENCE_UPDATE: Austin market updates
+        - MARKET_INTELLIGENCE_UPDATE: Rancho Cucamonga market updates
         - PREDICTIVE_MODEL_UPDATE: ML model performance updates
     """
     try:
         logger.info(f"Advanced Analytics WebSocket connection for location: {location_id}")
 
         # Parse analytics module filters
-        modules = (
+        (
             analytics_modules.split(",")
             if analytics_modules
             else ["shap_analysis", "predictive_modeling", "market_intelligence", "ml_insights"]

@@ -54,12 +54,12 @@ def create_sample_properties() -> List[Dict[str, Any]]:
         },
         {
             'id': 'prop_downtown_002',
-            'address': '456 Congress Ave, Downtown Austin, TX',
+            'address': '456 Congress Ave, Downtown Rancho Cucamonga, CA',
             'price': 620000,
             'bedrooms': 2,
             'bathrooms': 2,
             'sqft': 1650,
-            'neighborhood': 'Downtown Austin',
+            'neighborhood': 'Downtown Rancho Cucamonga',
             'features': ['city views', 'rooftop pool', 'concierge', 'parking garage'],
             'lot_size': None,  # Condo
             'year_built': 2020,
@@ -91,7 +91,7 @@ def create_sample_leads() -> List[Dict[str, Any]]:
             'workplace': 'Apple',
             'budget_max': 500000,
             'lifestyle_priorities': ['schools', 'commute', 'safety'],
-            'location_id': 'loc_austin_001',
+            'location_id': 'loc_rancho_cucamonga_001',
             'age': 34,
             'children_ages': [7, 10],
             'current_home': 'renting'
@@ -100,10 +100,10 @@ def create_sample_leads() -> List[Dict[str, Any]]:
             'lead_id': 'lead_david_kim',
             'lead_name': 'David Kim',
             'family_status': 'young_professional',
-            'workplace': 'Downtown Austin',
+            'workplace': 'Downtown Rancho Cucamonga',
             'budget_max': 650000,
             'lifestyle_priorities': ['walkability', 'nightlife', 'commute'],
-            'location_id': 'loc_austin_002',
+            'location_id': 'loc_rancho_cucamonga_002',
             'age': 28,
             'children_ages': [],
             'current_home': 'apartment'
@@ -115,7 +115,7 @@ def create_sample_leads() -> List[Dict[str, Any]]:
             'workplace': 'Remote',
             'budget_max': 450000,
             'lifestyle_priorities': ['investment_potential', 'rental_income', 'appreciation'],
-            'location_id': 'loc_austin_003',
+            'location_id': 'loc_rancho_cucamonga_003',
             'age': 42,
             'children_ages': [],
             'current_home': 'owns_multiple'
@@ -176,7 +176,7 @@ def create_sample_lifestyle_scores(property_id: str) -> LifestyleScores:
                 average_rating=7.5,
                 distance_penalty=0.3,
                 overall_score=7.2,
-                top_school_name="Austin Elementary",
+                top_school_name="Rancho Cucamonga Elementary",
                 reasoning="Good schools but farther from home"
             ),
             commute=CommuteScore(

@@ -8,9 +8,9 @@ import streamlit as st
 def init_session_state():
     """Initialize all session state variables with defaults."""
     if "current_hub" not in st.session_state:
-        st.session_state.current_hub = "Executive Command Center"
+        st.session_state.current_hub = "Jorge AI Landing Page"
     if "selected_market" not in st.session_state:
-        st.session_state.selected_market = "Austin, TX"
+        st.session_state.selected_market = "Rancho Cucamonga, CA"
     if "ai_tone" not in st.session_state:
         st.session_state.ai_tone = "Natural"
     if "elite_mode" not in st.session_state:
@@ -27,7 +27,7 @@ def init_session_state():
     # Initialize Global AI State
     if "ai_config" not in st.session_state:
         st.session_state.ai_config = {
-            "market": "Austin, TX",
+            "market": "Rancho Cucamonga, CA",
             "voice_tone": 0.5,  # 0.0 = Professional, 1.0 = Natural
             "response_speed": "Standard",
             "last_sync": datetime.datetime.now().strftime("%H:%M:%S"),

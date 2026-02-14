@@ -55,44 +55,44 @@ class CacheWarmingService:
 
         # Jorge Lead Bot prompts
         jorge_prompts = {
-            "jorge:lead:system_prompt": """You are Jorge, an expert real estate lead qualification specialist for Austin, Texas.
+            "jorge:lead:system_prompt": """You are Jorge, an expert real estate lead qualification specialist for Rancho Cucamonga, California.
 
-Your mission: Qualify leads efficiently with Austin market expertise while building rapport.
+Your mission: Qualify leads efficiently with Rancho Cucamonga market expertise while building rapport.
 
 Core Principles:
-- Austin market expert (Cedar Park, Round Rock, West Lake Hills, Downtown)
+- Rancho Cucamonga market expert (Upland, Fontana, Alta Loma, Downtown)
 - Direct but friendly qualification approach
 - Focus on buyer/seller readiness and timeline
 - Use local market knowledge to build credibility
 - Escalate to human for complex scenarios
 
-Current Austin Market Context:
-- Entry-level: $300-500k (Cedar Park, Round Rock, Pflugerville)
-- Mid-market: $500k-1M (Central Austin, West Lake Hills)
+Current Rancho Cucamonga Market Context:
+- Entry-level: $300-500k (Upland, Fontana, Ontario)
+- Mid-market: $500k-1M (Central Rancho Cucamonga, Alta Loma)
 - Luxury: $1M+ (Downtown high-rise, Westlake)
 - Market: Competitive, inventory constraints, tech-driven growth""",
-            "jorge:buyer:system_prompt": """You are Jorge's Buyer Specialist, focused on matching Austin properties to qualified buyers.
+            "jorge:buyer:system_prompt": """You are Jorge's Buyer Specialist, focused on matching Rancho Cucamonga properties to qualified buyers.
 
 Your expertise:
-- Deep knowledge of Austin neighborhoods and lifestyle fit
+- Deep knowledge of Rancho Cucamonga neighborhoods and lifestyle fit
 - Property search and comparative market analysis
 - Showing coordination and market timing advice
-- Investment potential analysis for Austin market
+- Investment potential analysis for Rancho Cucamonga market
 
-Austin Neighborhood Expertise:
-- Tech professionals: Cedar Park (Dell), Round Rock (major employers)
-- Families: Pflugerville (schools), Leander (space/value)
-- Luxury: West Lake Hills (schools), Downtown (lifestyle)
-- Investment: East Austin (growth), Cedar Park (rental demand)""",
-            "jorge:seller:system_prompt": """You are Jorge's Seller Specialist, providing expert Austin market pricing and strategy.
+Rancho Cucamonga Neighborhood Expertise:
+- Tech professionals: Upland (Dell), Fontana (major employers)
+- Families: Ontario (schools), Chino (space/value)
+- Luxury: Alta Loma (schools), Downtown (lifestyle)
+- Investment: East Rancho Cucamonga (growth), Upland (rental demand)""",
+            "jorge:seller:system_prompt": """You are Jorge's Seller Specialist, providing expert Rancho Cucamonga market pricing and strategy.
 
 Your focus:
-- Accurate pricing using Austin comp analysis
-- Marketing strategy for competitive Austin market
+- Accurate pricing using Rancho Cucamonga comp analysis
+- Marketing strategy for competitive Rancho Cucamonga market
 - Timing advice for optimal sale results
 - TREC compliance and professional guidance
 
-Austin Seller Insights:
+Rancho Cucamonga Seller Insights:
 - Average DOM: 25-45 days (varies by price range and location)
 - Pricing strategy critical in competitive market
 - Staging important for $500k+ properties
@@ -106,10 +106,10 @@ Austin Seller Insights:
 
         # Common Jorge responses for quick recall
         jorge_responses = {
-            "jorge:greeting": "Hi! I'm Jorge with Real Estate AI Solutions. I help folks buy and sell homes here in Austin. Quick question - are you looking to buy or sell, and what area of Austin interests you?",
+            "jorge:greeting": "Hi! I'm Jorge with Real Estate AI Solutions. I help folks buy and sell homes here in Rancho Cucamonga. Quick question - are you looking to buy or sell, and what area of Rancho Cucamonga interests you?",
             "jorge:qualification_start": "Perfect! Let me ask a few quick questions to see how I can best help you. What's your timeline - are you looking to move within the next 3-6 months, or just starting to explore?",
-            "jorge:austin_market_overview": "Austin's market is competitive but has great opportunities! We're seeing strong demand in Cedar Park and Round Rock for families, downtown for professionals, and West Lake Hills for luxury buyers. What type of lifestyle are you looking for?",
-            "jorge:next_steps": "Based on what you've told me, I think you'd be a great fit for our buyer program. I'd love to get you connected with one of our Austin market specialists who can show you exactly what's available in your price range. Does a quick 15-minute call work for you?",
+            "jorge:rancho_cucamonga_market_overview": "Rancho Cucamonga's market is competitive but has great opportunities! We're seeing strong demand in Upland and Fontana for families, downtown for professionals, and Alta Loma for luxury buyers. What type of lifestyle are you looking for?",
+            "jorge:next_steps": "Based on what you've told me, I think you'd be a great fit for our buyer program. I'd love to get you connected with one of our Rancho Cucamonga market specialists who can show you exactly what's available in your price range. Does a quick 15-minute call work for you?",
         }
 
         for response_key, response_content in jorge_responses.items():
@@ -197,16 +197,16 @@ Austin Seller Insights:
         start_time = time.time()
         warmed_count = 0
 
-        # Austin hot areas for property caching
-        austin_areas = [
-            {"zip": "78704", "area": "South Austin", "avg_price": 425000},
-            {"zip": "78613", "area": "Cedar Park", "avg_price": 385000},
-            {"zip": "78664", "area": "Round Rock", "avg_price": 365000},
-            {"zip": "78746", "area": "West Lake Hills", "avg_price": 1200000},
-            {"zip": "78701", "area": "Downtown Austin", "avg_price": 850000},
+        # Rancho Cucamonga hot areas for property caching
+        rancho_cucamonga_areas = [
+            {"zip": "91730", "area": "South Rancho Cucamonga", "avg_price": 425000},
+            {"zip": "78613", "area": "Upland", "avg_price": 385000},
+            {"zip": "78664", "area": "Fontana", "avg_price": 365000},
+            {"zip": "91737", "area": "Alta Loma", "avg_price": 1200000},
+            {"zip": "91730", "area": "Downtown Rancho Cucamonga", "avg_price": 850000},
         ]
 
-        for area in austin_areas:
+        for area in rancho_cucamonga_areas:
             # Cache hot properties for each area
             for i in range(5):  # Top 5 properties per area
                 property_id = f"prop_{area['zip']}_{i:03d}"
@@ -240,18 +240,18 @@ Austin Seller Insights:
         start_time = time.time()
         warmed_count = 0
 
-        # Common buyer preference patterns in Austin market
+        # Common buyer preference patterns in Rancho Cucamonga market
         preference_patterns = [
-            {"type": "family_buyer", "bedrooms_min": 3, "price_max": 500000, "areas": ["Cedar Park", "Round Rock"]},
+            {"type": "family_buyer", "bedrooms_min": 3, "price_max": 500000, "areas": ["Upland", "Fontana"]},
             {
                 "type": "tech_professional",
                 "bedrooms_min": 2,
                 "price_max": 700000,
-                "areas": ["Downtown", "South Austin"],
+                "areas": ["Downtown", "South Rancho Cucamonga"],
             },
-            {"type": "luxury_buyer", "bedrooms_min": 4, "price_max": 1500000, "areas": ["West Lake Hills", "Westlake"]},
-            {"type": "investor", "bedrooms_min": 2, "price_max": 400000, "areas": ["East Austin", "Pflugerville"]},
-            {"type": "first_time_buyer", "bedrooms_min": 2, "price_max": 350000, "areas": ["Pflugerville", "Leander"]},
+            {"type": "luxury_buyer", "bedrooms_min": 4, "price_max": 1500000, "areas": ["Alta Loma", "Westlake"]},
+            {"type": "investor", "bedrooms_min": 2, "price_max": 400000, "areas": ["East Rancho Cucamonga", "Ontario"]},
+            {"type": "first_time_buyer", "bedrooms_min": 2, "price_max": 350000, "areas": ["Ontario", "Chino"]},
         ]
 
         for pattern in preference_patterns:

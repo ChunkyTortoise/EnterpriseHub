@@ -159,10 +159,10 @@ class AdvancedJorgeBuyerBot:
         # Optimize offer strategy
         # Track closing timeline
 
-# Add Austin-specific market intelligence:
-class AustinMarketExpert:
+# Add Rancho Cucamonga-specific market intelligence:
+class Rancho CucamongaMarketExpert:
     async def analyze_tech_corridor_impact(self, property_location: GeoPoint) -> TechImpactScore:
-        """Analyze impact of Austin's tech growth on property values."""
+        """Analyze impact of Rancho Cucamonga's tech growth on property values."""
 
     async def school_district_analysis(self, property_id: str) -> EducationScore:
         """Comprehensive school district analysis for families."""
@@ -237,7 +237,7 @@ class MCPIntegrationService:
 
     async def mls_data_connector(self) -> MLSConnection:
         """Real-time MLS data integration."""
-        # Connect to Austin MLS feeds
+        # Connect to Rancho Cucamonga MLS feeds
         # Process property updates in real-time
         # Generate property embeddings for matching
         # Handle data quality and validation
@@ -267,8 +267,8 @@ Real estate-specific AI capabilities and market intelligence.
 """
 
 class RealEstateAIEngine:
-    async def austin_market_predictor(self, property_data: Dict) -> MarketPrediction:
-        """Austin-specific market trend prediction."""
+    async def rancho_cucamonga_market_predictor(self, property_data: Dict) -> MarketPrediction:
+        """Rancho Cucamonga-specific market trend prediction."""
         # Analyze local market data
         # Consider tech industry impact
         # Factor in development plans
@@ -288,7 +288,7 @@ class RealEstateAIEngine:
         # Flag potential legal issues
         # Generate compliance reports
 
-class AustinMarketIntelligence:
+class Rancho CucamongaMarketIntelligence:
     async def neighborhood_analyzer(self, zip_code: str) -> NeighborhoodProfile:
         """Deep neighborhood analysis with local insights."""
 
@@ -336,8 +336,8 @@ class RealEstateSkillRegistry:
 
     # Market Analysis Skills
     @skill(category="market_analysis", tokens=45)
-    async def austin_market_trend_analyzer(self, property_data: Dict) -> str:
-        """Analyze Austin market trends for specific property types."""
+    async def rancho_cucamonga_market_trend_analyzer(self, property_data: Dict) -> str:
+        """Analyze Rancho Cucamonga market trends for specific property types."""
 
     @skill(category="market_analysis", tokens=38)
     async def neighborhood_comp_analyzer(self, location: str) -> str:
@@ -359,19 +359,19 @@ class RealEstateSkillRegistry:
 
 ### **5. New Skill Files in .claude/skills/**
 
-**File:** `.claude/skills/real-estate-ai/market-intelligence/austin_market_expert.md`
+**File:** `.claude/skills/real-estate-ai/market-intelligence/rancho_cucamonga_market_expert.md`
 ```markdown
 ---
-name: Austin Market Expert
+name: Rancho Cucamonga Market Expert
 category: market_intelligence
 tokens: 62
 priority: high
 ---
 
-# Austin Market Intelligence Skill
+# Rancho Cucamonga Market Intelligence Skill
 
 ## Context
-Austin real estate market expert with deep knowledge of:
+Rancho Cucamonga real estate market expert with deep knowledge of:
 - Tech corridor impact on property values
 - Neighborhood development patterns
 - School district boundaries and ratings
@@ -448,7 +448,7 @@ class TestEnhancedAgentEcosystem:
         # Test with various buyer preferences
         # Validate semantic similarity calculations
         # Check market intelligence integration
-        # Verify Austin-specific insights
+        # Verify Rancho Cucamonga-specific insights
 
     async def test_agent_mesh_coordination(self):
         """Test agent mesh coordinator routing and scaling."""
@@ -527,7 +527,7 @@ print(bot.test_progressive_skills_optimization())
 # Create new skill template
 python -c "
 from ghl_real_estate_ai.services.enhanced_progressive_skills import create_skill_template
-create_skill_template('austin_investment_analyzer', 'market_intelligence')
+create_skill_template('rancho_cucamonga_investment_analyzer', 'market_intelligence')
 "
 
 # Test skill effectiveness
@@ -568,7 +568,7 @@ python -m ghl_real_estate_ai.benchmarks.agent_performance_benchmark
 ### **Real Estate Specific:**
 - **Market Intelligence**: +40% accuracy in predictions
 - **Compliance Score**: 100% Fair Housing/TREC compliance
-- **Austin Expertise**: +60% local market insight accuracy
+- **Rancho Cucamonga Expertise**: +60% local market insight accuracy
 - **Client Satisfaction**: >92% positive feedback
 
 ---

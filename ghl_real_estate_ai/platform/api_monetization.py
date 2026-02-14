@@ -171,7 +171,7 @@ class APIMonetization:
                 monthly_price=Decimal("9999"),
                 requests_per_month=-1,  # Unlimited
                 rate_limit_per_minute=5000,
-                features=["All features", "White-label branding", "Custom domains", "Dedicated support"],
+                features=["All features", "White-label branding", "Custom ontario_millss", "Dedicated support"],
                 support_level="Dedicated",
                 sla_uptime=0.9999,
                 priority_support=True,
@@ -429,8 +429,8 @@ class APIMonetization:
         # Configure custom branding
         branding_result = await self._apply_custom_branding(deployment_config)
 
-        # Set up custom domain
-        domain_result = await self._setup_custom_domain(deployment_config)
+        # Set up custom ontario_mills
+        ontario_mills_result = await self._setup_custom_ontario_mills(deployment_config)
 
         # Configure billing
         billing_setup = await self._setup_white_label_billing(customer_id, deployment_config)
@@ -438,7 +438,7 @@ class APIMonetization:
         return {
             "success": True,
             "deployment_id": deployment_config["deployment_id"],
-            "custom_domain": domain_result["domain"],
+            "custom_ontario_mills": ontario_mills_result["ontario_mills"],
             "api_endpoints": environment_result["api_endpoints"],
             "billing_info": billing_setup,
             "estimated_go_live": datetime.utcnow() + timedelta(days=7),
@@ -652,7 +652,7 @@ class APIMonetization:
         return {
             "deployment_id": str(uuid.uuid4()),
             "customer_id": customer_id,
-            "custom_domain": config.get("domain", f"{customer_id}.platform.com"),
+            "custom_ontario_mills": config.get("ontario_mills", f"{customer_id}.platform.com"),
             "branding": config.get("branding", {}),
             "features": config.get("features", []),
         }
@@ -661,7 +661,7 @@ class APIMonetization:
         """Create isolated environment for white-label deployment."""
         return {
             "environment_id": deployment_config["deployment_id"],
-            "api_endpoints": [f"https://{deployment_config['custom_domain']}/api/v1"],
+            "api_endpoints": [f"https://{deployment_config['custom_ontario_mills']}/api/v1"],
             "status": "provisioning",
         }
 
@@ -669,9 +669,9 @@ class APIMonetization:
         """Apply custom branding to deployment."""
         return {"branding_applied": True}
 
-    async def _setup_custom_domain(self, deployment_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Set up custom domain for white-label deployment."""
-        return {"domain": deployment_config["custom_domain"], "ssl_configured": True}
+    async def _setup_custom_ontario_mills(self, deployment_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Set up custom ontario_mills for white-label deployment."""
+        return {"ontario_mills": deployment_config["custom_ontario_mills"], "ssl_configured": True}
 
     async def _setup_white_label_billing(self, customer_id: str, deployment_config: Dict[str, Any]) -> Dict[str, Any]:
         """Set up billing for white-label deployment."""

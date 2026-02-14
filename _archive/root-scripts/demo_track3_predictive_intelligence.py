@@ -63,7 +63,7 @@ class Track3Demo:
                     "messages": [
                         {
                             "sender": "agent",
-                            "content": "Hello Sarah! I understand you're looking for a home in Austin?",
+                            "content": "Hello Sarah! I understand you're looking for a home in Rancho Cucamonga?",
                             "timestamp": (base_time - timedelta(hours=6)).isoformat()
                         },
                         {
@@ -73,12 +73,12 @@ class Track3Demo:
                         },
                         {
                             "sender": "agent",
-                            "content": "Perfect timing! What area of Austin are you focusing on?",
+                            "content": "Perfect timing! What area of Rancho Cucamonga are you focusing on?",
                             "timestamp": (base_time - timedelta(hours=5, minutes=40)).isoformat()
                         },
                         {
                             "sender": "lead",
-                            "content": "North Austin or Cedar Park. Need 4 bedrooms, good schools. Can we tour properties this weekend?",
+                            "content": "North Rancho Cucamonga or Cedar Park. Need 4 bedrooms, good schools. Can we tour properties this weekend?",
                             "timestamp": (base_time - timedelta(hours=5, minutes=35)).isoformat()
                         },
                         {
@@ -95,7 +95,7 @@ class Track3Demo:
                     "property_preferences": {
                         "price_max": 600000,
                         "bedrooms": 4,
-                        "location": {"city": "Austin", "areas": ["North Austin", "Cedar Park"]},
+                        "location": {"city": "Rancho Cucamonga", "areas": ["North Rancho Cucamonga", "Cedar Park"]},
                         "timeline": "30_days",
                         "financing_status": "pre_approved"
                     },
@@ -113,7 +113,7 @@ class Track3Demo:
                     "messages": [
                         {
                             "sender": "agent",
-                            "content": "Hi Mike! I saw you were interested in Austin real estate. How can I help?",
+                            "content": "Hi Mike! I saw you were interested in Rancho Cucamonga real estate. How can I help?",
                             "timestamp": (base_time - timedelta(days=5)).isoformat()
                         },
                         {
@@ -151,7 +151,7 @@ class Track3Demo:
                     "messages": [
                         {
                             "sender": "agent",
-                            "content": "Hi Jennifer! Thanks for reaching out about Austin properties.",
+                            "content": "Hi Jennifer! Thanks for reaching out about Rancho Cucamonga properties.",
                             "timestamp": (base_time - timedelta(days=2)).isoformat()
                         },
                         {
@@ -171,19 +171,19 @@ class Track3Demo:
                         },
                         {
                             "sender": "agent",
-                            "content": "Perfect! What areas of Austin are you considering?",
+                            "content": "Perfect! What areas of Rancho Cucamonga are you considering?",
                             "timestamp": (base_time - timedelta(days=1, hours=16)).isoformat()
                         },
                         {
                             "sender": "lead",
-                            "content": "South Austin preferred, but open to other areas with good commute to downtown.",
+                            "content": "South Rancho Cucamonga preferred, but open to other areas with good commute to downtown.",
                             "timestamp": (base_time - timedelta(days=1, hours=4)).isoformat()
                         }
                     ],
                     "property_preferences": {
                         "price_max": 450000,
                         "bedrooms": 3,
-                        "location": {"city": "Austin", "preferred": "South Austin"},
+                        "location": {"city": "Rancho Cucamonga", "preferred": "South Rancho Cucamonga"},
                         "timeline": "summer",
                         "financing_status": "pre_approved"
                     },
@@ -201,7 +201,7 @@ class Track3Demo:
                     "messages": [
                         {
                             "sender": "agent",
-                            "content": "Hi David! Ready to find your dream home in Austin?",
+                            "content": "Hi David! Ready to find your dream home in Rancho Cucamonga?",
                             "timestamp": (base_time - timedelta(days=14)).isoformat()
                         },
                         {

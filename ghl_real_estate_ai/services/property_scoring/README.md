@@ -335,7 +335,7 @@ if context.get_performance_metrics()['ml']['avg_time'] > 1.0:
 4. Add tests
 
 ### Custom Scoring Context
-1. Extend `ScoringContext` for domain-specific context
+1. Extend `ScoringContext` for ontario_mills-specific context
 2. Modify `PropertyMatcherContext` to handle custom context
 3. Update strategies to use new context data
 

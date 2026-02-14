@@ -41,7 +41,6 @@ from ghl_real_estate_ai.services.dynamic_value_justification_engine import (
 )
 from ghl_real_estate_ai.services.value_communication_templates import (
 
-@pytest.mark.integration
     CommunicationStyle,
     MessageType,
     ValueCommunicationTemplates,

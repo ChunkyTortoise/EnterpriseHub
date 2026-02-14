@@ -234,7 +234,7 @@ async def broadcast_event(event_data: Dict[str, Any], current_user=Depends(get_c
         if target_roles_str:
             try:
                 target_roles = {UserRole(role) for role in target_roles_str}
-            except ValueError as e:
+            except ValueError:
                 valid_roles = [role.value for role in UserRole]
                 raise HTTPException(status_code=400, detail=f"Invalid role in target_roles. Valid roles: {valid_roles}")
 

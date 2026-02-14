@@ -50,7 +50,7 @@
 ```json
 {
   "contact_id": "demo_lead_001",
-  "location_id": "jorge_austin",
+  "location_id": "jorge_rancho_cucamonga",
   "message": "I'm thinking about selling my house, what's it worth?",
   "contact_info": {
     "name": "Test Client",

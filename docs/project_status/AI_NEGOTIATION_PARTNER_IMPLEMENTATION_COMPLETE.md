@@ -276,7 +276,7 @@ The system integrates with GoHighLevel through webhook events:
 ### Existing Service Integration
 
 **Connected Services**:
-- `austin_market_service.py`: Market data and comparable analysis
+- `rancho_cucamonga_market_service.py`: Market data and comparable analysis
 - `enhanced_lead_intelligence.py`: Buyer psychology and preferences
 - `claude_assistant.py`: AI-powered insights and narrative generation
 - `competitive_data_pipeline.py`: Competitive market intelligence
@@ -373,7 +373,7 @@ NEGOTIATION_PERFORMANCE_TARGET_MS=3000
 
 1. **Advanced ML Models**: Replace rule-based systems with trained models
 2. **Historical Learning**: Outcome tracking for continuous improvement  
-3. **Multi-Market Support**: Expand beyond Austin market analysis
+3. **Multi-Market Support**: Expand beyond Rancho Cucamonga market analysis
 4. **Voice Integration**: Real-time voice coaching during phone calls
 5. **Predictive Analytics**: Anticipate negotiation challenges before they occur
 

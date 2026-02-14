@@ -58,7 +58,6 @@ from ghl_real_estate_ai.services.service6_ai_integration import (
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "mocks"))
 from external_services import (
 
-@pytest.mark.integration
     MockClaudeClient,
     MockEnhancedDatabaseService,
     MockMLScoringEngine,
@@ -153,7 +152,7 @@ class TestService6EndToEndWorkflows:
                 "email": "webhook.test@example.com",
                 "firstName": "Webhook",
                 "lastName": "Test",
-                "customFields": {"budget": "650000", "timeline": "immediate", "location": "Austin"},
+                "customFields": {"budget": "650000", "timeline": "immediate", "location": "Rancho Cucamonga"},
             }
         )
 
@@ -314,7 +313,7 @@ class TestService6EndToEndWorkflows:
                     {
                         "content_type": "premium_properties",
                         "delivery_channel": "email",
-                        "personalization_factors": {"budget": 850000, "timeline": "immediate", "location": "Austin"},
+                        "personalization_factors": {"budget": 850000, "timeline": "immediate", "location": "Rancho Cucamonga"},
                     },
                 )
             )

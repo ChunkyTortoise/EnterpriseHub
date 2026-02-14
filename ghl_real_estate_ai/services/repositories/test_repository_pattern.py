@@ -104,7 +104,7 @@ class TestPropertyQueryBuilder:
             PropertyQueryBuilder()
             .filter_by_price(min_price=400000, max_price=800000)
             .filter_by_bedrooms(min_beds=2, max_beds=4)
-            .filter_by_location(location="Austin")
+            .filter_by_location(location="Rancho Cucamonga")
             .sort_by("price", SortOrder.ASC)
             .paginate(page=1, limit=20)
             .build()
@@ -114,7 +114,7 @@ class TestPropertyQueryBuilder:
         assert query.max_price == 800000
         assert query.min_bedrooms == 2
         assert query.max_bedrooms == 4
-        assert query.location == "Austin"
+        assert query.location == "Rancho Cucamonga"
         assert query.sort_by == "price"
         assert query.sort_order == SortOrder.ASC
         assert query.pagination.limit == 20
@@ -138,8 +138,8 @@ class TestPropertyQueryBuilder:
         assert query.min_price == 300000
         assert query.max_price == 700000
 
-        query = FluentPropertyQuery.by_location("Austin").build()
-        assert query.location == "Austin"
+        query = FluentPropertyQuery.by_location("Rancho Cucamonga").build()
+        assert query.location == "Rancho Cucamonga"
 
         query = FluentPropertyQuery.semantic("modern downtown condo with pool").build()
         assert query.semantic_query == "modern downtown condo with pool"
@@ -481,7 +481,7 @@ class TestStrategyIntegration:
             "agent_id": "agent-456",
             "extracted_preferences": {
                 "budget": 750000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "bedrooms": 3,
                 "bathrooms": 2,
                 "property_type": "Single Family",
@@ -587,7 +587,7 @@ class TestErrorHandling:
         # This would typically timeout in real scenario
         # For test, we just verify the mock behavior
         query = PropertyQuery()
-        result = await asyncio.wait_for(mock_repo.find_properties(query), timeout=1.0)
+        await asyncio.wait_for(mock_repo.find_properties(query), timeout=1.0)
         # This should raise asyncio.TimeoutError in real scenario
 
 
@@ -670,7 +670,7 @@ class TestRealWorldScenarios:
         query = (
             FluentPropertyQuery.by_price_range(400000, 800000)
             .filter_by_bedrooms(min_beds=2, max_beds=4)
-            .filter_by_location(location="Austin")
+            .filter_by_location(location="Rancho Cucamonga")
             .filter_by_amenities(required=["garage"])
             .sort_by("price", SortOrder.ASC)
             .paginate(page=1, limit=10)
@@ -681,11 +681,11 @@ class TestRealWorldScenarios:
         test_data = [
             {
                 "id": "prop-001",
-                "address": "123 Austin Street",
+                "address": "123 Rancho Cucamonga Street",
                 "price": 650000,
                 "bedrooms": 3,
                 "bathrooms": 2.5,
-                "neighborhood": "Austin",
+                "neighborhood": "Rancho Cucamonga",
                 "amenities": ["garage", "pool"],
             }
         ]

@@ -142,7 +142,6 @@ class NegotiationStrategyEngine:
         recommended_price = list_price * Decimal(str(final_offer_pct))
 
         # Calculate offer range
-        range_spread = 0.03  # 3% range
         min_offer = recommended_price * Decimal("0.97")
         max_offer = recommended_price * Decimal("1.03")
 

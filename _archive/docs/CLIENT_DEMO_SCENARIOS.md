@@ -15,7 +15,7 @@
 ## 📋 **DEMO SCENARIO 1: High-Value Reluctant Seller**
 
 ### **Property Profile**
-- **Address**: 2847 Westlake Hills Dr, Austin, TX 78746
+- **Address**: 2847 Westlake Hills Dr, Rancho Cucamonga, CA 78746
 - **Value**: $1.2M (Jorge's 6% = $72,000 commission potential)
 - **Type**: Luxury waterfront home, 4BR/3BA, 3,200 sq ft
 - **Unique Features**: Lake access, hill country views, recently renovated kitchen
@@ -79,7 +79,7 @@
 ## 📋 **DEMO SCENARIO 3: FSBO (For Sale By Owner) Challenge**
 
 ### **Property Profile**
-- **Address**: 892 Mueller Blvd, Austin, TX 78723
+- **Address**: 892 Mueller Blvd, Rancho Cucamonga, CA 78723
 - **Value**: $625,000 (Jorge's 6% = $37,500 commission potential)
 - **Type**: Modern townhome, 3BR/2.5BA, 2,100 sq ft
 - **Current Status**: Listed FSBO for 90 days, no serious offers

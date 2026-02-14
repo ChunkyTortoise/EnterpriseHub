@@ -4,7 +4,7 @@ White Label Service for Mobile App Customization.
 Provides comprehensive white-label capabilities:
 - Agency branding and customization
 - Feature enablement per agency
-- Custom domain and app store management
+- Custom ontario_mills and app store management
 - Revenue tracking and billing integration
 - Automated app generation and deployment
 """
@@ -76,7 +76,7 @@ class FeatureSet:
 
     # Enterprise Features
     white_label_portal: bool = False
-    custom_domains: bool = False
+    custom_ontario_millss: bool = False
     advanced_security: bool = False
     compliance_reporting: bool = False
     dedicated_support: bool = False
@@ -92,7 +92,7 @@ class WhiteLabelConfig:
     branding: BrandingConfig
     features: FeatureSet
     platforms: List[AppPlatform]
-    custom_domains: List[str] = None
+    custom_ontario_millss: List[str] = None
     app_store_config: Dict[str, Any] = None
     billing_config: Dict[str, Any] = None
     created_at: datetime = None
@@ -133,7 +133,7 @@ class WhiteLabelMobileService:
             WhiteLabelTier.ENTERPRISE.value: {
                 "setup_fee": 25000,  # $25,000 setup
                 "monthly_fee": 2500,  # $2,500/month
-                "features": ["all_features", "custom_domains", "compliance_reporting"],
+                "features": ["all_features", "custom_ontario_millss", "compliance_reporting"],
                 "platforms": [AppPlatform.IOS, AppPlatform.ANDROID],
                 "max_users": 1000,
                 "support_level": "dedicated",
@@ -182,7 +182,7 @@ class WhiteLabelMobileService:
                 custom_integrations=True,
                 priority_support=True,
                 white_label_portal=True,
-                custom_domains=True,
+                custom_ontario_millss=True,
                 advanced_security=True,
                 compliance_reporting=True,
             ),
@@ -221,7 +221,7 @@ class WhiteLabelMobileService:
                 branding=branding,
                 features=features,
                 platforms=platforms,
-                custom_domains=[],
+                custom_ontario_millss=[],
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
                 is_active=True,
@@ -456,7 +456,7 @@ class WhiteLabelMobileService:
 
     async def _validate_branding_assets(self, branding: BrandingConfig):
         """Validate branding assets are accessible and properly formatted."""
-        # TODO: Implement asset validation
+        # ROADMAP-074: Implement asset validation for white-label branding
         pass
 
     async def _store_white_label_config(self, config: WhiteLabelConfig):
@@ -482,12 +482,12 @@ class WhiteLabelMobileService:
 
     async def _generate_app_configs(self, config: WhiteLabelConfig):
         """Generate app configuration files for mobile builds."""
-        # TODO: Implement app config generation
+        # ROADMAP-074: Implement app config generation for mobile builds
         pass
 
     async def _trigger_app_build(self, config: WhiteLabelConfig):
         """Trigger mobile app build process."""
-        # TODO: Implement app build triggering
+        # ROADMAP-074: Implement app build triggering via CI/CD
         pass
 
     def _generate_app_description(self, config: WhiteLabelConfig) -> str:
@@ -542,7 +542,7 @@ Download now and transform your real estate business!
     # Additional implementation methods...
     async def _generate_app_screenshots(self, config: WhiteLabelConfig, platform: AppPlatform) -> List[str]:
         """Generate app screenshots for store listing."""
-        # TODO: Implement screenshot generation with custom branding
+        # ROADMAP-074: Implement screenshot generation with custom branding
         return [
             f"screenshot_dashboard_{platform.value}.png",
             f"screenshot_leads_{platform.value}.png",

@@ -20,7 +20,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.voice_ai_service import (
 
-@pytest.mark.integration
     VoiceAIService,
     VoiceAnalytics,
     VoiceInteraction,
@@ -56,7 +55,7 @@ def sample_interaction_context():
         "lead_id": "test_lead_123",
         "interaction_type": VoiceInteractionType.LEAD_QUALIFICATION,
         "context": {
-            "lead_preferences": {"budget_max": 500000, "location": "Austin, TX", "property_type": "Single Family"}
+            "lead_preferences": {"budget_max": 500000, "location": "Rancho Cucamonga, CA", "property_type": "Single Family"}
         },
     }
 
@@ -110,12 +109,12 @@ class TestVoiceAIService:
 
         # Mock Claude response
         voice_ai_service.claude_assistant.chat_with_claude.return_value = (
-            "I understand you're looking for a home in Austin. Based on your budget of $500K, "
+            "I understand you're looking for a home in Rancho Cucamonga. Based on your budget of $500K, "
             "I have several great options in family-friendly neighborhoods. "
             "Would you like to see some properties with good school districts?"
         )
 
-        test_transcript = "Hi, I'm looking for a 3-bedroom house in Austin under $500k"
+        test_transcript = "Hi, I'm looking for a 3-bedroom house in Rancho Cucamonga under $500k"
 
         # Process the voice input
         result = await voice_ai_service.process_voice_input(interaction_id=interaction_id, transcript=test_transcript)
@@ -157,7 +156,7 @@ class TestVoiceAIService:
 
         # Mock summary generation
         voice_ai_service.claude_assistant.chat_with_claude.return_value = (
-            "Client showed strong interest in properties under $500K in Austin. "
+            "Client showed strong interest in properties under $500K in Rancho Cucamonga. "
             "Recommended next steps: Schedule property viewings in Cedar Park area. "
             "Conversion likelihood: High"
         )
@@ -196,7 +195,7 @@ class TestVoiceAIService:
         voice_ai_service.claude_assistant.chat_with_claude.return_value = "Mock analysis response"
 
         await voice_ai_service.process_voice_input(
-            interaction_id=interaction_id, transcript="I'm very excited about finding a home in Austin!"
+            interaction_id=interaction_id, transcript="I'm very excited about finding a home in Rancho Cucamonga!"
         )
 
         # Verify analytics were cached

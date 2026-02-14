@@ -28,6 +28,7 @@ class UserRole(Enum):
     """User roles with hierarchical permissions."""
 
     ADMIN = "admin"  # Full system access
+    MANAGER = "manager"  # Team/Location management
     AGENT = "agent"  # Lead and deal management
     VIEWER = "viewer"  # Read-only access
     SUPER_ADMIN = "super_admin"  # Reserved for enterprise ops

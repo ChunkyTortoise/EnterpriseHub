@@ -253,7 +253,7 @@ async def generate_contextual_guidance(
         # Convert and return response
         return convert_concierge_response(response)
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid request parameters")
     except Exception as e:
         logger.error(f"Error generating contextual guidance: {e}")
@@ -273,7 +273,7 @@ async def generate_live_guidance(
     try:
         # Convert mode and scope
         concierge_mode = ConciergeMode(request.mode)
-        intelligence_scope = IntelligenceScope(request.scope) if request.scope else None
+        IntelligenceScope(request.scope) if request.scope else None
 
         # Generate guidance with live data
         response = await orchestrator.generate_live_guidance(
@@ -359,7 +359,7 @@ async def chat_with_concierge(
             )
             return convert_concierge_response(response)
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid request parameters")
     except Exception as e:
         logger.error(f"Error in chat with concierge: {e}")
@@ -526,7 +526,7 @@ async def predict_jorge_preference(
 async def health_check():
     """Health check endpoint for the concierge service."""
     try:
-        orchestrator = get_claude_concierge_orchestrator()
+        get_claude_concierge_orchestrator()
         # Basic health check - could be enhanced with more detailed checks
 
         return {

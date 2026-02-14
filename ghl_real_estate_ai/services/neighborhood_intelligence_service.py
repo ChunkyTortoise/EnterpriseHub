@@ -571,7 +571,7 @@ class NeighborhoodIntelligenceService:
             return NeighborhoodMetrics(
                 neighborhood_id=neighborhood_id,
                 name=f"Neighborhood {neighborhood_id}",
-                zip_codes=["78701", "78702"],
+                zip_codes=["91730", "91739"],
                 county="Travis",
                 state="TX",
                 # Market Performance
@@ -698,7 +698,7 @@ class NeighborhoodIntelligenceService:
             MarketAlert(
                 alert_id="alert_001",
                 alert_type="inventory_drop",
-                neighborhood_id="austin_downtown",
+                neighborhood_id="rancho_cucamonga_downtown",
                 severity="high",
                 title="Significant Inventory Drop Detected",
                 description="Active listings dropped 23% in the last 7 days, indicating strong buyer demand.",
@@ -718,7 +718,7 @@ class NeighborhoodIntelligenceService:
             MarketAlert(
                 alert_id="alert_002",
                 alert_type="price_spike",
-                neighborhood_id="austin_tech_corridor",
+                neighborhood_id="rancho_cucamonga_tech_corridor",
                 severity="medium",
                 title="Price Acceleration Detected",
                 description="Median home values increased 3.2% in the last month, above seasonal expectations.",
@@ -770,7 +770,7 @@ class NeighborhoodIntelligenceService:
         # Simulate investment analysis
         opportunities = [
             {
-                "neighborhood_id": "austin_east_side",
+                "neighborhood_id": "rancho_cucamonga_east_side",
                 "opportunity_type": "value_play",
                 "score": 94.2,
                 "roi_projection": {"1_year": 18.5, "3_year": 42.8, "5_year": 78.3},
@@ -807,7 +807,7 @@ class NeighborhoodIntelligenceService:
                 }
             ],
             "competitive_landscape": {
-                "primary_competitors": ["West Lake Hills", "South Lamar"],
+                "primary_competitors": ["Alta Loma", "South Lamar"],
                 "competitive_advantages": ["Transit access", "Walkability"],
                 "market_positioning": "Premium urban lifestyle",
             },

@@ -5,13 +5,11 @@ This module provides helper functions for integrating composite lead scoring
 and ML ensemble lead scoring into the Lead, Buyer, and Seller bots.
 """
 
-import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.lead_scoring_v2 import (
     CompositeScore,
-    LeadClassification,
     LeadScoringServiceV2,
 )
 from ghl_real_estate_ai.services.sentiment_analysis_service import (

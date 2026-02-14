@@ -95,7 +95,7 @@ The Client Success Scoring & Accountability System has been successfully impleme
 - Event-driven communication between services
 
 **Key Capabilities:**
-- Integrate with Transaction Intelligence, AI Negotiation Partner, Austin Market Service
+- Integrate with Transaction Intelligence, AI Negotiation Partner, Rancho Cucamonga Market Service
 - Sync performance data across Claude AI and GHL CRM systems
 - Generate unified performance snapshots with verification confidence
 - Trigger automated workflows for client communication and follow-up

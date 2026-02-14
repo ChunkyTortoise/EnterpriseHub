@@ -11,8 +11,6 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def mock_ghl_for_api_tests():

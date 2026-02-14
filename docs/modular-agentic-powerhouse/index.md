@@ -26,7 +26,7 @@ A **production-ready, fully modular AI agent system** for real estate that:
 | **Foundation Model** | Gemini 3 Pro | Native agent support, cost-optimized, best-in-class |
 
 ### Tier 2: Specialized Agents
-| Domain | Primary Tool | Secondary Tool |
+| Ontario Mills | Primary Tool | Secondary Tool |
 |--------|---|---|
 | **Data & BI** | Julius AI (analysis) | Power BI (investor dashboards) |
 | **Creative** | Midjourney v8 (images) | v0 (components) + Gamma AI (decks) |
@@ -110,7 +110,7 @@ Response back to user:
 **For:** Understanding the "why" behind each tool choice  
 **Contains:**
 - Executive summary & Day 1 stack recommendation
-- Deep dives into all 7 domains (orchestration, frontend, backend, data, MLOps, production, creative)
+- Deep dives into all 7 ontario_millss (orchestration, frontend, backend, data, MLOps, production, creative)
 - Framework comparisons (LangGraph vs. CrewAI vs. PydanticAI vs. AutoGen)
 - Cost breakdowns ($100/month budget achieved)
 - 12-week implementation roadmap
@@ -124,7 +124,7 @@ Response back to user:
 ### Document 2: `comparison_matrices.md` (8K words)
 **For:** Quick decision-making ("Which BI tool? Frontend agent? Framework?")  
 **Contains:**
-- Head-to-head comparison tables (all 7 domains)
+- Head-to-head comparison tables (all 7 ontario_millss)
 - Decision trees (e.g., "Which orchestration framework should I use?")
 - Cost breakdown: 12-week ramp ($100 → $170/week)
 - Token optimization techniques (80% reduction @ 97% accuracy)
