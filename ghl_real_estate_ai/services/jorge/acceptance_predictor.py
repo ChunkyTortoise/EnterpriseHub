@@ -23,9 +23,8 @@ Created: 2026-02-10
 
 import hashlib
 import json
-import logging
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -188,7 +187,7 @@ class AcceptancePredictorService:
             return
 
         try:
-            # TODO: Implement model loading once training pipeline is ready
+            # ROADMAP-085: Implement model loading once training pipeline is ready
             # import joblib
             # model_data = joblib.load(self.model_path)
             # self.model = model_data["model"]
@@ -413,7 +412,7 @@ class AcceptancePredictorService:
         """
         Predict using trained XGBoost model.
 
-        TODO: Implement once training pipeline is ready (Task #11 + model training)
+        ROADMAP-085: Implement once training pipeline is ready (Task #11 + model training)
         """
         logger.warning("XGBoost model prediction not yet implemented, falling back to rules")
         return await self._predict_with_rules(seller_id, offer_price, seller_state)

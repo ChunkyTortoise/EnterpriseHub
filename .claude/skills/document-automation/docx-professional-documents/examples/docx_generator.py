@@ -945,7 +945,7 @@ def demo_docx_generation():
         'lead_id': 'LEAD_001',
         'name': 'John and Sarah Johnson',
         'budget': 650000,
-        'location': 'Austin, TX',
+        'location': 'Rancho Cucamonga, CA',
         'bedrooms': 3,
         'bathrooms': 2.5,
         'timeline': 'next_3_months',
@@ -958,7 +958,7 @@ def demo_docx_generation():
             'property': {
                 'id': 'PROP_001',
                 'price': 625000,
-                'address': {'street': '123 Oak Hill Dr', 'city': 'Austin', 'state': 'TX'},
+                'address': {'street': '123 Oak Hill Dr', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                 'bedrooms': 3,
                 'bathrooms': 2.5,
                 'sqft': 2100,
@@ -978,7 +978,7 @@ def demo_docx_generation():
             'property': {
                 'id': 'PROP_002',
                 'price': 598000,
-                'address': {'street': '456 Cedar Ridge', 'city': 'Austin', 'state': 'TX'},
+                'address': {'street': '456 Cedar Ridge', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                 'bedrooms': 4,
                 'bathrooms': 3,
                 'sqft': 2250,

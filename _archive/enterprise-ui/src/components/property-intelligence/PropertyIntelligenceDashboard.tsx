@@ -81,7 +81,7 @@ interface PropertyAnalysis {
 // Mock property analysis data
 const mockPropertyAnalysis: PropertyAnalysis = {
   propertyId: 'prop-12345',
-  address: '123 Maple Street, Austin, TX 78701',
+  address: '123 Maple Street, Rancho Cucamonga, TX 78701',
   analysisLevel: 'PREMIUM',
   investmentStrategy: 'RENTAL_INCOME',
   scoring: {

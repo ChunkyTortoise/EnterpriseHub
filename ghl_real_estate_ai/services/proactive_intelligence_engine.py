@@ -547,7 +547,6 @@ class ProactiveIntelligenceEngine:
         # Simulated predictive analysis
         closing_probability = 0.73
         optimal_contact_time = "Tuesday 10:00 AM"
-        churn_risk = 0.15
 
         # Closing probability insight
         closing_insight = PredictiveInsight(

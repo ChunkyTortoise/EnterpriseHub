@@ -193,7 +193,7 @@ Webhook Processing (Total)      45ms    178ms    298ms    425ms
 ```python
 # Input: GHL webhook with hot lead message
 webhook_data = {
-    "message": "Need to buy house ASAP. Budget $400k, pre-approved, Austin downtown, 3BR",
+    "message": "Need to buy house ASAP. Budget $400k, pre-approved, Rancho Cucamonga downtown, 3BR",
     "contact": {
         "tags": ["Needs Qualifying"],
         "custom_fields": {"budget": "$400k", "prequalified": "yes"}

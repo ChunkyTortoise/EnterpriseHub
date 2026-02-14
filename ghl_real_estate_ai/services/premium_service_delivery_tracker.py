@@ -350,7 +350,7 @@ class PremiumServiceDeliveryTracker:
         # In production, this would update the database
         # For now, we'll simulate the update logic
 
-        update_entry = {
+        {
             "timestamp": datetime.now().isoformat(),
             "status": new_status.value,
             "note": update_note,
@@ -639,7 +639,6 @@ class PremiumServiceDeliveryTracker:
         """Calculate ROI on premium service delivery"""
 
         total_relationship_value = sum(profile.relationship_value for profile in profiles)
-        total_commission_protected = total_relationship_value
 
         # Estimate service delivery costs
         service_cost_per_client = {

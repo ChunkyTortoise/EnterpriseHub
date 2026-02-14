@@ -4,9 +4,9 @@
       "id": "prop_001",
       "address": {
         "street": "123 Maple Ave",
-        "city": "Austin",
+        "city": "Rancho Cucamonga",
         "state": "TX",
-        "zip": "78701",
+        "zip": "91730",
         "neighborhood": "Downtown"
       },
       "price": 450000,
@@ -15,18 +15,18 @@
       "sqft": 1800,
       "property_type": "Single Family Home",
       "features": ["hardwood floors", "renovated kitchen", "granite countertops", "close to park"],
-      "description": "Beautifully renovated home in the heart of downtown Austin. Open floor plan with plenty of natural light.",
+      "description": "Beautifully renovated home in the heart of downtown Rancho Cucamonga. Open floor plan with plenty of natural light.",
       "listing_url": "https://lyrio.io/p/001",
-      "schools": ["Austin Elementary", "Austin High"],
+      "schools": ["Rancho Cucamonga Elementary", "Rancho Cucamonga High"],
       "days_on_market": 5
     },
     {
       "id": "prop_002",
       "address": {
         "street": "456 Oak Ln",
-        "city": "Austin",
+        "city": "Rancho Cucamonga",
         "state": "TX",
-        "zip": "78704",
+        "zip": "91730",
         "neighborhood": "South Lamar"
       },
       "price": 625000,
@@ -37,7 +37,7 @@
       "features": ["swimming pool", "outdoor kitchen", "large backyard", "modern design"],
       "description": "Modern family home with an incredible outdoor living space. Perfect for entertaining.",
       "listing_url": "https://lyrio.io/p/002",
-      "schools": ["Zilker Elementary", "Austin High"],
+      "schools": ["Victoria Gardens Elementary", "Rancho Cucamonga High"],
       "days_on_market": 12
     },
     {
@@ -64,10 +64,10 @@
       "id": "prop_004",
       "address": {
         "street": "101 Cedar Rd",
-        "city": "Austin",
+        "city": "Rancho Cucamonga",
         "state": "TX",
-        "zip": "78745",
-        "neighborhood": "South Austin"
+        "zip": "91730",
+        "neighborhood": "South Rancho Cucamonga"
       },
       "price": 320000,
       "bedrooms": 2,
@@ -75,7 +75,7 @@
       "sqft": 1100,
       "property_type": "Condo",
       "features": ["walkable neighborhood", "private balcony", "energy efficient", "fitness center"],
-      "description": "Cozy condo perfect for first-time buyers. Close to shopping and dining on South Congress.",
+      "description": "Cozy condo perfect for first-time buyers. Close to shopping and dining on Day Creek.",
       "listing_url": "https://lyrio.io/p/004",
       "schools": ["Pleasant Hill Elementary", "Crockett High"],
       "days_on_market": 2

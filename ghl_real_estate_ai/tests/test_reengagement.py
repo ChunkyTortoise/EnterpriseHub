@@ -31,8 +31,6 @@ from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPL
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine, ReengagementTrigger
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_trigger_detection_24h():

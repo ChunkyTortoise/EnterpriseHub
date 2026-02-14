@@ -16,8 +16,6 @@ import pytest
 from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
 
 
-@pytest.mark.unit
-
 
 @pytest.fixture
 def test_location_id():
@@ -89,12 +87,12 @@ class TestJourneyCreation:
             contact_id="contact_456",
             contact_name="Jane Smith",
             source="referral",
-            initial_data={"budget": 500000, "location": "Austin"},
+            initial_data={"budget": 500000, "location": "Rancho Cucamonga"},
         )
 
         journey = lifecycle_tracker.journeys[journey_id]
         assert journey["metadata"]["budget"] == 500000
-        assert journey["metadata"]["location"] == "Austin"
+        assert journey["metadata"]["location"] == "Rancho Cucamonga"
 
     def test_journey_initial_stage(self, lifecycle_tracker):
         """Test that new journeys start in 'new' stage."""

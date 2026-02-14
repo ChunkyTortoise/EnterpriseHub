@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.services.competitive_intelligence_hub import (
 
-@pytest.mark.integration
     AlertPriority,
     CompetitiveAlert,
     CompetitiveIntelligenceHub,
@@ -47,7 +46,7 @@ class TestCompetitiveIntelligenceHub:
             competitor_id="comp_123",
             name="Acme Real Estate",
             market_segment="luxury",
-            location="Austin, TX",
+            location="Rancho Cucamonga, CA",
             market_share=0.15,
             revenue_estimate=5000000.0,
             employee_count=25,

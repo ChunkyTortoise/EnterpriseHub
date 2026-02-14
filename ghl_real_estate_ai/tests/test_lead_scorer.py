@@ -8,8 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-@pytest.mark.unit
-
 
 class TestLeadScorer:
     """Test suite for LeadScorer class using Question Count scoring."""
@@ -21,14 +19,14 @@ class TestLeadScorer:
 
     def test_calculate_hot_lead_score(self, scorer):
         """Test that 3+ questions answered results in a hot score."""
-        context = {"extracted_preferences": {"budget": 400000, "location": "Austin", "timeline": "ASAP"}}
+        context = {"extracted_preferences": {"budget": 400000, "location": "Rancho Cucamonga", "timeline": "ASAP"}}
         score = scorer.calculate(context)
         assert score == 3
         assert scorer.classify(score) == "hot"
 
     def test_calculate_warm_lead_score(self, scorer):
         """Test that 2 questions answered results in a warm score."""
-        context = {"extracted_preferences": {"budget": 350000, "location": "Austin"}}
+        context = {"extracted_preferences": {"budget": 350000, "location": "Rancho Cucamonga"}}
         score = scorer.calculate(context)
         assert score == 2
         assert scorer.classify(score) == "warm"
@@ -59,7 +57,7 @@ class TestLeadScorer:
         context = {
             "extracted_preferences": {
                 "budget": 500000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "timeline": "ASAP",
                 "bedrooms": 3,
                 "financing": "pre-approved",
@@ -95,9 +93,9 @@ class TestLeadScorer:
 
     def test_calculate_with_reasoning(self, scorer):
         """Test reasoning breakdown for partial qualification."""
-        context = {"extracted_preferences": {"budget": 400000, "location": "Austin"}}
+        context = {"extracted_preferences": {"budget": 400000, "location": "Rancho Cucamonga"}}
         result = scorer.calculate_with_reasoning(context)
         assert result["score"] == 2
         assert "Budget: $400,000" in result["reasoning"]
-        assert "Location: Austin" in result["reasoning"]
+        assert "Location: Rancho Cucamonga" in result["reasoning"]
         assert result["classification"] == "warm"

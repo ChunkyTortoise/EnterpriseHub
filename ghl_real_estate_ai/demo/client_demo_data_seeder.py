@@ -203,9 +203,9 @@ class ClientDemoDataSeeder:
                 phone="(555) 123-4567",
                 email="sarah.johnson@email.com",
                 property_address="1247 Oak Avenue",
-                city="Austin",
+                city="Rancho Cucamonga",
                 state="TX",
-                zip_code="78701",
+                zip_code="91730",
                 seller_temperature=92,
                 qualification_stage="qualified",
                 timeline="30_days",
@@ -270,9 +270,9 @@ class ClientDemoDataSeeder:
                 phone="(555) 456-7890",
                 email="dthompson@email.com",
                 property_address="4187 Elm Court",
-                city="Austin",
+                city="Rancho Cucamonga",
                 state="TX",
-                zip_code="78750",
+                zip_code="91750",
                 seller_temperature=59,
                 qualification_stage="initial_contact",
                 timeline="90_days",
@@ -316,9 +316,9 @@ class ClientDemoDataSeeder:
                 phone="(555) 678-9012",
                 email="lmartinez@email.com",
                 property_address="6341 Cedar Ridge",
-                city="Austin",
+                city="Rancho Cucamonga",
                 state="TX",
-                zip_code="78749",
+                zip_code="91749",
                 seller_temperature=95,
                 qualification_stage="closed",
                 timeline="completed",
@@ -353,9 +353,9 @@ class ClientDemoDataSeeder:
         demo_properties = [
             DemoProperty(
                 address="1247 Oak Avenue",
-                city="Austin",
+                city="Rancho Cucamonga",
                 state="TX",
-                zip_code="78701",
+                zip_code="91730",
                 property_type="Single Family Home",
                 bedrooms=4,
                 bathrooms=2.5,
@@ -401,7 +401,7 @@ class ClientDemoDataSeeder:
                 address="7825 Waterfront Drive",
                 city="Lake Travis",
                 state="TX",
-                zip_code="78732",
+                zip_code="91739",
                 property_type="Luxury Home",
                 bedrooms=5,
                 bathrooms=4.5,
@@ -608,9 +608,9 @@ class ClientDemoDataSeeder:
                 phone=self._generate_random_phone(),
                 email=self._generate_random_email(),
                 property_address=self._generate_random_address(),
-                city=random.choice(["Austin", "Cedar Park", "Round Rock", "Pflugerville"]),
+                city=random.choice(["Rancho Cucamonga", "Cedar Park", "Round Rock", "Pflugerville"]),
                 state="TX",
-                zip_code=random.choice(["78701", "78613", "78664", "78660"]),
+                zip_code=random.choice(["91730", "78613", "78664", "78660"]),
                 seller_temperature=random.randint(*template["temp_range"]),
                 qualification_stage=random.choice(["initial_contact", "in_progress", "qualified"]),
                 timeline=random.choice(["30_days", "60_days", "90_days", "exploring"]),
@@ -644,9 +644,9 @@ class ClientDemoDataSeeder:
 
             prop = DemoProperty(
                 address=self._generate_random_address(),
-                city=random.choice(["Austin", "Cedar Park", "Round Rock"]),
+                city=random.choice(["Rancho Cucamonga", "Cedar Park", "Round Rock"]),
                 state="TX",
-                zip_code=random.choice(["78701", "78613", "78664"]),
+                zip_code=random.choice(["91730", "78613", "78664"]),
                 property_type=prop_type,
                 bedrooms=random.randint(2, 5),
                 bathrooms=random.choice([1.0, 1.5, 2.0, 2.5, 3.0, 3.5]),
@@ -709,8 +709,8 @@ class ClientDemoDataSeeder:
     def _generate_random_email(self) -> str:
         """Generate realistic email addresses for demo."""
         name = self._generate_random_name().lower().replace(" ", ".")
-        domains = ["gmail.com", "yahoo.com", "email.com", "outlook.com"]
-        return f"{name}@{random.choice(domains)}"
+        ontario_millss = ["gmail.com", "yahoo.com", "email.com", "outlook.com"]
+        return f"{name}@{random.choice(ontario_millss)}"
 
     def _generate_random_address(self) -> str:
         """Generate realistic addresses for demo."""

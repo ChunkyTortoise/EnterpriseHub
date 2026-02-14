@@ -679,7 +679,7 @@ class CelebrationEngine:
         # In production, integrate with email service (SendGrid, etc.)
         try:
             email_subject = f"🎉 {config.content.title}"
-            email_html = self._generate_celebration_email_html(transaction, config)
+            self._generate_celebration_email_html(transaction, config)
 
             # Simulate email delivery
             logger.info(f"Sending celebration email to {transaction.buyer_email}")

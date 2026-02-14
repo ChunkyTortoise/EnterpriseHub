@@ -19,12 +19,14 @@ import pytest
 from src.core.exceptions import RetrievalError
 from src.multimodal.structured_retriever import (
 
-@pytest.mark.integration
     StructuredQuery,
     StructuredRetriever,
     StructuredRetrieverConfig,
     TableSchema,
 )
+
+
+@pytest.mark.integration
 
 
 class TestStructuredQuery:

@@ -19,7 +19,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.handoff_card_generator import (
 
-@pytest.mark.unit
     HandoffCard,
     HandoffCardGenerator,
     get_handoff_card_generator,

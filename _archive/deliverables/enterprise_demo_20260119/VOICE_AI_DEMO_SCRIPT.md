@@ -11,8 +11,8 @@
 **Action:** Click 'Start Voice Session' in the dashboard.
 **Roleplay:** Act as a skeptical buyer.
 
-**You:** "Hi, I'm looking for a 3-bedroom house in Austin under $600k, but I'm worried about interest rates."
-**AI (Jorge):** "I completely understand that concern. The good news is that while rates have fluctuated, we're seeing some excellent value in the Austin market right now, especially for 3-bedroom homes in that price range. Are you looking for move-in ready, or are you open to something that needs a little work?"
+**You:** "Hi, I'm looking for a 3-bedroom house in Rancho Cucamonga under $600k, but I'm worried about interest rates."
+**AI (Jorge):** "I completely understand that concern. The good news is that while rates have fluctuated, we're seeing some excellent value in the Rancho Cucamonga market right now, especially for 3-bedroom homes in that price range. Are you looking for move-in ready, or are you open to something that needs a little work?"
 
 **(Highlight: The AI acknowledged the concern (empathy) and pivoted to a qualifying question immediately.)**
 

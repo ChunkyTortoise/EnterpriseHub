@@ -43,8 +43,8 @@ class MarketOpportunityReportService:
         top_opps = overview.get("top_opportunities", [])[:3]
 
         # 2. Get cross-market demand predictions for tenant's primary market
-        # (Assuming 'austin' as primary for now)
-        source_market = "austin"
+        # (Assuming 'rancho_cucamonga' as primary for now)
+        source_market = "rancho_cucamonga"
         hive_mind_insights = []
         for opp in top_opps:
             prediction = await self.market_intel.predict_cross_market_demand(source_market, opp["market_id"])

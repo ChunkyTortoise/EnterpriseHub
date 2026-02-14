@@ -12,7 +12,7 @@ Provides production-ready fixtures for testing:
 
 Architecture:
 - Async-first design matching production bot patterns
-- Realistic Austin real estate market data ($300k-$1M+)
+- Realistic Rancho Cucamonga real estate market data ($300k-$1M+)
 - Jorge's confrontational methodology conversation samples
 - Progressive skills and agent mesh integration support
 - Track 3.1 ML analytics integration
@@ -150,7 +150,7 @@ def mock_ghl_client() -> AsyncMock:
             "custom_fields": {
                 "lead_score": 85,
                 "qualification_status": "qualified",
-                "property_address": "123 Main St, Austin, TX 78701",
+                "property_address": "123 Main St, Rancho Cucamonga, CA 91701",
             },
         }
     )
@@ -179,7 +179,7 @@ def mock_property_matcher() -> AsyncMock:
     """
     Mock Property Matcher service for buyer bot testing.
 
-    Returns AsyncMock configured with Austin market property listings.
+    Returns AsyncMock configured with Rancho Cucamonga market property listings.
     """
     mock_matcher = AsyncMock()
 
@@ -187,13 +187,13 @@ def mock_property_matcher() -> AsyncMock:
         return_value=[
             {
                 "property_id": "prop_001",
-                "address": "456 Oak Ave, Austin, TX 78704",
+                "address": "456 Oak Ave, Rancho Cucamonga, CA 91704",
                 "price": 425000,
                 "bedrooms": 3,
                 "bathrooms": 2,
                 "sqft": 1850,
                 "match_score": 0.92,
-                "neighborhood": "South Austin",
+                "neighborhood": "South Rancho Cucamonga",
                 "listing_date": "2026-01-15",
             },
             {
@@ -218,7 +218,7 @@ def mock_property_matcher() -> AsyncMock:
                 "lot_size": 0.25,
                 "hoa_fee": 150,
                 "property_tax": 8500,
-                "school_district": "Austin ISD",
+                "school_district": "Rancho Cucamonga ISD",
             },
         }
     )
@@ -238,7 +238,7 @@ def conversation_history_seller_hot_lead() -> List[Dict[str, str]]:
     Jorge's confrontational methodology in action.
     """
     return [
-        {"role": "user", "content": "Hi, I need to sell my house in Austin ASAP. Got a job transfer to Seattle."},
+        {"role": "user", "content": "Hi, I need to sell my house in Rancho Cucamonga ASAP. Got a job transfer to Seattle."},
         {
             "role": "assistant",
             "content": "I appreciate the urgency. Job transfer is a legitimate reason. "
@@ -253,11 +253,11 @@ def conversation_history_seller_hot_lead() -> List[Dict[str, str]]:
         },
         {
             "role": "user",
-            "content": "123 Oak Street, 78704. It's a 3br/2ba, about 1,800 sqft. Built in 2010, good condition.",
+            "content": "123 Oak Street, 91704. It's a 3br/2ba, about 1,800 sqft. Built in 2010, good condition.",
         },
         {
             "role": "assistant",
-            "content": "South Austin, good area. Let me be direct - have you looked at "
+            "content": "South Rancho Cucamonga, good area. Let me be direct - have you looked at "
             "what similar homes sold for recently, or are you going off Zestimate?",
         },
         {
@@ -267,7 +267,7 @@ def conversation_history_seller_hot_lead() -> List[Dict[str, str]]:
         {
             "role": "assistant",
             "content": "Smart - you understand Zestimates are algorithms, not appraisals. "
-            "Based on recent sales in 78704, I'm thinking $465-475k range. "
+            "Based on recent sales in 91704, I'm thinking $465-475k range. "
             "Here's the question - are you ready to list at market price, "
             "or do you need to test the market first?",
         },
@@ -281,7 +281,7 @@ def conversation_history_buyer_qualified() -> List[Dict[str, str]]:
     Qualified buyer - pre-approved, clear timeline, realistic expectations.
     """
     return [
-        {"role": "user", "content": "Looking for a 3-bedroom house in North Austin, budget around $450k."},
+        {"role": "user", "content": "Looking for a 3-bedroom house in North Rancho Cucamonga, budget around $450k."},
         {
             "role": "assistant",
             "content": "Great, let's narrow this down. Are you pre-approved for financing, "
@@ -326,7 +326,7 @@ def bot_state_seller_hot_lead() -> Dict[str, Any]:
     return {
         "lead_id": "seller_hot_001",
         "lead_name": "Michael Rodriguez",
-        "property_address": "123 Oak Street, Austin, TX 78704",
+        "property_address": "123 Oak Street, Rancho Cucamonga, CA 91704",
         "conversation_history": [
             {"role": "user", "content": "Need to sell ASAP, job transfer"},
             {"role": "assistant", "content": "What's your deadline?"},
@@ -354,7 +354,7 @@ def bot_state_buyer_qualified() -> Dict[str, Any]:
     return {
         "buyer_id": "buyer_qualified_001",
         "buyer_name": "Sarah Martinez",
-        "target_areas": ["North Austin", "Round Rock", "Cedar Park"],
+        "target_areas": ["North Rancho Cucamonga", "Round Rock", "Cedar Park"],
         "conversation_history": [
             {"role": "user", "content": "Looking for 3br house, pre-approved for $475k"},
             {"role": "assistant", "content": "Great! When do you need to move?"},
@@ -386,20 +386,20 @@ def bot_state_buyer_qualified() -> Dict[str, Any]:
 
 
 # ============================================================================
-# PROPERTY LISTING FIXTURES - Austin Market Data
+# PROPERTY LISTING FIXTURES - Rancho Cucamonga Market Data
 # ============================================================================
 
 
 @pytest.fixture
-def sample_property_listings_austin() -> List[Dict[str, Any]]:
+def sample_property_listings_rancho_cucamonga() -> List[Dict[str, Any]]:
     """
-    Realistic Austin property listings across different price ranges.
+    Realistic Rancho Cucamonga property listings across different price ranges.
     """
     return [
         {
             "property_id": "MLS2601234",
-            "address": "456 Oak Ave, Austin, TX 78704",
-            "neighborhood": "South Austin (Bouldin Creek)",
+            "address": "456 Oak Ave, Rancho Cucamonga, CA 91704",
+            "neighborhood": "South Rancho Cucamonga (Bouldin Creek)",
             "price": 675000,
             "bedrooms": 3,
             "bathrooms": 2,
@@ -412,8 +412,8 @@ def sample_property_listings_austin() -> List[Dict[str, Any]]:
             "price_per_sqft": 365,
             "hoa_fee": 0,
             "property_tax": 11250,
-            "school_district": "Austin ISD",
-            "features": ["Updated kitchen", "Hardwood floors", "Covered patio", "Walking distance to South Congress"],
+            "school_district": "Rancho Cucamonga ISD",
+            "features": ["Updated kitchen", "Hardwood floors", "Covered patio", "Walking distance to Day Creek"],
             "listing_date": "2026-01-17",
         },
         {
@@ -458,7 +458,7 @@ def compliance_test_scenarios() -> Dict[str, List[str]]:
     return {
         "valid_responses": [
             "Based on recent comparable sales, similar homes in your area are selling for $450-475k.",
-            "The school district is Austin ISD. You can research ratings at GreatSchools.org.",
+            "The school district is Rancho Cucamonga ISD. You can research ratings at GreatSchools.org.",
             "I recommend consulting with a home inspector for a detailed property assessment.",
             "I can help you understand market trends, but final pricing should be discussed with your licensed agent.",
             "That neighborhood has a mix of property types and price ranges.",
@@ -479,7 +479,7 @@ def compliance_test_scenarios() -> Dict[str, List[str]]:
         ],
         "violations_misleading": [
             "This home is a steal - it'll be worth 20% more in a year!",
-            "Every home in Austin sells in 3 days or less.",
+            "Every home in Rancho Cucamonga sells in 3 days or less.",
             "You'll definitely get multiple offers above asking price.",
             "The Zestimate is always accurate - you can rely on that number.",
             "All homes in this area have foundation issues, but don't worry about it.",
@@ -651,7 +651,7 @@ __all__ = [
     "bot_state_seller_hot_lead",
     "bot_state_buyer_qualified",
     # Property data
-    "sample_property_listings_austin",
+    "sample_property_listings_rancho_cucamonga",
     # Compliance
     "compliance_test_scenarios",
     # Performance

@@ -1,6 +1,6 @@
 """
 Lead Intelligence MCP Server
-Exposes specialized lead analysis tools for the real estate domain.
+Exposes specialized lead analysis tools for the real estate ontario_mills.
 """
 
 import json

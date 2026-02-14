@@ -8,7 +8,7 @@ export default function FieldIntelligencePage() {
       <div className="max-w-[400px] md:max-w-[1200px] mx-auto">
         <FieldAgentIntelligenceDashboard
           agentId="jorge-field-agent"
-          location={{ lat: 30.2672, lng: -97.7431 }} // Austin, TX
+          location={{ lat: 30.2672, lng: -97.7431 }} // Rancho Cucamonga, TX
           maxRadius={25}
         />
       </div>

@@ -1934,7 +1934,7 @@ class MLAnalyticsEngine:
             "property_preferences": {
                 "price_min": 350000,
                 "price_max": 450000,
-                "location": {"city": "Austin", "state": "TX"}
+                "location": {"city": "Rancho Cucamonga", "state": "TX"}
             }
         }
 

@@ -6,11 +6,35 @@ Data structures for intelligent property-lead matching system
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
+
+
+class PriceHistoryEntry(TypedDict, total=False):
+    """TypedDict for property price history entry."""
+    date: str
+    price: float
+    event: str  # "listed", "price_change", "pending", "sold", etc.
+    price_change_percent: Optional[float]
+
+
+class LeadData(TypedDict, total=False):
+    """TypedDict for lead data in property matching."""
+    lead_id: str
+    name: str
+    email: Optional[str]
+    phone: Optional[str]
+    budget_min: Optional[float]
+    budget_max: Optional[float]
+    preferred_locations: List[str]
+    property_type: Optional[str]
+    bedrooms_min: Optional[int]
+    bathrooms_min: Optional[float]
+    urgency: Optional[str]
+    pre_approved: Optional[bool]
 
 
 class ConfidenceLevel(Enum):
@@ -95,11 +119,11 @@ class Property(BaseModel):
     property_type: PropertyType
 
     # Market Data
+    # Market Data
     days_on_market: int = 0
     price_per_sqft: float = Field(..., description="Calculated price per sqft")
     estimated_value: Optional[float] = None
-    price_history: List[Dict[str, Any]] = Field(default_factory=list)
-
+    price_history: List[PriceHistoryEntry] = Field(default_factory=list)
     # Location Intelligence
     schools: List[SchoolInfo] = Field(default_factory=list)
     commute_to_la: Optional[int] = None  # minutes
@@ -218,7 +242,7 @@ class PropertyMatchRequest(BaseModel):
 
     lead_id: str
     tenant_id: str = Field(..., description="Tenant ID for the lead and matching context")
-    lead_data: Dict[str, Any]
+    lead_data: LeadData
     preferences: Optional[LeadPropertyPreferences] = None
 
     # Filters

@@ -104,7 +104,7 @@ Add hub-specific theming:
 ```python
 # Use session_state properly
 if 'market' not in st.session_state:
-    st.session_state.market = "Austin"
+    st.session_state.market = "Rancho Cucamonga"
 ```
 
 ---

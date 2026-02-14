@@ -13,8 +13,6 @@ from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
-
 client = TestClient(app)
 
 
@@ -44,7 +42,7 @@ class TestARVRIntegration:
     def sample_visualization_request(self, sample_device_capabilities, sample_user_location):
         """Sample AR/VR visualization request."""
         return {
-            "property_id": "prop_austin_001",
+            "property_id": "prop_rancho_cucamonga_001",
             "user_location": sample_user_location,
             "device_capabilities": sample_device_capabilities,
             "visualization_type": "mixed_reality",
@@ -99,7 +97,7 @@ class TestARVisualizationSetup:
 
         # Test with low-performance device
         low_performance_request = {
-            "property_id": "prop_austin_001",
+            "property_id": "prop_rancho_cucamonga_001",
             "device_capabilities": {
                 "supports_ar": True,
                 "supports_occlusion": False,
@@ -127,7 +125,7 @@ class TestPropertyModels:
         """Test successful 3D model retrieval."""
         mock_auth.return_value = {"user_id": "test_user_123", "username": "test_user"}
 
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
         response = client.get(
             f"/api/mobile/ar/property/{property_id}/model",
             params={"quality": "high"},
@@ -141,7 +139,7 @@ class TestPropertyModels:
         """Test 3D model with different quality levels."""
         mock_auth.return_value = {"user_id": "test_user_123", "username": "test_user"}
 
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
 
         # Test different quality levels
         for quality in ["low", "medium", "high", "ultra"]:
@@ -155,7 +153,7 @@ class TestPropertyModels:
 
     def test_get_property_3d_model_invalid_quality(self):
         """Test 3D model request with invalid quality parameter."""
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
 
         response = client.get(
             f"/api/mobile/ar/property/{property_id}/model",
@@ -186,7 +184,7 @@ class TestSpatialAnchors:
         mock_auth.return_value = {"user_id": "test_user_123", "username": "test_user"}
 
         anchor_request = {
-            "property_id": "prop_austin_001",
+            "property_id": "prop_rancho_cucamonga_001",
             "world_position": {"x": 30.2672, "y": 0.0, "z": -97.7431},
             "local_position": {"x": 0.0, "y": 1.6, "z": 0.0},
             "anchor_type": "cloud",
@@ -205,7 +203,7 @@ class TestSpatialAnchors:
         """Test retrieving spatial anchors for a property."""
         mock_auth.return_value = {"user_id": "test_user_123", "username": "test_user"}
 
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
 
         response = client.get(
             f"/api/mobile/ar/anchors/property/{property_id}", headers={"Authorization": "Bearer test_token"}
@@ -217,7 +215,7 @@ class TestSpatialAnchors:
         """Test spatial anchor creation validation."""
         # Test with invalid coordinates
         invalid_anchor_request = {
-            "property_id": "prop_austin_001",
+            "property_id": "prop_rancho_cucamonga_001",
             "world_position": {
                 "x": 200.0,  # Invalid latitude (> 90)
                 "y": 0.0,
@@ -241,7 +239,7 @@ class TestVRTours:
         """Test VR tour waypoints retrieval."""
         mock_auth.return_value = {"user_id": "test_user_123", "username": "test_user"}
 
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
 
         response = client.get(
             f"/api/mobile/ar/tour/{property_id}/waypoints",
@@ -256,7 +254,7 @@ class TestVRTours:
         """Test VR tour with different quality levels."""
         mock_auth.return_value = {"user_id": "test_user_123", "username": "test_user"}
 
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
 
         # Test different quality levels
         for quality in ["low", "balanced", "high", "ultra"]:
@@ -397,7 +395,7 @@ class TestARErrorHandling:
         response = client.post(
             "/api/mobile/ar/visualize/setup",
             json={
-                "property_id": "prop_austin_001",
+                "property_id": "prop_rancho_cucamonga_001",
                 "device_capabilities": {"supports_ar": False},  # AR not supported
                 "visualization_type": "ar_overlay",
                 "quality_preference": "medium",

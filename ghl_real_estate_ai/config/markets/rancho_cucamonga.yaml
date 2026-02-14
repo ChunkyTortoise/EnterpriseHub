@@ -1,6 +1,6 @@
 # Rancho Cucamonga/Inland Empire Market Configuration
 # Multi-Market Geographic Expansion - Configuration-driven market data
-# Extracted from hardcoded austin_market_service.py data
+# Extracted from hardcoded rancho_cucamonga_market_service.py data
 
 # Basic Market Identification
 market_id: rancho_cucamonga

@@ -167,7 +167,7 @@ Basic Matcher vs ML Matcher:
 ### 2. **ML Solution Demo** (2 minutes)
 - **Show Young Tech Professional scenario**
 - **Highlight 91% confidence with breakdown**
-- **Explain East Austin perfect match reasoning**
+- **Explain East Rancho Cucamonga perfect match reasoning**
 - **Demonstrate component score visualization**
 
 ### 3. **Competitive Advantage** (1 minute)
@@ -210,7 +210,7 @@ python3 -c "
 import sys; sys.path.append('.')
 from services.property_matcher_ml import PropertyMatcherML
 matcher = PropertyMatcherML('data/knowledge_base/ml_demo_properties.json')
-matches = matcher.find_enhanced_matches({'budget': 750000, 'location': 'East Austin', 'bedrooms': 3})
+matches = matcher.find_enhanced_matches({'budget': 750000, 'location': 'East Rancho Cucamonga', 'bedrooms': 3})
 print(f'Confidence: {matches[0][\"confidence_score\"].overall}%')
 "
 ```

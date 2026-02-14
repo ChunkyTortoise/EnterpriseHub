@@ -403,8 +403,8 @@ class LoadTestOrchestrator:
                 print(f"❌ {name} failed with exception: {e}")
                 self.results.append({"scenario": name.lower().replace(" ", "_"), "passed": False, "error": str(e)})
 
-            # Brief pause between scenarios
-            time.sleep(5)
+            # Brief pause between scenarios (minimal delay for cleanup)
+            time.sleep(0.01)
 
         self.end_time = datetime.now()
 

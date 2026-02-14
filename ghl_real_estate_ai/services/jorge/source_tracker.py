@@ -11,12 +11,11 @@ Usage:
     metrics = await tracker.get_source_metrics(source_name="Facebook Ads")
 """
 
-import asyncio
-import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.service_types import LeadProfile
 
 logger = get_logger(__name__)
 
@@ -54,7 +53,7 @@ class SourceTracker:
         contact_id: str,
         source: Optional[str],
         tags: List[str] = None,
-        custom_fields: Dict[str, Any] = None,
+        custom_fields: Optional[LeadProfile] = None,
     ) -> None:
         """Track a new contact and their source attribution.
 
@@ -252,7 +251,6 @@ class SourceTracker:
         sources = metrics["sources"]
 
         # Sort by specified metric
-        sort_key = by
         if by == "conversion_rate":
             sources.sort(key=lambda x: x["conversion_rate"], reverse=True)
         elif by == "total_revenue":

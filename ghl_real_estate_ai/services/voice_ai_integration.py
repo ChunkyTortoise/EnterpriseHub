@@ -858,7 +858,7 @@ class LiveCoachingEngine:
     async def _analyze_coaching_needs(self, segment: VoiceSegment, context: Dict) -> Optional[str]:
         """Analyze what type of coaching is needed"""
 
-        text_lower = segment.text.lower()
+        segment.text.lower()
         emotions = segment.emotions
 
         # Objection handling
@@ -1121,7 +1121,7 @@ class VoiceAIIntegration:
             # Transcription
             text=transcript,
             confidence=confidence,
-            language="en-US",  # TODO: Auto-detect language
+            language="en-US",  # ROADMAP-063: Auto-detect language
             # Audio features
             volume_db=audio_features["volume_db"],
             pitch_hz=audio_features["pitch_hz"],
@@ -1272,8 +1272,8 @@ class VoiceAIIntegration:
             # Metrics
             lead_talk_time_percent=lead_talk_percent,
             agent_talk_time_percent=agent_talk_percent,
-            interruption_count=0,  # TODO: Implement interruption detection
-            silence_periods=[],  # TODO: Implement silence detection
+            interruption_count=0,  # ROADMAP-064: Implement interruption detection
+            silence_periods=[],  # ROADMAP-065: Implement silence detection
             # Lead analysis
             lead_sentiment_progression=lead_sentiment_progression,
             lead_engagement_score=lead_engagement,
@@ -1282,10 +1282,10 @@ class VoiceAIIntegration:
             lead_objections=list(set(all_objections)),
             lead_questions=all_questions,
             # Agent performance (simplified)
-            agent_rapport_score=0.75,  # TODO: Implement agent analysis
+            agent_rapport_score=0.75,  # ROADMAP-066: Implement agent analysis
             agent_professionalism_score=0.80,
             agent_response_quality=0.70,
-            missed_opportunities=[],
+            missed_opportunities=[],  # ROADMAP-068: Implement missed opportunity detection
             coaching_recommendations=[p.message for p in call_state["coaching_prompts"]],
             # Predictions
             conversion_probability=conversion_prob,
@@ -1297,7 +1297,7 @@ class VoiceAIIntegration:
             },
             optimal_follow_up_timing=self._calculate_optimal_follow_up(lead_urgency),
             # Quality
-            audio_quality_score=0.85,  # TODO: Implement audio quality assessment
+            audio_quality_score=0.85,  # ROADMAP-067: Implement audio quality assessment
             technical_issues=[],
             # Insights
             key_moments=key_moments,

@@ -8,7 +8,7 @@ Tests cover:
 1. Competitor mention detection with various patterns
 2. Risk level assessment accuracy
 3. NLP analysis functionality
-4. Austin market competitor identification
+4. Rancho Cucamonga market competitor identification
 5. Competitive analysis generation
 6. Edge cases and error handling
 """
@@ -21,7 +21,6 @@ import pytest
 
 from ghl_real_estate_ai.services.competitor_intelligence import (
 
-@pytest.mark.integration
     CompetitiveAnalysis,
     CompetitorIntelligenceService,
     CompetitorMention,
@@ -78,7 +77,7 @@ class TestCompetitorIntelligenceService:
     @pytest.mark.asyncio
     async def test_no_competitor_risk_clean_message(self, service):
         """Test that clean messages don't trigger false positives"""
-        test_message = "I'm looking for a 3 bedroom house in Austin under $500k"
+        test_message = "I'm looking for a 3 bedroom house in Rancho Cucamonga under $500k"
 
         analysis = await service.analyze_conversation(test_message)
 
@@ -171,8 +170,8 @@ class TestCompetitorIntelligenceService:
             assert analysis_high.confidence_score > analysis_low.confidence_score
 
     @pytest.mark.asyncio
-    async def test_austin_competitor_insights(self, service):
-        """Test Austin-specific competitor insights"""
+    async def test_rancho_cucamonga_competitor_insights(self, service):
+        """Test Rancho Cucamonga-specific competitor insights"""
         competitor_name = "keller_williams"
         insights = await service.get_competitor_insights(competitor_name)
 

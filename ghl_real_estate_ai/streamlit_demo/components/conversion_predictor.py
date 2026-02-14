@@ -64,7 +64,7 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
                     history = [
                         {
                             "role": "user",
-                            "content": "I'm looking for a home in Austin with a $500k budget. Must have a pool.",
+                            "content": "I'm looking for a home in Rancho Cucamonga with a $500k budget. Must have a pool.",
                         },
                         {"role": "assistant", "content": "I can help with that! When are you planning to move?"},
                         {"role": "user", "content": "Within the next 45 days. I'm already pre-approved."},
@@ -73,7 +73,7 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
                     lead_data = {
                         "id": lead_id,
                         "budget": lead_data_raw.get("extracted_preferences", {}).get("budget", 0),
-                        "location": lead_data_raw.get("extracted_preferences", {}).get("location", "Austin, TX"),
+                        "location": lead_data_raw.get("extracted_preferences", {}).get("location", "Rancho Cucamonga, CA"),
                         "page_views": random_page_views(lead_id),
                         "email_opens": random_opens(lead_id),
                     }
@@ -111,7 +111,7 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
             go.Indicator(
                 mode="gauge+number+delta",
                 value=prob_value,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "WIN PROBABILITY", "font": {"color": "#8B949E", "size": 12, "family": "Space Grotesk"}},
                 delta={"reference": prob_value - delta_val, "increasing": {"color": "#10b981"}},
                 number={"font": {"size": 44, "color": "#FFFFFF", "family": "Space Grotesk"}},

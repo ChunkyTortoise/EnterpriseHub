@@ -20,7 +20,6 @@ import pytest
 
 from ghl_real_estate_ai.services.white_label_service import (
 
-@pytest.mark.integration
     BrandingConfig,
     BrandingTier,
     IntegrationMarketplace,
@@ -158,7 +157,7 @@ class TestWhiteLabelService:
             logo_url="https://example.com/logo.png",
             tier=BrandingTier.BASIC,
             custom_css="body { background: red; }",  # Not allowed in Basic
-            custom_domain="test.com",  # Not allowed in Basic
+            custom_ontario_mills="test.com",  # Not allowed in Basic
         )
 
         with pytest.raises(ValueError, match="Custom CSS not available in Basic tier"):
@@ -187,7 +186,7 @@ class TestWhiteLabelService:
             logo_url="https://example.com/logo.png",
             tier=BrandingTier.ENTERPRISE,
             custom_css=large_css,
-            custom_domain="enterprise.com",
+            custom_ontario_mills="enterprise.com",
         )
 
         # Should not raise any validation errors
@@ -228,22 +227,22 @@ class TestWhiteLabelService:
         assert len(enterprise_workflows) >= len(professional_workflows)
 
     @pytest.mark.asyncio
-    async def test_configure_custom_domain(self, temp_service, sample_branding_config):
-        """Test custom domain configuration."""
+    async def test_configure_custom_ontario_mills(self, temp_service, sample_branding_config):
+        """Test custom ontario_mills configuration."""
         tenant_id = "test_tenant_123"
 
         # Create brand first
         brand_id = await temp_service.create_brand_config(tenant_id, sample_branding_config)
 
-        # Configure custom domain
+        # Configure custom ontario_mills
         ssl_config = {"certificate": "cert_data", "private_key": "key_data"}
-        success = await temp_service.configure_custom_domain(brand_id, "custom.example.com", ssl_config)
+        success = await temp_service.configure_custom_ontario_mills(brand_id, "custom.example.com", ssl_config)
 
         assert success is True
 
-        # Verify domain was added to brand config
+        # Verify ontario_mills was added to brand config
         updated_config = await temp_service.get_brand_config(brand_id)
-        assert updated_config.custom_domain == "custom.example.com"
+        assert updated_config.custom_ontario_mills == "custom.example.com"
         assert updated_config.ssl_enabled is True
 
     @pytest.mark.asyncio
@@ -282,7 +281,7 @@ class TestWhiteLabelService:
 
         # Should not have advanced features
         assert "advanced_analytics" not in capabilities
-        assert "custom_domains" not in capabilities
+        assert "custom_ontario_millss" not in capabilities
 
     def test_tier_capabilities_professional(self, temp_service):
         """Test tier capabilities for Professional tier."""
@@ -295,7 +294,7 @@ class TestWhiteLabelService:
         # Should have professional features
         assert capabilities["advanced_analytics"] is True
         assert capabilities["workflow_automation"] is True
-        assert capabilities["custom_domains"] is True
+        assert capabilities["custom_ontario_millss"] is True
         assert capabilities["api_access"] is True
 
         # Should not have enterprise features
@@ -310,7 +309,7 @@ class TestWhiteLabelService:
         assert capabilities["custom_branding"] is True
         assert capabilities["advanced_analytics"] is True
         assert capabilities["workflow_automation"] is True
-        assert capabilities["custom_domains"] is True
+        assert capabilities["custom_ontario_millss"] is True
         assert capabilities["api_access"] is True
         assert capabilities["dedicated_support"] is True
         assert capabilities["enterprise_sso"] is True

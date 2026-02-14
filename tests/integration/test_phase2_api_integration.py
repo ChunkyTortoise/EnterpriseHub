@@ -17,8 +17,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
-
 # Import Phase 2 API components
 try:
     from ghl_real_estate_ai.api.routes.phase2_intelligence import router as phase2_router
@@ -121,7 +119,7 @@ class TestPhase2IntegrationAPI:
                 behavioral_fit=0.91,
                 engagement_prediction=0.85,
                 urgency_match=0.88,
-                property_summary={"price": 525000, "bedrooms": 4, "bathrooms": 3, "neighborhood": "Domain"},
+                property_summary={"price": 525000, "bedrooms": 4, "bathrooms": 3, "neighborhood": "Ontario Mills"},
                 feature_matches={"home_office": 0.95, "pool": 0.8},
                 location_score=0.87,
                 presentation_strategy="lifestyle_match",

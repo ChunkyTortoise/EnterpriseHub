@@ -430,7 +430,7 @@ class CompetitiveAlertSystem:
 
     async def _send_sms_notification(self, alert: CompetitiveAlert) -> bool:
         """Send SMS notification to Jorge"""
-        config = next(c for c in self.notification_configs if c.channel == NotificationChannel.SMS)
+        next(c for c in self.notification_configs if c.channel == NotificationChannel.SMS)
 
         # Build SMS message
         message = f"🚨 COMPETITOR ALERT 🚨\n"
@@ -465,7 +465,7 @@ class CompetitiveAlertSystem:
 
     async def _send_email_notification(self, alert: CompetitiveAlert) -> bool:
         """Send email notification to Jorge"""
-        config = next(c for c in self.notification_configs if c.channel == NotificationChannel.EMAIL)
+        next(c for c in self.notification_configs if c.channel == NotificationChannel.EMAIL)
 
         try:
             # Create email content
@@ -567,7 +567,7 @@ class CompetitiveAlertSystem:
 
     async def _send_phone_call_notification(self, alert: CompetitiveAlert) -> bool:
         """Initiate phone call to Jorge for critical alerts"""
-        config = next(c for c in self.notification_configs if c.channel == NotificationChannel.PHONE_CALL)
+        next(c for c in self.notification_configs if c.channel == NotificationChannel.PHONE_CALL)
 
         try:
             # Message to play during call

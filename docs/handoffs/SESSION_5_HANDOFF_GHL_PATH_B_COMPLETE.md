@@ -277,7 +277,7 @@ ghl-real-estate-ai/backend/
 - **Webhook Architecture**: Complex event-driven systems
 - **CRM Integration**: GoHighLevel API mastery
 - **AI Orchestration**: Claude conversation management
-- **Real Estate Domain**: Industry-specific lead qualification
+- **Real Estate Ontario Mills**: Industry-specific lead qualification
 
 ---
 

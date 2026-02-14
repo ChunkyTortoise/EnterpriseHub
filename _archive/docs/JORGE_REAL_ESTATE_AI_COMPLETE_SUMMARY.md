@@ -211,7 +211,7 @@ Authorization: Bearer <jwt_token>
   "lead_data": {
     "name": "Sarah Chen",
     "budget_range": "500k-750k",
-    "location_preference": "Downtown Austin",
+    "location_preference": "Downtown Rancho Cucamonga",
     "interaction_history": [...]
   }
 }

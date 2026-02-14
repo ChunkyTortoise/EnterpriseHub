@@ -60,7 +60,7 @@ class AgentHandoffType(Enum):
     SEQUENTIAL = "sequential"  # One agent after another
     COLLABORATIVE = "collaborative"  # Multiple agents working together
     ESCALATION = "escalation"  # Moving to higher-level agent
-    SPECIALIZATION = "specialization"  # Moving to domain expert
+    SPECIALIZATION = "specialization"  # Moving to ontario_mills expert
     FALLBACK = "fallback"  # Falling back to simpler agent
 
 
@@ -867,7 +867,7 @@ class CustomerJourneyOrchestrator:
     async def _generate_completion_report(self, customer_id: str, performance_analysis: Dict) -> str:
         """Generate comprehensive journey completion report."""
 
-        journey_state = self.active_journeys.get(customer_id, {})
+        self.active_journeys.get(customer_id, {})
         customer_profile = self.customer_profiles.get(customer_id)
 
         report_prompt = f"""

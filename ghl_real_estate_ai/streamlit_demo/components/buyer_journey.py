@@ -78,7 +78,7 @@ def render_buyer_dashboard():
         # Property list with action buttons
         saved_properties = [
             {
-                "address": "1234 Oak Street, Austin, TX 78704",
+                "address": "1234 Oak Street, Rancho Cucamonga, CA 91730",
                 "price": "$485,000",
                 "beds": 3,
                 "baths": 2,
@@ -86,7 +86,7 @@ def render_buyer_dashboard():
                 "status": "Active",
             },
             {
-                "address": "5678 Pine Avenue, Austin, TX 78745",
+                "address": "5678 Pine Avenue, Rancho Cucamonga, CA 91730",
                 "price": "$425,000",
                 "beds": 3,
                 "baths": 2.5,
@@ -94,7 +94,7 @@ def render_buyer_dashboard():
                 "status": "Under Contract",
             },
             {
-                "address": "9012 Elm Drive, Austin, TX 78758",
+                "address": "9012 Elm Drive, Rancho Cucamonga, CA 91758",
                 "price": "$399,000",
                 "beds": 4,
                 "baths": 2,
@@ -169,13 +169,13 @@ def render_buyer_dashboard():
             },
             {
                 "type": "New Listing",
-                "message": "New property matches your criteria in West Lake Hills",
+                "message": "New property matches your criteria in Alta Loma",
                 "time": "1 day ago",
                 "action": "View Listing",
             },
             {
                 "type": "Market Update",
-                "message": "Austin market report: Inventory up 5% this month",
+                "message": "Rancho Cucamonga market report: Inventory up 5% this month",
                 "time": "3 days ago",
                 "action": "Read Report",
             },
@@ -204,8 +204,8 @@ def render_buyer_dashboard():
 
         st.markdown("**Recent Searches:**")
         searches = [
-            "3+ bed homes under $500K in West Lake Hills",
-            "New construction in Austin ISD",
+            "3+ bed homes under $500K in Alta Loma",
+            "New construction in Rancho Cucamonga ISD",
             "Condos near downtown with parking",
         ]
 
@@ -320,10 +320,10 @@ def render_buyer_analytics(SERVICES_LOADED=False, get_services=None):
         st.markdown("• Large Yard (50% of saved properties) - **Desired**")
 
         st.markdown("**📍 AI-Analyzed Location Preferences:**")
-        st.markdown("• West Lake Hills: 35% of searches - **Top Choice**")
-        st.markdown("• Central Austin: 25% of searches - **Secondary**")
-        st.markdown("• Cedar Park: 20% of searches - **Considering**")
-        st.markdown("• Round Rock: 20% of searches - **Backup Option**")
+        st.markdown("• Alta Loma: 35% of searches - **Top Choice**")
+        st.markdown("• Central Rancho Cucamonga: 25% of searches - **Secondary**")
+        st.markdown("• Upland: 20% of searches - **Considering**")
+        st.markdown("• Fontana: 20% of searches - **Backup Option**")
 
         # AI learning insights
         st.markdown("**🤖 AI Pattern Recognition:**")
@@ -615,7 +615,7 @@ def render_buyer_qualification_section(selected_lead_name: str):
                     sample_history = [
                         {
                             "role": "user",
-                            "content": f"Hi, I'm looking to buy a home in Austin",
+                            "content": f"Hi, I'm looking to buy a home in Rancho Cucamonga",
                             "sender_name": selected_lead_name,
                         },
                         {
@@ -721,7 +721,7 @@ def render_buyer_journey_hub(
             journey_text = """
             <ul style='margin: 0; padding-left: 1.5rem;'>
                 <li><strong>🧭 Path Finder:</strong> Sarah has reached the 'Viewing' stage. She's 40% more likely to close if we show her the Teravista property this weekend.</li>
-                <li><strong>📉 Value Alert:</strong> New listing in Cedar Park just hit the market. It aligns with her 45-day relocation timeline perfectly.</li>
+                <li><strong>📉 Value Alert:</strong> New listing in Upland just hit the market. It aligns with her 45-day relocation timeline perfectly.</li>
             </ul>
             """
         elif selected_lead_name == "David Kim (Investor)":
@@ -735,7 +735,7 @@ def render_buyer_journey_hub(
             journey_text = """
             <ul style='margin: 0; padding-left: 1.5rem;'>
                 <li><strong>🧭 Path Finder:</strong> General engagement is steady. Recommend personalized property alerts for the 'Warm' lead segment.</li>
-                <li><strong>📉 Value Alert:</strong> Recent price drops in East Austin provide an opening for first-time buyers.</li>
+                <li><strong>📉 Value Alert:</strong> Recent price drops in East Rancho Cucamonga provide an opening for first-time buyers.</li>
             </ul>
             """
         st.markdown(journey_text, unsafe_allow_html=True)

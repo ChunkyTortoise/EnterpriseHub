@@ -207,7 +207,6 @@ class RealTimeInferenceEngineV2:
         Target: <100ms for 95% of real-time requests
         """
         start_time = time.time()
-        cache_hit = False
 
         try:
             # Step 1: Check cache first (target: <5ms)
@@ -216,7 +215,6 @@ class RealTimeInferenceEngineV2:
             if request.mode == InferenceMode.REAL_TIME:
                 cached_result = await self._get_cached_result(cache_key)
                 if cached_result:
-                    cache_hit = True
                     inference_time_ms = (time.time() - start_time) * 1000
                     self.performance_monitor.record_inference(inference_time_ms, True, "cache")
 
@@ -531,13 +529,13 @@ if __name__ == "__main__":
             lead_id="lead_123",
             lead_data={
                 "budget": 500000,
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "immediate",
                 "source": "organic",
                 "email_engagement": 0.8,
             },
             conversation_history=[
-                {"text": "I'm looking for a tech-friendly home in Austin"},
+                {"text": "I'm looking for a tech-friendly home in Rancho Cucamonga"},
                 {"text": "Budget is around $500K, need to move ASAP for Apple job"},
             ],
         )

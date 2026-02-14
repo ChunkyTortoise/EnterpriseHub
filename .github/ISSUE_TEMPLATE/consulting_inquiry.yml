@@ -1,0 +1,142 @@
+name: Consulting Inquiry
+
+description: Request information about professional services, custom development, or implementation support
+
+title: "[Consulting] Brief description of your needs"
+
+labels: ["consulting", "triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Consulting & Services Inquiry
+
+        Thank you for your interest in EnterpriseHub! This template is for requesting information about:
+        - Custom development and integrations
+        - Professional implementation services
+        - Training and onboarding support
+        - White-label licensing
+        - Enterprise deployment assistance
+
+        For general questions, please use [Discussions](https://github.com/ChunkyTortoise/EnterpriseHub/discussions).
+
+  - type: input
+    id: organization
+    attributes:
+      label: Organization/Team Name
+      description: Your company, team, or agency name
+      placeholder: "Acme Real Estate Team"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: team_size
+    attributes:
+      label: Team Size
+      description: How many agents/team members would use the platform?
+      options:
+        - "1-5 agents"
+        - "6-20 agents"
+        - "21-50 agents"
+        - "50+ agents"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: current_crm
+    attributes:
+      label: Current CRM/Stack
+      description: What tools do you currently use?
+      options:
+        - "GoHighLevel (GHL)"
+        - "Follow Up Boss"
+        - "Chime"
+        - "Salesforce"
+        - "HubSpot"
+        - "Other (specify in description)"
+        - "No CRM currently"
+    validations:
+      required: false
+
+  - type: textarea
+    id: needs_description
+    attributes:
+      label: Describe Your Needs
+      description: What are you looking to achieve? What challenges are you facing?
+      placeholder: |
+        Example: We need to automate lead qualification for our 10-agent team. 
+        Currently losing leads because we can't respond within 5 minutes.
+        Looking for GHL integration and custom bot training.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: services_interested
+    attributes:
+      label: Services of Interest
+      description: Select all that apply
+      options:
+        - label: "Self-hosted deployment setup"
+        - label: "Custom bot personality/behavior"
+        - label: "Integration with existing systems"
+        - label: "Team training and onboarding"
+        - label: "Performance optimization"
+        - label: "White-label licensing"
+        - label: "Ongoing support/maintenance"
+
+  - type: dropdown
+    id: timeline
+    attributes:
+      label: Timeline
+      description: When do you need this implemented?
+      options:
+        - "ASAP (1-2 weeks)"
+        - "Short-term (1 month)"
+        - "Medium-term (2-3 months)"
+        - "Long-term (planning phase)"
+        - "Just exploring options"
+    validations:
+      required: true
+
+  - type: input
+    id: budget_range
+    attributes:
+      label: Budget Range (Optional)
+      description: Helps us recommend the right engagement model
+      placeholder: "$5,000-$15,000 or Lets discuss"
+
+  - type: input
+    id: contact_email
+    attributes:
+      label: Contact Email
+      description: Best email to reach you
+      placeholder: "you@example.com"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: preferred_contact
+    attributes:
+      label: Preferred Contact Method
+      options:
+        - label: "Email"
+        - label: "Video call (15-min discovery)"
+        - label: "Video call (30-min detailed)"
+        - label: "Async messaging (Slack/Discord)"
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ### Next Steps
+
+        After submitting this inquiry:
+        1. You'll receive an acknowledgment within 24 hours
+        2. We'll schedule a discovery call to discuss your needs
+        3. You'll receive a customized proposal within 3-5 business days
+
+        **Average response time:** Same-day during business hours (9am-6pm PT)
+
+        Or [book directly on Calendly](https://calendly.com/caymanroden/discovery-call) for a faster connection.

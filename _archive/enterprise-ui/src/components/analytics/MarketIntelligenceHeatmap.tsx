@@ -1,8 +1,8 @@
 /**
- * Market Intelligence Heatmap - Austin Real Estate Analysis
+ * Market Intelligence Heatmap - Rancho Cucamonga Real Estate Analysis
  *
  * Interactive market intelligence visualization showing geospatial insights
- * for Austin real estate markets with opportunity scoring and risk assessment.
+ * for Rancho Cucamonga real estate markets with opportunity scoring and risk assessment.
  *
  * Future Enhancement: Full Deck.gl integration for 3D geographic visualization
  * Current: Professional placeholder with data structures and UI patterns
@@ -51,11 +51,11 @@ interface MarketIntelligenceHeatmapProps {
   className?: string;
 }
 
-// Mock Austin market data
-const mockAustinMarketData: MarketArea[] = [
+// Mock Rancho Cucamonga market data
+const mockRancho CucamongaMarketData: MarketArea[] = [
   {
-    area_id: 'austin-central',
-    area_name: 'Central Austin',
+    area_id: 'rancho_cucamonga-central',
+    area_name: 'Central Rancho Cucamonga',
     coordinates: [-97.7431, 30.2672],
     avg_price: 785000,
     price_change_30d: 8.3,
@@ -68,8 +68,8 @@ const mockAustinMarketData: MarketArea[] = [
     hotness_rating: 'hot'
   },
   {
-    area_id: 'austin-south',
-    area_name: 'South Austin',
+    area_id: 'rancho_cucamonga-south',
+    area_name: 'South Rancho Cucamonga',
     coordinates: [-97.7431, 30.2172],
     avg_price: 612000,
     price_change_30d: 5.7,
@@ -82,8 +82,8 @@ const mockAustinMarketData: MarketArea[] = [
     hotness_rating: 'warm'
   },
   {
-    area_id: 'austin-east',
-    area_name: 'East Austin',
+    area_id: 'rancho_cucamonga-east',
+    area_name: 'East Rancho Cucamonga',
     coordinates: [-97.7031, 30.2672],
     avg_price: 545000,
     price_change_30d: 12.1,
@@ -96,8 +96,8 @@ const mockAustinMarketData: MarketArea[] = [
     hotness_rating: 'hot'
   },
   {
-    area_id: 'austin-west',
-    area_name: 'West Austin',
+    area_id: 'rancho_cucamonga-west',
+    area_name: 'West Rancho Cucamonga',
     coordinates: [-97.7831, 30.2672],
     avg_price: 923000,
     price_change_30d: 3.2,
@@ -110,8 +110,8 @@ const mockAustinMarketData: MarketArea[] = [
     hotness_rating: 'lukewarm'
   },
   {
-    area_id: 'austin-north',
-    area_name: 'North Austin',
+    area_id: 'rancho_cucamonga-north',
+    area_name: 'North Rancho Cucamonga',
     coordinates: [-97.7431, 30.3172],
     avg_price: 467000,
     price_change_30d: 6.8,
@@ -124,8 +124,8 @@ const mockAustinMarketData: MarketArea[] = [
     hotness_rating: 'warm'
   },
   {
-    area_id: 'austin-northwest',
-    area_name: 'Northwest Austin',
+    area_id: 'rancho_cucamonga-northwest',
+    area_name: 'Northwest Rancho Cucamonga',
     coordinates: [-97.7831, 30.3372],
     avg_price: 734000,
     price_change_30d: 1.9,
@@ -140,13 +140,13 @@ const mockAustinMarketData: MarketArea[] = [
 ];
 
 export function MarketIntelligenceHeatmap({
-  selectedArea = 'austin-central',
+  selectedArea = 'rancho_cucamonga-central',
   onAreaSelect,
   className = ''
 }: MarketIntelligenceHeatmapProps) {
   const [viewMode, setViewMode] = useState<'heatmap' | 'list' | 'insights'>('heatmap');
   const [selectedAreaData, setSelectedAreaData] = useState<MarketArea>(
-    mockAustinMarketData.find(area => area.area_id === selectedArea) || mockAustinMarketData[0]
+    mockRancho CucamongaMarketData.find(area => area.area_id === selectedArea) || mockRancho CucamongaMarketData[0]
   );
 
   const getHotnessColor = (rating: string) => {
@@ -182,7 +182,7 @@ export function MarketIntelligenceHeatmap({
                 <Map className="h-4 w-4" />
               </div>
               <div>
-                <div className="text-lg font-bold text-slate-100">{mockAustinMarketData.length}</div>
+                <div className="text-lg font-bold text-slate-100">{mockRancho CucamongaMarketData.length}</div>
                 <div className="text-xs text-slate-500">Market Areas</div>
               </div>
             </div>
@@ -197,7 +197,7 @@ export function MarketIntelligenceHeatmap({
               </div>
               <div>
                 <div className="text-lg font-bold text-slate-100">
-                  ${(mockAustinMarketData.reduce((sum, area) => sum + area.avg_price, 0) / mockAustinMarketData.length / 1000).toFixed(0)}K
+                  ${(mockRancho CucamongaMarketData.reduce((sum, area) => sum + area.avg_price, 0) / mockRancho CucamongaMarketData.length / 1000).toFixed(0)}K
                 </div>
                 <div className="text-xs text-slate-500">Avg Price</div>
               </div>
@@ -213,7 +213,7 @@ export function MarketIntelligenceHeatmap({
               </div>
               <div>
                 <div className="text-lg font-bold text-slate-100">
-                  {Math.round(mockAustinMarketData.reduce((sum, area) => sum + area.days_on_market, 0) / mockAustinMarketData.length)}
+                  {Math.round(mockRancho CucamongaMarketData.reduce((sum, area) => sum + area.days_on_market, 0) / mockRancho CucamongaMarketData.length)}
                 </div>
                 <div className="text-xs text-slate-500">Avg DOM</div>
               </div>
@@ -229,7 +229,7 @@ export function MarketIntelligenceHeatmap({
               </div>
               <div>
                 <div className="text-lg font-bold text-slate-100">
-                  {mockAustinMarketData.filter(area => area.hotness_rating === 'hot' || area.hotness_rating === 'warm').length}
+                  {mockRancho CucamongaMarketData.filter(area => area.hotness_rating === 'hot' || area.hotness_rating === 'warm').length}
                 </div>
                 <div className="text-xs text-slate-500">Hot Markets</div>
               </div>
@@ -245,7 +245,7 @@ export function MarketIntelligenceHeatmap({
             <div>
               <CardTitle className="text-slate-100 flex items-center gap-2">
                 <Map className="h-5 w-5 text-emerald-400" />
-                Austin Market Intelligence Heatmap
+                Rancho Cucamonga Market Intelligence Heatmap
               </CardTitle>
               <CardDescription className="text-slate-400">
                 Real-time market analysis with geospatial intelligence and opportunity mapping
@@ -293,7 +293,7 @@ export function MarketIntelligenceHeatmap({
 
                   {/* Market Area Indicators (Placeholder) */}
                   <div className="absolute inset-0 p-4">
-                    {mockAustinMarketData.map((area, index) => (
+                    {mockRancho CucamongaMarketData.map((area, index) => (
                       <div
                         key={area.area_id}
                         className={`absolute w-12 h-12 rounded-full border-2 cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-110 ${
@@ -411,7 +411,7 @@ export function MarketIntelligenceHeatmap({
             {/* Market List View */}
             <TabsContent value="list" className="space-y-4">
               <div className="grid gap-4">
-                {mockAustinMarketData.map((area) => (
+                {mockRancho CucamongaMarketData.map((area) => (
                   <Card
                     key={area.area_id}
                     className="bg-slate-800/30 border-slate-700 hover:border-blue-500/30 transition-all cursor-pointer"
@@ -468,7 +468,7 @@ export function MarketIntelligenceHeatmap({
                       <span className="font-medium text-green-200">Market Opportunity Alert</span>
                     </div>
                     <p className="text-green-100 text-sm">
-                      East Austin showing strongest appreciation signals with 12.1% 30-day growth.
+                      East Rancho Cucamonga showing strongest appreciation signals with 12.1% 30-day growth.
                       Recommend immediate lead generation focus in this area.
                     </p>
                   </div>
@@ -479,7 +479,7 @@ export function MarketIntelligenceHeatmap({
                       <span className="font-medium text-yellow-200">Market Shift Detection</span>
                     </div>
                     <p className="text-yellow-100 text-sm">
-                      Northwest Austin entering buyer's market conditions. Adjust pricing strategy
+                      Northwest Rancho Cucamonga entering buyer's market conditions. Adjust pricing strategy
                       and increase negotiation coaching for agents.
                     </p>
                   </div>
@@ -490,7 +490,7 @@ export function MarketIntelligenceHeatmap({
                       <span className="font-medium text-blue-200">Strategic Recommendation</span>
                     </div>
                     <p className="text-blue-100 text-sm">
-                      Central Austin inventory shortage creates seller's market opportunity.
+                      Central Rancho Cucamonga inventory shortage creates seller's market opportunity.
                       Deploy Jorge's confrontational qualification to identify motivated sellers.
                     </p>
                   </div>

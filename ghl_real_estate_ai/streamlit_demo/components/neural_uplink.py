@@ -38,7 +38,7 @@ def render_neural_uplink():
         {
             "icon": "📈",
             "color": "#3B82F6",
-            "text": "<b>MarketHeatmap</b>: Synthesizing trends for <i>Austin</i>",
+            "text": "<b>MarketHeatmap</b>: Synthesizing trends for <i>Rancho Cucamonga</i>",
             "time": "5m ago",
         },
         {

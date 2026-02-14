@@ -10,7 +10,6 @@ import pytest
 
 from utils.roi_logic import (
 
-@pytest.mark.unit
     calculate_automation_roi,
     calculate_data_roi,
     calculate_marketing_roi,

@@ -14,8 +14,6 @@ from typing import Any, Dict, List
 import aiohttp
 import pytest
 
-@pytest.mark.integration
-
 logger = logging.getLogger(__name__)
 
 
@@ -125,7 +123,7 @@ class PerformanceTestSuite:
             "lead_id": f"perf_test_lead_{worker_id}_{int(time.time() * 1000)}",
             "name": f"Test Lead {worker_id}",
             "email": f"lead{worker_id}@test.com",
-            "preferences": {"max_price": 500000, "min_bedrooms": 3, "location": "Austin"},
+            "preferences": {"max_price": 500000, "min_bedrooms": 3, "location": "Rancho Cucamonga"},
             "source": "performance_test",
         }
 

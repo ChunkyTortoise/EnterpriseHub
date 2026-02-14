@@ -8,7 +8,7 @@ The retry mechanism in ghl_real_estate_ai/services/ghl_client.py uses:
 - 3 max attempts
 - Exponential backoff: 0.5s, 1.0s
 - Retries on httpx.HTTPError (includes timeouts and 5xx)
-- Raises the last error after exhausting retries
+- Raises the last error after exhrancho_cucamongag retries
 """
 
 import asyncio
@@ -16,8 +16,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
-
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.api.schemas.ghl import MessageType
@@ -126,7 +124,7 @@ class TestSendMessageRetry:
 
     @pytest.mark.asyncio
     async def test_send_message_gives_up_after_3_retries(self, ghl_client):
-        """send_message raises after exhausting all 3 attempts."""
+        """send_message raises after exhrancho_cucamongag all 3 attempts."""
 
         async def mock_post(*args, **kwargs):
             raise httpx.ConnectTimeout("Connection timed out")

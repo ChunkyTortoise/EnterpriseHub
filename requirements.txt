@@ -54,6 +54,9 @@ langchain-core>=0.1.0,<1.0
 langchain-anthropic>=0.1.0,<1.0
 langsmith>=0.1.0,<1.0
 fastmcp>=0.2.0,<1.0
+notebooklm-py>=0.3.2
+google-auth>=2.20.0
+google-auth-oauthlib>=1.0.0
 # NOTE: sentence-transformers, transformers, spacy removed — they pull PyTorch
 # (~2GB) and cause Railway builds to timeout. Services use lazy imports.
 

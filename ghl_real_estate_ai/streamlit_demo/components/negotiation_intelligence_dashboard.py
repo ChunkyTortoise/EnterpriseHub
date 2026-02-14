@@ -464,7 +464,7 @@ class NegotiationIntelligenceDashboard:
                 go.Indicator(
                     mode="gauge+number",
                     value=win_probability.win_probability,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Win Probability"},
                     gauge={
                         "axis": {"range": [None, 100]},

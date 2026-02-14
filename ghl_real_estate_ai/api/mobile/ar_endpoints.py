@@ -117,7 +117,7 @@ class ARVisualizationService:
 
     def __init__(self):
         self.cache = None
-        self.claude_assistant = ClaudeAssistant(context_type="ar_vr", market_id="austin")
+        self.claude_assistant = ClaudeAssistant(context_type="ar_vr", market_id="rancho_cucamonga")
 
     async def _get_cache(self):
         """Get cache service instance."""
@@ -403,10 +403,10 @@ class ARVisualizationService:
         """Get property data (mock implementation)."""
         # This would integrate with actual property database
         mock_properties = {
-            "prop_austin_001": {
-                "property_id": "prop_austin_001",
+            "prop_rancho_cucamonga_001": {
+                "property_id": "prop_rancho_cucamonga_001",
                 "mls_id": "ATX123456",
-                "address": "1234 Hill Country Drive, Austin, TX 78746",
+                "address": "1234 Hill Country Drive, Rancho Cucamonga, CA 91737",
                 "price": 750000,
                 "price_per_sqft": 300,
                 "bedrooms": 4,
@@ -417,7 +417,7 @@ class ARVisualizationService:
                 "property_type": "Single Family",
                 "days_on_market": 12,
                 "neighborhood": "Hill Country",
-                "school_district": "Lake Travis ISD",
+                "school_district": "Mount Baldy ISD",
                 "latitude": 30.2672,
                 "longitude": -97.7431,
             }

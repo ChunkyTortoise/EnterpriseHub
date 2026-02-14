@@ -327,7 +327,7 @@ class MarketTimingOpportunityEngine:
             logger.error(f"Error initializing market intelligence engine: {e}")
 
     async def generate_comprehensive_timing_recommendation(
-        self, lead_id: str, property_id: Optional[str] = None, market_area: str = "austin", decision_type: str = "buy"
+        self, lead_id: str, property_id: Optional[str] = None, market_area: str = "rancho_cucamonga", decision_type: str = "buy"
     ) -> TimingRecommendation:
         """Generate comprehensive timing recommendation with full market intelligence."""
 
@@ -352,7 +352,7 @@ class MarketTimingOpportunityEngine:
             opportunities = results[2] if not isinstance(results[2], Exception) else []
             timing_risks = results[3] if not isinstance(results[3], Exception) else {}
             seasonal_analysis = results[4] if not isinstance(results[4], Exception) else {}
-            competitive_analysis = results[5] if not isinstance(results[5], Exception) else {}
+            results[5] if not isinstance(results[5], Exception) else {}
 
             # Generate timing strategy
             strategy = await self._determine_optimal_strategy(
@@ -566,7 +566,7 @@ class MarketTimingOpportunityEngine:
                 home_sales_existing=4.1,  # millions, annualized
                 home_sales_new=0.65,
                 months_supply=4.2,
-                # Regional indicators (Austin-specific)
+                # Regional indicators (Rancho Cucamonga-specific)
                 population_growth=2.8,
                 median_income_growth=4.5,
                 business_formation_rate=15.2,
@@ -856,7 +856,7 @@ class MarketTimingOpportunityEngine:
             logger.error(f"Error determining optimal strategy: {e}")
             return TimingStrategy.HOLD_WATCH
 
-    async def get_opportunity_dashboard(self, market_area: str = "austin") -> Dict[str, Any]:
+    async def get_opportunity_dashboard(self, market_area: str = "rancho_cucamonga") -> Dict[str, Any]:
         """Generate comprehensive opportunity intelligence dashboard."""
 
         try:

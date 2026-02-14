@@ -229,7 +229,7 @@ class DemoCampaignLauncher:
     async def launch_all_demo_environments(self):
         """Launch demo environments for all industries."""
         industries = {
-            "real_estate": ["Premier Realty Group", "Austin Metro Realty", "Texas Property Partners"],
+            "real_estate": ["Premier Realty Group", "Rancho Cucamonga Metro Realty", "Texas Property Partners"],
             "saas": ["CloudTech Solutions", "ScaleUp Systems", "DataFlow Inc"],
             "ecommerce": ["Fashion Forward", "SportsTech Store", "HomeStyle Direct"],
             "financial_services": ["Wealth Advisors Inc", "Premier Financial", "Investment Partners"]
@@ -425,7 +425,7 @@ st.markdown("### Industry-Specific Demo Environments")
 
 industries = {
     "Real Estate": {
-        "customers": ["Premier Realty Group", "Austin Metro Realty", "Texas Property Partners"],
+        "customers": ["Premier Realty Group", "Rancho Cucamonga Metro Realty", "Texas Property Partners"],
         "features": ["Lead Scoring", "Property Matching", "Agent Analytics"],
         "roi": "3,500%"
     },

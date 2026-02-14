@@ -5,7 +5,6 @@ import pytest
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
 from ghl_real_estate_ai.models.lead_scoring import (
 
-@pytest.mark.unit
     FinancialReadinessScore,
     LeadIntentProfile,
     PsychologicalCommitmentScore,

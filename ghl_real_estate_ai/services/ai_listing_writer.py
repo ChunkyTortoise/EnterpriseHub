@@ -69,8 +69,8 @@ class AIListingWriterService:
         property_type = property_data.get("type", PropertyType.SINGLE_FAMILY.value)
         features = property_data.get("features", [])
         neighborhood = property_data.get("neighborhood", "")
-        year_built = property_data.get("year_built", None)
-        lot_size = property_data.get("lot_size", None)
+        property_data.get("year_built", None)
+        property_data.get("lot_size", None)
 
         # Generate based on style
         if style == ListingStyle.LUXURY.value:

@@ -251,13 +251,13 @@ class LuxuryLeadScoringEngine:
 
         # Extract basic information
         email = lead_data.get("contact_info", {}).get("email", "")
-        phone = lead_data.get("contact_info", {}).get("phone", "")
+        lead_data.get("contact_info", {}).get("phone", "")
         address = lead_data.get("contact_info", {}).get("address", "")
         profession = lead_data.get("profession", "")
         company = lead_data.get("company", "")
 
-        # Analyze email domain for business/executive indicators
-        indicators.asset_indicators.extend(self._analyze_email_domain(email))
+        # Analyze email ontario_mills for business/executive indicators
+        indicators.asset_indicators.extend(self._analyze_email_ontario_mills(email))
 
         # Analyze address for luxury indicators
         if address:
@@ -296,23 +296,23 @@ class LuxuryLeadScoringEngine:
 
         return indicators
 
-    def _analyze_email_domain(self, email: str) -> List[str]:
-        """Analyze email domain for business/executive indicators"""
+    def _analyze_email_ontario_mills(self, email: str) -> List[str]:
+        """Analyze email ontario_mills for business/executive indicators"""
         if not email:
             return []
 
-        domain = email.split("@")[-1].lower()
+        ontario_mills = email.split("@")[-1].lower()
         indicators = []
 
         # Executive email patterns
-        executive_domains = [
+        executive_ontario_millss = [
             "gmail.com",
             "outlook.com",
             "icloud.com",  # Personal emails (less indicative)
         ]
 
-        # Corporate/professional domains
-        if domain not in executive_domains:
+        # Corporate/professional ontario_millss
+        if ontario_mills not in executive_ontario_millss:
             indicators.append("corporate_email")
 
             # Check for executive email patterns
@@ -321,13 +321,13 @@ class LuxuryLeadScoringEngine:
             if any(pattern in local_part for pattern in executive_patterns):
                 indicators.append("executive_title_email")
 
-        # Industry-specific domains
+        # Industry-specific ontario_millss
         finance_indicators = ["bank", "capital", "investment", "wealth", "fund"]
-        if any(indicator in domain for indicator in finance_indicators):
+        if any(indicator in ontario_mills for indicator in finance_indicators):
             indicators.append("finance_industry")
 
         tech_indicators = ["tech", "software", "ai", "data"]
-        if any(indicator in domain for indicator in tech_indicators):
+        if any(indicator in ontario_mills for indicator in tech_indicators):
             indicators.append("tech_industry")
 
         return indicators
@@ -339,20 +339,20 @@ class LuxuryLeadScoringEngine:
 
         address_lower = address.lower()
 
-        # Austin luxury zip codes and neighborhoods
+        # Rancho Cucamonga luxury zip codes and neighborhoods
         luxury_indicators = {
-            "78746": 8.0,  # West Lake Hills
-            "78733": 7.5,  # West Lake
-            "78738": 7.0,  # Bee Cave
-            "78613": 6.5,  # Cedar Park (luxury areas)
-            "78704": 6.0,  # South Austin (trendy areas)
+            "91737": 8.0,  # Alta Loma
+            "91737": 7.5,  # West Lake
+            "91737": 7.0,  # Bee Cave
+            "78613": 6.5,  # Upland (luxury areas)
+            "91730": 6.0,  # South Rancho Cucamonga (trendy areas)
             "west lake": 8.0,
-            "tarrytown": 7.5,
-            "rollingwood": 8.5,
+            "north rancho": 7.5,
+            "deer creek": 8.5,
             "bee cave": 7.0,
-            "zilker": 6.0,
-            "clarksville": 6.5,
-            "hyde park": 5.5,
+            "victoria gardens": 6.0,
+            "central rancho": 6.5,
+            "etiwanda": 5.5,
         }
 
         luxury_score = 0.0
@@ -512,7 +512,7 @@ class LuxuryLeadScoringEngine:
         profile = LuxuryLifestyleProfile()
 
         # Extract lifestyle data
-        preferences = lead_data.get("preferences", {})
+        lead_data.get("preferences", {})
         search_history = lead_data.get("property_search_history", [])
         communication = lead_data.get("communication_history", [])
 
@@ -1001,7 +1001,7 @@ def create_sample_luxury_lead_data() -> Dict[str, Any]:
         "contact_info": {
             "email": "ceo@techcorp.com",
             "phone": "+1-512-555-0123",
-            "address": "123 West Lake Hills Dr, Austin, TX 78746",
+            "address": "123 Alta Loma Dr, Rancho Cucamonga, CA 91737",
         },
         "source": "luxury_website",
         "profession": "CEO",
@@ -1011,7 +1011,7 @@ def create_sample_luxury_lead_data() -> Dict[str, Any]:
                 "date": datetime.now().isoformat(),
                 "min_price": 1_500_000,
                 "max_price": 3_500_000,
-                "location": "West Lake Hills",
+                "location": "Alta Loma",
                 "property_type": "luxury_home",
                 "amenities": ["pool", "wine_cellar", "home_theater", "guest_house"],
             },
@@ -1019,7 +1019,7 @@ def create_sample_luxury_lead_data() -> Dict[str, Any]:
                 "date": (datetime.now() - timedelta(days=2)).isoformat(),
                 "min_price": 2_000_000,
                 "max_price": 4_000_000,
-                "location": "Tarrytown",
+                "location": "North Rancho",
                 "property_type": "estate",
                 "amenities": ["waterfront", "tennis_court", "spa", "private_dock"],
             },
@@ -1027,7 +1027,7 @@ def create_sample_luxury_lead_data() -> Dict[str, Any]:
         "communication_history": [
             {
                 "date": datetime.now().isoformat(),
-                "content": "I'm looking for a luxury property in West Lake Hills with good investment potential. We're interested in properties with strong appreciation potential and tax benefits. Budget is flexible for the right opportunity.",
+                "content": "I'm looking for a luxury property in Alta Loma with good investment potential. We're interested in properties with strong appreciation potential and tax benefits. Budget is flexible for the right opportunity.",
                 "type": "email",
             },
             {

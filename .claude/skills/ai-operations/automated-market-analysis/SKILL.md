@@ -79,7 +79,7 @@ Provide comprehensive market analysis including competitive market analysis (CMA
 ### scripts/fetch-comparables.py
 Fetches comparable properties for CMA analysis.
 ```bash
-python scripts/fetch-comparables.py --address "123 Main St, Austin, TX" --radius 1
+python scripts/fetch-comparables.py --address "123 Main St, Rancho Cucamonga, CA" --radius 1
 ```
 
 ### scripts/generate-cma-report.py
@@ -171,7 +171,7 @@ print(f"Market Type: {trends.market_type}")  # buyer's / seller's / balanced
 ```python
 # Find undervalued properties
 opportunities = await analysis.find_investment_opportunities(
-    area="Austin Metro",
+    area="Rancho Cucamonga Metro",
     criteria={
         "min_discount_percent": 5,
         "max_dom": 30,

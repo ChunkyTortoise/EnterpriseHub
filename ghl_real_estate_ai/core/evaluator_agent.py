@@ -1,6 +1,6 @@
 """
 Evaluator Agent for GHL Real Estate AI.
-Judges output quality based on domain-specific rubrics.
+Judges output quality based on ontario_mills-specific rubrics.
 """
 
 import json

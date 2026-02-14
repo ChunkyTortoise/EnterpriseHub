@@ -28,7 +28,7 @@ class LeadProfiles:
             "phone": "+1-512-555-0123",
             "budget": 650000,
             "timeline": "immediate",
-            "location_preferences": ["North Austin", "Round Rock", "Cedar Park"],
+            "location_preferences": ["North Rancho Cucamonga", "Round Rock", "Cedar Park"],
             # Engagement metrics
             "email_open_rate": 0.92,
             "email_click_rate": 0.68,
@@ -74,7 +74,7 @@ class LeadProfiles:
             "phone": "+1-512-555-0456",
             "budget": 425000,
             "timeline": "3-6 months",
-            "location_preferences": ["South Austin", "Buda", "Kyle"],
+            "location_preferences": ["South Rancho Cucamonga", "Buda", "Kyle"],
             # Engagement metrics
             "email_open_rate": 0.67,
             "email_click_rate": 0.32,
@@ -120,7 +120,7 @@ class LeadProfiles:
             "phone": "+1-512-555-0789",
             "budget": 320000,
             "timeline": "6+ months",
-            "location_preferences": ["East Austin", "Manor", "Del Valle"],
+            "location_preferences": ["East Rancho Cucamonga", "Manor", "Del Valle"],
             # Engagement metrics
             "email_open_rate": 0.31,
             "email_click_rate": 0.08,
@@ -166,7 +166,7 @@ class LeadProfiles:
             "phone": "+1-512-555-0321",
             "budget": 800000,
             "timeline": "flexible",
-            "location_preferences": ["Austin Metro"],
+            "location_preferences": ["Rancho Cucamonga Metro"],
             "investor_type": "buy_and_hold",
             # Engagement metrics
             "email_open_rate": 0.78,
@@ -213,13 +213,13 @@ class ConversationHistories:
             {
                 "timestamp": "2026-01-14T10:00:00Z",
                 "role": "user",
-                "content": "Hi, I saw your listing for the home in North Austin. Can you tell me more about the neighborhood?",
+                "content": "Hi, I saw your listing for the home in North Rancho Cucamonga. Can you tell me more about the neighborhood?",
                 "channel": "website_chat",
             },
             {
                 "timestamp": "2026-01-14T10:05:00Z",
                 "role": "assistant",
-                "content": "Great question! The North Austin area has excellent schools, including Westwood High School (rated 9/10), and is close to tech companies like Apple and Google. The neighborhood features mature trees, walking trails, and quick access to downtown.",
+                "content": "Great question! The North Rancho Cucamonga area has excellent schools, including Westwood High School (rated 9/10), and is close to tech companies like Apple and Google. The neighborhood features mature trees, walking trails, and quick access to downtown.",
                 "channel": "website_chat",
             },
             {
@@ -267,13 +267,13 @@ class ConversationHistories:
             {
                 "timestamp": "2026-01-14T09:15:00Z",
                 "role": "user",
-                "content": "Actually yes, that would be helpful. Mostly interested in East Austin area.",
+                "content": "Actually yes, that would be helpful. Mostly interested in East Rancho Cucamonga area.",
                 "channel": "email",
             },
             {
                 "timestamp": "2026-01-14T10:30:00Z",
                 "role": "assistant",
-                "content": "Perfect! I have set you up for monthly East Austin market reports. The area is seeing great development with new restaurants and art studios. Here is this month's report...",
+                "content": "Perfect! I have set you up for monthly East Rancho Cucamonga market reports. The area is seeing great development with new restaurants and art studios. Here is this month's report...",
                 "channel": "email",
             },
         ]
@@ -283,12 +283,12 @@ class PropertyData:
     """Sample property data for matching tests"""
 
     @staticmethod
-    def north_austin_properties() -> List[Dict[str, Any]]:
-        """Properties in North Austin area"""
+    def north_rancho_cucamonga_properties() -> List[Dict[str, Any]]:
+        """Properties in North Rancho Cucamonga area"""
         return [
             {
                 "property_id": "prop_001",
-                "address": "1234 Cedar Ridge Dr, Austin, TX 78758",
+                "address": "1234 Cedar Ridge Dr, Rancho Cucamonga, CA 91758",
                 "price": 545000,
                 "bedrooms": 4,
                 "bathrooms": 2.5,
@@ -312,7 +312,7 @@ class PropertyData:
             },
             {
                 "property_id": "prop_002",
-                "address": "5678 Oak Valley Ln, Austin, TX 78759",
+                "address": "5678 Oak Valley Ln, Rancho Cucamonga, CA 91759",
                 "price": 635000,
                 "bedrooms": 5,
                 "bathrooms": 3,
@@ -342,7 +342,7 @@ class PropertyData:
         return [
             {
                 "property_id": "invest_001",
-                "address": "9876 Rental Ave, Austin, TX 78745",
+                "address": "9876 Rental Ave, Rancho Cucamonga, CA 91745",
                 "price": 350000,
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -465,12 +465,12 @@ class WebhookTestData:
                 "lastName": "Williams",
                 "phone": "+15125551234",
                 "source": "Facebook Ad",
-                "tags": ["austin", "first-time-buyer"],
+                "tags": ["rancho_cucamonga", "first-time-buyer"],
                 "customFields": {
                     "budget": "450000",
                     "timeline": "2-3 months",
                     "bedrooms": "3+",
-                    "location": "South Austin",
+                    "location": "South Rancho Cucamonga",
                 },
             },
         }

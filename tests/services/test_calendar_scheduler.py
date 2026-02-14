@@ -7,7 +7,7 @@ Tests for Calendar Scheduler Service.
 Tests the smart appointment scheduling system for Jorge's lead bot including:
 - Lead qualification for auto-booking
 - Calendar integration with GHL
-- Timezone handling for Austin market
+- Timezone handling for Rancho Cucamonga market
 - SMS confirmations
 - Error handling and fallbacks
 """
@@ -24,8 +24,7 @@ from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageTyp
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.calendar_scheduler import (
 
-@pytest.mark.integration
-    AUSTIN_TZ,
+    RC_TZ,
     AppointmentBooking,
     AppointmentDuration,
     AppointmentType,
@@ -85,7 +84,7 @@ def qualified_lead_data():
         },
         "extracted_data": {
             "budget": 450000,
-            "location": ["Austin", "Round Rock"],
+            "location": ["Rancho Cucamonga", "Round Rock"],
             "timeline": "next month",
             "bedrooms": 3,
             "bathrooms": 2,
@@ -108,7 +107,7 @@ def unqualified_lead_data():
             "phone": "+1987654321",
             "email": "jane.smith@example.com",
         },
-        "extracted_data": {"location": ["Austin"]},
+        "extracted_data": {"location": ["Rancho Cucamonga"]},
         "lead_score": 3,  # Below threshold (5)
         "message_content": "I'm thinking about buying",
     }
@@ -220,27 +219,27 @@ class TestCalendarScheduler:
 
     def test_is_during_business_hours(self, calendar_scheduler):
         """Test business hours validation."""
-        # Monday 10 AM Austin time (during business hours)
-        monday_10am = datetime(2024, 1, 15, 10, 0, 0, tzinfo=AUSTIN_TZ)
+        # Monday 10 AM Rancho Cucamonga time (during business hours)
+        monday_10am = datetime(2024, 1, 15, 10, 0, 0, tzinfo=RC_TZ)
         assert calendar_scheduler._is_during_business_hours(monday_10am) is True
 
-        # Monday 8 AM Austin time (before business hours)
-        monday_8am = datetime(2024, 1, 15, 8, 0, 0, tzinfo=AUSTIN_TZ)
+        # Monday 8 AM Rancho Cucamonga time (before business hours)
+        monday_8am = datetime(2024, 1, 15, 8, 0, 0, tzinfo=RC_TZ)
         assert calendar_scheduler._is_during_business_hours(monday_8am) is False
 
         # Sunday (closed)
-        sunday_2pm = datetime(2024, 1, 14, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        sunday_2pm = datetime(2024, 1, 14, 14, 0, 0, tzinfo=RC_TZ)
         assert calendar_scheduler._is_during_business_hours(sunday_2pm) is False
 
     def test_matches_preferred_time(self, calendar_scheduler):
         """Test preferred time matching."""
         # Morning time (10 AM)
-        morning_time = datetime(2024, 1, 15, 10, 0, 0, tzinfo=AUSTIN_TZ)
+        morning_time = datetime(2024, 1, 15, 10, 0, 0, tzinfo=RC_TZ)
         assert calendar_scheduler._matches_preferred_time(morning_time, ["morning"]) is True
         assert calendar_scheduler._matches_preferred_time(morning_time, ["afternoon"]) is False
 
         # Afternoon time (3 PM)
-        afternoon_time = datetime(2024, 1, 15, 15, 0, 0, tzinfo=AUSTIN_TZ)
+        afternoon_time = datetime(2024, 1, 15, 15, 0, 0, tzinfo=RC_TZ)
         assert calendar_scheduler._matches_preferred_time(afternoon_time, ["afternoon"]) is True
         assert calendar_scheduler._matches_preferred_time(afternoon_time, ["evening"]) is False
 
@@ -275,7 +274,7 @@ class TestCalendarScheduler:
     async def test_book_appointment_success(self, calendar_scheduler, qualified_lead_data, mock_ghl_client):
         """Test successful appointment booking."""
         # Create a time slot
-        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ)
         time_slot = TimeSlot(
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
@@ -306,7 +305,7 @@ class TestCalendarScheduler:
         # Mock GHL client to fail
         mock_ghl_client.create_appointment.side_effect = Exception("Calendar API error")
 
-        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ)
         time_slot = TimeSlot(
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
@@ -372,7 +371,7 @@ class TestCalendarScheduler:
     def test_generate_appointment_title(self, calendar_scheduler):
         """Test appointment title generation."""
         contact_info = {"first_name": "John", "last_name": "Doe"}
-        extracted_data = {"budget": 450000, "location": ["Austin", "Round Rock"]}
+        extracted_data = {"budget": 450000, "location": ["Rancho Cucamonga", "Round Rock"]}
 
         title = calendar_scheduler._generate_appointment_title(
             contact_info, AppointmentType.BUYER_CONSULTATION, extracted_data
@@ -380,7 +379,7 @@ class TestCalendarScheduler:
 
         assert "Buyer Consultation - John Doe" in title
         assert "$450,000" in title
-        assert "Austin" in title
+        assert "Rancho Cucamonga" in title
 
     @pytest.mark.asyncio
     async def test_generate_confirmation_actions(self, calendar_scheduler):
@@ -390,8 +389,8 @@ class TestCalendarScheduler:
             lead_score=6,
             appointment_type=AppointmentType.BUYER_CONSULTATION,
             time_slot=TimeSlot(
-                start_time=datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ),
-                end_time=datetime(2024, 1, 17, 15, 0, 0, tzinfo=AUSTIN_TZ),
+                start_time=datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ),
+                end_time=datetime(2024, 1, 17, 15, 0, 0, tzinfo=RC_TZ),
                 duration_minutes=60,
                 appointment_type=AppointmentType.BUYER_CONSULTATION,
             ),
@@ -425,8 +424,8 @@ class TestCalendarScheduler:
             lead_score=6,
             appointment_type=AppointmentType.BUYER_CONSULTATION,
             time_slot=TimeSlot(
-                start_time=datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ),
-                end_time=datetime(2024, 1, 17, 15, 0, 0, tzinfo=AUSTIN_TZ),
+                start_time=datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ),
+                end_time=datetime(2024, 1, 17, 15, 0, 0, tzinfo=RC_TZ),
                 duration_minutes=60,
                 appointment_type=AppointmentType.BUYER_CONSULTATION,
             ),
@@ -485,7 +484,7 @@ class TestTimeSlot:
 
     def test_time_slot_creation(self):
         """Test TimeSlot creation and validation."""
-        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ)
         end_time = start_time + timedelta(minutes=60)
 
         slot = TimeSlot(
@@ -512,8 +511,8 @@ class TestTimeSlot:
                 appointment_type=AppointmentType.BUYER_CONSULTATION,
             )
 
-    def test_time_slot_to_austin_time(self):
-        """Test timezone conversion to Austin time."""
+    def test_time_slot_to_rancho_cucamonga_time(self):
+        """Test timezone conversion to Rancho Cucamonga time."""
         # UTC time
         utc_time = datetime(2024, 1, 17, 20, 0, 0, tzinfo=pytz.UTC)
         end_time = utc_time + timedelta(minutes=60)
@@ -525,19 +524,19 @@ class TestTimeSlot:
             appointment_type=AppointmentType.BUYER_CONSULTATION,
         )
 
-        austin_time = slot.to_austin_time()
+        rancho_cucamonga_time = slot.to_rancho_cucamonga_time()
 
         # UTC 20:00 should be 12:00 PT (PST in January, -8 hours)
-        assert austin_time.hour == 12
-        assert str(austin_time.tzinfo) == str(AUSTIN_TZ)
+        assert rancho_cucamonga_time.hour == 12
+        assert str(rancho_cucamonga_time.tzinfo) == str(RC_TZ)
 
     def test_time_slot_format_for_lead(self):
         """Test time slot formatting for lead display."""
-        austin_time = datetime(2024, 1, 17, 14, 30, 0, tzinfo=AUSTIN_TZ)
-        end_time = austin_time + timedelta(minutes=60)
+        rancho_cucamonga_time = datetime(2024, 1, 17, 14, 30, 0, tzinfo=RC_TZ)
+        end_time = rancho_cucamonga_time + timedelta(minutes=60)
 
         slot = TimeSlot(
-            start_time=austin_time,
+            start_time=rancho_cucamonga_time,
             end_time=end_time,
             duration_minutes=60,
             appointment_type=AppointmentType.BUYER_CONSULTATION,
@@ -554,7 +553,7 @@ class TestAppointmentBooking:
 
     def test_appointment_booking_creation(self):
         """Test AppointmentBooking creation."""
-        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ)
         time_slot = TimeSlot(
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),
@@ -579,7 +578,7 @@ class TestAppointmentBooking:
 
     def test_appointment_booking_score_validation(self):
         """Test lead score validation in AppointmentBooking."""
-        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=AUSTIN_TZ)
+        start_time = datetime(2024, 1, 17, 14, 0, 0, tzinfo=RC_TZ)
         time_slot = TimeSlot(
             start_time=start_time,
             end_time=start_time + timedelta(minutes=60),

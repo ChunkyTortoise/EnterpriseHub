@@ -128,7 +128,7 @@ Jorge's BI Dashboard has achieved **complete production readiness** with industr
 - Live performance monitoring with <10ms latency
 - Executive KPI tracking and strategic alerts
 - SHAP explainability with interactive visualizations
-- Austin market intelligence with ML insights
+- Rancho Cucamonga market intelligence with ML insights
 
 ### **✅ Mobile Excellence**
 - Responsive design for field agents

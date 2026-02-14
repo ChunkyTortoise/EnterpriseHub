@@ -198,10 +198,10 @@ async def get_mobile_properties(
                 distance_miles = round(5.0 + (i % 20), 1)
 
             property_summary = MobilePropertySummary(
-                property_id=f"prop_austin_{i + 1:03d}",
+                property_id=f"prop_rancho_cucamonga_{i + 1:03d}",
                 mls_id=f"ATX{12345 + i}",
                 address=f"{1234 + i} Example Street",
-                city="Austin",
+                city="Rancho Cucamonga",
                 state="TX",
                 zip_code=f"787{46 + (i % 10):02d}",
                 price=450000 + (i * 25000),
@@ -281,9 +281,9 @@ async def get_mobile_property_details(
             property_id=property_id,
             mls_id=f"ATX{property_id[-6:]}",
             address="1234 Hill Country Drive",
-            city="Austin",
+            city="Rancho Cucamonga",
             state="TX",
-            zip_code="78746",
+            zip_code="91737",
             coordinates=GPSCoordinate(latitude=30.2672, longitude=-97.7431),
             price=750000,
             price_formatted="$750,000",
@@ -305,11 +305,11 @@ async def get_mobile_property_details(
             features=["Open Floor Plan", "Updated Kitchen", "Hardwood Floors", "Two-Car Garage", "Covered Patio"],
             amenities=["Swimming Pool", "Community Gym", "Walking Trails", "Playground"],
             neighborhood="Hill Country",
-            school_district="Lake Travis ISD",
+            school_district="Mount Baldy ISD",
             nearby_schools=[
-                {"name": "Lake Travis Elementary", "rating": 9, "distance": 0.5},
-                {"name": "Lake Travis Middle", "rating": 9, "distance": 1.2},
-                {"name": "Lake Travis High", "rating": 10, "distance": 2.1},
+                {"name": "Mount Baldy Elementary", "rating": 9, "distance": 0.5},
+                {"name": "Mount Baldy Middle", "rating": 9, "distance": 1.2},
+                {"name": "Mount Baldy High", "rating": 10, "distance": 2.1},
             ],
             walkability_score=65,
             market_trends={
@@ -337,17 +337,17 @@ async def get_mobile_property_details(
             try:
                 ai_context = {
                     "property_data": property_details.dict(),
-                    "market_context": "austin",
+                    "market_context": "rancho_cucamonga",
                     "user_id": current_user["user_id"],
                 }
 
                 # Use Claude assistant for insights
                 insights = await claude_assistant.generate_market_aware_retention_script(
-                    lead_data={"lead_name": "Property Viewer", "property_interest": property_id}, market_id="austin"
+                    lead_data={"lead_name": "Property Viewer", "property_interest": property_id}, market_id="rancho_cucamonga"
                 )
 
                 property_details.ai_insights = insights.get(
-                    "reasoning", "This property shows strong potential in the current Austin market."
+                    "reasoning", "This property shows strong potential in the current Rancho Cucamonga market."
                 )
 
             except Exception as e:
@@ -440,7 +440,7 @@ async def get_mobile_leads(
                 source="Website",
                 assigned_agent=current_user.get("username", "Jorge"),
                 priority=priorities[i % len(priorities)],
-                property_interest=f"prop_austin_{(i % 50) + 1:03d}",
+                property_interest=f"prop_rancho_cucamonga_{(i % 50) + 1:03d}",
                 estimated_budget=300000 + (i * 50000),
                 coordinates=GPSCoordinate(latitude=30.2672 + (i * 0.01), longitude=-97.7431 + (i * 0.01))
                 if user_coordinates
@@ -489,7 +489,7 @@ async def get_mobile_lead_details(
             last_name="Chen",
             phone="512-555-2001",
             email="sarah.chen@example.com",
-            address="789 Tech Boulevard, Austin, TX",
+            address="789 Tech Boulevard, Rancho Cucamonga, CA",
             coordinates=GPSCoordinate(latitude=30.2672, longitude=-97.7431),
             status="qualified",
             lead_score=92,
@@ -505,14 +505,14 @@ async def get_mobile_lead_details(
                 "must_have_garage": True,
             },
             price_range={"min": 600000, "max": 800000},
-            preferred_areas=["Downtown", "South Austin", "Hill Country"],
+            preferred_areas=["Downtown", "South Rancho Cucamonga", "Hill Country"],
             must_have_features=["Home Office", "Updated Kitchen", "Pool"],
             conversion_probability=85,
-            recommended_properties=["prop_austin_001", "prop_austin_015", "prop_austin_032"],
+            recommended_properties=["prop_rancho_cucamonga_001", "prop_rancho_cucamonga_015", "prop_rancho_cucamonga_032"],
             recent_activities=[
                 {
                     "type": "property_view",
-                    "property_id": "prop_austin_001",
+                    "property_id": "prop_rancho_cucamonga_001",
                     "timestamp": (datetime.now() - timedelta(hours=2)).isoformat(),
                     "duration_minutes": 15,
                 },
@@ -537,7 +537,7 @@ async def get_mobile_lead_details(
                         "conversion_probability": lead_details.conversion_probability,
                         "last_interaction_days": 0.25,  # 6 hours ago
                     },
-                    market_id="austin",
+                    market_id="rancho_cucamonga",
                 )
 
                 lead_details.behavioral_insights = behavioral_insights.get(
@@ -581,7 +581,7 @@ async def get_mobile_analytics_summary(
             top_performing_areas=[
                 {"area": "Downtown", "leads": 15, "conversions": 3},
                 {"area": "Hill Country", "leads": 12, "conversions": 4},
-                {"area": "South Austin", "leads": 10, "conversions": 2},
+                {"area": "South Rancho Cucamonga", "leads": 10, "conversions": 2},
             ],
             recent_activities=[
                 {
@@ -754,7 +754,7 @@ async def mobile_search(search_request: MobileSearchRequest, current_user: Dict[
         results = {
             "properties": [
                 {
-                    "property_id": "prop_austin_001",
+                    "property_id": "prop_rancho_cucamonga_001",
                     "address": "1234 Hill Country Drive",
                     "price": 750000,
                     "match_score": 0.95,
@@ -791,7 +791,7 @@ async def mobile_search(search_request: MobileSearchRequest, current_user: Dict[
             results=results,
             total_count=total_results,
             search_time_ms=search_time,
-            suggestions=["Hill Country", "Sarah", "Austin properties"],
+            suggestions=["Hill Country", "Sarah", "Rancho Cucamonga properties"],
             filters_applied=search_request.filters or {},
             pagination=pagination,
         )

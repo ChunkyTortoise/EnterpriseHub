@@ -261,7 +261,7 @@ class JorgePlatformValidator:
                 with open(coverage_file) as f:
                     cov_data = json.load(f)
                     coverage_pct = cov_data.get("totals", {}).get("percent_covered", 0.0)
-            except:
+            except Exception:
                 pass
 
         total_tests = passed + failed + skipped

@@ -169,7 +169,7 @@ Authorization: Bearer <jwt_token>
     "email": "sarah.chen@email.com",
     "phone": "+1-555-0123",
     "budget_range": "500k-750k",
-    "location_preference": "Downtown Austin",
+    "location_preference": "Downtown Rancho Cucamonga",
     "timeline": "3-6 months",
     "interaction_history": [
       {

@@ -739,7 +739,7 @@ class JorgePropertyMatchingService:
         score = 0.0
 
         # Days on market opportunity
-        dom_factor = self.market_data["negotiation_factors"]["days_on_market_advantage"]
+        self.market_data["negotiation_factors"]["days_on_market_advantage"]
         if property.days_on_market >= 90:
             score += 0.4  # Motivated seller
         elif property.days_on_market >= 60:
@@ -771,7 +771,7 @@ class JorgePropertyMatchingService:
         self, property: Property, lead_context: LeadScoreBreakdown, preferences: LeadPropertyPreferences
     ) -> float:
         """Score timeline alignment (0-1)."""
-        urgency_score = lead_context.timeline_urgency / 100.0
+        lead_context.timeline_urgency / 100.0
 
         if preferences.timeline_urgency == "immediate":
             if property.status == "active" and property.days_on_market < 30:

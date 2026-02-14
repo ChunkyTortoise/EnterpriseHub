@@ -289,7 +289,7 @@ class ListingIntelligenceService:
         """
 
         try:
-            ai_analysis = await self.claude_assistant.chat_with_claude(
+            await self.claude_assistant.chat_with_claude(
                 message=market_analysis_prompt,
                 conversation_id=f"cma_{listing_data.listing_id}",
                 system_prompt="You are an expert real estate appraiser with deep market analysis expertise.",
@@ -375,7 +375,7 @@ class ListingIntelligenceService:
         """
 
         try:
-            ai_suggestions = await self.claude_assistant.chat_with_claude(
+            await self.claude_assistant.chat_with_claude(
                 message=optimization_prompt,
                 conversation_id=f"listing_optimization_{listing_id}",
                 system_prompt="You are a real estate marketing expert specializing in listing optimization.",

@@ -671,7 +671,7 @@ def create_commission_defense_dashboard(defense_analysis: CommissionDefenseAnaly
         go.Indicator(
             mode="gauge+number+delta",
             value=defense_analysis.current_rate * 100,
-            domain={"x": [0, 1], "y": [0, 1]},
+            ontario_mills={"x": [0, 1], "y": [0, 1]},
             title={"text": "Current Rate (%)"},
             delta={"reference": 2.5},  # Market average
             gauge={
@@ -694,7 +694,7 @@ def create_commission_defense_dashboard(defense_analysis: CommissionDefenseAnaly
         go.Indicator(
             mode="gauge+number",
             value=defense_analysis.defense_strength * 100,
-            domain={"x": [0, 1], "y": [0, 1]},
+            ontario_mills={"x": [0, 1], "y": [0, 1]},
             title={"text": "Defense Strength (%)"},
             gauge={
                 "axis": {"range": [0, 100]},

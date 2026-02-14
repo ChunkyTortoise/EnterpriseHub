@@ -23,9 +23,9 @@ def create_test_data():
             "price": 750000,
             "address": "123 Test Street",
             "neighborhood": "Downtown",
-            "city": "Austin",
+            "city": "Rancho Cucamonga",
             "state": "TX",
-            "zip_code": "78701",
+            "zip_code": "91730",
             "bedrooms": 3,
             "bathrooms": 2.5,
             "sqft": 2100,
@@ -40,10 +40,10 @@ def create_test_data():
             "id": "test-002",
             "price": 650000,
             "address": "456 Elm Drive",
-            "neighborhood": "Mueller",
-            "city": "Austin",
+            "neighborhood": "Haven City",
+            "city": "Rancho Cucamonga",
             "state": "TX",
-            "zip_code": "78723",
+            "zip_code": "91739",
             "bedrooms": 3,
             "bathrooms": 2,
             "sqft": 1950,
@@ -138,7 +138,7 @@ def test_query_builder():
         query = (
             builder.price_range(500000, 800000)
             .bedrooms(3)
-            .location("Austin")
+            .location("Rancho Cucamonga")
             .sort_by_price(descending=True)
             .limit(10)
             .build()
@@ -224,7 +224,7 @@ def test_strategy_integration():
         data_service = PropertyDataService(repositories=[repo])
 
         # Test RepositoryPropertyMatcher creation
-        matcher = RepositoryPropertyMatcher(
+        RepositoryPropertyMatcher(
             property_data_service=data_service,
             strategy_name="basic",  # Use basic strategy to avoid complex dependencies
         )
@@ -232,7 +232,6 @@ def test_strategy_integration():
         print(f"   ✓ RepositoryPropertyMatcher created")
 
         # Test preferences
-        test_preferences = {"budget": 800000, "location": ["Austin"], "bedrooms": 3, "work_location": "downtown"}
 
         # Note: Since this might need async or complex setup, we just test creation
         print(f"   ✓ Matcher configured with preferences")

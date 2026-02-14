@@ -105,10 +105,10 @@ class MLFeaturePipeline:
         neighborhood = property_data.get("address", {}).get("neighborhood", "").lower()
         neighborhood_scores = {
             "downtown": 0.9,
-            "domain": 0.8,
-            "south congress": 0.85,
+            "ontario_mills": 0.8,
+            "day creek": 0.85,
             "westlake": 0.95,
-            "mueller": 0.8,
+            "haven city": 0.8,
             "circle c": 0.7,
         }
         encoded["neighborhood_score"] = neighborhood_scores.get(neighborhood, 0.5)
@@ -217,7 +217,7 @@ class PropertyMatcherML:
             {
                 "id": "demo_prop_1",
                 "price": 750000,
-                "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Austin", "zip": "78701"},
+                "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Rancho Cucamonga", "zip": "91730"},
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "sqft": 2100,
@@ -366,9 +366,9 @@ class PropertyMatcherML:
 
         # Adjacent area heuristics (would be enhanced with real geographic data)
         neighborhood_clusters = {
-            "downtown": ["east austin", "south congress"],
-            "westlake": ["rollingwood", "bee cave"],
-            "domain": ["round rock", "cedar park"],
+            "downtown": ["east rancho_cucamonga", "day creek"],
+            "westlake": ["deer creek", "bee cave"],
+            "ontario_mills": ["round rock", "cedar park"],
         }
 
         for pref_loc in pref_locations:

@@ -9,7 +9,7 @@ for common Spanish indicator words.
 
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.models.language_preferences import (
     ContactLanguagePreference,

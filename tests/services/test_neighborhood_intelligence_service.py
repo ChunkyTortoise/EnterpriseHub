@@ -26,7 +26,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
 
-@pytest.mark.integration
     InvestmentGrade,
     MarketAlert,
     MarketDataSource,

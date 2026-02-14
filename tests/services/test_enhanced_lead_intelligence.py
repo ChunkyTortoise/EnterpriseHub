@@ -18,7 +18,6 @@ import pytest
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import (
 
-@pytest.mark.integration
     EnhancedLeadIntelligence,
     get_enhanced_lead_intelligence,
 )
@@ -54,7 +53,7 @@ def _make_mock_analysis_result(**overrides):
         feature_breakdown={"engagement": 0.85, "budget_match": 0.92},
         conversation_context={
             "lead_id": "lead_12345",
-            "extracted_preferences": {"location": "West Lake Hills", "occupation": "Tech Executive"},
+            "extracted_preferences": {"location": "Alta Loma", "occupation": "Tech Executive"},
         },
         sources=["Claude AI", "Behavioral Analysis", "CRM Data"],
         analysis_time_ms=145,
@@ -81,7 +80,7 @@ class TestEnhancedLeadIntelligence:
     @pytest.fixture
     def sample_lead_name(self):
         """Sample lead name for testing."""
-        return "John Smith - Austin Premium Buyer"
+        return "John Smith - Rancho Cucamonga Premium Buyer"
 
     @pytest.fixture
     def sample_lead_context(self):
@@ -90,7 +89,7 @@ class TestEnhancedLeadIntelligence:
             "lead_id": "lead_12345",
             "name": "Sarah Johnson",
             "extracted_preferences": {
-                "location": "West Lake Hills",
+                "location": "Alta Loma",
                 "occupation": "Tech Executive",
             },
         }
@@ -110,7 +109,7 @@ class TestEnhancedLeadIntelligence:
             "conversation_history": [
                 {
                     "timestamp": datetime.now() - timedelta(hours=6),
-                    "message": "I'm looking for a luxury home in West Lake Hills",
+                    "message": "I'm looking for a luxury home in Alta Loma",
                     "type": "inbound",
                     "channel": "email",
                     "response_time": None,
@@ -134,7 +133,7 @@ class TestEnhancedLeadIntelligence:
             "property_views": [
                 {
                     "property_id": "prop_789",
-                    "address": "123 Luxury Lane, West Lake Hills",
+                    "address": "123 Luxury Lane, Alta Loma",
                     "price": 950000,
                     "bedrooms": 4,
                     "bathrooms": 3.5,
@@ -145,7 +144,7 @@ class TestEnhancedLeadIntelligence:
                 },
                 {
                     "property_id": "prop_890",
-                    "address": "456 Hills Drive, West Lake Hills",
+                    "address": "456 Hills Drive, Alta Loma",
                     "price": 1100000,
                     "bedrooms": 5,
                     "bathrooms": 4,
@@ -160,7 +159,7 @@ class TestEnhancedLeadIntelligence:
                 {
                     "timestamp": datetime.now() - timedelta(hours=4),
                     "filters": {
-                        "location": "West Lake Hills, TX",
+                        "location": "Alta Loma, TX",
                         "min_price": 800000,
                         "max_price": 1200000,
                         "min_bedrooms": 4,
@@ -194,7 +193,7 @@ class TestEnhancedLeadIntelligence:
             # Social and external signals
             "external_signals": {
                 "linkedin_job_change": True,
-                "spouse_job_location": "Austin, TX",
+                "spouse_job_location": "Rancho Cucamonga, CA",
                 "school_district_research": True,
                 "mortgage_pre_approval": True,
                 "credit_score_range": "excellent",

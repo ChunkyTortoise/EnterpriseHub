@@ -9,8 +9,6 @@ import pytest
 
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 
-@pytest.mark.integration
-
 
 def create_rag(name):
     """Create a RAG engine with a specific directory."""
@@ -36,7 +34,7 @@ def test_multitenancy_scoping():
 
         # 2. Add Tenant A document
         temp_rag.add_documents(
-            documents=["Private listing for Tenant A in Austin."],
+            documents=["Private listing for Tenant A in Rancho Cucamonga."],
             metadatas=[{"type": "listing"}],
             ids=["tenant_a_1"],
             location_id="TENANT_A",

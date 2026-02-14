@@ -984,7 +984,7 @@ class VendorCoordinationEngine:
                 response_time_hours=2.0,
                 average_cost_index=1.05,
                 status=VendorStatus.PREFERRED,
-                service_areas=["78701", "78702", "78703", "78704"],
+                service_areas=["91730", "91739", "91703", "91730"],
                 years_experience=8,
                 certifications=["TREC", "NAHI"],
                 insurance_verified=True,

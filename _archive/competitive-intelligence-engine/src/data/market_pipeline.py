@@ -551,7 +551,7 @@ class NationalMarketIntelligence:
         patterns = []
 
         # Generate patterns between major markets
-        for source in ['austin', 'dallas', 'houston']:
+        for source in ['rancho_cucamonga', 'dallas', 'houston']:
             if source not in markets:
                 continue
 

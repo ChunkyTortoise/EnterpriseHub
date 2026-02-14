@@ -167,7 +167,7 @@ class EnhancedPropertyMatcherAI:
             {
                 "id": "prop_001",
                 "price": 750000,
-                "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Austin", "zip": "78701"},
+                "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Rancho Cucamonga", "zip": "91730"},
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "sqft": 2100,
@@ -183,7 +183,7 @@ class EnhancedPropertyMatcherAI:
             {
                 "id": "prop_002",
                 "price": 680000,
-                "address": {"street": "456 Maple Avenue", "neighborhood": "Mueller", "city": "Austin", "zip": "78723"},
+                "address": {"street": "456 Maple Avenue", "neighborhood": "Haven City", "city": "Rancho Cucamonga", "zip": "91739"},
                 "bedrooms": 3,
                 "bathrooms": 2,
                 "sqft": 1950,
@@ -199,7 +199,7 @@ class EnhancedPropertyMatcherAI:
             {
                 "id": "prop_003",
                 "price": 825000,
-                "address": {"street": "789 Cedar Lane", "neighborhood": "Westlake", "city": "Austin", "zip": "78746"},
+                "address": {"street": "789 Cedar Lane", "neighborhood": "Westlake", "city": "Rancho Cucamonga", "zip": "91737"},
                 "bedrooms": 4,
                 "bathrooms": 3,
                 "sqft": 2800,

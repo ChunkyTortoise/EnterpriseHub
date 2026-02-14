@@ -5,5 +5,5 @@ Reference: OPERATIONAL_TOOLKIT_SPECS.md
 
 
 def audit_file(file_path: str):
-    # TODO: Wrap bandit/semgrep
+    # ROADMAP-095: Wrap bandit/semgrep security scanning tools
     pass

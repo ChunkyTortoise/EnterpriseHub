@@ -27,7 +27,6 @@ import pytest_asyncio
 # Import the service under test
 from ghl_real_estate_ai.services.service6_ai_integration import (
 
-@pytest.mark.integration
     Service6AIConfig,
     Service6AIOrchestrator,
     Service6AIResponse,
@@ -45,7 +44,7 @@ SAMPLE_LEAD_DATA = {
     "email": "john.smith@example.com",
     "phone": "+1234567890",
     "budget_range": "$400k-600k",
-    "preferred_location": "Austin, TX",
+    "preferred_location": "Rancho Cucamonga, CA",
     "property_type": "single_family",
     "timeline": "3_months",
     "current_situation": "first_time_buyer",
@@ -106,7 +105,7 @@ async def mock_memory_service():
     memory = AsyncMock()
     memory.get_context.return_value = {
         "conversation_history": [
-            {"role": "user", "content": "Looking for properties in Austin"},
+            {"role": "user", "content": "Looking for properties in Rancho Cucamonga"},
             {"role": "assistant", "content": "I can help with that"},
         ]
     }
@@ -357,7 +356,7 @@ class TestService6AIIntegration:
     async def test_enhanced_claude_conversation(self, ai_integration_service):
         """Test enhanced Claude conversation with AI insights."""
         conversation_history = [
-            {"role": "user", "content": "Looking for homes in Austin"},
+            {"role": "user", "content": "Looking for homes in Rancho Cucamonga"},
             {"role": "assistant", "content": "I can help you find great options..."},
         ]
 

@@ -133,7 +133,7 @@ const mockSuggestions: ProactiveSuggestion[] = [
     id: 'suggestion-003',
     type: 'insight',
     title: 'Market trend opportunity',
-    description: 'Austin market showing 12% increase in investor interest - suggest proactive outreach',
+    description: 'Rancho Cucamonga market showing 12% increase in investor interest - suggest proactive outreach',
     impact: 'medium',
     confidence: 78,
     actionable: true,

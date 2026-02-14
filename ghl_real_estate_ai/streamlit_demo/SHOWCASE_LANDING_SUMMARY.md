@@ -136,8 +136,8 @@ def render_service_categories() -> None:
 ### Case Studies (4 Categories)
 1. **Performance Optimization:** 89% token reduction, 87% cache hit rate
 2. **Cost Savings:** $240K annual savings, 3,200+ hours automated
-3. **AI Orchestration:** Multi-LLM coordination, agent mesh
-4. **Business Intelligence:** 80+ components, real-time monitoring
+3. **AI Orchestration:** Multi-LLM coordination, agent mesh (95% faster response)
+4. **Business Intelligence:** 80+ components, real-time monitoring (133% conversion increase)
 
 ### Service Categories (6)
 1. **AI & Machine Learning** (8 services)
@@ -254,7 +254,7 @@ streamlit run ghl_real_estate_ai/streamlit_demo/showcase_landing.py
 ### Access URL
 - **Local:** http://localhost:8501
 - **Network:** http://your-ip:8501
-- **Production:** Configure via Streamlit Cloud or custom domain
+- **Production:** Configure via Streamlit Cloud or custom ontario_mills
 
 ---
 
@@ -271,6 +271,7 @@ streamlit run ghl_real_estate_ai/streamlit_demo/showcase_landing.py
 - Pricing tiers and deliverables
 - Tech stack per service
 - Success stories and testimonials
+- See [SERVICE_BUNDLES.md](../../SERVICE_BUNDLES.md) for Signature Offers
 
 ### Phase 4: Case Studies
 - Deep technical implementations

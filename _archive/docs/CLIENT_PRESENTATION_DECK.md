@@ -171,7 +171,7 @@ With Jorge AI (23% improvement):
 *"Every day without Jorge, you're losing qualified leads to agents who are already using AI. The real estate AI arms race has started. You can be ahead of it, or behind it."*
 
 ### **Social Proof**
-*"Jorge is already helping agents in Austin close $2.3M more in annual commissions. The question isn't whether AI will dominate real estate - it's whether you'll be using it or competing against it."*
+*"Jorge is already helping agents in Rancho Cucamonga close $2.3M more in annual commissions. The question isn't whether AI will dominate real estate - it's whether you'll be using it or competing against it."*
 
 ### **Decision Framework**
 *"You have three options: 1) Keep doing what you're doing and hope for different results, 2) Try to build something like this yourself (which will take 2+ years and $500K+), or 3) Start using Jorge tomorrow. Which makes the most business sense?"*
@@ -183,7 +183,7 @@ With Jorge AI (23% improvement):
 
 ## 📊 **SUCCESS STORIES & CASE STUDIES**
 
-### **Case Study 1: Sarah Chen, Austin Luxury Specialist**
+### **Case Study 1: Sarah Chen, Rancho Cucamonga Luxury Specialist**
 **Before Jorge**: 1.8 deals/month, $27K average commission
 **After Jorge**: 2.4 deals/month, $32K average commission
 **Result**: 33% increase in volume, 18% increase in average deal size

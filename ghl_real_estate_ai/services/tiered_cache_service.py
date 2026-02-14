@@ -640,7 +640,7 @@ def tiered_cache(ttl: int = 300, key_prefix: str = ""):
         def sync_wrapper(*args, **kwargs):
             # For sync functions, check if we're in an async context
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
                 # We're in async context, need to schedule the coroutine
                 return asyncio.create_task(async_wrapper(*args, **kwargs))
             except RuntimeError:

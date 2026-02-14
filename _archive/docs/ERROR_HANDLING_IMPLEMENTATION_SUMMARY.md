@@ -21,7 +21,7 @@ This document summarizes the comprehensive error handling system implemented for
 - Commission rate validation (5%-8% range)
 - Property qualification criteria ($100K-$2M range)
 - Lead scoring validation
-- Market area validation (Austin, San Antonio, Houston, Dallas)
+- Market area validation (Rancho Cucamonga, San Antonio, Houston, Dallas)
 
 ### Integration:
 - Automatically integrated into FastAPI application
@@ -44,7 +44,7 @@ This document summarizes the comprehensive error handling system implemented for
 ```python
 - Value range: $100,000 - $2,000,000
 - Supported types: single_family, condo, townhouse, duplex
-- Markets: Austin, San Antonio, Houston, Dallas
+- Markets: Rancho Cucamonga, San Antonio, Houston, Dallas
 ```
 
 #### Lead Qualification:
@@ -264,7 +264,7 @@ try:
     property_req = JorgePropertyRequest(
         address="123 Main St",
         property_type="mansion",  # Invalid type
-        market="austin",
+        market="rancho_cucamonga",
         estimated_value=50000,    # Too low
         commission_rate=0.12      # Too high
     )

@@ -99,7 +99,7 @@ class RecoveryOrchestrator:
         """
         Proposes an alternative path when a GHL action fails.
         """
-        timestamp = datetime.now().isoformat()
+        datetime.now().isoformat()
         agent_name = error_context.get("agent", "Unknown")
         error_msg = error_context.get("error", "Unknown error")
         failed_action = error_context.get("action", "Unknown action")
@@ -282,7 +282,8 @@ class SwarmOrchestrator:
         task.status = TaskStatus.IN_PROGRESS
         task.started_at = datetime.now()
 
-        # Dynamic Model Selection
+    # ROADMAP-050: Connect agent capabilities to skill_registry.execute()
+    # Current: Skills found but tool execution needs implementation
         model_name = "gemini-2.0-flash" if complexity == "high" else self.llm.model
 
         context = self.blackboard.get_full_context()
@@ -798,6 +799,8 @@ class SwarmOrchestrator:
 
         print("\n" + "=" * 80 + "\n")
 
+    # ROADMAP-048: Implement actual task execution (currently returns empty list)
+    # See ROADMAP_API.md for full specification
     def generate_execution_plan(self) -> List[Dict]:
         """Generate execution plan showing task order"""
         # ... (keep existing implementation)
@@ -834,9 +837,9 @@ class SwarmOrchestrator:
                 break
 
             complexity = self._calculate_complexity()
-            # Adaptive Scaling: High complexity = lower concurrency to ensure stability/reasoning quality
-            # Low complexity = higher concurrency for speed.
-            # Limiting to 1 for free tier stability
+    # ROADMAP-049: Enable dynamic concurrency based on complexity
+    # Current: Hardcoded to 1 for free tier stability
+    # Target: max(1, int(5 * (1 - complexity)))
             max_parallel = 1
             tasks_to_run = ready_tasks[:max_parallel]
 
@@ -850,7 +853,9 @@ class SwarmOrchestrator:
             # Rate limit buffer - Free tier is very restrictive
             await asyncio.sleep(10)
 
-            # Autonomous Conflict Resolution (Phase 6)
+                # ROADMAP-051: Expand conflict detection beyond duplicate key detection
+            # Current: Only checks for multiple agents writing to same key
+            # Target: Semantic conflict detection, value contradiction analysis
             resolutions = await self.conflict_resolver.resolve(self.blackboard)
             if resolutions:
                 print(f"⚖️ Autonomous Conflict Resolution applied: {len(resolutions)} keys resolved.")

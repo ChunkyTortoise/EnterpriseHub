@@ -231,7 +231,7 @@ def render_chat_interface(api_base_url: str = "http://localhost:8000/api"):
     # Get current lead context
     contact_id = st.session_state.conversation_id
     selected_lead = st.session_state.get("selected_lead_name", "No lead selected")
-    market = st.session_state.get("current_market", "Austin")
+    market = st.session_state.get("current_market", "Rancho Cucamonga")
 
     # Chat header with context - Obsidian Command Edition
     st.markdown(

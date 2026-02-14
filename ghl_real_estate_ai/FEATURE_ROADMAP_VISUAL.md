@@ -87,7 +87,7 @@
 │                                                                             │
 │ ⏳ Production Deployment                                                   │
 │    └─ Railway/Render deployment                                            │
-│    └─ Domain setup                                                         │
+│    └─ Ontario Mills setup                                                         │
 │    └─ SSL certificates                                                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -117,7 +117,7 @@
 │ ⏳ Multi-Brand Support                                                     │
 │    └─ Custom logos per tenant                                              │
 │    └─ Color scheme customization                                           │
-│    └─ Domain whitelabeling                                                 │
+│    └─ Ontario Mills whitelabeling                                                 │
 │                                                                             │
 │ ⏳ Usage Metering & Billing                                                │
 │    └─ Conversation tracking                                                │

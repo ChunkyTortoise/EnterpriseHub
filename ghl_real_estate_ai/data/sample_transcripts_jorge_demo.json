@@ -325,20 +325,20 @@
     {
       "id": "robert_luxury_double_ender",
       "scenario": "Luxury Seller + Buyer Combo",
-      "persona": "Robert & Linda Williams - Steiner Ranch to Central RC",
+      "persona": "Robert & Linda Williams - North Rancho to Central RC",
       "demo_setup": "Robert wants to sell luxury and buy luxury. Watch AI capture both transactions...",
       "conversation": [
         {
           "timestamp": "09:45:40",
           "speaker": "Robert (Referral)",
-          "message": "Friends recommended Jorge for selling our Steiner Ranch home and finding a central_rc condo",
+          "message": "Friends recommended Jorge for selling our North Rancho home and finding a central_rc condo",
           "ai_analysis": "Luxury seller + luxury buyer + referral = Double-ended transaction",
           "jorge_note": "AI recognizes this could be your biggest commission this month"
         },
         {
           "timestamp": "09:45:47",
           "speaker": "AI Assistant",
-          "message": "We'd be honored to help! Steiner Ranch is such a prestigious community. What's drawing you to central_rc living?",
+          "message": "We'd be honored to help! North Rancho is such a prestigious community. What's drawing you to central_rc living?",
           "ai_strategy": "Honor luxury positioning + motivation discovery",
           "jorge_note": "AI speaks the language of luxury clients"
         },
@@ -352,7 +352,7 @@
         {
           "timestamp": "09:46:39",
           "speaker": "AI Assistant",
-          "message": "That sounds perfect! Rancho Cucamonga's central_rc luxury market is thriving. What's your Steiner Ranch home like? Beds, baths, square footage?",
+          "message": "That sounds perfect! Rancho Cucamonga's central_rc luxury market is thriving. What's your North Rancho home like? Beds, baths, square footage?",
           "ai_strategy": "Market confidence + listing information gathering",
           "jorge_note": "AI gathering listing details while building buyer profile"
         },

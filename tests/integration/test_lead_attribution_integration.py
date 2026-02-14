@@ -20,8 +20,6 @@ from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.api.schemas.ghl import GHLContact, GHLMessage, GHLWebhookEvent, MessageDirection, MessageType
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourceAttribution, SourceQuality
 
-@pytest.mark.integration
-
 
 class TestLeadAttributionIntegration:
     """Integration test suite for complete attribution workflow."""
@@ -55,7 +53,7 @@ class TestLeadAttributionIntegration:
                 "customFields": {
                     "utm_source": "zillow",
                     "utm_medium": "referral",
-                    "utm_campaign": "austin-listings-q1-2024",
+                    "utm_campaign": "rancho_cucamonga-listings-q1-2024",
                     "lead_source": "Zillow",
                     "original_url": "https://www.zillow.com/homedetails/123-main-st/",
                     "referrer": "https://zillow.com/search",
@@ -98,12 +96,12 @@ class TestLeadAttributionIntegration:
             # Mock lead source tracker
             expected_attribution = SourceAttribution(
                 source=LeadSource.ZILLOW,
-                source_detail="austin-listings-q1-2024",
+                source_detail="rancho_cucamonga-listings-q1-2024",
                 medium="referral",
-                campaign="austin-listings-q1-2024",
+                campaign="rancho_cucamonga-listings-q1-2024",
                 utm_source="zillow",
                 utm_medium="referral",
-                utm_campaign="austin-listings-q1-2024",
+                utm_campaign="rancho_cucamonga-listings-q1-2024",
                 referrer="https://zillow.com/search",
                 landing_page="https://youragentsite.com/listings/123-main-st",
                 quality_score=7.8,
@@ -194,7 +192,7 @@ class TestLeadAttributionIntegration:
         # Simulate a sequence of messages that qualify a lead
         messages = [
             {
-                "body": "I saw your Facebook ad about homes in Austin. I'm looking to buy.",
+                "body": "I saw your Facebook ad about homes in Rancho Cucamonga. I'm looking to buy.",
                 "lead_score": 2,
                 "extracted_data": {"budget": None, "timeline": None},
             },
@@ -228,12 +226,12 @@ class TestLeadAttributionIntegration:
                     "customFields": {
                         "utm_source": "facebook",
                         "utm_medium": "cpc",
-                        "utm_campaign": "austin-homes-spring-2024",
+                        "utm_campaign": "rancho_cucamonga-homes-spring-2024",
                         "utm_content": "carousel-ad-variant-b",
                         "gclid": "",
                         "fbclid": "IwAR123abc456def",
                         "lead_source": "Facebook Ads",
-                        "ad_set": "austin-buyers-lookalike",
+                        "ad_set": "rancho_cucamonga-buyers-lookalike",
                         "ad_creative": "spring-homes-carousel",
                     },
                 },
@@ -263,12 +261,12 @@ class TestLeadAttributionIntegration:
                 # Mock source attribution (same for all messages from this lead)
                 expected_attribution = SourceAttribution(
                     source=LeadSource.FACEBOOK_ADS,
-                    source_detail="austin-homes-spring-2024",
+                    source_detail="rancho_cucamonga-homes-spring-2024",
                     medium="cpc",
-                    campaign="austin-homes-spring-2024",
+                    campaign="rancho_cucamonga-homes-spring-2024",
                     utm_source="facebook",
                     utm_medium="cpc",
-                    utm_campaign="austin-homes-spring-2024",
+                    utm_campaign="rancho_cucamonga-homes-spring-2024",
                     utm_content="carousel-ad-variant-b",
                     quality_score=6.5,
                     source_quality=SourceQuality.STANDARD,

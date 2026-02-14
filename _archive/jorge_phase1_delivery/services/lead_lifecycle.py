@@ -658,7 +658,7 @@ if __name__ == "__main__":
     print(f"Started journey: {journey_id}")
     
     # Simulate journey events
-    tracker.record_event(journey_id, "message", "First contact: 'Looking for 3br in Austin'")
+    tracker.record_event(journey_id, "message", "First contact: 'Looking for 3br in Rancho Cucamonga'")
     tracker.transition_stage(journey_id, "contacted", "Initial response sent", lead_score=35)
     
     tracker.record_event(journey_id, "message", "Budget discussed")

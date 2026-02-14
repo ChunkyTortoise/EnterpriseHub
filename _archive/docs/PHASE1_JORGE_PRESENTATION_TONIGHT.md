@@ -22,7 +22,7 @@
 **Purpose:** High-level business intelligence and strategic insights
 
 **Key Features to Demo:**
-- ✅ Multi-market dashboard (Austin, TX & Rancho Cucamonga, CA)
+- ✅ Multi-market dashboard (Rancho Cucamonga, CA & Rancho Cucamonga, CA)
 - ✅ Real-time revenue tracking
 - ✅ Lead conversion metrics
 - ✅ System health monitoring
@@ -161,7 +161,7 @@
 - "Let's start with the 30,000-foot view..."
 - Show revenue dashboard
 - Highlight key metrics
-- "You can switch between your markets: Austin and Rancho Cucamonga"
+- "You can switch between your markets: Rancho Cucamonga and Rancho Cucamonga"
 
 **2. Lead Intelligence Hub (2 min)**
 - "Now let's dive into a specific lead..."

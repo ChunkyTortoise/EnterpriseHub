@@ -20,8 +20,6 @@ from typing import Dict, List, Tuple
 
 import pytest
 
-@pytest.mark.integration
-
 
 class CoverageValidator:
     """Validates test coverage meets quality and percentage thresholds"""

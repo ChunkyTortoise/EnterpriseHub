@@ -380,7 +380,7 @@ class PartnershipEcosystem:
             deployment_spec = {
                 "partner_id": partner_id,
                 "company_name": partner_config.company_name,
-                "custom_domain": deployment_config.get("custom_domain"),
+                "custom_ontario_mills": deployment_config.get("custom_ontario_mills"),
                 "region": deployment_config.get("region", "us-east-1"),
                 "features": partner_config.integration_config.supported_features,
                 "branding": custom_branding or {},

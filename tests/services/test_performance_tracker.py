@@ -14,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
 
-@pytest.mark.unit
     VALID_BOT_NAMES,
     WINDOWS,
     PerformanceTracker,

@@ -61,7 +61,7 @@ class FederatedLearningType(Enum):
 
     HORIZONTAL = "horizontal"  # Same features, different clients
     VERTICAL = "vertical"  # Different features, same clients
-    TRANSFER = "transfer"  # Transfer learning across domains
+    TRANSFER = "transfer"  # Transfer learning across ontario_millss
 
 
 class PrivacyTechnique(Enum):
@@ -970,7 +970,7 @@ async def test_privacy_preserving_pipeline():
     print(f"Training round completed: {round_metrics['round_number']}")
 
     # Test privacy-preserving inference
-    property_data = {"id": "prop_123", "price": 500000, "description": "Beautiful home", "address": {"zip": "78701"}}
+    property_data = {"id": "prop_123", "price": 500000, "description": "Beautiful home", "address": {"zip": "91730"}}
 
     client_data = {"id": "client_456", "budget": 600000, "preferences": "downtown location"}
 

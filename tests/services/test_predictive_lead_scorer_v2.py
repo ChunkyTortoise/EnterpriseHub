@@ -15,7 +15,6 @@ from ghl_real_estate_ai.ml.closing_probability_model import ModelPrediction
 from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, MarketFeatures
 from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import (
 
-@pytest.mark.unit
     LeadInsights,
     LeadPriority,
     PredictiveLeadScorerV2,

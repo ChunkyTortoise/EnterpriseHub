@@ -95,7 +95,7 @@ class WeaviateClient:
         """Mock hybrid search results for local dev/demo."""
         return [
             {
-                "address": "7801 Teravista Pkwy, Round Rock, TX",
+                "address": "7801 Teravista Pkwy, Fontana, TX",
                 "price": 545000,
                 "description": "Modern smart home with tech-centric features.",
                 "beds": 4,
@@ -104,7 +104,7 @@ class WeaviateClient:
                 "_additional": {"score": 0.92},
             },
             {
-                "address": "1202 East 4th St, Austin, TX",
+                "address": "1202 East 4th St, Rancho Cucamonga, CA",
                 "price": 625000,
                 "description": "Urban loft perfect for high-velocity professionals.",
                 "beds": 2,

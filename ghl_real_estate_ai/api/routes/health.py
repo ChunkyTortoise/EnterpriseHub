@@ -11,17 +11,19 @@ Provides multiple levels of health checks:
 
 import time
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from typing_extensions import Annotated
 
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import CacheService
-from ghl_real_estate_ai.services.database_service import get_database
+from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
+from ghl_real_estate_ai.services.database_service import DatabaseService, get_database
 from ghl_real_estate_ai.services.monitoring_service import MonitoringService
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
 
@@ -29,34 +31,27 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/health", tags=["Health Checks"])
 
-# Global instances (would be dependency injected in production)
-_monitoring_service: Optional[MonitoringService] = None
-_security_framework: Optional[SecurityFramework] = None
-_cache_service: Optional[CacheService] = None
+# FastAPI dependency injection - using @lru_cache for singleton behavior
 
 
+@lru_cache(maxsize=1)
 def get_monitoring_service() -> MonitoringService:
-    """Get monitoring service instance."""
-    global _monitoring_service
-    if _monitoring_service is None:
-        _monitoring_service = MonitoringService()
-    return _monitoring_service
+    """Get MonitoringService singleton instance."""
+    return MonitoringService()
 
 
+@lru_cache(maxsize=1)
 def get_security_framework() -> SecurityFramework:
-    """Get security framework instance."""
-    global _security_framework
-    if _security_framework is None:
-        _security_framework = SecurityFramework()
-    return _security_framework
+    """Get SecurityFramework singleton instance."""
+    return SecurityFramework()
 
 
-def get_cache_service() -> CacheService:
-    """Get cache service instance."""
-    global _cache_service
-    if _cache_service is None:
-        _cache_service = CacheService()
-    return _cache_service
+# Annotated types for cleaner dependency injection
+DatabaseDep = Annotated[DatabaseService, Depends(get_database)]
+CacheDep = Annotated[CacheService, Depends(get_cache_service)]
+MonitoringDep = Annotated[MonitoringService, Depends(get_monitoring_service)]
+SecurityDep = Annotated[SecurityFramework, Depends(get_security_framework)]
+UserDep = Annotated[dict, Depends(enterprise_auth_service.get_current_enterprise_user)]
 
 
 class HealthResponse(BaseModel):
@@ -99,7 +94,10 @@ _service_start_time = time.time()
 
 
 @router.get("/", response_model=HealthResponse)
-async def basic_health():
+async def basic_health(
+    db: DatabaseDep,
+    cache: CacheDep,
+):
     """
     Basic liveness probe.
 
@@ -111,7 +109,6 @@ async def basic_health():
 
         # Basic database check
         try:
-            db = await get_database()
             db_health = await db.health_check()
             db_healthy = db_health.get("status") == "healthy"
         except Exception as e:
@@ -120,7 +117,6 @@ async def basic_health():
 
         # Basic cache check
         try:
-            cache = get_cache_service()
             await cache.set("health_check_basic", "ok", ttl=10)
             cache_result = await cache.get("health_check_basic")
             cache_healthy = cache_result == "ok"
@@ -167,7 +163,12 @@ async def liveness_probe():
 
 
 @router.get("/ready", response_model=DetailedHealthResponse)
-async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
+async def readiness_probe(
+    current_user: UserDep,
+    db: DatabaseDep,
+    cache: CacheDep,
+    security: SecurityDep,
+):
     """
     Kubernetes-style readiness probe.
 
@@ -181,7 +182,6 @@ async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.g
 
         # Check database
         try:
-            db = await get_database()
             db_health = await db.health_check()
 
             services.append(
@@ -210,7 +210,6 @@ async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.g
 
         # Check cache/Redis
         try:
-            cache = get_cache_service()
             cache_start = time.time()
 
             await cache.set("readiness_check", "ok", ttl=10)
@@ -240,8 +239,6 @@ async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.g
 
         # Check security framework
         try:
-            security = get_security_framework()
-
             # Test JWT functionality
             test_token = security.generate_jwt_token("readiness_test", "user")
             token_valid = bool(test_token and len(test_token) > 50)
@@ -282,7 +279,10 @@ async def readiness_probe(current_user: dict = Depends(enterprise_auth_service.g
 
 
 @router.get("/deep", response_model=DetailedHealthResponse)
-async def deep_health_check(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
+async def deep_health_check(
+    current_user: UserDep,
+    monitoring: MonitoringDep,
+):
     """
     Comprehensive deep health check.
 
@@ -293,9 +293,6 @@ async def deep_health_check(current_user: dict = Depends(enterprise_auth_service
         uptime = time.time() - _service_start_time
         services = []
         alerts = []
-
-        # Get monitoring service
-        monitoring = get_monitoring_service()
 
         # Run comprehensive health checks
         try:
@@ -411,15 +408,17 @@ async def deep_health_check(current_user: dict = Depends(enterprise_auth_service
 
 
 @router.get("/metrics")
-async def performance_metrics(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
+async def performance_metrics(
+    current_user: UserDep,
+    monitoring: MonitoringDep,
+    db: DatabaseDep,
+):
     """
     Get performance and operational metrics.
 
     Provides detailed performance data for monitoring systems.
     """
     try:
-        monitoring = get_monitoring_service()
-
         # Get performance summary
         performance = monitoring.get_performance_summary(duration_minutes=15)
 
@@ -432,7 +431,6 @@ async def performance_metrics(current_user: dict = Depends(enterprise_auth_servi
         # Database statistics
         db_stats = {}
         try:
-            db = await get_database()
             db_metrics = await db.get_performance_metrics()
             db_stats = db_metrics
         except Exception as e:
@@ -448,13 +446,17 @@ async def performance_metrics(current_user: dict = Depends(enterprise_auth_servi
             "environment": settings.environment or "production",
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Metrics endpoint failed")
         raise HTTPException(status_code=500, detail="Metrics collection failed")
 
 
 @router.get("/dependencies")
-async def dependency_status(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
+async def dependency_status(
+    current_user: UserDep,
+    db: DatabaseDep,
+    cache: CacheDep,
+):
     """
     Get status of all external dependencies.
 
@@ -465,7 +467,6 @@ async def dependency_status(current_user: dict = Depends(enterprise_auth_service
 
         # Database dependency
         try:
-            db = await get_database()
             db_health = await db.health_check()
             dependencies["database"] = {
                 "status": db_health.get("status"),
@@ -484,7 +485,6 @@ async def dependency_status(current_user: dict = Depends(enterprise_auth_service
 
         # Redis dependency
         try:
-            cache = get_cache_service()
             start_time = time.time()
             await cache.set("dependency_check", "ok", ttl=5)
             result = await cache.get("dependency_check")
@@ -547,21 +547,22 @@ async def dependency_status(current_user: dict = Depends(enterprise_auth_service
 
         return {"timestamp": datetime.utcnow().isoformat(), "summary": summary, "dependencies": dependencies}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Dependency status check failed")
         raise HTTPException(status_code=500, detail="Dependency check failed")
 
 
 @router.post("/alerts/test")
-async def test_alerting(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
+async def test_alerting(
+    current_user: UserDep,
+    monitoring: MonitoringDep,
+):
     """
     Test the alerting system by creating a test alert.
 
     Useful for validating alert delivery mechanisms.
     """
     try:
-        monitoring = get_monitoring_service()
-
         # Create test alert
         alert_id = await monitoring.create_alert(
             service_name="health_check",
@@ -577,22 +578,42 @@ async def test_alerting(current_user: dict = Depends(enterprise_auth_service.get
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Test alert creation failed")
         raise HTTPException(status_code=500, detail="Alert test failed")
 
 
-# Custom response for different health check outcomes
 @router.get("/status")
-async def service_status():
+async def service_status(
+    db: DatabaseDep,
+    cache: CacheDep,
+):
     """
     Human-readable service status page.
 
     Returns a simple text status suitable for monitoring dashboards.
     """
     try:
-        # Get basic health
-        health = await basic_health()
+        # Determine health status (similar to basic_health)
+        try:
+            db_health = await db.health_check()
+            db_healthy = db_health.get("status") == "healthy"
+        except Exception:
+            db_healthy = False
+
+        try:
+            await cache.set("health_check_status", "ok", ttl=10)
+            cache_result = await cache.get("health_check_status")
+            cache_healthy = cache_result == "ok"
+        except Exception:
+            cache_healthy = False
+
+        if db_healthy and cache_healthy:
+            status = "healthy"
+        elif db_healthy or cache_healthy:
+            status = "degraded"
+        else:
+            status = "unhealthy"
 
         status_map = {
             "healthy": ("Service 6 is running normally", 200),
@@ -601,13 +622,13 @@ async def service_status():
             "critical": ("Service 6 is not functioning properly", 503),
         }
 
-        message, status_code = status_map.get(health.status, ("Unknown status", 500))
+        message, status_code = status_map.get(status, ("Unknown status", 500))
 
         response_data = {
             "message": message,
-            "status": health.status,
-            "timestamp": health.timestamp,
-            "uptime_seconds": health.uptime_seconds,
+            "status": status,
+            "timestamp": datetime.utcnow().isoformat(),
+            "uptime_seconds": time.time() - _service_start_time,
             "version": "1.0.0",
         }
 

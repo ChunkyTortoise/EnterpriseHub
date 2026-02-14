@@ -144,7 +144,7 @@ preferences = {
     "bathrooms": 3,
     "sqft_min": 2500,
     "school_rating_min": 8,
-    "commute_to": "Downtown Austin",
+    "commute_to": "Downtown Rancho Cucamonga",
     "commute_max_minutes": 45
 }
 

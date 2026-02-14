@@ -2,12 +2,12 @@
   "scenario": "Lead -> Jorge -> Lead Bot -> Concierge",
   "lead": {
     "contact_id": "demo_lead_1001",
-    "location_id": "demo_location_austin",
+    "location_id": "demo_location_rancho_cucamonga",
     "name": "Alex Morgan",
     "phone": "+15125550123",
     "email": "alex.morgan@example.com"
   },
-  "jorge_seller_message": "I'm thinking about selling my home in Austin in the next 60 days. What's the process like?",
+  "jorge_seller_message": "I'm thinking about selling my home in Rancho Cucamonga in the next 60 days. What's the process like?",
   "lead_bot_automation": {
     "automation_type": "day_3",
     "trigger_data": {

@@ -257,9 +257,9 @@ class TransactionProgressDashboard:
 
         # Demo data for selector
         sample_transactions = [
-            "TXN-20260118-ABC123 - John & Jane Smith - 123 Oak Street",
-            "TXN-20260115-DEF456 - Mike Johnson - 456 Pine Avenue",
-            "TXN-20260112-GHI789 - Sarah Williams - 789 Maple Drive",
+            "CAN-20260118-ABC123 - John & Jane Smith - 123 Oak Street",
+            "CAN-20260115-DEF456 - Mike Johnson - 456 Pine Avenue",
+            "CAN-20260112-GHI789 - Sarah Williams - 789 Maple Drive",
         ]
 
         selected = st.selectbox(
@@ -284,7 +284,7 @@ class TransactionProgressDashboard:
                 "transaction": {
                     "transaction_id": transaction_id,
                     "buyer_name": "John & Jane Smith",
-                    "property_address": "123 Oak Street, Austin, TX 78701",
+                    "property_address": "123 Oak Street, Rancho Cucamonga, CA 91730",
                     "purchase_price": 525000,
                     "status": "in_progress",
                     "progress_percentage": 73.5,
@@ -508,7 +508,7 @@ class TransactionProgressDashboard:
             go.Indicator(
                 mode="gauge+number+delta",
                 value=health_score,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "Health Score", "font": {"color": "white"}},
                 delta={"reference": 85},
                 gauge={

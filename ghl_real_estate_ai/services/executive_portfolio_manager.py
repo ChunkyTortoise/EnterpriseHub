@@ -35,7 +35,7 @@ class PortfolioManagerAgent:
         # In production, this queries leads where:
         # status="active", last_interaction < (now - 30 days), and expected_revenue > $10k
         dormant_leads = [
-            {"id": "LEAD_ dormant_1", "name": "Alice Smith", "potential_yield": 0.22, "location": "Austin"},
+            {"id": "LEAD_ dormant_1", "name": "Alice Smith", "potential_yield": 0.22, "location": "Rancho Cucamonga"},
             {"id": "LEAD_ dormant_2", "name": "Bob Jones", "potential_yield": 0.19, "location": "Miami"},
         ]
 

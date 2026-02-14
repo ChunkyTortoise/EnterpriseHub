@@ -176,7 +176,7 @@ if __name__ == "__main__":
     lead_data = {
         "budget": 500000,
         "timeline": "3-6 months",
-        "location": "downtown austin",
+        "location": "downtown rancho_cucamonga",
         "property_type": "condo",
         "engagement_level": "high"
     }
@@ -397,7 +397,7 @@ if __name__ == "__main__":
         "phone": "+15125559999",
         "budget": 750000,
         "timeline": "immediate",
-        "location": "downtown austin",
+        "location": "downtown rancho_cucamonga",
         "property_type": "luxury condo",
         "jorge_questions_answered": 6,
         "engagement_history": ["property_view", "property_view", "email_open", "sms_reply"],

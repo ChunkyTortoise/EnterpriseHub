@@ -109,7 +109,7 @@ class GhostFollowUpEngine:
 
     async def _day_14_email_cma(self, state: GhostState) -> Dict[str, Any]:
         """Email - Objection Handler + CMA Injection"""
-        address = state.property_address or "123 Main St, Austin, TX"
+        address = state.property_address or "123 Main St, Rancho Cucamonga, CA"
         report = await self.cma_generator.generate_report(address)
         pdf_url = PDFRenderer.generate_pdf_url(report)
 

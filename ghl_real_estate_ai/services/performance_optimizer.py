@@ -465,7 +465,7 @@ class ParallelExecutor:
         start_time = time.time()
 
         # Split into batches to avoid overwhelming the system
-        batches = [items[i : i + batch_size] for i in range(0, len(items), batch_size)]
+        [items[i : i + batch_size] for i in range(0, len(items), batch_size)]
 
         async def process_item_with_semaphore(item):
             async with self.semaphore:

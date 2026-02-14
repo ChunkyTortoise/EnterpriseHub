@@ -12,9 +12,9 @@ from ghl_real_estate_ai.agent_system.v2.conductor import process_request
 
 async def main():
     print("🚀 Starting V2 Pipeline Test...")
-    address = "123 Maple St, Austin, TX"
+    address = "123 Maple St, Rancho Cucamonga, CA"
     request = "full_pipeline"
-    market = "Austin, TX"
+    market = "Rancho Cucamonga, CA"
     
     try:
         result = await process_request(address, request, market)

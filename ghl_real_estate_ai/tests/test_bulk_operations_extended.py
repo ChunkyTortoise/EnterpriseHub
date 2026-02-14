@@ -12,8 +12,6 @@ import pytest
 
 from ghl_real_estate_ai.services.bulk_operations import BulkOperationsManager
 
-@pytest.mark.integration
-
 
 class TestBulkOperationsManager:
     """Comprehensive test suite for BulkOperationsManager."""

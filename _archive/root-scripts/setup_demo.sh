@@ -116,8 +116,8 @@ lead_names = [
 ]
 
 properties = [
-    "Downtown Austin Condo", "Lake Travis Mansion", "South Austin Bungalow",
-    "West Lake Hills Estate", "East Austin Townhouse", "Cedar Park Family Home",
+    "Downtown Rancho Cucamonga Condo", "Lake Travis Mansion", "South Rancho Cucamonga Bungalow",
+    "West Lake Hills Estate", "East Rancho Cucamonga Townhouse", "Cedar Park Family Home",
     "Barton Creek Luxury Villa", "Mueller Community Home", "Zilker Condo",
     "Round Rock Suburb House", "Georgetown Historic Home", "Dripping Springs Ranch"
 ]
@@ -135,7 +135,7 @@ for i, name in enumerate(lead_names):
         "budget": random.choice([300000, 450000, 600000, 750000, 900000, 1200000]),
         "preferences": {
             "bedrooms": random.choice([2, 3, 4, 5]),
-            "location": random.choice(["Downtown", "West Lake Hills", "South Austin", "Cedar Park"]),
+            "location": random.choice(["Downtown", "West Lake Hills", "South Rancho Cucamonga", "Cedar Park"]),
             "property_type": random.choice(["Condo", "House", "Townhouse", "Estate"])
         },
         "activity": {

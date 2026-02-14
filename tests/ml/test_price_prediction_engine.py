@@ -26,7 +26,6 @@ import pytest
 
 from ghl_real_estate_ai.ml.price_prediction_engine import (
 
-@pytest.mark.unit
     EnsemblePricePredictor,
     ModelMetrics,
     ModelType,

@@ -12,8 +12,6 @@ import pytest
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 class TestGHLClient:

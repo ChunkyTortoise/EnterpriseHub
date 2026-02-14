@@ -8,7 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.utils.conversation_rate_limiter import (
 
-@pytest.mark.unit
     ConversationRateLimiter,
     RateLimitResult,
 )

@@ -167,7 +167,6 @@ class MCPClient:
         import aiohttp
 
         # Create HTTP session with authentication
-        auth = None
         headers = {}
 
         if "token" in server.auth_config:

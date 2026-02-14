@@ -1,7 +1,7 @@
 # EnterpriseHub: Real Estate AI & BI Platform
 
 ## Project Identity
-**Domain**: Austin real estate market with AI-powered lead qualification, chatbot orchestration, and Business Intelligence dashboards.
+**Domain**: Rancho Cucamonga real estate market with AI-powered lead qualification, chatbot orchestration, and Business Intelligence dashboards.
 
 **Core Mission**: Transform real estate operations through intelligent automation while maintaining human oversight and compliance.
 
@@ -53,7 +53,7 @@
 - **CMA**: Comparative Market Analysis
 - **Hot Lead**: High-intent prospect (ready to transact)
 
-### Austin Market Specifics
+### Rancho Cucamonga Market Specifics
 - **Price Ranges**: Entry-level $300-500k, Mid-market $500k-1M, Luxury $1M+
 - **Key Areas**: Downtown, West Lake Hills, Cedar Park, Round Rock, Pflugerville
 - **Buyer Personas**: Tech professionals, families relocating, investors
@@ -129,7 +129,7 @@ class LeadQualificationError(Exception):
 def test_buyer_intent_classification():
     """Test buyer intent detection accuracy"""
     test_cases = [
-        ("I want to buy a 3BR house in Austin", "buyer_intent"),
+        ("I want to buy a 3BR house in Rancho Cucamonga", "buyer_intent"),
         ("What's my home worth?", "seller_intent"),
         ("Just browsing", "information_seeking")
     ]

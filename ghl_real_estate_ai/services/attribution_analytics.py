@@ -21,6 +21,7 @@ Key Features:
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -194,6 +195,12 @@ class AttributionAnalytics:
         self.min_data_requirements = {"min_leads": 10, "min_days": 7, "min_conversions": 3}
 
         logger.info("AttributionAnalytics initialized with advanced analytics capabilities")
+
+
+@lru_cache(maxsize=1)
+def get_attribution_analytics() -> AttributionAnalytics:
+    """Get AttributionAnalytics singleton instance."""
+    return AttributionAnalytics()
 
     async def generate_attribution_report(
         self,

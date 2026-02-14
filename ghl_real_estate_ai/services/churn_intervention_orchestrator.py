@@ -468,7 +468,7 @@ class InterventionOrchestrator:
         """Create and deliver special incentive offer for critical churn risk"""
         # This would integrate with incentive/promotion systems
         # For now, create a placeholder
-        offer_data = {
+        {
             "lead_id": intervention.lead_id,
             "offer_type": "churn_prevention",
             "discount_percentage": 5.0,  # 5% off closing costs

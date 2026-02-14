@@ -127,7 +127,7 @@ class MLOpsRetrainingJob:
                         sample = await self._process_lead_into_sample(data)
                         if sample:
                             all_samples.append(sample)
-                    except Exception as e:
+                    except Exception:
                         # Skip malformed files
                         continue
 

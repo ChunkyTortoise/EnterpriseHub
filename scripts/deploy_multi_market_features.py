@@ -243,7 +243,7 @@ class ProductionDeploymentManager:
             from ghl_real_estate_ai.services.churn_prediction_engine import ChurnPredictionEngine
             engine = ChurnPredictionEngine()
             validation_results["churn_engine"] = True
-        except:
+        except Exception:
             pass
         
         # Count API routes
@@ -267,7 +267,7 @@ class ProductionDeploymentManager:
         feature_flags = {
             "multi_market_expansion": {
                 "enabled": True,
-                "markets": ["austin", "dallas", "houston", "san_antonio", "rancho_cucamonga"],
+                "markets": ["rancho_cucamonga", "dallas", "houston", "san_antonio", "rancho_cucamonga"],
                 "rollout_percentage": 100
             },
             "advanced_churn_recovery": {

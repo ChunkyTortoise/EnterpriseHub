@@ -114,6 +114,9 @@ from ghl_real_estate_ai.api.routes import (
     websocket_routes,  # Real-time WebSocket routes
 )
 
+# Import GHL Integration router (Phase 1: Unified webhook infrastructure)
+from ghl_integration import ghl_router, initialize_ghl_integration, shutdown_ghl_integration
+
 # Import WebSocket and Socket.IO integration services
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -408,9 +411,27 @@ async def lifespan(app: FastAPI):
 
     _validate_jorge_services_config(logger)
 
+    # ========================================================================
+    # GHL UNIFIED WEBHOOK INTEGRATION (Phase 1: Router + Handlers + Retry/DLQ)
+    # ========================================================================
+    try:
+        ghl_init_result = await initialize_ghl_integration()
+        if ghl_init_result.get("success"):
+            logger.info(f"✅ GHL Integration initialized: {ghl_init_result.get('handlers_registered')} handlers")
+        else:
+            logger.warning(f"⚠️ GHL Integration init issue: {ghl_init_result.get('error')}")
+    except Exception as e:
+        logger.error(f"❌ GHL Integration failed to initialize: {e}")
+        logger.warning("GHL webhooks will not function - incoming GHL events will be rejected")
+
     yield
 
-    # Shutdown logic
+    # Shutdown logic - GHL Integration
+    try:
+        await shutdown_ghl_integration()
+        logger.info("🛑 GHL Integration shutdown complete")
+    except Exception as e:
+        logger.warning(f"GHL Integration shutdown error: {e}")
     if alerting_task and not alerting_task.done():
         alerting_task.cancel()
         try:
@@ -601,9 +622,9 @@ def _setup_routers(app: FastAPI):
     enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
 
     @enterprise_auth_router.post("/sso/initiate")
-    async def initiate_enterprise_sso_login(domain: str, redirect_uri: str):
+    async def initiate_enterprise_sso_login(ontario_mills: str, redirect_uri: str):
         try:
-            sso_data = await enterprise_auth_service.initiate_sso_login(domain, redirect_uri)
+            sso_data = await enterprise_auth_service.initiate_sso_login(ontario_mills, redirect_uri)
             return sso_data
         except EnterpriseAuthError as e:
             raise HTTPException(status_code=400, detail=e.message)
@@ -663,6 +684,9 @@ def _setup_routers(app: FastAPI):
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
     app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
+
+    # GHL Unified Webhook Integration (Phase 1: Lead/Seller/Buyer bot handlers)
+    app.include_router(ghl_router, prefix="/ghl")
 
 
 # Import OpenAPI tag metadata for enhanced documentation

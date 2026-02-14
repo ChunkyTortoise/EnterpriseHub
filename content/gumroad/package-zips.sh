@@ -45,27 +45,34 @@ zip -r "../EnterpriseHub/$STARTER_ZIP" \
     README.md \
     LICENSE \
     requirements.txt \
-    setup.py \
     pyproject.toml \
     Dockerfile \
     docker-compose.yml \
-    config/ \
-    src/ \
-    cli/ \
-    ui/ \
+    agentforge/ \
+    app.py \
+    client.py \
+    subagent.py \
+    streamlit_app.py \
+    services/ \
+    utils/ \
     tests/ \
-    examples/basic_chat.py \
-    examples/function_calling.py \
-    examples/cost_tracking.py \
+    examples/basic_usage.py \
+    examples/multi_provider.py \
+    examples/fallback_routing.py \
     examples/streaming.py \
-    docs/API_REFERENCE.md \
-    docs/CUSTOMIZATION.md \
-    docs/ARCHITECTURE.md \
+    benchmarks/ \
+    Makefile \
+    pytest.ini \
+    .env.example \
+    .gitignore \
+    docs/ \
     -x "*.pyc" \
-    -x "__pycache__/*" \
+    -x "*/__pycache__/*" \
+    -x "*/__pycache__" \
     -x ".git/*" \
     -x ".pytest_cache/*" \
     -x ".mypy_cache/*" \
+    -x ".ruff_cache/*" \
     -x "*.egg-info/*"
 
 cd ../EnterpriseHub
@@ -153,14 +160,15 @@ Contact caymanroden@gmail.com if not received.
 EOF
 
 # Add to Pro ZIP
+SCRIPT_DIR="$(pwd)"
 cd "$TEMP_DIR"
-zip -r "../EnterpriseHub/$PRO_ZIP" \
+zip -r "$SCRIPT_DIR/$PRO_ZIP" \
     CONSULTATION_BOOKING.txt \
     PRIORITY_SUPPORT.txt \
     case-studies/ \
     ci-cd/
 
-cd ../EnterpriseHub
+cd "$SCRIPT_DIR"
 rm -rf "$TEMP_DIR"
 
 echo "✅ Pro ZIP created: $PRO_ZIP"
@@ -282,8 +290,9 @@ Questions? Email caymanroden@gmail.com
 EOF
 
 # Add to Enterprise ZIP
+SCRIPT_DIR="$(pwd)"
 cd "$TEMP_DIR"
-zip -r "../EnterpriseHub/$ENTERPRISE_ZIP" \
+zip -r "$SCRIPT_DIR/$ENTERPRISE_ZIP" \
     ENTERPRISE_KICKOFF.txt \
     CUSTOM_EXAMPLES_FORM.txt \
     WHITE_LABEL_LICENSE.txt \
@@ -291,7 +300,7 @@ zip -r "../EnterpriseHub/$ENTERPRISE_ZIP" \
     TEAM_TRAINING.txt \
     enterprise/
 
-cd ../EnterpriseHub
+cd "$SCRIPT_DIR"
 rm -rf "$TEMP_DIR"
 
 echo "✅ Enterprise ZIP created: $ENTERPRISE_ZIP"

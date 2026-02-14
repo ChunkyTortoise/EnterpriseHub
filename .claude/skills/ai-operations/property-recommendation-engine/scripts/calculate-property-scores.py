@@ -74,7 +74,7 @@ def load_preferences(lead_id: str) -> Dict[str, Any]:
             "garage": 2,
             "pool": False,
             "school_rating_min": 7,
-            "commute_to": "Downtown Austin",
+            "commute_to": "Downtown Rancho Cucamonga",
             "commute_max_minutes": 45,
             "style_preference": "modern",
             "yard_size": "medium"
@@ -153,7 +153,7 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
             },
             {
                 "property_id": "prop_005",
-                "address": {"street": "555 Austin Blvd", "neighborhood": "Downtown", "city": "Austin"},
+                "address": {"street": "555 Rancho Cucamonga Blvd", "neighborhood": "Downtown", "city": "Rancho Cucamonga"},
                 "price": 895000,
                 "bedrooms": 3,
                 "bathrooms": 2,

@@ -14,8 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.unit
-
 try:
     from ghl_real_estate_ai.core.types import LeadClassification
 

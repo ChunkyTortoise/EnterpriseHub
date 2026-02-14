@@ -5,7 +5,7 @@ Extracted from ClaudeAssistant god class.
 """
 
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import streamlit as st
 
@@ -70,7 +70,7 @@ class UIRenderingService:
 
         if "Executive" in clean_hub:
             hot_leads = sum(1 for l in leads.values() if l and l.get("classification") == "hot")
-            return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Austin downtown cluster."
+            return f"Jorge, your pipeline has {hot_leads} leads ready for immediate closing. Most are focused on the Rancho Cucamonga downtown cluster."
 
         elif "Lead Intelligence" in clean_hub:
             selected = st.session_state.get("selected_lead_name", "-- Select a Lead --")

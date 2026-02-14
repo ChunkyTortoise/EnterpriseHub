@@ -158,7 +158,7 @@ value_engine = get_dynamic_value_justification_engine()
 ```python
 # Track value across all dimensions
 value_metrics = await value_engine.track_real_time_value(
-    agent_id="jorge_sales_austin",
+    agent_id="jorge_sales_rancho_cucamonga",
     client_id="client_smith_001",
     transaction_id="txn_450k_home"
 )
@@ -170,7 +170,7 @@ print(f"Tracked {len(value_metrics)} value metrics")
 ```python
 # Calculate comprehensive ROI
 roi_calculation = await value_engine.calculate_real_time_roi(
-    agent_id="jorge_sales_austin",
+    agent_id="jorge_sales_rancho_cucamonga",
     client_id="client_smith_001"
 )
 
@@ -182,7 +182,7 @@ print(f"Value: ${roi_calculation.total_value_delivered:,}")
 ```python
 # Get dynamic pricing recommendation
 pricing_rec = await value_engine.optimize_dynamic_pricing(
-    agent_id="jorge_sales_austin",
+    agent_id="jorge_sales_rancho_cucamonga",
     target_roi_percentage=250.0
 )
 
@@ -200,7 +200,7 @@ from ghl_real_estate_ai.streamlit_demo.components.real_time_value_dashboard impo
 
 # Render dashboard
 render_real_time_value_dashboard(
-    agent_id="jorge_sales_austin",
+    agent_id="jorge_sales_rancho_cucamonga",
     client_id="client_smith_001"
 )
 ```
@@ -215,7 +215,7 @@ import requests
 response = requests.post(
     "http://localhost:8000/api/v1/value-justification/roi/calculate",
     json={
-        "agent_id": "jorge_sales_austin",
+        "agent_id": "jorge_sales_rancho_cucamonga",
         "client_id": "client_smith_001",
         "period_days": 365
     }
@@ -237,7 +237,7 @@ templates = get_value_communication_templates()
 
 # Generate ROI email report
 message = await templates.generate_roi_email_report(
-    agent_id="jorge_sales_austin",
+    agent_id="jorge_sales_rancho_cucamonga",
     client_id="client_smith_001"
 )
 

@@ -11,7 +11,7 @@ def render_property_valuation_engine():
 
     col1, col2 = st.columns(2)
     with col1:
-        property_address = st.text_input("Property Address", placeholder="1234 Main Street, Austin, TX 78704")
+        property_address = st.text_input("Property Address", placeholder="1234 Main Street, Rancho Cucamonga, CA 91730")
         property_type = st.selectbox("Property Type", ["Single Family", "Townhome", "Condo", "Duplex", "Multi-Family"])
         year_built = st.number_input("Year Built", value=1995, step=1)
         lot_size = st.number_input("Lot Size (acres)", value=0.25, step=0.05)

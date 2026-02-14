@@ -38,8 +38,6 @@ from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadI
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from tests.mocks.external_services import MockClaudeClient, MockDatabaseService, MockRedisClient, create_test_lead_data
 
-@pytest.mark.integration
-
 
 class FailureType(Enum):
     """Types of failures to inject"""
@@ -164,7 +162,7 @@ class TestClaudeAPIResilience:
         )
 
         lead_data = create_test_lead_data(
-            {"lead_name": "Timeout Test Lead", "budget": "$500,000", "timeline": "soon", "location": "Austin"}
+            {"lead_name": "Timeout Test Lead", "budget": "$500,000", "timeline": "soon", "location": "Rancho Cucamonga"}
         )
 
         async with self.chaos_injector.inject_failure(experiment) as failure_func:
@@ -517,12 +515,12 @@ class TestBusinessContinuityUnderChaos:
         test_scenarios = [
             {
                 "name": "High Intent Lead - Infrastructure Chaos",
-                "data": {"budget": "$600,000", "timeline": "immediate", "location": "Austin", "financing": "cash"},
+                "data": {"budget": "$600,000", "timeline": "immediate", "location": "Rancho Cucamonga", "financing": "cash"},
                 "expected_min_score": 4,
             },
             {
                 "name": "Standard Lead - Infrastructure Chaos",
-                "data": {"budget": "$400,000", "location": "Austin suburbs"},
+                "data": {"budget": "$400,000", "location": "Rancho Cucamonga suburbs"},
                 "expected_min_score": 2,
             },
         ]

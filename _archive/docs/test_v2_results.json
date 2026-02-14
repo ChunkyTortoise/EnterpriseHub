@@ -1,7 +1,7 @@
 {
   "user_request": "full_pipeline",
-  "property_address": "123 Maple St, Austin, TX",
-  "market": "Austin, TX",
+  "property_address": "123 Maple St, Rancho Cucamonga, CA",
+  "market": "Rancho Cucamonga, CA",
   "intent": "FULL_PIPELINE",
   "research_data": null,
   "analysis_results": null,

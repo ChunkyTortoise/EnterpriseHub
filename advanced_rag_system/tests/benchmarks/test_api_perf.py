@@ -16,7 +16,6 @@ from typing import Any, Dict
 import numpy as np
 import pytest
 
-@pytest.mark.integration
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -25,6 +24,8 @@ try:
     from ai_ml_showcase.rag_excellence.advanced_rag_orchestrator import ProductionRAGOrchestrator
 except ImportError:
     # Fallback for testing environment
+
+@pytest.mark.integration
     class ProductionRAGOrchestrator:
         async def query_with_metrics(self, query: str, k: int = 5, **kwargs):
             # Simulate API processing
@@ -115,8 +116,6 @@ class TestAPIPerformance:
             "What are common RAG implementation challenges?",
         ]
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_query_endpoint_latency(self, client, test_queries):
         """
         Measure /query endpoint latency.
@@ -165,8 +164,6 @@ class TestAPIPerformance:
 
         return {"p50": p50, "p95": p95, "p99": p99, "total_requests": len(latencies)}
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_cache_performance(self, client):
         """
         Measure cache hit performance improvement.
@@ -214,8 +211,6 @@ class TestAPIPerformance:
             "cache_effective": cache_effective,
         }
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_concurrent_users_performance(self, client, test_queries):
         """
         Test API performance with concurrent users.
@@ -300,8 +295,6 @@ class TestAPIPerformance:
 
         return results
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_streaming_performance(self, client, test_queries):
         """
         Test streaming query performance.
@@ -359,8 +352,6 @@ class TestAPIPerformance:
 
         return {"status": "streaming_not_available"}
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_api_error_handling_performance(self, client):
         """
         Test API performance with various error conditions.
@@ -410,8 +401,6 @@ class TestAPIPerformance:
 
         return {"status": "error_tests_skipped"}
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_throughput_sustained_load(self, client, test_queries):
         """
         Test sustained throughput under continuous load.
@@ -479,8 +468,6 @@ class TestAPIPerformance:
             "stretch_goal_met": stretch_goal_met,
         }
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_api_response_completeness(self, client, test_queries):
         """
         Test that API responses contain all expected fields and data.

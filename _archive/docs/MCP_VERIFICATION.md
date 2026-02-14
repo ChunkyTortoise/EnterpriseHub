@@ -81,7 +81,7 @@ mcp__postgres__query sql="SELECT current_database();"
 2. **Verify tools available** → ToolSearch commands
 3. **Test individual tools** → Basic functionality
 4. **Test Jorge's data** → Real CRM queries
-5. **Test Austin properties** → Live market data
+5. **Test Rancho Cucamonga properties** → Live market data
 6. **Full workflow test** → End-to-end automation
 
 ## 🎉 Success Indicators
@@ -89,7 +89,7 @@ mcp__postgres__query sql="SELECT current_database();"
 - All ToolSearch queries return functions
 - Database queries return data
 - Jorge's GHL account accessible
-- Austin property data retrieved
+- Rancho Cucamonga property data retrieved
 - AI reasoning generates insights
 - Memory stores project data
 

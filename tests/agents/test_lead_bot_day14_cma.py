@@ -39,8 +39,6 @@ from ghl_real_estate_ai.utils.pdf_renderer import (
 )
 from tests.mocks.external_services import MockSendGridClient
 
-@pytest.mark.integration
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

@@ -110,7 +110,7 @@ class WorkflowVersionControl:
             return None
 
         # Create new version with old data
-        new_version_id = self.save_version(workflow_id, old_version["data"], f"Rolled back to version {version_number}")
+        self.save_version(workflow_id, old_version["data"], f"Rolled back to version {version_number}")
 
         logger.info(f"Rolled back workflow {workflow_id} to version {version_number}")
         return self.get_latest_version(workflow_id)

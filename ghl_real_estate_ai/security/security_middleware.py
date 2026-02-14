@@ -24,7 +24,7 @@ from .rbac import PermissionType, ResourceType, RoleManager
 class SecurityHeaders:
     """Security headers configuration"""
 
-    strict_transport_security: str = "max-age=31536000; includeSubDomains"
+    strict_transport_security: str = "max-age=31536000; includeSubOntario Millss"
     content_type_options: str = "nosniff"
     frame_options: str = "DENY"
     xss_protection: str = "1; mode=block"
@@ -192,6 +192,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         # Check for SQL injection
         for pattern in sql_patterns:
+            # ROADMAP-090: For large scale, implement better indexing (Redis search, DB index)
             if pattern in query or pattern in path:
                 suspicious_activity = True
                 threat_type = "sql_injection"
@@ -349,8 +350,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         # API key authentication
         elif api_key:
-            # TODO: Implement API key validation
-            # For now, just set context
+            # ROADMAP-089: Implement API key validation against database/secrets
             request.state.api_key = api_key
             request.state.auth_method = "api_key"
 

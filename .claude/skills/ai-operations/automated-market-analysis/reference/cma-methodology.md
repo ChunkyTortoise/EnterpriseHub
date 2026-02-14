@@ -169,7 +169,7 @@ def select_best_comparables(
 ### Standard Adjustment Factors
 
 ```python
-# Market-specific adjustments (Austin Metro, 2026)
+# Market-specific adjustments (Rancho Cucamonga Metro, 2026)
 ADJUSTMENT_FACTORS = {
     # Per-unit adjustments
     "bedroom": {

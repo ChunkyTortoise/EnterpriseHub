@@ -7,7 +7,6 @@ import pytest
 
 from ghl_real_estate_ai.services.sentiment_analysis_engine import (
 
-@pytest.mark.unit
     Channel,
     Emotion,
     SentimentAnalysisEngine,

@@ -337,7 +337,7 @@ class BusinessIntelligenceCommandCenter:
                 go.Indicator(
                     mode="gauge+number+delta",
                     value=effectiveness * 100,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Jorge Method Performance"},
                     delta={"reference": 85},
                     gauge={

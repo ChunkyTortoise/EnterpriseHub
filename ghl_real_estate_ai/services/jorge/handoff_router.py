@@ -24,13 +24,14 @@ Usage:
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
     PerformanceTracker,
     SLA_CONFIG,
 )
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
+from ghl_real_estate_ai.services.service_types import DeferralStats
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class HandoffRouter:
 
         # Track deferred handoffs for retry
         self._deferred_handoffs: Dict[str, List[DeferredHandoff]] = {}
-        self._deferral_stats: Dict[str, Any] = {
+        self._deferral_stats: DeferralStats = {
             "total_deferrals": 0,
             "deferrals_by_bot": {},
             "auto_recoveries": 0,
@@ -312,6 +313,15 @@ class HandoffRouter:
                 "reason": f"Max retries exceeded: {reason}",
                 "retry_count": retry_count,
             }
+
+        # Record deferral in statistics
+        # Extract reason type from reason string
+        reason_type = "other"
+        if "error rate" in reason.lower():
+            reason_type = "error_rate"
+        elif "p95" in reason.lower() or "latency" in reason.lower():
+            reason_type = "p95_latency"
+        self._record_deferral(target_bot, reason_type)
 
         # Create deferred handoff record
         deferred = DeferredHandoff(

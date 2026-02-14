@@ -114,7 +114,7 @@ class PropertyMatcherWithSemanticCache:
         
         Examples of similar searches that would hit the cache:
         - "3 bedroom house under $500k" vs "3 br home below 500000"
-        - "Downtown Austin condo" vs "Austin city center apartment"
+        - "Downtown Rancho Cucamonga condo" vs "Rancho Cucamonga city center apartment"
         """
         
         # Normalize search criteria for better cache hits
@@ -423,11 +423,11 @@ async def test_semantic_cache_integration():
     print("\n2. Testing property matching integration...")
     property_matcher = PropertyMatcherWithSemanticCache()
     
-    search1 = {"bedrooms": 3, "max_price": 500000, "location": "Austin"}
+    search1 = {"bedrooms": 3, "max_price": 500000, "location": "Rancho Cucamonga"}
     result1 = await property_matcher.find_properties_with_semantic_cache(search1)
     print(f"   First search: cached={result1['cache_info']['was_cached']}")
     
-    search2 = {"bedrooms": 3, "max_price": 495000, "location": "austin"}  # Similar search
+    search2 = {"bedrooms": 3, "max_price": 495000, "location": "rancho_cucamonga"}  # Similar search
     result2 = await property_matcher.find_properties_with_semantic_cache(search2)
     print(f"   Similar search: cached={result2['cache_info']['was_cached']}, similarity={result2['cache_info']['similarity_score']:.3f}")
     

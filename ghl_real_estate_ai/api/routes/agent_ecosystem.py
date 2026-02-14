@@ -600,7 +600,7 @@ async def get_agent_by_id(agent_id: str, current_user=Depends(get_current_user_o
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch agent status")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -619,8 +619,11 @@ async def update_agent_status(
 
         logger.info(f"Updating agent {agent_id} status to {new_status}")
 
-        # TODO: Implement actual agent status update
-        # This would call the specific agent's control interface
+        # ROADMAP-021: Implement agent status update with control interface
+        # Current: Publishing event only, no actual state change
+        # Required: Integrate with agent lifecycle management system
+        # API: AgentController.update_status(agent_id, new_status)
+        # Events: agent_status_changed with before/after states
 
         # Publish status change event
         event_publisher = get_event_publisher()
@@ -638,7 +641,7 @@ async def update_agent_status(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to update agent status")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -713,8 +716,11 @@ async def initiate_handoff(handoff_request: Dict[str, Any], current_user=Depends
 
         logger.info(f"Initiating handoff {coordination_id}: {from_agent} -> {to_agent}")
 
-        # TODO: Implement actual handoff coordination
-        # This would use the coordination engine
+        # ROADMAP-022: Implement handoff coordination with CoordinationEngine
+        # Current: Publishing handoff_initiated event only
+        # Required: Integrate with AgentMeshCoordinator for state transfer
+        # See: services/agent_mesh_coordinator.py
+        # Features: Context preservation, rollback capability, timeout handling
 
         # Publish handoff event
         event_publisher = get_event_publisher()
@@ -752,8 +758,11 @@ async def pause_agent(agent_id: str, current_user=Depends(get_current_user_optio
     try:
         logger.info(f"Pausing agent: {agent_id}")
 
-        # TODO: Implement actual agent pause
-        # This would call agent.pause() or similar
+        # ROADMAP-023: Implement agent pause lifecycle
+        # Current: Publishing event only, agent continues running
+        # Required: Call agent.pause() to stop processing new requests
+        # State: PAUSED - finish in-progress, queue new requests
+        # Resume: See ROADMAP-024
 
         # Publish pause event
         event_publisher = get_event_publisher()
@@ -763,7 +772,7 @@ async def pause_agent(agent_id: str, current_user=Depends(get_current_user_optio
 
         return {"success": True, "action": "paused", "agent_id": agent_id}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to pause agent")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -776,8 +785,11 @@ async def resume_agent(agent_id: str, current_user=Depends(get_current_user_opti
     try:
         logger.info(f"Resuming agent: {agent_id}")
 
-        # TODO: Implement actual agent resume
-        # This would call agent.resume() or similar
+        # ROADMAP-024: Implement agent resume lifecycle
+        # Current: Publishing event only, no state verification
+        # Required: Call agent.resume() to restart processing
+        # Validation: Verify agent was in PAUSED state before resuming
+        # Dependencies: ROADMAP-023 (pause implementation)
 
         # Publish resume event
         event_publisher = get_event_publisher()
@@ -787,7 +799,7 @@ async def resume_agent(agent_id: str, current_user=Depends(get_current_user_opti
 
         return {"success": True, "action": "resumed", "agent_id": agent_id}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to resume agent")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -800,8 +812,11 @@ async def restart_agent(agent_id: str, current_user=Depends(get_current_user_opt
     try:
         logger.info(f"Restarting agent: {agent_id}")
 
-        # TODO: Implement actual agent restart
-        # This would stop and start the agent service
+        # ROADMAP-025: Implement agent restart with graceful shutdown
+        # Current: Publishing event only, no actual restart
+        # Required: 1) Drain in-flight requests, 2) Stop agent, 3) Start agent, 4) Health check
+        # Timeout: 30 seconds for graceful, 5 seconds for forceful
+        # Rollback: On failed restart, notify operations team
 
         # Publish restart event
         event_publisher = get_event_publisher()
@@ -811,7 +826,7 @@ async def restart_agent(agent_id: str, current_user=Depends(get_current_user_opt
 
         return {"success": True, "action": "restarted", "agent_id": agent_id}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to restart agent")
         raise HTTPException(status_code=500, detail="Internal server error")
 

@@ -33,8 +33,8 @@ class LeadScoringService:
 
         # Add common tags if they are in the address/description
         address = property_data.get("address", "").lower()
-        if "austin" in address:
-            prop_market = "austin"
+        if "rancho_cucamonga" in address:
+            prop_market = "rancho_cucamonga"
 
         for lead in leads:
             score = 0

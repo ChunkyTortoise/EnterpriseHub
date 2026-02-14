@@ -87,15 +87,15 @@ class RealTimeExecutiveDashboard:
         """Generate market intelligence data"""
         return MarketIntelligence(
             neighborhood_activity={
-                "Downtown Austin": 42,
+                "Downtown Rancho Cucamonga": 42,
                 "South Lamar": 45,
-                "Round Rock": 38,
-                "East Austin": 31,
-                "Pflugerville": 19,
-                "Domain": 28,
-                "Zilker": 15,
+                "Fontana": 38,
+                "East Rancho Cucamonga": 31,
+                "Ontario": 19,
+                "Ontario Mills": 28,
+                "Victoria Gardens": 15,
             },
-            price_trends={"Downtown": 5.2, "South Lamar": 7.8, "Round Rock": 3.1, "East Austin": 12.4, "Domain": 2.9},
+            price_trends={"Downtown": 5.2, "South Lamar": 7.8, "Fontana": 3.1, "East Rancho Cucamonga": 12.4, "Ontario Mills": 2.9},
             inventory_levels={"Under $300K": 45, "$300K-$500K": 78, "$500K-$750K": 34, "$750K+": 12},
             competition_analysis={
                 "market_share": 15.7,
@@ -103,7 +103,7 @@ class RealTimeExecutiveDashboard:
                 "competitive_advantages": ["AI Integration", "Response Speed", "Market Knowledge"],
             },
             market_opportunities=[
-                "First-time buyers in Round Rock",
+                "First-time buyers in Fontana",
                 "Luxury segment downtown",
                 "Investment properties east side",
             ],
@@ -592,7 +592,7 @@ class RealTimeExecutiveDashboard:
                 go.Indicator(
                     mode="gauge+number+delta",
                     value=market_share,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Market Share", "font": {"size": 14, "color": "#FFFFFF"}},
                     delta={"reference": 12.5, "suffix": "%"},
                     gauge={

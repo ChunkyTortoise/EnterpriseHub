@@ -142,7 +142,7 @@ class MarketRegistry:
         Get or create market service instance for the specified market
 
         Args:
-            market_id: Market identifier (e.g., "austin", "dallas")
+            market_id: Market identifier (e.g., "rancho_cucamonga", "dallas")
 
         Returns:
             Market service instance

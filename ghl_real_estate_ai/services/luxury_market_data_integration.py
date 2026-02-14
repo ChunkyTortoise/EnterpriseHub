@@ -202,15 +202,15 @@ class MLSLuxuryProvider(DataProvider):
             property_data = LuxuryPropertyData(
                 property_id=prop_id,
                 mls_id=f"MLS-{prop_id}",
-                address=f"123 Luxury Lane, Austin, TX",
+                address=f"123 Luxury Lane, Rancho Cucamonga, CA",
                 property_type="Single Family",
                 square_footage=4500,
                 lot_size=1.2,
                 bedrooms=5,
                 bathrooms=4.5,
                 year_built=2018,
-                zip_code="78746",
-                neighborhood="West Lake Hills",
+                zip_code="91737",
+                neighborhood="Alta Loma",
                 list_price=2_500_000,
                 price_per_sqft=555,
                 property_tier=PropertyTier.ULTRA_LUXURY,
@@ -233,7 +233,7 @@ class MLSLuxuryProvider(DataProvider):
             # Simulate market analytics
             market_data = MarketAnalytics(
                 zip_code=zip_code,
-                neighborhood="West Lake Hills",
+                neighborhood="Alta Loma",
                 analysis_date=datetime.now(),
                 median_price=1_850_000,
                 price_per_sqft_median=485,
@@ -271,7 +271,7 @@ class PublicRecordsProvider(DataProvider):
         for prop_id in property_ids:
             property_data = LuxuryPropertyData(
                 property_id=prop_id,
-                address=f"456 Executive Drive, Austin, TX",
+                address=f"456 Executive Drive, Rancho Cucamonga, CA",
                 year_built=2015,
                 square_footage=3800,
                 lot_size=0.8,
@@ -296,7 +296,7 @@ class PublicRecordsProvider(DataProvider):
         for zip_code in zip_codes:
             market_data = MarketAnalytics(
                 zip_code=zip_code,
-                neighborhood="Tarrytown",
+                neighborhood="North Rancho",
                 analysis_date=datetime.now(),
                 median_price=1_450_000,
                 price_per_sqft_median=425,
@@ -345,7 +345,7 @@ class MarketAnalyticsProvider(DataProvider):
         for zip_code in zip_codes:
             market_data = MarketAnalytics(
                 zip_code=zip_code,
-                neighborhood="Zilker",
+                neighborhood="Victoria Gardens",
                 analysis_date=datetime.now(),
                 investment_attractiveness=82.3,
                 competitive_intensity=67.8,
@@ -389,16 +389,16 @@ class LuxuryMarketDataIntegrator:
             "valuation_confidence_threshold": 75.0,
         }
 
-        # Austin luxury market configuration
+        # Rancho Cucamonga luxury market configuration
         self.luxury_zip_codes = [
-            "78746",  # West Lake Hills
-            "78733",  # West Lake
-            "78738",  # Bee Cave
-            "78704",  # South Austin (trendy areas)
-            "78613",  # Cedar Park (luxury areas)
-            "78732",  # Lakeway
+            "91737",  # Alta Loma
+            "91737",  # West Lake
+            "91737",  # Bee Cave
+            "91730",  # South Rancho Cucamonga (trendy areas)
+            "78613",  # Upland (luxury areas)
+            "91739",  # Lakeway
             "78669",  # Spicewood
-            "78734",  # Lakeway/Bee Cave
+            "91737",  # Lakeway/Bee Cave
         ]
 
     def _initialize_providers(self):
@@ -537,15 +537,6 @@ class LuxuryMarketDataIntegrator:
         """Calculate AI-powered investment score for luxury property"""
 
         # Prepare property summary for AI analysis
-        property_summary = {
-            "price": property_data.list_price,
-            "price_per_sqft": property_data.price_per_sqft,
-            "neighborhood": property_data.neighborhood,
-            "property_tier": property_data.property_tier.value if property_data.property_tier else "unknown",
-            "luxury_score": property_data.luxury_score,
-            "cap_rate": property_data.cap_rate,
-            "amenities": property_data.luxury_amenities,
-        }
 
         prompt = f"""
         Analyze this luxury property for investment potential and provide a score 0-100:
@@ -594,7 +585,7 @@ class LuxuryMarketDataIntegrator:
         if property_data.luxury_score > 0:
             factors.append(property_data.luxury_score * 0.3)
 
-        if property_data.neighborhood in ["West Lake Hills", "Tarrytown", "Rollingwood"]:
+        if property_data.neighborhood in ["Alta Loma", "North Rancho", "Deer Creek"]:
             factors.append(25)  # Premium neighborhood bonus
 
         if property_data.luxury_amenities:
@@ -751,7 +742,7 @@ class LuxuryMarketDataIntegrator:
         """
 
         try:
-            response = await self.claude.generate_claude_response(prompt, "competitive_analysis")
+            await self.claude.generate_claude_response(prompt, "competitive_analysis")
 
             # Parse AI response into structured data
             return {
@@ -820,11 +811,11 @@ class LuxuryMarketDataIntegrator:
                 PropertyTier.ESTATE.value: 3,  # $10M+
             },
             "neighborhood_distribution": {
-                "West Lake Hills": 35,
-                "Tarrytown": 28,
-                "Zilker": 22,
-                "Hyde Park": 18,
-                "Rollingwood": 12,
+                "Alta Loma": 35,
+                "North Rancho": 28,
+                "Victoria Gardens": 22,
+                "Alta Loma": 18,
+                "Deer Creek": 12,
                 "Others": 30,
             },
             "market_trends": {
@@ -863,7 +854,7 @@ class LuxuryMarketDataIntegrator:
         # Gather comprehensive market data
         market_analytics = await self.get_luxury_market_analytics(zip_codes)
         inventory_summary = await self.get_luxury_inventory_summary()
-        competitive_landscape = await self.analyze_competitive_landscape("Austin Luxury Market")
+        competitive_landscape = await self.analyze_competitive_landscape("Rancho Cucamonga Luxury Market")
 
         # Generate AI-powered market insights
         market_insights = await self._generate_market_insights_summary(market_analytics, inventory_summary)
@@ -910,7 +901,7 @@ class LuxuryMarketDataIntegrator:
         avg_momentum = sum(m.market_momentum for m in market_analytics) / len(market_analytics)
 
         prompt = f"""
-        Create an executive market summary for Austin luxury real estate:
+        Create an executive market summary for Rancho Cucamonga luxury real estate:
 
         Key Metrics:
         - Total Luxury Inventory: ${inventory_summary["total_inventory_value"]:,.0f}
@@ -933,9 +924,9 @@ class LuxuryMarketDataIntegrator:
             return response
         except Exception:
             return f"""
-            Austin Luxury Market Executive Summary:
+            Rancho Cucamonga Luxury Market Executive Summary:
 
-            The Austin luxury real estate market demonstrates exceptional strength with ${inventory_summary["total_inventory_value"]:,.0f} in total luxury inventory and {avg_appreciation:.1f}% projected appreciation. Market momentum of {avg_momentum:.1f}/100 indicates robust buyer demand and continued growth potential.
+            The Rancho Cucamonga luxury real estate market demonstrates exceptional strength with ${inventory_summary["total_inventory_value"]:,.0f} in total luxury inventory and {avg_appreciation:.1f}% projected appreciation. Market momentum of {avg_momentum:.1f}/100 indicates robust buyer demand and continued growth potential.
 
             Investment opportunities remain attractive with luxury properties showing premium positioning and strong fundamentals. The {inventory_summary["luxury_absorption_rate"]}-month absorption rate suggests healthy market velocity, creating optimal conditions for strategic acquisitions and portfolio expansion.
 
@@ -966,7 +957,7 @@ async def test_luxury_market_integration():
 
     # Test market analytics
     print("\n2. Testing Market Analytics...")
-    market_analytics = await integrator.get_luxury_market_analytics(["78746", "78733"])
+    market_analytics = await integrator.get_luxury_market_analytics(["91737", "91737"])
     for analytics in market_analytics[:2]:  # Show first 2
         print(f"Zip Code: {analytics.zip_code}")
         print(f"Median Price: ${analytics.median_price:,.0f}")
@@ -983,7 +974,7 @@ async def test_luxury_market_integration():
 
     # Test competitive landscape
     print("\n4. Testing Competitive Analysis...")
-    competitive_landscape = await integrator.analyze_competitive_landscape("Austin")
+    competitive_landscape = await integrator.analyze_competitive_landscape("Rancho Cucamonga")
     print(f"Market Gaps: {len(competitive_landscape.market_gaps)} identified")
     print(f"Competitive Advantages: {len(competitive_landscape.competitive_advantages)} identified")
 

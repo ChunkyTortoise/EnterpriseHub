@@ -122,7 +122,7 @@ class SellerPsychologyAnalyzer:
 
         # Analyze drop timing patterns
         rapid_drops = sum(1 for drop in price_drops if drop.get("percentage", 0) > 5)
-        small_drops = sum(1 for drop in price_drops if drop.get("percentage", 0) <= 2)
+        sum(1 for drop in price_drops if drop.get("percentage", 0) <= 2)
 
         # Psychological pattern classification
         if total_reduction > 15:

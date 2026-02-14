@@ -252,7 +252,12 @@ async def get_subscription(subscription_id: int):
         HTTPException: If subscription not found or access error
     """
     try:
-        # TODO: Implement database lookup
+        # ROADMAP-008: Implement subscription database lookup
+        # Current: Using placeholder data from Stripe
+        # Required: Query subscriptions table by ID, join with customers
+        # Acceptance: Return real subscription data with proper error handling
+        # Status: Database schema ready, awaiting implementation
+        #
         # subscription = await db.subscriptions.get(id=subscription_id)
         # if not subscription:
         #     raise HTTPException(404, "Subscription not found")
@@ -335,11 +340,11 @@ async def update_subscription(
                 subscription_id, request.tier
             )
         else:
-            # TODO: Handle other modifications (payment method, cancellation)
-            # stripe_subscription = await billing_service.modify_subscription(
-            #     subscription.stripe_subscription_id, request
-            # )
-            pass
+            # ROADMAP-009: Implement payment method and cancellation modifications
+            # Current: Only tier changes are handled
+            # Required: Add Stripe payment method updates and cancellation scheduling
+            # Status: Planned for Q2 2026
+            pass  # Placeholder for additional modification types
 
         # Track subscription modification event
         background_tasks.add_task(
@@ -425,7 +430,11 @@ async def cancel_subscription(
             }
         )
 
-        # TODO: Get subscription from database
+        # ROADMAP-010: Get subscription from database before Stripe cancellation
+        # Current: Direct Stripe cancellation without local validation
+        # Required: Validate subscription exists locally, then call Stripe
+        # Impact: Prevents orphaned Stripe subscriptions
+        #
         # subscription = await db.subscriptions.get(id=subscription_id)
         # stripe_subscription = await billing_service.cancel_subscription(
         #     subscription.stripe_subscription_id, immediate
@@ -511,7 +520,11 @@ async def record_usage(
             max_delay=10.0,
         )
 
-        # TODO: Store in database
+        # ROADMAP-011: Store usage records in local database
+        # Current: Only recording in Stripe
+        # Required: Insert into usage_records table for analytics and audit
+        # Schema: subscription_id, stripe_usage_record_id, lead_id, contact_id, amount, tier, timestamp
+        #
         # usage_record = await db.usage_records.insert({
         #     "subscription_id": request.subscription_id,
         #     "stripe_usage_record_id": stripe_usage_record.id,
@@ -870,7 +883,10 @@ async def get_billing_history(customer_id: str):
             period_start = period_end = datetime.now()
 
         billing_history = BillingHistoryResponse(
-            location_id="placeholder",  # TODO: Lookup from database
+            # ROADMAP-012: Get actual location_id from customer record
+            # Current: Using placeholder
+            # Required: Query customers table by stripe_customer_id
+            location_id="placeholder",
             invoices=invoice_details,
             total_spent=total_spent,
             period_start=period_start,
@@ -1017,8 +1033,11 @@ async def get_revenue_analytics():
     try:
         logger.info("Calculating revenue analytics")
 
-        # TODO: Calculate from actual subscription and usage data
-        # For now, return projected data based on $240K ARR target
+        # ROADMAP-013: Calculate revenue from actual subscription data
+        # Current: Using tier distribution projections
+        # Required: Aggregate real subscription and usage data
+        # Note: Current implementation uses projected data based on $240K ARR target
+        # Status: Pending database integration (see ROADMAP-008, ROADMAP-011)
 
         # Calculate tier distribution
         tier_distribution = await subscription_manager.get_tier_distribution()
@@ -1120,7 +1139,10 @@ async def get_tier_distribution():
 async def _track_billing_event(event_type: str, data: Dict[str, Any]) -> None:
     """Track billing events for analytics (background task)."""
     try:
-        # TODO: Integrate with analytics service
+        # ROADMAP-014: Integrate with analytics service
+        # Current: Logging only
+        # Required: Send to analytics pipeline (Segment, Mixpanel, or custom)
+        # Events: subscription_created, subscription_modified, subscription_canceled, payment_processed, usage_recorded
         logger.info(
             f"Billing event tracked: {event_type}",
             extra={"event_type": event_type, "data": data}
@@ -1132,7 +1154,11 @@ async def _track_billing_event(event_type: str, data: Dict[str, Any]) -> None:
 async def _store_webhook_event(event_data: Dict[str, Any], processing_result: Dict[str, Any]) -> None:
     """Store webhook event in database for audit trail (background task)."""
     try:
-        # TODO: Store in billing_events table
+        # ROADMAP-015: Store webhook events in billing_events table
+        # Current: Logging only
+        # Required: Insert into billing_events table for audit trail and replay capability
+        # Schema: event_id, event_type, event_data, processing_result, processed_at, created_at
+        # Index: event_id (unique), event_type, created_at
         logger.info(
             f"Webhook event stored: {event_data['id']}",
             extra={

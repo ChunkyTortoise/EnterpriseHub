@@ -7,7 +7,7 @@
 This audit evaluates the efficiency of the Anthropic Prompt Caching implementation across the EnterpriseHub ecosystem. Testing focused on high-context negotiation and research tasks where system prompts exceed 1024 tokens.
 
 ## 2. Burn-in Test Results
-A 10-query burn-in sequence was executed using a high-context system prompt (approx. 1200 tokens) simulating elite Austin market intelligence.
+A 10-query burn-in sequence was executed using a high-context system prompt (approx. 1200 tokens) simulating elite Rancho Cucamonga market intelligence.
 
 | Metric | Value |
 |--------|-------|
@@ -29,7 +29,7 @@ To further maximize ROI, the following adjustments are recommended for `ghl_real
 
 1.  **Lower Cache Threshold:** Currently, `cache_control` triggers at 1024 characters. Based on ROI data, consider lowering this to **768 characters** (approx. 190 tokens) for models like `claude-3-5-sonnet` where complex system instructions are common even in "medium" tasks.
 2.  **Strategic Multi-Block Caching:** Implement multiple cache points for long conversation histories (e.g., caching every 10 messages) to maintain performance during extended lead qualification sessions.
-3.  **TTL Awareness:** For high-velocity hubs (e.g., Austin Market), increase prompt weight to ensure the cache stays "warm" during business hours.
+3.  **TTL Awareness:** For high-velocity hubs (e.g., Rancho Cucamonga Market), increase prompt weight to ensure the cache stays "warm" during business hours.
 
 ## 5. Compliance Impact
 The "Live Compliance Monitor" integrated into the Performance ROI dashboard now visualizes these healing iterations and caching events, ensuring that high-stakes safety checks remain cost-effective through reuse of compliance guidelines.

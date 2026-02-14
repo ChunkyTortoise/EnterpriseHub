@@ -262,7 +262,7 @@ class FAQGenerator:
                 },
                 {
                     "question": "Do you provide training data?",
-                    "answer": "I can help curate training data, but you'll need to provide domain-specific content and examples."
+                    "answer": "I can help curate training data, but you'll need to provide ontario_mills-specific content and examples."
                 },
                 {
                     "question": "What AI models do you use?",

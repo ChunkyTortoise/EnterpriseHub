@@ -12,8 +12,6 @@ import pytest
 from ghl_real_estate_ai.api.middleware import APIKeyAuth, JWTAuth, RateLimitMiddleware, SecurityHeadersMiddleware
 from ghl_real_estate_ai.api.middleware.rate_limiter import RateLimiter
 
-@pytest.mark.integration
-
 
 class TestJWTAuthentication:
     """Test JWT authentication functionality."""

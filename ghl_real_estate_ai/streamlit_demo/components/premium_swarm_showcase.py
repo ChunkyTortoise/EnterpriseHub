@@ -163,21 +163,21 @@ class PremiumSwarmShowcase:
 
         self.demo_leads = {
             "Sarah Chen - Tech Executive": {
-                "demographics": {"age": 34, "income": 185000, "location": "Austin, TX", "job": "VP Engineering"},
+                "demographics": {"age": 34, "income": 185000, "location": "Rancho Cucamonga, CA", "job": "VP Engineering"},
                 "behavior": {"engagement_score": 87, "urgency": "High", "decision_style": "Data-Driven"},
                 "intent": {"timeline": "45 days", "budget": "850K-1.2M", "motivation": "Relocation"},
                 "risk_score": 15,  # Low risk
                 "roi_potential": 485000,
             },
             "David Kim - Real Estate Investor": {
-                "demographics": {"age": 42, "income": 320000, "location": "Dallas, TX", "job": "Portfolio Manager"},
+                "demographics": {"age": 42, "income": 320000, "location": "Dallas, CA", "job": "Portfolio Manager"},
                 "behavior": {"engagement_score": 72, "urgency": "Medium", "decision_style": "ROI-Focused"},
                 "intent": {"timeline": "90 days", "budget": "400K-600K", "motivation": "Investment"},
                 "risk_score": 35,  # Medium risk
                 "roi_potential": 275000,
             },
             "Maria Rodriguez - Family Relocator": {
-                "demographics": {"age": 38, "income": 125000, "location": "Houston, TX", "job": "Marketing Director"},
+                "demographics": {"age": 38, "income": 125000, "location": "Houston, CA", "job": "Marketing Director"},
                 "behavior": {"engagement_score": 91, "urgency": "Very High", "decision_style": "Emotion + Logic"},
                 "intent": {"timeline": "30 days", "budget": "450K-650K", "motivation": "School District"},
                 "risk_score": 8,  # Very low risk
@@ -481,7 +481,7 @@ def render_agent_consensus_visualization(showcase: PremiumSwarmShowcase):
             go.Indicator(
                 mode="gauge+number+delta",
                 value=94.2,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "Consensus Strength"},
                 delta={"reference": 80, "position": "top"},
                 gauge={

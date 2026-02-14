@@ -37,8 +37,6 @@ from ghl_real_estate_ai.services.autonomous_followup_engine import (
 )
 from ghl_real_estate_ai.services.behavioral_trigger_engine import IntentLevel
 
-@pytest.mark.integration
-
 
 class TestAutonomousFollowUpEngine:
     """Test suite for AutonomousFollowUpEngine core functionality."""
@@ -96,7 +94,7 @@ class TestAutonomousFollowUpEngine:
             "conversation_history": [
                 {
                     "timestamp": datetime.now() - timedelta(hours=72),
-                    "message": "Interested in properties around $600K in north Austin",
+                    "message": "Interested in properties around $600K in north Rancho Cucamonga",
                     "type": "inbound",
                     "channel": "email",
                     "sentiment": "positive",
@@ -121,7 +119,7 @@ class TestAutonomousFollowUpEngine:
                 "age_range": "28-35",
                 "income_bracket": "medium_high",
                 "family_status": "young_professional",
-                "location": "North Austin, TX",
+                "location": "North Rancho Cucamonga, CA",
                 "buy_timeline": "3-6_months",
             },
             "current_sentiment": "interested_but_cautious",
@@ -586,7 +584,7 @@ class TestAutonomousFollowUpEngine:
             mock_profile.return_value = {
                 "phone": "+1234567890",
                 "name": "Test Lead",
-                "demographics": {"city": "Austin"},
+                "demographics": {"city": "Rancho Cucamonga"},
             }
             mock_activity.return_value = {"sms_responses": []}
             mock_detector.return_value.analyze_drift.return_value = {"drift_score": 0.5, "recommendation": "maintain"}

@@ -19,8 +19,6 @@ from sklearn.metrics import accuracy_score
 
 from ghl_real_estate_ai.ml.closing_probability_model import ClosingProbabilityModel, ModelMetrics, ModelPrediction
 
-@pytest.mark.unit
-
 
 class TestClosingProbabilityModel:
     """Test suite for ClosingProbabilityModel class."""

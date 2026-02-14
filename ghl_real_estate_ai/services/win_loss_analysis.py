@@ -466,7 +466,7 @@ class WinLossAnalysis:
     def _calculate_trends(self, days: int) -> Dict:
         """Calculate performance trends over time."""
         # Compare recent period vs previous period
-        recent = self._filter_deals(days)
+        self._filter_deals(days)
         previous = self._filter_deals(days * 2)
         previous = [d for d in previous if datetime.fromisoformat(d["date"]) <= datetime.now() - timedelta(days=days)]
 

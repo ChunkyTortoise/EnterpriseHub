@@ -98,7 +98,7 @@ Be honest - major repairs needed, minor fixes, or move-in ready?"
 **1. Agent sees new lead in GHL:**
 ```
 Contact: Sarah Martinez
-Message: "Looking for 4BR house under $500k in North Austin"
+Message: "Looking for 4BR house under $500k in North Rancho Cucamonga"
 Status: NEW LEAD
 ```
 
@@ -184,15 +184,15 @@ BOT CONTINUES:
 ### **Example 2: Facebook Lead Form**
 ```
 FACEBOOK LEAD:
-"Need to buy house ASAP, pre-approved for $400k, North Austin preferred"
+"Need to buy house ASAP, pre-approved for $400k, North Rancho Cucamonga preferred"
 
 BOT ANALYSIS:
 → Buyer lead, high urgency, specific budget, location preference
 → Score: 9.1/10 (Hot Lead)
-→ Auto-tags: Hot-Lead, Pre-Approved, North-Austin, Urgent-Buyer
+→ Auto-tags: Hot-Lead, Pre-Approved, North-Rancho Cucamonga, Urgent-Buyer
 
 JORGE BOT RESPONSE:
-"Great! North Austin has excellent options in your $400k range.
+"Great! North Rancho Cucamonga has excellent options in your $400k range.
 Since you're pre-approved, we can move quickly. What's your timeline
 and are you flexible on specific neighborhoods?"
 

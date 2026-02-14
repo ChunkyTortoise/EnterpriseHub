@@ -681,7 +681,7 @@ class PremiumServiceJustificationEngine:
         """Calculate expected value delivery to client"""
 
         # Base commission cost
-        commission_cost = property_value * commission_rate
+        property_value * commission_rate
 
         # Negotiation value advantage
         agent_negotiation = metrics.get("negotiation_performance", 0.94)

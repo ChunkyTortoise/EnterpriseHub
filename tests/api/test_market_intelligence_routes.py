@@ -4,7 +4,7 @@ pytestmark = pytest.mark.integration
 """
 Test suite for Market Intelligence API Routes.
 
-Tests comprehensive Austin real estate market API functionality including:
+Tests comprehensive Rancho Cucamonga real estate market API functionality including:
 - Market metrics and neighborhood endpoints
 - Property search and recommendation APIs
 - Corporate relocation intelligence endpoints
@@ -26,7 +26,7 @@ try:
 
     # Import the FastAPI app and route components
     from ghl_real_estate_ai.api.routes.market_intelligence import router
-    from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
+    from ghl_real_estate_ai.services.rancho_cucamonga_market_service import MarketCondition, PropertyType
 except (ImportError, TypeError, AttributeError, Exception):
     pytest.skip("required imports unavailable", allow_module_level=True)
 app = FastAPI()
@@ -107,7 +107,7 @@ class TestMarketMetricsEndpoints:
         # Verify key neighborhoods are present
         neighborhood_names = [n["name"] for n in neighborhoods]
         assert "Round Rock" in neighborhood_names
-        assert "Domain" in neighborhood_names
+        assert "Ontario Mills" in neighborhood_names
 
     def test_get_neighborhood_analysis_valid(self):
         """Test neighborhood analysis for valid neighborhood."""
@@ -494,7 +494,7 @@ class TestAIInsightsEndpoints:
     def test_get_ai_conversation_response_minimal(self):
         """Test AI conversation response with minimal context."""
         conversation_request = {
-            "query": "Tell me about Austin real estate market",
+            "query": "Tell me about Rancho Cucamonga real estate market",
             "lead_context": {"lead_id": "minimal_context"},
         }
 

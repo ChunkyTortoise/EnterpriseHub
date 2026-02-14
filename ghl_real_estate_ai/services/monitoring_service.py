@@ -781,7 +781,7 @@ class MonitoringService:
                 await self.run_all_health_checks()
 
                 # Check SLA compliance
-                sla_results = await self.check_sla_compliance()
+                await self.check_sla_compliance()
 
                 # Auto-resolve old alerts
                 await self._auto_resolve_stale_alerts()

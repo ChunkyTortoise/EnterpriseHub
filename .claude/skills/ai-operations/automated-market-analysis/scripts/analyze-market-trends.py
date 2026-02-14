@@ -84,7 +84,7 @@ class MarketTrendReport:
     recommendations: Dict[str, str]
 
 
-# Seasonal factors (Austin Metro)
+# Seasonal factors (Rancho Cucamonga Metro)
 SEASONAL_FACTORS = {
     1: 0.97, 2: 0.98, 3: 1.00, 4: 1.02, 5: 1.03, 6: 1.03,
     7: 1.02, 8: 1.01, 9: 1.00, 10: 0.99, 11: 0.98, 12: 0.97

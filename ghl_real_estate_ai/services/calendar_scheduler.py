@@ -5,7 +5,7 @@ Smart appointment scheduling system that:
 - Connects to GHL calendar API and external calendar services
 - Retrieves real-time availability slots
 - Automatically books qualified leads (score ≥5) into Jorge's calendar
-- Handles timezone conversion for Austin market
+- Handles timezone conversion for Rancho Cucamonga market
 - Sends confirmation SMS to leads
 - Prevents double-booking with buffer management
 - 40% faster lead→appointment conversion target
@@ -14,7 +14,7 @@ Integration Points:
 - GHL Calendar API for availability and booking
 - Lead Scorer for qualification thresholds
 - SMS service for confirmations
-- Timezone handling for Austin business hours
+- Timezone handling for Rancho Cucamonga business hours
 
 Security Features:
 - Input validation and sanitization
@@ -41,7 +41,7 @@ logger = get_logger(__name__)
 # Rancho Cucamonga timezone for Jorge's business
 RC_TZ = pytz.timezone("America/Los_Angeles")
 # Backward compatibility
-AUSTIN_TZ = RC_TZ
+RC_TZ = RC_TZ
 UTC_TZ = pytz.UTC
 
 
@@ -83,10 +83,10 @@ class TimeSlot(BaseModel):
             raise ValueError("DateTime must be timezone-aware")
         return v
 
-    def to_austin_time(self) -> datetime:
-        """Convert start_time to Austin timezone for display."""
-        if self.start_time.tzinfo != AUSTIN_TZ:
-            return self.start_time.astimezone(AUSTIN_TZ)
+    def to_rancho_cucamonga_time(self) -> datetime:
+        """Convert start_time to Rancho Cucamonga timezone for display."""
+        if self.start_time.tzinfo != RC_TZ:
+            return self.start_time.astimezone(RC_TZ)
         return self.start_time
 
     def format_for_lead(self) -> str:
@@ -135,7 +135,7 @@ class CalendarScheduler:
 
     Automatically books qualified leads into Jorge's calendar with:
     - Real-time availability checking
-    - Timezone conversion for Austin market
+    - Timezone conversion for Rancho Cucamonga market
     - Double-booking prevention
     - SMS confirmations
     - Fallback to manual scheduling
@@ -171,7 +171,7 @@ class CalendarScheduler:
 
     def _get_business_hours(self) -> Dict[str, Dict[str, str]]:
         """
-        Get Jorge's business hours in Austin timezone.
+        Get Jorge's business hours in Rancho Cucamonga timezone.
 
         Returns:
             Dict mapping weekday names to start/end times
@@ -408,7 +408,7 @@ class CalendarScheduler:
 
         try:
             # Calculate date range for availability check
-            start_date = datetime.now(AUSTIN_TZ).replace(hour=0, minute=0, second=0, microsecond=0)
+            start_date = datetime.now(RC_TZ).replace(hour=0, minute=0, second=0, microsecond=0)
             end_date = start_date + timedelta(days=days_ahead)
 
             # Fetch raw availability from GHL
@@ -433,9 +433,9 @@ class CalendarScheduler:
                     # Parse ISO format datetime
                     slot_time = datetime.fromisoformat(slot_time_str.replace("Z", "+00:00"))
 
-                    # Convert to Austin timezone
-                    if slot_time.tzinfo != AUSTIN_TZ:
-                        slot_time = slot_time.astimezone(AUSTIN_TZ)
+                    # Convert to Rancho Cucamonga timezone
+                    if slot_time.tzinfo != RC_TZ:
+                        slot_time = slot_time.astimezone(RC_TZ)
 
                     # Check if slot is during business hours
                     if not self._is_during_business_hours(slot_time):
@@ -502,7 +502,7 @@ class CalendarScheduler:
         Check if slot is during Jorge's business hours.
 
         Args:
-            slot_time: Datetime in Austin timezone
+            slot_time: Datetime in Rancho Cucamonga timezone
 
         Returns:
             True if during business hours
@@ -959,7 +959,7 @@ Looking forward to helping you with your real estate needs!
 
             if booking_result.success:
                 # Successful booking
-                name = contact_info.get("first_name", "there")
+                contact_info.get("first_name", "there")
                 appointment_time = first_slot.format_for_lead()
 
                 response_message = (

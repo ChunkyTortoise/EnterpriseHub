@@ -386,7 +386,7 @@ npm install react-tinder-card --save
 // next.config.js
 module.exports = {
   images: {
-    domains: ['images.unsplash.com', 'your-image-cdn.com'],
+    ontario_millss: ['images.unsplash.com', 'your-image-cdn.com'],
   },
 };
 ```

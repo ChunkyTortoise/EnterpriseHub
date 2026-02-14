@@ -136,9 +136,9 @@ def render_listing_intelligence_tab(listing_service, agent_id: str):
         listings_data = {
             "Address": [
                 "123 Hill Country Dr",
-                "456 Austin Blvd",
-                "789 Cedar Park Way",
-                "101 Round Rock Ave",
+                "456 Rancho Cucamonga Blvd",
+                "789 Upland Way",
+                "101 Fontana Ave",
                 "202 Lakeway Circle",
             ],
             "Days on Market": [12, 25, 8, 45, 18],
@@ -198,10 +198,10 @@ def render_listing_intelligence_tab(listing_service, agent_id: str):
                 an open floor plan, gourmet kitchen with granite countertops, and spacious
                 master suite. The backyard oasis includes a sparkling pool and mature oak trees.
                 Located in the highly-rated Hill Country Elementary district with easy access
-                to downtown Austin. This gem won't last long in today's market!
+                to downtown Rancho Cucamonga. This gem won't last long in today's market!
 
                 **Key Features:** Updated kitchen, Pool, Premium location, Top schools
-                **SEO Keywords:** Hill Country, 4 bedroom, Austin, pool, updated
+                **SEO Keywords:** Hill Country, 4 bedroom, Rancho Cucamonga, pool, updated
                 """)
 
     # Listing performance chart
@@ -327,11 +327,11 @@ def render_followup_optimization_tab(followup_service, agent_id: str):
 
                 st.markdown("""
                 **📱 SMS - Today 2:00 PM**
-                "Hi Sarah! Just saw a beautiful 3BR in Cedar Park that matches your criteria perfectly.
+                "Hi Sarah! Just saw a beautiful 3BR in Upland that matches your criteria perfectly.
                 Great schools and your budget range. Want to see it this weekend? 🏡"
 
                 **📧 Email - Tomorrow 10:00 AM**
-                Subject: "Cedar Park Gem - Perfect for Your Family"
+                Subject: "Upland Gem - Perfect for Your Family"
                 Detailed property info with photos and neighborhood highlights.
 
                 **📞 Phone - Friday 2:00 PM**
@@ -429,7 +429,7 @@ def render_revenue_analytics_tab(agent_id: str):
             "🎯 **Focus on luxury market**: Your avg commission on $500K+ properties is 38% higher",
             "🔄 **Increase referral network**: Only 3.7% of revenue from referrals vs industry avg of 12%",
             "📅 **Q4 opportunity**: Historical data shows 23% revenue increase in Nov-Dec",
-            "🏘️ **Geographic expansion**: Cedar Park market shows 45% less competition",
+            "🏘️ **Geographic expansion**: Upland market shows 45% less competition",
             "💡 **Service diversification**: Add property management for recurring revenue stream",
         ]
 
@@ -482,7 +482,7 @@ def render_market_intelligence_tab(agent_id: str):
         )
 
         fig_market.update_layout(
-            title="Austin Market Trends",
+            title="Rancho Cucamonga Market Trends",
             xaxis_title="Month",
             yaxis=dict(title="Median Price ($)", side="left"),
             yaxis2=dict(title="Months of Inventory", side="right", overlaying="y"),
@@ -545,10 +545,10 @@ def render_market_intelligence_tab(agent_id: str):
     with col1:
         st.markdown("**📈 Market Opportunities**")
         opportunities = [
-            "🏘️ **Cedar Park Expansion**: 45% less competition, growing demand",
+            "🏘️ **Upland Expansion**: 45% less competition, growing demand",
             "💎 **Luxury Market**: $750K+ segment showing 23% growth",
             "🏠 **First-time Buyers**: New programs creating opportunity",
-            "📊 **Investment Properties**: ROI potential in East Austin",
+            "📊 **Investment Properties**: ROI potential in East Rancho Cucamonga",
             "🔄 **Seller Market**: Inventory shortage benefits listing agents",
         ]
 

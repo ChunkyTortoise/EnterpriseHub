@@ -168,7 +168,7 @@
             
             setTimeout(() => {
                 chatWindow.innerHTML = `<div class="flex justify-center"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Conversation started Today</span></div>`;
-                appendMessage('Jorge AI', `Hello! I'm Jorge. I see you're looking at properties in ${name.includes('Sarah') ? 'Austin' : 'Texas'}. How can I help?`, true);
+                appendMessage('Jorge AI', `Hello! I'm Jorge. I see you're looking at properties in ${name.includes('Sarah') ? 'Rancho Cucamonga' : 'California'}. How can I help?`, true);
             }, 500);
         }
 
@@ -300,7 +300,7 @@
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <h3 class="font-bold text-lg">${lead.lead_name || 'New Lead'}</h3>
-                                <p class="text-xs text-slate-400">${lead.location || 'Austin, TX'}</p>
+                                <p class="text-xs text-slate-400">${lead.location || 'Rancho Cucamonga, CA'}</p>
                             </div>
                             <span class="bg-${statusColor}-500/20 text-${statusColor}-400 text-[10px] px-2 py-1 rounded-md font-bold uppercase">${status}</span>
                         </div>

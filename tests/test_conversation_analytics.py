@@ -1,15 +1,13 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 """Tests for Conversation Analytics Service."""
 
-from __future__ import annotations
-
 import pytest
 
 from ghl_real_estate_ai.services.conversation_analytics import (
 
-@pytest.mark.integration
     ConversationAnalytics,
     ConversationMetrics,
     HandoffEffectiveness,

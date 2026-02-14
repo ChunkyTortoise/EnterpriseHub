@@ -1274,8 +1274,8 @@ GHL_LOCATION_ID=<primary_location>
 DATABASE_URL=postgresql://...
 
 # Security
-ALLOWED_ORIGINS=https://yourdomain.com
-CORS_ALLOWED_HOSTS=yourdomain.com
+ALLOWED_ORIGINS=https://yourontario_mills.com
+CORS_ALLOWED_HOSTS=yourontario_mills.com
 ```
 
 ### 9.2 Secret Rotation Schedule
@@ -1476,7 +1476,7 @@ async def security_health_check():
 ## Support and Contact
 
 For questions or security concerns:
-- **Security Issues:** Report immediately to security@yourdomain.com
+- **Security Issues:** Report immediately to security@yourontario_mills.com
 - **Implementation Help:** See `SECURITY_AUDIT_MULTITENANT.md`
 - **Test Coverage:** Run `pytest tests/test_security_multitenant.py -v`
 

@@ -41,10 +41,10 @@ class WarRoomService:
     """
 
     def __init__(self):
-        # Mock coordinates for Austin, TX area
-        self.austin_bounds = {"lat": (30.2, 30.4), "lng": (-97.8, -97.6)}
+        # Mock coordinates for Rancho Cucamonga, CA area
+        self.rancho_cucamonga_bounds = {"lat": (30.2, 30.4), "lng": (-97.8, -97.6)}
 
-    async def get_market_heat_data(self, market: str = "Austin") -> WarRoomData:
+    async def get_market_heat_data(self, market: str = "Rancho Cucamonga") -> WarRoomData:
         """
         Aggregates live lead data into a heat map and relationship graph format.
         """
@@ -52,13 +52,13 @@ class WarRoomService:
 
         # 1. Generate nodes (Properties with interest)
         nodes = []
-        addresses = ["123 Zilker Dr", "456 South Lake Blvd", "789 East 6th St", "101 Domain Way", "202 Congress Ave"]
+        addresses = ["123 Victoria Gardens Dr", "456 South Lake Blvd", "789 East 6th St", "101 Ontario Mills Way", "202 Congress Ave"]
         for i, addr in enumerate(addresses):
             nodes.append(
                 MarketNode(
                     id=f"prop_{i}",
-                    lat=random.uniform(*self.austin_bounds["lat"]),
-                    lng=random.uniform(*self.austin_bounds["lng"]),
+                    lat=random.uniform(*self.rancho_cucamonga_bounds["lat"]),
+                    lng=random.uniform(*self.rancho_cucamonga_bounds["lng"]),
                     heat_value=random.uniform(40, 95),
                     leads_count=random.randint(1, 8),
                     highest_frs=random.uniform(70, 98),

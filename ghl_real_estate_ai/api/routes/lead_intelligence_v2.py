@@ -301,8 +301,8 @@ async def health_check() -> Dict[str, Any]:
     """Health check for Lead Intelligence v2 services."""
     try:
         # Test service availability
-        scoring_service = get_enhanced_lead_scoring()
-        generation_engine = get_ai_lead_generation_engine()
+        get_enhanced_lead_scoring()
+        get_ai_lead_generation_engine()
 
         # Test cache
         cache = get_cache_service()

@@ -105,7 +105,7 @@ ghl_real_estate_ai/services/websocket_server.py        # WebSocket management
 
 # Advanced Analytics Backend
 ghl_real_estate_ai/services/analytics_service.py       # SHAP analytics with <30ms generation
-ghl_real_estate_ai/services/market_intelligence.py     # Austin market analysis
+ghl_real_estate_ai/services/market_intelligence.py     # Rancho Cucamonga market analysis
 ```
 
 ### **📁 Production Configuration**
@@ -258,7 +258,7 @@ PriorityLaneProcessing:  # Critical <1ms, High <5ms, Normal <10ms
 AIConcierge:            # Proactive coaching insights (<2s generation)
 AdvancedAnalytics:      # SHAP waterfall charts (<30ms generation)
 ConversationIntelligence: # Real-time analysis with coaching detection
-MarketIntelligence:     # Austin-specific insights (<50ms geospatial)
+MarketIntelligence:     # Rancho Cucamonga-specific insights (<50ms geospatial)
 ```
 
 ---

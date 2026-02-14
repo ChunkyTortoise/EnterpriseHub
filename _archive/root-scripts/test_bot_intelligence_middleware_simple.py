@@ -83,12 +83,12 @@ def test_bot_intelligence_context():
     # Test fallback context creation
     fallback_context = BotIntelligenceContext.create_fallback(
         lead_id="lead_123",
-        location_id="austin",
+        location_id="rancho_cucamonga",
         bot_type="jorge-seller"
     )
 
     assert fallback_context.lead_id == "lead_123"
-    assert fallback_context.location_id == "austin"
+    assert fallback_context.location_id == "rancho_cucamonga"
     assert fallback_context.bot_type == "jorge-seller"
     assert fallback_context.property_intelligence.match_count == 0
     assert fallback_context.conversation_intelligence.overall_sentiment == 0.0
@@ -174,9 +174,9 @@ async def test_cache_operations():
     middleware = BotIntelligenceMiddleware()
 
     # Test cache key generation
-    cache_key1 = middleware._create_cache_key("lead_123", "austin", "jorge-seller")
-    cache_key2 = middleware._create_cache_key("lead_123", "austin", "jorge-seller")
-    cache_key3 = middleware._create_cache_key("lead_456", "austin", "jorge-seller")
+    cache_key1 = middleware._create_cache_key("lead_123", "rancho_cucamonga", "jorge-seller")
+    cache_key2 = middleware._create_cache_key("lead_123", "rancho_cucamonga", "jorge-seller")
+    cache_key3 = middleware._create_cache_key("lead_456", "rancho_cucamonga", "jorge-seller")
 
     assert cache_key1 == cache_key2  # Same inputs should generate same key
     assert cache_key1 != cache_key3  # Different inputs should generate different keys
@@ -202,7 +202,7 @@ async def test_intelligence_aggregation():
     context = middleware._aggregate_intelligence(
         "jorge-seller",
         "lead_123",
-        "austin",
+        "rancho_cucamonga",
         empty_results,
         performance_metrics
     )
@@ -221,7 +221,7 @@ async def test_intelligence_aggregation():
     context = middleware._aggregate_intelligence(
         "jorge-buyer",
         "lead_456",
-        "austin",
+        "rancho_cucamonga",
         partial_results,
         performance_metrics
     )

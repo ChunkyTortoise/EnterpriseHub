@@ -15,8 +15,6 @@ from ghl_real_estate_ai.services.portal_swipe_manager import (
 )
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def mock_properties():

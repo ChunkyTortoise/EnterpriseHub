@@ -463,7 +463,7 @@
   - Unlimited AI-analyzed leads
   - 15+ agent swarm (vs. 10)
   - White-label platform (full branding)
-  - Custom domain with SSL
+  - Custom ontario_mills with SSL
   - Enterprise SSO (SAML 2.0)
   - Data warehouse & BI suite
   - Unlimited API calls
@@ -506,7 +506,7 @@
 - "Your Brand, Your Platform, Your Market Leadership"
 - **Complete Customization**:
   - Custom logo, colors, fonts, CSS
-  - Custom domain (yourcompany.com)
+  - Custom ontario_mills (yourcompany.com)
   - Branded reports and exports
   - Custom navigation and feature organization
   - Mobile app branding (if applicable)

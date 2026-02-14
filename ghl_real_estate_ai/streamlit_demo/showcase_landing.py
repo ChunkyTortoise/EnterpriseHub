@@ -655,7 +655,7 @@ def render_footer() -> None:
 
 def load_analytics() -> None:
     """Load Google Analytics tracking code (production placeholder)."""
-    # TODO: Replace with actual Google Analytics ID in production
+    # ROADMAP-069: Replace with actual Google Analytics ID in production
     # Example: UA-XXXXXXXXX-X or G-XXXXXXXXXX
     ga_id = st.secrets.get("GOOGLE_ANALYTICS_ID", None) if hasattr(st, "secrets") else None
 

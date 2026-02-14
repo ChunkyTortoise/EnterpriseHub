@@ -77,7 +77,7 @@ def load_conversation_history(lead_id: str) -> List[Dict[str, Any]]:
     except ImportError:
         # Return sample data for standalone testing
         return [
-            {"role": "lead", "content": "Hi, I'm looking for a home in Austin", "timestamp": "2026-01-15T10:00:00"},
+            {"role": "lead", "content": "Hi, I'm looking for a home in Rancho Cucamonga", "timestamp": "2026-01-15T10:00:00"},
             {"role": "agent", "content": "Great! What's your budget range?", "timestamp": "2026-01-15T10:05:00"},
             {"role": "lead", "content": "We're pre-approved for $750k", "timestamp": "2026-01-15T10:08:00"},
         ]

@@ -14,7 +14,7 @@ Endpoints:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -24,6 +24,34 @@ from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/jorge", tags=["jorge-alerting"])
+
+
+# ── TypedDict Definitions ─────────────────────────────────────────────────
+
+
+class AlertDict(TypedDict):
+    """Type definition for serialized alert data."""
+
+    id: str
+    rule_name: str
+    severity: str
+    message: str
+    triggered_at: float
+    acknowledged: bool
+    acknowledged_at: Optional[float]
+    acknowledged_by: Optional[str]
+    channels_sent: List[str]
+
+
+class AlertRuleDict(TypedDict):
+    """Type definition for serialized alert rule data."""
+
+    name: str
+    severity: str
+    cooldown_seconds: int
+    channels: List[str]
+    description: str
+    active: bool
 
 
 # ── Request / Response Models ────────────────────────────────────────
@@ -69,31 +97,31 @@ class AlertRuleResponse(BaseModel):
 # ── Helpers ───────────────────────────────────────────────────────────
 
 
-def _alert_to_dict(alert) -> Dict[str, Any]:
+def _alert_to_dict(alert) -> AlertDict:
     """Convert an Alert dataclass to a serializable dict."""
-    return {
-        "id": alert.id,
-        "rule_name": alert.rule_name,
-        "severity": alert.severity,
-        "message": alert.message,
-        "triggered_at": alert.triggered_at,
-        "acknowledged": alert.acknowledged,
-        "acknowledged_at": alert.acknowledged_at,
-        "acknowledged_by": alert.acknowledged_by,
-        "channels_sent": alert.channels_sent,
-    }
+    return AlertDict(
+        id=alert.id,
+        rule_name=alert.rule_name,
+        severity=alert.severity,
+        message=alert.message,
+        triggered_at=alert.triggered_at,
+        acknowledged=alert.acknowledged,
+        acknowledged_at=alert.acknowledged_at,
+        acknowledged_by=alert.acknowledged_by,
+        channels_sent=alert.channels_sent,
+    )
 
 
-def _rule_to_dict(rule, active: bool) -> Dict[str, Any]:
+def _rule_to_dict(rule, active: bool) -> AlertRuleDict:
     """Convert an AlertRule dataclass to a serializable dict."""
-    return {
-        "name": rule.name,
-        "severity": rule.severity,
-        "cooldown_seconds": rule.cooldown_seconds,
-        "channels": rule.channels,
-        "description": rule.description,
-        "active": active,
-    }
+    return AlertRuleDict(
+        name=rule.name,
+        severity=rule.severity,
+        cooldown_seconds=rule.cooldown_seconds,
+        channels=rule.channels,
+        description=rule.description,
+        active=active,
+    )
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────

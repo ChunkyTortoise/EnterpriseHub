@@ -571,7 +571,8 @@ class JorgeFollowUpScheduler:
     def _is_business_hours(self) -> bool:
         """
         Check if current time is within business hours (9 AM - 6 PM).
-        TODO: Implement location-specific timezone lookup using location_id.
+
+        ROADMAP-084: Implement location-specific timezone lookup using location_id.
         Currently uses server time (assumed to be UTC or configured system time).
         """
         now = datetime.now()

@@ -32,7 +32,6 @@ from ghl_real_estate_ai.agents.customer_journey_orchestrator import (
 )
 from ghl_real_estate_ai.agents.property_intelligence_agent import (
 
-@pytest.mark.integration
     InvestmentAnalysisEngine,
     InvestmentStrategy,
     PropertyDataCollector,

@@ -20,7 +20,6 @@ from ghl_real_estate_ai.services.white_label_service import (
 )
 from ghl_real_estate_ai.streamlit_demo.components.white_label_showcase import (
 
-@pytest.mark.integration
     WhiteLabelShowcase,
     get_white_label_showcase,
 )
@@ -425,7 +424,7 @@ class TestWhiteLabelShowcase:
         # Test Professional tier additions
         professional_capabilities = showcase_instance._get_tier_demo_capabilities(BrandingTier.PROFESSIONAL)
         assert professional_capabilities["Advanced Analytics"] is True
-        assert professional_capabilities["Custom Domain"] is True
+        assert professional_capabilities["Custom Ontario Mills"] is True
         assert professional_capabilities["Enterprise SSO"] is False  # Still not available
 
         # Test Enterprise tier completeness

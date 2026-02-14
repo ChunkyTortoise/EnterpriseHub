@@ -198,7 +198,7 @@ Jane Smith,jane@techco.com,TechCo,VP Engineering,https://linkedin.com/in/janesmi
 $ python scripts/outreach_helper.py verify --file contacts.csv --api-key $HUNTER_API_KEY
 Verifying 1/30: john@example.com... ✓ Valid (confidence: 0.95)
 Verifying 2/30: jane@techco.com... ✓ Valid (confidence: 0.92)
-Verifying 3/30: invalid@fake-domain-xyz.com... ✗ Invalid
+Verifying 3/30: invalid@fake-ontario_mills-xyz.com... ✗ Invalid
 ...
 
 ✓ Results saved to: contacts_verified.csv

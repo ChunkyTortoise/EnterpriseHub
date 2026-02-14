@@ -388,22 +388,22 @@ class PropertyScoringPipeline:
         For now, returns sample properties for testing.
         """
         # Get timestamp of last processing
-        last_processed = await self._get_last_processed_timestamp()
+        await self._get_last_processed_timestamp()
 
         # In production: query external property data sources
         # For now, return sample properties
         sample_properties = [
             {
                 "id": f"prop_{int(time.time())}_{i}",
-                "address": f"{100 + i} Sample St, Austin, TX",
+                "address": f"{100 + i} Sample St, Rancho Cucamonga, CA",
                 "price": 450000 + (i * 25000),
                 "bedrooms": 3 + (i % 2),
                 "bathrooms": 2.0 + (i % 2) * 0.5,
                 "sqft": 1800 + (i * 200),
                 "property_type": "single_family",
-                "city": "Austin",
+                "city": "Rancho Cucamonga",
                 "state": "TX",
-                "zip_code": "78701",
+                "zip_code": "91730",
                 "listing_date": datetime.now(timezone.utc).isoformat(),
                 "days_on_market": 1,
                 "updated_at": datetime.now(timezone.utc).isoformat(),

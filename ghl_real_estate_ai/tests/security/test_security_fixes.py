@@ -44,24 +44,24 @@ async def test_open_redirect_validation(mock_env_redirect, monkeypatch):
     
     from ghl_real_estate_ai.api.routes.enterprise_partnerships import initiate_sso_login
     
-    # Trusted domain
+    # Trusted ontario_mills
     mock_auth = MagicMock()
     mock_auth.initiate_sso_login = AsyncMock(return_value={"url": "http://sso.com"})
     
     with patch("ghl_real_estate_ai.api.routes.enterprise_partnerships.enterprise_auth_service", mock_auth), \
          patch("ghl_real_estate_ai.api.routes.enterprise_partnerships.logger") as mock_logger:
-        res = await initiate_sso_login(domain="test.com", redirect_uri="https://trusted.com/callback", auth_service=mock_auth)
+        res = await initiate_sso_login(ontario_mills="test.com", redirect_uri="https://trusted.com/callback", auth_service=mock_auth)
         assert res == {"url": "http://sso.com"}
     
-    # Untrusted domain
+    # Untrusted ontario_mills
     with pytest.raises(HTTPException) as excinfo:
-        await initiate_sso_login(domain="test.com", redirect_uri="https://malicious.com/stealer")
+        await initiate_sso_login(ontario_mills="test.com", redirect_uri="https://malicious.com/stealer")
     assert excinfo.value.status_code == 400
     assert excinfo.value.detail == "Unauthorized redirect URI"
 
     # Missing netloc
     with pytest.raises(HTTPException) as excinfo:
-        await initiate_sso_login(domain="test.com", redirect_uri="/local/path")
+        await initiate_sso_login(ontario_mills="test.com", redirect_uri="/local/path")
     assert excinfo.value.status_code == 400
     assert excinfo.value.detail == "Invalid redirect URI format"
 

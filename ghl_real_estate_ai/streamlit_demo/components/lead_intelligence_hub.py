@@ -937,12 +937,12 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
             mock_history = [
                 {
                     "role": "user",
-                    "content": "I'm looking for a house in Austin, budget around $500k.",
+                    "content": "I'm looking for a house in Rancho Cucamonga, budget around $500k.",
                     "timestamp": "2026-01-10",
                 },
                 {
                     "role": "assistant",
-                    "content": "That's great! Austin has some wonderful neighborhoods. What's your timeline?",
+                    "content": "That's great! Rancho Cucamonga has some wonderful neighborhoods. What's your timeline?",
                     "timestamp": "2026-01-10",
                 },
                 {"role": "user", "content": "Hoping to move in 3 months.", "timestamp": "2026-01-10"},

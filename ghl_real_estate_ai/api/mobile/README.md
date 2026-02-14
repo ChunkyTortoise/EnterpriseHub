@@ -123,7 +123,7 @@ Set up AR/VR visualization for a property.
 **Request:**
 ```json
 {
-  "property_id": "prop_austin_001",
+  "property_id": "prop_rancho_cucamonga_001",
   "user_location": {"latitude": 30.2672, "longitude": -97.7431},
   "device_capabilities": {
     "supports_ar": true,
@@ -139,12 +139,12 @@ Set up AR/VR visualization for a property.
 **Response:**
 ```json
 {
-  "property_id": "prop_austin_001",
+  "property_id": "prop_rancho_cucamonga_001",
   "visualization_type": "mixed_reality",
   "visualization_data": {
     "ar_overlays": [
       {
-        "overlay_id": "price_prop_austin_001",
+        "overlay_id": "price_prop_rancho_cucamonga_001",
         "overlay_type": "price",
         "position": {"x": 0.0, "y": 2.0, "z": 0.0},
         "content": {
@@ -156,10 +156,10 @@ Set up AR/VR visualization for a property.
     ],
     "vr_waypoints": [
       {
-        "waypoint_id": "exterior_prop_austin_001",
+        "waypoint_id": "exterior_prop_rancho_cucamonga_001",
         "name": "Exterior View",
         "position": {"x": 0.0, "y": 1.6, "z": 10.0},
-        "panorama_url": "https://vr-content.example.com/prop_austin_001/exterior_360.jpg"
+        "panorama_url": "https://vr-content.example.com/prop_rancho_cucamonga_001/exterior_360.jpg"
       }
     ]
   },
@@ -174,16 +174,16 @@ Get 3D model data for property visualization.
 **Response:**
 ```json
 {
-  "model_id": "model_prop_austin_001_high",
-  "property_id": "prop_austin_001",
+  "model_id": "model_prop_rancho_cucamonga_001_high",
+  "property_id": "prop_rancho_cucamonga_001",
   "model_format": "gltf",
-  "model_url": "https://3d-models.example.com/prop_austin_001/high/model.gltf",
+  "model_url": "https://3d-models.example.com/prop_rancho_cucamonga_001/high/model.gltf",
   "level_of_detail": [
     {
       "distance": 0.0,
       "polygon_count": 50000,
       "texture_resolution": 2048,
-      "model_url": "https://3d-models.example.com/prop_austin_001/high/model_lod0.gltf"
+      "model_url": "https://3d-models.example.com/prop_rancho_cucamonga_001/high/model_lod0.gltf"
     }
   ],
   "interactive_elements": [
@@ -270,7 +270,7 @@ Get mobile-optimized property listings with location-based filtering.
   "status": "success",
   "data": [
     {
-      "property_id": "prop_austin_001",
+      "property_id": "prop_rancho_cucamonga_001",
       "address": "1234 Example Street",
       "price": 750000,
       "price_formatted": "$750,000",
@@ -303,7 +303,7 @@ Get detailed property information optimized for mobile viewing.
 **Response:**
 ```json
 {
-  "property_id": "prop_austin_001",
+  "property_id": "prop_rancho_cucamonga_001",
   "address": "1234 Hill Country Drive",
   "price": 750000,
   "price_formatted": "$750,000",
@@ -312,16 +312,16 @@ Get detailed property information optimized for mobile viewing.
   "bathrooms": 3.5,
   "sqft": 2500,
   "images": [
-    "https://images.example.com/prop_austin_001/exterior_1.jpg",
-    "https://images.example.com/prop_austin_001/kitchen_1.jpg"
+    "https://images.example.com/prop_rancho_cucamonga_001/exterior_1.jpg",
+    "https://images.example.com/prop_rancho_cucamonga_001/kitchen_1.jpg"
   ],
   "features": ["Open Floor Plan", "Updated Kitchen", "Hardwood Floors"],
   "neighborhood": "Hill Country",
-  "school_district": "Lake Travis ISD",
+  "school_district": "Mount Baldy ISD",
   "nearby_schools": [
-    {"name": "Lake Travis Elementary", "rating": 9, "distance": 0.5}
+    {"name": "Mount Baldy Elementary", "rating": 9, "distance": 0.5}
   ],
-  "ai_insights": "This property shows strong potential in the current Austin market with excellent school ratings and recent appreciation trends.",
+  "ai_insights": "This property shows strong potential in the current Rancho Cucamonga market with excellent school ratings and recent appreciation trends.",
   "investment_score": 85,
   "market_trends": {
     "appreciation_1y": 8.5,
@@ -359,7 +359,7 @@ Get mobile-optimized lead listings with filtering and search.
       "last_contact": "2024-01-18T04:30:00Z",
       "next_followup": "2024-01-20T10:00:00Z",
       "priority": "high",
-      "property_interest": "prop_austin_001",
+      "property_interest": "prop_rancho_cucamonga_001",
       "estimated_budget": 800000,
       "distance_miles": 3.2,
       "unread_messages": 2
@@ -394,11 +394,11 @@ Get detailed lead information with AI insights and recommendations.
   },
   "behavioral_insights": "High-engagement lead showing strong buying signals with excellent response rate.",
   "conversion_probability": 85,
-  "recommended_properties": ["prop_austin_001", "prop_austin_015"],
+  "recommended_properties": ["prop_rancho_cucamonga_001", "prop_rancho_cucamonga_015"],
   "recent_activities": [
     {
       "type": "property_view",
-      "property_id": "prop_austin_001",
+      "property_id": "prop_rancho_cucamonga_001",
       "timestamp": "2024-01-18T08:30:00Z",
       "duration_minutes": 15
     }

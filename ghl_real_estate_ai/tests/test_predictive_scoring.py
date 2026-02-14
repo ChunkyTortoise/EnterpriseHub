@@ -8,8 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.services.predictive_scoring import BatchPredictor, PredictiveLeadScorer
 
-@pytest.mark.unit
-
 
 class TestPredictiveLeadScorer:
     def test_predict_conversion_hot_lead(self):
@@ -23,7 +21,7 @@ class TestPredictiveLeadScorer:
             "location_fit": 0.9,
             "messages": [
                 {"text": "I am pre-approved for $500k cash.", "response_time_seconds": 30},
-                {"text": "I need to move in the next 2 weeks to Austin.", "response_time_seconds": 45},
+                {"text": "I need to move in the next 2 weeks to Rancho Cucamonga.", "response_time_seconds": 45},
                 {"text": "Is the 3 bedroom house available?", "response_time_seconds": 60},
             ],
         }

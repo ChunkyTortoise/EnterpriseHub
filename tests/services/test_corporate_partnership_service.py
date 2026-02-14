@@ -61,7 +61,7 @@ def valid_relocation_batch():
         {
             "employee_email": "john.doe@techcorp.com",
             "employee_name": "John Doe",
-            "destination_city": "Austin",
+            "destination_city": "Rancho Cucamonga",
             "destination_state": "TX",
             "housing_budget": 3500.00,
             "preferred_housing_type": "apartment",
@@ -294,7 +294,7 @@ class TestCorporatePartnershipService:
             "relocation_id": "rel_123",
             "employee_email": employee_email,
             "status": "in_progress",
-            "destination_city": "Austin",
+            "destination_city": "Rancho Cucamonga",
         }
 
         with patch.object(partnership_service, "cache_service", mock_cache_service):
@@ -416,7 +416,7 @@ class TestCorporatePartnershipService:
         relocation_request = {
             "employee_email": "john.doe@company.com",
             "employee_name": "John Doe",
-            "destination_city": "Austin",
+            "destination_city": "Rancho Cucamonga",
             "destination_state": "TX",
             "housing_budget": 3500.00,
             "start_date": datetime.now(timezone.utc) + timedelta(days=30),

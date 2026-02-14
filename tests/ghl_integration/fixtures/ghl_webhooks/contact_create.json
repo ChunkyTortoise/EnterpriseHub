@@ -1,0 +1,29 @@
+{
+  "event": "ContactCreate",
+  "version": "v2",
+  "timestamp": "2026-02-11T10:30:00Z",
+  "trace_id": "evt_contact_create_12345",
+  "data": {
+    "id": "contact_abc123",
+    "locationId": "loc_xyz789",
+    "firstName": "John",
+    "lastName": "Smith",
+    "name": "John Smith",
+    "email": "john.smith@example.com",
+    "phone": "+1-909-555-0123",
+    "address1": "123 Main Street",
+    "city": "Rancho Cucamonga",
+    "state": "CA",
+    "country": "US",
+    "postalCode": "91730",
+    "dateAdded": "2026-02-11T10:30:00Z",
+    "tags": ["lead", "website_inquiry"],
+    "source": "website_form",
+    "customFields": {
+      "utm_source": "google_ads",
+      "utm_campaign": "spring_2026",
+      "property_interest": "single_family"
+    },
+    "message": "I'm interested in buying a home in Rancho Cucamonga. Budget is around $800,000."
+  }
+}

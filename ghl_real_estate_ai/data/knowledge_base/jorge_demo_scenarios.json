@@ -98,7 +98,7 @@
       "age": "58 & 55",
       "occupation": "Retired Tech Executive & Interior Designer",
       "income": "$400k+ investment income",
-      "location_current": "Large Steiner Ranch home",
+      "location_current": "Large North Rancho home",
       "pain_points": [
         "Empty nesters in 4,500 sq ft home",
         "Want luxury but less maintenance",
@@ -115,8 +115,8 @@
       ],
       "timeline": "Flexible but decisive when right property appears",
       "budget": "$900k-1.2M",
-      "likely_areas": ["Central RC", "West Campus", "Clarksville"],
-      "demo_conversation_trigger": "Referral call: 'Friends said you could help us downsize from Steiner Ranch'",
+      "likely_areas": ["Central RC", "Chaffey District", "Central Rancho"],
+      "demo_conversation_trigger": "Referral call: 'Friends said you could help us downsize from North Rancho'",
       "jorge_roi_moment": "AI recognizes luxury seller + buyer combo, books Jorge personally for $2M+ transaction value"
     }
   ],
@@ -395,16 +395,16 @@
 
     {
       "scenario_id": "luxury_listing_steiner",
-      "title": "Robert's Luxury Steiner Ranch Listing",
-      "setup": "Empty nesters want to downsize from 4,500 sq ft Steiner Ranch home to luxury central_rc condo",
+      "title": "Robert's Luxury North Rancho Listing",
+      "setup": "Empty nesters want to downsize from 4,500 sq ft North Rancho home to luxury central_rc condo",
       "conversation_flow": {
         "intro": "DEMO: AI recognizes luxury seller + buyer combination",
         "messages": [
           {
             "time": "0:00",
             "speaker": "Robert (Referral Call)",
-            "message": "Friends said you could help us downsize from Steiner Ranch",
-            "ai_thinking": "Steiner Ranch = luxury market + referral = high-quality"
+            "message": "Friends said you could help us downsize from North Rancho",
+            "ai_thinking": "North Rancho = luxury market + referral = high-quality"
           },
           {
             "time": "0:05",
@@ -421,7 +421,7 @@
           {
             "time": "0:45",
             "speaker": "AI Assistant",
-            "message": "That's a great move! What's your Steiner Ranch home like? Beds/baths/sq ft?",
+            "message": "That's a great move! What's your North Rancho home like? Beds/baths/sq ft?",
             "jorge_note": "AI gathering listing information while buyer needs develop"
           },
           {

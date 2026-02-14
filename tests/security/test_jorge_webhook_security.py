@@ -31,8 +31,6 @@ from ghl_real_estate_ai.ghl_utils.config import Settings
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
-@pytest.mark.integration
-
 
 class TestJorgeWebhookSecurity:
     """Test webhook security for Jorge's GHL integration."""

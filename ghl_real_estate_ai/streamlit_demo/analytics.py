@@ -176,7 +176,7 @@ def load_mock_data() -> Dict[str, Any]:
     now = datetime.now()
     return {
         "tenants": [
-            {"name": "Luxury Living ATX", "location_id": "loc_123", "region": "Austin", "tier": "Enterprise"},
+            {"name": "Luxury Living ATX", "location_id": "loc_123", "region": "Rancho Cucamonga", "tier": "Enterprise"},
             {"name": "Dallas Realty Grp", "location_id": "loc_456", "region": "Dallas", "tier": "Professional"},
             {"name": "Houston Homes", "location_id": "loc_789", "region": "Houston", "tier": "Starter"},
         ],
@@ -1584,7 +1584,7 @@ def main():
                 elif selected_op_type == "tag":
                     action = st.radio("Action", ["Add Tags", "Remove Tags"], horizontal=True)
                     tags_input = st.text_input(
-                        "Tags (comma-separated)", placeholder="hot-lead, follow-up-needed, austin"
+                        "Tags (comma-separated)", placeholder="hot-lead, follow-up-needed, rancho_cucamonga"
                     )
                     tags = [t.strip() for t in tags_input.split(",") if t.strip()]
 

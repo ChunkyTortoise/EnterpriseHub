@@ -9,7 +9,6 @@ import pytest
 
 from ghl_real_estate_ai.services.xgboost_propensity_engine import (
 
-@pytest.mark.integration
     LIFE_EVENT_CONVERSION_RATES,
     LifeEventSignal,
     LifeEventType,

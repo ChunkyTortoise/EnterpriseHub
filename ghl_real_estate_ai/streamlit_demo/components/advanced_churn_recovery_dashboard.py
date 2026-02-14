@@ -197,7 +197,7 @@ def load_churn_metrics() -> ChurnKPIs:
 def load_market_data() -> List[MarketMetrics]:
     """Load multi-market performance data"""
     markets = [
-        MarketMetrics("Austin Metro", 0.065, 0.72, 18, 87500, 34, 16),
+        MarketMetrics("Rancho Cucamonga Metro", 0.065, 0.72, 18, 87500, 34, 16),
         MarketMetrics("San Antonio", 0.082, 0.68, 14, 62300, 28, 12),
         MarketMetrics("Houston West", 0.071, 0.74, 21, 94200, 41, 19),
         MarketMetrics("Dallas North", 0.089, 0.61, 16, 71800, 38, 14),
@@ -246,7 +246,7 @@ def generate_geographic_data() -> pd.DataFrame:
     """Generate geographic churn intensity data"""
     return pd.DataFrame(
         {
-            "Market": ["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
+            "Market": ["Rancho Cucamonga Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
             "Latitude": [30.2672, 29.4241, 29.7604, 32.7767, 32.7555],
             "Longitude": [-97.7431, -98.4936, -95.3698, -96.7970, -97.3308],
             "Churn_Rate": [6.5, 8.2, 7.1, 8.9, 7.6],
@@ -728,8 +728,8 @@ def render_advanced_churn_recovery_dashboard():
 
         market_filter = st.multiselect(
             "Market Filter",
-            ["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
-            default=["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
+            ["Rancho Cucamonga Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
+            default=["Rancho Cucamonga Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
         )
 
         if auto_refresh:

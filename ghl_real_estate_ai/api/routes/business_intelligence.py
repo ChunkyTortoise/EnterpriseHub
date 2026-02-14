@@ -100,11 +100,6 @@ class PredictiveInsight(BaseModel):
     data: PerformanceMetrics
 
 
-# Initialize services
-bi_cache = get_bi_cache_service()
-stream_processor = get_bi_stream_processor()
-event_publisher = get_event_publisher()
-
 # Dashboard KPI Endpoints
 
 
@@ -122,6 +117,10 @@ async def get_dashboard_kpis(
     Includes real-time metrics, comparisons, and trend data.
     """
     try:
+        # Initialize services
+        bi_cache = get_bi_cache_service()
+        event_publisher = get_event_publisher()
+
         # Input validation
         if not validate_timeframe(timeframe):
             raise HTTPException(status_code=422, detail="Invalid timeframe parameter")
@@ -192,6 +191,9 @@ async def get_revenue_intelligence(
     Includes Jorge's 6% commission tracking and predictive insights.
     """
     try:
+        # Initialize services
+        bi_cache = get_bi_cache_service()
+
         # Input validation
         if not validate_timeframe(timeframe):
             raise HTTPException(status_code=422, detail="Invalid timeframe parameter")
@@ -203,7 +205,7 @@ async def get_revenue_intelligence(
         logger.info(f"Revenue intelligence requested: {timeframe}, location: {location_id}")
 
         # Get revenue analytics data
-        revenue_data = await bi_cache.get_revenue_pipeline(
+        await bi_cache.get_revenue_pipeline(
             location_id=location_id, forecast_days=forecast_days if include_forecast else 0
         )
 
@@ -253,6 +255,9 @@ async def get_bot_performance_matrix(
     Includes coordination metrics and performance alerts.
     """
     try:
+        # Initialize services
+        bi_cache = get_bi_cache_service()
+
         logger.info(f"Bot performance matrix requested: {timeframe}, location: {location_id}")
 
         # Get bot performance data
@@ -390,6 +395,10 @@ async def detect_anomalies(
     Provides early warning for system degradation and unusual patterns.
     """
     try:
+        # Initialize services
+        stream_processor = get_bi_stream_processor()
+        event_publisher = get_event_publisher()
+
         logger.info(f"Anomaly detection for {location_id}, timeframe: {timeframe}")
 
         # Get recent metrics for anomaly detection
@@ -435,6 +444,9 @@ async def get_real_time_metrics(
     Provides up-to-the-second performance data for live dashboards.
     """
     try:
+        # Initialize services
+        stream_processor = get_bi_stream_processor()
+
         # Get real-time metrics
         metrics = await stream_processor.get_real_time_metrics(location_id)
 
@@ -467,6 +479,9 @@ async def trigger_manual_aggregation(
     Useful for immediate dashboard updates or troubleshooting.
     """
     try:
+        # Initialize services
+        stream_processor = get_bi_stream_processor()
+
         # Check user permissions (admin only)
         if hasattr(current_user, "role") and current_user.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Admin access required")
@@ -501,6 +516,9 @@ async def get_cache_analytics(current_user: Any = Depends(get_current_user)):
     Provides insights into cache efficiency and optimization opportunities.
     """
     try:
+        # Initialize services
+        bi_cache = get_bi_cache_service()
+
         analytics = await bi_cache.get_cache_analytics()
         return JSONResponse(content=analytics)
 
@@ -520,6 +538,9 @@ async def warm_dashboard_cache(
     Pre-loads frequently accessed analytics data.
     """
     try:
+        # Initialize services
+        bi_cache = get_bi_cache_service()
+
         # Parse location IDs
         locations = location_ids.split(",") if location_ids else ["default"]
 
@@ -868,6 +889,9 @@ async def _drill_down_conversion_funnel(query: DrillDownQuery) -> Dict[str, Any]
 
 async def _log_drill_down_interaction(component: str, metric: str, location_id: str, result_count: int):
     """Log drill-down interaction for analytics."""
+    # Initialize services
+    event_publisher = get_event_publisher()
+
     await event_publisher.publish_user_activity(
         action="drill_down",
         user_id=1,  # Would get from auth context

@@ -13,8 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 try:
     from ghl_real_estate_ai.services.proactive_communication_engine import (
         CommunicationMessage,
@@ -143,7 +141,7 @@ class TestProactiveCommunicationEngine:
                 "overall_result": "no_major_issues",
                 "next_steps": ["review_report", "proceed_to_appraisal"],
             },
-            "property_data": {"address": "123 Main Street, Austin, TX", "price": 450000},
+            "property_data": {"address": "123 Main Street, Rancho Cucamonga, CA", "price": 450000},
             "client_data": {
                 "name": "John Doe",
                 "email": "john@example.com",
@@ -203,7 +201,7 @@ class TestProactiveCommunicationEngine:
             "recipient_id": "client_789",
             "celebration_details": {
                 "closing_date": "2024-01-25",
-                "property_address": "456 Oak Street, Austin, TX",
+                "property_address": "456 Oak Street, Rancho Cucamonga, CA",
                 "purchase_price": 525000,
                 "achievement": "first_time_homeowner",
             },

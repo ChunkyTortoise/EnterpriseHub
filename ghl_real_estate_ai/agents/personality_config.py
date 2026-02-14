@@ -192,7 +192,7 @@ class PersonalityConfig(BaseModel):
         Registers a factory-backed personality under
         (industry, bot_type) in the global registry.
         """
-        personality = self.to_personality()
+        self.to_personality()
 
         # Create a thin wrapper class for registry storage
         config_ref = self

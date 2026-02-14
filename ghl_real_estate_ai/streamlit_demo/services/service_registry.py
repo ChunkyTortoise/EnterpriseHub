@@ -251,14 +251,14 @@ def warm_critical_data():
                 "name": "Sarah Chen",
                 "email": "sarah.chen@email.com",
                 "budget": 450000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "preferences": {"bedrooms": 3, "bathrooms": 2, "property_type": "Single Family"},
             },
             {
                 "name": "David Kim",
                 "email": "david.kim@email.com",
                 "budget": 350000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "preferences": {"bedrooms": 2, "bathrooms": 2, "property_type": "Condo"},
             },
         ]
@@ -266,12 +266,12 @@ def warm_critical_data():
         # Warm property data
         warmed_data["sample_properties"] = [
             {
-                "address": "123 Austin St",
+                "address": "123 Rancho Cucamonga St",
                 "price": 425000,
                 "bedrooms": 3,
                 "bathrooms": 2,
                 "property_type": "Single Family",
-                "neighborhood": "South Austin",
+                "neighborhood": "South Rancho Cucamonga",
             }
         ]
 
@@ -429,8 +429,8 @@ def warm_demo_cache_comprehensive():
 
 
 @st.cache_resource(ttl=3600, show_spinner=True)  # Cache services for 1 hour, show loading
-def get_services(market="Austin"):
-    listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
+def get_services(market="Rancho Cucamonga"):
+    listings_file = "property_listings.json" if market == "Rancho Cucamonga" else "property_listings_rancho.json"
     listings_path = _GHL_ROOT / "data" / "knowledge_base" / listings_file
 
     # Safe import of orchestrator services with fallback

@@ -35,11 +35,11 @@ def get_lead_data():
     """Cached lead data retrieval (5min TTL)"""
     return {
         "name": "SARAH MARTINEZ",
-        "sector": "AUSTIN",
+        "sector": "RANCHO CUCAMONGA",
         "score": st.session_state.get("lead_score", 82),
         "status": "active",
         "temperature": "hot",
-        "preferences": {"budget": 850000, "location": "Austin, TX", "beds": 3},
+        "preferences": {"budget": 850000, "location": "Rancho Cucamonga, CA", "beds": 3},
         "tags": ["High Value", "Investment Focus", "Quick Close", "Pre-Approved", "Repeat Client"],
     }
 
@@ -175,7 +175,7 @@ def render_lead_dashboard_optimized():
         AI STRATEGIC DIRECTIVE FOR THIS NODE:
     </div>
     <ul style="margin: 0; padding-left: 1.25rem; line-height: 1.6;">
-        <li><strong>Value Hook:</strong> Highlighting recent 5% variance on 'Priority' node in Zilker sector.</li>
+        <li><strong>Value Hook:</strong> Highlighting recent 5% variance on 'Priority' node in Victoria Gardens sector.</li>
         <li><strong>Optimal Sync:</strong> Establish contact at <strong style="color: #10b981;">18:15</strong> (detected peak engagement window).</li>
         <li><strong>Closing Vector:</strong> Node prioritizes 'appreciation trajectory' - pivot to tech corridor expansion dataset.</li>
     </ul>

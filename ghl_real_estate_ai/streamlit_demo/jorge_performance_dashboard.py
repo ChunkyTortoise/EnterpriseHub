@@ -525,7 +525,7 @@ class JorgePerformanceDashboard:
                 go.Indicator(
                     mode="gauge+number",
                     value=value,
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": metric},
                     number={"suffix": suffix},
                     gauge={

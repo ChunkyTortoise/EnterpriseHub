@@ -324,7 +324,7 @@ class InteractiveDemoBuilder:
                 bedrooms = st.selectbox("Bedrooms", [1, 2, 3, 4, 5], index=2)
 
             with col2:
-                location = st.text_input("Location", value="Austin, TX")
+                location = st.text_input("Location", value="Rancho Cucamonga, CA")
                 property_type = st.selectbox("Property Type", ["House", "Condo", "Townhouse"])
 
         # Search results simulation

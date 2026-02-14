@@ -126,7 +126,7 @@ async def handle_swipe(request: SwipeRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Error handling swipe")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -165,7 +165,7 @@ async def get_lead_stats(lead_id: str):
     try:
         stats = swipe_manager.get_lead_stats(lead_id)
         return stats
-    except Exception as e:
+    except Exception:
         logger.exception("Error getting lead stats")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -214,7 +214,7 @@ async def get_lead_interactions(lead_id: str, limit: int = 50):
             "interactions": lead_interactions[:limit],
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error getting lead interactions")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -301,7 +301,7 @@ async def get_smart_deck(lead_id: str, location_id: str, limit: int = 10, min_sc
             "preferences_applied": preferences,
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error getting smart deck")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -317,6 +317,6 @@ async def get_smart_deck_legacy(contact_id: str, location_id: Optional[str] = No
 
         deck = await swipe_manager.get_smart_deck(lead_id=contact_id, location_id=loc_id, limit=10)
         return {"deck": deck}
-    except Exception as e:
+    except Exception:
         logger.exception("Error in legacy smart deck")
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -15,8 +15,6 @@ from fastapi.testclient import TestClient
 from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.voice_claude_service import VoiceClaudeService, VoiceInteractionType
 
-@pytest.mark.integration
-
 client = TestClient(app)
 
 
@@ -56,7 +54,7 @@ class TestVoiceIntegration:
             "language": "en-US",
             "context": {
                 "current_screen": "property_details",
-                "property_id": "prop_austin_001",
+                "property_id": "prop_rancho_cucamonga_001",
                 "include_audio_response": False,  # Skip TTS for testing
             },
             "location": {
@@ -143,7 +141,7 @@ class TestVoiceClaudeService:
     @pytest.fixture
     def voice_service(self):
         """Create VoiceClaudeService instance for testing."""
-        return VoiceClaudeService(market_id="austin")
+        return VoiceClaudeService(market_id="rancho_cucamonga")
 
     @patch("speech_recognition.Recognizer")
     def test_speech_transcription_mock(self, mock_recognizer, voice_service):
@@ -177,7 +175,7 @@ class TestVoiceClaudeService:
         # This would test price entity extraction
 
         # Test location extraction
-        location_text = "Show me homes in Downtown Austin"
+        location_text = "Show me homes in Downtown Rancho Cucamonga"
         # This would test location entity extraction
 
         # Test room count extraction
@@ -226,7 +224,7 @@ class TestVoiceContextAwareness:
             "audio_format": "wav",
             "context": {
                 "current_screen": "property_details",
-                "property_id": "prop_austin_001",
+                "property_id": "prop_rancho_cucamonga_001",
                 "property_price": 750000,
                 "property_address": "1234 Hill Country Drive",
             },

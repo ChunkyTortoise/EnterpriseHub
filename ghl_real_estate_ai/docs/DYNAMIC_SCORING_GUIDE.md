@@ -42,7 +42,7 @@ result = await scorer.score_lead(
     context={
         'extracted_preferences': {
             'budget': '$750,000',
-            'location': 'Austin, TX',
+            'location': 'Rancho Cucamonga, CA',
             'timeline': 'next 2 months',
             'bedrooms': 3,
             'financing': 'pre-approved'

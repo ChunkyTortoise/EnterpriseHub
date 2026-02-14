@@ -542,7 +542,7 @@ class EmergencyDealRescue:
     def _extract_location_from_address(self, address: Optional[str]) -> str:
         """Extract location/ZIP code from property address."""
         if not address:
-            return "78701"  # Default Austin ZIP
+            return "91730"  # Default Rancho Cucamonga ZIP
 
         # Try to extract ZIP code
         import re
@@ -552,14 +552,14 @@ class EmergencyDealRescue:
             return zip_match.group(1)
 
         # Try to extract city/area
-        if "austin" in address.lower():
-            return "78701"
+        if "rancho_cucamonga" in address.lower():
+            return "91730"
         elif "cedar park" in address.lower():
             return "78613"
         elif "round rock" in address.lower():
             return "78664"
 
-        return "78701"  # Default
+        return "91730"  # Default
 
     async def _calculate_overall_risk(self, signals: List[ChurnSignal], deal_data: Dict) -> float:
         """Calculate composite risk score from all signals."""

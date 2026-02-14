@@ -21,10 +21,10 @@ import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
-def force_austin_market():
-    """Force Austin market for property matcher tests to ensure consistent test data."""
+def force_rancho_cucamonga_market():
+    """Force Rancho Cucamonga market for property matcher tests to ensure consistent test data."""
     original = os.environ.get("JORGE_MARKET")
-    os.environ["JORGE_MARKET"] = "austin"
+    os.environ["JORGE_MARKET"] = "rancho_cucamonga"
     yield
     if original:
         os.environ["JORGE_MARKET"] = original

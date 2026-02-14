@@ -22,7 +22,7 @@
 - ✅ Budget extraction working perfectly ($600k, $400k ranges detected)
 - ✅ Timeline analysis accurate (30 days, flexible detected)
 - ✅ Financing status recognition (pre-approved, unknown)
-- ✅ Location preferences identified (Austin areas)
+- ✅ Location preferences identified (Rancho Cucamonga areas)
 - ✅ Intent confidence calibrated correctly
 
 ### **🟢 Seller Bot - JORGE'S AUTHENTIC TONE**
@@ -110,7 +110,7 @@
 ### **2. Robust Lead Scoring**
 - Defensive programming with fallbacks
 - Multiple extraction patterns for budget/timeline
-- Austin-specific location recognition
+- Rancho Cucamonga-specific location recognition
 
 ### **3. Error Handling Excellence**
 - Graceful handling of API failures
@@ -128,13 +128,13 @@
 
 ### **What Makes This Special:**
 1. **Authentic Jorge Personality** - Not generic AI
-2. **Real Estate Expertise** - Austin market knowledge built-in
+2. **Real Estate Expertise** - Rancho Cucamonga market knowledge built-in
 3. **Proven Approach** - Your 4-question system automated
 4. **Business Intelligence** - Revenue-focused qualification
 
 ### **Vs. Generic AI Chatbots:**
 - 🎯 **Jorge's Tone:** Confrontational, no-nonsense approach
-- 🎯 **Real Estate Focus:** Austin market, investor language
+- 🎯 **Real Estate Focus:** Rancho Cucamonga market, investor language
 - 🎯 **Qualification System:** Your proven 4-question method
 - 🎯 **Revenue Optimization:** Designed for your business model
 

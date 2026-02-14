@@ -292,7 +292,7 @@ class PerformanceTestSuite:
 
             # Test with various audio segment sizes
             test_segments = [
-                {"duration": 3, "transcript": "Hello, I am interested in properties in Austin"},
+                {"duration": 3, "transcript": "Hello, I am interested in properties in Rancho Cucamonga"},
                 {"duration": 5, "transcript": "Can you tell me about the schools in this neighborhood?"},
                 {"duration": 2, "transcript": "What is the price range?"},
                 {"duration": 4, "transcript": "I would like to schedule a showing this weekend"},

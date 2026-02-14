@@ -1,3 +1,3 @@
 # Jorge Bot Test Package
 
-from services.jorge.alerting_service import Alert, AlertingService, AlertRule
+from ghl_real_estate_ai.services.jorge.alerting_service import Alert, AlertingService, AlertRule

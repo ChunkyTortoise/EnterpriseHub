@@ -18,10 +18,12 @@ from src.retrieval.hybrid.fusion import (
 )
 from src.retrieval.hybrid.hybrid_searcher import (
 
-@pytest.mark.unit
     HybridSearchConfig,
     HybridSearcher,
 )
+
+
+@pytest.mark.unit
 
 
 class TestFusionAlgorithms:

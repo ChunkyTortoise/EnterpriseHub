@@ -416,7 +416,7 @@ class DashboardStateManager:
         """Get dashboard usage analytics"""
         now = datetime.now()
         day_ago = now - timedelta(days=1)
-        week_ago = now - timedelta(days=7)
+        now - timedelta(days=7)
 
         recent_changes = [
             change for change in self.state_changes if datetime.fromisoformat(change["timestamp"]) > day_ago

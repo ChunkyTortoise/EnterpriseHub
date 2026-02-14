@@ -45,7 +45,7 @@
 ### **Jorge Integration**
 - **6% Commission Calculation**: Automatic revenue projection per match
 - **Confrontational Context**: Behavioral weighting adapted for Jorge's direct approach
-- **Market Intelligence**: Austin market data integration for competitive scoring
+- **Market Intelligence**: Rancho Cucamonga market data integration for competitive scoring
 
 ---
 

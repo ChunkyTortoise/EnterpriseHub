@@ -111,7 +111,7 @@ class Track3PerformanceValidator:
                     },
                     {
                         "sender": "lead",
-                        "content": "Austin central, 3+ bedrooms",
+                        "content": "Rancho Cucamonga central, 3+ bedrooms",
                         "timestamp": (base_time - timedelta(hours=5, minutes=35)).isoformat(),
                     },
                 ],

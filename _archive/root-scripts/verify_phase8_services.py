@@ -27,7 +27,7 @@ async def verify_services():
             property_id="test_prop_456",
             buyer_name="Test Buyer",
             buyer_email="test@example.com",
-            property_address="123 Test St, Austin, TX",
+            property_address="123 Test St, Rancho Cucamonga, CA",
             purchase_price=500000.0,
             contract_date=datetime.now(),
             expected_closing_date=datetime.now(),

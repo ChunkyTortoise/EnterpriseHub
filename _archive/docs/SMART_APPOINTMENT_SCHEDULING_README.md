@@ -21,7 +21,7 @@ Jorge's Smart Appointment Scheduling System automatically books qualified leads 
 | Property Showing | 30 minutes | Specific property viewings |
 | Follow-up Call | 15 minutes | Quick check-ins, status updates |
 
-### Business Hours (Austin, TX)
+### Business Hours (Rancho Cucamonga, CA)
 - **Monday-Friday**: 9:00 AM - 6:00 PM CT
 - **Saturday**: 10:00 AM - 4:00 PM CT
 - **Sunday**: CLOSED
@@ -170,7 +170,7 @@ Looking forward to helping you with your real estate needs!
 - **API Failures**: Fallback to manual scheduling
 - **No Availability**: Offer to check calendar manually
 - **Invalid Data**: Validation with clear error messages
-- **Timezone Issues**: Automatic conversion to Austin time
+- **Timezone Issues**: Automatic conversion to Rancho Cucamonga time
 
 ### Logging & Monitoring
 ```python

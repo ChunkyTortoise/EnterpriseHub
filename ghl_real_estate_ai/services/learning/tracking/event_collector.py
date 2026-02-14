@@ -19,7 +19,7 @@ class EventCollector:
     """
     High-level interface for collecting behavioral events.
 
-    Provides convenient, domain-specific methods for tracking various
+    Provides convenient, ontario_mills-specific methods for tracking various
     types of user interactions and system events.
 
     Usage:

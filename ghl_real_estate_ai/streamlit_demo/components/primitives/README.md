@@ -228,9 +228,9 @@ ghl_real_estate_ai/streamlit_demo/
         ├── __init__.py           # Public API exports
         ├── card.py               # Card component (4 variants)
         ├── icon.py               # Icon system
-        ├── button.py             # TODO: Button primitive
-        ├── metric.py             # TODO: Metric primitive
-        ├── badge.py              # TODO: Badge primitive
+        ├── button.py             # ROADMAP-071: Button primitive
+        ├── metric.py             # ROADMAP-072: Metric primitive
+        ├── badge.py              # ROADMAP-072: Badge primitive
         ├── README.md             # This file
         └── USAGE_EXAMPLES.md     # Detailed examples
 ```

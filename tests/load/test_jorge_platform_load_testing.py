@@ -36,8 +36,6 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 
-@pytest.mark.integration
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

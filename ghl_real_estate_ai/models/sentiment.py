@@ -6,7 +6,6 @@ across conversations and escalation events.
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 from sqlalchemy import (

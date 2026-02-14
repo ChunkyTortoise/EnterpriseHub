@@ -372,7 +372,7 @@ class SecurityValidator:
                 if "sqlalchemy" in file.read_text().lower():
                     uses_orm = True
                     break
-            except:
+            except Exception:
                 continue
 
         self.print_check(
@@ -406,7 +406,7 @@ class SecurityValidator:
                     "API Security",
                     "Permissive CORS Configuration",
                     "CORS may allow localhost or overly permissive origins",
-                    "Restrict CORS origins to production domains only",
+                    "Restrict CORS origins to production ontario_millss only",
                     ["OWASP A05:2021"]
                 )
 
@@ -641,7 +641,7 @@ class SecurityValidator:
                     gdpr_indicators += 1
                 if "data export" in content:
                     gdpr_indicators += 1
-            except:
+            except Exception:
                 continue
 
         self.print_check(

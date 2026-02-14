@@ -85,7 +85,7 @@ async def get_throughput_metrics() -> Dict[str, Any]:
     """
     try:
         websocket_manager = get_websocket_manager()
-        publisher = get_optimized_event_publisher()
+        get_optimized_event_publisher()
 
         # WebSocket connection metrics
         connection_metrics = websocket_manager.get_metrics()

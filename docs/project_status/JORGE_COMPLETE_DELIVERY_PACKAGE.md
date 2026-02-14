@@ -32,7 +32,7 @@
 - System health monitoring
 - Multi-location dashboard (ready for scale)
 
-**Why Jorge needs it:** See your entire business performance at a glance and track the high-value Austin tech corridor relocations.
+**Why Jorge needs it:** See your entire business performance at a glance and track the high-value Rancho Cucamonga tech corridor relocations.
 
 ---
 

@@ -82,7 +82,7 @@ class ResponseGenerationService:
             automated_report = await automation_engine.generate_automated_report(
                 report_type=report_type_enum,
                 data=data,
-                market_context={"location": "Austin", "market_conditions": "stable"},
+                market_context={"location": "Rancho Cucamonga", "market_conditions": "stable"},
                 time_period="current_period",
             )
 

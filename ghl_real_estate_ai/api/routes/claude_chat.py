@@ -107,7 +107,7 @@ async def chat_query(request: ChatQueryRequest, claude: ClaudeOrchestrator = Dep
             conversation_id=request.contact_id,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error processing chat query")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -182,7 +182,7 @@ async def get_conversation_history(contact_id: str, location_id: Optional[str] =
             success=True, messages=messages, conversation_id=contact_id, lead_context=lead_context
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error retrieving conversation history")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -212,7 +212,7 @@ async def analyze_lead_comprehensive(
             "response_time_ms": response.response_time_ms,
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error analyzing lead")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -241,7 +241,7 @@ async def generate_script(
             "response_time_ms": response.response_time_ms,
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error generating script")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -269,7 +269,7 @@ async def synthesize_report(
             "response_time_ms": response.response_time_ms,
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error synthesizing report")
         raise HTTPException(status_code=500, detail="Internal server error")
 

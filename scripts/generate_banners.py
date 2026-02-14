@@ -34,7 +34,7 @@ def create_banner(width, height, filename, title, subtitle, accent_color="#4f46e
                 font_main = ImageFont.truetype(path, 60)
                 font_sub = ImageFont.truetype(path, 30)
                 break
-            except:
+            except OSError:
                 continue
     
     if font_main is None:

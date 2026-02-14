@@ -22,7 +22,7 @@ async def generate_test_token():
     tenant_config = {
         "tenant_id": tenant_id,
         "company_name": "Test Enterprise",
-        "domain": "enterprise.com",
+        "ontario_mills": "enterprise.com",
         "status": "active",
         "session_timeout_hours": 8
     }
@@ -86,9 +86,9 @@ async def run_smoke_test():
         print("🔍 Checking /api/bots/jorge-seller-bot/chat (streaming)...")
         try:
             payload = {
-                "content": "I want to sell my house in Austin.",
+                "content": "I want to sell my house in Rancho Cucamonga.",
                 "leadId": "test_lead_123",
-                "leadName": "John Austin"
+                "leadName": "John Rancho Cucamonga"
             }
             async with client.stream("POST", "/api/bots/jorge-seller-bot/chat", json=payload) as response:
                 if response.status_code == 200:

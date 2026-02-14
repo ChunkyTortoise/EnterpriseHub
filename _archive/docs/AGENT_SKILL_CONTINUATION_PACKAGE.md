@@ -6,7 +6,7 @@
 I'm continuing EnterpriseHub development with focus on Claude Code agents and skills. MCP setup is complete (PostgreSQL, GoHighLevel, GitHub, Firecrawl, Memory, Sequential Thinking).
 
 PRIORITY: Deploy and test specialized agents and skills for real estate AI automation:
-- Market Intelligence Agent (Austin property analysis)
+- Market Intelligence Agent (Rancho Cucamonga property analysis)
 - Lead Qualification workflows (Jorge's GHL optimization)
 - Performance Monitoring (BI dashboard insights)
 - Real Estate Skills (market analysis, lead scoring)
@@ -22,7 +22,7 @@ Key files: AGENT_SKILL_ARCHITECTURE.md, .claude/agents/, .claude/skills/real-est
 Deploy specialized agents for complex real estate tasks and validate skill integration.
 
 ### **Success Criteria**:
-- ✅ Market Intelligence Agent analyzes Austin properties
+- ✅ Market Intelligence Agent analyzes Rancho Cucamonga properties
 - ✅ Lead Analysis skills work with Jorge's GHL data
 - ✅ Performance monitoring provides BI insights
 - ✅ Agent coordination for multi-step workflows
@@ -33,7 +33,7 @@ Deploy specialized agents for complex real estate tasks and validate skill integ
 
 | Agent | File | Specialization |
 |-------|------|----------------|
-| **Market Intelligence** | `.claude/agents/market-intelligence-specialist.md` | Austin property analysis, market trends |
+| **Market Intelligence** | `.claude/agents/market-intelligence-specialist.md` | Rancho Cucamonga property analysis, market trends |
 | **BI Performance** | `.claude/agents/bi-performance-specialist.md` | Dashboard optimization, latency analysis |
 | **Performance Optimizer** | `.claude/agents/performance-optimizer.md` | System performance, bottleneck identification |
 | **Security Auditor** | `.claude/agents/security-auditor.md` | Compliance, data protection, security |
@@ -46,14 +46,14 @@ Deploy specialized agents for complex real estate tasks and validate skill integ
 
 | Skill | Path | Commands |
 |-------|------|----------|
-| **Market Intelligence** | `.claude/skills/real-estate-ai/market-intelligence/` | `/austin-market`, `/property-match`, `/investment-scan` |
+| **Market Intelligence** | `.claude/skills/real-estate-ai/market-intelligence/` | `/rancho_cucamonga-market`, `/property-match`, `/investment-scan` |
 | **Lead Analysis** | `.claude/skills/real-estate-ai/lead-analysis/` | `/analyze-lead`, `/score-leads`, `/follow-up-strategy` |
 
 ## 🧪 Priority Test Commands
 
 ### **1. Test Market Intelligence Agent**
 ```
-Task subagent_type="market-intelligence-specialist" "Analyze Austin luxury property market in West Lake Hills, identify 3 properties under $800k with highest appreciation potential"
+Task subagent_type="market-intelligence-specialist" "Analyze Rancho Cucamonga luxury property market in West Lake Hills, identify 3 properties under $800k with highest appreciation potential"
 ```
 
 ### **2. Test Lead Analysis with Jorge's Data**
@@ -64,14 +64,14 @@ Task subagent_type="general-purpose" "Use the lead analysis skill to query Jorge
 ### **3. Test Agent Coordination (Swarm)**
 ```
 # Deploy parallel agents for comprehensive analysis
-Task subagent_type="market-intelligence-specialist" "Find Austin properties matching luxury buyer criteria"
+Task subagent_type="market-intelligence-specialist" "Find Rancho Cucamonga properties matching luxury buyer criteria"
 Task subagent_type="bi-performance-specialist" "Analyze current system performance and BI dashboard metrics"
 ```
 
 ### **4. Test Skill Integration**
 ```
 # Test market intelligence skill
-/austin-market west-lake-hills 500k-1m current
+/rancho_cucamonga-market west-lake-hills 500k-1m current
 
 # Test lead analysis skill
 /analyze-lead jorge_lead_latest full-qualification
@@ -79,7 +79,7 @@ Task subagent_type="bi-performance-specialist" "Analyze current system performan
 
 ### **5. Test Full Real Estate Workflow**
 ```
-Task subagent_type="general-purpose" "Coordinate market intelligence and lead analysis agents to: 1) Query Jorge's GHL for high-value leads, 2) Find matching Austin properties, 3) Generate personalized follow-up strategies using Sequential Thinking"
+Task subagent_type="general-purpose" "Coordinate market intelligence and lead analysis agents to: 1) Query Jorge's GHL for high-value leads, 2) Find matching Rancho Cucamonga properties, 3) Generate personalized follow-up strategies using Sequential Thinking"
 ```
 
 ## 🎯 Agent Deployment Patterns
@@ -99,7 +99,7 @@ Task subagent_type="security-auditor" "task description"
 ### **Parallel Agent Swarm**
 ```bash
 # Deploy multiple agents simultaneously
-Task subagent_type="market-intelligence-specialist" "Austin market analysis"
+Task subagent_type="market-intelligence-specialist" "Rancho Cucamonga market analysis"
 Task subagent_type="bi-performance-specialist" "BI dashboard optimization"
 Task subagent_type="security-auditor" "Compliance and data protection review"
 ```
@@ -107,7 +107,7 @@ Task subagent_type="security-auditor" "Compliance and data protection review"
 ### **Sequential Agent Chain**
 ```bash
 # Step 1: Market intelligence
-Task subagent_type="market-intelligence-specialist" "Analyze luxury Austin market"
+Task subagent_type="market-intelligence-specialist" "Analyze luxury Rancho Cucamonga market"
 
 # Step 2: Lead qualification (based on step 1 results)
 Task subagent_type="general-purpose" "Use market data to qualify Jorge's luxury leads"
@@ -133,7 +133,7 @@ Task subagent_type="performance-optimizer" "Optimize based on workflow results"
 ## 📊 Expected Capabilities After Testing
 
 ### **Market Intelligence Automation**
-- Real-time Austin property analysis
+- Real-time Rancho Cucamonga property analysis
 - Automated CMA generation
 - Investment opportunity identification
 - Market trend forecasting

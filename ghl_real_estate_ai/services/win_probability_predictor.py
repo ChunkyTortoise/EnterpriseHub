@@ -162,7 +162,7 @@ class WinProbabilityPredictor:
         return PredictionFeatures(
             # Pricing features
             offer_to_list_ratio=offer_price / list_price,
-            price_per_sqft_variance=0.0,  # TODO: Calculate from comps
+            price_per_sqft_variance=0.0,  # ROADMAP-081: Calculate from comparable properties
             days_on_market=property_data.get("days_on_market", 30),
             price_reduction_count=property_data.get("price_drops", 0),
             total_price_reduction_pct=property_data.get("total_reduction_pct", 0),
@@ -553,7 +553,7 @@ class WinProbabilityPredictor:
         """Analyze optimal offer scenarios and recommendations"""
 
         list_price = float(property_data.get("list_price", 500000))
-        current_offer = float(strategy.recommended_offer_price)
+        float(strategy.recommended_offer_price)
 
         # Test different offer levels to find optimal probability/price tradeoff
         offer_scenarios = []

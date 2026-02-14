@@ -74,7 +74,7 @@ class BotOptimizationTester:
             TestScenario(
                 name="Ready Buyer - Cash Purchase",
                 contact_id="test_lead_cash_buyer",
-                message="I'm selling my rental property and have $650k cash to buy immediately. Need something move-in ready in North Austin. Timeline is flexible but want to close within 30 days to avoid capital gains. 3+ bedrooms minimum.",
+                message="I'm selling my rental property and have $650k cash to buy immediately. Need something move-in ready in North Rancho Cucamonga. Timeline is flexible but want to close within 30 days to avoid capital gains. 3+ bedrooms minimum.",
                 expected_score_min=8.0,
                 expected_temperature="hot",
                 test_type="lead",
@@ -147,7 +147,7 @@ class BotOptimizationTester:
             TestScenario(
                 name="Non-English Message",
                 contact_id="test_lead_spanish",
-                message="Hola, quiero comprar una casa en Austin. ¿Puedes ayudarme?",
+                message="Hola, quiero comprar una casa en Rancho Cucamonga. ¿Puedes ayudarme?",
                 expected_score_min=3.0,
                 expected_temperature="cold",
                 test_type="lead",
@@ -184,7 +184,7 @@ class BotOptimizationTester:
             TestScenario(
                 name="Inherited Property - Out of State",
                 contact_id="test_seller_inherited",
-                message="I inherited my mom's house in Austin but I live in California. It's been sitting empty for 6 months and I'm tired of paying taxes and maintenance on it. What's the process to sell to you?",
+                message="I inherited my mom's house in Rancho Cucamonga but I live in California. It's been sitting empty for 6 months and I'm tired of paying taxes and maintenance on it. What's the process to sell to you?",
                 expected_score_min=6.0,
                 expected_temperature="warm",
                 test_type="seller",

@@ -236,7 +236,7 @@ class RanchoCucamongaMarketIntelligence:
                 key_weaknesses=[
                     "High costs reduce agent profitability",
                     "Corporate culture over local focus",
-                    "Limited Austin market knowledge",
+                    "Limited Rancho Cucamonga market knowledge",
                     "High pressure sales environment",
                     "Unproven long-term stability",
                 ],
@@ -248,12 +248,12 @@ class RanchoCucamongaMarketIntelligence:
                     "Local expertise vs. corporate expansion",
                     "Proven track record vs. venture experiment",
                     "Personal relationships vs. platform transactions",
-                    "Austin focus vs. national scaling",
+                    "Rancho Cucamonga focus vs. national scaling",
                     "Sustainable business model vs. VC dependence",
                 ],
                 competitive_messaging=[
                     "I provide their tech advantages with local expertise they lack",
-                    "My Austin knowledge runs deeper than their platform analytics",
+                    "My Rancho Cucamonga knowledge runs deeper than their platform analytics",
                     "You get proven results, not venture capital experiments",
                     "I'm building relationships while they're scaling transactions",
                 ],
@@ -426,7 +426,7 @@ class RanchoCucamongaMarketIntelligence:
         """Load detailed neighborhood insights for competitive positioning"""
         return {
             "downtown": NeighborhoodInsights(
-                name="Downtown Austin",
+                name="Downtown Rancho Cucamonga",
                 median_price=485000,
                 price_trend="Rising",
                 inventory_level="Low",
@@ -445,8 +445,8 @@ class RanchoCucamongaMarketIntelligence:
                 },
                 investment_potential="High - ongoing development and density increases",
             ),
-            "domain_arboretum": NeighborhoodInsights(
-                name="Domain/Arboretum",
+            "ontario_mills_arboretum": NeighborhoodInsights(
+                name="Ontario Mills/Arboretum",
                 median_price=750000,
                 price_trend="Stable with luxury growth",
                 inventory_level="Medium",
@@ -465,8 +465,8 @@ class RanchoCucamongaMarketIntelligence:
                 },
                 investment_potential="Medium - established area with steady appreciation",
             ),
-            "east_austin": NeighborhoodInsights(
-                name="East Austin",
+            "east_rancho_cucamonga": NeighborhoodInsights(
+                name="East Rancho Cucamonga",
                 median_price=525000,
                 price_trend="Rapidly Rising",
                 inventory_level="Low",
@@ -486,7 +486,7 @@ class RanchoCucamongaMarketIntelligence:
                 investment_potential="Very High - continued gentrification and development",
             ),
             "cedar_park": NeighborhoodInsights(
-                name="Cedar Park",
+                name="Upland",
                 median_price=435000,
                 price_trend="Steady Growth",
                 inventory_level="Medium",
@@ -506,7 +506,7 @@ class RanchoCucamongaMarketIntelligence:
                 investment_potential="Medium - steady family-driven demand",
             ),
             "lake_travis": NeighborhoodInsights(
-                name="Lake Travis",
+                name="Mount Baldy",
                 median_price=925000,
                 price_trend="Luxury Premium Growth",
                 inventory_level="Low",
@@ -612,7 +612,7 @@ class RanchoCucamongaMarketIntelligence:
             },
             "rapid_response_system": {
                 "description": "24/7 availability with sub-60-minute response technology",
-                "competitive_advantage": "Fastest response time in Austin market",
+                "competitive_advantage": "Fastest response time in Rancho Cucamonga market",
                 "success_metrics": {
                     "avg_response_time": "12 minutes vs 4 hours industry average",
                     "showing_coordination": "Same-day 87% of time",

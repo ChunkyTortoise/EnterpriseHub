@@ -255,7 +255,7 @@ class InstantCMAGenerator:
 
         recommendations = {"pricing": {}, "timing": {}, "strategy": []}
 
-        estimated_value = price_analysis["estimated_value"]
+        price_analysis["estimated_value"]
         price_range = price_analysis["price_range"]
 
         if analysis_type == "listing":

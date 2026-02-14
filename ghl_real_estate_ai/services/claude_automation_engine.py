@@ -356,7 +356,7 @@ class ClaudeAutomationEngine:
             "market_context": market_context or {},
             "time_period": time_period or "current_period",
             "agent_name": "Jorge",  # Could be parameterized
-            "market_location": "Austin",  # Could be dynamic
+            "market_location": "Rancho Cucamonga",  # Could be dynamic
             "reporting_timestamp": datetime.now().isoformat(),
         }
 

@@ -21,7 +21,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
     - name: Cache dependencies
       uses: actions/cache@v3
@@ -82,7 +82,7 @@ jobs:
         GHL_API_KEY: test-ghl-key-for-ci-only
         GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
-        pytest -m unit --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=0 -v
+        pytest -m unit --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=60 -v
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -141,7 +141,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
@@ -163,7 +163,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |

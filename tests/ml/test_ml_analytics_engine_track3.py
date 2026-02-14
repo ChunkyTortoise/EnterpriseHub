@@ -33,7 +33,6 @@ import pytest_asyncio
 pytest.importorskip("bots", reason="bots package not available in EnterpriseHub standalone")
 from bots.shared.ml_analytics_engine import (
 
-@pytest.mark.integration
     ConfidenceLevel,
     ConversionProbabilityAnalysis,
     LeadJourneyPrediction,
@@ -77,7 +76,7 @@ class TestTrack3PredictiveIntelligence:
                 },
                 {
                     "sender": "lead",
-                    "content": "I'm interested in buying a house in Austin",
+                    "content": "I'm interested in buying a house in Rancho Cucamonga",
                     "timestamp": (datetime.now() - timedelta(hours=47, minutes=30)).isoformat(),
                 },
                 {
@@ -116,9 +115,9 @@ class TestTrack3PredictiveIntelligence:
                 "price_max": 450000,
                 "bedrooms": 3,
                 "location": {
-                    "city": "Austin",
+                    "city": "Rancho Cucamonga",
                     "state": "TX",
-                    "neighborhoods": ["Cedar Park", "Round Rock", "North Austin"],
+                    "neighborhoods": ["Cedar Park", "Round Rock", "North Rancho Cucamonga"],
                 },
                 "financing_approved": True,
                 "timeline": "60_days",

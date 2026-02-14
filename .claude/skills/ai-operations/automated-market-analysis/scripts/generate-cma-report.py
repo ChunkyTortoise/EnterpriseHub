@@ -5,7 +5,7 @@ Generate CMA Report Script
 Zero-context execution script for generating Comparative Market Analysis reports.
 
 Usage:
-    python generate-cma-report.py --address "123 Main St, Austin, TX" --output json
+    python generate-cma-report.py --address "123 Main St, Rancho Cucamonga, CA" --output json
     python generate-cma-report.py --property-id <id> --output pdf
 """
 
@@ -85,7 +85,7 @@ class CMAReport:
     recommendations: Dict[str, str]
 
 
-# Adjustment factors (Austin Metro 2026)
+# Adjustment factors (Rancho Cucamonga Metro 2026)
 ADJUSTMENT_FACTORS = {
     "bedroom": {"add": 20000, "subtract": -15000},
     "bathroom": 12000,

@@ -356,7 +356,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             go.Indicator(
                 mode="gauge+number",
                 value=payment_data["payment_health"]["successful_payments"],
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "Success Rate %"},
                 gauge={
                     "axis": {"range": [None, 100]},

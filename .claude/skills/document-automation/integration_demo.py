@@ -516,7 +516,7 @@ class DocumentAutomationOrchestrator:
                     'property': {
                         'id': 'PROP_001',
                         'price': 650000,
-                        'address': {'street': '123 Oak Hill Dr', 'city': 'Austin', 'state': 'TX'},
+                        'address': {'street': '123 Oak Hill Dr', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                         'bedrooms': 3,
                         'bathrooms': 2.5,
                         'sqft': 2100,
@@ -531,7 +531,7 @@ class DocumentAutomationOrchestrator:
             'featured_property': {
                 'id': 'PROP_001',
                 'price': 650000,
-                'address': {'street': '123 Oak Hill Dr', 'city': 'Austin', 'state': 'TX'},
+                'address': {'street': '123 Oak Hill Dr', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                 'bedrooms': 3,
                 'bathrooms': 2.5,
                 'sqft': 2100,
@@ -602,7 +602,7 @@ class DocumentAutomationOrchestrator:
 
         return [
             {
-                'client': 'Premier Realty Austin',
+                'client': 'Premier Realty Rancho Cucamonga',
                 'results': '40% increase in conversion rate',
                 'quote': 'EnterpriseHub transformed our lead management process'
             },
@@ -637,7 +637,7 @@ class DocumentAutomationOrchestrator:
                 'property': {
                     'id': 'DEMO_001',
                     'price': 625000,
-                    'address': {'street': '123 Demo St', 'city': 'Austin', 'state': 'TX'},
+                    'address': {'street': '123 Demo St', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                     'bedrooms': 3,
                     'bathrooms': 2.5,
                     'sqft': 2100
@@ -651,7 +651,7 @@ class DocumentAutomationOrchestrator:
         """Get sample scoring examples."""
 
         return [
-            {'profile': 'High-budget Austin buyer', 'score': 89},
+            {'profile': 'High-budget Rancho Cucamonga buyer', 'score': 89},
             {'profile': 'First-time buyer, flexible', 'score': 72},
             {'profile': 'Investment property seeker', 'score': 82}
         ]
@@ -775,7 +775,7 @@ async def demo_document_automation():
 
     demo_preferences = {
         'budget': 650000,
-        'location': 'Austin, TX',
+        'location': 'Rancho Cucamonga, CA',
         'bedrooms': 3,
         'bathrooms': 2.5,
         'property_type': 'Single Family',

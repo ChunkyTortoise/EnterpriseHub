@@ -210,7 +210,7 @@ class ClientDemoCampaignManager:
         sample_customers = {
             "real_estate": [
                 ("Premier Realty Group", "Sarah Chen", "sarah.chen@premierrealty.com"),
-                ("Austin Metro Realty", "Mike Rodriguez", "mike@austinmetro.com"),
+                ("Rancho Cucamonga Metro Realty", "Mike Rodriguez", "mike@rancho_cucamongametro.com"),
                 ("Texas Property Partners", "Jennifer Williams", "j.williams@txproperty.com")
             ],
             "saas": [

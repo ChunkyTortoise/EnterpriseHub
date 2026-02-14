@@ -422,7 +422,7 @@ class AILeadGenerationEngine:
         # Aggregate metrics
         total_leads = sum(metrics.total_leads for metrics in channel_performance.values())
         total_conversions = sum(metrics.converted_leads for metrics in channel_performance.values())
-        total_costs = sum(
+        sum(
             metrics.cost_per_lead * metrics.total_leads
             for metrics in channel_performance.values()
             if metrics.cost_per_lead

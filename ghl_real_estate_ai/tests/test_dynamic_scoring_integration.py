@@ -42,8 +42,6 @@ from ghl_real_estate_ai.services.dynamic_scoring_weights import (
 from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer, ScoringMode
 from ghl_real_estate_ai.services.scoring_config import ScoringConfigManager, ScoringEnvironment
 
-@pytest.mark.integration
-
 
 class TestDynamicScoringIntegration:
     """Integration tests for dynamic scoring system"""
@@ -54,7 +52,7 @@ class TestDynamicScoringIntegration:
         return {
             "extracted_preferences": {
                 "budget": "$750,000",
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "next 2 months",
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -62,7 +60,7 @@ class TestDynamicScoringIntegration:
                 "motivation": "growing family",
             },
             "conversation_history": [
-                {"content": "Looking for a 3-bedroom house in Austin"},
+                {"content": "Looking for a 3-bedroom house in Rancho Cucamonga"},
                 {"content": "Budget is around $750k, need to move by spring"},
                 {"content": "Already pre-approved for mortgage"},
                 {"content": "Want something with good schools for the kids"},
@@ -76,13 +74,13 @@ class TestDynamicScoringIntegration:
         return {
             "extracted_preferences": {
                 "budget": "$1,200,000",
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "ASAP",
                 "motivation": "investment property",
                 "financing": "cash",
             },
             "conversation_history": [
-                {"content": "Looking for investment properties in Austin"},
+                {"content": "Looking for investment properties in Rancho Cucamonga"},
                 {"content": "Cash buyer, $1.2M budget, need positive cash flow"},
                 {"content": "Can close in 10 days if the numbers work"},
             ],
@@ -95,7 +93,7 @@ class TestDynamicScoringIntegration:
         return {
             "extracted_preferences": {
                 "budget": "$3,500,000",
-                "location": "Austin, TX - Westlake",
+                "location": "Rancho Cucamonga, CA - Westlake",
                 "timeline": "6 months",
                 "bedrooms": 5,
                 "bathrooms": 4,
@@ -154,7 +152,7 @@ class TestDynamicScoringIntegration:
         orchestrator = DynamicScoringOrchestrator()
 
         # Simulate different market conditions by time of year
-        test_cases = [("Austin, TX", "Spring market test"), ("Seattle, WA", "Different market test")]
+        test_cases = [("Rancho Cucamonga, CA", "Spring market test"), ("Seattle, WA", "Different market test")]
 
         results = []
         for location, description in test_cases:
@@ -486,7 +484,7 @@ async def run_all_tests():
     sample_context = {
         "extracted_preferences": {
             "budget": "$750,000",
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "timeline": "next 2 months",
             "bedrooms": 3,
             "bathrooms": 2,
@@ -494,7 +492,7 @@ async def run_all_tests():
             "motivation": "growing family",
         },
         "conversation_history": [
-            {"content": "Looking for a 3-bedroom house in Austin"},
+            {"content": "Looking for a 3-bedroom house in Rancho Cucamonga"},
             {"content": "Budget is around $750k, need to move by spring"},
         ],
         "created_at": datetime.now(),
@@ -503,7 +501,7 @@ async def run_all_tests():
     investor_context = {
         "extracted_preferences": {
             "budget": "$1,200,000",
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "motivation": "investment property",
         },
         "conversation_history": [{"content": "Looking for investment properties"}],
@@ -511,7 +509,7 @@ async def run_all_tests():
     }
 
     luxury_context = {
-        "extracted_preferences": {"budget": "$3,500,000", "location": "Austin, TX - Westlake"},
+        "extracted_preferences": {"budget": "$3,500,000", "location": "Rancho Cucamonga, CA - Westlake"},
         "conversation_history": [{"content": "Luxury home search"}],
         "created_at": datetime.now(),
     }

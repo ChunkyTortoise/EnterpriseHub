@@ -17,7 +17,6 @@ import pytest
 
 from ghl_real_estate_ai.markets.national_registry import (
 
-@pytest.mark.unit
     CorporateHeadquarters,
     CorporatePartnerTier,
     CrossMarketInsights,
@@ -42,7 +41,7 @@ def mock_cache_service():
 def mock_base_registry():
     """Mock base market registry"""
     registry = Mock()
-    registry.list_markets.return_value = ["austin", "denver", "phoenix", "seattle"]
+    registry.list_markets.return_value = ["rancho_cucamonga", "denver", "phoenix", "seattle"]
     registry.get_market_config.return_value = {
         "market_id": "denver",
         "market_name": "Denver Metropolitan Area",
@@ -92,7 +91,7 @@ def sample_corporate_headquarters():
         employee_count=50000,
         fortune_ranking=100,
         partnership_tier=CorporatePartnerTier.GOLD,
-        preferred_markets=["denver", "austin", "seattle"],
+        preferred_markets=["denver", "rancho_cucamonga", "seattle"],
         relocation_volume_annual=200,
         average_relocation_budget=85000.0,
         contact_info={"hr_director": "test@test.com", "phone": "+1-555-0123", "program_manager": "Jane Smith"},
@@ -227,11 +226,11 @@ class TestNationalMarketRegistry:
     @pytest.mark.asyncio
     async def test_get_cross_market_insights(self, national_registry):
         """Test cross-market migration insights"""
-        insights = await national_registry.get_cross_market_insights("austin", "denver")
+        insights = await national_registry.get_cross_market_insights("rancho_cucamonga", "denver")
 
         assert insights is not None
         assert isinstance(insights, CrossMarketInsights)
-        assert insights.source_market == "austin"
+        assert insights.source_market == "rancho_cucamonga"
         assert insights.target_market == "denver"
         assert insights.migration_volume > 0
         assert isinstance(insights.average_salary_delta, float)
@@ -250,7 +249,7 @@ class TestNationalMarketRegistry:
 
     def test_estimate_migration_volume(self, national_registry):
         """Test migration volume estimation"""
-        volume = national_registry._estimate_migration_volume("austin", "denver")
+        volume = national_registry._estimate_migration_volume("rancho_cucamonga", "denver")
         assert isinstance(volume, int)
         assert volume > 0
 
@@ -303,14 +302,14 @@ class TestNationalMarketRegistry:
 
     def test_identify_corporate_factors(self, national_registry):
         """Test corporate driving factors identification"""
-        factors = national_registry._identify_corporate_factors("austin", "denver")
+        factors = national_registry._identify_corporate_factors("rancho_cucamonga", "denver")
         assert isinstance(factors, list)
         assert len(factors) > 0
         assert all(isinstance(factor, str) for factor in factors)
 
     def test_analyze_seasonal_patterns(self, national_registry):
         """Test seasonal pattern analysis"""
-        patterns = national_registry._analyze_seasonal_patterns("austin", "denver")
+        patterns = national_registry._analyze_seasonal_patterns("rancho_cucamonga", "denver")
         assert isinstance(patterns, dict)
         assert "Q1" in patterns
         assert "Q2" in patterns
@@ -340,7 +339,7 @@ class TestNationalMarketRegistry:
 
     def test_calculate_success_probability(self, national_registry):
         """Test success probability calculation"""
-        prob = national_registry._calculate_success_probability("austin", "denver")
+        prob = national_registry._calculate_success_probability("rancho_cucamonga", "denver")
         assert isinstance(prob, float)
         assert 0.0 <= prob <= 1.0
 
@@ -442,8 +441,8 @@ class TestNationalMarketRegistry:
             assert result == {"test": "data"}
 
             # Test get_market_migration_insights
-            insights = await get_market_migration_insights("austin", "denver")
-            mock_instance.get_cross_market_insights.assert_called_once_with("austin", "denver")
+            insights = await get_market_migration_insights("rancho_cucamonga", "denver")
+            mock_instance.get_cross_market_insights.assert_called_once_with("rancho_cucamonga", "denver")
             assert insights is not None
 
 
@@ -462,7 +461,7 @@ class TestDataStructures:
             employee_count=10000,
             fortune_ranking=250,
             partnership_tier=CorporatePartnerTier.SILVER,
-            preferred_markets=["denver", "austin"],
+            preferred_markets=["denver", "rancho_cucamonga"],
             relocation_volume_annual=50,
             average_relocation_budget=70000.0,
             contact_info={"email": "test@test.com"},
@@ -502,7 +501,7 @@ class TestDataStructures:
     def test_cross_market_insights_creation(self):
         """Test CrossMarketInsights data structure"""
         insights = CrossMarketInsights(
-            source_market="austin",
+            source_market="rancho_cucamonga",
             target_market="denver",
             migration_volume=120,
             average_salary_delta=15.5,
@@ -514,7 +513,7 @@ class TestDataStructures:
             success_probability=0.82,
         )
 
-        assert insights.source_market == "austin"
+        assert insights.source_market == "rancho_cucamonga"
         assert insights.target_market == "denver"
         assert insights.migration_volume == 120
         assert 0.0 <= insights.success_probability <= 1.0

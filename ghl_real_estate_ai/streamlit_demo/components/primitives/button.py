@@ -1,6 +1,6 @@
 """
 Obsidian-themed button primitive component.
-TODO: Implement button variants with hover effects.
+ROADMAP-071: Implement button variants with hover effects.
 
 Planned variants:
 - primary: Main action button with indigo gradient

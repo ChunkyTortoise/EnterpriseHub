@@ -1749,13 +1749,6 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 st.metric("Trajectory", f"{trajectory_emoji} {emotional_state.emotional_trajectory.title()}")
 
             with col3:
-                empathy_color = (
-                    "green"
-                    if emotional_state.empathy_score >= 0.7
-                    else "orange"
-                    if emotional_state.empathy_score >= 0.4
-                    else "red"
-                )
                 st.metric("Empathy Score", f"{emotional_state.empathy_score:.0%}")
 
             # Secondary emotions
@@ -1788,7 +1781,6 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
 
             # Decision readiness
             decision_readiness = emotional_state.decision_readiness
-            readiness_color = "green" if decision_readiness >= 0.7 else "orange" if decision_readiness >= 0.5 else "red"
             st.progress(decision_readiness, text=f"Decision Readiness: {decision_readiness:.0%}")
 
         with tab3:
@@ -1885,7 +1877,6 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
                 st.metric("Decision Timing", f"{timing_emoji} {closing_signals.decision_timing.title()}")
 
             with col3:
-                readiness_color = "green" if closing_signals.closing_readiness_score >= 0.7 else "orange"
                 st.metric("Closing Readiness", f"{closing_signals.closing_readiness_score:.0%}")
 
             with col4:
@@ -2031,9 +2022,6 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            intent_color = (
-                "red" if analysis.intent_level >= 0.7 else "orange" if analysis.intent_level >= 0.4 else "blue"
-            )
             st.metric(
                 "Intent Level",
                 f"{analysis.intent_level:.0%}",
@@ -2042,9 +2030,6 @@ Look for micro-commitments, buying language, urgency indicators, and decision-ma
             )
 
         with col2:
-            urgency_color = (
-                "red" if analysis.urgency_score >= 0.7 else "orange" if analysis.urgency_score >= 0.4 else "blue"
-            )
             st.metric("Urgency Score", f"{analysis.urgency_score:.0%}")
 
         with col3:

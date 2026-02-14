@@ -87,8 +87,8 @@ class Permission(Enum):
 
     # White-Label Features
     WHITELABEL_BRANDING = "whitelabel.branding"
-    WHITELABEL_DOMAIN = "whitelabel.domain"
-    WHITELABEL_SUBDOMAIN = "whitelabel.subdomain"
+    WHITELABEL_DOMAIN = "whitelabel.ontario_mills"
+    WHITELABEL_SUBDOMAIN = "whitelabel.subontario_mills"
 
 
 class RoleType(Enum):
@@ -139,7 +139,7 @@ class FeatureFlags:
 
     # Platform Features
     white_label_branding: bool = False
-    custom_domain: bool = False
+    custom_ontario_mills: bool = False
     api_access: bool = False
     advanced_reporting: bool = False
 
@@ -242,7 +242,7 @@ class EnterpriseTenantService:
 
     Features:
     - Database-backed tenant configuration with PostgreSQL
-    - White-label branding and custom domain support
+    - White-label branding and custom ontario_mills support
     - Role-based access controls (RBAC) with granular permissions
     - Tier-based feature flags ($25K/$50K/$100K consulting packages)
     - Usage tracking and billing integration
@@ -301,7 +301,7 @@ class EnterpriseTenantService:
                 behavioral_profiling=True,
                 predictive_analytics=True,
                 white_label_branding=True,
-                custom_domain=True,
+                custom_ontario_mills=True,
                 api_access=True,
                 advanced_reporting=True,
                 ghl_premium_features=True,
@@ -319,7 +319,7 @@ class EnterpriseTenantService:
                 custom_ai_models=True,
                 real_time_consensus=True,
                 white_label_branding=True,
-                custom_domain=True,
+                custom_ontario_mills=True,
                 api_access=True,
                 advanced_reporting=True,
                 ghl_premium_features=True,
@@ -877,7 +877,7 @@ class EnterpriseTenantService:
         """Encrypt API keys for storage (placeholder - implement with proper encryption)."""
         if not key:
             return key
-        # TODO: Implement proper encryption with a key management service
+        # ROADMAP-087: Implement proper encryption with a key management service (KMS)
         # For now, using simple base64 encoding as placeholder
         import base64
 
@@ -887,7 +887,7 @@ class EnterpriseTenantService:
         """Decrypt API keys (placeholder - implement with proper decryption)."""
         if not encrypted_key:
             return encrypted_key
-        # TODO: Implement proper decryption
+        # ROADMAP-087: Implement proper decryption with KMS
         import base64
 
         return base64.b64decode(encrypted_key.encode()).decode()

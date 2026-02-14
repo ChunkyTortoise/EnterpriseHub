@@ -99,7 +99,7 @@ async def process_call_outcome(contact_id: str, analysis: Dict[str, Any], transc
 
             # Add a note with the transcript summary
             summary = analysis.get("call_summary", "No summary provided.")
-            note_text = f"--- RETELL AI CALL SUMMARY ---\nOutcome: {analysis.get('agent_sentiment', 'N/A')}\nSummary: {summary}\n\nFull Transcript available in Retell dashboard."
+            f"--- RETELL AI CALL SUMMARY ---\nOutcome: {analysis.get('agent_sentiment', 'N/A')}\nSummary: {summary}\n\nFull Transcript available in Retell dashboard."
 
             # Note: EnhancedGHLClient might need a create_note method if not present
             # For now, let's assume update_contact is the primary sync

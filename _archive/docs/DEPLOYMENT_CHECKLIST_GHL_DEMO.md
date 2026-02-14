@@ -23,7 +23,7 @@
 #### Test Scenarios
 
 **Scenario 1: Cold Lead**
-- [ ] Message: "Looking for a house in Austin"
+- [ ] Message: "Looking for a house in Rancho Cucamonga"
 - [ ] Expected: Score ~30, Cold-Lead tag
 - [ ] Result: _____
 

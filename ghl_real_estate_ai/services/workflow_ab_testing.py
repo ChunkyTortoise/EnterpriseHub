@@ -417,7 +417,7 @@ class WorkflowABTesting:
 
         # Get control and treatment metrics
         control_variant = next(v for v in test.variants if v.is_control)
-        control_metrics = variant_results[control_variant.variant_id]
+        variant_results[control_variant.variant_id]
 
         # For simplification, using sample size as proxy for significance
         # In production, would use proper statistical tests (z-test, t-test, etc.)
@@ -549,7 +549,7 @@ class WorkflowABTesting:
         winner_variant = next(v for v in test.variants if v.variant_id == winner_variant_id)
 
         # Store winning configuration for future use
-        winning_config = {
+        {
             "test_type": test.test_type.value,
             "winner_config": winner_variant.config,
             "applied_at": datetime.now().isoformat(),

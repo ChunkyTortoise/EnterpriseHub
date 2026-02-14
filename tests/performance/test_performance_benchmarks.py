@@ -17,8 +17,6 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
-@pytest.mark.integration
-
 
 # Test fixtures and utilities
 @pytest.fixture
@@ -104,14 +102,14 @@ class TestAIResponsePerformance:
         # Mock property and lead data for consistent testing
         property_data = {
             "id": "test_property_1",
-            "address": "123 Test Street, Austin, TX",
+            "address": "123 Test Street, Rancho Cucamonga, CA",
             "price": 450000,
             "bedrooms": 3,
             "bathrooms": 2,
             "property_type": "single_family",
         }
 
-        lead_preferences = {"budget_max": 500000, "bedrooms_min": 3, "location": "Austin", "timeline": "immediate"}
+        lead_preferences = {"budget_max": 500000, "bedrooms_min": 3, "location": "Rancho Cucamonga", "timeline": "immediate"}
 
         # First call (cache miss) - should be slower
         start_time = time.perf_counter()
@@ -219,7 +217,7 @@ class TestDashboardPerformance:
 
         # Measure parallel loading
         start_time = time.perf_counter()
-        dashboard_data = performance_service.load_dashboard_data("test_agent", "Austin")
+        dashboard_data = performance_service.load_dashboard_data("test_agent", "Rancho Cucamonga")
         parallel_time = time.perf_counter() - start_time
 
         # Validate data loaded
@@ -259,7 +257,7 @@ class TestAPIPerformance:
                     "phone": f"555-{i:04d}",
                     "preferences": {
                         "budget": 400000 + (i * 10000),
-                        "location": "Austin, TX",
+                        "location": "Rancho Cucamonga, CA",
                         "bedrooms": 3 + (i % 2),
                         "bathrooms": 2 + (i % 2),
                         "features": ["garage", "pool", "office"],
@@ -430,17 +428,17 @@ class TestIntegrationPerformance:
             claude = ClaudeAssistant()
 
             # Warm up caches
-            performance_service.warm_cache_on_startup("test_agent", "Austin")
+            performance_service.warm_cache_on_startup("test_agent", "Rancho Cucamonga")
 
             # Test full request flow
             start_time = time.perf_counter()
 
             # 1. Load dashboard data (parallel)
-            dashboard_data = performance_service.load_dashboard_data("test_agent", "Austin")
+            dashboard_data = performance_service.load_dashboard_data("test_agent", "Rancho Cucamonga")
 
             # 2. Generate AI insight (cached)
             ai_response = await claude.explain_match_with_claude(
-                {"price": 450000, "bedrooms": 3}, {"budget": 500000, "location": "Austin"}
+                {"price": 450000, "bedrooms": 3}, {"budget": 500000, "location": "Rancho Cucamonga"}
             )
 
             total_time = time.perf_counter() - start_time

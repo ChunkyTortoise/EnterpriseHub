@@ -66,7 +66,7 @@ class ClaudeJourneyOrchestrator:
         Designs a custom sales journey path for a specific lead using Claude.
         """
         location_id = lead_profile.get("location_id", "unknown")
-        memory_context = await self.memory.get_context(lead_id)
+        await self.memory.get_context(lead_id)
 
         prompt = f"""
         As an Elite Real Estate Journey Strategist, design a personalized 30-day journey for this lead.

@@ -326,7 +326,7 @@ class MatchReasoningEngine:
 
         # Investment potential
         neighborhood = property_data.get("address", {}).get("neighborhood", "")
-        if neighborhood.lower() in ["hyde park", "steiner ranch", "west campus"]:
+        if neighborhood.lower() in ["etiwanda", "rancho etiwanda", "chaffey district"]:
             benefits.append("Strong investment potential in desirable area")
 
         # Market timing benefits
@@ -480,7 +480,7 @@ class MatchReasoningEngine:
             return None
 
         current_price = property_data.get("price", 0)
-        current_bedrooms = property_data.get("bedrooms", 0)
+        property_data.get("bedrooms", 0)
         current_neighborhood = property_data.get("address", {}).get("neighborhood", "")
 
         # Find most similar past liked property
@@ -775,7 +775,7 @@ def demo_match_reasoning():
     # Sample property
     test_property = {
         "id": "test_001",
-        "address": {"street": "123 Main St", "neighborhood": "Hyde Park", "city": "Austin"},
+        "address": {"street": "123 Main St", "neighborhood": "Alta Loma", "city": "Rancho Cucamonga"},
         "price": 650000,
         "bedrooms": 3,
         "bathrooms": 2,
@@ -786,7 +786,7 @@ def demo_match_reasoning():
     }
 
     # Sample preferences
-    test_preferences = {"budget": 700000, "location": "Austin", "bedrooms": 3, "property_type": "Single Family"}
+    test_preferences = {"budget": 700000, "location": "Rancho Cucamonga", "bedrooms": 3, "property_type": "Single Family"}
 
     # Create mock score breakdown
     score_breakdown = MatchScoreBreakdown(

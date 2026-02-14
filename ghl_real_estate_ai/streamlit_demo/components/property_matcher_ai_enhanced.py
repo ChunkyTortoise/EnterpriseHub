@@ -149,10 +149,10 @@ def generate_enhanced_property_matches(lead_context: Dict) -> List[Dict]:
             address_data = match.get("address", {})
             if isinstance(address_data, dict):
                 street_address = address_data.get("street", f"{match.get('id', 'Property')} Street")
-                neighborhood = address_data.get("neighborhood", "Austin Area")
+                neighborhood = address_data.get("neighborhood", "Rancho Cucamonga Area")
             else:
                 street_address = str(address_data)
-                neighborhood = "Austin Area"
+                neighborhood = "Rancho Cucamonga Area"
             formatted_match = {
                 "address": street_address,
                 "price": match.get("price", 750000),
@@ -221,7 +221,7 @@ def generate_enhanced_property_matches(lead_context: Dict) -> List[Dict]:
             "beds": 3,
             "baths": 2,
             "sqft": 2300,
-            "neighborhood": "Domain",
+            "neighborhood": "Ontario Mills",
             "icon": "🏠",
             "match_score": 88,
             "budget_match": True,
@@ -248,7 +248,7 @@ def generate_enhanced_property_matches(lead_context: Dict) -> List[Dict]:
             "beds": 4,
             "baths": 2.5,
             "sqft": 2400,
-            "neighborhood": "South Congress",
+            "neighborhood": "Day Creek",
             "icon": "🏘️",
             "match_score": 85,
             "budget_match": True,

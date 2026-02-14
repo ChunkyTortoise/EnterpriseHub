@@ -7,7 +7,7 @@
 ## 📋 Progress Summary
 We have transformed the Lead Intelligence Hub from a collection of placeholders into a fully functional, multi-market command center.
 
-- **Multi-Market Engine**: Swapping between Austin and Rancho now correctly updates personas and behavioral insights.
+- **Multi-Market Engine**: Swapping between Rancho Cucamonga and Rancho now correctly updates personas and behavioral insights.
 - **Simulator & Sales Copilot**: Fixed `StreamlitAPIException` by replacing `st.chat_input` with tab-safe form inputs.
 - **Predictions Tab**: Added risk-adjusted "Predicted Deal Value" and "Conversion Velocity" metrics.
 - **Personalization Tab**: Implemented `generate_personalized_content` and added mock performance KPIs (Open/Reply rates).

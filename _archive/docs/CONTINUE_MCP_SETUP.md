@@ -60,10 +60,10 @@ mcp__postgres__query sql="SELECT current_database()"
 mcp__leadconnector__list_contacts location_id="3xt4qayAh35BIDLaUv7P"
 
 # Test 3: Property scraping
-mcp__firecrawl__scrape url="https://www.zillow.com/austin-tx/"
+mcp__firecrawl__scrape url="https://www.zillow.com/rancho_cucamonga-tx/"
 
 # Test 4: Full workflow
-"Query GHL for leads with budget >$500k, find matching Austin properties, create outreach plan"
+"Query GHL for leads with budget >$500k, find matching Rancho Cucamonga properties, create outreach plan"
 ```
 
 ## 🔧 File Locations

@@ -26,8 +26,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 try:
     from ghl_real_estate_ai.services.advanced_analytics_engine import (
         AdvancedAnalyticsEngine,
@@ -81,8 +79,8 @@ class TestBehavioralTriggerEngine:
         """Sample lead activity data for testing."""
         return {
             "property_searches": [
-                {"timestamp": datetime.now().isoformat(), "location": "Austin", "type": "condo"},
-                {"timestamp": (datetime.now() - timedelta(hours=2)).isoformat(), "location": "Austin", "type": "house"},
+                {"timestamp": datetime.now().isoformat(), "location": "Rancho Cucamonga", "type": "condo"},
+                {"timestamp": (datetime.now() - timedelta(hours=2)).isoformat(), "location": "Rancho Cucamonga", "type": "house"},
             ],
             "pricing_tool_uses": [
                 {"timestamp": datetime.now().isoformat(), "property_id": "123", "estimated_value": 450000}
@@ -485,7 +483,7 @@ class TestAutonomousFollowUpEngine:
                 confidence=0.85,
                 recommended_action="Use personalized message",
                 reasoning="High engagement history",
-                suggested_message="Hi John, I noticed your interest in Austin condos...",
+                suggested_message="Hi John, I noticed your interest in Rancho Cucamonga condos...",
             ),
             FollowUpRecommendation(
                 agent_type=AgentType.CHANNEL_STRATEGIST,

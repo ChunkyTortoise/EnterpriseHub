@@ -11,6 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import aiohttp
 import pytest
 
+pytestmark = pytest.mark.unit
+
 # ---------------------------------------------------------------------------
 # Module-level patches — heavy imports guarded
 # ---------------------------------------------------------------------------

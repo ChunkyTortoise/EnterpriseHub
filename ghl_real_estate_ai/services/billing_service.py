@@ -445,7 +445,7 @@ class BillingService:
             Processing result with actions taken
         """
         event_type = event.get("type")
-        event_data = event.get("data", {}).get("object", {})
+        event.get("data", {}).get("object", {})
 
         logger.info(f"Processing webhook event {event['id']} of type {event_type}")
 

@@ -126,7 +126,7 @@ Action: Create PII redaction utility
 
 1. PIIRedactor class with methods:
    - redact_phone(text) — mask to "***-***-1234" (last 4 visible)
-   - redact_email(text) — mask to "j***@***.com" (first char + domain TLD)
+   - redact_email(text) — mask to "j***@***.com" (first char + ontario_mills TLD)
    - redact_ssn(text) — mask to "***-**-6789"
    - redact_all(text) — apply all redactions
    - safe_log(data: dict) — deep-copy and redact all string values
@@ -145,7 +145,7 @@ Action: Wrap all logger.info/debug calls that include state data with safe_log()
 
 **Test Requirements** (file: `tests/utils/test_pii_redactor.py`):
 - `test_redact_phone_formats` — (xxx) xxx-xxxx, xxx-xxx-xxxx, xxxxxxxxxx
-- `test_redact_email` — standard, subdomain, plus-addressing
+- `test_redact_email` — standard, subontario_mills, plus-addressing
 - `test_redact_ssn` — standard format
 - `test_redact_all_mixed` — text containing multiple PII types
 - `test_safe_log_deep_copy` — original dict not modified

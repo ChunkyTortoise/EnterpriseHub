@@ -15,6 +15,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import time
 from datetime import datetime, timezone
 from enum import Enum
@@ -265,7 +266,7 @@ class TenantContext:
 class TenantToken:
     """JWT-like token for tenant authentication"""
 
-    SECRET_KEY = "test_secret_key_for_testing_only"
+    SECRET_KEY = os.environ.get("TEST_SECRET_KEY", "test_secret_key_for_testing_only")
 
     @classmethod
     def create_token(

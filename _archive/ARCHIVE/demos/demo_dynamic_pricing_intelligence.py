@@ -414,7 +414,7 @@ class DynamicPricingIntelligenceDemo:
 
         try:
             # Import market service
-            from ghl_real_estate_ai.services.austin_market_service import get_rancho_cucamonga_market_service
+            from ghl_real_estate_ai.services.rancho_cucamonga_market_service import get_rancho_cucamonga_market_service
             market_service = get_rancho_cucamonga_market_service()
 
             # Get pricing analytics

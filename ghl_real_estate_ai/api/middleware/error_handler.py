@@ -8,7 +8,7 @@ import time
 import traceback
 import uuid
 from collections import defaultdict
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TypedDict
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -17,6 +17,27 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+# ── TypedDict Definitions ─────────────────────────────────────────────────
+
+
+class ErrorInfoDict(TypedDict):
+    """Type definition for error classification information."""
+
+    id: str
+    correlation_id: str
+    timestamp: float
+    process_time: float
+    endpoint: str
+    error_type: str
+    error_message: str
+    stack_trace: str
+    category: str
+    status_code: int
+    severity: str
+    user_message: str
+    retryable: bool
 
 
 class CircuitBreaker:
@@ -123,10 +144,10 @@ class BulletproofErrorHandler(BaseHTTPMiddleware):
 
     async def _classify_error(
         self, error: Exception, request: Request, process_time: float, correlation_id: str
-    ) -> Dict[str, Any]:
+    ) -> ErrorInfoDict:
         """Classify error for appropriate handling"""
 
-        error_info = {
+        error_info: ErrorInfoDict = {
             "id": f"err_{correlation_id}",
             "correlation_id": correlation_id,
             "timestamp": time.time(),
@@ -135,6 +156,11 @@ class BulletproofErrorHandler(BaseHTTPMiddleware):
             "error_type": type(error).__name__,
             "error_message": str(error),
             "stack_trace": traceback.format_exc(),
+            "category": "unknown",
+            "status_code": 500,
+            "severity": "high",
+            "user_message": "An unexpected error occurred. Our team has been notified.",
+            "retryable": True,
         }
 
         # Classify by error type

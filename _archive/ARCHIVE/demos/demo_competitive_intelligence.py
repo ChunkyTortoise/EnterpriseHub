@@ -5,7 +5,7 @@ This demo showcases the complete competitive intelligence system including:
 1. Real-time competitor detection
 2. Risk assessment and alert generation
 3. Jorge-specific competitive responses
-4. Austin market intelligence integration
+4. Rancho Cucamonga market intelligence integration
 5. Alert notifications and escalation
 """
 
@@ -18,7 +18,7 @@ from ghl_real_estate_ai.core.enhanced_conversation_manager import get_enhanced_c
 from ghl_real_estate_ai.services.competitor_intelligence import get_competitor_intelligence
 from ghl_real_estate_ai.prompts.competitive_responses import get_competitive_response_system
 from ghl_real_estate_ai.services.competitive_alert_system import get_competitive_alert_system
-from ghl_real_estate_ai.data.austin_market_data import get_austin_market_intelligence
+from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
 
 
 class CompetitiveIntelligenceDemo:
@@ -29,7 +29,7 @@ class CompetitiveIntelligenceDemo:
         self.competitor_intelligence = get_competitor_intelligence()
         self.response_system = get_competitive_response_system()
         self.alert_system = get_competitive_alert_system()
-        self.market_intelligence = get_austin_market_intelligence()
+        self.market_intelligence = get_rancho_cucamonga_market_intelligence()
 
     def print_section_header(self, title: str):
         """Print formatted section header"""
@@ -129,8 +129,8 @@ class CompetitiveIntelligenceDemo:
             # Get Jorge's value propositions
             jorge_advantages = [
                 "AI-powered market analysis provides insights others can't access",
-                "24/7 availability in fast-moving Austin market",
-                "Native Austin knowledge with tech industry specialization",
+                "24/7 availability in fast-moving Rancho Cucamonga market",
+                "Native Rancho Cucamonga knowledge with tech industry specialization",
                 "Real-time off-market opportunity access"
             ]
 
@@ -144,7 +144,7 @@ class CompetitiveIntelligenceDemo:
                 print("  → Ask discovery questions about their needs")
             elif scenario['risk_level'] == 'MEDIUM':
                 print("  → Demonstrate technology and expertise differences")
-                print("  → Create urgency with Austin market timing")
+                print("  → Create urgency with Rancho Cucamonga market timing")
             elif scenario['risk_level'] == 'HIGH':
                 print("  → Position as backup resource")
                 print("  → Offer complimentary market insights")
@@ -152,8 +152,8 @@ class CompetitiveIntelligenceDemo:
                 print("  → Immediate Jorge intervention required")
                 print("  → Long-term nurture strategy")
 
-    async def demo_austin_market_intelligence(self):
-        """Demo Austin market intelligence"""
+    async def demo_rancho_cucamonga_market_intelligence(self):
+        """Demo Rancho Cucamonga market intelligence"""
         self.print_section_header("AUSTIN MARKET INTELLIGENCE DEMO")
 
         # Competitor positioning analysis
@@ -248,12 +248,12 @@ class CompetitiveIntelligenceDemo:
             "conversation_history": [
                 {
                     "role": "user",
-                    "content": "Hi, I'm looking for a house in Austin",
+                    "content": "Hi, I'm looking for a house in Rancho Cucamonga",
                     "timestamp": datetime.now().isoformat()
                 },
                 {
                     "role": "assistant",
-                    "content": "I'd be happy to help you find the perfect home in Austin!",
+                    "content": "I'd be happy to help you find the perfect home in Rancho Cucamonga!",
                     "timestamp": datetime.now().isoformat()
                 }
             ],
@@ -331,7 +331,7 @@ class CompetitiveIntelligenceDemo:
             },
             {
                 "stage": "Value Demonstration",
-                "action": "Austin expertise and tech specialization highlighted",
+                "action": "Rancho Cucamonga expertise and tech specialization highlighted",
                 "outcome": "Competitive advantage established"
             },
             {
@@ -366,7 +366,7 @@ class CompetitiveIntelligenceDemo:
             # Run all demo sections
             await self.demo_competitor_detection()
             await self.demo_competitive_responses()
-            await self.demo_austin_market_intelligence()
+            await self.demo_rancho_cucamonga_market_intelligence()
             await self.demo_alert_system()
             await self.demo_end_to_end_scenario()
             await self.demo_recovery_workflow()
@@ -376,7 +376,7 @@ class CompetitiveIntelligenceDemo:
             print("✅ Competitor Detection Engine: 95%+ accuracy with NLP and pattern matching")
             print("✅ Jorge-Specific Response System: Professional competitive positioning")
             print("✅ Real-time Alert System: Multi-channel Jorge notifications")
-            print("✅ Austin Market Intelligence: Local competitive advantages")
+            print("✅ Rancho Cucamonga Market Intelligence: Local competitive advantages")
             print("✅ Recovery Workflow: Systematic lead recovery strategies")
             print("✅ End-to-End Integration: Seamless competitive intelligence flow")
 
@@ -384,7 +384,7 @@ class CompetitiveIntelligenceDemo:
             print(f"  • Never miss a competitive situation")
             print(f"  • Instant alerts for immediate intervention")
             print(f"  • Professional responses that maintain relationships")
-            print(f"  • Austin market advantages leveraged effectively")
+            print(f"  • Rancho Cucamonga market advantages leveraged effectively")
             print(f"  • Lead recovery rate maximization")
             print(f"  • Competitive intelligence tracking and learning")
 

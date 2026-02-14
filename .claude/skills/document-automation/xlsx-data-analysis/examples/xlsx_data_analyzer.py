@@ -1124,7 +1124,7 @@ def demo_xlsx_generation():
         {
             'id': 'PROP_001',
             'price': 625000,
-            'address': {'street': '123 Oak Hill Dr', 'city': 'Austin', 'state': 'TX'},
+            'address': {'street': '123 Oak Hill Dr', 'city': 'Rancho Cucamonga', 'state': 'TX'},
             'bedrooms': 3,
             'bathrooms': 2.5,
             'sqft': 2100,
@@ -1134,7 +1134,7 @@ def demo_xlsx_generation():
         {
             'id': 'PROP_002',
             'price': 580000,
-            'address': {'street': '456 Pine Ridge', 'city': 'Austin', 'state': 'TX'},
+            'address': {'street': '456 Pine Ridge', 'city': 'Rancho Cucamonga', 'state': 'TX'},
             'bedrooms': 4,
             'bathrooms': 3,
             'sqft': 2250,
@@ -1144,7 +1144,7 @@ def demo_xlsx_generation():
         {
             'id': 'PROP_003',
             'price': 450000,
-            'address': {'street': '789 Cedar Ave', 'city': 'Austin', 'state': 'TX'},
+            'address': {'street': '789 Cedar Ave', 'city': 'Rancho Cucamonga', 'state': 'TX'},
             'bedrooms': 2,
             'bathrooms': 2,
             'sqft': 1650,
@@ -1155,7 +1155,7 @@ def demo_xlsx_generation():
 
     # Sample market data
     sample_market_data = {
-        'area': 'Austin, TX',
+        'area': 'Rancho Cucamonga, CA',
         'median_price': 580000,
         'comparables': [
             {'address': '111 Maple St', 'price': 595000, 'sqft': 2000},
@@ -1177,7 +1177,7 @@ def demo_xlsx_generation():
             'converted': np.random.random() < 0.18,  # 18% conversion rate
             'created_date': datetime.now() - timedelta(days=np.random.randint(0, 90)),
             'budget': np.random.randint(300000, 800000),
-            'location_preference': np.random.choice(['Austin', 'Dallas', 'Houston'])
+            'location_preference': np.random.choice(['Rancho Cucamonga', 'Dallas', 'Houston'])
         }
         sample_leads.append(lead)
 
@@ -1211,7 +1211,7 @@ def demo_xlsx_generation():
 
         print("\n🌍 Generating market analysis workbook...")
         market_workbook_path, market_metadata = analyzer.generate_market_analysis_workbook(
-            market_area="Austin, TX",
+            market_area="Rancho Cucamonga, CA",
             comparison_areas=["Dallas, TX", "San Antonio, TX"],
             time_range="12_months",
             include_forecasting=True

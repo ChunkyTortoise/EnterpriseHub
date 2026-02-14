@@ -5,14 +5,12 @@ This module provides integration with GoHighLevel CRM workflows, including
 auto-tagging, pipeline stage updates, and appointment booking synchronization.
 """
 
-import asyncio
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -479,25 +477,44 @@ class GHLWorkflowService:
         try:
             # Prepare update payload
             updates = {}
+            from ghl_real_estate_ai.ghl_utils.config import settings
 
             # Map bot data to GHL fields
+            updates["custom_fields"] = updates.get("custom_fields", {})
+
+            # 1. Standard scores
             if "frs_score" in bot_data:
-                updates["custom_fields"] = updates.get("custom_fields", {})
                 updates["custom_fields"]["frs_score"] = str(bot_data["frs_score"])
-
             if "pcs_score" in bot_data:
-                updates["custom_fields"] = updates.get("custom_fields", {})
                 updates["custom_fields"]["pcs_score"] = str(bot_data["pcs_score"])
-
             if "composite_score" in bot_data:
-                updates["custom_fields"] = updates.get("custom_fields", {})
                 updates["custom_fields"]["composite_score"] = str(bot_data["composite_score"])
-
             if "persona" in bot_data:
-                updates["custom_fields"] = updates.get("custom_fields", {})
                 updates["custom_fields"]["persona"] = bot_data["persona"]
 
-            if updates:
+            # 2. Deep Seller Field Mapping (Phase 2 enhancements)
+            field_map = {
+                "seller_temperature": settings.custom_field_seller_temperature,
+                "pcs_score": settings.custom_field_pcs_score,
+                "seller_motivation": settings.custom_field_seller_motivation,
+                "timeline_urgency": settings.custom_field_timeline_urgency,
+                "property_condition": settings.custom_field_property_condition,
+                "price_expectation": settings.custom_field_price_expectation,
+                "seller_liens": settings.custom_field_seller_liens,
+                "seller_repairs": settings.custom_field_seller_repairs,
+                "seller_listing_history": settings.custom_field_seller_listing_history,
+                "seller_decision_maker": settings.custom_field_seller_decision_maker,
+            }
+
+            for data_key, field_id in field_map.items():
+                if field_id and data_key in bot_data and bot_data[data_key] is not None:
+                    updates["custom_fields"][field_id] = str(bot_data[data_key])
+
+            # 3. Special handling for address/location
+            if "property_address" in bot_data and settings.custom_field_location:
+                updates["custom_fields"][settings.custom_field_location] = bot_data["property_address"]
+
+            if updates["custom_fields"]:
                 success = await self.ghl_client.update_contact(contact_id, updates)
                 if success:
                     logger.info(f"Synced bot data to contact {contact_id}")

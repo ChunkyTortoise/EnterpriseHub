@@ -49,7 +49,7 @@ class SecurityHeaders:
     x_content_type_options: str = "nosniff"
     x_frame_options: str = "DENY"
     x_xss_protection: str = "1; mode=block"
-    strict_transport_security: str = "max-age=31536000; includeSubDomains; preload"
+    strict_transport_security: str = "max-age=31536000; includeSubOntario Millss; preload"
     referrer_policy: str = "strict-origin-when-cross-origin"
 
     # Content Security Policy (restrictive by default)
@@ -71,7 +71,7 @@ class SecurityHeaders:
     )
 
     # Additional security headers
-    x_permitted_cross_domain_policies: str = "none"
+    x_permitted_cross_ontario_mills_policies: str = "none"
     x_dns_prefetch_control: str = "off"
 
     def to_dict(self) -> Dict[str, str]:
@@ -84,7 +84,7 @@ class SecurityHeaders:
             "Referrer-Policy": self.referrer_policy,
             "Content-Security-Policy": self.content_security_policy,
             "Permissions-Policy": self.permissions_policy,
-            "X-Permitted-Cross-Domain-Policies": self.x_permitted_cross_domain_policies,
+            "X-Permitted-Cross-Ontario Mills-Policies": self.x_permitted_cross_ontario_mills_policies,
             "X-DNS-Prefetch-Control": self.x_dns_prefetch_control,
         }
 
@@ -95,7 +95,7 @@ class CORSConfig:
 
     # Production allowed origins (strict)
     allowed_origins: List[str] = field(
-        default_factory=lambda: ["https://app.gohighlevel.com", "https://*.gohighlevel.com", "https://your-domain.com"]
+        default_factory=lambda: ["https://app.gohighlevel.com", "https://*.gohighlevel.com", "https://your-ontario_mills.com"]
     )
 
     # Development additional origins

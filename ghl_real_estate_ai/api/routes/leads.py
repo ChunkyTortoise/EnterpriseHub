@@ -117,7 +117,7 @@ async def list_leads(
 
         return formatted_leads
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error listing leads")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -183,7 +183,7 @@ async def update_lead_status(
 
         return {"success": True, "leadId": lead_id, "updates": updates_performed}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error updating lead status")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -230,7 +230,7 @@ async def get_lead_property_matches(
 
         return formatted_matches
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error matching properties")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -266,7 +266,7 @@ async def get_conversation_messages(
                 ]
             return []
 
-        conversations = result.get("data", {}).get("conversations", [])
+        result.get("data", {}).get("conversations", [])
         # Format GHL messages for frontend
         messages = []
         # Simplified: just return something for now to satisfy the integration

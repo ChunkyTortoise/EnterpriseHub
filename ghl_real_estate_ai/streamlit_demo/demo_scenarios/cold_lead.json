@@ -1,9 +1,9 @@
 {
   "name": "Cold Lead Example",
   "messages": [
-    {"role": "user", "content": "Looking for a house in Austin"}
+    {"role": "user", "content": "Looking for a house in Rancho Cucamonga"}
   ],
   "extracted_data": {
-    "location": "Austin"
+    "location": "Rancho Cucamonga"
   }
 }

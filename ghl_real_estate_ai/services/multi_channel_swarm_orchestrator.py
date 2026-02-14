@@ -85,7 +85,7 @@ class MultiChannelSwarmOrchestrator:
         logger.info(f"🚀 Triggering Swarm Playbook '{playbook.name}' for lead: {lead_id}")
 
         lead_name = lead_data.get("name", lead_data.get("first_name", "Lead"))
-        market = lead_data.get("market", "Austin")
+        lead_data.get("market", "Rancho Cucamonga")
 
         # Record initialization in dashboard
         await self._record_activity("Orchestrator", f"Initiating '{playbook.name}' for {lead_name}")
@@ -106,7 +106,7 @@ class MultiChannelSwarmOrchestrator:
     ):
         """Executes steps in sequence with their respective delays."""
         lead_name = lead_data.get("name", lead_data.get("first_name", "Lead"))
-        market = lead_data.get("market", "Austin")
+        market = lead_data.get("market", "Rancho Cucamonga")
 
         for step in playbook.steps:
             try:

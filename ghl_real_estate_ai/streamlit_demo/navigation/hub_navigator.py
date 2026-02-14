@@ -33,6 +33,7 @@ except ImportError:
 
 # Hub categories with icons and organization
 HUB_CATEGORIES = {
+    "Welcome": ["Jorge AI Landing Page"],
     "Core Operations": [
         "Executive Command Center",
         "Lead Intelligence Hub",
@@ -65,10 +66,18 @@ HUB_CATEGORIES = {
         "SMS Compliance Dashboard",
     ],
     "Customer Journey": ["Buyer Journey Hub", "Seller Journey Hub"],
-    "Portfolio Showcase": ["Services Portfolio", "Case Studies"],
+    "Portfolio Showcase": [
+        "Services Portfolio",
+        "Case Studies",
+        "Revenue-Sprint Case Study",
+        "Advanced RAG Case Study",
+        "DocQA Engine Case Study",
+        "Request Quote"
+    ],
 }
 
 CATEGORY_DESCRIPTIONS = {
+    "Welcome": "Start here: Professional services and outcome-first ROI",
     "Core Operations": "Executive dashboards and strategic intelligence",
     "Analytics & Insights": "Business intelligence and performance tracking",
     "AI & Automation": "Intelligent agents and automation systems",
@@ -78,13 +87,14 @@ CATEGORY_DESCRIPTIONS = {
 }
 
 COUNSEL_MESSAGES = {
+    "Jorge AI Landing Page": "Welcome, I've prepared a summary of our production results and service tiers for your review.",
     "Executive Command Center": "Jorge, lead velocity is up 12% this week. Focus on the Downtown cluster for maximum ROI.",
     "Lead Intelligence Hub": "Sarah Martinez is showing high engagement with luxury properties. Suggest a showing today.",
     "Voice Claude": "Voice commands active. Try saying 'Hey Claude, show me my top leads' for hands-free assistance.",
     "Voice AI Assistant": "Advanced voice AI ready for lead qualification calls. 91.3% accuracy with real-time sentiment analysis.",
     "Proactive Intelligence": "2 high-priority alerts detected. Pipeline risk identified - take action now to stay on target.",
     "Swarm Intelligence": "The analyst swarm is currently processing 142 leads. Token efficiency is at an all-time high.",
-    "Real-Time Intelligence": "Market conditions are shifting in East Austin. Update your valuation models.",
+    "Real-Time Intelligence": "Market conditions are shifting in East Rancho Cucamonga. Update your valuation models.",
     "Lead Source ROI": "Facebook Ads ROI at 280% vs Realtor.com at 95%. Recommend shifting $3K budget to top performers for +$10K revenue.",
     "Billing Analytics": "ARR is tracking at $187K - 23% monthly growth puts us on target for $240K. 23 customers in overage generating strong usage revenue.",
     "Buyer Journey Hub": "We have 3 buyers ready for pre-approval. Syncing with financing partners now.",
@@ -99,7 +109,11 @@ COUNSEL_MESSAGES = {
     "Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month.",
     "Deep Research": "Perplexity-powered search is active. Ask me to research any market or property.",
     "Services Portfolio": "31 production-grade AI services with transparent pricing and ROI models. 19 certifications, 1,768 training hours.",
-    "Case Studies": "EnterpriseHub: 87% reduction in manual review, $240K savings. AgentForge: 3x qualified leads, 45% response improvement.",
+    "Case Studies": "EnterpriseHub: 87% reduction in manual review, $240K savings. Revenue-Sprint: 3x qualified leads, 99% faster proposals. Advanced RAG: 85% accuracy, 70% faster response.",
+    "Revenue-Sprint Case Study": "Marketing automation platform: 3x qualified leads, 45% reply rate improvement, 99% faster proposal generation (45min→3-7sec).",
+    "Advanced RAG Case Study": "Hybrid retrieval system: 85% query accuracy improvement, 70% faster response (5-10min→<50ms), 95% cache hit rate.",
+    "DocQA Engine Case Study": "Document Q&A platform: Multi-format support, citation tracking, prompt engineering lab for optimization.",
+    "Request Quote": "Get a detailed proposal within 24 hours. Typical projects range $4K-$25K with 2-6 week timelines. 30-day satisfaction guarantee.",
 }
 
 
@@ -357,7 +371,7 @@ def render_hub_navigator(sparkline_fn):
 
         # Global AI State Sync
         with st.expander("Global AI Configuration", expanded=True):
-            market = st.selectbox("Active Market", ["Austin, TX", "Miami, FL", "Los Angeles, CA"], index=0)
+            market = st.selectbox("Active Market", ["Rancho Cucamonga, CA", "Miami, FL", "Los Angeles, CA"], index=0)
             voice_tone = st.slider(
                 "AI Voice Tone",
                 0.0,

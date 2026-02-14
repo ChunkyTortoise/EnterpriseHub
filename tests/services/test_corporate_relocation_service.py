@@ -20,7 +20,6 @@ import pytest
 
 from ghl_real_estate_ai.services.corporate_relocation_service import (
 
-@pytest.mark.integration
     CorporateContract,
     CorporatePartnerTier,
     CorporateRelocationService,
@@ -94,7 +93,7 @@ def sample_employee_details():
         "name": "John Smith",
         "email": "john.smith@company.com",
         "level": "vp_director",
-        "current_location": "Austin, TX",
+        "current_location": "Rancho Cucamonga, CA",
         "family_size": 3,
     }
 
@@ -224,7 +223,7 @@ class TestCorporateRelocationService:
             employee_name="Jane Doe",
             employee_email="jane@test.com",
             employee_level=EmployeeLevel.C_SUITE,
-            source_location="Austin",
+            source_location="Rancho Cucamonga",
             target_market="seattle",
             start_date=date(2026, 6, 1),
             timeline_requirement="flexible",
@@ -369,7 +368,7 @@ class TestCorporateRelocationService:
             employee_name="Cost Test",
             employee_email="cost@test.com",
             employee_level=EmployeeLevel.VP_DIRECTOR,
-            source_location="Austin",
+            source_location="Rancho Cucamonga",
             target_market="denver",
             start_date=date.today() + timedelta(days=90),  # Normal timeline
             timeline_requirement="flexible",
@@ -486,7 +485,7 @@ class TestCorporateRelocationService:
             employee_name="Employee 1",
             employee_email="emp1@dash.com",
             employee_level=EmployeeLevel.MANAGER,
-            source_location="Austin",
+            source_location="Rancho Cucamonga",
             target_market="denver",
             start_date=date.today() + timedelta(days=60),
             timeline_requirement="flexible",

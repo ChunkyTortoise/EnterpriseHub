@@ -148,13 +148,13 @@ class ClaudePlatformCompanion:
 
         logger.info("Claude Platform Companion initialized with voice capabilities")
 
-    async def initialize_session(self, user_name: str = "Jorge", market: str = "Austin") -> ClaudeGreeting:
+    async def initialize_session(self, user_name: str = "Jorge", market: str = "Rancho Cucamonga") -> ClaudeGreeting:
         """
         Initialize Claude platform session with personalized greeting.
 
         Args:
             user_name: Agent's name
-            market: Current market (Austin/Rancho)
+            market: Current market (Rancho Cucamonga/Rancho)
 
         Returns:
             Personalized greeting with insights and recommendations

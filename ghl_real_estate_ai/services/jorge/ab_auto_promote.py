@@ -24,7 +24,6 @@ Usage:
 """
 
 import logging
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -501,7 +500,7 @@ class ABAutoPromoter:
             f"(variant={winning_variant}, traffic={self.CANARY_TRAFFIC_PERCENT}%)"
         )
 
-        # TODO: Update traffic split in A/B service to route 20% to winner
+        # ROADMAP-075: Update traffic split in A/B service to route 20% to winner
         # This will be implemented in a follow-up task to modify traffic allocation
 
     # ── Canary Monitoring & Rollout ───────────────────────────────────────
@@ -607,11 +606,7 @@ class ABAutoPromoter:
         Returns:
             True if issues detected, False if healthy.
         """
-        # TODO: Implement real health checks:
-        # - Check error rates
-        # - Check conversion rates
-        # - Check latency metrics
-        # - Check user complaints/feedback
+        # ROADMAP-075: Implement real canary health checks (error rates, conversion rates, latency)
         # For now, assume healthy (no issues)
         logger.debug(f"Checking canary health for '{experiment_id}' (variant={promoted_variant})")
         return False
@@ -649,7 +644,7 @@ class ABAutoPromoter:
             )
             await conn.commit()
 
-        # TODO: Update traffic split to 100% for winner
+        # ROADMAP-075: Update traffic split to 100% for winner
         logger.info(
             f"Completed promotion for experiment '{experiment_id}' "
             f"(variant={promoted_variant}, traffic=100%)"
@@ -690,7 +685,7 @@ class ABAutoPromoter:
             )
             await conn.commit()
 
-        # TODO: Restore previous traffic split
+        # ROADMAP-075: Restore previous traffic split on rollback
         logger.warning(f"Rolled back promotion for experiment '{experiment_id}': {reason}")
 
     # ── Manual Rollback ───────────────────────────────────────────────────

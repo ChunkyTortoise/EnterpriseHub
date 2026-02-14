@@ -1,0 +1,17 @@
+{
+  "event": "ConversationMessageCreate",
+  "version": "v2",
+  "timestamp": "2026-02-11T14:20:00Z",
+  "trace_id": "evt_msg_create_11111",
+  "data": {
+    "id": "msg_conv_22222",
+    "conversationId": "conv_33333",
+    "contactId": "contact_abc123",
+    "locationId": "loc_xyz789",
+    "message": "Yes, I'm pre-approved for $850,000 and would love to see some properties this weekend. Do you have any 3 bedroom homes available in the Alta Loma area?",
+    "direction": "inbound",
+    "channel": "sms",
+    "sentAt": "2026-02-11T14:20:00Z",
+    "attachments": []
+  }
+}

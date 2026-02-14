@@ -578,7 +578,7 @@ if __name__ == "__main__":
         Predicts best time to send message for maximum response rate
         """
         conversations = lead_data.get("conversations", [])
-        metadata = lead_data.get("metadata", {})
+        lead_data.get("metadata", {})
 
         # Analyze when lead typically responds
         response_hours = []

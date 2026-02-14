@@ -217,7 +217,7 @@ class VoiceAIService:
 
         try:
             # Use Claude's semantic caching for performance
-            analysis_response = await self.claude_assistant.chat_with_claude(
+            await self.claude_assistant.chat_with_claude(
                 message=analysis_prompt,
                 conversation_id=f"voice_analysis_{interaction_id}",
                 system_prompt="You are an expert real estate voice analytics AI. Provide precise, actionable insights in JSON format.",
@@ -305,7 +305,7 @@ class VoiceAIService:
 
         # Store final analytics
         if interaction_id in self.analytics_cache:
-            final_analytics = self.analytics_cache[interaction_id]
+            self.analytics_cache[interaction_id]
             # Cache summary for reporting
             await self.cache.set(
                 f"voice_summary_{interaction_id}",

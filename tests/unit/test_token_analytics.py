@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.unit
 
@@ -7,15 +8,12 @@ Tests record usage, cost aggregation by bot/provider, daily trend,
 demo data generation, and empty state handling.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.token_analytics import (
 
-@pytest.mark.unit
     TokenAnalytics,
     TokenUsageRecord,
     _generate_demo_data,

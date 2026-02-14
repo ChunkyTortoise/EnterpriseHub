@@ -560,7 +560,7 @@ class DatabaseConnectionService:
             # Test basic connectivity
             async with self.get_session(engine_name) as session:
                 result = await session.execute(text("SELECT 1"))
-                test_value = result.scalar()
+                result.scalar()
 
             connection_time = (time.time() - start_time) * 1000
 

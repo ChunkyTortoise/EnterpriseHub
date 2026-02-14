@@ -95,7 +95,7 @@ class VoiceSessionContext(BaseModel):
 class VoiceClaudeService:
     """Enhanced Claude assistant with voice capabilities."""
 
-    def __init__(self, market_id: str = "austin"):
+    def __init__(self, market_id: str = "rancho_cucamonga"):
         self.claude_assistant = ClaudeAssistant(context_type="voice", market_id=market_id)
         self.market_id = market_id
         self.cache = None
@@ -378,8 +378,8 @@ class VoiceClaudeService:
                 # Location mentions
                 location_keywords = [
                     "downtown",
-                    "south austin",
-                    "north austin",
+                    "south rancho_cucamonga",
+                    "north rancho_cucamonga",
                     "west lake",
                     "cedar park",
                     "lakeway",
@@ -458,8 +458,8 @@ class VoiceClaudeService:
                 # Extract market-related entities
 
                 # Market areas
-                if any(area in text_lower for area in ["austin", "travis county", "williamson county"]):
-                    entities["market_area"] = "austin_metro"
+                if any(area in text_lower for area in ["rancho_cucamonga", "travis county", "williamson county"]):
+                    entities["market_area"] = "rancho_cucamonga_metro"
 
                 # Market metrics
                 metric_keywords = {
@@ -562,12 +562,12 @@ class VoiceClaudeService:
 
         if intent == VoiceInteractionType.PROPERTY_INQUIRY:
             if "price_mention" in entities:
-                return f"I can help you find properties around {entities['price_mention']}. Let me search our current listings in the Austin area. What specific neighborhoods are you most interested in?"
+                return f"I can help you find properties around {entities['price_mention']}. Let me search our current listings in the Rancho Cucamonga area. What specific neighborhoods are you most interested in?"
             elif "bedrooms" in entities or "bathrooms" in entities:
                 beds = entities.get("bedrooms", "your preferred")
                 baths = entities.get("bathrooms", "")
                 bath_text = f" and {baths} bathrooms" if baths else ""
-                return f"I'll look for properties with {beds} bedrooms{bath_text}. Are you looking at any particular area of Austin?"
+                return f"I'll look for properties with {beds} bedrooms{bath_text}. Are you looking at any particular area of Rancho Cucamonga?"
             else:
                 return "I'd be happy to help you find the perfect property. What are your main criteria - price range, number of bedrooms, or preferred neighborhoods?"
 
@@ -588,7 +588,7 @@ class VoiceClaudeService:
                 return "I can help schedule property showings. What property would you like to show, and when works best for your client?"
 
         elif intent == VoiceInteractionType.MARKET_QUESTION:
-            return "I can provide Austin market insights. The market is currently showing steady appreciation with good buyer activity. What specific aspect would you like to know about - prices, inventory, or trends in a particular area?"
+            return "I can provide Rancho Cucamonga market insights. The market is currently showing steady appreciation with good buyer activity. What specific aspect would you like to know about - prices, inventory, or trends in a particular area?"
 
         else:
             return "I'm here to help with your real estate business. You can ask me about properties, update leads, schedule showings, or get market insights. What would you like to do?"
@@ -620,7 +620,6 @@ class VoiceClaudeService:
 
         try:
             intent = voice_command.command_type
-            entities = voice_command.entities
 
             if intent == VoiceInteractionType.PROPERTY_INQUIRY:
                 actions.extend(

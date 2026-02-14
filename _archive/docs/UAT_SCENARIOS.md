@@ -42,7 +42,7 @@ This document outlines the specific scenarios Jorge Salas should use to verify t
 1.  Navigate to the **War Room** tab.
 2.  Review the **Property Heat Map**.
 3.  **Verification:**
-    - You should see markers clustered around Austin, TX (or your local market).
+    - You should see markers clustered around Rancho Cucamonga, CA (or your local market).
     - Red markers indicate "Hot" properties where multiple leads have high FRS scores.
     - Click a marker to see the **Highest FRS** and **Lead Count**.
     - Review the **Lead Relationships** graph on the right to see which leads are connected to which properties.

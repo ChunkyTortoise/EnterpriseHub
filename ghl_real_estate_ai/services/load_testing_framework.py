@@ -395,7 +395,7 @@ class LoadTestRunner:
 
     async def _execute_test_phases(self, test_id: str, config: LoadTestConfig, session: aiohttp.ClientSession):
         """Execute load test phases (ramp-up, steady-state, ramp-down)."""
-        results = self.running_tests[test_id]
+        self.running_tests[test_id]
 
         # Phase 1: Ramp-up
         logger.info(f"Test {test_id}: Starting ramp-up phase ({config.ramp_up_duration_s}s)")

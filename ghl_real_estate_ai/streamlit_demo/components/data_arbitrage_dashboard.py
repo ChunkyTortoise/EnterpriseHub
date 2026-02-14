@@ -16,7 +16,7 @@ def render_data_arbitrage_dashboard():
 
     arbitrage_service = get_data_arbitrage_service()
 
-    zip_code = st.text_input("Enter Zip Code for Arbitrage Scan:", value="78701")
+    zip_code = st.text_input("Enter Zip Code for Arbitrage Scan:", value="91730")
 
     if st.button("🚀 Run Deep Arbitrage Scan"):
         with st.spinner("🧠 Scanning County Records, Tax Liens, and Probate Filings..."):

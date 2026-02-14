@@ -43,7 +43,7 @@ repo = await (json_repository(["/path/to/properties.json"])
 query = (FluentPropertyQuery
          .by_price_range(400000, 800000)
          .filter_by_bedrooms(min_beds=2, max_beds=4)
-         .filter_by_location(location="Austin")
+         .filter_by_location(location="Rancho Cucamonga")
          .sort_by("price")
          .paginate(limit=20)
          .build())
@@ -61,7 +61,7 @@ from repositories.strategy_integration import enhanced_generate_property_matches
 lead_context = {
     'extracted_preferences': {
         'budget': 750000,
-        'location': 'Austin',
+        'location': 'Rancho Cucamonga',
         'bedrooms': 3,
         'property_type': 'Single Family',
         'must_haves': ['garage']
@@ -119,7 +119,7 @@ from repositories.query_builder import PropertyQueryBuilder, FluentPropertyQuery
 query = (PropertyQueryBuilder()
          .filter_by_price(min_price=300000, max_price=800000)
          .filter_by_bedrooms(min_beds=2, max_beds=4)
-         .filter_by_location(location="Austin")
+         .filter_by_location(location="Rancho Cucamonga")
          .filter_by_amenities(required=["garage"], preferred=["pool"])
          .semantic_search("modern downtown condo")
          .sort_by("price", SortOrder.ASC)
@@ -381,7 +381,7 @@ matcher = RepositoryPropertyMatcher(
 # Use with existing Strategy Pattern
 lead_preferences = {
     'budget': 750000,
-    'location': 'Austin',
+    'location': 'Rancho Cucamonga',
     'bedrooms': 3,
     'must_haves': ['garage']
 }
@@ -413,7 +413,7 @@ PRODUCTION_CONFIG = {
         "api_key": os.getenv("MLS_API_KEY"),
         "provider": "trestle",
         "rate_limit": 20,
-        "market_area": "austin"
+        "market_area": "rancho_cucamonga"
     },
     "rag_config": {
         "data_paths": ["/app/data/properties.json"],
@@ -448,7 +448,7 @@ repo = create_from_environment()
 # Use specific filters to reduce data scan
 query = (PropertyQueryBuilder()
          .filter_by_price(min_price=400000, max_price=800000)  # Reduces scan
-         .filter_by_location(location="Austin")  # Index-friendly
+         .filter_by_location(location="Rancho Cucamonga")  # Index-friendly
          .paginate(limit=25)  # Limit results
          .build())
 
@@ -583,7 +583,7 @@ pytest.main(["test_repository_pattern.py", "-v"])
 @pytest.mark.integration
 async def test_real_data_integration():
     service = await PropertyDataServiceFactory.create_demo_service()
-    query = PropertyQueryBuilder().filter_by_location(location="Austin").build()
+    query = PropertyQueryBuilder().filter_by_location(location="Rancho Cucamonga").build()
     result = await service.find_properties(query)
     assert result.success
 ```

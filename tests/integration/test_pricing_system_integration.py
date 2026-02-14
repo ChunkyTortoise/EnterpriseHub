@@ -15,8 +15,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 try:
     from fastapi.testclient import TestClient
     from ghl_real_estate_ai.core.types import LeadClassification

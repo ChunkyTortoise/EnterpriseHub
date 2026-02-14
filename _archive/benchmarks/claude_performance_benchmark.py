@@ -88,13 +88,13 @@ class PerformanceBenchmark:
         print("TEST 2: Market Context Loading Speed")
         print("="*60)
 
-        assistant_optimized = ClaudeAssistantOptimized(market_id="austin")
+        assistant_optimized = ClaudeAssistantOptimized(market_id="rancho_cucamonga")
 
         # Benchmark minimal context (fast path)
         minimal_times = []
         for i in range(10):
             start = time.time()
-            await assistant_optimized.get_market_context_minimal("austin")
+            await assistant_optimized.get_market_context_minimal("rancho_cucamonga")
             elapsed = (time.time() - start) * 1000
             minimal_times.append(elapsed)
 
@@ -104,7 +104,7 @@ class PerformanceBenchmark:
             # Clear cache to simulate cold start
             assistant_optimized._market_context_cache_full.clear()
             start = time.time()
-            await assistant_optimized.get_market_context_full("austin")
+            await assistant_optimized.get_market_context_full("rancho_cucamonga")
             elapsed = (time.time() - start) * 1000
             full_times.append(elapsed)
 
@@ -140,13 +140,13 @@ class PerformanceBenchmark:
             "Explain why this property matches Sarah Chen's needs",
             "Analyze David Kim's investment potential",
             "Draft SMS for Maria Rodriguez property tour",
-            "Summarize Austin market conditions",
+            "Summarize Rancho Cucamonga market conditions",
             "Generate churn recovery script for high-value lead",
             # Variations of same queries (should hit cache)
             "Can you explain why this property matches Sarah Chen?",
             "Tell me about David Kim's investment analysis",
             "Draft text message for Maria Rodriguez tour",
-            "What are Austin market conditions?",
+            "What are Rancho Cucamonga market conditions?",
             "Create churn recovery script for valuable lead",
         ]
 
@@ -156,7 +156,7 @@ class PerformanceBenchmark:
             (demo_queries[0], {"content": "Sarah Chen property match explanation..."}),
             (demo_queries[1], {"content": "David Kim investment analysis..."}),
             (demo_queries[2], {"content": "Maria Rodriguez tour SMS..."}),
-            (demo_queries[3], {"content": "Austin market summary..."}),
+            (demo_queries[3], {"content": "Rancho Cucamonga market summary..."}),
             (demo_queries[4], {"content": "Churn recovery script..."}),
         ])
 
@@ -275,7 +275,7 @@ class PerformanceBenchmark:
             "Draft SMS for property tour scheduling",
         ]
 
-        assistant_optimized = ClaudeAssistantOptimized(market_id="austin")
+        assistant_optimized = ClaudeAssistantOptimized(market_id="rancho_cucamonga")
 
         # Warm cache for realistic demo scenario
         print("Pre-warming cache for demo scenario...")
@@ -292,7 +292,7 @@ class PerformanceBenchmark:
                 result = await assistant_optimized._async_handle_query(
                     query=query,
                     leads={},
-                    market="austin"
+                    market="rancho_cucamonga"
                 )
                 elapsed = (time.time() - start) * 1000
                 query_times.append(elapsed)

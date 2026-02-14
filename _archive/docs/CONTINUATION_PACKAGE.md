@@ -1,7 +1,7 @@
 # 🚀 MCP Testing Session - EnterpriseHub
 
 ## 🎯 Session Objective
-Test all 6 MCP servers with Jorge's real estate data and Austin property integration.
+Test all 6 MCP servers with Jorge's real estate data and Rancho Cucamonga property integration.
 
 ## 📋 COPY THIS PROMPT FOR NEXT SESSION:
 
@@ -11,12 +11,12 @@ I just completed MCP setup for EnterpriseHub real estate AI. All 6 MCP servers a
 ✅ PostgreSQL: Database 'enterprisehub' ready
 ✅ GoHighLevel: Jorge's credentials (Location: 3xt4qayAh35BIDLaUv7P)
 ✅ GitHub: Personal access token configured
-✅ Firecrawl: API key for Austin property scraping
+✅ Firecrawl: API key for Rancho Cucamonga property scraping
 ✅ Memory & Sequential Thinking: AI reasoning tools
 
-PRIORITY: Test all MCP integrations, starting with Jorge's GoHighLevel leads, then Austin property matching.
+PRIORITY: Test all MCP integrations, starting with Jorge's GoHighLevel leads, then Rancho Cucamonga property matching.
 
-Key test: "Query Jorge's GHL for recent leads, find matching Austin properties with Firecrawl, create follow-up strategy using Sequential Thinking"
+Key test: "Query Jorge's GHL for recent leads, find matching Rancho Cucamonga properties with Firecrawl, create follow-up strategy using Sequential Thinking"
 
 Reference files: MCP_COMPLETE_SUCCESS.md, .mcp.json
 ```
@@ -38,9 +38,9 @@ Reference files: MCP_COMPLETE_SUCCESS.md, .mcp.json
 "List the 5 most recent leads from Jorge's GoHighLevel account and show their details"
 ```
 
-### **4. Test Austin Property Scraping**
+### **4. Test Rancho Cucamonga Property Scraping**
 ```
-"Use Firecrawl to search for 3 luxury properties in Austin under $700k"
+"Use Firecrawl to search for 3 luxury properties in Rancho Cucamonga under $700k"
 ```
 
 ### **5. Test GitHub Integration**
@@ -55,7 +55,7 @@ Reference files: MCP_COMPLETE_SUCCESS.md, .mcp.json
 
 ### **7. Test Full Workflow Integration**
 ```
-"Query Jorge's GHL for leads with budget >$500k, find matching Austin properties using Firecrawl, then create personalized follow-up strategy using Sequential Thinking, and store insights in Memory"
+"Query Jorge's GHL for leads with budget >$500k, find matching Rancho Cucamonga properties using Firecrawl, then create personalized follow-up strategy using Sequential Thinking, and store insights in Memory"
 ```
 
 ## 🔧 Configuration Summary
@@ -80,7 +80,7 @@ Reference files: MCP_COMPLETE_SUCCESS.md, .mcp.json
 After successful testing, you should be able to:
 
 1. **CRM Data Access**: View Jorge's actual leads, opportunities, contacts
-2. **Property Intelligence**: Scrape live Austin listings from multiple sources
+2. **Property Intelligence**: Scrape live Rancho Cucamonga listings from multiple sources
 3. **AI Strategy**: Generate sophisticated real estate business strategies
 4. **Data Analytics**: Query and analyze CRM data in PostgreSQL
 5. **Code Operations**: Read/write files in the GitHub repository
@@ -99,7 +99,7 @@ If any tool doesn't work:
 
 Session is successful when you can:
 - ✅ Query live Jorge GHL data
-- ✅ Scrape current Austin properties
+- ✅ Scrape current Rancho Cucamonga properties
 - ✅ Generate AI real estate insights
 - ✅ Store data in PostgreSQL
 - ✅ Access GitHub repository files

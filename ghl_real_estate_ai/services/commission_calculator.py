@@ -347,7 +347,7 @@ class CommissionCalculator:
 
         for month in range(1, months + 1):
             month_start = datetime.now() + timedelta(days=30 * (month - 1))
-            month_end = month_start + timedelta(days=30)
+            month_start + timedelta(days=30)
 
             # Simple projection: distribute expected value across avg close time
             expected_monthly = sum(d["expected_value"] for d in active_deals) / (avg_days_to_close / 30)

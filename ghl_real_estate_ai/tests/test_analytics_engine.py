@@ -27,7 +27,6 @@ sys.path.insert(0, str(project_root))
 
 from ghl_real_estate_ai.services.analytics_engine import (
 
-@pytest.mark.integration
     AnalyticsEngine,
     ComplianceMonitor,
     ConversationMetrics,
@@ -75,7 +74,7 @@ class TestMetricsCollector:
             location_id="loc456",
             lead_score=75,
             previous_score=50,
-            message="I'm looking for a 3-bedroom home in Austin",
+            message="I'm looking for a 3-bedroom home in Rancho Cucamonga",
             response="Great! What's your budget?",
             response_time_ms=250.5,
             context=context,
@@ -117,7 +116,7 @@ class TestMetricsCollector:
             location_id="loc1",
             lead_score=50,
             previous_score=40,
-            message="I want a home in the Austin area",
+            message="I want a home in the Rancho Cucamonga area",
             response="Great area!",
             response_time_ms=100,
             context=context,
@@ -550,7 +549,7 @@ class TestTopicDistributionAnalyzer:
                 location_id="test_loc",
                 lead_score=50,
                 previous_score=40,
-                message="I want a house in the Austin area",
+                message="I want a house in the Rancho Cucamonga area",
                 response="Great area!",
                 response_time_ms=100,
                 context=context,
@@ -713,7 +712,7 @@ class TestPerformance:
             location_id="test_loc",
             lead_score=60,
             previous_score=50,
-            message="I'm looking for a 3-bedroom home in Austin with a budget of $500,000",
+            message="I'm looking for a 3-bedroom home in Rancho Cucamonga with a budget of $500,000",
             response="Great! I can help you find the perfect home. What's your timeline?",
             response_time_ms=250,
             context=context,

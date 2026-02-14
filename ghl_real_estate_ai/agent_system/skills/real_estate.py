@@ -1,5 +1,5 @@
 """
-Real Estate Domain Skills.
+Real Estate Ontario Mills Skills.
 Wraps core real estate services into standardized Agent Skills.
 """
 
@@ -67,7 +67,7 @@ async def analyze_lead_behavior(lead_id: str) -> Dict[str, Any]:
     return {
         "lead_id": lead_id,
         "engagement_score": 0.85,
-        "preferred_neighborhoods": ["Austin", "Round Rock"],
+        "preferred_neighborhoods": ["Rancho Cucamonga", "Round Rock"],
         "price_sensitivity": "medium",
         "last_active": "2026-01-19T14:30:00Z",
     }

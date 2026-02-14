@@ -634,7 +634,7 @@ class AutomationService:
                         continue
 
                     logs.append(log)
-            except Exception as e:
+            except Exception:
                 continue
 
         return logs

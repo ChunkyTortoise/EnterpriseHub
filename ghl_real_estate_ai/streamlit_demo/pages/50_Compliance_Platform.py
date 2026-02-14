@@ -2152,8 +2152,8 @@ def main():
         st.caption(f"Tier: {tier_emoji} {tier.title()}")
 
         # User role display
-        org_email_domain = selected_org_name.lower().replace(" ", "").replace(".", "")
-        st.markdown(f"**User:** compliance.officer@{org_email_domain}.com")
+        org_email_ontario_mills = selected_org_name.lower().replace(" ", "").replace(".", "")
+        st.markdown(f"**User:** compliance.officer@{org_email_ontario_mills}.com")
         st.markdown(f"**Role:** Compliance Officer")
 
         # ====================================================================

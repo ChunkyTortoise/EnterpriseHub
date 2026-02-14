@@ -6,7 +6,6 @@ import pytest
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.self_query import (
 
-@pytest.mark.integration
     Entity,
     ExecutionStrategy,
     FallbackHandler,
@@ -22,6 +21,9 @@ from src.retrieval.self_query import (
     SelfQueryRetriever,
     TemporalRef,
 )
+
+
+@pytest.mark.integration
 
 # ============================================================================
 # Fixtures

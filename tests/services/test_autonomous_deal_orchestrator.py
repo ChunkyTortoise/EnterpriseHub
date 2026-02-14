@@ -15,7 +15,6 @@ import pytest
 
 from ghl_real_estate_ai.services.autonomous_deal_orchestrator import (
 
-@pytest.mark.integration
     AutonomousDealOrchestrator,
     AutonomousTask,
     DocumentRequest,

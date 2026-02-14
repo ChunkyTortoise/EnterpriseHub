@@ -4,8 +4,8 @@ Provides fundamental types, configuration, and exceptions
 used throughout the system.
 """
 
-from src.core.config import Settings, get_settings
-from src.core.exceptions import (
+from .config import Settings, get_settings
+from .exceptions import (
     CacheError,
     ConfigurationError,
     EmbeddingError,
@@ -13,7 +13,7 @@ from src.core.exceptions import (
     ValidationError,
     VectorStoreError,
 )
-from src.core.types import Document, DocumentChunk, Metadata, Query, SearchRequest, SearchResult
+from .types import Document, DocumentChunk, Metadata, Query, SearchRequest, SearchResult
 
 __all__ = [
     "Document",

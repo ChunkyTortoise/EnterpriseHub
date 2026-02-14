@@ -18,7 +18,7 @@ def mask_phone(text: str) -> str:
 
 
 def mask_email(text: str) -> str:
-    """Replace email addresses with masked version (keeps domain)."""
+    """Replace email addresses with masked version (keeps ontario_mills)."""
 
     def _replace(m: re.Match) -> str:
         parts = m.group().split("@")

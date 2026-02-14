@@ -84,7 +84,7 @@ def test_demo_lead_context():
         'lead_id': 'demo_sarah_chen',
         'name': 'Sarah Chen',
         'occupation': 'Apple Engineer',
-        'location': 'Austin, TX',
+        'location': 'Rancho Cucamonga, CA',
         'budget': 500000,
         'timeline': '45 days',
         'preferences': {

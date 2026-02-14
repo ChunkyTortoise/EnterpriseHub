@@ -280,7 +280,7 @@ from ghl_real_estate_ai.streamlit_demo.components.performance_optimizations impo
 filters = {
     'min_score': 70,
     'temperature': ['hot', 'warm'],
-    'sectors': ['Austin', 'Dallas']
+    'sectors': ['Rancho Cucamonga', 'Dallas']
 }
 
 # This should use caching
@@ -309,7 +309,7 @@ data = {
     'lead_id': range(1, 101),
     'score': [70 + (i % 30) for i in range(100)],
     'temperature': ['hot', 'warm', 'cold'] * 34,
-    'sector': ['Austin', 'Dallas'] * 50,
+    'sector': ['Rancho Cucamonga', 'Dallas'] * 50,
     'value': [250000 + (i * 1000) for i in range(100)]
 }
 df = pd.DataFrame(data)
@@ -400,7 +400,7 @@ st.write(f"Tags count: {len(lead_data['tags'])}")
         assert not at.exception
         # Verify cached data structure
         assert any("Lead name: SARAH MARTINEZ" in str(w.body) for w in at.text)
-        assert any("Sector: AUSTIN" in str(w.body) for w in at.text)
+        assert any("Sector: RANCHO CUCAMONGA" in str(w.body) for w in at.text)
         assert any("Temperature: hot" in str(w.body) for w in at.text)
 
 
@@ -510,8 +510,6 @@ class TestPerformanceBenchmarks:
         test_script = """
 import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.components.performance_optimizations import PerformanceOptimizer
-
-@pytest.mark.integration
 
 # Create optimizer and simulate cache operations
 perf = PerformanceOptimizer()

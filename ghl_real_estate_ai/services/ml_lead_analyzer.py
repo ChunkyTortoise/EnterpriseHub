@@ -485,7 +485,7 @@ class MLEnhancedLeadAnalyzer(EnhancedLeadIntelligence):
         except Exception as e:
             logger.error(f"ML tier analysis failed for {lead_name}: {e}")
             # Fallback to Claude analysis on ML error
-            total_time_ms = (datetime.now() - start_time).total_seconds() * 1000
+            (datetime.now() - start_time).total_seconds() * 1000
             logger.info(f"Falling back to Claude analysis due to ML error")
             return await super().get_comprehensive_lead_analysis(
                 lead_name=lead_name, lead_context=lead_context, force_refresh=True

@@ -162,8 +162,8 @@ class EnhancedPredictiveAnalytics:
         self.feature_processors: Dict[str, Any] = {}
         self.model_metadata: Dict[str, Dict] = {}
 
-        # Austin market configuration
-        self.austin_config = self._initialize_austin_config()
+        # Rancho Cucamonga market configuration
+        self.rancho_cucamonga_config = self._initialize_rancho_cucamonga_config()
 
         # Model performance tracking
         self.performance_metrics: Dict[str, Dict] = {}
@@ -510,14 +510,14 @@ class EnhancedPredictiveAnalytics:
             logger.error(f"Investment analysis failed: {str(e)}", exc_info=True)
             return self._create_fallback_investment_analysis(property_data)
 
-    def _initialize_austin_config(self) -> Dict[str, Any]:
-        """Initialize Austin market-specific configuration"""
+    def _initialize_rancho_cucamonga_config(self) -> Dict[str, Any]:
+        """Initialize Rancho Cucamonga market-specific configuration"""
         return {
             "neighborhoods": {
-                "luxury": ["west_lake_hills", "tarrytown", "rollingwood"],
-                "emerging": ["mueller", "east_austin", "riverside"],
+                "luxury": ["alta_loma", "north rancho", "deer creek"],
+                "emerging": ["haven city", "east_rancho_cucamonga", "riverside"],
                 "family": ["cedar_park", "round_rock", "pflugerville"],
-                "urban": ["downtown", "soco", "rainey_street"],
+                "urban": ["downtown", "day creek", "rainey_street"],
             },
             "market_factors": {
                 "tech_job_correlation": 0.85,
@@ -560,7 +560,7 @@ class EnhancedPredictiveAnalytics:
             property_data.get("bathrooms", 2),
             property_data.get("year_built", 1990),
             property_data.get("lot_size", 0.25),
-            hash(property_data.get("zip_code", "78704")) % 100,  # Encoded location
+            hash(property_data.get("zip_code", "91730")) % 100,  # Encoded location
             property_data.get("school_rating", 7),
             property_data.get("walkability_score", 50),
         ]
@@ -570,7 +570,7 @@ class EnhancedPredictiveAnalytics:
     async def _predict_value_for_horizon(self, features: np.ndarray, horizon: str) -> Dict[str, Any]:
         """Predict property value for specific time horizon"""
         # Simulate prediction logic
-        base_value = 500000  # Default Austin property value
+        base_value = 500000  # Default Rancho Cucamonga property value
 
         # Apply feature-based adjustments
         if features.size > 0:
@@ -771,12 +771,12 @@ if __name__ == "__main__":
 
         # Test property value prediction
         property_data = {
-            "property_id": "austin_12345",
+            "property_id": "rancho_cucamonga_12345",
             "sqft": 2200,
             "bedrooms": 4,
             "bathrooms": 3,
             "year_built": 2005,
-            "zip_code": "78704",
+            "zip_code": "91730",
             "current_value": 650000,
         }
 

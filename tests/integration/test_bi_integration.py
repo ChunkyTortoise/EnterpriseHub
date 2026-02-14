@@ -37,8 +37,6 @@ from ghl_real_estate_ai.services.bi_cache_service import get_bi_cache_service
 from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_processor
 from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
 
-@pytest.mark.integration
-
 
 class TestBIIntegration:
     """Test suite for BI backend integration."""
@@ -376,8 +374,8 @@ class TestBIIntegration:
             avg_time_per_message = total_time / message_count
             assert avg_time_per_message < 0.010  # <10ms per message
 
-            # Verify all messages were sent
-            assert mock_websocket.send_text.call_count == message_count
+            # Verify all messages were sent (including initial welcome message)
+            assert mock_websocket.send_text.call_count == message_count + 1
 
         finally:
             await websocket_manager.disconnect_bi_client(connection_id)

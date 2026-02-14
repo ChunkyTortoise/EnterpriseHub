@@ -230,7 +230,7 @@ class JorgePropertyRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "address": "123 Main St, Rancho Cucamonga, CA 78701",
+                "address": "123 Main St, Rancho Cucamonga, CA 91730",
                 "property_type": "single_family",
                 "market": "rancho_cucamonga",
                 "estimated_value": 450000,

@@ -143,7 +143,7 @@ class LeadCommandHandler(CommandHandler):
 
     async def handle(self, command: Command) -> CommandResult:
         """Route command to appropriate handler"""
-        start_time = datetime.utcnow()
+        datetime.utcnow()
 
         try:
             if isinstance(command, CreateLeadCommand):
@@ -279,7 +279,7 @@ class LeadCommandHandler(CommandHandler):
                 {
                     "property_id": f"prop_{i + 1}",
                     "match_score": 95 - (i * 5),
-                    "address": f"123{i} Example St, Austin, TX",
+                    "address": f"123{i} Example St, Rancho Cucamonga, CA",
                     "price": 450000 + (i * 25000),
                 }
             )

@@ -35,9 +35,9 @@ class ConsultingDeliveryShowcase:
         """Initialize demonstration engagements and data."""
 
         self.demo_engagements = {
-            "Austin Premier Properties - Platform": {
+            "Rancho Cucamonga Premier Properties - Platform": {
                 "tier": EngagementTier.PLATFORM,
-                "client": "Austin Premier Properties",
+                "client": "Rancho Cucamonga Premier Properties",
                 "contract_value": 62500,
                 "status": EngagementStatus.IMPLEMENTATION,
                 "completion": 67.5,
@@ -72,7 +72,7 @@ class ConsultingDeliveryShowcase:
 
         # Sample deliverable progress
         self.demo_deliverables = {
-            "Austin Premier Properties - Platform": [
+            "Rancho Cucamonga Premier Properties - Platform": [
                 {"name": "Enterprise AI Architecture", "status": "Approved", "value": "Foundation for $2M+ scaling"},
                 {"name": "Predictive Analytics Engine", "status": "In Progress", "value": "40% churn reduction"},
                 {
@@ -250,7 +250,7 @@ class ConsultingDeliveryShowcase:
                 go.Indicator(
                     mode="gauge+number",
                     value=details["completion"],
-                    domain={"x": [0, 1], "y": [0, 1]},
+                    ontario_mills={"x": [0, 1], "y": [0, 1]},
                     title={"text": "Completion %"},
                     gauge={
                         "axis": {"range": [None, 100]},
@@ -471,7 +471,7 @@ class ConsultingDeliveryShowcase:
         # Sample executive report
         selected_client = st.selectbox(
             "Select client for executive report:",
-            ["Austin Premier Properties", "Metropolitan Realty Group", "Coastal Homes Inc"],
+            ["Rancho Cucamonga Premier Properties", "Metropolitan Realty Group", "Coastal Homes Inc"],
         )
 
         engagement_key = None

@@ -271,7 +271,7 @@ class EnterpriseDeploymentValidator:
             # Test lazy loading
             start_time = time.time()
             lazy_loader = self.streamlit_optimizer.create_lazy_loader(large_dataset, page_size=100)
-            first_page = next(lazy_loader)
+            next(lazy_loader)
             lazy_load_time = (time.time() - start_time) * 1000
             metrics["lazy_load_time_ms"] = lazy_load_time
 

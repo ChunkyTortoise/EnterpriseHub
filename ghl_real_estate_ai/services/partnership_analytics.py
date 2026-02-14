@@ -252,7 +252,7 @@ class PartnershipAnalyticsService:
 
             # Get partnership contract details
             partnership_data = await self.partnership_service.get_partnership(partnership_id)
-            contract_data = await self._get_partnership_contract_data(partnership_id)
+            await self._get_partnership_contract_data(partnership_id)
 
             # Calculate direct revenue attribution
             direct_revenue = await self._calculate_direct_revenue_attribution(
@@ -834,7 +834,7 @@ class PartnershipAnalyticsService:
             "relocation_id": relocation_id,
             "partnership_id": partnership_id,
             "employee_email": "employee@company.com",
-            "destination_city": "Austin",
+            "destination_city": "Rancho Cucamonga",
             "destination_state": "TX",
             "housing_budget": Decimal("3500.00"),
             "start_date": datetime.now(timezone.utc) - timedelta(days=30),

@@ -44,8 +44,8 @@ def render_listing_architect():
         st.markdown("#### 🏗️ PROPERTY DNA")
 
         with st.container(border=True):
-            address = st.text_input("Address", "1234 Oak Hill Drive, Austin, TX 78704")
-            zip_code = st.text_input("ZIP Code", "78704")
+            address = st.text_input("Address", "1234 Oak Hill Drive, Rancho Cucamonga, CA 91730")
+            zip_code = st.text_input("ZIP Code", "91730")
             price = st.number_input("Listing Price ($)", value=815000)
 
             style = st.selectbox(
@@ -122,7 +122,7 @@ def render_listing_architect():
 
             with tab_fb:
                 # Generate a social ad variation
-                fb_copy = f"🔥 JUST LISTED in {results[0].get('neighborhood', 'Austin')}!\n\nStop scrolling. This is the one. 🥂\n"
+                fb_copy = f"🔥 JUST LISTED in {results[0].get('neighborhood', 'Rancho Cucamonga')}!\n\nStop scrolling. This is the one. 🥂\n"
                 for f in features[:2]:
                     fb_copy += f"✨ {f}\n"
                 fb_copy += f"\nIdeal for {target_audience.lower()}!\n\n📍 {address}\n💰 ${price:,}\n\nDM for a private VIP tour before it hits Zillow! 📩"

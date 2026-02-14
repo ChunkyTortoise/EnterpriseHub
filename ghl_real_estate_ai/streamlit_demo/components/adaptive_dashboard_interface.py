@@ -102,7 +102,7 @@ class AdaptiveDashboardInterface:
             "priority_suggestion": "Focus on hot leads - you have 3 requiring immediate attention",
             "time_recommendation": f"Best time for outreach based on historical data: {context.time_of_day}",
             "efficiency_tip": "Consider batching similar activities to improve productivity",
-            "market_alert": "Downtown Austin showing increased activity - consider prioritizing leads in this area",
+            "market_alert": "Downtown Rancho Cucamonga showing increased activity - consider prioritizing leads in this area",
             "personal_insight": f"You've been most successful with {context.focus_areas[0] if context.focus_areas else 'lead qualification'} today",
         }
         return insights

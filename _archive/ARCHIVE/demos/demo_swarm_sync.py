@@ -23,7 +23,7 @@ async def run_demo():
         "name": "Sarah Jenkins",
         "phone": "+15125550199",
         "email": "sarah.j@example.com",
-        "interest": "Austin Luxury Condos"
+        "interest": "Rancho Cucamonga Luxury Condos"
     }
     
     # 1. Trigger the swarm (this will start recording thoughts)
@@ -41,7 +41,7 @@ async def run_demo():
     sync_service.record_agent_thought("LeadScorer", "Sarah Jenkins' behavior indicates 92% purchase probability.", "Success")
     
     await asyncio.sleep(2)
-    sync_service.record_agent_thought("MarketBot", "Inventory in Austin zip 78701 is decreasing. Increasing urgency in Sarah's follow-up.", "Warning")
+    sync_service.record_agent_thought("MarketBot", "Inventory in Rancho Cucamonga zip 78701 is decreasing. Increasing urgency in Sarah's follow-up.", "Warning")
     
     print("\n✅ Demo sequence complete. Check your dashboard at http://localhost:3000/dashboard")
 

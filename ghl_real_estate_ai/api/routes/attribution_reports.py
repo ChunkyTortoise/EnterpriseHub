@@ -14,21 +14,25 @@ Key Features:
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics, AttributionModel
-from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
+from ghl_real_estate_ai.services.attribution_analytics import (
+    AttributionAnalytics,
+    AttributionModel,
+    get_attribution_analytics,
+)
+from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker, get_lead_source_tracker
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/attribution", tags=["attribution"])
 
-# Initialize analytics services
-attribution_analytics = AttributionAnalytics()
-lead_source_tracker = LeadSourceTracker()
+# Annotated types for cleaner dependency injection
+AttributionAnalyticsDep = Annotated[AttributionAnalytics, Depends(get_attribution_analytics)]
+LeadSourceTrackerDep = Annotated[LeadSourceTracker, Depends(get_lead_source_tracker)]
 
 
 # Pydantic models for API responses
@@ -101,6 +105,7 @@ class TrendDataResponse(BaseModel):
 
 @router.get("/performance", response_model=List[SourcePerformanceResponse])
 async def get_source_performance(
+    lead_source_tracker: LeadSourceTrackerDep,
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     source: Optional[str] = Query(None, description="Specific source to filter"),
@@ -179,6 +184,7 @@ async def get_source_performance(
 
 @router.get("/report", response_model=AttributionReportResponse)
 async def generate_attribution_report(
+    attribution_analytics: AttributionAnalyticsDep,
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     attribution_model: str = Query("last_touch", description="Attribution model"),
@@ -281,7 +287,10 @@ async def generate_attribution_report(
 
 
 @router.get("/weekly-summary", response_model=WeeklySummaryResponse)
-async def get_weekly_summary(location_id: Optional[str] = Query(None, description="Location ID filter")):
+async def get_weekly_summary(
+    attribution_analytics: AttributionAnalyticsDep,
+    location_id: Optional[str] = Query(None, description="Location ID filter"),
+):
     """
     Get weekly performance summary for Jorge's dashboard.
 
@@ -307,7 +316,7 @@ async def get_weekly_summary(location_id: Optional[str] = Query(None, descriptio
 
 
 @router.get("/trends", response_model=TrendDataResponse)
-async def get_monthly_trends():
+async def get_monthly_trends(attribution_analytics: AttributionAnalyticsDep):
     """
     Get monthly trend analysis for dashboard charts.
 
@@ -334,6 +343,8 @@ async def get_monthly_trends():
 
 @router.get("/alerts", response_model=List[AlertResponse])
 async def get_active_alerts(
+    attribution_analytics: AttributionAnalyticsDep,
+    lead_source_tracker: LeadSourceTrackerDep,
     severity: Optional[str] = Query(None, description="Filter by severity: low, medium, high, critical"),
     source: Optional[str] = Query(None, description="Filter by source"),
     limit: int = Query(20, description="Maximum alerts to return"),
@@ -399,7 +410,7 @@ async def get_active_alerts(
 
 
 @router.get("/recommendations")
-async def get_optimization_recommendations():
+async def get_optimization_recommendations(lead_source_tracker: LeadSourceTrackerDep):
     """
     Get optimization recommendations for Jorge's marketing strategy.
 
@@ -455,7 +466,12 @@ async def get_available_sources():
 
 
 @router.post("/track-event")
-async def track_attribution_event(source: str, event_type: str, metadata: Optional[Dict[str, Any]] = None):
+async def track_attribution_event(
+    lead_source_tracker: LeadSourceTrackerDep,
+    source: str,
+    event_type: str,
+    metadata: Optional[Dict[str, Any]] = None,
+):
     """
     Track attribution event for external system integration.
 
@@ -488,6 +504,7 @@ async def track_attribution_event(source: str, event_type: str, metadata: Option
 
 @router.get("/export/csv")
 async def export_performance_csv(
+    lead_source_tracker: LeadSourceTrackerDep,
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     sources: Optional[str] = Query(None, description="Comma-separated source list"),

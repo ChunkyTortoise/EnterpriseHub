@@ -100,7 +100,7 @@ When a lead reaches **Hot** status (70+ score):
 AI: Hey! Quick question - what's your budget range looking like?
 Lead: Around $400k
 AI: Got it. Which neighborhoods are you eyeing?
-Lead: Hyde Park area
+Lead: Alta Loma area
 AI: Perfect. How many bedrooms do you need?
 Lead: 3 bedrooms minimum
 ```

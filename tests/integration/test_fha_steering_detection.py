@@ -12,8 +12,6 @@ import pytest
 
 from ghl_real_estate_ai.agent_system.compliance_loop import run_guarded_generation
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_fha_steering_detection_safety():

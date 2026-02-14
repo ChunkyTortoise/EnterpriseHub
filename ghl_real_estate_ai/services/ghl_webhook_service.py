@@ -476,7 +476,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
 
     # 4. Investor "Prime Arbitrage" Pitch
     if "investor" in str(tags).lower() or "investor" in str(custom_fields.get("motivation")).lower():
-        market_area = custom_fields.get("region", "austin").lower()
+        market_area = custom_fields.get("region", "rancho_cucamonga").lower()
         opportunities = await market_engine.identify_investment_opportunities(
             client_budget=float(custom_fields.get("budget", 500000)),
             risk_tolerance="medium",

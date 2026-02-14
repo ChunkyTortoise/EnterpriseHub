@@ -853,7 +853,7 @@ class RealTimeValueDashboard:
 
 
 def render_real_time_value_dashboard(
-    agent_id: str = "jorge_sales_austin", client_id: Optional[str] = None, transaction_id: Optional[str] = None
+    agent_id: str = "jorge_sales_rancho_cucamonga", client_id: Optional[str] = None, transaction_id: Optional[str] = None
 ) -> None:
     """
     Render the real-time value dashboard
@@ -875,7 +875,7 @@ def render_value_dashboard_demo() -> None:
     # Demo configuration
     st.sidebar.markdown("### 🎛️ Demo Configuration")
 
-    agent_id = st.sidebar.selectbox("Agent", ["jorge_sales_austin", "agent_002", "agent_003"], index=0)
+    agent_id = st.sidebar.selectbox("Agent", ["jorge_sales_rancho_cucamonga", "agent_002", "agent_003"], index=0)
 
     client_id = st.sidebar.selectbox("Client View", [None, "client_smith", "client_johnson", "client_davis"], index=0)
 

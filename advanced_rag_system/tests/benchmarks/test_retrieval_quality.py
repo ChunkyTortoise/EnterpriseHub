@@ -15,7 +15,6 @@ from typing import Dict
 import numpy as np
 import pytest
 
-@pytest.mark.integration
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -26,6 +25,8 @@ try:
     from ghl_real_estate_ai.core.rag_engine import SearchResult, VectorStore
 except ImportError:
     # Fallback mock classes for testing environment
+
+@pytest.mark.integration
     class SearchResult:
         def __init__(self, text: str, source: str, id: str, distance: float, metadata: Dict):
             self.text = text
@@ -157,8 +158,6 @@ class TestRetrievalQuality:
             },
         ]
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_recall_at_k(self, retriever, labeled_dataset):
         """
         Measure recall@k on labeled dataset.
@@ -213,8 +212,6 @@ class TestRetrievalQuality:
             "individual_scores": {"recall_at_5": recalls_at_5, "recall_at_10": recalls_at_10},
         }
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_ndcg_at_k(self, retriever, ranked_dataset):
         """
         Measure NDCG@k on ranked dataset.
@@ -270,8 +267,6 @@ class TestRetrievalQuality:
 
         return {"ndcg_at_10": mean_ndcg, "ndcg_stretch_met": ndcg_stretch_met, "individual_scores": ndcg_scores}
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_precision_at_k(self, retriever, labeled_dataset):
         """
         Measure precision@k on labeled dataset.
@@ -308,8 +303,6 @@ class TestRetrievalQuality:
 
         return {"precision_at_5": mean_precision_5, "precision_at_10": mean_precision_10}
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_f1_score(self, retriever, labeled_dataset):
         """
         Calculate F1 score (harmonic mean of precision and recall).
@@ -358,8 +351,6 @@ class TestRetrievalQuality:
 
         return {"f1_at_5": mean_f1_5, "f1_at_10": mean_f1_10}
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_retrieval_diversity(self, retriever):
         """
         Measure diversity of retrieved results.

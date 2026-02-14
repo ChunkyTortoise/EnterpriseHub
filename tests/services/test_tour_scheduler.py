@@ -9,7 +9,6 @@ import pytest
 
 from ghl_real_estate_ai.services.tour_scheduler import (
 
-@pytest.mark.integration
     BookingResult,
     TimeSlot,
     Tour,

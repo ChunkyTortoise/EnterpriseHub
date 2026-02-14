@@ -6,7 +6,7 @@ I’ve just completed a significant architectural hardening session for the Lyri
 
 **The following upgrades are now PRODUCTION LIVE:**
 
-1.  **$2.4M Pipeline Visualization:** Your Executive Hub now tracks active pipeline value directly linked to your high-value Austin tech corridor personas.
+1.  **$2.4M Pipeline Visualization:** Your Executive Hub now tracks active pipeline value directly linked to your high-value Rancho Cucamonga tech corridor personas.
 2.  **Architectural Buyer Portal (Phase 3):** Your leads now have a high-authority, mobile-responsive environment to manage their search. I’ve integrated a **Tinder-style Property Swipe UI** that makes property discovery addictive for your clients.
 3.  **Real-Time Behavioral Telemetry:** I’ve integrated a telemetry layer so you can see lead activity (views/saves) in real-time. You’ll know exactly when a lead is "ready to buy" based on their portal behavior.
 4.  **Agentic Match reasoning:** I’ve injected Claude-powered reasoning into the property search logic. Every match now includes a strategic "Architect’s Note" explaining the financial ROI for that specific lead.

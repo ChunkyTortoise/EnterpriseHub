@@ -25,7 +25,46 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
+
+
+class PropertyMatchSummary(TypedDict, total=False):
+    """TypedDict for property match summary in handoff context."""
+    property_id: str
+    address: str
+    price: float
+    match_score: float
+    key_features: List[str]
+
+
+class ObjectionSummary(TypedDict, total=False):
+    """TypedDict for objection summary in handoff context."""
+    objection_type: str
+    description: str
+    resolved: bool
+    resolution_notes: Optional[str]
+
+
+class ResponseRecommendationSummary(TypedDict, total=False):
+    """TypedDict for response recommendation summary."""
+    recommendation_type: str
+    suggested_response: str
+    context: str
+
+
+class QualificationScoreDetail(TypedDict, total=False):
+    """TypedDict for qualification score details."""
+    category: str
+    score: float
+    max_score: float
+    notes: Optional[str]
+
+
+class ReadinessIndicatorDetail(TypedDict, total=False):
+    """TypedDict for readiness indicator details."""
+    indicator: str
+    value: bool
+    confidence: float
 
 
 class BotType(str, Enum):
@@ -71,7 +110,7 @@ class PreservedIntelligence:
     """
 
     # Property intelligence (top matches only)
-    top_property_matches: List[Dict[str, Any]] = field(default_factory=list)
+    top_property_matches: List[PropertyMatchSummary] = field(default_factory=list)
     best_match_score: float = 0.0
     property_presentation_strategy: Optional[str] = None
 
@@ -79,11 +118,10 @@ class PreservedIntelligence:
     conversation_quality_score: float = 50.0
     overall_sentiment: float = 0.0
     sentiment_trend: str = "stable"
-    key_objections_detected: List[Dict[str, Any]] = field(default_factory=list)
-    resolved_objections: List[Dict[str, Any]] = field(default_factory=list)
-    pending_objections: List[Dict[str, Any]] = field(default_factory=list)
-    response_recommendations: List[Dict[str, Any]] = field(default_factory=list)
-
+    key_objections_detected: List[ObjectionSummary] = field(default_factory=list)
+    resolved_objections: List[ObjectionSummary] = field(default_factory=list)
+    pending_objections: List[ObjectionSummary] = field(default_factory=list)
+    response_recommendations: List[ResponseRecommendationSummary] = field(default_factory=list)
     # Preference intelligence (core preferences)
     budget_range: Optional[Dict[str, float]] = None
     location_preferences: Dict[str, float] = field(default_factory=dict)

@@ -24,7 +24,7 @@ async def run_the_gauntlet_test():
         
         GAUNTLET PROTOCOLS:
         1. ROI DEFENSE: Use hard market data to justify valuations against skeptic pushback.
-        2. ARBITRAGE: Pitch yield spreads and pivot opportunities between London, Singapore, and Austin.
+        2. ARBITRAGE: Pitch yield spreads and pivot opportunities between London, Singapore, and Rancho Cucamonga.
         3. COMPLIANCE: Strict GDPR and PDPA adherence. Mention secure processing if questioned.
         4. TECHNICAL: Reference swap rates, cap rates, and net exit metrics.
         """

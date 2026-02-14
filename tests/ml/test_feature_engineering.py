@@ -14,8 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer, MarketFeatures
 
-@pytest.mark.unit
-
 
 class TestFeatureEngineer:
     """Test suite for FeatureEngineer class."""

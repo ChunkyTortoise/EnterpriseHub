@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.services.document_orchestration_engine import (
 
-@pytest.mark.integration
     DeliveryChannel,
     DocumentOrchestrationEngine,
     DocumentRequest,
@@ -158,7 +157,7 @@ class TestDocumentOrchestrationEngine:
 
         transaction_data = {
             "loan_amount": 350000,
-            "property_address": "123 Main St, Austin, TX",
+            "property_address": "123 Main St, Rancho Cucamonga, CA",
         }
 
         request_ids = await engine.initiate_document_collection(
@@ -183,7 +182,7 @@ class TestDocumentOrchestrationEngine:
 
         transaction_data = {
             "loan_amount": 0,  # Cash purchase
-            "property_address": "456 Oak St, Austin, TX",
+            "property_address": "456 Oak St, Rancho Cucamonga, CA",
         }
 
         request_ids = await engine.initiate_document_collection(
@@ -309,7 +308,7 @@ class TestDocumentOrchestrationEngine:
         engine.document_templates["tmpl_closing"] = template
 
         variables = {
-            "address": "456 Oak Street, Austin, TX",
+            "address": "456 Oak Street, Rancho Cucamonga, CA",
             "sale_price": 425000,
         }
 

@@ -98,18 +98,18 @@ if 'current_hub' in st.session_state:
 
 **Before:**
 ```python
-selected_market = st.selectbox("Select Market:", ["Austin, TX", "Rancho Cucamonga, CA"])
+selected_market = st.selectbox("Select Market:", ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"])
 ```
 
 **After:**
 ```python
 if 'selected_market' not in st.session_state:
-    st.session_state.selected_market = "Austin, TX"
+    st.session_state.selected_market = "Rancho Cucamonga, CA"
 
 selected_market = st.selectbox(
     "Select Market:", 
-    ["Austin, TX", "Rancho Cucamonga, CA"],
-    index=["Austin, TX", "Rancho Cucamonga, CA"].index(st.session_state.selected_market),
+    ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"],
+    index=["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"].index(st.session_state.selected_market),
     key="market_selector"
 )
 st.session_state.selected_market = selected_market

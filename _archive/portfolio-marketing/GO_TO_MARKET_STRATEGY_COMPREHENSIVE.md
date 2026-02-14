@@ -886,7 +886,7 @@ BRAND/RELATIONSHIP COMPETITION:
 PHASE 1: PRIMARY MARKETS (Months 1-6)
 - San Francisco Bay Area
 - New York Metropolitan Area
-- Austin/Dallas Texas
+- Rancho Cucamonga/Dallas Texas
 - Target: 60% of client acquisition
 
 PHASE 2: SECONDARY MARKETS (Months 7-12)

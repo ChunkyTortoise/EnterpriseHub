@@ -153,7 +153,7 @@ class PredictiveLeadScorerV2:
             logger.debug(f"Applied dynamic weights: {self.weights}")
 
     async def calculate_predictive_score(
-        self, conversation_context: List[Dict[str, str]], location: str = "austin"
+        self, conversation_context: List[Dict[str, str]], location: str = "rancho_cucamonga"
     ) -> "PredictiveScore":
         """
         Calculate comprehensive predictive score for a lead.
@@ -223,7 +223,7 @@ class PredictiveLeadScorerV2:
 
             # 3. Extract conversation features for detailed analysis
             conv_features = await self.feature_engineer.extract_conversation_features(conversation_context)
-            market_features = await self.feature_engineer.extract_market_features(location)
+            await self.feature_engineer.extract_market_features(location)
 
             # 4. Calculate engagement score
             engagement_score = await self._calculate_engagement_score(conv_features)

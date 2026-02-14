@@ -4,8 +4,6 @@ import pytest
 
 from ghl_real_estate_ai.utils.pii_redactor import PIIRedactor
 
-@pytest.mark.unit
-
 
 class TestPIIRedactor:
     """Tests for the PIIRedactor class."""
@@ -25,11 +23,11 @@ class TestPIIRedactor:
         assert PIIRedactor.redact_phone("Call me at 555.123.4567") == "Call me at ***-***-4567"
 
     def test_redact_email(self):
-        """Standard and subdomain email addresses are redacted."""
+        """Standard and subontario_mills email addresses are redacted."""
         # Standard email
         assert PIIRedactor.redact_email("Email jane.doe@example.com") == "Email j***@***.com"
 
-        # Subdomain email
+        # Subontario_mills email
         assert PIIRedactor.redact_email("Contact admin@mail.corp.org") == "Contact a***@***.org"
 
         # Short local part

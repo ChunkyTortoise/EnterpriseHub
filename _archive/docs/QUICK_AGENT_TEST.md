@@ -4,7 +4,7 @@
 ```
 Agent & skill testing for EnterpriseHub. All MCP tools ready. Goal: Deploy specialized real estate agents and test Jorge's GHL integration.
 
-Quick tests: Market Intelligence Agent → Austin properties, Lead Analysis → Jorge's data, Agent swarm coordination.
+Quick tests: Market Intelligence Agent → Rancho Cucamonga properties, Lead Analysis → Jorge's data, Agent swarm coordination.
 ```
 
 ## ⚡ 60-Second Agent Status Check
@@ -29,7 +29,7 @@ mcp__postgres__query sql="SELECT 'Agents ready!' as status, now() as timestamp;"
 
 ### **1. Market Intelligence Agent**
 ```
-Task subagent_type="market-intelligence-specialist" "Find 3 Austin luxury properties under $700k in West Lake Hills with highest appreciation potential"
+Task subagent_type="market-intelligence-specialist" "Find 3 Rancho Cucamonga luxury properties under $700k in West Lake Hills with highest appreciation potential"
 ```
 **Expected**: Property analysis with price predictions and investment insights.
 
@@ -48,7 +48,7 @@ Task subagent_type="performance-optimizer" "Analyze current EnterpriseHub system
 ## 🔥 Power Test: Agent Swarm (3 minutes)
 
 ```
-Task subagent_type="market-intelligence-specialist" "Analyze Austin market for luxury buyers with $500k-1M budget"
+Task subagent_type="market-intelligence-specialist" "Analyze Rancho Cucamonga market for luxury buyers with $500k-1M budget"
 Task subagent_type="general-purpose" "Query Jorge's GHL for leads matching luxury buyer profile and generate personalized outreach strategies using Sequential Thinking"
 ```
 
@@ -58,7 +58,7 @@ Task subagent_type="general-purpose" "Query Jorge's GHL for leads matching luxur
 
 - ✅ Agents deploy without errors
 - ✅ Jorge's GHL data accessible
-- ✅ Austin property data retrieved
+- ✅ Rancho Cucamonga property data retrieved
 - ✅ AI reasoning generates insights
 - ✅ Parallel agent coordination works
 - ✅ Skills integrate with MCP tools
@@ -79,7 +79,7 @@ Once working:
 - Lead qualification optimization ✅
 - Multi-agent task coordination ✅
 - Jorge's CRM integration ✅
-- Austin property analysis ✅
+- Rancho Cucamonga property analysis ✅
 
 ---
 

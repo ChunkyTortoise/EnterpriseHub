@@ -17,6 +17,7 @@ import asyncio
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -718,7 +719,7 @@ class EventPublisher:
         if context_transfer is None:
             context_transfer = {}
 
-        event = RealTimeEvent(
+        RealTimeEvent(
             event_type=EventType.BOT_HANDOFF_REQUEST,
             data={
                 "handoff_id": handoff_id,
@@ -2630,16 +2631,10 @@ class EventPublisher:
             return "F (Failed)"
 
 
-# Global event publisher instance
-_event_publisher = None
-
-
+@lru_cache(maxsize=1)
 def get_event_publisher() -> EventPublisher:
     """Get singleton event publisher instance."""
-    global _event_publisher
-    if _event_publisher is None:
-        _event_publisher = EventPublisher()
-    return _event_publisher
+    return EventPublisher()
 
 
 # Convenience functions for common event publishing

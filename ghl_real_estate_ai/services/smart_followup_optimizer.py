@@ -303,7 +303,7 @@ class SmartFollowUpOptimizer:
         - Name: {lead_data.get("name", "Valued Client")}
         - Budget: ${lead_data.get("budget", 0):,.0f}
         - Property Type: {lead_data.get("property_type", "N/A")}
-        - Location: {lead_data.get("location", "Austin, TX")}
+        - Location: {lead_data.get("location", "Rancho Cucamonga, CA")}
         - Timeline: {lead_data.get("timeline", "Not specified")}
 
         Goal: {goal}
@@ -326,7 +326,7 @@ class SmartFollowUpOptimizer:
         """
 
         try:
-            ai_content = await self.claude_assistant.chat_with_claude(
+            await self.claude_assistant.chat_with_claude(
                 message=content_prompt,
                 conversation_id=f"followup_content_{lead_id}",
                 system_prompt="You are an expert real estate follow-up specialist creating conversion-optimized sequences.",
@@ -503,7 +503,7 @@ class SmartFollowUpOptimizer:
         """Generate personalized follow-up content."""
 
         name = lead_data.get("name", "there")
-        location = lead_data.get("location", "Austin")
+        location = lead_data.get("location", "Rancho Cucamonga")
         property_type = lead_data.get("property_type", "home")
 
         content_templates = [
@@ -529,7 +529,7 @@ class SmartFollowUpOptimizer:
     def _generate_subject_line(self, sequence_number: int, lead_data: PersonalizationData) -> str:
         """Generate engaging subject lines."""
 
-        location = lead_data.get("location", "Austin")
+        location = lead_data.get("location", "Rancho Cucamonga")
         property_type = lead_data.get("property_type", "Home")
 
         subject_templates = [
@@ -677,7 +677,7 @@ class SmartFollowUpOptimizer:
                 channel=FollowUpChannel.EMAIL,
                 scheduled_time=scheduled_time,
                 content=f"Follow-up message #{i + 1} for lead {lead_id}",
-                subject_line=f"Your {lead_data.get('location', 'Austin')} Home Search",
+                subject_line=f"Your {lead_data.get('location', 'Rancho Cucamonga')} Home Search",
                 priority=5,
                 personalization_data=lead_data,
                 expected_response_rate=0.25,

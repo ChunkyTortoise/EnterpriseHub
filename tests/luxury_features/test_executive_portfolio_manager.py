@@ -71,7 +71,7 @@ def luxury_property():
     """Sample luxury property for testing"""
     return PortfolioProperty(
         property_id="LUXURY-001",
-        address="123 West Lake Hills Estate",
+        address="123 Alta Loma Estate",
         property_type=PropertyType.ESTATE,
         purchase_date=datetime.now() - timedelta(days=730),
         purchase_price=3_500_000,
@@ -80,8 +80,8 @@ def luxury_property():
         lot_size=2.5,
         bedrooms=6,
         bathrooms=5.5,
-        neighborhood="West Lake Hills",
-        zip_code="78746",
+        neighborhood="Alta Loma",
+        zip_code="91746",
         investment_metrics=PropertyInvestmentMetrics(
             cap_rate=0.065,
             cash_on_cash_return=0.082,
@@ -178,7 +178,7 @@ class TestPortfolioAnalysis:
                 zip_code=zip_code,
             )
             for i, (neighborhood, zip_code) in enumerate(
-                [("West Lake Hills", "78746"), ("Tarrytown", "78733"), ("Zilker", "78704"), ("Hyde Park", "78751")]
+                [("Alta Loma", "91746"), ("North Rancho", "91733"), ("Victoria Gardens", "91704"), ("Etiwanda", "91751")]
             )
         ]
 
@@ -199,8 +199,8 @@ class TestPortfolioAnalysis:
                 lot_size=0.0,
                 bedrooms=3,
                 bathrooms=2.5,
-                neighborhood="West Lake Hills",
-                zip_code="78746",
+                neighborhood="Alta Loma",
+                zip_code="91746",
             )
             for i in range(3)
         ]
@@ -223,8 +223,8 @@ class TestPortfolioAnalysis:
                 lot_size=1.0,
                 bedrooms=3,
                 bathrooms=2.5,
-                neighborhood="West Lake Hills",
-                zip_code="78746",
+                neighborhood="Alta Loma",
+                zip_code="91746",
             )
             for i, prop_type in enumerate(
                 [
@@ -308,8 +308,8 @@ class TestTaxOptimization:
                 lot_size=1.0,
                 bedrooms=4,
                 bathrooms=3.0,
-                neighborhood="Austin",
-                zip_code="78704",
+                neighborhood="Rancho Cucamonga",
+                zip_code="91704",
             )
             for i in range(3)
         ]
@@ -336,8 +336,8 @@ class TestTaxOptimization:
                 lot_size=1.0,
                 bedrooms=4,
                 bathrooms=3.0,
-                neighborhood="Austin",
-                zip_code="78704",
+                neighborhood="Rancho Cucamonga",
+                zip_code="91704",
             )
         ]
 
@@ -531,8 +531,8 @@ class TestDataValidation:
                 lot_size=0.0,
                 bedrooms=3,
                 bathrooms=2.0,
-                neighborhood="Austin",
-                zip_code="78704",
+                neighborhood="Rancho Cucamonga",
+                zip_code="91704",
             )
         ]
 
@@ -600,7 +600,7 @@ class TestPerformance:
                 bedrooms=3 + (i % 3),
                 bathrooms=2.0 + (i % 2),
                 neighborhood="Test Neighborhood",
-                zip_code="78704",
+                zip_code="91704",
             )
             large_portfolio.append(property_data)
 

@@ -274,11 +274,11 @@ class ClientHealthScore:
 
 ### 5.2 Multi-Market Intelligence
 
-**Service**: `national_market_intelligence.py`, `austin_market_service.py`  
+**Service**: `national_market_intelligence.py`, `rancho_cucamonga_market_service.py`  
 **Purpose**: Geographic market intelligence and expansion support  
 
 #### Market Coverage
-- **Austin Market**: Deep local market intelligence
+- **Rancho Cucamonga Market**: Deep local market intelligence
 - **National Expansion**: Multi-market data aggregation and analysis
 - **Market Entry**: New market analysis and opportunity assessment
 - **Competitive Landscape**: Market-specific competitive intelligence

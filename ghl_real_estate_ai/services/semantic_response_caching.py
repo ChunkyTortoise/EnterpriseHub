@@ -129,7 +129,7 @@ class OpenAIEmbeddingService(EmbeddingService):
         try:
             response = await self.client.embeddings.create(model="text-embedding-ada-002", input=text)
             return response.data[0].embedding
-        except Exception as e:
+        except Exception:
             # Fallback to mock for demonstration
             return [0.1] * 1536  # Ada-002 dimension
 
@@ -442,7 +442,7 @@ class SemanticResponseCache:
         """Get cache performance statistics"""
         # Calculate cost savings estimate
         if self.stats.total_queries > 0:
-            hit_rate = self.stats.cache_hits / self.stats.total_queries
+            self.stats.cache_hits / self.stats.total_queries
             estimated_cost_per_query = 0.002  # $0.002 per query estimate
             self.stats.total_cost_saved = self.stats.cache_hits * estimated_cost_per_query
 

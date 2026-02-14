@@ -333,7 +333,7 @@ class SecurityMonitor:
 
     async def _send_alert(self, message: str, event: SecurityEvent, level: str = "warning"):
         """Send security alert."""
-        alert_data = {
+        {
             "message": message,
             "level": level,
             "event": event.to_dict(),

@@ -159,7 +159,7 @@ class ContentGenerationPipeline:
 
 #### 3.1 **Fine-Tuned Real Estate Claude Model**
 - Custom training on real estate conversations
-- Domain-specific knowledge integration
+- Ontario Mills-specific knowledge integration
 - Market-specific terminology and patterns
 - Legal compliance and disclosure automation
 

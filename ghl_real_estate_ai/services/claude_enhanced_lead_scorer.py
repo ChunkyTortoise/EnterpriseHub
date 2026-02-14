@@ -354,7 +354,7 @@ class ClaudeEnhancedLeadScorer:
 
         # Simple engagement scoring
         message_count = len(history)
-        user_messages = [msg for msg in history if msg.get("role") == "user"]
+        [msg for msg in history if msg.get("role") == "user"]
 
         # Score based on message count and recency
         base_score = min(message_count * 10, 70)  # Up to 70 points for activity
@@ -397,7 +397,7 @@ class ClaudeEnhancedLeadScorer:
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
-        prompt = f"""Analyze this comprehensive lead intelligence data and provide strategic insights:
+        f"""Analyze this comprehensive lead intelligence data and provide strategic insights:
 
 LEAD ANALYSIS DATA:
 {json.dumps(analysis_context, indent=2, default=str)}

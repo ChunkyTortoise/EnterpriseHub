@@ -20,7 +20,6 @@ from utils.agent_registry import ALL_AGENTS
 from utils.exceptions import InvalidTickerError
 from utils.orchestrator import (
 
-@pytest.mark.integration
     AgentRegistry,
     AgentStatus,
     Orchestrator,

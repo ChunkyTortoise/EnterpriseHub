@@ -40,7 +40,7 @@ def test_lead_intelligence_hub_loading():
 
     # Setup session state
     at.session_state.current_hub = "🧠 Lead Intelligence Hub"
-    at.session_state.selected_market = "Austin, TX"
+    at.session_state.selected_market = "Rancho Cucamonga, CA"
 
     at.run(timeout=30)
 

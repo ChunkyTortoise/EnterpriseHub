@@ -3,7 +3,7 @@
 Rancho Cucamonga Market Integration Validation
 
 This script validates that Jorge bots have been successfully updated from
-Austin, TX to Rancho Cucamonga, CA market focus. Tests include:
+Rancho Cucamonga, CA to Rancho Cucamonga, CA market focus. Tests include:
 
 1. Configuration validation
 2. Market data verification
@@ -116,7 +116,7 @@ class RanchoMarketValidator:
             self._log_test("California Price Ranges", False, str(e))
 
     def _test_neighborhood_mapping(self):
-        """Test neighborhood mapping from Austin to Rancho Cucamonga"""
+        """Test neighborhood mapping from Rancho Cucamonga to Rancho Cucamonga"""
         print("🏘️ Testing Neighborhood Mapping...")
 
         expected_neighborhoods = [
@@ -208,15 +208,15 @@ class RanchoMarketValidator:
                 # Check for Rancho Cucamonga references
                 has_rancho = "rancho_cucamonga" in content.lower() or "rancho cucamonga" in content.lower()
 
-                # Check for absence of Austin references (with some exceptions)
-                austin_count = content.lower().count("austin")
-                # Allow some Austin references in comments/docs
-                austin_ok = austin_count <= 5
+                # Check for absence of Rancho Cucamonga references (with some exceptions)
+                rancho_cucamonga_count = content.lower().count("rancho_cucamonga")
+                # Allow some Rancho Cucamonga references in comments/docs
+                rancho_cucamonga_ok = rancho_cucamonga_count <= 5
 
-                if has_rancho and austin_ok:
+                if has_rancho and rancho_cucamonga_ok:
                     self._log_test(f"Transform: {file_path}", True, "Successfully updated to Rancho")
                 else:
-                    self._log_test(f"Transform: {file_path}", False, f"Rancho: {has_rancho}, Austin count: {austin_count}")
+                    self._log_test(f"Transform: {file_path}", False, f"Rancho: {has_rancho}, Rancho Cucamonga count: {rancho_cucamonga_count}")
 
             except Exception as e:
                 self._log_test(f"Transform: {file_path}", False, str(e))
@@ -263,10 +263,10 @@ class RanchoMarketValidator:
             status = "NEEDS_WORK"
 
         print(f"\n🏠 Market Transition Summary:")
-        print(f"   • Source: Austin, TX → Target: Rancho Cucamonga, CA")
+        print(f"   • Source: Rancho Cucamonga, CA → Target: Rancho Cucamonga, CA")
         print(f"   • Regulatory: TREC → California DRE")
         print(f"   • Price Ranges: Updated for California market")
-        print(f"   • Neighborhoods: Austin areas → Rancho neighborhoods")
+        print(f"   • Neighborhoods: Rancho Cucamonga areas → Rancho neighborhoods")
         print(f"   • Compliance: Texas → California requirements")
 
         if self.failed_tests > 0:
@@ -278,7 +278,7 @@ class RanchoMarketValidator:
         # Create detailed report
         report = {
             "validation_date": "2026-01-25",
-            "market_transition": "Austin TX → Rancho Cucamonga CA",
+            "market_transition": "Rancho Cucamonga TX → Rancho Cucamonga CA",
             "total_tests": total_tests,
             "passed_tests": self.passed_tests,
             "failed_tests": self.failed_tests,

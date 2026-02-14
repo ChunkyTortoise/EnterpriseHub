@@ -19,6 +19,7 @@ import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
@@ -1009,3 +1010,9 @@ class LeadSourceTracker:
             data["source_quality"] = SourceQuality(data["source_quality"])
 
         return SourceAttribution(**data)
+
+
+@lru_cache(maxsize=1)
+def get_lead_source_tracker() -> LeadSourceTracker:
+    """Get LeadSourceTracker singleton instance."""
+    return LeadSourceTracker()

@@ -386,7 +386,7 @@ curl -X POST https://your-deployment-url.railway.app/ghl/webhook \
    Hey! Quick question: where's the property located?
    ```
 5. Continue conversation:
-   - User: "Austin, TX"
+   - User: "Rancho Cucamonga, CA"
    - AI: "Got it. What's the condition of your home? Move-in ready, needs some work, or a fixer-upper?"
 
 ---

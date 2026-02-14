@@ -447,7 +447,7 @@ class GeospatialAnalysisService:
         """Validate spatial operation capabilities."""
         try:
             # Test basic spatial operations
-            test_point = geom.Point(-97.7431, 30.2672)  # Austin
+            test_point = geom.Point(-97.7431, 30.2672)  # Rancho Cucamonga
             test_buffer = test_point.buffer(0.01)  # ~1km buffer
 
             if test_buffer.area > 0:
@@ -504,7 +504,7 @@ class GeospatialAnalysisService:
 
                 # Create boundary polygon (simplified convex hull)
                 boundary_coords = self._create_boundary_polygon(cluster["coords"])
-                center_point = self._calculate_centroid(cluster["coords"])
+                self._calculate_centroid(cluster["coords"])
 
                 # Calculate market characteristics
                 cluster_props = [properties[j] for j in cluster["indices"]]

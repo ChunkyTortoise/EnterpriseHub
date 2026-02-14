@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 #!/usr/bin/env python3
 """
 Test Slack Webhook Alert Channel

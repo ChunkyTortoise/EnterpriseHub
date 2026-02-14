@@ -46,7 +46,7 @@ async def handle_twilio_sms_status(request: Request):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Failed to process Twilio status webhook"
             )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Twilio status webhook processing failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
@@ -77,7 +77,7 @@ async def handle_twilio_sms_incoming(request: Request):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Failed to process incoming SMS"
             )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Twilio incoming webhook processing failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
@@ -106,7 +106,7 @@ async def handle_sendgrid_events(request: Request):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Failed to process SendGrid events"
             )
 
-    except Exception as e:
+    except Exception:
         logger.exception("SendGrid event webhook processing failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
@@ -127,7 +127,7 @@ async def handle_apollo_enrichment(request: Request):
         # For now, acknowledge receipt
         return {"status": "success", "processed": True}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Apollo enrichment webhook processing failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"

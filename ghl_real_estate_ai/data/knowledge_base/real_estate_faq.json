@@ -11,14 +11,14 @@
       "id": "faq_002",
       "category": "financing",
       "question": "How much do I need for a down payment?",
-      "answer": "It depends on your loan type. FHA loans require as little as 3.5% down. Conventional loans typically need 5-20% (putting down 20% avoids PMI insurance). VA loans for veterans require $0 down. For a $400k home, that's $14k (FHA), $20k-80k (conventional), or $0 (VA). First-time buyers often qualify for assistance programs that can cover $5k-15k of your down payment.",
+      "answer": "It depends on your loan type. FHA loans require as little as 3.5% down. Conventional loans typically need 5-20% (putting down 20% avoids PMI insurance). VA loans for veterans require $0 down. For a $600k home, that's $21k (FHA), $30k-120k (conventional), or $0 (VA). First-time buyers often qualify for assistance programs that can cover $5k-15k of your down payment.",
       "keywords": ["down payment", "FHA", "VA loan", "conventional", "first-time buyer", "PMI"]
     },
     {
       "id": "faq_003",
       "category": "financing",
       "question": "What is PMI and can I avoid it?",
-      "answer": "PMI (Private Mortgage Insurance) is required on conventional loans when you put down less than 20%. It costs $50-200/month depending on your loan amount. You can avoid it by: (1) putting 20% down, (2) getting a piggyback loan (80-10-10 structure), or (3) using an FHA loan (which has MIP instead, but lower upfront cost). PMI automatically drops off once you reach 20% equity.",
+      "answer": "PMI (Private Mortgage Insurance) is required on conventional loans when you put down less than 20%. It costs $50-250/month depending on your loan amount. You can avoid it by: (1) putting 20% down, (2) getting a piggyback loan (80-10-10 structure), or (3) using an FHA loan (which has MIP instead, but lower upfront cost). PMI automatically drops off once you reach 20% equity.",
       "keywords": ["PMI", "mortgage insurance", "20 percent down", "equity"]
     },
     {
@@ -46,14 +46,14 @@
       "id": "faq_007",
       "category": "buying",
       "question": "How much should I offer below asking price?",
-      "answer": "It depends on market conditions. In hot markets (like Austin), homes often sell at or above asking. In buyer's markets, 5-10% below asking is reasonable. I analyze comparable sales (comps) to determine fair value. If a home is priced at $400k but comps show $380k, we'd offer $375k-385k. Days on market also matter—if it's been listed 60+ days, sellers are more motivated.",
+      "answer": "It depends on market conditions. In hot markets (like Rancho Cucamonga), homes often sell at or above asking. In buyer's markets, 5-10% below asking is reasonable. I analyze comparable sales (comps) to determine fair value. If a home is priced at $700k but comps show $680k, we'd offer $675k-685k. Days on market also matter—if it's been listed 60+ days, sellers are more motivated.",
       "keywords": ["offer strategy", "asking price", "negotiation", "comps", "market value"]
     },
     {
       "id": "faq_008",
       "category": "buying",
       "question": "What are closing costs and how much are they?",
-      "answer": "Closing costs are fees paid at closing (separate from down payment). They're typically 2-5% of the purchase price. For a $400k home, expect $8k-20k. This includes: loan origination ($1k-2k), appraisal ($500-700), title insurance ($1k-2k), escrow/attorney fees ($500-1k), property taxes (prorated), and recording fees ($200-500). You can ask the seller to cover some closing costs in your offer.",
+      "answer": "Closing costs are fees paid at closing (separate from down payment). They're typically 2-3% of the purchase price in California. For a $700k home, expect $14k-21k. This includes: loan origination ($1k-2k), appraisal ($500-700), title insurance ($1k-2k), escrow fees ($1k-2k), property taxes (prorated), and recording fees ($200-500). You can ask the seller to cover some closing costs in your offer.",
       "keywords": ["closing costs", "fees", "title insurance", "escrow", "seller concessions"]
     },
     {
@@ -74,77 +74,77 @@
       "id": "faq_011",
       "category": "market",
       "question": "Is now a good time to buy or should I wait?",
-      "answer": "Trying to time the market is risky. If you're financially ready (stable income, 6-month emergency fund, pre-approved), buy when you find the right home. Waiting for rates or prices to drop can backfire—Austin's median home price has risen 8% annually over the past decade. Even if prices dip 5%, rising interest rates could cost you more monthly. Real estate is a long-term investment (7+ years).",
+      "answer": "Trying to time the market is risky. If you're financially ready (stable income, 6-month emergency fund, pre-approved), buy when you find the right home. Waiting for rates or prices to drop can backfire—Rancho Cucamonga's median home price has risen steadily due to its popularity. Even if prices dip 5%, rising interest rates could cost you more monthly. Real estate is a long-term investment (7+ years).",
       "keywords": ["market timing", "when to buy", "interest rates", "home prices", "investment"]
     },
     {
       "id": "faq_012",
       "category": "market",
       "question": "How do rising interest rates affect my buying power?",
-      "answer": "Every 1% increase in interest rates costs you ~$200/month per $300k borrowed. At 4% on $400k loan = $1,910/month. At 6% = $2,398/month. That's $488/month or $175k over 30 years. This is why pre-approval is critical—lock in your rate for 60-90 days. If rates are rising, consider paying points (1 point = 1% of loan amount) to lower your rate by 0.25%.",
+      "answer": "Every 1% increase in interest rates costs you ~$200/month per $300k borrowed. At 4% on $600k loan = $2,864/month. At 6% = $3,597/month. That's $733/month or $264k over 30 years. This is why pre-approval is critical—lock in your rate for 60-90 days. If rates are rising, consider paying points (1 point = 1% of loan amount) to lower your rate by 0.25%.",
       "keywords": ["interest rates", "buying power", "monthly payment", "rate lock", "mortgage points"]
     },
     {
       "id": "faq_013",
       "category": "neighborhoods",
-      "question": "What are the best family-friendly neighborhoods in Austin?",
-      "answer": "Top picks: (1) Circle C Ranch—great schools (8-9/10 rating), parks, pools, $400k-600k; (2) Avery Ranch—Round Rock ISD (9/10), newer builds, $450k-700k; (3) Steiner Ranch—Lake Travis schools (9/10), resort-style, $500k-800k; (4) Pflugerville—affordable ($300k-450k), good schools (7-8/10), family-oriented. All have low crime, HOA amenities, and 20-30 min commute to downtown.",
-      "keywords": ["family neighborhoods", "good schools", "Austin", "Circle C", "Avery Ranch", "Steiner Ranch"]
+      "question": "What are the best family-friendly neighborhoods in Rancho Cucamonga?",
+      "answer": "Top picks: (1) Etiwanda—premier schools (9/10 rating), newer luxury homes, $800k-1.2M; (2) Alta Loma—mountain views, large lots, custom homes, $750k-1.5M; (3) Victoria Gardens Area—walkable shopping, modern townhomes, $600k-850k; (4) Terra Vista—planned community, parks, pools, $650k-900k. All have low crime, great amenities, and easy 210 freeway access.",
+      "keywords": ["family neighborhoods", "good schools", "Rancho Cucamonga", "Etiwanda", "Alta Loma", "Victoria Gardens"]
     },
     {
       "id": "faq_014",
       "category": "neighborhoods",
-      "question": "Which Austin neighborhoods are walkable?",
-      "answer": "Highly walkable: (1) Hyde Park—restaurants, parks, UT campus nearby, $500k-900k; (2) East Austin—trendy, bars/cafes, $450k-700k; (3) South Congress (SoCo)—boutiques, dining, $600k-1.2M; (4) Clarksville—central, charming, $700k-1.5M. These have Walk Scores of 70-90 (very walkable). If budget is under $400k, look at East Riverside or North Loop.",
-      "keywords": ["walkable", "walkability", "urban", "downtown Austin", "Hyde Park", "SoCo"]
+      "question": "Which Rancho Cucamonga neighborhoods are walkable?",
+      "answer": "Highly walkable: (1) Victoria Gardens—premier shopping, dining, and lifestyle center with nearby residential, Walk Score 80+; (2) Central Rancho—close to amenities and parks; (3) Foothill Blvd Corridor—easy access to services. Rancho Cucamonga is primarily suburban, but the Victoria Gardens area offers a truly urban-suburban mix.",
+      "keywords": ["walkable", "walkability", "urban", "Victoria Gardens", "Rancho Cucamonga"]
     },
     {
       "id": "faq_015",
       "category": "investment",
-      "question": "Is buying rental property in Austin a good investment?",
-      "answer": "Austin has strong rental demand (UT students, tech workers, military). Cap rates are 4-6% (lower than national average but offset by appreciation). Best areas: East Austin ($350k-500k condos, 7% cap rate), Pflugerville (SFH $300k-400k, rent $2k-2.5k/month), Leander (newer builds, $350k-450k). Vacancy rates are <5%. If you can hold 10+ years, Austin's population growth (+3% annually) drives long-term appreciation.",
+      "question": "Is buying rental property in Rancho Cucamonga a good investment?",
+      "answer": "Rancho Cucamonga has strong rental demand from logistics professionals, healthcare workers, and families. Cap rates are stable (4-5%) but offset by strong historical appreciation. Best areas: South Rancho ($550k-700k homes, high demand), Etiwanda (executive rentals), Victoria Gardens (professional condos). Vacancy rates are low. Long-term growth in the Inland Empire drives appreciation.",
       "keywords": ["rental property", "investment", "cap rate", "cash flow", "appreciation", "landlord"]
     },
     {
       "id": "faq_016",
       "category": "legal",
       "question": "Do I need a real estate attorney?",
-      "answer": "In Texas, attorneys aren't required (title companies handle closings). However, I recommend an attorney if: (1) buying foreclosure/short sale, (2) complex contract terms, (3) boundary disputes, (4) estate/trust sales. Attorney review costs $500-1,500 but can save you from $10k+ mistakes. For standard transactions, your agent and title company provide adequate protection.",
-      "keywords": ["attorney", "legal", "title company", "closing", "contract review"]
+      "answer": "In California, attorneys aren't required for standard residential transactions (escrow companies handle closings). However, I recommend an attorney if: (1) buying foreclosure/short sale, (2) complex contract terms, (3) boundary disputes, (4) estate/trust sales. For standard transactions, your agent and escrow company provide adequate protection.",
+      "keywords": ["attorney", "legal", "escrow", "closing", "contract review"]
     },
     {
       "id": "faq_017",
       "category": "inspection",
       "question": "What do home inspectors check?",
-      "answer": "Inspectors examine: (1) Foundation/structure (cracks, settling), (2) Roof (age, leaks, shingle condition), (3) HVAC (functionality, age), (4) Plumbing (leaks, water pressure, sewer line), (5) Electrical (panel, wiring, outlets), (6) Windows/doors, (7) Attic/insulation. They DON'T check: cosmetic issues, appliances (unless specified), pest damage (separate inspection). Expect a 30-50 page report. Major red flags: foundation issues ($10k-50k), old roof ($8k-15k), outdated electrical ($5k-10k).",
+      "answer": "Inspectors examine: (1) Foundation/structure (cracks, settling), (2) Roof (age, leaks, shingle condition), (3) HVAC (functionality, age), (4) Plumbing (leaks, water pressure, sewer line), (5) Electrical (panel, wiring, outlets), (6) Windows/doors, (7) Attic/insulation. They DON'T check: cosmetic issues, appliances (unless specified), pest damage (separate inspection required in CA). Major red flags: foundation issues, old roof, outdated electrical.",
       "keywords": ["home inspection", "inspector", "what is inspected", "foundation", "roof", "HVAC"]
     },
     {
       "id": "faq_018",
       "category": "appraisal",
       "question": "What happens if the appraisal comes in low?",
-      "answer": "If appraisal < purchase price, you have 4 options: (1) Renegotiate price down to appraisal, (2) Bring extra cash to cover the gap, (3) Meet seller halfway, (4) Walk away (if you have appraisal contingency). Example: Offer $400k, appraisal $385k. Gap = $15k. If putting 10% down, you'd need $40k + $15k = $55k total. Smart move: Include appraisal contingency in your offer to protect yourself.",
+      "answer": "If appraisal < purchase price, you have 4 options: (1) Renegotiate price down to appraisal, (2) Bring extra cash to cover the gap, (3) Meet seller halfway, (4) Walk away (if you have appraisal contingency). Smart move: Include appraisal contingency in your offer to protect yourself in competitive Southern California markets.",
       "keywords": ["appraisal", "low appraisal", "appraisal gap", "contingency", "renegotiate"]
     },
     {
       "id": "faq_019",
       "category": "taxes",
-      "question": "How much are property taxes in Austin?",
-      "answer": "Texas has no state income tax, so property taxes are high: ~2.1% of home value annually. For a $400k home, expect $8,400/year ($700/month escrowed). Travis County is slightly higher (2.2%), Williamson County slightly lower (2.0%). Homestead exemption saves ~$300-500/year. Over-65 exemption adds more savings. Good news: property taxes are deductible on federal returns (up to $10k SALT cap).",
-      "keywords": ["property taxes", "Austin taxes", "homestead exemption", "tax rate", "SALT"]
+      "question": "How much are property taxes in Rancho Cucamonga?",
+      "answer": "California property taxes are governed by Proposition 13, which limits the base tax rate to 1% of the assessed value (purchase price) plus local bonds and assessments (Mello-Roos). In Rancho Cucamonga (San Bernardino County), expect a total effective rate of ~1.1% to 1.4%. Taxes increase by no more than 2% annually. Good news: California has no 'tax cliff'—your taxes stay predictable as long as you own the home.",
+      "keywords": ["property taxes", "Rancho Cucamonga taxes", "Prop 13", "tax rate", "San Bernardino County"]
     },
     {
       "id": "faq_020",
       "category": "strategy",
       "question": "Should I sell my current home before buying a new one?",
-      "answer": "It depends on your finances. Selling first = no mortgage contingency (stronger offer), but you might need temporary housing. Buying first = seamless move, but you'll carry 2 mortgages temporarily. Middle ground: Home sale contingency (offer on new home contingent on selling yours—sellers don't love this). Or bridge loan (borrow against current home equity for down payment, pay off when it sells). I can connect you with lenders who specialize in bridge loans.",
+      "answer": "It depends on your finances. Selling first = no mortgage contingency (stronger offer), but you might need temporary housing. Buying first = seamless move, but you'll carry 2 mortgages temporarily. Middle ground: Home sale contingency or bridge loan. I can connect you with lenders who specialize in bridge loans for Southern California homeowners.",
       "keywords": ["buy before sell", "contingency", "bridge loan", "timing", "two mortgages"]
     }
   ],
   "metadata": {
-    "version": "1.0",
-    "market": "Austin, TX",
-    "last_updated": "2025-01-02",
+    "version": "1.1",
+    "market": "Rancho Cucamonga, CA",
+    "last_updated": "2026-02-13",
     "total_faqs": 20
   }
 }

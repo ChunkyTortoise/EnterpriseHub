@@ -60,8 +60,8 @@ st.subheader("Phase 6: Enterprise Production Platform")
 
 with st.sidebar:
     st.header("Control Center")
-    address = st.text_input("Property Address", "123 Maple St, Austin, TX")
-    market = st.text_input("Market", "Austin, TX")
+    address = st.text_input("Property Address", "123 Maple St, Rancho Cucamonga, CA")
+    market = st.text_input("Market", "Rancho Cucamonga, CA")
     run_button = st.button("🚀 TRIGGER ENTERPRISE PIPELINE")
 
     st.divider()

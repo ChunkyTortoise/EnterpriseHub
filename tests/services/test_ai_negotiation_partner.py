@@ -32,8 +32,6 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 )
 from ghl_real_estate_ai.services.ai_negotiation_partner import AINegotiationPartner
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def negotiation_partner():
@@ -77,7 +75,7 @@ def mock_property_data():
         "bedrooms": 4,
         "bathrooms": 3,
         "property_type": "single_family",
-        "zip_code": "78701",
+        "zip_code": "91701",
         "days_on_market": 45,
         "year_built": 2015,
         "price_drops": 1,

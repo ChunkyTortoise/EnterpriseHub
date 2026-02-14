@@ -422,7 +422,7 @@ class ClaudeLeadQualificationEngine:
             return {"error": "Lead not found", "stage": stage}
 
         # Implementation of multi-stage logic using Claude
-        prompt = f"""
+        f"""
         Analyze lead qualification for Stage {stage}:
         Lead Data: {json.dumps(lead_data)}
         
@@ -634,14 +634,6 @@ class ClaudeLeadQualificationEngine:
             return 0.5
 
         # Look for market knowledge indicators in conversation
-        knowledge_indicators = [
-            "market trends",
-            "comparable sales",
-            "price per square foot",
-            "appreciation",
-            "market conditions",
-            "inventory levels",
-        ]
 
         # Simplified assessment - in production, would use Claude analysis
         return min(1.0, 0.4 + (conversation_analysis.confidence * 0.6))

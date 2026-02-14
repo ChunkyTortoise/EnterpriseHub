@@ -63,8 +63,6 @@ from ghl_real_estate_ai.services.service6_ai_integration import Service6AIRespon
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "mocks"))
 from external_services import MockEnhancedDatabaseService, create_mock_service6_response, create_test_lead_data
 
-@pytest.mark.integration
-
 
 class TestDatabaseServiceModels:
     """Test database models and data structures"""
@@ -180,7 +178,7 @@ class TestDatabaseService:
             "phone": "+15559876543",
             "budget": 600000,
             "timeline": "immediate",
-            "location": "North Austin",
+            "location": "North Rancho Cucamonga",
             "source": "website_form",
         }
 

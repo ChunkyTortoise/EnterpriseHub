@@ -27,8 +27,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
-
 # Import the billing components
 try:
     from ghl_real_estate_ai.api.schemas.billing import (
@@ -117,7 +115,7 @@ class TestBillingIntegrationE2E:
                 tags=["Needs Qualifying"],
             ),
             message=Message(
-                type=MessageType.SMS, body="I'm looking for a 3-bedroom house in Austin with a budget of $450,000"
+                type=MessageType.SMS, body="I'm looking for a 3-bedroom house in Rancho Cucamonga with a budget of $450,000"
             ),
         )
 

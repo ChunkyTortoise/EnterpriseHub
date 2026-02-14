@@ -60,7 +60,7 @@ def uhnw_lead_data():
         "contact_info": {
             "email": "founder@mega-corp.com",
             "phone": "+1-512-555-0100",
-            "address": "1000 West Lake Hills Pkwy, Austin, TX 78746",
+            "address": "1000 Alta Loma Pkwy, Rancho Cucamonga, CA 91746",
         },
         "source": "private_referral",
         "profession": "Founder & CEO",
@@ -70,7 +70,7 @@ def uhnw_lead_data():
                 "date": datetime.now().isoformat(),
                 "min_price": 5_000_000,
                 "max_price": 15_000_000,
-                "location": "West Lake Hills",
+                "location": "Alta Loma",
                 "property_type": "estate",
                 "amenities": ["private_dock", "helicopter_pad", "wine_cellar", "home_theater", "spa", "guest_quarters"],
             }
@@ -108,30 +108,30 @@ class TestNetWorthAnalysis:
         assert indicators.investment_sophistication >= 70
         assert "corporate_email" in indicators.asset_indicators
 
-    def test_analyze_email_domain(self, luxury_scoring_engine):
-        """Test email domain analysis for business indicators"""
+    def test_analyze_email_ontario_mills(self, luxury_scoring_engine):
+        """Test email ontario_mills analysis for business indicators"""
         # Corporate email
-        corporate_indicators = luxury_scoring_engine._analyze_email_domain("ceo@techcorp.com")
+        corporate_indicators = luxury_scoring_engine._analyze_email_ontario_mills("ceo@techcorp.com")
         assert "corporate_email" in corporate_indicators
 
         # Executive email
-        executive_indicators = luxury_scoring_engine._analyze_email_domain("founder@startup.com")
+        executive_indicators = luxury_scoring_engine._analyze_email_ontario_mills("founder@startup.com")
         assert "corporate_email" in executive_indicators
 
         # Consumer email
-        consumer_indicators = luxury_scoring_engine._analyze_email_domain("user@gmail.com")
+        consumer_indicators = luxury_scoring_engine._analyze_email_ontario_mills("user@gmail.com")
         assert len(consumer_indicators) == 0
 
     def test_analyze_address_luxury_indicators(self, luxury_scoring_engine):
         """Test address analysis for luxury indicators"""
         # Luxury neighborhood
         luxury_score = luxury_scoring_engine._analyze_address_luxury_indicators(
-            "123 West Lake Hills Dr, Austin, TX 78746"
+            "123 Alta Loma Dr, Rancho Cucamonga, CA 91746"
         )
         assert luxury_score >= 7.0
 
         # Non-luxury area
-        standard_score = luxury_scoring_engine._analyze_address_luxury_indicators("456 Regular St, Austin, TX 78702")
+        standard_score = luxury_scoring_engine._analyze_address_luxury_indicators("456 Regular St, Rancho Cucamonga, CA 91702")
         assert standard_score < 5.0
 
     @pytest.mark.asyncio
@@ -178,14 +178,14 @@ class TestLuxuryLifestyleAnalysis:
     def test_extract_neighborhood_preferences(self, luxury_scoring_engine):
         """Test neighborhood preference extraction"""
         search_history = [
-            {"location": "West Lake Hills"},
-            {"location": "Tarrytown"},
-            {"location": "West Lake Hills"},
-            {"location": "Zilker"},
+            {"location": "Alta Loma"},
+            {"location": "North Rancho"},
+            {"location": "Alta Loma"},
+            {"location": "Victoria Gardens"},
         ]
 
         neighborhoods = luxury_scoring_engine._extract_neighborhood_preferences(search_history)
-        assert "West Lake Hills" in neighborhoods
+        assert "Alta Loma" in neighborhoods
         assert len(neighborhoods) <= 5
 
     def test_extract_amenity_preferences(self, luxury_scoring_engine):

@@ -14,7 +14,6 @@ import time
 import numpy as np
 import pytest
 
-@pytest.mark.integration
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -23,6 +22,8 @@ try:
     from ghl_real_estate_ai.core.embeddings import get_async_embedding_model, get_embedding_model
 except ImportError:
     # Fallback for testing environment
+
+@pytest.mark.integration
     class MockEmbedder:
         async def embed(self, texts, batch_size=32):
             # Simulate embedding latency
@@ -57,8 +58,6 @@ class TestEmbeddingPerformance:
             "What are the benefits of working with a real estate agent?",
         ] * 20  # 100 texts total
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_single_embedding_latency(self, embedder):
         """
         Measure latency for single embedding generation.
@@ -95,8 +94,6 @@ class TestEmbeddingPerformance:
         stretch_goal_met = p50 < 15
         print(f"  Stretch goal (<15ms p50): {'✅ MET' if stretch_goal_met else '⚠️  NOT MET'}")
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_batch_embedding_throughput(self, embedder, sample_texts):
         """
         Measure batch embedding throughput.
@@ -132,8 +129,6 @@ class TestEmbeddingPerformance:
 
         return results
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_concurrent_embedding_performance(self, embedder):
         """
         Test embedding performance under concurrent load.
@@ -180,8 +175,6 @@ class TestEmbeddingPerformance:
 
         return results
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_memory_efficiency(self, embedder, sample_texts):
         """
         Test memory usage during batch embedding.
@@ -222,8 +215,6 @@ class TestEmbeddingPerformance:
         assert memory_used < 500, f"Memory usage {memory_used:.1f}MB too high for {len(large_texts)} texts"
         assert memory_efficiency > 2, f"Memory efficiency {memory_efficiency:.1f} texts/MB too low"
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_device_optimization(self, sample_texts):
         """
         Compare performance across different devices (CPU/GPU if available).

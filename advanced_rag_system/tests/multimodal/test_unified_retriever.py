@@ -28,12 +28,14 @@ from src.core.exceptions import RetrievalError
 from src.multimodal.structured_retriever import StructuredQuery
 from src.multimodal.unified_retriever import (
 
-@pytest.mark.integration
     QueryModality,
     UnifiedRetriever,
     UnifiedRetrieverConfig,
     UnifiedSearchResult,
 )
+
+
+@pytest.mark.integration
 
 
 class TestQueryModality:

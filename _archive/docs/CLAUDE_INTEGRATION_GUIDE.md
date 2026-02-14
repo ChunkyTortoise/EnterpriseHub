@@ -7,7 +7,7 @@ You can now invoke specific "personas" for different development tasks. Mention 
 
 | Agent | Task |
 |-------|------|
-| **Market Intelligence Specialist** | Use for market analysis, property valuation logic, and Austin-specific trends. |
+| **Market Intelligence Specialist** | Use for market analysis, property valuation logic, and Rancho Cucamonga-specific trends. |
 | **Chatbot Architect** | Use for LangGraph orchestration, GHL sync, and conversation design. |
 | **BI Performance Specialist** | Use for auditing latency, optimizing SQL/Redis, and load testing. |
 
@@ -17,10 +17,10 @@ You can now invoke specific "personas" for different development tasks. Mention 
 ## 📚 Domain Skills
 Claude automatically discovers skills in `.claude/skills/`. The following new skill is available:
 
-- **Austin Market Intelligence**: Provides deep context on Austin zip codes, tech corridors, and economic drivers.
+- **Rancho Cucamonga Market Intelligence**: Provides deep context on Rancho Cucamonga zip codes, tech corridors, and economic drivers.
 
 **Example Prompt**:
-> "Using the **Austin Market Data skill**, explain the impact of Tesla Giga Texas on property values in Del Valle."
+> "Using the **Rancho Cucamonga Market Data skill**, explain the impact of Tesla Giga Texas on property values in Del Valle."
 
 ## 🔌 MCP Tools (Model Context Protocol)
 The system is configured to use specialized servers for live data access. These are defined in `.claude/mcp-servers.json`.

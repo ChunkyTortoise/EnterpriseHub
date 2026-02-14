@@ -111,7 +111,7 @@ await concierge.coordinateBotEcosystem({
 await concierge.generateFieldAssistance({
   location_data: {
     latitude: 30.2672, longitude: -97.7431,
-    address: '1234 Austin Heights Dr',
+    address: '1234 Rancho Cucamonga Heights Dr',
     visit_purpose: 'client_showing'
   },
   platform_context: currentContext
@@ -159,14 +159,14 @@ await concierge.providePresentationSupport({
 Jorge opens /executive-dashboard
 → Context detected: Executive role, 12 active deals, $2.4M pipeline
 → Omnipresent guidance: "Jorge, Deal #7 needs attention - buyer financing expires tomorrow. Recommend immediate follow-up."
-→ Revenue optimization: "Market conditions favor 15% price increase on Austin Heights properties"
+→ Revenue optimization: "Market conditions favor 15% price increase on Rancho Cucamonga Heights properties"
 → Risk alerts: "Lead Sarah Chen hasn't responded in 48 hours - deploy re-engagement sequence"
 ```
 
 ### **Field Agent Experience**
 ```
 Jorge arrives at property showing (mobile)
-→ Location detected: 1234 Austin Heights Dr, Austin, TX
+→ Location detected: 1234 Rancho Cucamonga Heights Dr, Rancho Cucamonga, CA
 → Field assistance: "Property highlights: Recent kitchen renovation ($45K), comparable sales up 12%"
 → Client context: "Sarah Chen prioritizes commute time - emphasize 18-minute downtown access"
 → Objection handling: "If price concern arises, mention recent area appreciation trend"

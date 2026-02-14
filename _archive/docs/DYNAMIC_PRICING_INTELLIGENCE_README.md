@@ -23,7 +23,7 @@ The Dynamic Pricing Intelligence system represents the most advanced pricing ana
    - Listing price optimization with competitive intelligence
    - Negotiation strategy development
 
-3. **Market Analytics Integration** (enhanced `austin_market_service.py`)
+3. **Market Analytics Integration** (enhanced `rancho_cucamonga_market_service.py`)
    - Pricing analytics with distribution analysis
    - Appreciation trend calculations
    - Competitive positioning intelligence
@@ -103,7 +103,7 @@ pricing_service = get_pricing_intelligence_service()
 valuation_result = await valuation_engine.generate_comprehensive_valuation(
     property_data={
         'property_id': 'prop_001',
-        'address': '123 Main St, Austin, TX',
+        'address': '123 Main St, Rancho Cucamonga, CA',
         'neighborhood': 'Downtown',
         'price': 750000,
         'sqft': 2100,

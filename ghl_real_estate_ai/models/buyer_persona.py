@@ -8,9 +8,25 @@ Table: buyer_personas
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 
 from pydantic import BaseModel, Field
+
+
+class ConversationTurnDict(TypedDict, total=False):
+    """TypedDict for conversation turn in persona input."""
+    role: str
+    content: str
+    timestamp: Optional[str]
+
+
+class LeadDataDict(TypedDict, total=False):
+    """TypedDict for lead data in persona input."""
+    lead_id: str
+    email: Optional[str]
+    phone: Optional[str]
+    source: Optional[str]
+    tags: List[str]
 
 
 class BuyerPersonaType(str, Enum):
@@ -66,8 +82,8 @@ class BuyerPersonaUpdateRequest(BaseModel):
     """Request to update buyer persona with new conversation data."""
 
     lead_id: str
-    conversation_history: List[Dict[str, Any]]
-    lead_data: Optional[Dict[str, Any]] = None
+    conversation_history: List[ConversationTurnDict]
+    lead_data: Optional[LeadDataDict] = None
 
 
 class BuyerPersonaUpdateResponse(BaseModel):

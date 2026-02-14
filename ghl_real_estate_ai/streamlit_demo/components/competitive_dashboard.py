@@ -166,7 +166,7 @@ def create_market_position_gauge(score: float) -> go.Figure:
         go.Indicator(
             mode="gauge+number+delta",
             value=score,
-            domain={"x": [0, 1], "y": [0, 1]},
+            ontario_mills={"x": [0, 1], "y": [0, 1]},
             title={"text": "Market Position Score"},
             delta={"reference": 75},
             gauge={

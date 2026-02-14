@@ -47,7 +47,7 @@ async def vapi_check_availability(
     logger.info("Vapi tool call: check-availability")
 
     tool_call = payload.toolCall
-    args = tool_call.get("function", {}).get("arguments", {})
+    tool_call.get("function", {}).get("arguments", {})
 
     # Map Vapi's 'date' argument if provided
     # Note: CalendarScheduler currently looks ahead from 'now'

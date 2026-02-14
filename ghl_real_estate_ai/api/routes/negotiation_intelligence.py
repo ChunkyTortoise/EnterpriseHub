@@ -177,7 +177,7 @@ async def get_negotiation_metrics(current_user: Dict[str, Any] = Depends(get_cur
     """
     try:
         negotiation_partner = get_ai_negotiation_partner()
-        cache_service = get_cache_service()
+        get_cache_service()
 
         # Get performance metrics
         performance_metrics = negotiation_partner.get_performance_metrics()

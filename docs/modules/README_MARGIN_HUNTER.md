@@ -268,7 +268,7 @@ No complex spreadsheets, no error-prone formulas - just input your numbers and g
 
 **Solution**:
 1. Check browser download bar (bottom of Chrome, top-right of Firefox)
-2. Allow downloads from the app domain
+2. Allow downloads from the app ontario_mills
 3. Try a different browser (Chrome, Firefox, Safari)
 4. Check your Downloads folder - it may have downloaded silently
 

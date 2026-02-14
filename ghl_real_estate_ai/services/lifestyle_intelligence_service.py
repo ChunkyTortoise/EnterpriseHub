@@ -439,21 +439,21 @@ class LifestyleIntelligenceService:
         # This would typically come from external data sources
         # For now, create a basic profile database
         self.neighborhood_profiles = {
-            "hyde park": {
+            "etiwanda": {
                 "walk_score": 85,
                 "safety_rating": 7.5,
                 "downtown_commute_min": 15,
                 "amenities": {"total_amenities": 25, "grocery_distance_miles": 0.3},
                 "crime_rate_per_1000": 15.2,
             },
-            "steiner ranch": {
+            "rancho etiwanda": {
                 "walk_score": 35,
                 "safety_rating": 9.0,
                 "downtown_commute_min": 35,
                 "amenities": {"total_amenities": 12, "grocery_distance_miles": 2.0},
                 "crime_rate_per_1000": 8.1,
             },
-            "east austin": {
+            "east rancho_cucamonga": {
                 "walk_score": 92,
                 "safety_rating": 6.8,
                 "downtown_commute_min": 8,
@@ -467,7 +467,7 @@ class LifestyleIntelligenceService:
                 "amenities": {"total_amenities": 8, "grocery_distance_miles": 3.0},
                 "crime_rate_per_1000": 9.3,
             },
-            "west campus": {
+            "chaffey district": {
                 "walk_score": 95,
                 "safety_rating": 7.2,
                 "downtown_commute_min": 10,
@@ -484,9 +484,9 @@ class LifestyleIntelligenceService:
             "data_sources": ["cached", "estimated"],
             "neighborhoods": {},
             "commute_hubs": {
-                "downtown_austin": {"lat": 30.2672, "lng": -97.7431},
+                "downtown_rancho_cucamonga": {"lat": 30.2672, "lng": -97.7431},
                 "ut_campus": {"lat": 30.2849, "lng": -97.7341},
-                "domain": {"lat": 30.3987, "lng": -97.7262},
+                "ontario_mills": {"lat": 30.3987, "lng": -97.7262},
             },
         }
 
@@ -503,7 +503,7 @@ class LifestyleIntelligenceService:
 
     def _estimate_downtown_commute(self, neighborhood: str, city: str) -> Optional[int]:
         """Estimate commute time to downtown."""
-        if city != "austin":
+        if city != "rancho_cucamonga":
             return None
 
         profile = self.neighborhood_profiles.get(neighborhood, {})
@@ -516,9 +516,9 @@ class LifestyleIntelligenceService:
 
         # Basic workplace mapping (would integrate with real mapping API)
         workplace_commutes = {
-            "domain": {"hyde park": 25, "steiner ranch": 15, "east austin": 30},
-            "ut campus": {"hyde park": 10, "west campus": 5, "east austin": 15},
-            "downtown": {"hyde park": 15, "east austin": 8, "west campus": 10},
+            "ontario_mills": {"etiwanda": 25, "rancho etiwanda": 15, "east rancho_cucamonga": 30},
+            "ut campus": {"etiwanda": 10, "chaffey district": 5, "east rancho_cucamonga": 15},
+            "downtown": {"etiwanda": 15, "east rancho_cucamonga": 8, "chaffey district": 10},
         }
 
         workplace_lower = workplace.lower()
@@ -530,9 +530,9 @@ class LifestyleIntelligenceService:
 
     def _assess_public_transit(self, neighborhood: str, city: str) -> float:
         """Assess public transit access (0-1 scale)."""
-        # Austin public transit assessment
-        good_transit = ["east austin", "west campus", "hyde park"]
-        moderate_transit = ["south austin", "north austin"]
+        # Rancho Cucamonga public transit assessment
+        good_transit = ["east rancho_cucamonga", "chaffey district", "etiwanda"]
+        moderate_transit = ["south rancho_cucamonga", "north rancho_cucamonga"]
 
         if neighborhood in good_transit:
             return 0.8
@@ -543,9 +543,9 @@ class LifestyleIntelligenceService:
 
     def _assess_highway_access(self, neighborhood: str, city: str) -> float:
         """Assess highway access quality (0-1 scale)."""
-        # Major highway access in Austin
-        excellent_access = ["steiner ranch", "avery ranch", "circle c ranch"]
-        good_access = ["hyde park", "east austin"]
+        # Major highway access in Rancho Cucamonga
+        excellent_access = ["rancho etiwanda", "avery ranch", "circle c ranch"]
+        good_access = ["etiwanda", "east rancho_cucamonga"]
 
         if neighborhood in excellent_access:
             return 0.9
@@ -646,7 +646,7 @@ def demo_lifestyle_intelligence():
     test_properties = [
         {
             "id": "test_1",
-            "address": {"neighborhood": "Hyde Park", "city": "Austin", "zip": "78751"},
+            "address": {"neighborhood": "Alta Loma", "city": "Rancho Cucamonga", "zip": "91737"},
             "schools": [
                 {"name": "Mathews Elementary", "rating": 9, "type": "Elementary"},
                 {"name": "McCallum High School", "rating": 8, "type": "High"},
@@ -655,7 +655,7 @@ def demo_lifestyle_intelligence():
         },
         {
             "id": "test_2",
-            "address": {"neighborhood": "Steiner Ranch", "city": "Austin", "zip": "78732"},
+            "address": {"neighborhood": "North Rancho", "city": "Rancho Cucamonga", "zip": "91739"},
             "schools": [
                 {"name": "River Ridge Elementary", "rating": 9, "type": "Elementary"},
                 {"name": "Vandegrift High School", "rating": 10, "type": "High"},

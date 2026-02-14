@@ -11,8 +11,6 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 )
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
-@pytest.mark.integration
-
 
 class TestJorgeIntelligenceFlow:
     """
@@ -128,8 +126,8 @@ class TestJorgeIntelligenceFlow:
         mock_ghl_client = MagicMock()
 
         engine = JorgeSellerEngine(conversation_manager=mock_conv_manager, ghl_client=mock_ghl_client)
-        insight = await engine._get_market_insight("Austin, TX")
+        insight = await engine._get_market_insight("Rancho Cucamonga, CA")
 
-        assert "Austin, TX" in insight
+        assert "Rancho Cucamonga, CA" in insight
         assert "exploding" in insight
         assert "losing leverage" in insight

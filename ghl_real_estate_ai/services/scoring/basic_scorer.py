@@ -251,7 +251,7 @@ class BasicPropertyScorer(PropertyScorer):
 
         if price > 0 and sqft > 0:
             price_per_sqft = price / sqft
-            # Austin market baseline ~$200-400/sqft
+            # Rancho Cucamonga market baseline ~$200-400/sqft
             if 250 <= price_per_sqft <= 350:
                 base_score += 10  # Market rate
             elif price_per_sqft < 250:

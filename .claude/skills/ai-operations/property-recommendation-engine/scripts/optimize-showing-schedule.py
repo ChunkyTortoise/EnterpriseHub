@@ -358,7 +358,7 @@ def load_properties(properties_file: str) -> List[ShowingLocation]:
 
 def generate_mock_properties() -> List[ShowingLocation]:
     """Generate mock properties for demonstration."""
-    # Round Rock / Austin area coordinates
+    # Round Rock / Rancho Cucamonga area coordinates
     mock_data = [
         ("prop_001", "123 Main St, Round Rock, TX", (30.508, -97.678), 0.9, 0.85),
         ("prop_002", "456 Oak Ave, Cedar Park, TX", (30.505, -97.820), 0.7, 0.78),

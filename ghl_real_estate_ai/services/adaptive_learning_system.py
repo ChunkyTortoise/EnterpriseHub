@@ -1332,7 +1332,7 @@ class AdaptiveLearningSystem:
 
     def get_learning_stats(self) -> Dict[str, Any]:
         """Get comprehensive learning system statistics."""
-        uptime = datetime.now() - self.learning_stats.get("system_start_time", datetime.now())
+        datetime.now() - self.learning_stats.get("system_start_time", datetime.now())
 
         return {
             "system_status": "adaptive_learning_with_agent_feedback_loops",

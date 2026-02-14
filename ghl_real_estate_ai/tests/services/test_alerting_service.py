@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.alerting_service import (
 
-@pytest.mark.integration
     Alert,
     AlertingService,
     AlertRule,

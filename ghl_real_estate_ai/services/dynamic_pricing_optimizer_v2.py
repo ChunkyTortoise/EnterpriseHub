@@ -709,11 +709,11 @@ async def test_enhanced_pricing_optimization() -> None:
         "lead_id": "test_lead_001",
         "conversation_context": {
             "messages": [
-                {"role": "user", "content": "I'm looking for a 3BR home in Austin under $500K"},
+                {"role": "user", "content": "I'm looking for a 3BR home in Rancho Cucamonga under $500K"},
                 {"role": "assistant", "content": "I can help you find great options in that range!"},
             ]
         },
-        "preferences": {"budget_min": 400000, "budget_max": 500000, "bedrooms": 3, "location": "Austin"},
+        "preferences": {"budget_min": 400000, "budget_max": 500000, "bedrooms": 3, "location": "Rancho Cucamonga"},
         "urgency_signals": ["timeline_mentioned", "pre_approved"],
         "engagement_score": 0.85,
     }

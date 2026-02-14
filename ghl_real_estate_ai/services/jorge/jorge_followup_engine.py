@@ -281,7 +281,7 @@ class JorgeFollowUpEngine:
     ) -> str:
         """Create message to retry incomplete qualification"""
 
-        questions_answered = seller_data.get("questions_answered", 0)
+        seller_data.get("questions_answered", 0)
 
         # Escalating urgency based on sequence position
         if sequence_position == 1:

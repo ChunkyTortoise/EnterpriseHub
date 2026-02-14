@@ -16,7 +16,7 @@ from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_char
 
 
 def render_war_room_dashboard():
-    st.markdown("### 🏢 JORGE WAR ROOM: Austin Market Heat")
+    st.markdown("### 🏢 JORGE WAR ROOM: Rancho Cucamonga Market Heat")
     st.markdown("*Real-time visualization of lead clustering and conversion probability*")
 
     service = get_war_room_service()
@@ -74,7 +74,7 @@ def render_war_room_dashboard():
     with col2:
         st.markdown("#### 🔥 Top 10 Hot Leads")
         hot_leads = [
-            {"name": "Sarah Chen", "frs": 89, "timeline": "30d", "area": "Zilker"},
+            {"name": "Sarah Chen", "frs": 89, "timeline": "30d", "area": "Victoria Gardens"},
             {"name": "David Kim", "frs": 95, "timeline": "Immediate", "area": "Manor"},
             {"name": "Robert Williams", "frs": 76, "timeline": "45d", "area": "South Lake"},
         ]
@@ -82,7 +82,7 @@ def render_war_room_dashboard():
         st.table(df_hot)
 
         st.info(
-            "💡 **Strategy:** 3 leads clustered in Zilker Area. Recommend hosting a private neighborhood brief this Friday."
+            "💡 **Strategy:** 3 leads clustered in Victoria Gardens Area. Recommend hosting a private neighborhood brief this Friday."
         )
 
 

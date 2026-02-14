@@ -258,8 +258,8 @@ class JorgeOptimizationEngine:
             return bottlenecks
 
         avg_response = statistics.mean(response_times)
-        p95_response = np.percentile(response_times, 95)
-        max_response = max(response_times)
+        np.percentile(response_times, 95)
+        max(response_times)
 
         # Check for high average response times
         if avg_response > self.response_time_threshold:
@@ -322,7 +322,7 @@ class JorgeOptimizationEngine:
             return bottlenecks
 
         avg_memory = statistics.mean(memory_usage)
-        max_memory = max(memory_usage)
+        max(memory_usage)
 
         # Check for high memory usage
         if avg_memory > self.memory_threshold:

@@ -224,7 +224,11 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
         if not isinstance(value, str):
             return value
 
-        # FIXED: Apply relaxed validation for real estate conversation endpoints
+        # SECURITY MODEL: Relaxed validation for real estate conversation endpoints
+        # - Validation is bypassed for natural language params (message, content, text, query)
+        # - This prevents false positives for legitimate user conversations
+        # - SQL injection prevention: parameterized queries used downstream
+        # - XSS prevention: sanitization applied before rendering (see line ~297)
         is_conversation_endpoint = self._is_real_estate_conversation_endpoint(request.url.path)
 
         # Skip SQL injection validation for conversation messages (natural language)

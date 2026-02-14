@@ -79,7 +79,7 @@ ghl_real_estate_ai/streamlit_demo/
 
 ```json
 {
-  "Austin": [
+  "Rancho Cucamonga": [
     {
       "id": "lead_1",
       "name": "Sarah Johnson",
@@ -110,7 +110,7 @@ from components.interactive_lead_map import render_interactive_lead_map
 leads = load_leads_from_database()
 
 # Render the map
-render_interactive_lead_map(leads, market="Austin")
+render_interactive_lead_map(leads, market="Rancho Cucamonga")
 ```
 
 ### Custom Lead Data
@@ -127,7 +127,7 @@ custom_lead = {
     "location": "West Lake"
 }
 
-render_interactive_lead_map([custom_lead], market="Austin")
+render_interactive_lead_map([custom_lead], market="Rancho Cucamonga")
 ```
 
 ## AI Insight Rules
@@ -182,7 +182,7 @@ streamlit run app.py
 ```
 
 ### Navigate To
-1. Sidebar: Select "Austin, TX" or "Rancho Cucamonga, CA"
+1. Sidebar: Select "Rancho Cucamonga, CA" or "Rancho Cucamonga, CA"
 2. Main menu: Click "🧠 Lead Intelligence Hub"
 3. Tab: Click "🎯 Lead Scoring"
 4. Interact: Click any marker or use dropdown

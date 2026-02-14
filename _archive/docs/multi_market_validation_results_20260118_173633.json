@@ -9,7 +9,7 @@
     "Market Configurations": {
       "status": "PASS",
       "validated_configs": [
-        "austin.yaml",
+        "rancho_cucamonga.yaml",
         "dallas.yaml",
         "houston.yaml",
         "san_antonio.yaml",
@@ -66,7 +66,7 @@
     "Service Dependencies": {
       "status": "FAIL",
       "validated_services": [
-        "austin_market_service.py",
+        "rancho_cucamonga_market_service.py",
         "rancho_cucamonga_market_service.py"
       ],
       "errors": [
@@ -77,7 +77,7 @@
     "Backward Compatibility": {
       "status": "PASS",
       "compatibility_checks": [
-        "AustinMarketService - PASS",
+        "RanchoCucamongaMarketService - PASS",
         "ContactData schema - PASS"
       ],
       "warnings": []
@@ -86,7 +86,7 @@
       "status": "WARNING",
       "security_checks": [
         "dallas.yaml - Clean",
-        "austin.yaml - Clean",
+        "rancho_cucamonga.yaml - Clean",
         "san_antonio.yaml - Clean",
         "rancho_cucamonga.yaml - Clean",
         "houston.yaml - Clean"
@@ -112,7 +112,7 @@
     "Import error in market_prediction_engine.py: cannot import name 'get_market_service' from 'ghl_real_estate_ai.markets.registry' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/markets/registry.py)"
   ],
   "market_configs": {
-    "austin": {
+    "rancho_cucamonga": {
       "neighborhoods": 8,
       "employers": 6,
       "demographics": [

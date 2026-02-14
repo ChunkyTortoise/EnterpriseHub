@@ -21,7 +21,6 @@ from fastapi.testclient import TestClient
 from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.jorge.alerting_service import (
 
-@pytest.mark.integration
     Alert,
     AlertingService,
     AlertRule,

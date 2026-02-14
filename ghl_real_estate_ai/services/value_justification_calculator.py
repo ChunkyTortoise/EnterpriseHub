@@ -400,7 +400,7 @@ class ValueJustificationCalculator:
 
             # Calculate agent value
             agent_commission = property_value * agent_performance_metrics.get("commission_rate", 0.035)
-            agent_value = await self._calculate_total_agent_value(agent_performance_metrics, property_value)
+            await self._calculate_total_agent_value(agent_performance_metrics, property_value)
 
             # Calculate competitor costs and outcomes
             competitor_commission = property_value * competitor["commission_rate"]

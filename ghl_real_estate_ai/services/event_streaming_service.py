@@ -326,7 +326,7 @@ class EventStreamingService:
 
     async def _emit_infrastructure_alert(self, alert_type: str, details: Dict[str, Any]):
         """Emit infrastructure failure alerts for monitoring systems."""
-        alert_event = StreamEvent(
+        StreamEvent(
             event_type=EventType.SYSTEM_ALERT,
             data={
                 "alert_type": alert_type,

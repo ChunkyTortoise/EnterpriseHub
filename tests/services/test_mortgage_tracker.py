@@ -13,7 +13,6 @@ import pytest
 
 from ghl_real_estate_ai.services.mortgage_tracker import (
 
-@pytest.mark.integration
     MortgageReadiness,
     MortgageTracker,
     Referral,

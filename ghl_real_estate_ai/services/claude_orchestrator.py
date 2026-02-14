@@ -18,7 +18,6 @@ from ghl_real_estate_ai.models.orchestrator_types import (
     LeadAnalysisContext,
     MemoryContext,
     OrchestratorContext,
-    ParsedOrchestratorResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -134,6 +133,7 @@ class ClaudeOrchestrator:
         from ghl_real_estate_ai.core.mcp_servers.domain.market_intelligence_server import mcp as market_mcp
         from ghl_real_estate_ai.core.mcp_servers.domain.negotiation_intelligence_server import mcp as negotiation_mcp
         from ghl_real_estate_ai.core.mcp_servers.domain.property_intelligence_server import mcp as property_mcp
+        from ghl_real_estate_ai.core.mcp_servers.domain.research_intelligence_server import mcp as research_mcp
 
         self.mcp_servers = {
             "LeadIntelligence": lead_mcp,
@@ -141,6 +141,7 @@ class ClaudeOrchestrator:
             "MarketIntelligence": market_mcp,
             "NegotiationIntelligence": negotiation_mcp,
             "AnalyticsIntelligence": analytics_mcp,
+            "ResearchIntelligence": research_mcp,
         }
 
         # Initialize dependencies for ChurnPredictionEngine
@@ -595,10 +596,10 @@ class ClaudeOrchestrator:
     def _get_demo_fallback_response(self, task_type: ClaudeTaskType) -> ClaudeResponse:
         """Provide realistic mock responses when API key is invalid (Demo Mode)"""
         fallbacks = {
-            ClaudeTaskType.CHAT_QUERY: "I'm currently in **Simulated Intelligence Mode** because a valid API key was not detected. Based on your pipeline, I recommend focusing on the Austin Alta Loma cluster where engagement is peaking.",
+            ClaudeTaskType.CHAT_QUERY: "I'm currently in **Simulated Intelligence Mode** because a valid API key was not detected. Based on your pipeline, I recommend focusing on the Rancho Cucamonga Alta Loma cluster where engagement is peaking.",
             ClaudeTaskType.LEAD_ANALYSIS: "Strategic Analysis (Simulated): This lead shows high data-driven intent. Recommend prioritizing neighborhood stats and commute efficiency metrics in your next outreach.",
-            ClaudeTaskType.REPORT_SYNTHESIS: "Executive Summary (Simulated): Your Austin market is performing at 115% of target. Conversion velocity has increased by 12% since activating the Swarm Intelligence layer.",
-            ClaudeTaskType.SCRIPT_GENERATION: "Simulated SMS: 'Hi! I noticed you were looking at the Zilker listings. I've prepared a custom market update for that area—would you like me to send it over?'",
+            ClaudeTaskType.REPORT_SYNTHESIS: "Executive Summary (Simulated): Your Rancho Cucamonga market is performing at 115% of target. Conversion velocity has increased by 12% since activating the Swarm Intelligence layer.",
+            ClaudeTaskType.SCRIPT_GENERATION: "Simulated SMS: 'Hi! I noticed you were looking at the Victoria Gardens listings. I've prepared a custom market update for that area—would you like me to send it over?'",
         }
 
         return ClaudeResponse(

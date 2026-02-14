@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.unit
 #!/usr/bin/env python3
 """
 Test SMTP Email Alert Channel

@@ -12,8 +12,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 
 def create_mock_buyer_intent_profile():
     """Create a realistic BuyerIntentProfile mock."""

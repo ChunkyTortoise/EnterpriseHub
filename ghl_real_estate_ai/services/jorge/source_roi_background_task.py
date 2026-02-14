@@ -11,7 +11,6 @@ Usage:
 """
 
 import asyncio
-import logging
 from typing import Any, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

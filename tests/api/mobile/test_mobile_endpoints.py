@@ -13,8 +13,6 @@ from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
-
 client = TestClient(app)
 
 
@@ -34,7 +32,7 @@ class TestMobileEndpoints:
     @pytest.fixture
     def sample_gps_location(self):
         """Sample GPS coordinates for testing."""
-        return "30.2672,-97.7431"  # Austin, TX coordinates
+        return "30.2672,-97.7431"  # Rancho Cucamonga, CA coordinates
 
 
 class TestMobileProperties:
@@ -95,7 +93,7 @@ class TestMobileProperties:
         """Test detailed property information retrieval."""
         mock_auth.return_value = {"user_id": "test_user", "username": "test_user"}
 
-        property_id = "prop_austin_001"
+        property_id = "prop_rancho_cucamonga_001"
         response = client.get(
             f"/api/mobile/properties/{property_id}",
             params={"include_ai_insights": "true"},

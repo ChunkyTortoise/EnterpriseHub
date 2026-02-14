@@ -20,7 +20,6 @@ import pytest
 
 from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import (
 
-@pytest.mark.integration
     AdvancedMLLeadScoringEngine,
     MLFeatureVector,
     MLScoringResult,

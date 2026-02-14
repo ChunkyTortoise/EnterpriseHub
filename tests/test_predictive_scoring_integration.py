@@ -16,8 +16,6 @@ os.environ["JORGE_SELLER_MODE"] = "false"
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_predictive_integration():
@@ -36,12 +34,12 @@ async def test_predictive_integration():
     history = [
         {
             "role": "user",
-            "content": "Hi, I'm looking for a 3 bedroom house in Austin. My budget is around $500k.",
+            "content": "Hi, I'm looking for a 3 bedroom house in Rancho Cucamonga. My budget is around $500k.",
             "timestamp": (now - timedelta(minutes=10)).isoformat(),
         },
         {
             "role": "assistant",
-            "content": "Hi! Austin is a great choice. I can certainly help you with that. Are you already pre-approved for a loan?",
+            "content": "Hi! Rancho Cucamonga is a great choice. I can certainly help you with that. Are you already pre-approved for a loan?",
             "timestamp": (now - timedelta(minutes=9)).isoformat(),
         },
         {
@@ -56,7 +54,7 @@ async def test_predictive_integration():
         "location_id": location_id,
         "conversation_history": history,
         "extracted_preferences": {
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "budget": 500000,
             "bedrooms": 3,
             "financing": "pre-approved",

@@ -3,7 +3,7 @@
  *
  * Integrates with Jorge's Phase 7 Advanced Analytics Backend to provide:
  * - SHAP waterfall charts using Recharts for ML explainability
- * - Austin market intelligence heatmaps using Deck.gl
+ * - Rancho Cucamonga market intelligence heatmaps using Deck.gl
  * - Real-time performance metrics with <50ms API response targets
  * - Export and sharing capabilities for professional reporting
  *
@@ -107,7 +107,7 @@ export function AdvancedAnalyticsInterface({ locationId, className = '' }: Advan
   const [marketData, setMarketData] = useState<MarketIntelligenceData[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string>('demo-lead-123');
-  const [selectedArea, setSelectedArea] = useState<string>('austin-central');
+  const [selectedArea, setSelectedArea] = useState<string>('rancho_cucamonga-central');
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,7 +204,7 @@ export function AdvancedAnalyticsInterface({ locationId, className = '' }: Advan
     try {
       const startTime = Date.now();
 
-      const response = await fetch(`/api/v1/analytics/market-intelligence/austin?area=${selectedArea}`, {
+      const response = await fetch(`/api/v1/analytics/market-intelligence/rancho_cucamonga?area=${selectedArea}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json'
@@ -419,7 +419,7 @@ export function AdvancedAnalyticsInterface({ locationId, className = '' }: Advan
         <div>
           <h2 className="text-xl font-semibold text-slate-100 mb-2">Advanced Analytics Intelligence</h2>
           <p className="text-slate-400 text-sm">
-            SHAP explainability analysis and Austin market intelligence with real-time insights
+            SHAP explainability analysis and Rancho Cucamonga market intelligence with real-time insights
           </p>
         </div>
 

@@ -56,7 +56,7 @@ Transform Jorge's bot ecosystem into a unified, browser-based command center wit
 - **Claude Strategy Coaching**: Live suggestions for next best confrontational approach
 - **Behavioral Analysis**: Lead response patterns and optimal timing recommendations
 - **Commission Calculator**: Jorge's 6% commission projection with ML-predicted sale prices
-- **Market Context**: Austin market intelligence injected into conversations
+- **Market Context**: Rancho Cucamonga market intelligence injected into conversations
 
 #### **Client Interaction Hub**
 - **Live Conversation Monitor**: Real-time message flow with sentiment analysis
@@ -73,7 +73,7 @@ Transform Jorge's bot ecosystem into a unified, browser-based command center wit
 - **SMS Compliance Monitor**: TCPA-compliant messaging with automatic opt-out tracking
 
 #### **Property Matching Engine**
-- **Austin Market Explorer**: Interactive property recommendations with Claude explanations
+- **Rancho Cucamonga Market Explorer**: Interactive property recommendations with Claude explanations
 - **Buyer Journey Mapping**: Visual progression through consultation stages
 - **Showing Scheduler**: Integrated calendar with automated follow-up sequences
 - **Negotiation Prep**: AI-generated talking points based on buyer psychology

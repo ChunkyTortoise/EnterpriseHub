@@ -21,7 +21,7 @@
 
 I built EnterpriseHub to solve this problem. It's an AI-powered platform with three specialized bots that qualify leads instantly — 24/7 — and sync everything to your CRM.
 
-The platform is production-ready with 4,937 automated tests, 89% token cost reduction through intelligent caching, and P95 latency under 2 seconds.
+The platform is production-ready with **8,340 automated tests** across the portfolio, 89% token cost reduction through intelligent caching, and P95 latency under 2 seconds.
 
 Let me show you how it works."
 
@@ -205,7 +205,7 @@ The API layer has 82 FastAPI routes covering webhooks, CRM sync, analytics, and 
 
 P95 latency is under 2 seconds for the Lead Bot. That includes LLM calls, database writes, and cache operations. The orchestration layer adds less than 200 milliseconds of overhead.
 
-The test suite has 4,937 automated tests — all green in CI. This covers unit tests, integration tests, and end-to-end scenarios. Every PR runs the full suite before merge.
+The test suite has **8,340 automated tests** — all green in CI. This covers unit tests, integration tests, and end-to-end scenarios. Every PR runs the full suite before merge.
 
 The platform integrates with three CRMs — GoHighLevel, HubSpot, and Salesforce. The GoHighLevel client is rate-limited to 10 requests per second to stay within API limits.
 
@@ -281,7 +281,7 @@ Thanks for watching. Go check out the live demo and let me know what you think."
 - Add lower-third graphics for key metrics
 - Include subtle background music (royalty-free)
 - Add chapter markers for YouTube
-- Create thumbnail with "4,937 Tests" and "89% Cost Reduction" text
+- Create thumbnail with "**8,340 Tests**" and "89% Cost Reduction" text
 
 ### Thumbnail Concepts
 1. Split screen: Code on left, dashboard on right, "EnterpriseHub" title
@@ -317,3 +317,4 @@ Thanks for watching. Go check out the live demo and let me know what you think."
 *Script Version: 1.0*  
 *Created: February 2026*  
 *Estimated Word Count: ~1,100 words (2.8 words/second average)*
+cont and update beads

@@ -161,18 +161,18 @@ class TestAuthorizationSecurity:
                 assert "manage_tenant" not in permissions
                 assert "configure_sso" not in permissions
 
-    def test_domain_isolation_enforcement(self, auth_service):
-        """Test that domain isolation is enforced."""
-        # Valid domain
-        assert auth_service._validate_user_domain("user@company.com", ["company.com"]) is True
+    def test_ontario_mills_isolation_enforcement(self, auth_service):
+        """Test that ontario_mills isolation is enforced."""
+        # Valid ontario_mills
+        assert auth_service._validate_user_ontario_mills("user@company.com", ["company.com"]) is True
 
-        # Invalid domains should be rejected
-        assert auth_service._validate_user_domain("user@attacker.com", ["company.com"]) is False
-        assert auth_service._validate_user_domain("user@company.com.evil.com", ["company.com"]) is False
-        assert auth_service._validate_user_domain("user@subcompany.com", ["company.com"]) is False
+        # Invalid ontario_millss should be rejected
+        assert auth_service._validate_user_ontario_mills("user@attacker.com", ["company.com"]) is False
+        assert auth_service._validate_user_ontario_mills("user@company.com.evil.com", ["company.com"]) is False
+        assert auth_service._validate_user_ontario_mills("user@subcompany.com", ["company.com"]) is False
 
         # Case insensitive but exact match
-        assert auth_service._validate_user_domain("USER@COMPANY.COM", ["company.com"]) is True
+        assert auth_service._validate_user_ontario_mills("USER@COMPANY.COM", ["company.com"]) is True
 
     @pytest.mark.asyncio
     async def test_tenant_data_isolation(self, auth_service):
@@ -234,12 +234,12 @@ class TestDataProtectionSecurity:
             # Test tenant creation with proper TTL
             tenant_data = {
                 "company_name": "TestCorp",
-                "domain": "testcorp.com",
+                "ontario_mills": "testcorp.com",
                 "sso_provider": SSOProvider.AZURE_AD,
                 "admin_email": "admin@testcorp.com",
             }
 
-            auth_service._is_domain_already_registered = AsyncMock(return_value=False)
+            auth_service._is_ontario_mills_already_registered = AsyncMock(return_value=False)
             auth_service._generate_tenant_secrets = AsyncMock(return_value={"client_secret": "secret"})
             auth_service._setup_sso_configuration = AsyncMock(return_value={"status": "pending"})
 
@@ -309,10 +309,10 @@ class TestInputValidationSecurity:
         # User data should be properly escaped/sanitized
         # The service should store the data safely without executing scripts
 
-        tenant_config = {"tenant_id": "tenant_123", "allowed_domains": ["company.com"], "require_mfa": True}
+        tenant_config = {"tenant_id": "tenant_123", "allowed_ontario_millss": ["company.com"], "require_mfa": True}
 
         with patch.object(auth_service, "cache_service", AsyncMock()):
-            auth_service._validate_user_domain = MagicMock(return_value=True)
+            auth_service._validate_user_ontario_mills = MagicMock(return_value=True)
             auth_service._calculate_user_permissions = MagicMock(return_value=["view_own_relocation"])
 
             # This should not raise an exception and should handle malicious input safely
@@ -326,7 +326,7 @@ class TestInputValidationSecurity:
         auth_service = EnterpriseAuthService()
 
         # Valid emails
-        assert auth_service._validate_user_domain("user@company.com", ["company.com"]) is True
+        assert auth_service._validate_user_ontario_mills("user@company.com", ["company.com"]) is True
 
         # Invalid/malicious emails
         malicious_emails = [
@@ -342,7 +342,7 @@ class TestInputValidationSecurity:
         ]
 
         for email in malicious_emails:
-            assert auth_service._validate_user_domain(email, ["company.com"]) is False
+            assert auth_service._validate_user_ontario_mills(email, ["company.com"]) is False
 
     @pytest.mark.asyncio
     async def test_volume_limits_enforcement(self):
@@ -351,7 +351,7 @@ class TestInputValidationSecurity:
 
         # Test bulk relocation with excessive volume
         excessive_relocations = [
-            {"employee_email": f"user{i}@company.com", "destination_city": "Austin"}
+            {"employee_email": f"user{i}@company.com", "destination_city": "Rancho Cucamonga"}
             for i in range(101)  # Exceeds limit of 100
         ]
 
@@ -424,18 +424,18 @@ class TestErrorHandlingSecurity:
         auth_service = EnterpriseAuthService()
 
         # Test that user existence checks don't leak timing information
-        # Both existing and non-existing domains should take similar time
+        # Both existing and non-existing ontario_millss should take similar time
 
         import time
 
         # Mock consistent behavior
         with patch.object(auth_service, "cache_service", AsyncMock()):
             start_time = time.time()
-            result1 = await auth_service.get_tenant_by_domain("existing.com")
+            result1 = await auth_service.get_tenant_by_ontario_mills("existing.com")
             time1 = time.time() - start_time
 
             start_time = time.time()
-            result2 = await auth_service.get_tenant_by_domain("nonexistent.com")
+            result2 = await auth_service.get_tenant_by_ontario_mills("nonexistent.com")
             time2 = time.time() - start_time
 
             # Timing difference should be minimal (allowing for normal variance)

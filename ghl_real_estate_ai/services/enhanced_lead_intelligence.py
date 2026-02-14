@@ -695,7 +695,7 @@ class EnhancedLeadIntelligence:
         # Extract occupation and location from context or analysis
         lead_context = analysis_result.conversation_context
         occupation = lead_context.get("extracted_preferences", {}).get("occupation", "Professional")
-        location = lead_context.get("extracted_preferences", {}).get("location", "Austin Area")
+        location = lead_context.get("extracted_preferences", {}).get("location", "Rancho Cucamonga Area")
 
         st.markdown(
             f"""
@@ -958,7 +958,7 @@ class EnhancedLeadIntelligence:
         base_insights = {
             "Sarah Chen": f"High-velocity tech professional (Score: {analysis_result.final_score:.0f}%). Apple engineers are data-driven; Claude detected {analysis_result.engagement_score:.0f}% engagement. Timeline critical: prioritize Teravista for commute efficiency.",
             "David Kim": f"Analytical investor (Score: {analysis_result.final_score:.0f}%). Claude identified investment-focused behavior patterns. Current focus: Manor vs Del Valle yield comparison. Recommend off-market ROI analysis.",
-            "Mike & Jessica Rodriguez": f"First-time buyer family (Score: {analysis_result.final_score:.0f}%). Claude detected high sentiment but low confidence. Safety & schools research indicates Pflugerville preference. Emphasize 8/10 school ratings.",
+            "Mike & Jessica Rodriguez": f"First-time buyer family (Score: {analysis_result.final_score:.0f}%). Claude detected high sentiment but low confidence. Safety & schools research indicates Ontario preference. Emphasize 8/10 school ratings.",
             "Robert & Linda Williams": f"Luxury downsizers (Score: {analysis_result.final_score:.0f}%). Relationship-focused with high trust indicators. Value personal service over automation. Recommend exclusive downtown access and concierge approach.",
         }
 

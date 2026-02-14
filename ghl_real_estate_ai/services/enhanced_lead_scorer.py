@@ -719,7 +719,7 @@ if __name__ == "__main__":
         context = {
             "extracted_preferences": {
                 "budget": "$750,000",
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "timeline": "next 2 months",
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -727,7 +727,7 @@ if __name__ == "__main__":
                 "motivation": "growing family",
             },
             "conversation_history": [
-                {"content": "Looking for a 3-bedroom house in Austin"},
+                {"content": "Looking for a 3-bedroom house in Rancho Cucamonga"},
                 {"content": "Budget is around $750k, need to move by spring"},
                 {"content": "Already pre-approved for mortgage"},
             ],

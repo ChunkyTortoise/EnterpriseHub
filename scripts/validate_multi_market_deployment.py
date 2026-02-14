@@ -103,7 +103,7 @@ class DeploymentValidator:
             
             # Check available markets
             available_markets = registry.list_markets()
-            expected_markets = ["austin", "dallas", "houston", "san_antonio", "rancho_cucamonga"]
+            expected_markets = ["rancho_cucamonga", "dallas", "houston", "san_antonio", "rancho_cucamonga"]
             
             result = {
                 "status": "PASS",
@@ -150,7 +150,7 @@ class DeploymentValidator:
             "warnings": []
         }
         
-        expected_configs = ["austin.yaml", "dallas.yaml", "houston.yaml", "san_antonio.yaml", "rancho_cucamonga.yaml"]
+        expected_configs = ["rancho_cucamonga.yaml", "dallas.yaml", "houston.yaml", "san_antonio.yaml", "rancho_cucamonga.yaml"]
         
         for config_file in expected_configs:
             config_path = config_dir / config_file
@@ -316,7 +316,7 @@ class DeploymentValidator:
         
         # Key services for multi-market functionality
         key_services = [
-            "austin_market_service.py",
+            "rancho_cucamonga_market_service.py",
             "rancho_cucamonga_market_service.py",
             "churn_prediction_engine.py",
             "market_prediction_engine.py"
@@ -353,11 +353,11 @@ class DeploymentValidator:
         
         # Check if existing services still work
         try:
-            from ghl_real_estate_ai.services.austin_market_service import AustinMarketService
-            service = AustinMarketService()
-            result["compatibility_checks"].append("AustinMarketService - PASS")
+            from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService
+            service = RanchoCucamongaMarketService()
+            result["compatibility_checks"].append("RanchoCucamongaMarketService - PASS")
         except Exception as e:
-            result["warnings"].append(f"AustinMarketService compatibility issue: {str(e)}")
+            result["warnings"].append(f"RanchoCucamongaMarketService compatibility issue: {str(e)}")
             result["status"] = "WARNING"
         
         # Check API backwards compatibility
@@ -427,7 +427,7 @@ class DeploymentValidator:
                     content = f.read()
                 if 'async def' in content:
                     async_patterns += 1
-            except:
+            except Exception:
                 pass
         
         result["performance_checks"].append(f"Async patterns found in {async_patterns} service files")

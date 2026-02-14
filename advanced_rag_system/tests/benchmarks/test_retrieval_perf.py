@@ -16,7 +16,6 @@ from typing import Dict
 import numpy as np
 import pytest
 
-@pytest.mark.integration
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -27,6 +26,8 @@ try:
     from ghl_real_estate_ai.core.rag_engine import SearchResult, VectorStore
 except ImportError:
     # Fallback mock classes for testing environment
+
+@pytest.mark.integration
     class SearchResult:
         def __init__(self, text: str, source: str, id: str, distance: float, metadata: Dict):
             self.text = text
@@ -106,8 +107,6 @@ class TestRetrievalPerformance:
             "First-time homebuyer programs available",
         ]
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_dense_retrieval_latency(self, vector_store, test_queries):
         """
         Measure dense retrieval latency.
@@ -148,8 +147,6 @@ class TestRetrievalPerformance:
 
         return {"p50": p50, "p95": p95, "p99": p99, "stretch_goal_met": stretch_goal_met}
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_hybrid_retrieval_latency(self, hybrid_retriever, test_queries):
         """
         Measure hybrid retrieval end-to-end latency.
@@ -208,8 +205,6 @@ class TestRetrievalPerformance:
             "stretch_goal_met": stretch_goal_met,
         }
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_retrieval_throughput(self, vector_store, test_queries):
         """
         Measure retrieval system throughput under concurrent load.
@@ -264,8 +259,6 @@ class TestRetrievalPerformance:
 
         return results
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_retrieval_scalability(self, vector_store, test_queries):
         """
         Test retrieval performance scaling with different result set sizes.
@@ -317,8 +310,6 @@ class TestRetrievalPerformance:
 
         return results
 
-    @pytest.mark.benchmark
-    @pytest.mark.asyncio
     async def test_cache_performance_impact(self, vector_store, test_queries):
         """
         Test the impact of caching on retrieval performance.

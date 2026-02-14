@@ -653,7 +653,7 @@ class AutonomousABTesting:
         """Perform statistical significance analysis."""
         try:
             # Get primary metric (usually conversion rate)
-            primary_metric = test_config.target_metrics[0] if test_config.target_metrics else "conversion_rate"
+            test_config.target_metrics[0] if test_config.target_metrics else "conversion_rate"
 
             # Collect data for analysis
             variant_metrics = []
@@ -1028,7 +1028,7 @@ class AutonomousABTesting:
     async def cross_pollinate_successful_variants(self):
         """
         Phase 7: Neural Cross-Pollination.
-        Identifies successful linguistic patterns in one domain (e.g., Seller)
+        Identifies successful linguistic patterns in one ontario_mills (e.g., Seller)
         and automatically applies them to another (e.g., Buyer).
         """
         logger.info("🧠 Running Neural Cross-Pollination analysis...")
@@ -1053,17 +1053,17 @@ class AutonomousABTesting:
                     )
 
         for candidate in candidates:
-            target_domain = "Buyer" if candidate["source"] == "Seller" else "Seller"
-            logger.info(f"Applying successful {candidate['variant'].variant_name} hook to {target_domain} domain.")
-            await self._create_adapted_domain_test(candidate["variant"], target_domain)
+            target_ontario_mills = "Buyer" if candidate["source"] == "Seller" else "Seller"
+            logger.info(f"Applying successful {candidate['variant'].variant_name} hook to {target_ontario_mills} ontario_mills.")
+            await self._create_adapted_ontario_mills_test(candidate["variant"], target_ontario_mills)
 
-    async def _create_adapted_domain_test(self, variant: TestVariant, target_domain: str):
+    async def _create_adapted_ontario_mills_test(self, variant: TestVariant, target_ontario_mills: str):
         """
         Phase 7: Neural Cross-Pollination.
-        Uses LLM to adapt a successful variant for a different domain and registers a new test.
+        Uses LLM to adapt a successful variant for a different ontario_mills and registers a new test.
         """
         try:
-            prompt = f"""Adapt this successful real estate hook for the {target_domain} domain.
+            prompt = f"""Adapt this successful real estate hook for the {target_ontario_mills} ontario_mills.
             ORIGINAL HOOK: {variant.variant_name}
             STRATEGY: {variant.configuration.get("description", "Educational insight")}
             ORIGINAL CONFIG: {json.dumps(variant.configuration)}
@@ -1072,7 +1072,7 @@ class AutonomousABTesting:
             
             Return ONLY a JSON object for a new A/B test variant:
             {{
-                "name": "CrossPollinated_{variant.variant_name}_{target_domain}",
+                "name": "CrossPollinated_{variant.variant_name}_{target_ontario_mills}",
                 "description": "Adapted from successful {variant.variant_name} pattern",
                 "configuration": {{ ... adapted configuration ... }}
             }}
@@ -1090,15 +1090,15 @@ class AutonomousABTesting:
 
             adapted_variant_config = json.loads(content)
 
-            # Create a new test for the target domain
-            test_name = f"Neural Cross-Pollination: {variant.variant_name} -> {target_domain}"
+            # Create a new test for the target ontario_mills
+            test_name = f"Neural Cross-Pollination: {variant.variant_name} -> {target_ontario_mills}"
 
             # Define variants: we test the adapted hook against a baseline
             variants = [
                 {
-                    "name": f"{target_domain} Baseline Control",
-                    "description": f"Standard {target_domain} messaging control.",
-                    "configuration": {"template_type": "standard", "domain": target_domain.lower()},
+                    "name": f"{target_ontario_mills} Baseline Control",
+                    "description": f"Standard {target_ontario_mills} messaging control.",
+                    "configuration": {"template_type": "standard", "ontario_mills": target_ontario_mills.lower()},
                 },
                 adapted_variant_config,
             ]
@@ -1116,11 +1116,11 @@ class AutonomousABTesting:
             test_config.status = TestStatus.ACTIVE
             await self._save_test_configuration(test_config)
 
-            logger.info(f"✅ Neural Cross-Pollination active: {test_config.test_id} ({target_domain})")
+            logger.info(f"✅ Neural Cross-Pollination active: {test_config.test_id} ({target_ontario_mills})")
             return test_config
 
         except Exception as e:
-            logger.error(f"❌ Failed to adapt domain test: {e}")
+            logger.error(f"❌ Failed to adapt ontario_mills test: {e}")
             return None
 
 

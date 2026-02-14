@@ -98,7 +98,6 @@ class VossNegotiationAgent:
     def compliance_audit(self, state: VossNegotiationState) -> Dict:
         """Real-time FHA/RESPA safety check."""
         # Simple keyword-based safety check for demo
-        prohibited = ["exclusive", "traditional neighborhood", "only for families"]
         is_compliant = True
         feedback = None
 

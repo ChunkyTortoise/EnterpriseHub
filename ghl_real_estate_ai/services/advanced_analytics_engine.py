@@ -437,7 +437,6 @@ class AdvancedAnalyticsEngine:
             List of analytics insights with recommendations
         """
         try:
-            insights = []
 
             # Gather performance data for analysis
             performance_data = await self._gather_performance_data(time_window)

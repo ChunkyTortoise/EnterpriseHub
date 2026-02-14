@@ -221,7 +221,7 @@ railway up --config railway.jorge.toml
 
 ```bash
 # Get your Railway URL
-railway domain
+railway ontario_mills
 
 # Test health endpoint (lightweight, no auth required)
 curl https://YOUR-APP.up.railway.app/api/health/live
@@ -631,7 +631,7 @@ docker-compose logs postgres
 - Review runtime logs: `railway logs`
 
 **Webhook not triggering:**
-- Verify webhook URL matches Railway domain
+- Verify webhook URL matches Railway ontario_mills
 - Check GHL workflow is active
 - Ensure contact has "Needs Qualifying" tag
 - Verify webhook secret matches: `GHL_WEBHOOK_SECRET`

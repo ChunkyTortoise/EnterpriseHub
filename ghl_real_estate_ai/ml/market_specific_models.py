@@ -7,7 +7,7 @@ Specialized ML models for different market segments with optimized
 conversion prediction algorithms tailored to specific buyer personas.
 
 Market Segments:
-- Tech Hub (Austin, Seattle, San Francisco) - Tech professionals
+- Tech Hub (Rancho Cucamonga, Seattle, San Francisco) - Tech professionals
 - Energy Sector (Houston, Dallas) - Oil & gas professionals
 - Military Market (San Antonio, Norfolk) - Military personnel
 - Luxury Residential (High-end buyers)
@@ -155,7 +155,7 @@ class TechHubModel(BaseMarketModel):
         features["wfh_requirements"] = float(any(indicator in conversation_text for indicator in wfh_indicators))
 
         # Tech hub location preferences
-        tech_locations = ["austin", "seattle", "san francisco", "palo alto", "cupertino"]
+        tech_locations = ["rancho_cucamonga", "seattle", "san francisco", "palo alto", "cupertino"]
         features["tech_location_preference"] = float(any(location in all_text for location in tech_locations))
 
         # High-speed internet requirements
@@ -623,7 +623,7 @@ if __name__ == "__main__":
     tech_lead_data = {
         "lead_id": "tech_123",
         "budget": 750000,
-        "location": "Austin, TX",
+        "location": "Rancho Cucamonga, CA",
         "messages": [
             {"text": "I'm a software engineer at Apple looking for a home with a good home office setup"},
             {"text": "My stock options vest next month, so I can put down 20%"},

@@ -26,29 +26,29 @@ class EnhancedPropertyScorer(PropertyScorer):
     """
 
     def __init__(self):
-        """Initialize enhanced scorer with Austin market expertise"""
-        # Austin-specific market knowledge
+        """Initialize enhanced scorer with Rancho Cucamonga market expertise"""
+        # Rancho Cucamonga-specific market knowledge
         self.premium_neighborhoods = {
             "westlake",
             "downtown",
-            "south congress",
-            "clarksville",
-            "tarrytown",
-            "rollingwood",
-            "barton hills",
+            "day creek",
+            "central rancho",
+            "north rancho",
+            "deer creek",
+            "grapeland",
         }
 
         self.tech_corridor_areas = {
-            "domain",
+            "ontario_mills",
             "arboretum",
             "northwest hills",
-            "great hills",
+            "north rancho",
             "anderson mill",
             "cedar park",
             "round rock",
         }
 
-        self.emerging_areas = {"east austin", "mueller", "highland", "cherrywood", "govalle", "windsor park"}
+        self.emerging_areas = {"east rancho_cucamonga", "haven city", "highland", "cherrywood", "govalle", "windsor park"}
 
         # Advanced scoring weights (15 factors)
         self.weights = {
@@ -216,7 +216,7 @@ class EnhancedPropertyScorer(PropertyScorer):
         return min(1.0, base_score)
 
     def _factor_commute_convenience(self, property_data: Dict, lead_preferences: Dict) -> float:
-        """Commute analysis using Austin geography knowledge"""
+        """Commute analysis using Rancho Cucamonga geography knowledge"""
         neighborhood = self._get_neighborhood_lower(property_data)
         work_location = lead_preferences.get("work_location", "").lower()
 
@@ -225,18 +225,18 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         # Downtown workers
         if "downtown" in work_location:
-            if neighborhood in ["downtown", "south congress", "east austin", "clarksville"]:
+            if neighborhood in ["downtown", "day creek", "east rancho_cucamonga", "central rancho"]:
                 base_score = 0.95  # Walking/biking distance
-            elif neighborhood in ["tarrytown", "rollingwood", "barton hills"]:
+            elif neighborhood in ["north rancho", "deer creek", "grapeland"]:
                 base_score = 0.85  # Short drive
-            elif neighborhood in ["mueller", "highland", "cherrywood"]:
+            elif neighborhood in ["haven city", "highland", "cherrywood"]:
                 base_score = 0.80  # Good transit options
 
         # Tech corridor workers
-        elif any(tech in work_location for tech in ["domain", "arboretum", "apple", "google"]):
-            if neighborhood in ["domain", "arboretum", "northwest hills"]:
+        elif any(tech in work_location for tech in ["ontario_mills", "arboretum", "apple", "google"]):
+            if neighborhood in ["ontario_mills", "arboretum", "northwest hills"]:
                 base_score = 0.95  # Very close
-            elif neighborhood in ["cedar park", "round rock", "great hills"]:
+            elif neighborhood in ["cedar park", "round rock", "north rancho"]:
                 base_score = 0.85  # Reverse commute
 
         return base_score
@@ -246,8 +246,8 @@ class EnhancedPropertyScorer(PropertyScorer):
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Hot market areas (high growth/demand)
-        hot_markets = ["mueller", "east austin", "highland", "south congress"]
-        stable_markets = ["westlake", "tarrytown", "clarksville", "downtown"]
+        hot_markets = ["haven city", "east rancho_cucamonga", "highland", "day creek"]
+        stable_markets = ["westlake", "north rancho", "central rancho", "downtown"]
         emerging_markets = ["govalle", "windsor park", "cherrywood"]
 
         if any(hot in neighborhood for hot in hot_markets):
@@ -312,9 +312,9 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         neighborhood = self._get_neighborhood_lower(property_data)
 
-        # Austin ISD highly-rated areas
-        excellent_schools = ["westlake", "tarrytown", "rollingwood", "barton hills"]
-        good_schools = ["mueller", "highland", "great hills", "northwest hills"]
+        # Rancho Cucamonga ISD highly-rated areas
+        excellent_schools = ["westlake", "north rancho", "deer creek", "grapeland"]
+        good_schools = ["haven city", "highland", "north rancho", "northwest hills"]
 
         if any(excellent in neighborhood for excellent in excellent_schools):
             return 0.95
@@ -344,7 +344,7 @@ class EnhancedPropertyScorer(PropertyScorer):
 
         if sqft > 0:
             price_per_sqft = price / sqft
-            # Austin market analysis
+            # Rancho Cucamonga market analysis
             if 200 <= price_per_sqft <= 300:
                 return 0.9  # Good value zone
             elif 150 <= price_per_sqft <= 200:
@@ -377,9 +377,9 @@ class EnhancedPropertyScorer(PropertyScorer):
         """Neighborhood safety assessment"""
         neighborhood = self._get_neighborhood_lower(property_data)
 
-        # Generally safe Austin areas
-        very_safe = ["westlake", "rollingwood", "tarrytown", "great hills"]
-        safe = ["mueller", "domain", "northwest hills", "barton hills"]
+        # Generally safe Rancho Cucamonga areas
+        very_safe = ["westlake", "deer creek", "north rancho", "north rancho"]
+        safe = ["haven city", "ontario_mills", "northwest hills", "grapeland"]
 
         if any(safe_area in neighborhood for safe_area in very_safe):
             return 0.95
@@ -392,20 +392,20 @@ class EnhancedPropertyScorer(PropertyScorer):
         """Walkability and transit access"""
         neighborhood = self._get_neighborhood_lower(property_data)
 
-        # Highly walkable Austin areas
-        walkable = ["downtown", "south congress", "east austin", "clarksville"]
+        # Highly walkable Rancho Cucamonga areas
+        walkable = ["downtown", "day creek", "east rancho_cucamonga", "central rancho"]
 
         if any(walk_area in neighborhood for walk_area in walkable):
             return 0.9
         else:
-            return 0.6  # Car-dependent but typical for Austin
+            return 0.6  # Car-dependent but typical for Rancho Cucamonga
 
     def _factor_future_development(self, property_data: Dict, lead_preferences: Dict) -> float:
         """Future development and infrastructure projects"""
         neighborhood = self._get_neighborhood_lower(property_data)
 
         # Areas with planned development/transit
-        growth_areas = ["mueller", "east austin", "domain", "highland"]
+        growth_areas = ["haven city", "east rancho_cucamonga", "ontario_mills", "highland"]
 
         if any(growth in neighborhood for growth in growth_areas):
             return 0.85

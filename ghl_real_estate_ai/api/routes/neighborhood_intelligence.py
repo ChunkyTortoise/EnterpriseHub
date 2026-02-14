@@ -424,15 +424,15 @@ async def search_neighborhoods(
         # In production, this would query actual neighborhood database
         sample_neighborhoods = [
             {
-                "neighborhood_id": "austin_downtown",
-                "name": "Downtown Austin",
+                "neighborhood_id": "rancho_cucamonga_downtown",
+                "name": "Downtown Rancho Cucamonga",
                 "median_price": 750000,
                 "investment_grade": "A",
                 "walk_score": 92,
                 "match_score": 95.5,
             },
             {
-                "neighborhood_id": "austin_tech_corridor",
+                "neighborhood_id": "rancho_cucamonga_tech_corridor",
                 "name": "Tech Corridor",
                 "median_price": 680000,
                 "investment_grade": "A-",

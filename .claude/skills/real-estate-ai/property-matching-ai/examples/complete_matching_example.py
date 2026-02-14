@@ -472,7 +472,7 @@ def demo_property_matching():
             "bathrooms": 2.5,
             "sqft": 1850,
             "property_type": "Single Family",
-            "address": {"neighborhood": "Hyde Park", "city": "Austin", "zip": "78751"},
+            "address": {"neighborhood": "Hyde Park", "city": "Rancho Cucamonga", "zip": "78751"},
             "schools": [
                 {"name": "Mathews Elementary", "rating": 9, "type": "Elementary"},
                 {"name": "McCallum High", "rating": 8, "type": "High"}
@@ -491,7 +491,7 @@ def demo_property_matching():
             "bathrooms": 3,
             "sqft": 2200,
             "property_type": "Single Family",
-            "address": {"neighborhood": "Steiner Ranch", "city": "Austin", "zip": "78732"},
+            "address": {"neighborhood": "Steiner Ranch", "city": "Rancho Cucamonga", "zip": "78732"},
             "schools": [
                 {"name": "River Ridge Elementary", "rating": 9, "type": "Elementary"},
                 {"name": "Vandegrift High", "rating": 10, "type": "High"}
@@ -510,8 +510,8 @@ def demo_property_matching():
             "bathrooms": 2,
             "sqft": 1200,
             "property_type": "Condo",
-            "address": {"neighborhood": "Downtown", "city": "Austin", "zip": "78701"},
-            "schools": [{"name": "Austin High", "rating": 7, "type": "High"}],
+            "address": {"neighborhood": "Downtown", "city": "Rancho Cucamonga", "zip": "78701"},
+            "schools": [{"name": "Rancho Cucamonga High", "rating": 7, "type": "High"}],
             "features": ["Modern finishes", "Rooftop deck", "Concierge"],
             "highlights": ["Walking distance to work", "Urban lifestyle"],
             "hoa_fee": 400,
@@ -527,7 +527,7 @@ def demo_property_matching():
             "segment": "family_with_kids",
             "preferences": {
                 "budget": 750000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "bedrooms": 3,
                 "bathrooms": 2,
                 "property_type": "Single Family",
@@ -539,7 +539,7 @@ def demo_property_matching():
             "segment": "young_professional",
             "preferences": {
                 "budget": 600000,
-                "location": "Downtown Austin",
+                "location": "Downtown Rancho Cucamonga",
                 "bedrooms": 2,
                 "bathrooms": 2,
                 "property_type": "Condo",
@@ -551,7 +551,7 @@ def demo_property_matching():
             "segment": "luxury_buyer",
             "preferences": {
                 "budget": 1000000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "bedrooms": 4,
                 "bathrooms": 3,
                 "property_type": "Single Family",
@@ -633,7 +633,7 @@ EXPECTED OUTPUT:
 👤 Lead Segment: Family With Kids
 🎯 Preferences: {
   "budget": 750000,
-  "location": "Austin",
+  "location": "Rancho Cucamonga",
   "bedrooms": 3,
   "bathrooms": 2,
   "property_type": "Single Family",

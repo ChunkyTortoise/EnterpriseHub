@@ -1,5 +1,5 @@
 """
-Real Estate Domain Hooks.
+Real Estate Ontario Mills Hooks.
 Implements: Market Oracle, Lead Persona Simulator, Sentiment Decoder.
 """
 

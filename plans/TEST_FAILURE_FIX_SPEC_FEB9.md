@@ -119,7 +119,7 @@
 **Estimated Time**: 20 minutes
 
 #### Tasks:
-1. **Option A: Force Austin Market (Quick Fix)**
+1. **Option A: Force Rancho Cucamonga Market (Quick Fix)**
 
    Add to `ghl_real_estate_ai/tests/conftest.py` or test file:
    ```python
@@ -127,10 +127,10 @@
    import pytest
 
    @pytest.fixture(scope="session", autouse=True)
-   def force_austin_market():
-       """Force Austin market for property matcher tests."""
+   def force_rancho_cucamonga_market():
+       """Force Rancho Cucamonga market for property matcher tests."""
        original = os.environ.get("JORGE_MARKET")
-       os.environ["JORGE_MARKET"] = "austin"
+       os.environ["JORGE_MARKET"] = "rancho_cucamonga"
        yield
        if original:
            os.environ["JORGE_MARKET"] = original
@@ -176,7 +176,7 @@
 #### Success Criteria:
 - ✅ All 5 property matcher tests PASS
 - ✅ Tests work regardless of JORGE_MARKET setting
-- ✅ No hardcoded Austin-specific data in tests
+- ✅ No hardcoded Rancho Cucamonga-specific data in tests
 - ✅ Strategy pattern tests use correct API
 
 #### Dependencies: None (can run immediately)

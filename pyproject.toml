@@ -11,16 +11,14 @@ license = {text = "MIT"}
 authors = [
     {name = "Cayman Roden", email = ""},
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
     "streamlit==1.28.0",
@@ -49,7 +47,7 @@ Issues = "https://github.com/ChunkyTortoise/enterprise-hub/issues"
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ['py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -114,6 +112,7 @@ omit = [
 ]
 
 [tool.coverage.report]
+fail_under = 60
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -125,7 +124,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 exclude = [
     ".agent", "_archive", ".git", ".venv", "build", "dist",
     ".claude", "auto-claude", "scripts", "mcp-servers",

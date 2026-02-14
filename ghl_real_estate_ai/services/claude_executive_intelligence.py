@@ -22,7 +22,7 @@ class MarketAnalystAgent(BaseSwarmAgent):
         )
 
     async def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        market = data.get("market", "Austin, TX")
+        market = data.get("market", "Rancho Cucamonga, CA")
         prompt = f"""
         You are an Elite Real Estate Market Analyst.
         Analyze the following business data for the {market} market.

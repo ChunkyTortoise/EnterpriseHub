@@ -1311,7 +1311,7 @@ Return as JSON with: peak_months, seasonal_trends, buyer_timing, seller_timing
                         "confidence": prediction.confidence_level.value,
                     }
                 )
-            except Exception as e:
+            except Exception:
                 # This often happens if models aren't trained yet
                 pass
 

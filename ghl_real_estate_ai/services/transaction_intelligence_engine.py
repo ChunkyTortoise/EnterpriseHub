@@ -887,7 +887,7 @@ class TransactionIntelligenceEngine:
         """
 
         try:
-            ai_response = await self.claude.generate_response(prompt)
+            await self.claude.generate_response(prompt)
             # Parse AI response (would need proper JSON parsing in production)
             return {"additional_actions": [], "priority_focus": [], "success_probability": 0.7, "confidence_score": 0.8}
         except Exception as e:

@@ -145,7 +145,7 @@ function extractBusinessContext(pathname: string, customData: Record<string, any
     context.location_context = {
       current_latitude: customData.latitude || 30.2672,
       current_longitude: customData.longitude || -97.7431,
-      current_address: customData.address || 'Austin, TX',
+      current_address: customData.address || 'Rancho Cucamonga, TX',
       nearby_properties: customData.nearby_properties || []
     }
     context.device_type = 'mobile'

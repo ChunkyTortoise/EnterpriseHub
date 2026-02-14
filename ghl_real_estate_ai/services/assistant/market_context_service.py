@@ -22,7 +22,7 @@ class MarketContextService:
 
     async def get_market_context(self, market_id: Optional[str] = None) -> Dict[str, Any]:
         """Get comprehensive market context for intelligent messaging."""
-        target_market_id = market_id or self.market_id or "austin"
+        target_market_id = market_id or self.market_id or "rancho_cucamonga"
 
         if target_market_id in self._market_context_cache:
             return self._market_context_cache[target_market_id]

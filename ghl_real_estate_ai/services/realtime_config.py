@@ -235,7 +235,7 @@ class RealtimeConfigManager:
 
                 # Wait for response with timeout
                 try:
-                    response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                    await asyncio.wait_for(websocket.recv(), timeout=5.0)
                     self._connection_status["websocket"] = ConnectionStatus.CONNECTED
                     return True, "WebSocket connection successful"
                 except asyncio.TimeoutError:
@@ -355,7 +355,7 @@ class RealtimeConfigManager:
             "redis_password": "redis://:password@localhost:6379/0",
             "redis_railway": "redis://default:password@host:port",
             "websocket_local": "ws://localhost:8765/ws",
-            "websocket_secure": "wss://your-domain.com/ws",
+            "websocket_secure": "wss://your-ontario_mills.com/ws",
             "websocket_development": f"{self.websocket_config.url}",
         }
 

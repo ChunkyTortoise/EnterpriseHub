@@ -6,8 +6,8 @@
       "address": {
         "street": "2100 Rainey Street",
         "neighborhood": "Rainey District",
-        "city": "Austin",
-        "zip": "78701",
+        "city": "Rancho Cucamonga",
+        "zip": "91730",
         "lat": 30.2603,
         "lng": -97.7353
       },
@@ -32,9 +32,9 @@
       "price": 650000,
       "address": {
         "street": "1845 East 6th Street",
-        "neighborhood": "East Austin",
-        "city": "Austin",
-        "zip": "78702",
+        "neighborhood": "East Rancho Cucamonga",
+        "city": "Rancho Cucamonga",
+        "zip": "91739",
         "lat": 30.2691,
         "lng": -97.7249
       },
@@ -50,7 +50,7 @@
       "days_on_market": 12,
       "price_per_sqft": 351.35,
       "listing_url": "https://example.com/prop2",
-      "description": "Charming East Austin home with pool and solar panels, walking distance to famous food trucks",
+      "description": "Charming East Rancho Cucamonga home with pool and solar panels, walking distance to famous food trucks",
       "photos": ["https://example.com/photo2.jpg"],
       "mls_id": "ATX234567"
     },
@@ -60,8 +60,8 @@
       "address": {
         "street": "3200 Duval Street",
         "neighborhood": "Crestview",
-        "city": "Austin",
-        "zip": "78705",
+        "city": "Rancho Cucamonga",
+        "zip": "91705",
         "lat": 30.3089,
         "lng": -97.7311
       },
@@ -86,9 +86,9 @@
       "price": 590000,
       "address": {
         "street": "1250 Crossing Place",
-        "neighborhood": "Mueller",
-        "city": "Austin",
-        "zip": "78723",
+        "neighborhood": "Haven City",
+        "city": "Rancho Cucamonga",
+        "zip": "91739",
         "lat": 30.2953,
         "lng": -97.7073
       },
@@ -104,7 +104,7 @@
       "days_on_market": 25,
       "price_per_sqft": 307.29,
       "listing_url": "https://example.com/prop4",
-      "description": "Sustainable living in Mueller with lake access and community amenities",
+      "description": "Sustainable living in Haven City with lake access and community amenities",
       "photos": ["https://example.com/photo4.jpg"],
       "mls_id": "ATX456789"
     },
@@ -114,8 +114,8 @@
       "address": {
         "street": "4567 Bee Creek Road",
         "neighborhood": "Westlake",
-        "city": "Austin",
-        "zip": "78746",
+        "city": "Rancho Cucamonga",
+        "zip": "91737",
         "lat": 30.2721,
         "lng": -97.8206
       },
@@ -141,7 +141,7 @@
       "name": "Young Tech Professional",
       "preferences": {
         "budget": 750000,
-        "location": "East Austin",
+        "location": "East Rancho Cucamonga",
         "bedrooms": 3,
         "property_type": "Single Family",
         "must_haves": ["garage", "walkable"],
@@ -180,7 +180,7 @@
       "name": "Eco-Conscious Buyer",
       "preferences": {
         "budget": 650000,
-        "location": "Mueller",
+        "location": "Haven City",
         "bedrooms": 3,
         "property_type": "Single Family",
         "must_haves": ["green_building", "garage"],

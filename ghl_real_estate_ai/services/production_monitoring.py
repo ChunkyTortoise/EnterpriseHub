@@ -520,7 +520,7 @@ async def check_auth_service_health() -> Dict[str, Any]:
     try:
         from ghl_real_estate_ai.services.auth_service import get_auth_service
 
-        auth_service = get_auth_service()
+        get_auth_service()
         # Simple test of auth service
         return {"healthy": True, "message": "Auth service available"}
     except Exception as e:

@@ -425,7 +425,7 @@ class WeightConfigService:
         feature_importance = {}
 
         converted_leads = [d for d in performance_data if d.get("converted", False)]
-        conversion_rate = len(converted_leads) / len(performance_data)
+        len(converted_leads) / len(performance_data)
 
         # Calculate correlation for each feature
         features = [
@@ -487,7 +487,6 @@ class WeightConfigService:
     async def _get_active_ab_test(self, tenant_id: str) -> Optional[ABTestConfig]:
         """Get active A/B test for tenant"""
         # Check cache first
-        cache_key = f"ab_test:{tenant_id}:*"
 
         for key, test in self.ab_tests.items():
             if key.startswith(f"ab_test:{tenant_id}:") and test.is_active:
@@ -711,7 +710,7 @@ class MarketConditionAdjuster:
             12: 0.80,  # December - holiday slowdown
         }
 
-    async def get_current_market_metrics(self, location: str = "Austin, TX") -> MarketMetrics:
+    async def get_current_market_metrics(self, location: str = "Rancho Cucamonga, CA") -> MarketMetrics:
         """
         Get current market metrics for a location
 
@@ -746,8 +745,8 @@ class MarketConditionAdjuster:
         season_factor = self.seasonal_patterns.get(now.month, 1.0)
 
         # Simulate based on location and season
-        if "Austin" in location:
-            # Austin market characteristics
+        if "Rancho Cucamonga" in location:
+            # Rancho Cucamonga market characteristics
             base_inventory = 2.5
             base_price_trend = 3.0
             base_interest = 6.5
@@ -812,7 +811,7 @@ class DynamicScoringOrchestrator:
             segment = self._detect_lead_segment(lead_data)
 
         # Get current market conditions
-        location = lead_data.get("location", "Austin, TX")
+        location = lead_data.get("location", "Rancho Cucamonga, CA")
         market_metrics = await self.market_adjuster.get_current_market_metrics(location)
 
         # Get optimized weights
@@ -842,7 +841,7 @@ class DynamicScoringOrchestrator:
 
         return {
             "budget": prefs.get("budget", 0),
-            "location": prefs.get("location", "Austin, TX"),
+            "location": prefs.get("location", "Rancho Cucamonga, CA"),
             "timeline": prefs.get("timeline", ""),
             "intent": prefs.get("motivation", ""),
             "messages": messages,
@@ -863,7 +862,7 @@ class DynamicScoringOrchestrator:
             budget = self._parse_budget(budget)
 
         intent = lead_data.get("intent", "").lower()
-        source = lead_data.get("source", "").lower()
+        lead_data.get("source", "").lower()
 
         # Luxury indicators
         if budget > 1000000 or "luxury" in intent or "high-end" in intent:
@@ -1113,7 +1112,7 @@ if __name__ == "__main__":
         lead_data = {
             "id": "lead_123",
             "budget": 750000,
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "intent": "buying",
             "email_opens": 8,
             "emails_sent": 10,
@@ -1125,7 +1124,7 @@ if __name__ == "__main__":
             "communication_quality": 0.9,
             "source": "organic",
             "messages": [
-                {"content": "Looking for a house in Austin with 3-4 bedrooms, budget around $750k"},
+                {"content": "Looking for a house in Rancho Cucamonga with 3-4 bedrooms, budget around $750k"},
                 {"content": "When can we schedule a viewing?"},
             ],
         }

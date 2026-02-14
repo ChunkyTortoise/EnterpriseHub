@@ -872,7 +872,7 @@ def render_whisper_mode():
             go.Indicator(
                 mode="gauge+number",
                 value=feed["sentiment"],
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 gauge={
                     "axis": {"range": [None, 100], "tickcolor": "white"},
                     "bar": {"color": "var(--negotiation-neon)"},

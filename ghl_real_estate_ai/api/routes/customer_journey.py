@@ -569,7 +569,7 @@ async def get_journey(journey_id: str, current_user=Depends(get_current_user_opt
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch journey")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -583,8 +583,15 @@ async def create_journey(request: CreateJourneyRequest, current_user=Depends(get
         journey_id = str(uuid.uuid4())
         logger.info(f"Creating journey {journey_id} for customer {request.customerName}")
 
-        # TODO: Implement actual journey creation logic
-        # This would use the journey orchestrator to create and initialize a journey
+        # ROADMAP-026: Implement journey creation with JourneyOrchestrator
+        # Current: Generating mock steps, no persistence
+        # Required: 
+        #   1. Validate customer exists
+        #   2. Create journey record in database
+        #   3. Initialize journey orchestrator
+        #   4. Generate steps from template
+        #   5. Persist to customer_journeys table
+        # Dependencies: None
 
         # Generate steps based on template or type
         steps = generate_mock_journey_steps()
@@ -649,8 +656,15 @@ async def update_journey(
     try:
         logger.info(f"Updating journey {journey_id}")
 
-        # TODO: Implement actual journey update logic
-        # This would update the journey in the database
+        # ROADMAP-027: Implement journey update logic
+        # Current: Mock data lookup, no persistence
+        # Required:
+        #   1. Query customer_journeys table by journey_id
+        #   2. Validate journey exists and is active
+        #   3. Apply updates atomically
+        #   4. Handle status transitions (active->paused->completed)
+        #   5. Update modified_at timestamp
+        # Dependencies: ROADMAP-026
 
         # For now, return a mock updated journey
         journeys = generate_mock_journeys()
@@ -683,7 +697,7 @@ async def update_journey(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to update journey")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -696,8 +710,14 @@ async def delete_journey(journey_id: str, current_user=Depends(get_current_user_
     try:
         logger.info(f"Deleting journey {journey_id}")
 
-        # TODO: Implement actual journey deletion logic
-        # This would soft-delete or archive the journey
+        # ROADMAP-028: Implement journey deletion with soft-delete
+        # Current: Publishing event only, no persistence change
+        # Required:
+        #   1. Soft-delete: Set deleted_at timestamp
+        #   2. Archive: Move to journey_archives table
+        #   3. Cleanup: Schedule related data cleanup after 90 days
+        #   4. Cascade: Handle in-progress steps
+        # Dependencies: ROADMAP-026, ROADMAP-027
 
         # Publish journey deleted event
         event_publisher = get_event_publisher()
@@ -708,7 +728,7 @@ async def delete_journey(journey_id: str, current_user=Depends(get_current_user_
         logger.info(f"Journey {journey_id} deleted successfully")
         return {"success": True, "journeyId": journey_id}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to delete journey")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -728,7 +748,15 @@ async def update_step(
     try:
         logger.info(f"Updating step {step_id} in journey {journey_id}")
 
-        # TODO: Implement actual step update logic
+        # ROADMAP-029: Implement journey step update logic
+        # Current: Mock data lookup
+        # Required:
+        #   1. Query journey_steps table
+        #   2. Validate step belongs to journey
+        #   3. Update step configuration
+        #   4. Handle step type-specific updates
+        #   5. Update journey version if needed
+        # Dependencies: ROADMAP-026
 
         # Mock updated step
         steps = generate_mock_journey_steps()
@@ -742,7 +770,7 @@ async def update_step(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to update journey step")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -760,7 +788,16 @@ async def complete_step(
     try:
         logger.info(f"Completing step {step_id} in journey {journey_id}")
 
-        # TODO: Implement actual step completion logic
+        # ROADMAP-030: Implement step completion logic
+        # Current: Publishing event only
+        # Required:
+        #   1. Validate step is in-progress
+        #   2. Store completion output
+        #   3. Update journey progress percentage
+        #   4. Trigger next step if auto-advance
+        #   5. Check journey completion criteria
+        #   6. Update analytics (response time, etc.)
+        # Dependencies: ROADMAP-026, ROADMAP-029
 
         # Publish step completed event
         event_publisher = get_event_publisher()
@@ -786,7 +823,7 @@ async def complete_step(
         logger.info(f"Step {step_id} completed successfully")
         return step
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to complete journey step")
         raise HTTPException(status_code=500, detail="Internal server error")
 

@@ -19,7 +19,7 @@ VALIDATION SUMMARY:
 
 MARKET CONFIGURATIONS:
 ----------------------------------------
-• Austin: 8 neighborhoods, 6 employers
+• Rancho Cucamonga: 8 neighborhoods, 6 employers
 • Dallas: 8 neighborhoods, 6 employers
 • Houston: 8 neighborhoods, 6 employers
 • San_Antonio: 8 neighborhoods, 6 employers
@@ -32,7 +32,7 @@ WARNINGS:
 ERRORS:
 ----------------------------------------
 ❌ Failed to create service for dallas: Invalid service type for dallas
-❌ Failed to create service for austin: Invalid service type for austin
+❌ Failed to create service for rancho_cucamonga: Invalid service type for rancho_cucamonga
 ❌ Failed to create service for san_antonio: Invalid service type for san_antonio
 ❌ Failed to create service for rancho_cucamonga: Invalid service type for rancho_cucamonga
 ❌ Failed to create service for houston: Invalid service type for houston

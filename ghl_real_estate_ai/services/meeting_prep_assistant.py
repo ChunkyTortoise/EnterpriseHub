@@ -87,7 +87,7 @@ class MeetingPrepAssistant:
             "preferences": {
                 "price_range": "$400K-$550K",
                 "bedrooms": 3,
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "must_haves": ["pool", "2-car garage"],
             },
         }
@@ -103,14 +103,14 @@ class MeetingPrepAssistant:
             {
                 "date": "2026-01-02",
                 "type": "website_visit",
-                "details": "Viewed 5 properties in Austin",
+                "details": "Viewed 5 properties in Rancho Cucamonga",
             },
         ]
 
     def _get_property_info(self, property_id: str) -> Dict[str, Any]:
         """Get property information"""
         return {
-            "address": "123 Main St, Austin, TX",
+            "address": "123 Main St, Rancho Cucamonga, CA",
             "price": 450000,
             "bedrooms": 3,
             "bathrooms": 2,

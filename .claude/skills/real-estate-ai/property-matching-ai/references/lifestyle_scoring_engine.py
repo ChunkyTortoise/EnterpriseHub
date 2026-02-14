@@ -239,14 +239,14 @@ class LifestyleScoringEngine:
         """Load neighborhood data cache."""
         # Production pattern: Load from Redis/database cache
         return {
-            "hyde_park_austin": {
+            "hyde_park_rancho_cucamonga": {
                 "downtown_commute_min": 15,
                 "public_transit_score": 0.8,
                 "highway_access": 0.7,
                 "walkability": 0.9,
                 "safety_rating": 7.5
             },
-            "steiner_ranch_austin": {
+            "steiner_ranch_rancho_cucamonga": {
                 "downtown_commute_min": 35,
                 "public_transit_score": 0.3,
                 "highway_access": 0.9,
@@ -261,7 +261,7 @@ class LifestyleScoringEngine:
         # Production: Integrate with Google Maps/Mapbox API
         downtown_estimates = {
             "hyde park": 15,
-            "east austin": 8,
+            "east rancho_cucamonga": 8,
             "west campus": 10,
             "steiner ranch": 35,
             "avery ranch": 40
@@ -274,7 +274,7 @@ class LifestyleScoringEngine:
         workplace_map = {
             "domain": {"hyde park": 25, "steiner ranch": 15},
             "ut campus": {"hyde park": 10, "west campus": 5},
-            "downtown": {"hyde park": 15, "east austin": 8}
+            "downtown": {"hyde park": 15, "east rancho_cucamonga": 8}
         }
 
         for location, commutes in workplace_map.items():
@@ -284,8 +284,8 @@ class LifestyleScoringEngine:
 
     def _assess_transit_access(self, neighborhood: str, city: str) -> float:
         """Assess public transit quality (0-1 scale)."""
-        good_transit = ["hyde park", "east austin", "west campus"]
-        moderate_transit = ["south austin", "north austin"]
+        good_transit = ["hyde park", "east rancho_cucamonga", "west campus"]
+        moderate_transit = ["south rancho_cucamonga", "north rancho_cucamonga"]
 
         if neighborhood in good_transit:
             return 0.8
@@ -297,7 +297,7 @@ class LifestyleScoringEngine:
     def _assess_highway_access(self, neighborhood: str, city: str) -> float:
         """Assess highway access quality (0-1 scale)."""
         excellent_access = ["steiner ranch", "avery ranch", "circle c"]
-        good_access = ["hyde park", "east austin"]
+        good_access = ["hyde park", "east rancho_cucamonga"]
 
         if neighborhood in excellent_access:
             return 0.9
@@ -327,9 +327,9 @@ school_score = engine.score_school_quality(
 # Score commute for professional
 commute_score = engine.score_commute_convenience(
     property_data={
-        "address": {"neighborhood": "Hyde Park", "city": "Austin"}
+        "address": {"neighborhood": "Hyde Park", "city": "Rancho Cucamonga"}
     },
-    preferences={"workplace_location": "downtown Austin"},
+    preferences={"workplace_location": "downtown Rancho Cucamonga"},
     weight=0.30
 )
 

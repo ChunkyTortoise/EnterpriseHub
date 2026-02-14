@@ -107,7 +107,7 @@ Jorge opens Executive Dashboard
 
 ### **Example 2: Field Property Visit**
 ```
-Jorge arrives at 1234 Austin Heights Dr (GPS detected)
+Jorge arrives at 1234 Rancho Cucamonga Heights Dr (GPS detected)
 → 📍 Field Mode: Activates location-specific intelligence
 → 🏠 Property Intel: "Recent kitchen reno (+$45K), area appreciation +12%"
 → 👥 Client Context: "Sarah Chen - commute-focused, mention 18min downtown"

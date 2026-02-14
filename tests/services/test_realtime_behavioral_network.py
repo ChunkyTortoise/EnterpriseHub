@@ -27,7 +27,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.realtime_behavioral_network import (
 
-@pytest.mark.integration
     BehavioralAnalysisAgentType,
     BehavioralInsight,
     BehavioralPattern,
@@ -463,7 +462,7 @@ class TestDeliverPersonalizedContent:
                 "lead_id": "lead_456",
                 "name": "John Smith",
                 "email": "john@example.com",
-                "preferences": {"budget": "400k-600k", "location": "Austin, TX"},
+                "preferences": {"budget": "400k-600k", "location": "Rancho Cucamonga, CA"},
             }
         )
         behavioral_network._get_behavioral_insights_history = AsyncMock(

@@ -65,7 +65,7 @@ def render_agent_os_tab():
 
     with tab_hooks:
         st.markdown("#### Agentic Hooks (The Brains)")
-        st.info("Hooks are specialized cognitive units that perform specific domain analysis.")
+        st.info("Hooks are specialized cognitive units that perform specific ontario_mills analysis.")
 
         hooks_data = [
             {"category": "Architecture", "name": "Codebase Investigator", "status": "Ready", "last_run": "2m ago"},

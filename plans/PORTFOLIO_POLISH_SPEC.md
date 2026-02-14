@@ -179,7 +179,7 @@ Phase 5 (sequential): 5A                 ← Final metadata sync
 | 1 | `exec(code, global_vars)` — security risk, code smell | HIGH | `app.py:44-53` |
 | 2 | Hardcoded favicon URL (raw.githubusercontent.com) | MEDIUM | `app.py` |
 | 3 | Try/except for `async_utils` import — fragile optional dep | LOW | `streamlit_demo/app.py:32-37` |
-| 4 | Hardcoded "Austin, TX" default market data | LOW | `streamlit_demo/app.py` |
+| 4 | Hardcoded "Rancho Cucamonga, CA" default market data | LOW | `streamlit_demo/app.py` |
 | 5 | Footer says "4,467 tests" — should be ~4,937 | MEDIUM | `streamlit_demo/app.py` |
 | 6 | 24+ invalid theme color console warnings | HIGH | `.streamlit/config.toml` |
 

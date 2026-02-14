@@ -115,7 +115,7 @@ Yes:
 ### Can I deploy this to production?
 Yes! See `docs/DEPLOYMENT.md` for instructions. Recommended platforms:
 - **Streamlit Cloud**: Free tier available, easy deployment
-- **Heroku**: Good for custom domains
+- **Heroku**: Good for custom ontario_millss
 - **AWS/GCP/Azure**: Full control, requires more setup
 
 ### How do I run tests?

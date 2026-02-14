@@ -40,7 +40,7 @@ scoring_workbook = xlsx_gen.generate_lead_analytics_workbook(
 
 # Market analysis spreadsheet
 market_analysis = xlsx_gen.generate_market_analysis_workbook(
-    market_area="Austin_TX",
+    market_area="Rancho Cucamonga_TX",
     comparison_areas=["Dallas_TX", "San_Antonio_TX"],
     time_range="12_months",
     metrics=['price_trends', 'inventory', 'days_on_market']
@@ -307,7 +307,7 @@ analytics_workbook = xlsx_gen.generate_lead_analytics_workbook(
 ### Market Analysis Integration
 ```python
 # Market research workbook
-market_data = market_timing_service.get_market_analysis('Austin_TX')
+market_data = market_timing_service.get_market_analysis('Rancho Cucamonga_TX')
 market_workbook = xlsx_gen.generate_market_analysis_workbook(
     primary_market=market_data,
     comparable_markets=['Dallas_TX', 'San_Antonio_TX'],

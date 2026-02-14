@@ -26,12 +26,12 @@ async def test_optimized_lead_intelligence():
     test_messages = [
         {
             "name": "High-Quality Lead",
-            "message": "Hi! I'm relocating to Austin for Apple and have $600k budget. I need 4 bedrooms in Westlake Hills and I'm pre-approved. Can close within 30 days.",
+            "message": "Hi! I'm relocating to Rancho Cucamonga for Apple and have $600k budget. I need 4 bedrooms in Westlake Hills and I'm pre-approved. Can close within 30 days.",
             "expected_score_min": 80
         },
         {
             "name": "Medium-Quality Lead",
-            "message": "I'm looking to buy a house in Austin under $400k. Timeline is flexible but prefer North Austin.",
+            "message": "I'm looking to buy a house in Rancho Cucamonga under $400k. Timeline is flexible but prefer North Rancho Cucamonga.",
             "expected_score_min": 60
         },
         {

@@ -153,6 +153,21 @@ def _all_mode_patches(
                 }
             )
 
+        # --- Lead bot (Workflow) ---
+        mock_lead_bot_instance = MagicMock()
+        if lead_raises:
+            mock_lead_bot_instance.process_enhanced_lead_sequence = AsyncMock(
+                side_effect=RuntimeError("Lead bot error")
+            )
+        else:
+            mock_lead_bot_instance.process_enhanced_lead_sequence = AsyncMock(
+                return_value={
+                    "response_content": "I'm interested in real estate.",
+                    "engagement_status": "engaged",
+                    "lead_score": 3,
+                }
+            )
+
         # --- Lead (ConversationManager) ---
         mock_ai_response = MagicMock()
         mock_ai_response.message = "Thanks for reaching out! Tell me more about what you need."
@@ -230,12 +245,14 @@ def _all_mode_patches(
                 return_value=mock_seller_engine_instance,
             ),
             patch("ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot", return_value=mock_buyer_bot_instance),
+            patch("ghl_real_estate_ai.agents.lead_bot.LeadBotWorkflow", return_value=mock_lead_bot_instance),
         ):
             yield {
                 "jorge_settings": mock_jorge_settings,
                 "config_settings": mock_config_settings,
                 "seller_engine": mock_seller_engine_instance,
                 "buyer_bot": mock_buyer_bot_instance,
+                "lead_bot": mock_lead_bot_instance,
                 "conversation_manager": mock_conv_mgr,
                 "compliance": mock_compliance,
                 "ghl_client": mock_ghl_client,
@@ -295,7 +312,7 @@ class TestWebhookRoutingComprehensive:
         with _all_mode_patches(jorge_seller_mode=False) as mocks:
             lead_resp = await handle_ghl_webhook.__wrapped__(MagicMock(), lead_event, MagicMock())
         assert lead_resp.success is True
-        mocks["conversation_manager"].generate_response.assert_awaited_once()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_priority_seller_over_lead(self):
@@ -312,7 +329,7 @@ class TestWebhookRoutingComprehensive:
 
         assert response.success is True
         mocks["seller_engine"].process_seller_response.assert_awaited_once()
-        mocks["conversation_manager"].generate_response.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_priority_buyer_over_lead(self):
@@ -329,7 +346,7 @@ class TestWebhookRoutingComprehensive:
 
         assert response.success is True
         mocks["buyer_bot"].process_buyer_conversation.assert_awaited_once()
-        mocks["conversation_manager"].generate_response.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_priority_seller_over_buyer(self):
@@ -369,7 +386,7 @@ class TestWebhookRoutingComprehensive:
             assert "deactivated" in response.message.lower()
             mocks["seller_engine"].process_seller_response.assert_not_awaited()
             mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
-            mocks["conversation_manager"].generate_response.assert_not_awaited()
+            mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_opt_out_from_any_mode(self):
@@ -392,7 +409,7 @@ class TestWebhookRoutingComprehensive:
             # No bot should have processed
             mocks["seller_engine"].process_seller_response.assert_not_awaited()
             mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
-            mocks["conversation_manager"].generate_response.assert_not_awaited()
+            mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_mode_flags_disable_correctly(self):
@@ -416,7 +433,7 @@ class TestWebhookRoutingComprehensive:
         assert "reaching out" in response.message.lower() or "help" in response.message.lower()
         mocks["seller_engine"].process_seller_response.assert_not_awaited()
         mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
-        mocks["conversation_manager"].generate_response.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_error_in_seller_falls_to_buyer(self):
@@ -441,7 +458,7 @@ class TestWebhookRoutingComprehensive:
 
     @pytest.mark.asyncio
     async def test_error_in_all_bots_returns_fallback(self):
-        """All bots error results in safe fallback response (via error handler)."""
+        """All bots error results in safe fallback response."""
         from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
 
         event = _make_webhook_event(
@@ -458,18 +475,27 @@ class TestWebhookRoutingComprehensive:
             seller_raises=True,
             lead_raises=True,
         ) as mocks:
-            try:
-                await handle_ghl_webhook.__wrapped__(MagicMock(), event, mock_bg_tasks)
-            except Exception:
-                # HTTPException from error handler is expected
-                pass
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, mock_bg_tasks)
+
+            assert response.success is True
+            assert "reach" in response.message.lower() or "help" in response.message.lower()
 
             # Fallback message should have been queued via background_tasks.add_task
             add_task_calls = mock_bg_tasks.add_task.call_args_list
-            send_message_queued = any(
-                args and args[0] is mocks["ghl_client"].send_message for args, kwargs in [c for c in add_task_calls]
-            )
-            assert send_message_queued, "Expected fallback send_message to be queued in background_tasks"
+            
+            # Check if safe_send_message was queued (it's the first arg, and its second arg is our mock client)
+            send_message_queued = False
+            for args, kwargs in add_task_calls:
+                # args[0] is the function, args[1] is ghl_client, args[2] is contact_id, args[3] is message
+                if len(args) >= 4 and args[1] is mocks["ghl_client"] and "reach" in str(args[3]).lower():
+                    send_message_queued = True
+                    break
+                # Fallback check for different call patterns
+                if any("reach" in str(arg).lower() for arg in args):
+                    send_message_queued = True
+                    break
+                    
+            assert send_message_queued, f"Expected fallback message in background_tasks. Calls: {add_task_calls}"
 
     @pytest.mark.asyncio
     async def test_compliance_enforced_all_modes(self):

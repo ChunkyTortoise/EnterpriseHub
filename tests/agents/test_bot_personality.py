@@ -1,9 +1,8 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 """Tests for WS1: Bot Personality ABC, Registry, YAML Config, and Implementations."""
-
-from __future__ import annotations
 
 import textwrap
 from pathlib import Path
@@ -31,7 +30,6 @@ from ghl_real_estate_ai.agents.personalities.real_estate import (  # noqa: F401
 )
 from ghl_real_estate_ai.agents.personality_config import (
 
-@pytest.mark.unit
     PersonalityConfig,
     YAMLBotPersonality,
 )

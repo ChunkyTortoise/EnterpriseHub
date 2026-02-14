@@ -5,9 +5,35 @@ Data structures for business intelligence and forecasting
 
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 from pydantic import BaseModel, Field
+
+
+class TimeSeriesDataPointDict(TypedDict, total=False):
+    """TypedDict for time series data point."""
+    date: str
+    accuracy: float
+    score_distribution: Dict[str, float]
+    lead_count: int
+    conversion_rate: float
+
+
+class AnalyticsSegmentFilter(TypedDict, total=False):
+    """TypedDict for analytics segment filter."""
+    source: Optional[str]
+    lead_type: Optional[str]
+    date_range: Optional[Dict[str, str]]  # {from: str, to: str}
+    location: Optional[str]
+    score_threshold: Optional[float]
+
+
+class DataPointMetadata(TypedDict, total=False):
+    """TypedDict for time series data point metadata."""
+    source: str
+    campaign_id: Optional[str]
+    agent_id: Optional[str]
+    notes: Optional[str]
 
 
 class ForecastHorizon(Enum):
@@ -164,7 +190,7 @@ class CalibrationBucket(BaseModel):
 class LeadQualityTrend(BaseModel):
     """Trend analysis of lead quality metrics."""
 
-    time_series_data: List[Dict[str, Any]]  # [{date, accuracy, score_distribution, etc}]
+    time_series_data: List[TimeSeriesDataPointDict]
     trend_direction: str  # "improving", "stable", "declining"
     trend_rate: float  # percentage change per day
 
@@ -441,7 +467,7 @@ class TimeSeriesDataPoint(BaseModel):
 
     timestamp: datetime
     value: float
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[DataPointMetadata] = None
 
 
 class TimeSeriesAnalysis(BaseModel):
@@ -463,7 +489,7 @@ class AnalyticsRequest(BaseModel):
     include_forecasts: bool = True
     include_geographic: bool = True
     include_competitive: bool = False
-    segment_filters: Optional[Dict[str, Any]] = None
+    segment_filters: Optional[AnalyticsSegmentFilter] = None
 
 
 class AnalyticsResponse(BaseModel):

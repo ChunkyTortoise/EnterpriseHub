@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.agents.jorge_seller_bot import (
 
-@pytest.mark.integration
     JorgeFeatureConfig,
     JorgeSellerBot,
 )

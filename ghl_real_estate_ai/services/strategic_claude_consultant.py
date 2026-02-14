@@ -328,7 +328,7 @@ class StrategicClaudeConsultant:
         """Create revenue optimization strategic recommendation."""
 
         current_revenue = state["financial"]["revenue_trend"]["current"]
-        growth_potential = state["market"]["growth_potential"]
+        state["market"]["growth_potential"]
 
         # Calculate financial impact
         revenue_increase = current_revenue * 0.35  # 35% increase target

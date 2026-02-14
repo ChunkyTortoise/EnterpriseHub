@@ -409,7 +409,7 @@ class IntelligentCacheWarmingService:
         """Generate warming tasks based on predictions"""
         try:
             current_time = datetime.utcnow()
-            prediction_window = timedelta(minutes=30)  # Predict 30 minutes ahead
+            timedelta(minutes=30)  # Predict 30 minutes ahead
 
             new_tasks = []
 

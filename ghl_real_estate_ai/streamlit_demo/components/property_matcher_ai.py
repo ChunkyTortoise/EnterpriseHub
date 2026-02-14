@@ -348,7 +348,7 @@ def _load_demo_properties() -> List[Dict]:
             "bedrooms": 3,
             "bathrooms": 2,
             "sqft": 2300,
-            "neighborhood": "Domain",
+            "neighborhood": "Ontario Mills",
             "property_type": "Single Family",
             "year_built": 2020,
             "recently_renovated": False,
@@ -362,7 +362,7 @@ def _load_demo_properties() -> List[Dict]:
             "bedrooms": 4,
             "bathrooms": 2.5,
             "sqft": 2400,
-            "neighborhood": "South Congress",
+            "neighborhood": "Day Creek",
             "property_type": "Townhome",
             "year_built": 2019,
             "recently_renovated": False,
@@ -390,7 +390,7 @@ def _load_demo_properties() -> List[Dict]:
             "bedrooms": 3,
             "bathrooms": 2,
             "sqft": 1950,
-            "neighborhood": "Mueller",
+            "neighborhood": "Haven City",
             "property_type": "Single Family",
             "year_built": 2017,
             "recently_renovated": True,
@@ -404,7 +404,7 @@ def _load_demo_properties() -> List[Dict]:
             "bedrooms": 4,
             "bathrooms": 3.5,
             "sqft": 2800,
-            "neighborhood": "Tarrytown",
+            "neighborhood": "North Rancho",
             "property_type": "Single Family",
             "year_built": 2022,
             "recently_renovated": False,
@@ -444,7 +444,7 @@ def _get_fallback_properties(lead_context: Dict) -> List[Dict]:
                 "beds": 3,
                 "baths": 2.5,
                 "sqft": 2180,
-                "neighborhood": "Teravista (Round Rock)",
+                "neighborhood": "Teravista (Fontana)",
                 "icon": "🏡",
                 "match_score": 95,
                 "budget_match": True,
@@ -455,7 +455,7 @@ def _get_fallback_properties(lead_context: Dict) -> List[Dict]:
                     "12-min commute to Apple campus",
                     "Gigabit fiber internet ready",
                     "Dedicated home office space",
-                    "Round Rock ISD (9/10 rating)",
+                    "Fontana ISD (9/10 rating)",
                 ],
             },
             {
@@ -514,15 +514,15 @@ def _get_fallback_properties(lead_context: Dict) -> List[Dict]:
                 "location_match": True,
                 "features_match": True,
                 "match_reasons": [
-                    "Proximity to Tesla Giga Austin",
+                    "Proximity to Tesla Giga Rancho Cucamonga",
                     "Low maintenance exterior",
                     "Ideal entry-level rental",
                     "Strategic land-value hold",
-                    "Near Austin Airport expansion",
+                    "Near Rancho Cucamonga Airport expansion",
                 ],
             },
         ]
-    location = extracted.get("location", "Austin")
+    location = extracted.get("location", "Rancho Cucamonga")
     beds = extracted.get("bedrooms", 3)
     return [
         {

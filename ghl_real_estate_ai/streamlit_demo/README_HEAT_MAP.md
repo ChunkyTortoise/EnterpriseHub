@@ -62,7 +62,7 @@ Range: 0.0 (cold) to 3.0 (super hot)
 - Blue zones → Automated nurture campaigns
 
 **Example**: 
-"East Austin shows as red (heat 2.62). Send your best closer there. South Congress is blue (heat 0.95) - set up a drip campaign instead."
+"East Rancho Cucamonga shows as red (heat 2.62). Send your best closer there. Day Creek is blue (heat 0.95) - set up a drip campaign instead."
 
 ### 2. Route Planning
 **Problem**: How do I minimize drive time between showings?
@@ -106,25 +106,25 @@ Range: 0.0 (cold) to 3.0 (super hot)
 - Track performance relative to zone heat
 
 **Example**:
-"Agent A gets Downtown + East Austin (combined heat 4.5). Agent B gets West Lake + South Congress (combined heat 4.3)."
+"Agent A gets Downtown + East Rancho Cucamonga (combined heat 4.5). Agent B gets West Lake + Day Creek (combined heat 4.3)."
 
 ## Real Data Analysis
 
-### Austin Market (8 leads, $7.7M total value)
+### Rancho Cucamonga Market (8 leads, $7.7M total value)
 
 | Neighborhood | Leads | Avg Score | Total Value | Heat Rank |
 |--------------|-------|-----------|-------------|-----------|
-| East Austin | 1 | 92.0 | $1,200,000 | 🔥🔥🔥 1st |
-| Domain | 1 | 87.0 | $850,000 | 🔥🔥 2nd |
+| East Rancho Cucamonga | 1 | 92.0 | $1,200,000 | 🔥🔥🔥 1st |
+| Ontario Mills | 1 | 87.0 | $850,000 | 🔥🔥 2nd |
 | Downtown | 2 | 65.0 | $1,850,000 | 🟠 3rd |
 | West Lake | 2 | 64.0 | $1,850,000 | 🟠 4th |
-| South Congress | 2 | 49.0 | $1,950,000 | 🔵 5th |
+| Day Creek | 2 | 49.0 | $1,950,000 | 🔵 5th |
 
 **Insights**:
-- **East Austin**: Single super-hot lead (score 92) - priority target
-- **Domain**: Strong tech corridor activity
+- **East Rancho Cucamonga**: Single super-hot lead (score 92) - priority target
+- **Ontario Mills**: Strong tech corridor activity
 - **Downtown/West Lake**: Moderate heat, good for follow-ups
-- **South Congress**: High value ($1.95M) but low heat - long-term nurture
+- **Day Creek**: High value ($1.95M) but low heat - long-term nurture
 
 ### Rancho Market (8 leads, $7.95M total value)
 
@@ -164,7 +164,7 @@ leads = [
 ]
 
 # Render with heat map capability
-render_interactive_lead_map(leads, market="Austin")
+render_interactive_lead_map(leads, market="Rancho Cucamonga")
 ```
 
 ### Switching View Modes
@@ -235,7 +235,7 @@ else:
 
 ### Example 1: High Heat, Single Lead
 ```
-Location: East Austin
+Location: East Rancho Cucamonga
 Leads: 1
 Heat: 2.62 / 3.00
 Lead Score: 92
@@ -261,7 +261,7 @@ Action: Regular follow-ups, send property matches weekly.
 
 ### Example 3: Low Heat, High Value
 ```
-Location: South Congress
+Location: Day Creek
 Leads: 2
 Heat: 0.95 / 3.00
 Avg Score: 49

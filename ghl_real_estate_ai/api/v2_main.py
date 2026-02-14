@@ -4,6 +4,7 @@ This version implements the 'Elite Stack' as defined in the Jan 2026 roadmap.
 """
 
 import time
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -11,6 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ghl_real_estate_ai.api.routes import health
 from ghl_real_estate_ai.api.v2.routes import properties as properties_v2
+
+
+# CORS configuration - must not use wildcard with credentials
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+if not CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGINS == [""]:
+    CORS_ALLOWED_ORIGINS = ["https://yourontario_mills.com"]  # Safe default
 
 
 @asynccontextmanager
@@ -27,9 +34,9 @@ app = FastAPI(title="GHL Real Estate AI - Modular Agentic Powerhouse", version="
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 

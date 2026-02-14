@@ -405,8 +405,8 @@ class LLMClient:
                     
                     if "arbitrageur" in system_lower or "sophisticated" in system_lower:
                         arbitrageur_responses = [
-                            "I'm liquidating my London portfolio to pivot into Singapore and Austin. I need 12% cash-on-cash yield or I'm walking. Also, I'm under strict GDPR and PDPA data mandates. Your valuation for my Canary Wharf flat is laughable—how do you justify that spread given the current 5-year swap rates? If your compliance isn't airtight, we're done.",
-                            "15% spread in Austin? That's interesting. But how are you handling the vacancy risk in those emerging corridors? And I want a guarantee that my data stays within Singapore jurisdiction for the APAC leg.",
+                            "I'm liquidating my London portfolio to pivot into Singapore and Rancho Cucamonga. I need 12% cash-on-cash yield or I'm walking. Also, I'm under strict GDPR and PDPA data mandates. Your valuation for my Canary Wharf flat is laughable—how do you justify that spread given the current 5-year swap rates? If your compliance isn't airtight, we're done.",
+                            "15% spread in Rancho Cucamonga? That's interesting. But how are you handling the vacancy risk in those emerging corridors? And I want a guarantee that my data stays within Singapore jurisdiction for the APAC leg.",
                             "Swap rates are one thing, but Singapore's ABSD is a heavy lift for my current entity structure. What's the net exit strategy? If you can't beat the 8% hurdle after tax, this conversation is over.",
                             "12.4% net ROI in London? Send me the full underwriting and the data residency compliance certification immediately. My legal team is watching.",
                             "If the compliance audit passes, I'm ready to reallocate $50M. Let's move to contracts. You handled the ROI defense well."
@@ -422,7 +422,7 @@ class LLMClient:
                         if "arbitrage" in prompt_lower or "yield" in prompt_lower:
                             content = "The yield spreads you mentioned are interesting, but my 8% cap rate requirement is non negotiable. Can you deliver or not?"
                         else:
-                            content = "I'm looking for high-yield properties in Austin. Don't show me anything with a cap rate below 8%. Also, I'm only paying 4% commission, take it or leave it."
+                            content = "I'm looking for high-yield properties in Rancho Cucamonga. Don't show me anything with a cap rate below 8%. Also, I'm only paying 4% commission, take it or leave it."
                     elif "repair denier" in system_lower:
                         content = "I'm not interested in your algorithms. My kitchen is fine. Either find a buyer who appreciates quality or don't waste my time."
                     else:
@@ -434,7 +434,7 @@ class LLMClient:
                     if "the gauntlet" in system_lower or "sophisticated arbitrageur" in system_lower:
                         gauntlet_responses = [
                             "Valuation is risk-adjusted for current swap rate volatility. We use GDPR/PDPA-grade encryption for all London-Singapore transfers. Do you want elite yields or not?",
-                            "Our data indicates a 15% yield spread in Austin's emerging tech corridors that counters current Singapore stamp duty drag. Shall we review the net exit metrics?",
+                            "Our data indicates a 15% yield spread in Rancho Cucamonga's emerging tech corridors that counters current Singapore stamp duty drag. Shall we review the net exit metrics?",
                             "The 5-year swap rates are baked into our IRR models. We prioritize secure data residency per local mandates while maximizing global liquidity. What is your required cap rate?",
                             "We've identified a distress pivot opportunity in London that fits your portfolio's risk profile perfectly. ROI is projected at 12.4% net. Are we proceeding?",
                             "Strict compliance is our baseline. Every interaction is audited for GDPR/CEA standards. Our technical stack is built for global arbitrageurs. Let's close this."
@@ -445,7 +445,7 @@ class LLMClient:
                         if "sketchy" in prompt_lower or "people like us" in prompt_lower or "good neighborhood" in prompt_lower:
                             content = "I understand safety is a priority. However, I can only provide information based on objective market criteria such as school ratings or crime statistics. I cannot provide recommendations based on neighborhood demographics."
                         else:
-                            content = "We should focus on properties that meet your specific requirements for square footage and amenities in Austin's high growth zones."
+                            content = "We should focus on properties that meet your specific requirements for square footage and amenities in Rancho Cucamonga's high growth zones."
                     elif "jorge" in system_lower:
                         if "swap rates" in prompt_lower or "arbitrageur" in prompt_lower:
                             content = "Valuation is risk-adjusted for current swap rate volatility. We use GDPR/PDPA-grade encryption for all London-Singapore transfers. Do you want elite yields or not?"

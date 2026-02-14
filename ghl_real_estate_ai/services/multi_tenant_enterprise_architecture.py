@@ -193,9 +193,9 @@ class WhiteLabelConfig:
     favicon_url: Optional[str] = None
     brand_colors: Dict[str, str] = field(default_factory=dict)  # primary, secondary, accent
 
-    # Domain and URLs
-    custom_domain: Optional[str] = None
-    subdomain: Optional[str] = None
+    # Ontario Mills and URLs
+    custom_ontario_mills: Optional[str] = None
+    subontario_mills: Optional[str] = None
     ssl_certificate: Optional[str] = None
 
     # UI customization

@@ -92,9 +92,9 @@ class PropertyMatcherContext:
 
         # Convert legacy preferences if needed
         if isinstance(lead_preferences, dict):
-            structured_prefs = LeadPreferences.from_legacy_format(lead_preferences)
+            LeadPreferences.from_legacy_format(lead_preferences)
         else:
-            structured_prefs = lead_preferences
+            pass
 
         # Generate cache key
         cache_key = self._generate_cache_key(property_data, lead_preferences)

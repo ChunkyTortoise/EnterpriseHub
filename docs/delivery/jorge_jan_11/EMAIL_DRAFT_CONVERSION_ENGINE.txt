@@ -37,7 +37,7 @@ PHASE 2: SMART PROPERTY MATCHING (Timeline: Days 1-7)
 - Admin Command Center: Dashboard to upload off-market/pocket listings.
 - NEW - Deal Score Algorithm: AI assigns a 0-100% "Fit Score" to every property based on 15+ data points.
 - NEW - The "Why" Generator: The AI writes a custom 1-sentence reason WHY it matched a home (e.g., "I picked this because you mentioned needing a home office").
-- NEW - Multi-Zone Territory Logic: Distinct matching rules for Rancho Cucamonga vs. Austin leads.
+- NEW - Multi-Zone Territory Logic: Distinct matching rules for Rancho Cucamonga vs. Rancho Cucamonga leads.
 
 PHASE 3: THE BUYER PORTAL (Timeline: Days 7-14)
 - Mobile-First Experience: A branded, "App-like" portal for your leads (no download required).

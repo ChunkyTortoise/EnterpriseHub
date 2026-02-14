@@ -25,8 +25,6 @@ from ghl_real_estate_ai.services.action_recommendations import (
 )
 from ghl_real_estate_ai.services.predictive_lead_scorer_v2 import LeadInsights, LeadPriority, PredictiveScore
 
-@pytest.mark.integration
-
 
 class TestPredictiveAnalyticsAPI:
     """Test suite for Predictive Analytics API endpoints."""

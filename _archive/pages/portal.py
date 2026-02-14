@@ -102,7 +102,7 @@ st.markdown(f"""
 with st.expander("🛠️ Architectural Search Criteria"):
     budget = st.slider("Target Cap", 300000, 2000000, 1200000, step=50000)
     beds = st.number_input("Min Bedrooms", 1, 6, 3)
-    location = st.text_input("Geography", "Austin, TX")
+    location = st.text_input("Geography", "Rancho Cucamonga, CA")
     
     if st.button("Synchronize with Lyrio Core", use_container_width=True):
         # 1. Telemetry

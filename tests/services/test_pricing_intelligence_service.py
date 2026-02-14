@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from ghl_real_estate_ai.services.austin_market_service import MarketCondition
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import MarketCondition
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
     ValuationComponents,
     ValuationConfidence,
@@ -27,7 +27,6 @@ from ghl_real_estate_ai.services.dynamic_valuation_engine import (
 )
 from ghl_real_estate_ai.services.pricing_intelligence_service import (
 
-@pytest.mark.unit
     InvestmentGrade,
     InvestmentMetrics,
     InvestmentOpportunity,
@@ -52,7 +51,7 @@ class TestPricingIntelligenceService:
         """Sample property data for investment analysis"""
         return {
             "property_id": "investment_test_001",
-            "address": "123 Investment Street, Austin, TX 78701",
+            "address": "123 Investment Street, Rancho Cucamonga, CA 91701",
             "neighborhood": "Downtown",
             "price": 650000,
             "sqft": 1800,

@@ -1,7 +1,42 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, List, Optional, TypedDict
 
 from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
+
+
+class ConversationTurn(TypedDict, total=False):
+    """TypedDict for a single conversation turn."""
+    role: str  # "user" or "assistant"
+    content: str
+    timestamp: Optional[str]
+
+
+class CrossBotPreference(TypedDict, total=False):
+    """TypedDict for cross-bot shared preferences."""
+    preferred_contact_method: str
+    best_contact_time: str
+    decision_maker_present: bool
+    spouse_name: Optional[str]
+    special_considerations: List[str]
+
+
+class SellerData(TypedDict, total=False):
+    """TypedDict for seller workflow data."""
+    motivation: str
+    timeline: str
+    price_expectation: float
+    property_condition: str
+    repairs_needed: List[str]
+    previous_listing: bool
+
+
+class ClosingMilestone(TypedDict, total=False):
+    """TypedDict for closing milestone."""
+    milestone_type: str  # "inspection", "appraisal", "financing", "title", "closing"
+    scheduled_date: Optional[str]
+    completed: bool
+    completed_date: Optional[str]
+    notes: Optional[str]
 
 
 class LeadFollowUpState(TypedDict):
@@ -17,7 +52,7 @@ class LeadFollowUpState(TypedDict):
     property_address: Optional[str]
 
     # Conversation Context
-    conversation_history: List[Dict[str, str]]
+    conversation_history: List[ConversationTurn]
     intent_profile: Optional[LeadIntentProfile]
 
     # Workflow Status
@@ -48,7 +83,7 @@ class LeadFollowUpState(TypedDict):
     # Enhanced nurture fields for intelligence-driven optimization
     preferred_engagement_timing: Optional[List[int]]  # Hours of day when lead is most responsive
     churn_risk_score: Optional[float]  # 0-1 risk of lead disengagement
-    cross_bot_preferences: Optional[Dict[str, Any]]  # Shared preferences from Jorge bots
+    cross_bot_preferences: Optional[CrossBotPreference]  # Shared preferences from Jorge bots
     sequence_optimization_applied: Optional[bool]  # Whether timing was optimized based on intelligence
 
 
@@ -65,8 +100,8 @@ class SellerWorkflowState(TypedDict):
     property_address: Optional[str]
 
     # Conversation Context
-    conversation_history: List[Dict[str, str]]
-    seller_data: Dict[str, Any]
+    conversation_history: List[ConversationTurn]
+    seller_data: SellerData
     temperature: str  # "hot", "warm", "cold"
 
     # Workflow Status
@@ -84,4 +119,4 @@ class SellerWorkflowState(TypedDict):
     closing_date: Optional[datetime]
     final_sale_price: Optional[float]
     net_proceeds: Optional[float]
-    closing_milestones: List[Dict[str, Any]]  # Inspection, Appraisal, etc.
+    closing_milestones: List[ClosingMilestone]  # Inspection, Appraisal, etc.

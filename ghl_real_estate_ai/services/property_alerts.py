@@ -1,5 +1,5 @@
 """
-Property Alert System - Automated notifications for Austin real estate opportunities.
+Property Alert System - Automated notifications for Rancho Cucamonga real estate opportunities.
 
 Provides intelligent property alerts including:
 - New listing notifications matching lead preferences
@@ -16,10 +16,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.austin_market_service import (
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
     PropertyListing,
     PropertyType,
-    get_austin_market_service,
+    get_rancho_cucamonga_market_service,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
@@ -127,7 +127,7 @@ class MarketAlert:
 
 class PropertyAlertSystem:
     """
-    Comprehensive property alert system for Austin real estate.
+    Comprehensive property alert system for Rancho Cucamonga real estate.
 
     Monitors MLS data, market conditions, and lead preferences to deliver
     intelligent property and market notifications.
@@ -135,7 +135,7 @@ class PropertyAlertSystem:
 
     def __init__(self):
         self.cache = get_cache_service()
-        self.market_service = get_austin_market_service()
+        self.market_service = get_rancho_cucamonga_market_service()
         self.active_criteria: Dict[str, AlertCriteria] = {}
         self.sent_alerts: Set[str] = set()
 
@@ -278,7 +278,7 @@ class PropertyAlertSystem:
         alerts = []
 
         try:
-            for neighborhood in ["Round Rock", "Domain", "South Lamar", "Downtown", "Mueller"]:
+            for neighborhood in ["Fontana", "Ontario Mills", "South Lamar", "Downtown", "Haven City"]:
                 metrics = await self.market_service.get_market_metrics(neighborhood)
 
                 # Check for low inventory alerts
@@ -604,7 +604,7 @@ class PropertyAlertSystem:
         return interested
 
     async def _get_corporate_events(self) -> List[Dict[str, Any]]:
-        """Get recent corporate events affecting Austin market."""
+        """Get recent corporate events affecting Rancho Cucamonga market."""
         # In production, integrate with news APIs, corporate announcements
         return [
             {
@@ -612,7 +612,7 @@ class PropertyAlertSystem:
                 "company": "Apple",
                 "announcement_date": datetime.now() - timedelta(days=3),
                 "impact": "Additional 5,000 jobs by 2025",
-                "location": "Round Rock campus",
+                "location": "Fontana campus",
             }
         ]
 

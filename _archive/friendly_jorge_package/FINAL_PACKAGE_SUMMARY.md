@@ -8,7 +8,7 @@ This is the **corrected and complete** Jorge bot package with the proper specifi
 
 ### ✅ **Corrected Specifications**
 - **Personality**: ~~Confrontational~~ → **Friendly & Helpful Customer Service**
-- **Market**: ~~Austin, TX~~ → **Rancho Cucamonga, California**
+- **Market**: ~~Rancho Cucamonga, CA~~ → **Rancho Cucamonga, California**
 - **Approach**: ~~Aggressive~~ → **Consultative Relationship Building**
 - **Compliance**: ~~TREC~~ → **California DRE Regulations**
 
@@ -57,12 +57,12 @@ This is the **corrected and complete** Jorge bot package with the proper specifi
 
 ## 🌟 Key Transformations Completed
 
-### ❌ **OLD: Confrontational Austin Approach**
+### ❌ **OLD: Confrontational Rancho Cucamonga Approach**
 - Aggressive, pressure-based tactics
 - "Listen, you need to get realistic..."
 - "What's it going to take for you to commit today?"
 - Timeline demands and ultimatums
-- Austin market data and references
+- Rancho Cucamonga market data and references
 
 ### ✅ **NEW: Friendly Rancho Cucamonga Approach**
 - Warm, consultative customer service

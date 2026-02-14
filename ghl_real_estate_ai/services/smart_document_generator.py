@@ -90,7 +90,7 @@ class SmartDocumentGenerator:
 
             market_intel = get_national_market_intelligence()
 
-            location = data.get("property_address") or data.get("market_id", "austin")
+            location = data.get("property_address") or data.get("market_id", "rancho_cucamonga")
             market_metrics = await market_intel.get_market_metrics(location)
 
             if market_metrics:
@@ -553,7 +553,7 @@ if __name__ == "__main__":
         DocumentType.PURCHASE_AGREEMENT,
         "template_purchase_ca",
         {
-            "property_address": "123 Main St, Austin, TX 78701",
+            "property_address": "123 Main St, Rancho Cucamonga, CA 91730",
             "purchase_price": 450000,
             "buyer_name": "John Doe",
             "seller_name": "Jane Smith",
@@ -568,7 +568,7 @@ if __name__ == "__main__":
     print("\n📋 Generating disclosure packet...")
     packet = service.generate_disclosure_packet(
         {
-            "address": "123 Main St, Austin, TX 78701",
+            "address": "123 Main St, Rancho Cucamonga, CA 91730",
             "year_built": 2015,
             "has_pool": True,
             "in_hoa": True,

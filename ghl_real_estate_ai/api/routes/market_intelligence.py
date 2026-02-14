@@ -103,7 +103,7 @@ async def get_market_metrics(
     property_type: Optional[str] = Query(None, description="Filter by property type"),
 ):
     """
-    Get comprehensive Austin market metrics.
+    Get comprehensive Rancho Cucamonga market metrics.
 
     Returns current market conditions, pricing trends, and inventory data.
     Can be filtered by neighborhood and property type.
@@ -147,18 +147,18 @@ async def get_market_metrics(
 
 @router.get("/neighborhoods")
 async def get_neighborhood_list():
-    """Get list of available Austin neighborhoods with basic info."""
+    """Get list of available Rancho Cucamonga neighborhoods with basic info."""
     try:
         market_service = get_rancho_cucamonga_market_service()
 
         neighborhoods = [
-            {"name": "Round Rock", "zone": "North", "appeal": "Tech Hub - Apple Campus"},
-            {"name": "Domain", "zone": "Northwest", "appeal": "Luxury Urban - Tech Executives"},
+            {"name": "Fontana", "zone": "North", "appeal": "Tech Hub - Apple Campus"},
+            {"name": "Ontario Mills", "zone": "Northwest", "appeal": "Luxury Urban - Tech Executives"},
             {"name": "South Lamar", "zone": "Central", "appeal": "Cultural District - Young Professionals"},
             {"name": "Downtown", "zone": "Central", "appeal": "Urban Living - Google/Indeed"},
-            {"name": "Mueller", "zone": "East", "appeal": "Master Planned - Tech Families"},
-            {"name": "East Austin", "zone": "East", "appeal": "Hip Culture - Tesla/Startups"},
-            {"name": "Cedar Park", "zone": "Northwest", "appeal": "Family Friendly - Top Schools"},
+            {"name": "Haven City", "zone": "East", "appeal": "Master Planned - Tech Families"},
+            {"name": "East Rancho Cucamonga", "zone": "East", "appeal": "Hip Culture - Tesla/Startups"},
+            {"name": "Upland", "zone": "Northwest", "appeal": "Family Friendly - Top Schools"},
             {"name": "Westlake", "zone": "West", "appeal": "Luxury - Executive Homes"},
         ]
 
@@ -221,7 +221,7 @@ async def get_neighborhood_analysis(neighborhood_name: str):
 @router.post("/properties/search")
 async def search_properties(request: PropertySearchRequest):
     """
-    Search Austin properties with comprehensive filtering.
+    Search Rancho Cucamonga properties with comprehensive filtering.
 
     Supports filtering by price, size, neighborhood, commute time, and lifestyle preferences.
     """
@@ -297,16 +297,16 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
     """
     Get AI-powered property recommendations for a specific lead.
 
-    Uses Austin market intelligence and lead preferences to suggest optimal properties.
+    Uses Rancho Cucamonga market intelligence and lead preferences to suggest optimal properties.
     """
     try:
-        ai_assistant = get_austin_ai_assistant()
+        ai_assistant = get_rancho_cucamonga_ai_assistant()
         market_service = get_rancho_cucamonga_market_service()
 
         # Build lead context
-        from ghl_real_estate_ai.services.austin_ai_assistant import AustinConversationContext
+        from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import Rancho CucamongaConversationContext
 
-        lead_context = AustinConversationContext(
+        lead_context = Rancho CucamongaConversationContext(
             lead_id=request.lead_id,
             employer=request.employer,
             budget_range=tuple(request.budget_range) if request.budget_range else None,
@@ -351,7 +351,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
                         "match_score": 85,  # AI-calculated match score
                         "why_perfect": f"Ideal for {request.employer} professionals"
                         if request.employer
-                        else "Great Austin opportunity",
+                        else "Great Rancho Cucamonga opportunity",
                     }
                 )
             except Exception as prop_error:
@@ -376,7 +376,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
 @router.post("/corporate-insights")
 async def get_corporate_insights(request: CorporateInsightsRequest):
     """
-    Get comprehensive corporate relocation insights for Austin.
+    Get comprehensive corporate relocation insights for Rancho Cucamonga.
 
     Provides employer-specific recommendations, compensation analysis, and neighborhood guidance.
     """
@@ -407,48 +407,48 @@ async def get_corporate_insights(request: CorporateInsightsRequest):
 
 @router.get("/corporate-employers")
 async def get_corporate_employers():
-    """Get list of major corporate employers in Austin with basic stats."""
+    """Get list of major corporate employers in Rancho Cucamonga with basic stats."""
     try:
         employers = [
             {
                 "name": "Apple",
-                "location": "Round Rock",
+                "location": "Fontana",
                 "employees": 15000,
                 "expansion_status": "Major expansion to 20,000 by 2026",
                 "avg_salary_range": [120000, 200000],
-                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Domain"],
+                "preferred_neighborhoods": ["Fontana", "Upland", "Ontario Mills"],
             },
             {
                 "name": "Google",
-                "location": "Downtown Austin",
+                "location": "Downtown Rancho Cucamonga",
                 "employees": 2500,
                 "expansion_status": "Steady growth",
                 "avg_salary_range": [140000, 220000],
-                "preferred_neighborhoods": ["Downtown", "South Lamar", "Mueller"],
+                "preferred_neighborhoods": ["Downtown", "South Lamar", "Haven City"],
             },
             {
                 "name": "Meta",
-                "location": "Domain",
+                "location": "Ontario Mills",
                 "employees": 3000,
                 "expansion_status": "Significant expansion planned",
                 "avg_salary_range": [150000, 250000],
-                "preferred_neighborhoods": ["Domain", "Downtown", "Round Rock"],
+                "preferred_neighborhoods": ["Ontario Mills", "Downtown", "Fontana"],
             },
             {
                 "name": "Tesla",
-                "location": "East Austin (Gigafactory)",
+                "location": "East Rancho Cucamonga (Gigafactory)",
                 "employees": 20000,
                 "expansion_status": "Manufacturing hub",
                 "avg_salary_range": [80000, 150000],
-                "preferred_neighborhoods": ["East Austin", "Mueller", "Manor"],
+                "preferred_neighborhoods": ["East Rancho Cucamonga", "Haven City", "Manor"],
             },
             {
                 "name": "Dell",
-                "location": "Round Rock",
+                "location": "Fontana",
                 "employees": 12000,
                 "expansion_status": "Stable workforce",
                 "avg_salary_range": [110000, 180000],
-                "preferred_neighborhoods": ["Round Rock", "Cedar Park", "Georgetown"],
+                "preferred_neighborhoods": ["Fontana", "Upland", "Georgetown"],
             },
         ]
 
@@ -465,7 +465,7 @@ async def get_corporate_employers():
 @router.post("/market-timing")
 async def get_market_timing_advice(request: MarketTimingRequest):
     """
-    Get personalized market timing advice for Austin real estate.
+    Get personalized market timing advice for Rancho Cucamonga real estate.
 
     Analyzes current market conditions and provides timing recommendations.
     """
@@ -487,10 +487,10 @@ async def get_market_timing_advice(request: MarketTimingRequest):
 
         # Enhance with lead context if provided
         if request.lead_context:
-            ai_assistant = get_austin_ai_assistant()
-            from ghl_real_estate_ai.services.austin_ai_assistant import AustinConversationContext
+            ai_assistant = get_rancho_cucamonga_ai_assistant()
+            from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import Rancho CucamongaConversationContext
 
-            lead_context = AustinConversationContext(
+            lead_context = Rancho CucamongaConversationContext(
                 lead_id=request.lead_context.get("lead_id", "timing_analysis"),
                 employer=request.lead_context.get("employer"),
                 relocation_timeline=request.lead_context.get("timeline"),
@@ -518,7 +518,7 @@ async def get_market_trends(
     period: str = Query("3m", description="Time period: 1m, 3m, 6m, 1y"),
     neighborhood: Optional[str] = Query(None, description="Specific neighborhood"),
 ):
-    """Get historical market trends for Austin or specific neighborhoods."""
+    """Get historical market trends for Rancho Cucamonga or specific neighborhoods."""
     try:
         market_service = get_rancho_cucamonga_market_service()
 
@@ -628,11 +628,11 @@ async def get_alert_summary(lead_id: str):
 
 @router.post("/ai-insights/lead-analysis")
 async def get_ai_lead_analysis(lead_data: Dict[str, Any], conversation_history: Optional[List[Dict[str, Any]]] = None):
-    """Get AI-powered analysis of a lead with Austin market context."""
+    """Get AI-powered analysis of a lead with Rancho Cucamonga market context."""
     try:
-        ai_assistant = get_austin_ai_assistant()
+        ai_assistant = get_rancho_cucamonga_ai_assistant()
 
-        analysis = await ai_assistant.analyze_lead_with_austin_context(lead_data, conversation_history)
+        analysis = await ai_assistant.analyze_lead_with_rancho_cucamonga_context(lead_data, conversation_history)
 
         return {"analysis": analysis, "generated_at": datetime.now().isoformat()}
 
@@ -645,13 +645,13 @@ async def get_ai_lead_analysis(lead_data: Dict[str, Any], conversation_history: 
 async def get_ai_conversation_response(
     query: str, lead_context: Dict[str, Any], conversation_history: Optional[List[Dict[str, Any]]] = None
 ):
-    """Get AI-powered response to lead query with Austin market intelligence."""
+    """Get AI-powered response to lead query with Rancho Cucamonga market intelligence."""
     try:
-        ai_assistant = get_austin_ai_assistant()
-        from ghl_real_estate_ai.services.austin_ai_assistant import AustinConversationContext
+        ai_assistant = get_rancho_cucamonga_ai_assistant()
+        from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import Rancho CucamongaConversationContext
 
         # Convert dict to context object
-        context = AustinConversationContext(
+        context = Rancho CucamongaConversationContext(
             lead_id=lead_context.get("lead_id", ""),
             employer=lead_context.get("employer"),
             preferred_neighborhoods=lead_context.get("preferred_neighborhoods", []),
@@ -659,7 +659,7 @@ async def get_ai_conversation_response(
             conversation_stage=lead_context.get("conversation_stage", "discovery"),
         )
 
-        response = await ai_assistant.generate_austin_response(query, context, conversation_history)
+        response = await ai_assistant.generate_rancho_cucamonga_response(query, context, conversation_history)
 
         return {"query": query, "ai_response": response, "generated_at": datetime.now().isoformat()}
 

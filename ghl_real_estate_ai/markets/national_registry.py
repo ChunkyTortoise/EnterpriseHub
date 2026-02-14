@@ -194,7 +194,7 @@ class NationalMarketRegistry:
                 employee_count=1540000,
                 fortune_ranking=2,
                 partnership_tier=CorporatePartnerTier.PLATINUM,
-                preferred_markets=["seattle", "austin", "denver", "phoenix"],
+                preferred_markets=["seattle", "rancho_cucamonga", "denver", "phoenix"],
                 relocation_volume_annual=850,
                 average_relocation_budget=85000.0,
                 contact_info={
@@ -215,7 +215,7 @@ class NationalMarketRegistry:
                 employee_count=221000,
                 fortune_ranking=14,
                 partnership_tier=CorporatePartnerTier.PLATINUM,
-                preferred_markets=["seattle", "austin", "denver", "phoenix"],
+                preferred_markets=["seattle", "rancho_cucamonga", "denver", "phoenix"],
                 relocation_volume_annual=420,
                 average_relocation_budget=95000.0,
                 contact_info={
@@ -236,7 +236,7 @@ class NationalMarketRegistry:
                 employee_count=190000,
                 fortune_ranking=29,
                 partnership_tier=CorporatePartnerTier.PLATINUM,
-                preferred_markets=["austin", "denver", "seattle"],
+                preferred_markets=["rancho_cucamonga", "denver", "seattle"],
                 relocation_volume_annual=380,
                 average_relocation_budget=125000.0,
                 contact_info={
@@ -278,7 +278,7 @@ class NationalMarketRegistry:
                 employee_count=131900,
                 fortune_ranking=45,
                 partnership_tier=CorporatePartnerTier.GOLD,
-                preferred_markets=["phoenix", "austin", "denver"],
+                preferred_markets=["phoenix", "rancho_cucamonga", "denver"],
                 relocation_volume_annual=225,
                 average_relocation_budget=82000.0,
                 contact_info={

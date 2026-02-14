@@ -72,7 +72,7 @@ jorge_scoring_api.py             # Real-time scoring API
    - Text embeddings (lead message content)
    - Behavioral patterns (response times, engagement)
    - Temporal features (day/time, seasonality)
-   - Austin market data (property prices, inventory)
+   - Rancho Cucamonga market data (property prices, inventory)
 
 3. Model Selection
    - XGBoost for tabular data
@@ -124,7 +124,7 @@ class MLDataCollector:
         - Time of day (morning/afternoon/evening)
 
         # Market features
-        - Austin avg price in budget range
+        - Rancho Cucamonga avg price in budget range
         - Inventory levels in preferred areas
         - Days on market trends
         - Competition intensity
@@ -660,7 +660,7 @@ async def score_lead(lead_id: str):
     pass
 
 @cache.cached(ttl=3600, level="L1")  # Memory cache, 1 hour TTL
-def get_austin_property_stats():
+def get_rancho_cucamonga_property_stats():
     """Market data - changes slowly, access frequently"""
     pass
 ```

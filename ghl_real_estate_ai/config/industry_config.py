@@ -1,7 +1,7 @@
 """
 Industry-Agnostic Bot Configuration Layer
 
-Provides dataclass-based configuration that decouples domain knowledge
+Provides dataclass-based configuration that decouples ontario_mills knowledge
 (intent markers, personality, market data, handoff rules) from bot logic.
 Configs can be loaded from YAML files, enabling the same bot framework
 to serve real estate, dental, HVAC, or any service industry.

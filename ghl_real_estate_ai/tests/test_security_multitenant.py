@@ -20,8 +20,6 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
-@pytest.mark.integration
-
 
 class TestTenantIsolation:
     """Test that tenants cannot access each other's data."""
@@ -779,7 +777,7 @@ class TestGDPRCompliance:
                     {"date": "2026-01-02", "content": "Message 2"},
                 ],
                 "lead_scores": [{"date": "2026-01-01", "score": 50}, {"date": "2026-01-02", "score": 75}],
-                "tags": ["Hot-Lead", "Location-Austin"],
+                "tags": ["Hot-Lead", "Location-Rancho Cucamonga"],
                 "data_processing_purposes": ["Lead qualification", "Marketing automation"],
             },
             "format": "PDF",  # Human-readable format
@@ -845,7 +843,7 @@ class TestDependencySecurity:
             "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
-            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Strict-Transport-Security": "max-age=31536000; includeSubOntario Millss",
             "Content-Security-Policy": "default-src 'self'",
         }
 

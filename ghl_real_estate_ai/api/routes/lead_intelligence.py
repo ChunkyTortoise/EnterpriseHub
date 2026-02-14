@@ -3,6 +3,7 @@ Lead Intelligence Middleware Endpoints.
 Provides advanced behavioral forecasting and agentic re-engagement triggers.
 """
 
+from functools import lru_cache
 from typing import Any, Dict
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -16,45 +17,39 @@ from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine
 
 router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 
-# Lazy service singletons — defer initialization until first request
-_scorer = None
-_memory = None
-_reengage = None
-_intent_decoder = None
+# FastAPI dependency injection - using @lru_cache for singleton behavior
 
 
-def _get_scorer():
-    global _scorer
-    if _scorer is None:
-        _scorer = PredictiveLeadScorer()
-    return _scorer
+@lru_cache(maxsize=1)
+def _get_scorer() -> PredictiveLeadScorer:
+    """Get PredictiveLeadScorer singleton instance."""
+    return PredictiveLeadScorer()
 
 
-def _get_memory():
-    global _memory
-    if _memory is None:
-        _memory = MemoryService()
-    return _memory
+@lru_cache(maxsize=1)
+def _get_memory() -> MemoryService:
+    """Get MemoryService singleton instance."""
+    return MemoryService()
 
 
-def _get_reengage():
-    global _reengage
-    if _reengage is None:
-        _reengage = ReengagementEngine()
-    return _reengage
+@lru_cache(maxsize=1)
+def _get_reengage() -> ReengagementEngine:
+    """Get ReengagementEngine singleton instance."""
+    return ReengagementEngine()
 
 
-def _get_intent_decoder():
-    global _intent_decoder
-    if _intent_decoder is None:
-        _intent_decoder = LeadIntentDecoder()
-    return _intent_decoder
+@lru_cache(maxsize=1)
+def _get_intent_decoder() -> LeadIntentDecoder:
+    """Get LeadIntentDecoder singleton instance."""
+    return LeadIntentDecoder()
 
 
 @router.post("/analyze-intent", response_model=LeadIntentProfile)
 async def analyze_lead_intent(
     payload: Dict[str, Any] = Body(...),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),
+    memory: MemoryService = Depends(_get_memory),
+    intent_decoder: LeadIntentDecoder = Depends(_get_intent_decoder),
 ):
     """
     2026 Strategic Roadmap: Phase 1
@@ -64,17 +59,17 @@ async def analyze_lead_intent(
     if not contact_id:
         raise HTTPException(status_code=400, detail="contact_id is required")
 
-    # Get history from _get_memory() or payload
+    # Get history from memory or payload
     history = payload.get("conversation_history")
     if not history:
-        context = await _get_memory().get_context(contact_id)
+        context = await memory.get_context(contact_id)
         history = context.get("conversation_history", [])
 
     if not history:
         # Return empty/neutral profile if no history
-        return _get_intent_decoder().analyze_lead(contact_id, [])
+        return intent_decoder.analyze_lead(contact_id, [])
 
-    profile = _get_intent_decoder().analyze_lead(contact_id, history)
+    profile = intent_decoder.analyze_lead(contact_id, history)
     return profile
 
 
@@ -82,6 +77,8 @@ async def analyze_lead_intent(
 async def score_lead_intelligence(
     payload: Dict[str, Any] = Body(...),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),
+    memory: MemoryService = Depends(_get_memory),
+    scorer: PredictiveLeadScorer = Depends(_get_scorer),
 ):
     """
     Advanced Behavioral Scoring Endpoint.
@@ -91,14 +88,14 @@ async def score_lead_intelligence(
     if not contact_id:
         raise HTTPException(status_code=400, detail="contact_id is required")
 
-    # Retrieve context from _get_memory()
-    context = await _get_memory().get_context(contact_id)
+    # Retrieve context from memory
+    context = await memory.get_context(contact_id)
     if not context.get("conversation_history"):
         # If no history, we can't do predictive scoring yet
         return {"success": False, "message": "Insufficient conversation history for behavioral forecasting."}
 
     # Calculate Predictive Score
-    prediction = _get_scorer().predict_conversion(context)
+    prediction = scorer.predict_conversion(context)
 
     return {"success": True, "prediction": prediction}
 
@@ -107,6 +104,8 @@ async def score_lead_intelligence(
 async def trigger_agentic_recovery(
     payload: Dict[str, Any] = Body(...),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),
+    memory: MemoryService = Depends(_get_memory),
+    reengage: ReengagementEngine = Depends(_get_reengage),
 ):
     """
     Sentiment-Aware Recovery Trigger.
@@ -115,8 +114,8 @@ async def trigger_agentic_recovery(
     contact_id = payload.get("contact_id")
     contact_name = payload.get("contact_name", "there")
 
-    context = await _get_memory().get_context(contact_id)
+    context = await memory.get_context(contact_id)
 
-    message = await _get_reengage().agentic_reengagement(contact_name, context)
+    message = await reengage.agentic_reengagement(contact_name, context)
 
     return {"success": True, "contact_id": contact_id, "agentic_message": message}

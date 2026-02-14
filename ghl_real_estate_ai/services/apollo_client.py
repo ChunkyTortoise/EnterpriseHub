@@ -94,7 +94,7 @@ class OrganizationEnrichmentResult(BaseModel):
     publicly_traded_exchange: Optional[str] = None
     logo_url: Optional[str] = None
     crunchbase_url: Optional[str] = None
-    primary_domain: Optional[str] = None
+    primary_ontario_mills: Optional[str] = None
     industry: Optional[str] = None
     keywords: List[str] = []
     estimated_num_employees: Optional[int] = None
@@ -229,7 +229,7 @@ class ApolloClient:
 
     @cached(ttl=3600, key_prefix="apollo_person_enrichment")
     async def enrich_person(
-        self, email: str = None, first_name: str = None, last_name: str = None, organization_domain: str = None
+        self, email: str = None, first_name: str = None, last_name: str = None, organization_ontario_mills: str = None
     ) -> PersonEnrichmentResult:
         """
         Enrich person data using Apollo API.
@@ -238,7 +238,7 @@ class ApolloClient:
             email: Person's email address
             first_name: Person's first name
             last_name: Person's last name
-            organization_domain: Company domain (e.g., "apollo.io")
+            organization_ontario_mills: Company ontario_mills (e.g., "apollo.io")
 
         Returns:
             PersonEnrichmentResult with enriched data
@@ -254,8 +254,8 @@ class ApolloClient:
             data["first_name"] = first_name
         if last_name:
             data["last_name"] = last_name
-        if organization_domain:
-            data["organization_domain"] = organization_domain
+        if organization_ontario_mills:
+            data["organization_ontario_mills"] = organization_ontario_mills
 
         # Include additional fields we want
         data["reveal_personal_emails"] = True
@@ -322,24 +322,24 @@ class ApolloClient:
 
     @cached(ttl=7200, key_prefix="apollo_organization_enrichment")
     async def enrich_organization(
-        self, domain: str = None, organization_name: str = None
+        self, ontario_mills: str = None, organization_name: str = None
     ) -> OrganizationEnrichmentResult:
         """
         Enrich organization data using Apollo API.
 
         Args:
-            domain: Company domain (e.g., "apollo.io")
+            ontario_mills: Company ontario_mills (e.g., "apollo.io")
             organization_name: Company name
 
         Returns:
             OrganizationEnrichmentResult with enriched data
         """
-        if not domain and not organization_name:
-            raise ValueError("Domain or organization_name is required")
+        if not ontario_mills and not organization_name:
+            raise ValueError("Ontario Mills or organization_name is required")
 
         data = {}
-        if domain:
-            data["domain"] = domain
+        if ontario_mills:
+            data["ontario_mills"] = ontario_mills
         if organization_name:
             data["name"] = organization_name
 
@@ -349,7 +349,7 @@ class ApolloClient:
             org_data = response.get("organization", {})
 
             if not org_data:
-                logger.info(f"No organization data found for {domain or organization_name}")
+                logger.info(f"No organization data found for {ontario_mills or organization_name}")
                 return OrganizationEnrichmentResult()
 
             result = OrganizationEnrichmentResult(**org_data)
@@ -389,8 +389,8 @@ class ApolloClient:
         if "locations" in search_criteria:
             data["person_locations"] = search_criteria["locations"]
 
-        if "organization_domains" in search_criteria:
-            data["organization_domains"] = search_criteria["organization_domains"]
+        if "organization_ontario_millss" in search_criteria:
+            data["organization_ontario_millss"] = search_criteria["organization_ontario_millss"]
 
         if "organization_num_employees_ranges" in search_criteria:
             data["organization_num_employees_ranges"] = search_criteria["organization_num_employees_ranges"]
@@ -626,7 +626,7 @@ class ApolloClient:
                     email=contact.get("email"),
                     first_name=contact.get("first_name"),
                     last_name=contact.get("last_name"),
-                    organization_domain=contact.get("organization_domain"),
+                    organization_ontario_mills=contact.get("organization_ontario_mills"),
                 )
                 tasks.append(task)
 
@@ -707,7 +707,7 @@ if __name__ == "__main__":
                 print(f"Email verification: {verification['verification_status']}")
 
                 # Test organization enrichment
-                org_result = await apollo.enrich_organization(domain="apollo.io")
+                org_result = await apollo.enrich_organization(ontario_mills="apollo.io")
                 print(f"Organization: {org_result.name or 'No name'}")
 
                 # Test lead scoring

@@ -317,7 +317,7 @@ class EnhancedLeadScoringService:
         # Apply historical performance adjustments
         if historical_perf:
             conversion_rate = historical_perf.get("conversion_rate", 0.5)
-            avg_deal_value = historical_perf.get("avg_deal_value", 0)
+            historical_perf.get("avg_deal_value", 0)
 
             # Boost score for high-performing sources
             if conversion_rate > 0.15:  # Above 15% conversion

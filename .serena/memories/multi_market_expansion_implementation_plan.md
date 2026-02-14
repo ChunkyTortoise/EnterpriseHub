@@ -2,17 +2,17 @@
 
 ## Executive Summary
 
-Based on exploration of the existing codebase, I've identified 80% code duplication between `austin_market_service.py` and `rancho_cucamonga_market_service.py` with hardcoded market data throughout. This plan transforms the platform to support dynamic market expansion through configuration-driven architecture.
+Based on exploration of the existing codebase, I've identified 80% code duplication between `rancho_cucamonga_market_service.py` and `rancho_cucamonga_market_service.py` with hardcoded market data throughout. This plan transforms the platform to support dynamic market expansion through configuration-driven architecture.
 
 ## Current State Analysis
 
 ### Critical Findings
-- **80% Code Duplication**: Austin and Rancho Cucamonga services are nearly identical
+- **80% Code Duplication**: Rancho Cucamonga and Rancho Cucamonga services are nearly identical
 - **Hardcoded Data**: Neighborhoods, employers, expertise embedded in Python methods
 - **Market-Specific Files**: 
-  - `/services/austin_market_service.py` (811 lines)
   - `/services/rancho_cucamonga_market_service.py` (811 lines)
-  - `/data/austin_market_data.py` (815 lines)
+  - `/services/rancho_cucamonga_market_service.py` (811 lines)
+  - `/data/rancho_cucamonga_market_data.py` (815 lines)
   - `/api/routes/market_intelligence.py` (721 lines)
 - **Configuration System**: Extensible via `config.py` with Pydantic validation
 - **Singleton Pattern**: Ready for factory transformation
@@ -30,7 +30,7 @@ Based on exploration of the existing codebase, I've identified 80% code duplicat
 
 ```python
 # Core Architecture
-MarketRegistry → MarketFactory → BaseMarketService → [AustinMarket, DallasMarket, ...]
+MarketRegistry → MarketFactory → BaseMarketService → [Rancho CucamongaMarket, DallasMarket, ...]
                 ↓
             MarketConfigLoader ← YAML/JSON configs
 ```
@@ -45,13 +45,13 @@ ghl_real_estate_ai/
 │   ├── base_market_service.py          # Abstract base class
 │   ├── config_loader.py               # Market config loader
 │   └── implementations/
-│       ├── austin_market.py            # Austin-specific implementation
+│       ├── rancho_cucamonga_market.py            # Rancho Cucamonga-specific implementation
 │       ├── dallas_market.py            # Dallas-specific implementation
 │       ├── houston_market.py           # Houston-specific implementation
 │       └── san_antonio_market.py       # San Antonio-specific implementation
 ├── config/
 │   └── markets/
-│       ├── austin.yaml                 # Austin market configuration
+│       ├── rancho_cucamonga.yaml                 # Rancho Cucamonga market configuration
 │       ├── dallas.yaml                 # Dallas market configuration
 │       ├── houston.yaml                # Houston market configuration
 │       └── san_antonio.yaml            # San Antonio market configuration
@@ -151,16 +151,16 @@ class BaseMarketService(ABC):
 
 ### Phase 2: Configuration Migration (Week 1-2)
 
-#### 2.1 Austin Market Configuration
-**File**: `ghl_real_estate_ai/config/markets/austin.yaml`
+#### 2.1 Rancho Cucamonga Market Configuration
+**File**: `ghl_real_estate_ai/config/markets/rancho_cucamonga.yaml`
 
 ```yaml
 market:
-  market_id: "austin"
-  name: "Austin"
+  market_id: "rancho_cucamonga"
+  name: "Rancho Cucamonga"
   state: "TX" 
   timezone: "America/Chicago"
-  mls_provider: "Austin Board of Realtors"
+  mls_provider: "Rancho Cucamonga Board of Realtors"
   coordinates: [30.2672, -97.7431]
   
 neighborhoods:
@@ -198,7 +198,7 @@ employers:
     industry_type: "technology"
     
   - name: "Google"
-    location: "Downtown Austin"
+    location: "Downtown Rancho Cucamonga"
     coordinates: [30.2672, -97.7431]
     employees: 2500
     avg_salary: 180000
@@ -208,13 +208,13 @@ employers:
 specializations:
   - name: "tech_relocations"
     description: "Technology worker relocations"
-    competitive_advantage: "Deep Austin tech ecosystem knowledge"
+    competitive_advantage: "Deep Rancho Cucamonga tech ecosystem knowledge"
     success_metrics:
       avg_search_time: 28
       closing_success_rate: 0.89
       
   - name: "downtown_condos"
-    description: "Downtown Austin condo market expertise"
+    description: "Downtown Rancho Cucamonga condo market expertise"
     competitive_advantage: "Exclusive downtown development pipeline access"
 ```
 
@@ -305,20 +305,20 @@ class MarketService:
         return results
 ```
 
-#### 3.2 Austin Market Implementation
-**File**: `ghl_real_estate_ai/markets/implementations/austin_market.py`
+#### 3.2 Rancho Cucamonga Market Implementation
+**File**: `ghl_real_estate_ai/markets/implementations/rancho_cucamonga_market.py`
 
 ```python
-class AustinMarketService(BaseMarketService):
+class RanchoCucamongaMarketService(BaseMarketService):
     async def get_market_metrics(self, neighborhood: Optional[str] = None) -> MarketMetrics:
-        # Austin-specific MLS integration
-        # Use market_config for Austin-specific data sources
+        # Rancho Cucamonga-specific MLS integration
+        # Use market_config for Rancho Cucamonga-specific data sources
         
     async def search_properties(self, criteria: Dict[str, Any]) -> List[PropertyListing]:
-        # Austin Board of Realtors MLS API
+        # Rancho Cucamonga Board of Realtors MLS API
         
-    async def _fetch_austin_mls_data(self) -> Dict[str, Any]:
-        """Austin-specific MLS data fetching"""
+    async def _fetch_rancho_cucamonga_mls_data(self) -> Dict[str, Any]:
+        """Rancho Cucamonga-specific MLS data fetching"""
 ```
 
 ### Phase 4: API Modernization (Week 2-3)
@@ -359,11 +359,11 @@ async def compare_markets(markets: List[str], criteria: MarketComparisonRequest)
 **File**: `ghl_real_estate_ai/api/routes/market_intelligence_legacy.py`
 
 ```python
-# Maintain existing Austin-specific endpoints during transition
+# Maintain existing Rancho Cucamonga-specific endpoints during transition
 @router.get("/metrics", deprecated=True)
-async def legacy_get_austin_metrics():
-    """Legacy Austin metrics endpoint"""
-    return await get_market_metrics("austin")
+async def legacy_get_rancho_cucamonga_metrics():
+    """Legacy Rancho Cucamonga metrics endpoint"""
+    return await get_market_metrics("rancho_cucamonga")
 ```
 
 ### Phase 5: Data Migration & Testing (Week 3)
@@ -372,10 +372,10 @@ async def legacy_get_austin_metrics():
 **File**: `scripts/migrate_market_data.py`
 
 ```python
-async def migrate_austin_data():
-    """Migrate hardcoded Austin data to YAML configuration"""
-    # Extract from austin_market_service.py
-    # Generate austin.yaml
+async def migrate_rancho_cucamonga_data():
+    """Migrate hardcoded Rancho Cucamonga data to YAML configuration"""
+    # Extract from rancho_cucamonga_market_service.py
+    # Generate rancho_cucamonga.yaml
     
 async def migrate_rancho_cucamonga_data():
     """Migrate Rancho Cucamonga data to YAML configuration"""
@@ -428,7 +428,7 @@ Based on this analysis, the 5 most critical files for implementing this plan:
 
 - `/ghl_real_estate_ai/markets/registry.py` - Core factory pattern and market registration
 - `/ghl_real_estate_ai/markets/base_market_service.py` - Abstract base eliminating 80% duplication
-- `/ghl_real_estate_ai/config/markets/austin.yaml` - Data migration from hardcoded to config
+- `/ghl_real_estate_ai/config/markets/rancho_cucamonga.yaml` - Data migration from hardcoded to config
 - `/ghl_real_estate_ai/services/market_service.py` - Unified interface for all market operations  
 - `/ghl_real_estate_ai/api/routes/market_intelligence_v2.py` - Market-agnostic API endpoints
 

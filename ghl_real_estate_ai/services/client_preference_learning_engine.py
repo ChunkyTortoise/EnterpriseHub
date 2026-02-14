@@ -222,14 +222,14 @@ class ClientPreferenceLearningEngine:
             r"(\d+(?:\.\d)?)\s*bath",
         ]
 
-        # Location keywords for Austin area
+        # Location keywords for Rancho Cucamonga area
         self.location_keywords = {
             "downtown": 0.9,
             "central": 0.8,
-            "south austin": 0.9,
-            "north austin": 0.9,
-            "east austin": 0.9,
-            "west austin": 0.9,
+            "south rancho_cucamonga": 0.9,
+            "north rancho_cucamonga": 0.9,
+            "east rancho_cucamonga": 0.9,
+            "west rancho_cucamonga": 0.9,
             "suburb": 0.7,
             "urban": 0.8,
             "quiet": 0.6,
@@ -921,7 +921,6 @@ class ClientPreferenceLearningEngine:
     ) -> List[PreferenceSignal]:
         """Extract preference signals from property interaction data."""
         signals = []
-        confidence_multiplier = -1 if is_negative else 1
 
         # Budget signal
         price = property_data.get("price")

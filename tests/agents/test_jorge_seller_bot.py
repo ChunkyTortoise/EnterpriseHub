@@ -36,7 +36,6 @@ from ghl_real_estate_ai.agents.jorge_seller_bot import (
 )
 from ghl_real_estate_ai.models.lead_scoring import (
 
-@pytest.mark.integration
     ConditionRealism,
     FinancialReadinessScore,
     LeadIntentProfile,

@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
-def render_interactive_lead_map(leads_data: List[Dict[str, Any]], market: str = "Austin"):
+def render_interactive_lead_map(leads_data: List[Dict[str, Any]], market: str = "Rancho Cucamonga"):
     """
     Render an interactive map with clickable lead markers and optional heat map overlay
 
@@ -35,10 +35,10 @@ def render_interactive_lead_map(leads_data: List[Dict[str, Any]], market: str = 
     if "selected_lead_marker" not in st.session_state:
         st.session_state.selected_lead_marker = None
     map_config = {
-        "Austin": {"center_lat": 30.2672, "center_lon": -97.7431, "zoom": 11},
+        "Rancho Cucamonga": {"center_lat": 30.2672, "center_lon": -97.7431, "zoom": 11},
         "Rancho": {"center_lat": 34.12, "center_lon": -117.57, "zoom": 12},
     }
-    config = map_config.get(market, map_config["Austin"])
+    config = map_config.get(market, map_config["Rancho Cucamonga"])
     col_map, col_detail = st.columns([2, 1])
     with col_map:
         view_mode = st.session_state.map_view_mode
@@ -319,7 +319,7 @@ def render_lead_analysis(lead: Dict[str, Any]):
 
 
 @st.cache_data(ttl=300)
-def generate_sample_lead_data(market: str = "Austin") -> List[Dict[str, Any]]:
+def generate_sample_lead_data(market: str = "Rancho Cucamonga") -> List[Dict[str, Any]]:
     """Generate sample lead data for map visualization when real data is unavailable."""
     if market == "Rancho":
         return [
@@ -378,7 +378,7 @@ def generate_sample_lead_data(market: str = "Austin") -> List[Dict[str, Any]]:
                 "lead_score": 65,
                 "engagement_score": 45,
                 "budget": 450000,
-                "location": "East Austin",
+                "location": "East Rancho Cucamonga",
                 "timeline": "6 months",
             },
             {
@@ -389,7 +389,7 @@ def generate_sample_lead_data(market: str = "Austin") -> List[Dict[str, Any]]:
                 "lead_score": 42,
                 "engagement_score": 30,
                 "budget": 300000,
-                "location": "South Austin",
+                "location": "South Rancho Cucamonga",
                 "timeline": "Exploring",
             },
         ]

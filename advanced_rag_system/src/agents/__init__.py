@@ -7,14 +7,14 @@ This module provides agentic capabilities for the RAG system, including:
 - Orchestration of multi-step reasoning workflows
 """
 
-from src.agents.agentic_rag import (
+from .agentic_rag import (
     AgenticRAG,
     AgenticRAGConfig,
     AgenticRAGResponse,
     ExecutionStep,
     ExecutionTrace,
 )
-from src.agents.query_planner import (
+from .query_planner import (
     IntentAnalysis,
     QueryIntent,
     QueryPlan,
@@ -23,7 +23,7 @@ from src.agents.query_planner import (
     StepStatus,
     ToolSelection,
 )
-from src.agents.reflection import (
+from .reflection import (
     AnswerQualityAssessment,
     ConfidenceScore,
     ConfidenceScorer,
@@ -31,7 +31,7 @@ from src.agents.reflection import (
     QualityDimension,
     ReflectionEngine,
 )
-from src.agents.tool_registry import (
+from .tool_registry import (
     BaseTool,
     CalculatorTool,
     ToolExecutionError,

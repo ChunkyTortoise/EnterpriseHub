@@ -160,7 +160,7 @@ class OptimizedCacheService:
 
         try:
             # Warm popular market data
-            popular_markets = ["austin", "dallas", "houston", "san_antonio"]
+            popular_markets = ["rancho_cucamonga", "dallas", "houston", "san_antonio"]
             for market in popular_markets:
                 key = f"market_data:{market}"
                 # Simulate fetching market data
@@ -270,7 +270,7 @@ async def demo_optimized_caching():
 
     # Test cache performance
     for i in range(100):
-        key = f"market_data:austin"  # Popular key (cache hit)
+        key = f"market_data:rancho_cucamonga"  # Popular key (cache hit)
         value = await cache.get(key)
 
         if i % 20 == 0:

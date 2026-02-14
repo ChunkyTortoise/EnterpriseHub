@@ -395,7 +395,7 @@ class PerformanceMonitor:
         self.record_api_latency(response_time, "jorge-seller-bot", success)
 
         # Add Jorge-specific metadata tracking
-        jorge_metadata = {
+        {
             "timestamp": datetime.now(),
             "response_time_ms": response_time,
             "success": success,
@@ -603,7 +603,7 @@ class PerformanceMonitor:
                 "overall_system": {
                     "status": system_health["status"],
                     "active_alerts": len(self._active_alerts),
-                    "uptime": "99.5%",  # TODO: Implement actual uptime tracking
+                    "uptime": "99.5%",  # ROADMAP-082: Implement actual uptime tracking
                 },
             },
             "enterprise_targets": {
@@ -1000,7 +1000,7 @@ def monitor_api_latency(endpoint: str = ""):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 success = False
                 raise
             finally:

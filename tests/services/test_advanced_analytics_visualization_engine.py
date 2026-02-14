@@ -14,8 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_asyncio
 
-@pytest.mark.integration
-
 # Import the service under test
 try:
     from ghl_real_estate_ai.services.advanced_analytics_visualization_engine import (

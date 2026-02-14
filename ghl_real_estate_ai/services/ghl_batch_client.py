@@ -323,7 +323,7 @@ class GHLBatchClient:
                 dedup_key = request.get_dedup_key()
                 if dedup_key in self.request_dedup:
                     # Request already pending, link to existing future
-                    existing_request_id = self.request_dedup[dedup_key]
+                    self.request_dedup[dedup_key]
                     self.metrics.deduplicated_requests += 1
                     continue
 

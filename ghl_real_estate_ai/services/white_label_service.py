@@ -2,7 +2,7 @@
 White-Label Platform Service - Brand Integration Suite
 
 Provides comprehensive white-labeling capabilities for high-ticket consulting engagements.
-Enables custom branding, domain management, and client-specific platform deployments.
+Enables custom branding, ontario_mills management, and client-specific platform deployments.
 """
 
 import json
@@ -54,8 +54,8 @@ class BrandingConfig:
     # Custom CSS Overrides
     custom_css: Optional[str] = None
 
-    # Domain Configuration
-    custom_domain: Optional[str] = None
+    # Ontario Mills Configuration
+    custom_ontario_mills: Optional[str] = None
     ssl_enabled: bool = True
 
     # Feature Customization
@@ -399,13 +399,13 @@ class WhiteLabelService:
 
         return integrations
 
-    async def configure_custom_domain(self, brand_id: str, domain: str, ssl_config: Dict[str, str]) -> bool:
-        """Configure custom domain for white-label deployment."""
+    async def configure_custom_ontario_mills(self, brand_id: str, ontario_mills: str, ssl_config: Dict[str, str]) -> bool:
+        """Configure custom ontario_mills for white-label deployment."""
 
         try:
-            # Update brand config with domain
+            # Update brand config with ontario_mills
             await self.update_brand_config(
-                brand_id, {"custom_domain": domain, "ssl_enabled": True, "ssl_config": ssl_config}
+                brand_id, {"custom_ontario_mills": ontario_mills, "ssl_enabled": True, "ssl_config": ssl_config}
             )
 
             # In a production system, this would:
@@ -414,11 +414,11 @@ class WhiteLabelService:
             # 3. Update load balancer rules
             # 4. Configure CDN routing
 
-            logger.info(f"Configured custom domain {domain} for brand {brand_id}")
+            logger.info(f"Configured custom ontario_mills {ontario_mills} for brand {brand_id}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to configure domain {domain} for brand {brand_id}: {e}")
+            logger.error(f"Failed to configure ontario_mills {ontario_mills} for brand {brand_id}: {e}")
             return False
 
     async def _validate_branding_tier(self, config: BrandingConfig):
@@ -428,8 +428,8 @@ class WhiteLabelService:
             # Basic tier: Logo, colors, basic customization only
             if config.custom_css:
                 raise ValueError("Custom CSS not available in Basic tier")
-            if config.custom_domain:
-                raise ValueError("Custom domain not available in Basic tier")
+            if config.custom_ontario_mills:
+                raise ValueError("Custom ontario_mills not available in Basic tier")
 
         elif config.tier == BrandingTier.PROFESSIONAL:
             # Professional tier: Full branding except complex custom CSS
@@ -545,9 +545,9 @@ class WhiteLabelService:
             "deployment_type": "white_label",
             # Branding
             "branding": asdict(brand_config),
-            # Custom Domain
-            "domain_config": {
-                "custom_domain": brand_config.custom_domain,
+            # Custom Ontario Mills
+            "ontario_mills_config": {
+                "custom_ontario_mills": brand_config.custom_ontario_mills,
                 "ssl_enabled": brand_config.ssl_enabled,
                 "cdn_enabled": brand_config.tier != BrandingTier.BASIC,
             },
@@ -586,7 +586,7 @@ class WhiteLabelService:
                     "advanced_analytics": True,
                     "workflow_automation": True,
                     "priority_support": True,
-                    "custom_domains": True,
+                    "custom_ontario_millss": True,
                     "api_access": True,
                 }
             )
@@ -597,7 +597,7 @@ class WhiteLabelService:
                     "advanced_analytics": True,
                     "workflow_automation": True,
                     "priority_support": True,
-                    "custom_domains": True,
+                    "custom_ontario_millss": True,
                     "api_access": True,
                     "dedicated_support": True,
                     "custom_integrations": True,

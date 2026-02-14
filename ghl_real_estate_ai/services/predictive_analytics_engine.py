@@ -1989,7 +1989,7 @@ if __name__ == "__main__":
             "page_views": 12,
             "budget": 450000,
             "timeline": "soon",
-            "searched_locations": ["North Austin", "Round Rock"],
+            "searched_locations": ["North Rancho Cucamonga", "Fontana"],
             "viewed_property_prices": [420000, 460000, 440000, 475000],
             "messages_per_day": 1.2,
             "questions_asked": 3,

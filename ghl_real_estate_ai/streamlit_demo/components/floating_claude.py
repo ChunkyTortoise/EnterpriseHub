@@ -79,7 +79,7 @@ def generate_omni_response(prompt):
         request = ClaudeRequest(
             task_type=ClaudeTaskType.OMNIPOTENT_ASSISTANT,
             context={
-                "market": st.session_state.get("selected_market", "Austin"),
+                "market": st.session_state.get("selected_market", "Rancho Cucamonga"),
                 "current_hub": st.session_state.get("current_hub", "Executive"),
                 "omni_context": True,
             },

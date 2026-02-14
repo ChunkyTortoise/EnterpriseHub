@@ -1,0 +1,363 @@
+# Canonical Certification Inventory
+# Version: 1.0
+# Last Updated: 2026-02-11
+# Total Certifications: 19 (10 completed, 9 in-progress)
+# Total Hours: 1,768+
+
+- id: C001
+  name: Google Data Analytics Certificate
+  provider: Google
+  status: completed
+  hours: 181
+  year: 2025
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S08"
+    - "S09"
+    - "S10"
+    - "S11"
+    - "S15"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "Expertise in data analysis, SQL, R programming, and visualization for business intelligence"
+  badge_url: "https://img.shields.io/badge/Google-Data%20Analytics-blue"
+  category: Data/BI
+
+- id: C002
+  name: Vanderbilt Generative AI Strategic Leader Specialization
+  provider: Vanderbilt University
+  status: completed
+  hours: 40
+  year: 2025
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S01"
+    - "S03"
+    - "S05"
+    - "S25"
+  repo_ids:
+    - "docqa-engine"
+    - "prompt-engineering-lab"
+    - "EnterpriseHub"
+  positioning_snippet: "Strategic leadership in generative AI adoption, prompt engineering, and agentic AI systems"
+  badge_url: "https://img.shields.io/badge/Vanderbilt-GenAI%20Strategic%20Leader-purple"
+  category: GenAI
+
+- id: C003
+  name: Microsoft Generative AI for Data Analysis Professional Certificate
+  provider: Microsoft
+  status: completed
+  hours: 108
+  year: 2025
+  verification_url: "https://learn.microsoft.com/en-us/credentials/certificates/"
+  service_ids:
+    - "S03"
+    - "S08"
+    - "S10"
+    - "S21"
+    - "S22"
+  repo_ids:
+    - "insight-engine"
+    - "docqa-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "AI-enhanced data analysis with GenAI for cleaning, visualization, and code generation"
+  badge_url: "https://img.shields.io/badge/Microsoft-GenAI%20Data%20Analysis-blue"
+  category: GenAI
+
+- id: C004
+  name: Google Cloud Generative AI Leader Certificate
+  provider: Google Cloud
+  status: completed
+  hours: 25
+  year: 2025
+  verification_url: "https://www.cloudskillsboost.google/public_profiles"
+  service_ids:
+    - "S01"
+    - "S03"
+    - "S04"
+  repo_ids:
+    - "EnterpriseHub"
+    - "docqa-engine"
+  positioning_snippet: "Foundational knowledge in GenAI applications, agents, and Google Cloud AI services"
+  badge_url: "https://img.shields.io/badge/GCP-GenAI%20Leader-orange"
+  category: GenAI
+
+- id: C005
+  name: DeepLearning.AI AI For Everyone
+  provider: DeepLearning.AI
+  status: completed
+  hours: 12
+  year: 2025
+  verification_url: "https://www.deeplearning.ai/certificates/"
+  service_ids:
+    - "S01"
+    - "S07"
+  repo_ids:
+    - "EnterpriseHub"
+    - "insight-engine"
+  positioning_snippet: "AI fundamentals, project building, and business strategy for non-technical stakeholders"
+  badge_url: "https://img.shields.io/badge/DeepLearning.AI-AI%20For%20Everyone-green"
+  category: AI/ML
+
+- id: C006
+  name: Duke University Large Language Model Operations (LLMOps) Specialization
+  provider: Duke University
+  status: in-progress
+  hours: 48
+  year: 2026
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S03"
+    - "S04"
+    - "S17"
+    - "S21"
+    - "S25"
+  repo_ids:
+    - "docqa-engine"
+    - "ai-orchestrator"
+    - "EnterpriseHub"
+  positioning_snippet: "Production LLM deployment, local models, plugins, and LLMOps best practices"
+  badge_url: "https://img.shields.io/badge/Duke-LLMOps-blue"
+  category: GenAI
+
+- id: C007
+  name: IBM Business Intelligence Analyst Professional Certificate
+  provider: IBM
+  status: completed
+  hours: 141
+  year: 2025
+  verification_url: "https://www.credly.com/badges/"
+  service_ids:
+    - "S08"
+    - "S09"
+    - "S11"
+    - "S15"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "Business intelligence with Excel, SQL, Cognos, Tableau, and data warehousing"
+  badge_url: "https://img.shields.io/badge/IBM-BI%20Analyst-blue"
+  category: Data/BI
+
+- id: C008
+  name: Google Digital Marketing & E-commerce Certificate
+  provider: Google
+  status: in-progress
+  hours: 190
+  year: 2026
+  verification_url: "https://skillshop.exceedlms.com/student/path/"
+  service_ids:
+    - "S12"
+    - "S13"
+    - "S14"
+    - "S15"
+  repo_ids:
+    - "scrape-and-serve"
+    - "Revenue-Sprint"
+    - "linkedin_engine"
+  positioning_snippet: "Digital marketing strategy, email marketing, e-commerce, and analytics"
+  badge_url: "https://img.shields.io/badge/Google-Digital%20Marketing-green"
+  category: Marketing
+
+- id: C009
+  name: Meta Social Media Marketing Professional Certificate
+  provider: Meta
+  status: in-progress
+  hours: 83
+  year: 2026
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S12"
+    - "S14"
+    - "S15"
+  repo_ids:
+    - "scrape-and-serve"
+    - "insight-engine"
+  positioning_snippet: "Social media strategy, advertising, campaign optimization, and analytics"
+  badge_url: "https://img.shields.io/badge/Meta-Social%20Media%20Marketing-blue"
+  category: Marketing
+
+- id: C010
+  name: DeepLearning.AI Deep Learning Specialization
+  provider: DeepLearning.AI
+  status: completed
+  hours: 120
+  year: 2025
+  verification_url: "https://www.deeplearning.ai/certificates/"
+  service_ids:
+    - "S07"
+    - "S10"
+  repo_ids:
+    - "insight-engine"
+    - "docqa-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "Deep learning expertise in neural networks, CNNs, RNNs, and hyperparameter tuning"
+  badge_url: "https://img.shields.io/badge/DeepLearning.AI-Deep%20Learning-orange"
+  category: AI/ML
+
+- id: C011
+  name: ChatGPT: Excel at Personal Automation with GPTs, AI & Zapier
+  provider: Vanderbilt University
+  status: completed
+  hours: 30
+  year: 2025
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S05"
+    - "S06"
+    - "S13"
+  repo_ids:
+    - "scrape-and-serve"
+    - "Revenue-Sprint"
+    - "prompt-engineering-lab"
+  positioning_snippet: "Prompt engineering, custom GPTs, and automation with Zapier for personal productivity"
+  badge_url: "https://img.shields.io/badge/Vanderbilt-ChatGPT%20Automation-purple"
+  category: GenAI
+
+- id: C012
+  name: IBM Generative AI Engineering with PyTorch, LangChain & Hugging Face
+  provider: IBM
+  status: in-progress
+  hours: 144
+  year: 2026
+  verification_url: "https://www.credly.com/badges/"
+  service_ids:
+    - "S03"
+    - "S04"
+    - "S07"
+  repo_ids:
+    - "docqa-engine"
+    - "EnterpriseHub"
+    - "ai-orchestrator"
+  positioning_snippet: "GenAI engineering with transformers, RAG, LangChain, fine-tuning, and deployment"
+  badge_url: "https://img.shields.io/badge/IBM-GenAI%20Engineering-blue"
+  category: GenAI
+
+- id: C013
+  name: Python for Everybody
+  provider: University of Michigan
+  status: in-progress
+  hours: 60
+  year: 2026
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S18"
+    - "S19"
+  repo_ids:
+    - "EnterpriseHub"
+    - "scrape-and-serve"
+    - "insight-engine"
+  positioning_snippet: "Python fundamentals, data structures, web scraping, and databases for all projects"
+  badge_url: "https://img.shields.io/badge/Michigan-Python%20For%20Everybody-yellow"
+  category: Engineering
+
+- id: C014
+  name: Microsoft AI-Enhanced Data Analysis: From Raw Data to Deep Insights
+  provider: Microsoft
+  status: in-progress
+  hours: 120
+  year: 2026
+  verification_url: "https://learn.microsoft.com/en-us/credentials/certificates/"
+  service_ids:
+    - "S08"
+    - "S10"
+    - "S11"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "AI-enhanced analytics with Excel Copilot, Python, Power BI, and integrated workflows"
+  badge_url: "https://img.shields.io/badge/Microsoft-AI%20Enhanced%20Data%20Analysis-blue"
+  category: Data/BI
+
+- id: C015
+  name: Microsoft Data Visualization Professional Certificate
+  provider: Microsoft
+  status: in-progress
+  hours: 87
+  year: 2026
+  verification_url: "https://learn.microsoft.com/en-us/credentials/certificates/"
+  service_ids:
+    - "S08"
+    - "S09"
+    - "QW7"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "Data visualization fundamentals, data modeling, analytics, and AI storytelling"
+  badge_url: "https://img.shields.io/badge/Microsoft-Data%20Visualization-blue"
+  category: Data/BI
+
+- id: C016
+  name: Google Business Intelligence Professional Certificate
+  provider: Google
+  status: in-progress
+  hours: 80
+  year: 2026
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S08"
+    - "S09"
+    - "S15"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "BI foundations, data pipelines, dashboards, and reporting with Google tools"
+  badge_url: "https://img.shields.io/badge/Google-Business%20Intelligence-green"
+  category: Data/BI
+
+- id: C017
+  name: IBM RAG and Agentic AI: Build Next-Gen AI Systems Professional Certificate
+  provider: IBM
+  status: in-progress
+  hours: 24
+  year: 2026
+  verification_url: "https://www.credly.com/badges/"
+  service_ids:
+    - "S03"
+    - "S04"
+    - "S21"
+    - "S22"
+  repo_ids:
+    - "docqa-engine"
+    - "EnterpriseHub"
+    - "mcp-toolkit"
+  positioning_snippet: "RAG with LangChain, vector databases, multi-agent systems, and AG2 frameworks"
+  badge_url: "https://img.shields.io/badge/IBM-RAG%20and%20Agentic%20AI-blue"
+  category: GenAI
+
+- id: C018
+  name: Google Advanced Data Analytics Certificate
+  provider: Google
+  status: in-progress
+  hours: 200
+  year: 2026
+  verification_url: "https://www.coursera.org/account/accomplishments/certificate"
+  service_ids:
+    - "S07"
+    - "S10"
+    - "S11"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "Advanced analytics with Python, statistics, regression, and machine learning"
+  badge_url: "https://img.shields.io/badge/Google-Advanced%20Data%20Analytics-green"
+  category: Data/BI
+
+- id: C019
+  name: Microsoft AI & ML Engineering Professional Certificate
+  provider: Microsoft
+  status: in-progress
+  hours: 75
+  year: 2026
+  verification_url: "https://learn.microsoft.com/en-us/credentials/certificates/"
+  service_ids:
+    - "S07"
+    - "S10"
+    - "S17"
+  repo_ids:
+    - "insight-engine"
+    - "EnterpriseHub"
+  positioning_snippet: "ML algorithms, Azure workflows, and intelligent agents for production systems"
+  badge_url: "https://img.shields.io/badge/Microsoft-AI%20%26%20ML%20Engineering-blue"
+  category: AI/ML
