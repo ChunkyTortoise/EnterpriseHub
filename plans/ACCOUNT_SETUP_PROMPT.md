@@ -193,11 +193,11 @@ GA4_MEASUREMENT_ID=G-XXXXXXXXXX
 
 # Stripe Configuration (Test Mode)
 STRIPE_SECRET_KEY=your_stripe_secret_key_here
-STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
 
 # Stripe Product Price IDs
-STRIPE_STARTER_PRICE_ID=price_xxxxxxxxxxxxxx
-STRIPE_PROFESSIONAL_PRICE_ID=price_xxxxxxxxxxxxxx
+STRIPE_STARTER_PRICE_ID=your_starter_price_id
+STRIPE_PROFESSIONAL_PRICE_ID=your_professional_price_id
 STRIPE_ENTERPRISE_PRICE_ID=price_xxxxxxxxxxxxxx
 ```
 

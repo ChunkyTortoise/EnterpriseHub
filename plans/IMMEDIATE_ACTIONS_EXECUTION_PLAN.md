@@ -317,21 +317,21 @@ Add the following environment variables:
 ```bash
 # Stripe Configuration
 STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
 
 # Stripe Price IDs (from Step 3)
-STRIPE_STARTER_PRICE_ID=price_xxxxx
-STRIPE_PROFESSIONAL_PRICE_ID=price_xxxxx
-STRIPE_ENTERPRISE_PRICE_ID=price_xxxxx
+STRIPE_STARTER_PRICE_ID=your_starter_price
+STRIPE_PROFESSIONAL_PRICE_ID=your_professional_price
+STRIPE_ENTERPRISE_PRICE_ID=your_enterprise_price
 ```
 
 **For Production (.env.production)**:
 ```bash
 # Stripe Configuration (Production)
 STRIPE_SECRET_KEY=your_live_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxxxxxxxxxxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_PUBLISHABLE_KEY=your_live_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_live_webhook_secret
 ```
 
 #### Step 6: Update Billing Module Configuration
