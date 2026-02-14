@@ -26,7 +26,8 @@ class JorgeSellerConfig:
     # psychology profiling, Voss negotiation, drift detection, market insights)
     # When True, bot follows strict 4-question flow (high conversion)
     # When False, bot follows full 10-question flow (deep qualification)
-    JORGE_SIMPLE_MODE: bool = True  # Default to high-conversion 4-question flow
+    # Can be overridden by JORGE_SIMPLE_MODE environment variable
+    JORGE_SIMPLE_MODE: bool = os.getenv("JORGE_SIMPLE_MODE", "true").lower() == "true"
 
     # ========== ACTIVATION/DEACTIVATION TAGS ==========
     ACTIVATION_TAGS = ["Needs Qualifying"]
@@ -248,6 +249,37 @@ class JorgeSellerConfig:
         "classification_accuracy": 0.90,  # Min 90% accuracy
         "sms_compliance_rate": 1.0,  # 100% SMS compliant
     }
+
+    # ========== MODE SWITCHING ==========
+    @classmethod
+    def set_mode(cls, simple_mode: bool):
+        """
+        Switch between simple mode (4 questions) and full mode (10 questions).
+
+        Args:
+            simple_mode: If True, use 4-question flow. If False, use 10-question flow.
+
+        Updates:
+            - JORGE_SIMPLE_MODE
+            - SELLER_QUESTIONS
+            - QUESTION_FIELD_MAPPING
+            - HOT_QUESTIONS_REQUIRED
+            - WARM_QUESTIONS_REQUIRED
+        """
+        cls.JORGE_SIMPLE_MODE = simple_mode
+
+        if simple_mode:
+            cls.SELLER_QUESTIONS = cls.SELLER_QUESTIONS_SIMPLE
+            cls.QUESTION_FIELD_MAPPING = cls.QUESTION_FIELD_MAPPING_SIMPLE
+            cls.HOT_QUESTIONS_REQUIRED = cls.HOT_QUESTIONS_REQUIRED_SIMPLE
+            cls.WARM_QUESTIONS_REQUIRED = cls.WARM_QUESTIONS_REQUIRED_SIMPLE
+            logger.info("Jorge Seller Bot: Switched to SIMPLE mode (4 questions)")
+        else:
+            cls.SELLER_QUESTIONS = cls.SELLER_QUESTIONS_FULL
+            cls.QUESTION_FIELD_MAPPING = cls.QUESTION_FIELD_MAPPING_FULL
+            cls.HOT_QUESTIONS_REQUIRED = cls.HOT_QUESTIONS_REQUIRED_FULL
+            cls.WARM_QUESTIONS_REQUIRED = cls.WARM_QUESTIONS_REQUIRED_FULL
+            logger.info("Jorge Seller Bot: Switched to FULL mode (10 questions)")
 
     # ========== ENVIRONMENT SPECIFIC SETTINGS ==========
     @classmethod

@@ -1,3 +1,4 @@
+
 """
 Jorge Seller Bot - Unified Enterprise Implementation
 Combines all research enhancements into production-ready unified implementation.
@@ -49,12 +50,14 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.bot_context_types import (
     BotMetadata,
     ConversationMessage,
+    QualificationData,
     SellerBotResponse,
 )
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+from ghl_real_estate_ai.services.jorge.acceptance_predictor_service import get_acceptance_predictor_service
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
@@ -66,6 +69,7 @@ from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnal
 from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringIntegration
 from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
 from ghl_real_estate_ai.services.churn_detection_service import ChurnDetectionService
+from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeRequest, ClaudeTaskType
 
 # Phase 3 Loop 3: Handoff context propagation
 try:
@@ -212,9 +216,17 @@ class JorgeSellerBot:
         self.conversation_memory = None
         self.question_engine = None
         if self.config.enable_adaptive_questioning:
+            # Import JorgeSellerConfig to get the current mode setting
+            from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+            simple_mode = JorgeSellerConfig.JORGE_SIMPLE_MODE
             self.conversation_memory = ConversationMemory()
-            self.question_engine = AdaptiveQuestionEngine(questions_config=self.industry_config.questions)
-            logger.info("Jorge bot: Adaptive questioning enabled")
+            self.question_engine = AdaptiveQuestionEngine(
+                questions_config=self.industry_config.questions,
+                simple_mode=simple_mode
+            )
+            mode_name = "simple (4 questions)" if simple_mode else "full (10 questions)"
+            logger.info(f"Jorge bot: Adaptive questioning enabled in {mode_name} mode")
 
         # Phase 3.3 Bot Intelligence Middleware (optional)
         self.intelligence_middleware = None
@@ -1015,11 +1027,11 @@ class JorgeSellerBot:
             return None
 
         rancho_cucamonga_neighborhoods = {
-            "alta_loma": ["alta_loma", "alta loma"],
-            "north rancho": ["north rancho"],
-            "haven city": ["haven city"],
+            "alta_loma": ["alta_loma", "west lake hills"],
+            "tarrytown": ["tarrytown"],
+            "mueller": ["mueller"],
             "central_rc": ["central_rc", "west 6th", "rainey"],
-            "day_creek": ["day creek", "day creek", "victoria gardens"],
+            "south_congress": ["soco", "south congress", "zilker"],
             "east_rancho_cucamonga": ["east rancho_cucamonga", "cherrywood"],
             "etiwanda": ["cedar park"],
             "victoria_gardens": ["round rock"],

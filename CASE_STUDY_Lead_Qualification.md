@@ -24,7 +24,7 @@ Before EnterpriseHub, this real estate team faced critical challenges:
 |--------|------------|
 | Manual follow-up | Leads waited 2-4 hours for initial response |
 | Inconsistent scoring | Each agent qualified leads differently |
-| CRM data gaps | Important lead信息经常丢失 |
+| CRM data gaps | Important lead information was frequently lost |
 | High dropout rate | 67% of leads lost due to slow follow-up |
 
 The team was spending **$18,000 annually** on lead qualification labor alone—time that could be spent closing deals.
@@ -119,6 +119,6 @@ Don't let another lead slip through the cracks. With EnterpriseHub, you can:
 
 ---
 
-*Case study data based on actual client results. Individual results may vary. All testimonials available upon request.*
+*Projected results based on system capabilities and industry benchmarks. Individual results may vary. All testimonials available upon request.*
 
 *© 2026 EnterpriseHub — AI Solutions for Real Estate Excellence*

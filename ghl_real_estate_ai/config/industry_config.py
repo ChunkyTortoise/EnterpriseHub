@@ -106,7 +106,9 @@ class MarketConfig:
 class QuestionConfig:
     """Qualification question sets, follow-ups, and accelerators."""
 
-    questions: List[Dict[str, Any]] = field(default_factory=list)
+    questions: List[Dict[str, Any]] = field(default_factory=list)  # Default/simple mode questions
+    questions_simple: List[Dict[str, Any]] = field(default_factory=list)  # 4-question mode
+    questions_full: List[Dict[str, Any]] = field(default_factory=list)  # 10-question mode
     follow_ups: Dict[str, List[str]] = field(default_factory=dict)
     accelerators: List[str] = field(default_factory=list)
 
@@ -251,6 +253,8 @@ class IndustryConfig:
         qs = data.get("questions", {})
         questions = QuestionConfig(
             questions=qs.get("questions", []),
+            questions_simple=qs.get("questions_simple", []),
+            questions_full=qs.get("questions_full", []),
             follow_ups=qs.get("follow_ups", {}),
             accelerators=qs.get("accelerators", []),
         )
