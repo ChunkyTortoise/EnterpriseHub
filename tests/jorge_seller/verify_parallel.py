@@ -17,7 +17,7 @@ async def verify_parallel():
     cm = ConversationManager()
 
     # Mock dependencies to simulate latency
-    cm.extract_data = AsyncMock(return_value={"budget": 500000, "location": "Austin"})
+    cm.extract_data = AsyncMock(return_value={"budget": 500000, "location": "Rancho Cucamonga"})
 
     # Mock RAG to take 100ms
     def slow_search(*args, **kwargs):
@@ -52,7 +52,7 @@ async def verify_parallel():
     print("Executing generate_response...")
     start_time = time.time()
     response = await cm.generate_response(
-        user_message="I want to buy a house in Austin for 500k",
+        user_message="I want to buy a house in Rancho Cucamonga for 500k",
         contact_info=contact_info,
         context=context,
         ghl_client=mock_ghl,

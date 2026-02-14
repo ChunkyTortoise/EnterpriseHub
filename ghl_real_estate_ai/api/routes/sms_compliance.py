@@ -260,16 +260,33 @@ async def get_compliance_report(
         if current_user.get("role") not in [UserRole.ADMIN.value, UserRole.SUPER_ADMIN.value]:
             raise HTTPException(status_code=403, detail="Admin permissions required for compliance reports")
 
-        # TODO: Implement compliance reporting
-        # This would query the database for compliance metrics over the specified period
+        # ROADMAP-036: SMS Compliance Reporting Dashboard
+        # Current: All zeros and empty arrays
+        # Required:
+        #   1. Query sms_opt_outs table for total_opt_outs count
+        #   2. Query sms_message_log for frequency_violations (messages exceeding daily/monthly limits)
+        #   3. Calculate compliance_score: 100 - (violations * 10) - (opt_out_rate * 20)
+        #   4. Generate recommendations based on violation patterns
+        #   5. Cache report for 1 hour
+        # Dependencies: None (database tables exist)
 
         return {
             "report_period_days": days,
             "location_id": location_id,
-            "total_opt_outs": 0,  # TODO: Query database
-            "frequency_violations": 0,  # TODO: Query database
-            "compliance_score": 100.0,  # TODO: Calculate based on metrics
-            "recommendations": [],  # TODO: Generate recommendations
+            # ROADMAP-037: Query actual opt-out counts
+            # Table: sms_opt_outs, filter by location_id and date range
+            "total_opt_outs": 0,
+            # ROADMAP-038: Query frequency violations
+            # Table: sms_message_log, group by contact_id, count messages per day
+            "frequency_violations": 0,
+            # ROADMAP-039: Calculate compliance score
+            # Formula: 100 - (violations * 10) - (opt_out_rate * 20), min 0, max 100
+            "compliance_score": 100.0,
+            # ROADMAP-040: Generate compliance recommendations
+            # Rules: If violations > 5: "Reduce message frequency"
+            #        If opt_out_rate > 2%: "Review message content"
+            #        If violations == 0: "Excellent compliance"
+            "recommendations": [],
             "generated_at": datetime.now().isoformat(),
             "generated_by": current_user.get("username"),
         }

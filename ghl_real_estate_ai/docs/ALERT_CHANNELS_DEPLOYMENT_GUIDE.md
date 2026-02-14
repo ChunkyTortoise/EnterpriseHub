@@ -61,12 +61,12 @@ ALERT_EMAIL_SMTP_USER=your-email@gmail.com     # SMTP username
 ALERT_EMAIL_SMTP_PASSWORD=your-app-password   # App-specific password
 
 # Email Content
-ALERT_EMAIL_FROM=alerts@yourdomain.com         # From address
+ALERT_EMAIL_FROM=alerts@yourontario_mills.com         # From address
 ALERT_EMAIL_FROM_NAME="Jorge Bot Alerts"       # From name
-ALERT_EMAIL_REPLY_TO=admin@yourdomain.com      # Reply-to address
+ALERT_EMAIL_REPLY_TO=admin@yourontario_mills.com      # Reply-to address
 
 # Recipients (comma-separated)
-ALERT_EMAIL_TO=admin@yourdomain.com,ops@yourdomain.com
+ALERT_EMAIL_TO=admin@yourontario_mills.com,ops@yourontario_mills.com
 ```
 
 #### Common SMTP Providers
@@ -271,8 +271,8 @@ TESTING: Email (SMTP) Configuration
 ============================================================
   ✓ ALERT_EMAIL_SMTP_HOST: smtp.gmail.com
   ✓ ALERT_EMAIL_SMTP_PORT: 587
-  ✓ ALERT_EMAIL_FROM: alerts@yourdomain.com
-  ✓ ALERT_EMAIL_TO: admin@yourdomain.com
+  ✓ ALERT_EMAIL_FROM: alerts@yourontario_mills.com
+  ✓ ALERT_EMAIL_TO: admin@yourontario_mills.com
   ✓ ALERT_EMAIL_SMTP_USER: your-email@gmail.com
 
 ============================================================
@@ -309,7 +309,7 @@ CONFIG:
 |-------|----------|
 | "Connection refused" | Check SMTP host/port, firewall |
 | "Authentication failed" | Verify username/app password |
-| "Sender address rejected" | Use verified sender domain |
+| "Sender address rejected" | Use verified sender ontario_mills |
 | No emails received | Check spam folder, verify recipients |
 
 ### Slack Issues

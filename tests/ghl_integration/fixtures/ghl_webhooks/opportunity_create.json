@@ -1,0 +1,30 @@
+{
+  "event": "OpportunityCreate",
+  "version": "v2",
+  "timestamp": "2026-02-11T09:00:00Z",
+  "trace_id": "evt_opp_create_44444",
+  "data": {
+    "id": "opp_seller_55555",
+    "locationId": "loc_xyz789",
+    "contactId": "contact_seller_123",
+    "name": "123 Oak Street Listing",
+    "pipelineId": "pipeline_seller_001",
+    "stageId": "stage_new_listing",
+    "status": "open",
+    "monetaryValue": 750000,
+    "createdAt": "2026-02-11T09:00:00Z",
+    "updatedAt": "2026-02-11T09:00:00Z",
+    "customFields": {
+      "property_address": "123 Oak Street, Rancho Cucamonga, CA 91737",
+      "estimated_value": 750000,
+      "listing_type": "seller"
+    },
+    "contact": {
+      "id": "contact_seller_123",
+      "name": "Jane Doe",
+      "email": "jane.doe@example.com",
+      "phone": "+1-909-555-0456",
+      "tags": ["seller", "listing_inquiry"]
+    }
+  }
+}

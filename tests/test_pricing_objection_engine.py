@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
 
-@pytest.mark.unit
     ObjectionDetection,
     ObjectionType,
     PricingObjectionEngine,

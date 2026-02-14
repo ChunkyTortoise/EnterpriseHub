@@ -5,10 +5,10 @@
       "status": "active",
       "address": {
         "street": "4512 Duval St",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78751",
-        "neighborhood": "Hyde Park"
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91737",
+        "neighborhood": "Alta Loma"
       },
       "price": 675000,
       "bedrooms": 3,
@@ -21,7 +21,7 @@
         "Updated kitchen with quartz countertops",
         "Original hardwood floors refinished",
         "Large backyard with mature trees",
-        "Walkable to restaurants and UT campus",
+        "Walkable to restaurants and Chaffey College",
         "Detached garage converted to studio",
         "New HVAC (2023)",
         "Original craftsman charm"
@@ -46,7 +46,7 @@
       "hoa_fee": 0,
       "property_tax_annual": 14175,
       "days_on_market": 12,
-      "description": "Charming 1948 craftsman in the heart of Hyde Park. This beautifully updated home blends original character with modern amenities. The chef's kitchen features quartz countertops and stainless appliances. Original hardwood floors run throughout. Oversized backyard with mature oaks perfect for entertaining. Walk to local coffee shops, restaurants, and parks. Rare detached studio ideal for home office or guest suite. Top-rated schools. Move-in ready!",
+      "description": "Charming 1948 craftsman in the heart of Alta Loma. This beautifully updated home blends original character with modern amenities. The chef's kitchen features quartz countertops and stainless appliances. Original hardwood floors run throughout. Oversized backyard with mature oaks perfect for entertaining. Walk to local coffee shops, restaurants, and parks. Rare detached studio ideal for home office or guest suite. Top-rated schools. Move-in ready!",
       "highlights": [
         "Walkable neighborhood (Walk Score: 85)",
         "Top-rated schools",
@@ -61,10 +61,10 @@
       "status": "active",
       "address": {
         "street": "15823 Fontana Lake Dr",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78717",
-        "neighborhood": "Avery Ranch"
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91717",
+        "neighborhood": "Etiwanda"
       },
       "price": 585000,
       "bedrooms": 4,
@@ -84,7 +84,7 @@
       ],
       "schools": [
         {
-          "name": "Avery Ranch Elementary",
+          "name": "Etiwanda Elementary",
           "rating": 9,
           "type": "Elementary"
         },
@@ -102,10 +102,10 @@
       "hoa_fee": 95,
       "property_tax_annual": 12285,
       "days_on_market": 8,
-      "description": "Stunning modern home in desirable Avery Ranch. Built in 2018, this 4-bedroom gem features soaring ceilings and abundant natural light. The gourmet kitchen boasts granite counters, island seating, and stainless appliances. Primary suite on main floor with spa-like bath. Upstairs game room perfect for family fun. Covered patio overlooks private backyard. Community offers pools, trails, and parks. Top-rated Round Rock ISD schools. Minutes to shopping and dining.",
+      "description": "Stunning modern home in desirable Etiwanda. Built in 2018, this 4-bedroom gem features soaring ceilings and abundant natural light. The gourmet kitchen boasts granite counters, island seating, and stainless appliances. Primary suite on main floor with spa-like bath. Upstairs game room perfect for family fun. Covered patio overlooks private backyard. Community offers pools, trails, and parks. Top-rated Fontana ISD schools. Minutes to shopping and dining.",
       "highlights": [
         "Nearly new construction (2018)",
-        "Highly-rated Round Rock ISD",
+        "Highly-rated Fontana ISD",
         "Resort-style community amenities",
         "Primary bedroom downstairs",
         "Low maintenance yard"
@@ -117,8 +117,8 @@
       "status": "active",
       "address": {
         "street": "2847 Glenwood Trail",
-        "city": "Round Rock",
-        "state": "TX",
+        "city": "Fontana",
+        "state": "CA",
         "zip": "78665",
         "neighborhood": "Teravista"
       },
@@ -132,7 +132,7 @@
       "features": [
         "Home office with built-in desk",
         "Gigabit fiber internet ready",
-        "15-minute drive to Apple campus",
+        "15-minute drive to Amazon Hub",
         "Open concept perfect for virtual meetings",
         "Quiet neighborhood away from traffic",
         "Brand new construction - no repair surprises",
@@ -158,12 +158,12 @@
       "hoa_fee": 110,
       "property_tax_annual": 11025,
       "days_on_market": 5,
-      "description": "This home was built for tech professionals! 2020 build featuring a dedicated home office, gigabit fiber, and a 12-minute reverse commute to the Apple campus. Under his $550k SF-adjusted budget.",
+      "description": "This home was built for tech professionals! 2020 build featuring a dedicated home office, gigabit fiber, and a 12-minute reverse commute to the Amazon Hub. Under his $550k SF-adjusted budget.",
       "highlights": [
         "12-min commute to Apple",
         "Gigabit fiber internet",
         "Dedicated office space",
-        "Round Rock ISD (9/10)",
+        "Fontana ISD (9/10)",
         "Tech professional hub"
       ],
       "listing_url": "https://example.com/listing/2847-glenwood"
@@ -173,9 +173,9 @@
       "status": "active",
       "address": {
         "street": "1205 Settlers Valley Dr",
-        "city": "Pflugerville",
-        "state": "TX",
-        "zip": "78660",
+        "city": "Ontario",
+        "state": "CA",
+        "zip": "91761",
         "neighborhood": "Settlers Valley"
       },
       "price": 365000,
@@ -205,7 +205,7 @@
           "type": "Middle"
         },
         {
-          "name": "Pflugerville High School",
+          "name": "Ontario High School",
           "rating": 7,
           "type": "High"
         }
@@ -229,7 +229,7 @@
       "address": {
         "street": "14821 Willow Ridge Dr",
         "city": "Manor",
-        "state": "TX",
+        "state": "CA",
         "zip": "78653",
         "neighborhood": "Manor"
       },
@@ -268,7 +268,7 @@
       "hoa_fee": 45,
       "property_tax_annual": 5985,
       "days_on_market": 18,
-      "description": "Smart money investment in Austin's growth corridor. Turnkey condition with tenant in place. High rental demand and projected rapid appreciation.",
+      "description": "Smart money investment in Rancho Cucamonga's growth corridor. Turnkey condition with tenant in place. High rental demand and projected rapid appreciation.",
       "highlights": [
         "$270/mo cash flow",
         "Turnkey condition",
@@ -283,10 +283,10 @@
       "status": "active",
       "address": {
         "street": "1204 E 6th St #302",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78702",
-        "neighborhood": "East Austin"
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91739",
+        "neighborhood": "East Rancho Cucamonga"
       },
       "price": 425000,
       "bedrooms": 2,
@@ -324,9 +324,9 @@
       "hoa_fee": 325,
       "property_tax_annual": 8925,
       "days_on_market": 21,
-      "description": "Modern urban living at its finest! This sleek 2-bedroom condo in the heart of East Austin offers the ultimate city lifestyle. Floor-to-ceiling windows flood the space with light. Open kitchen with island perfect for entertaining. Private balcony with skyline views. Rooftop deck features grills, lounge areas, and panoramic views. Walk to top restaurants, coffee shops, and nightlife. Secure parking includes 2 spaces. Low-maintenance lock-and-leave lifestyle.",
+      "description": "Modern urban living at its finest! This sleek 2-bedroom condo in the heart of East Rancho Cucamonga offers the ultimate city lifestyle. Floor-to-ceiling windows flood the space with light. Open kitchen with island perfect for entertaining. Private balcony with skyline views. Rooftop deck features grills, lounge areas, and panoramic views. Walk to top restaurants, coffee shops, and nightlife. Secure parking includes 2 spaces. Low-maintenance lock-and-leave lifestyle.",
       "highlights": [
-        "Trendy East Austin location",
+        "Trendy East Rancho Cucamonga location",
         "Walk Score: 92 (Walker's Paradise)",
         "Rooftop amenities",
         "2 parking spaces included",
@@ -339,9 +339,9 @@
       "status": "active",
       "address": {
         "street": "3308 Cavendish Ct",
-        "city": "Pflugerville",
-        "state": "TX",
-        "zip": "78660",
+        "city": "Ontario",
+        "state": "CA",
+        "zip": "91761",
         "neighborhood": "Blackhawk"
       },
       "price": 375000,
@@ -380,7 +380,7 @@
       "hoa_fee": 75,
       "property_tax_annual": 7875,
       "days_on_market": 15,
-      "description": "Fantastic family home in Pflugerville's sought-after Blackhawk community. This spacious 4-bedroom offers modern living with an open floor plan and high ceilings. The kitchen features granite counters, stainless appliances, and island seating. Primary suite includes walk-in closet and dual vanities. Covered patio overlooks large fenced yard perfect for kids and pets. Community amenities include pool, playgrounds, and trails. Top-rated Pflugerville ISD. Quick access to I-35 and toll roads.",
+      "description": "Fantastic family home in Ontario's sought-after Blackhawk community. This spacious 4-bedroom offers modern living with an open floor plan and high ceilings. The kitchen features granite counters, stainless appliances, and island seating. Primary suite includes walk-in closet and dual vanities. Covered patio overlooks large fenced yard perfect for kids and pets. Community amenities include pool, playgrounds, and trails. Top-rated Ontario ISD. Quick access to I-35 and toll roads.",
       "highlights": [
         "Excellent value under $400k",
         "Great schools (all 8/10)",
@@ -395,9 +395,9 @@
       "status": "active",
       "address": {
         "street": "98 San Jacinto Blvd #1204",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78701",
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91730",
         "neighborhood": "Downtown"
       },
       "price": 975000,
@@ -427,7 +427,7 @@
           "type": "Middle"
         },
         {
-          "name": "Austin High School",
+          "name": "Rancho Cucamonga High School",
           "rating": 8,
           "type": "High"
         }
@@ -450,10 +450,10 @@
       "status": "active",
       "address": {
         "street": "12805 Marabou Cv",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78732",
-        "neighborhood": "Steiner Ranch"
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91739",
+        "neighborhood": "North Rancho"
       },
       "price": 725000,
       "bedrooms": 4,
@@ -491,7 +491,7 @@
       "hoa_fee": 165,
       "property_tax_annual": 15225,
       "days_on_market": 10,
-      "description": "Luxury living in prestigious Steiner Ranch. This stunning 2019 home sits on an oversized lot with breathtaking hill country views. Gourmet kitchen features commercial-grade appliances, butler's pantry, and huge island. Two primary suites (main + guest) on first floor. Upstairs media room perfect for movie nights. Outdoor living space includes covered patio, outdoor kitchen, and pool-sized yard. Community offers 4 pools, lazy river, fitness center, and miles of trails. Top 10-rated Lake Travis schools.",
+      "description": "Luxury living in prestigious North Rancho. This stunning 2019 home sits on an oversized lot with breathtaking hill country views. Gourmet kitchen features commercial-grade appliances, butler's pantry, and huge island. Two primary suites (main + guest) on first floor. Upstairs media room perfect for movie nights. Outdoor living space includes covered patio, outdoor kitchen, and pool-sized yard. Community offers 4 pools, lazy river, fitness center, and miles of trails. Top 10-rated Mount Baldy schools.",
       "highlights": [
         "Nearly new (2019) with upgrades",
         "Best school district (Vandegrift HS)",
@@ -506,10 +506,10 @@
       "status": "active",
       "address": {
         "street": "710 W 23rd St",
-        "city": "Austin",
-        "state": "TX",
-        "zip": "78705",
-        "neighborhood": "West Campus"
+        "city": "Rancho Cucamonga",
+        "state": "CA",
+        "zip": "91705",
+        "neighborhood": "Chaffey District"
       },
       "price": 895000,
       "bedrooms": 3,
@@ -525,7 +525,7 @@
         "European appliances",
         "Private elevator",
         "Two-car garage",
-        "Walk to UT campus"
+        "Walk to Chaffey College"
       ],
       "schools": [
         {
@@ -547,7 +547,7 @@
       "hoa_fee": 200,
       "property_tax_annual": 18795,
       "days_on_market": 25,
-      "description": "Ultra-modern townhome in prime West Campus location. This 2022 build showcases luxury finishes and thoughtful design. Gourmet kitchen features Bosch appliances and waterfall quartz island. Each bedroom includes en-suite bath. Private elevator serves all three floors. Rooftop deck offers stunning city and UT tower views. Two-car garage with EV charging. Walk to campus, coffee shops, and restaurants. Perfect for professionals or investors (strong rental demand). Low-maintenance urban lifestyle.",
+      "description": "Ultra-modern townhome in prime Chaffey District location. This 2022 build showcases luxury finishes and thoughtful design. Gourmet kitchen features Bosch appliances and waterfall quartz island. Each bedroom includes en-suite bath. Private elevator serves all three floors. Rooftop deck offers stunning city and UT tower views. Two-car garage with EV charging. Walk to campus, coffee shops, and restaurants. Perfect for professionals or investors (strong rental demand). Low-maintenance urban lifestyle.",
       "highlights": [
         "Brand new (2022)",
         "Prime walkable location",
@@ -560,21 +560,21 @@
   ],
   "metadata": {
     "version": "1.1",
-    "market": "Greater Austin, TX",
+    "market": "Greater Rancho Cucamonga, CA",
     "price_range": "$285,000 - $1,150,000",
     "total_listings": 10,
     "last_updated": "2026-01-11",
     "average_price": 610000,
     "neighborhoods_covered": [
-      "Hyde Park",
-      "Avery Ranch",
-      "East Austin",
-      "Pflugerville",
-      "Steiner Ranch",
-      "Round Rock",
+      "Alta Loma",
+      "Etiwanda",
+      "East Rancho Cucamonga",
+      "Ontario",
+      "North Rancho",
+      "Fontana",
       "Manor",
       "Downtown",
-      "West Campus",
+      "Chaffey District",
       "Teravista"
     ]
   }

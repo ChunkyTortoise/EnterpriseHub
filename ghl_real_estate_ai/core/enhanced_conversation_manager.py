@@ -6,7 +6,7 @@ Extends the base conversation manager with:
 2. Automatic competitive response generation
 3. Alert system integration for Jorge
 4. Competitive positioning and recovery strategies
-5. Austin market intelligence integration
+5. Rancho Cucamonga market intelligence integration
 """
 
 from dataclasses import dataclass
@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.core.conversation_manager import AIResponse, ConversationManager
-from ghl_real_estate_ai.data.austin_market_data import get_austin_market_intelligence
+from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.prompts.competitive_responses import LeadProfile, get_competitive_response_system
 from ghl_real_estate_ai.services.competitive_alert_system import get_competitive_alert_system
@@ -47,7 +47,7 @@ class EnhancedConversationManager(ConversationManager):
     - Real-time competitor mention detection
     - Automatic competitive response generation
     - Jorge alert system for high-risk situations
-    - Austin market intelligence integration
+    - Rancho Cucamonga market intelligence integration
     - Lead recovery strategies
     """
 
@@ -59,7 +59,7 @@ class EnhancedConversationManager(ConversationManager):
         self.competitor_intelligence = get_competitor_intelligence()
         self.competitive_response_system = get_competitive_response_system()
         self.competitive_alert_system = get_competitive_alert_system()
-        self.austin_market_intelligence = get_austin_market_intelligence()
+        self.rancho_cucamonga_market_intelligence = get_rancho_cucamonga_market_intelligence()
 
         logger.info("Enhanced conversation manager with competitive intelligence initialized")
 
@@ -169,12 +169,12 @@ class EnhancedConversationManager(ConversationManager):
                     except Exception as e:
                         logger.error(f"Failed to send competitive alert: {e}")
 
-                # Add Austin market intelligence for local positioning
+                # Add Rancho Cucamonga market intelligence for local positioning
                 if any(
                     mention.competitor_name in ["keller_williams", "remax", "coldwell_banker"]
                     for mention in competitive_analysis.mentions
                 ):
-                    market_advantage = self._get_austin_market_advantage(competitive_analysis.mentions)
+                    market_advantage = self._get_rancho_cucamonga_market_advantage(competitive_analysis.mentions)
                     if market_advantage:
                         base_response.message += f"\n\n{market_advantage}"
 
@@ -264,24 +264,24 @@ class EnhancedConversationManager(ConversationManager):
 
         return None
 
-    def _get_austin_market_advantage(self, competitor_mentions: List[CompetitorMention]) -> Optional[str]:
-        """Get Austin market advantage messaging based on competitors mentioned"""
+    def _get_rancho_cucamonga_market_advantage(self, competitor_mentions: List[CompetitorMention]) -> Optional[str]:
+        """Get Rancho Cucamonga market advantage messaging based on competitors mentioned"""
 
         for mention in competitor_mentions:
             if mention.competitor_name:
-                competitor_insights = self.austin_market_intelligence.get_competitor_positioning(
+                competitor_insights = self.rancho_cucamonga_market_intelligence.get_competitor_positioning(
                     mention.competitor_name
                 )
                 if competitor_insights:
                     advantages = competitor_insights["positioning_strategy"]["jorge_advantages"]
                     if advantages:
-                        return f"Here's what makes me different in Austin: {advantages[0]}"
+                        return f"Here's what makes me different in Rancho Cucamonga: {advantages[0]}"
 
-        # Generic Austin advantage
-        market_insights = self.austin_market_intelligence.get_market_timing_insights()
+        # Generic Rancho Cucamonga advantage
+        market_insights = self.rancho_cucamonga_market_intelligence.get_market_timing_insights()
         urgency_factors = market_insights.get("urgency_factors", [])
         if urgency_factors:
-            return f"Austin market insight: {urgency_factors[0]}"
+            return f"Rancho Cucamonga market insight: {urgency_factors[0]}"
 
         return None
 
@@ -423,7 +423,7 @@ class EnhancedConversationManager(ConversationManager):
                     "Immediate Jorge intervention required",
                     "Position as backup resource for future opportunities",
                     "Add to long-term nurture campaign",
-                    "Send quarterly Austin market updates",
+                    "Send quarterly Rancho Cucamonga market updates",
                 ]
             elif current_risk == "high":
                 recommendations = [
@@ -435,14 +435,14 @@ class EnhancedConversationManager(ConversationManager):
             elif current_risk == "medium":
                 recommendations = [
                     "Demonstrate unique technology advantages",
-                    "Highlight Jorge's Austin expertise",
+                    "Highlight Jorge's Rancho Cucamonga expertise",
                     "Create urgency with market timing insights",
                     "Offer specialized services (investor analysis, tech relocation)",
                 ]
 
             # Add competitor-specific strategies
             for competitor in competitors:
-                competitor_insights = self.austin_market_intelligence.get_competitor_positioning(competitor)
+                competitor_insights = self.rancho_cucamonga_market_intelligence.get_competitor_positioning(competitor)
                 if competitor_insights:
                     advantages = competitor_insights["positioning_strategy"]["jorge_advantages"]
                     recommendations.extend([f"Emphasize: {advantage}" for advantage in advantages[:2]])

@@ -689,7 +689,7 @@ class EnhancedCacheService(OptimizedCacheService):
         results = {}
 
         # Popular market data
-        markets = ["austin", "dallas", "houston", "san_antonio", "fort_worth"]
+        markets = ["rancho_cucamonga", "dallas", "houston", "san_antonio", "fort_worth"]
         for market in markets:
             key = f"market_data:{market}"
             data = {
@@ -886,7 +886,7 @@ if __name__ == "__main__":
         print("\n3. Testing cache hits (100 operations)...")
         for i in range(100):
             # Mix of hits and misses
-            key = f"market_data:{'austin' if i % 2 == 0 else 'dallas'}"
+            key = f"market_data:{'rancho_cucamonga' if i % 2 == 0 else 'dallas'}"
             await cache.get(key)
 
         # Test 4: Performance health check

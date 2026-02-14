@@ -748,7 +748,7 @@ class ComprehensiveSecurityScanner:
         try:
             result = subprocess.run(["pip", "list", "--format=freeze"], capture_output=True, text=True)
             return len(result.stdout.strip().split('\n')) if result.stdout else 0
-        except:
+        except Exception:
             return 0
 
     async def _count_python_files(self) -> int:

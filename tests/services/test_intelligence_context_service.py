@@ -44,7 +44,6 @@ from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContex
 # Import service under test
 from ghl_real_estate_ai.services.intelligence_context_service import (
 
-@pytest.mark.integration
     IntelligenceContextService,
     get_intelligence_context_service,
     health_check,
@@ -130,7 +129,7 @@ class TestIntelligenceContextService:
             "preference_intelligence": {
                 "preference_profile": {"budget_max": 600000, "bedrooms": 3, "move_timeline": "3_months"},
                 "budget_range": {"min": 400000, "max": 600000},
-                "location_preferences": {"austin_central": 0.8},
+                "location_preferences": {"rancho_cucamonga_central": 0.8},
                 "feature_preferences": {"pool": True, "garage": True},
                 "profile_completeness": 0.75,
                 "urgency_level": 0.7,
@@ -149,7 +148,7 @@ class TestIntelligenceContextService:
         return BotTransition(
             transition_id="trans_123",
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             source_bot=BotType.JORGE_SELLER,
             target_bot=BotType.JORGE_BUYER,
             transition_reason=TransitionReason.QUALIFIED_BUYER,
@@ -179,7 +178,7 @@ class TestIntelligenceContextService:
         """Test successful intelligence preservation."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Act
         start_time = time.time()
@@ -220,7 +219,7 @@ class TestIntelligenceContextService:
         """Test successful intelligence context retrieval."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         target_bot = BotType.JORGE_BUYER
 
         # Create a snapshot to retrieve
@@ -273,7 +272,7 @@ class TestIntelligenceContextService:
         # Arrange
         lead_id = "lead_456"
         target_bot = BotType.JORGE_SELLER
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Mock cache miss
         context_service.cache.get.side_effect = None
@@ -296,7 +295,7 @@ class TestIntelligenceContextService:
         # Arrange
         lead_id = "lead_123"
         target_bot = BotType.JORGE_BUYER
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Create expired snapshot (3 hours old)
         expired_timestamp = datetime.now(timezone.utc) - timedelta(hours=3)
@@ -334,7 +333,7 @@ class TestIntelligenceContextService:
         # Arrange
         lead_id = "lead_123"
         target_bot = BotType.JORGE_BUYER
-        requested_location = "austin"
+        requested_location = "rancho_cucamonga"
         cached_location = "dallas"  # Different location
 
         # Create snapshot with different location
@@ -367,7 +366,7 @@ class TestIntelligenceContextService:
         """Test intelligence snapshot creation from intelligence data."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Act
         snapshot = await context_service.create_intelligence_snapshot(
@@ -407,7 +406,7 @@ class TestIntelligenceContextService:
         """Test transition history tracking and retrieval."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Mock empty history initially
         context_service.cache.get.side_effect = None
@@ -437,7 +436,7 @@ class TestIntelligenceContextService:
     async def test_bot_handoff_scenarios(self, context_service, sample_intelligence_data):
         """Test different bot handoff scenarios."""
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Test scenarios
         scenarios = [
@@ -513,7 +512,7 @@ class TestIntelligenceContextService:
         """Test behavior when cache service fails."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Make cache operations fail
         context_service.cache.set.side_effect = Exception("Redis connection failed")
@@ -536,7 +535,7 @@ class TestIntelligenceContextService:
         """Test behavior when event publishing fails."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Make event publishing fail
         context_service.event_publisher.publish_lead_update.side_effect = Exception("Event service down")
@@ -558,7 +557,7 @@ class TestIntelligenceContextService:
         """Test performance metrics tracking."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Get initial metrics
         initial_metrics = context_service.get_metrics()
@@ -592,7 +591,7 @@ class TestIntelligenceContextService:
         """Test behavior with empty intelligence data."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
         empty_intelligence = {}
 
         # Act
@@ -620,7 +619,7 @@ class TestIntelligenceContextService:
         """Test behavior with large intelligence data."""
         # Arrange
         lead_id = "lead_123"
-        location_id = "austin"
+        location_id = "rancho_cucamonga"
 
         # Create large intelligence data (simulate large conversation history)
         large_intelligence = {
@@ -683,7 +682,7 @@ class TestBotHandoffModels:
         original_snapshot = IntelligenceSnapshot(
             snapshot_id="snap_123",
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             source_bot=BotType.JORGE_SELLER,
             target_bot=BotType.JORGE_BUYER,
             snapshot_timestamp=datetime.now(timezone.utc),
@@ -709,7 +708,7 @@ class TestBotHandoffModels:
         transition = BotTransition(
             transition_id="trans_123",
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             source_bot=BotType.JORGE_SELLER,
             target_bot=BotType.JORGE_BUYER,
             transition_reason=TransitionReason.QUALIFIED_BUYER,
@@ -731,7 +730,7 @@ class TestBotHandoffModels:
         # Test successful handoff
         success_handoff = ContextHandoff.create_success(
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             intelligence_snapshot_id="snap_123",
             transition_id="trans_123",
             preservation_latency_ms=45.5,
@@ -745,7 +744,7 @@ class TestBotHandoffModels:
         # Test failed handoff
         failed_handoff = ContextHandoff.create_failure(
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             error_message="Cache service unavailable",
             preservation_latency_ms=100.0,
         )
@@ -757,12 +756,12 @@ class TestBotHandoffModels:
     def test_transition_history_management(self):
         """Test TransitionHistory tracking and metrics."""
         # Arrange
-        history = TransitionHistory.create_empty("lead_123", "austin")
+        history = TransitionHistory.create_empty("lead_123", "rancho_cucamonga")
 
         transition = BotTransition(
             transition_id="trans_123",
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             source_bot=BotType.JORGE_SELLER,
             target_bot=BotType.JORGE_BUYER,
             transition_reason=TransitionReason.QUALIFIED_BUYER,
@@ -771,7 +770,7 @@ class TestBotHandoffModels:
 
         handoff = ContextHandoff.create_success(
             lead_id="lead_123",
-            location_id="austin",
+            location_id="rancho_cucamonga",
             intelligence_snapshot_id="snap_123",
             transition_id="trans_123",
             preservation_latency_ms=30.0,

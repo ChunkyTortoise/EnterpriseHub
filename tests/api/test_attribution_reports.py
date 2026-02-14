@@ -18,8 +18,6 @@ from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.attribution_analytics import AlertType, AttributionReport, PerformanceAlert
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourcePerformance, SourceQuality
 
-@pytest.mark.integration
-
 
 class TestAttributionReportsAPI:
     """Test suite for Attribution Reports API endpoints."""

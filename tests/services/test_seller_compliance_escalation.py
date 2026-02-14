@@ -9,7 +9,6 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_escalation import (
 
-@pytest.mark.integration
     ComplianceEscalationService,
     ViolationSeverity,
     ViolationType,

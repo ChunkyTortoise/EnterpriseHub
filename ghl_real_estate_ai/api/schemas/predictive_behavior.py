@@ -408,7 +408,7 @@ class ExamplePredictionRequest(BehavioralPredictionRequest):
                 "conversation_history": [
                     {
                         "id": "msg_1",
-                        "content": "I'm interested in properties in Austin",
+                        "content": "I'm interested in properties in Rancho Cucamonga",
                         "direction": "inbound",
                         "timestamp": "2026-01-25T10:00:00Z",
                     },

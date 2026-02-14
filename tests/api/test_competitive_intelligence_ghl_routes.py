@@ -13,8 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
-
 try:
     from ghl_real_estate_ai.api.routes.competitive_intelligence_ghl import (
         CompetitiveResponseCampaign,
@@ -374,7 +372,7 @@ class TestMarketIntelligenceSync:
         service.cache_service.get_data.return_value = None  # Cache miss
 
         # Mock the sync status endpoint logic
-        territory = "austin"
+        territory = "rancho_cucamonga"
         hours = 24
 
         cache_key = f"sync_status:{territory}:{hours}"
@@ -387,7 +385,7 @@ class TestMarketIntelligenceSync:
         }
 
         # Verify the cache key format and structure
-        assert "sync_status:austin:24" == cache_key
+        assert "sync_status:rancho_cucamonga:24" == cache_key
         assert sync_status["sync_summary"]["success_rate"] > 95.0
 
     async def test_background_sync_execution(self, mock_ghl_service):
@@ -396,7 +394,7 @@ class TestMarketIntelligenceSync:
 
         sync_record = MarketIntelligenceSync(
             sync_id="test_sync_123",
-            territory="austin",
+            territory="rancho_cucamonga",
             competitor_data={"sync_type": "full"},
             market_trends={"data_types": ["all"]},
             sync_status="INITIATED",
@@ -458,7 +456,7 @@ class TestCompetitiveLandscapeInsights:
         service.data_pipeline.collect_competitor_data.return_value = mock_competitive_data
 
         # This simulates the endpoint logic
-        territory = "austin"
+        territory = "rancho_cucamonga"
         timeframe = "30d"
 
         competitive_data = await service.data_pipeline.collect_competitor_data(

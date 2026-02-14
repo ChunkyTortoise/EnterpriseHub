@@ -27,8 +27,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-@pytest.mark.integration
-
 # Import Phase 7 intelligence services
 try:
     from ghl_real_estate_ai.intelligence.business_intelligence_dashboard import (

@@ -47,8 +47,6 @@ except (ImportError, TypeError, AttributeError):
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockDatabaseService
 
-@pytest.mark.integration
-
 
 def _make_transaction_context_manager(mock_conn):
     """
@@ -320,7 +318,7 @@ class TestCommunicationLogging:
             "status": "sent",
             "campaign_id": "campaign_456",
             "template_id": "template_789",
-            "metadata": {"subject": "North Austin Properties Available", "template_name": "property_followup"},
+            "metadata": {"subject": "North Rancho Cucamonga Properties Available", "template_name": "property_followup"},
         }
 
         result = await db_service_real.log_communication(comm_data)
@@ -481,14 +479,14 @@ class TestNurtureCampaigns:
                     "delay_hours": 24,
                     "channel": "email",
                     "template": "market_insights",
-                    "subject": "Austin Market Update",
+                    "subject": "Rancho Cucamonga Market Update",
                 },
                 {
                     "step": 3,
                     "delay_hours": 72,
                     "channel": "sms",
                     "template": "quick_check_in",
-                    "content": "Quick question: Are you still looking in the Austin area?",
+                    "content": "Quick question: Are you still looking in the Rancho Cucamonga area?",
                 },
             ],
         }

@@ -2,7 +2,7 @@
 Specialized Feature Extractors
 
 Modular feature extraction components for different aspects of user behavior.
-Each extractor focuses on a specific domain of features.
+Each extractor focuses on a specific ontario_mills of features.
 """
 
 import logging

@@ -562,7 +562,7 @@ class ChurnDetectionService:
         )
         
         # Calculate scheduled time based on strategy
-        days_inactive = contact_data.get("days_inactive", 0)
+        contact_data.get("days_inactive", 0)
         scheduled_at = datetime.utcnow() + timedelta(hours=24)
         
         action = RecoveryAction(

@@ -87,7 +87,7 @@ class TestChurnFeatureExtractor:
                     "name": "John Doe",
                     "preferences": {
                         "budget_range": "$300K-$400K",
-                        "locations": ["Austin", "Cedar Park"],
+                        "locations": ["Rancho Cucamonga", "Cedar Park"],
                         "property_types": ["Single-family"],
                     },
                 },
@@ -519,7 +519,7 @@ class TestInterventionTemplates:
             "risk_tier": "critical",
             "top_risk_factor": "days_since_last_interaction",
             "days_since_interaction": "12",
-            "preferred_locations": "Austin, TX",
+            "preferred_locations": "Rancho Cucamonga, CA",
             "budget_range": "$350K - $450K",
             "property_types": "Single-family homes",
             "last_property_viewed": "3-bedroom home in Cedar Park",
@@ -537,7 +537,7 @@ class TestInterventionTemplates:
         # Verify personalization
         assert "Sarah Johnson" in template["body"]
         assert "12" in template["body"]  # days_since_interaction
-        assert "Austin, TX" in template["body"]
+        assert "Rancho Cucamonga, CA" in template["body"]
 
         # Verify urgency indicators
         assert any(keyword in template["subject"].lower() for keyword in ["urgent", "limited", "exclusive", "special"])
@@ -892,7 +892,7 @@ class TestChurnSystemIntegration:
         # Mock memory service responses
         integration_service.memory_service.get_lead_context.return_value = {
             "name": "Integration Test Lead",
-            "preferences": {"budget_range": "$400K-$500K", "locations": ["Austin"], "property_types": ["Condo"]},
+            "preferences": {"budget_range": "$400K-$500K", "locations": ["Rancho Cucamonga"], "property_types": ["Condo"]},
         }
 
         integration_service.memory_service.get_conversation_history.return_value = [

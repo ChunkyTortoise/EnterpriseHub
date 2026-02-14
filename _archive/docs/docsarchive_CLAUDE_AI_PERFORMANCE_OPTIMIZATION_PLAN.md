@@ -129,7 +129,7 @@ DEMO_QUERIES = [
     "Explain why this property matches Sarah Chen's needs",
     "Analyze David Kim's investment potential",
     "Draft SMS for Maria Rodriguez property tour",
-    "Summarize Austin market conditions",
+    "Summarize Rancho Cucamonga market conditions",
     "Generate churn recovery script for high-value lead"
 ]
 
@@ -306,7 +306,7 @@ def is_demo_request(self, context: Dict[str, Any]) -> bool:
     """Detect if this is a demo request for fast path."""
     demo_indicators = [
         "demo_location", "Sarah Chen", "David Kim",
-        "Maria Rodriguez", "Austin Alta Loma"
+        "Maria Rodriguez", "Rancho Cucamonga Alta Loma"
     ]
     return any(indicator in str(context) for indicator in demo_indicators)
 
@@ -347,19 +347,19 @@ from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 async def benchmark_performance():
     """Benchmark Claude AI performance improvements."""
-    assistant = ClaudeAssistant(market_id="austin")
+    assistant = ClaudeAssistant(market_id="rancho_cucamonga")
 
     # Test queries (mix of cached and uncached)
     queries = [
         "Explain Sarah Chen's property match",  # Should be cached
         "Analyze David Kim's investment potential",  # Should be cached
-        "Compare Austin vs San Antonio markets",  # Uncached
+        "Compare Rancho Cucamonga vs San Antonio markets",  # Uncached
     ]
 
     results = []
     for query in queries:
         start = time.time()
-        response = await assistant._async_handle_query(query, {}, "austin")
+        response = await assistant._async_handle_query(query, {}, "rancho_cucamonga")
         latency = (time.time() - start) * 1000
 
         results.append({

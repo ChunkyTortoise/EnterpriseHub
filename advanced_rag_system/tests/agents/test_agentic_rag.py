@@ -15,14 +15,15 @@ from src.agents.reflection import (
     ReflectionEngine,
 )
 from src.agents.tool_registry import (
-
-@pytest.mark.unit
     CalculatorTool,
     ToolRegistry,
     ToolResult,
     VectorSearchTool,
     WebSearchTool,
 )
+
+
+@pytest.mark.unit
 
 
 def _build_registry():

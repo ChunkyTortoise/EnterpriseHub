@@ -21,7 +21,7 @@ The Advanced Churn Recovery Dashboard Suite is a comprehensive, production-ready
 
 #### Features:
 - **Executive KPI Cards**: Churn rate, recovery rate, CLV impact, active interventions
-- **Multi-Market Overview Grid**: Performance across 5 markets (Austin, San Antonio, Houston, Dallas, Fort Worth)
+- **Multi-Market Overview Grid**: Performance across 5 markets (Rancho Cucamonga, San Antonio, Houston, Dallas, Fort Worth)
 - **Real-Time Recovery Pipeline**: Funnel visualization with conversion tracking
 - **Campaign Performance Matrix**: Email, SMS, phone effectiveness analysis
 - **Geographic Heat Map**: Churn intensity visualization by region
@@ -161,7 +161,7 @@ from typing import Dict, List, Optional, Any
 - **ROI on Investment**: 285-520% across different channels
 
 ### Market Coverage
-- **Austin Metro**: 23% market share, 87 health score, Leader position
+- **Rancho Cucamonga Metro**: 23% market share, 87 health score, Leader position
 - **San Antonio**: 19% market share, 74 health score, Challenger position
 - **Houston West**: 31% market share, 93 health score, Leader position
 - **Dallas North**: 21% market share, 78 health score, Challenger position

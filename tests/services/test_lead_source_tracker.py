@@ -15,7 +15,6 @@ import pytest
 
 from ghl_real_estate_ai.services.lead_source_tracker import (
 
-@pytest.mark.integration
     LeadSource,
     LeadSourceTracker,
     SourceAttribution,
@@ -75,7 +74,7 @@ class TestLeadSourceTracker:
         """Test source analysis for Google organic search."""
         contact_data = {
             "custom_fields": {
-                "referrer": "https://google.com/search?q=real+estate+agent+austin",
+                "referrer": "https://google.com/search?q=real+estate+agent+rancho_cucamonga",
                 "utm_source": "google",
                 "utm_medium": "organic",
             }
@@ -344,7 +343,7 @@ class TestLeadSourceTracker:
             "custom_fields": {
                 "utm_source": "facebook",
                 "utm_medium": "cpc",
-                "utm_campaign": "austin-homes-2024",
+                "utm_campaign": "rancho_cucamonga-homes-2024",
                 "referrer": "https://google.com/search",
             }
         }
@@ -354,7 +353,7 @@ class TestLeadSourceTracker:
         # UTM parameters should take precedence over referrer
         assert attribution.source == LeadSource.FACEBOOK_ADS
         assert attribution.confidence_score >= 0.8
-        assert attribution.campaign == "austin-homes-2024"
+        assert attribution.campaign == "rancho_cucamonga-homes-2024"
 
     @pytest.mark.asyncio
     async def test_performance_tracking_workflow(self):

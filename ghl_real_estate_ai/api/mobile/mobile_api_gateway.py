@@ -302,7 +302,7 @@ async def get_property_swipe_stack(
             listings = [
                 {
                     "id": f"prop_{i}",
-                    "address": f"{100 + i} Market St, Austin, TX",
+                    "address": f"{100 + i} Market St, Rancho Cucamonga, CA",
                     "price": 450000 + (i * 25000),
                     "bedrooms": 3 + (i % 2),
                     "bathrooms": 2.5,
@@ -331,7 +331,7 @@ async def get_property_swipe_stack(
                     "bathrooms": match.get("bathrooms"),
                     "sqft": match.get("sqft"),
                     "match_score": int(match.get("match_score", 0.5) * 100),
-                    "why_matched": f"Matches your {preferences.get('location', 'Austin')} preference with {match.get('match_type')} scoring.",
+                    "why_matched": f"Matches your {preferences.get('location', 'Rancho Cucamonga')} preference with {match.get('match_type')} scoring.",
                     "tour_available": True,
                 }
             )
@@ -340,7 +340,7 @@ async def get_property_swipe_stack(
             "properties": properties,
             "stack_id": f"stack_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
             "lead_preferences": preferences
-            or {"max_price": 600000, "min_bedrooms": 3, "preferred_areas": ["Austin Central"]},
+            or {"max_price": 600000, "min_bedrooms": 3, "preferred_areas": ["Rancho Cucamonga Central"]},
         }
 
         # Cache for 30 minutes

@@ -27,7 +27,7 @@ from ghl_real_estate_ai.agents.lead_intelligence_swarm import get_lead_intellige
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.core.llm_client import get_llm_client
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.models.orchestrator_types import FollowupContext, FollowupRecommendationData, FollowupTaskData
+from ghl_real_estate_ai.models.orchestrator_types import FollowupContext
 from ghl_real_estate_ai.services.behavioral_trigger_engine import (
     IntentLevel,
     get_behavioral_trigger_engine,
@@ -230,9 +230,9 @@ class ContentPersonalizerAgent(FollowUpAgent):
                     doc_gen = SmartDocumentGenerator()
 
                     proforma = await m_engine.generate_roi_proforma(
-                        "ARBITRAGE_001", lead_profile.get("market_area", "austin")
+                        "ARBITRAGE_001", lead_profile.get("market_area", "rancho_cucamonga")
                     )
-                    loi_doc = doc_gen.generate_document(DocumentType.ARBITRAGE_LOI, "loi_template_v1", proforma)
+                    doc_gen.generate_document(DocumentType.ARBITRAGE_LOI, "loi_template_v1", proforma)
                     offer_link = proforma.get("one_click_url", "")
                 except Exception as e:
                     logger.warning(f"One-click offer gen failed: {e}")
@@ -308,7 +308,7 @@ class ChannelStrategistAgent(FollowUpAgent):
             # Analyze channel effectiveness
             email_engagement = activity_data.get("email_interactions", [])
             sms_responses = activity_data.get("sms_responses", [])
-            call_history = activity_data.get("call_history", [])
+            activity_data.get("call_history", [])
 
             # Default to email, adjust based on patterns
             optimal_channel = FollowUpChannel.EMAIL
@@ -381,7 +381,6 @@ class ResponseAnalyzerAgent(FollowUpAgent):
             elif response_rate < 0.2 and total_sent >= 3:
                 recommendation = "Consider escalation or strategy change - low engagement"
                 confidence = 0.85
-                escalation_needed = True
             else:
                 recommendation = "Continue current strategy with minor adjustments"
                 confidence = 0.7
@@ -722,7 +721,7 @@ class MarketContextAgent(FollowUpAgent):
             lead_profile = context.get("lead_profile", {})
 
             # Phase 7: Use MarketTimingOpportunityEngine for arbitrage detection
-            market_area = lead_profile.get("market_area", "austin")
+            market_area = lead_profile.get("market_area", "rancho_cucamonga")
             arbitrage_data = None
             if self.market_engine:
                 try:
@@ -816,7 +815,7 @@ class PerformanceTrackerAgent(FollowUpAgent):
         try:
             follow_up_history = context.get("follow_up_history", [])
             response_data = context.get("response_data", {})
-            behavioral_score = context.get("behavioral_score")
+            context.get("behavioral_score")
 
             # Calculate performance metrics
             performance_metrics = {}
@@ -1286,7 +1285,7 @@ class AutonomousFollowUpEngine:
             lead_profile = await self._get_lead_profile(lead_id)
 
             # Phase 7: Gather market intelligence for agents
-            market_area = lead_profile.get("market_area", "austin")
+            market_area = lead_profile.get("market_area", "rancho_cucamonga")
             arbitrage_info = ""
             market_context_data = {}
             if hasattr(self.market_context_agent, "market_engine") and self.market_context_agent.market_engine:
@@ -1567,8 +1566,7 @@ class AutonomousFollowUpEngine:
             escalation_key = f"escalation:{lead_id}"
             await self.cache.set(escalation_key, escalation_data, ttl=86400)  # 24 hours
 
-            # TODO: Integrate with human agent notification system
-            # This could send alerts to Slack, email, or CRM system
+            # ROADMAP-079: Integrate with human agent notification system (Slack/email/CRM)
 
             logger.info(f"✅ Lead {lead_id} escalation recorded and ready for human pickup")
 

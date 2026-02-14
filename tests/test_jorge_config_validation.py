@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import (
 
-@pytest.mark.integration
     JorgeEnvironmentSettings,
     JorgeSellerConfig,
 )

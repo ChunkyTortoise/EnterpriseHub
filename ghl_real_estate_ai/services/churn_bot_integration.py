@@ -5,14 +5,11 @@ This module provides integration utilities for adding churn detection
 to the Lead, Buyer, and Seller bots without modifying their core code.
 """
 
-import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
 from ghl_real_estate_ai.services.churn_detection_service import (
     ChurnDetectionService,
-    ChurnRiskAssessment,
-    ChurnRiskLevel,
     RecoveryStrategy,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

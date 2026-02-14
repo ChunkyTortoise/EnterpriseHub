@@ -31,7 +31,7 @@ The app will open at `http://localhost:8501`
 
 **Cold Lead (Score: ~30)**
 ```
-"Looking for a house in Austin"
+"Looking for a house in Rancho Cucamonga"
 ```
 
 **Warm Lead (Score: ~50-60)**
@@ -41,7 +41,7 @@ The app will open at `http://localhost:8501`
 
 **Hot Lead (Score: 70+)**
 ```
-"I'm pre-approved for $400k, need to move ASAP, love Hyde Park"
+"I'm pre-approved for $400k, need to move ASAP, love Alta Loma"
 ```
 
 **Objection Handling**

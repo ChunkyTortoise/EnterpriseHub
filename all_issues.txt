@@ -1,0 +1,20 @@
+○ EnterpriseHub-qaiq [● P0] [task] - Fiverr: Create seller account + list 3 gigs (blocks: EnterpriseHub-j4gx)
+◐ EnterpriseHub-qsmz [● P1] [task] - Deploy 3 Streamlit apps (blocked by: EnterpriseHub-ruzg, blocks: EnterpriseHub-82lt)
+○ EnterpriseHub-mvkx [● P1] [task] - Post LinkedIn Week 2 content (blocked by: EnterpriseHub-ba5h, blocks: EnterpriseHub-82lt)
+◐ EnterpriseHub-ruzg [● P1] [task] - Create 3 Fiverr gigs (blocked by: EnterpriseHub-2gw6, blocks: EnterpriseHub-qsmz, EnterpriseHub-82lt)
+○ EnterpriseHub-ty1t [● P1] [task] - Sign up on Contra (0% commission)
+○ EnterpriseHub-oom6 [● P1] [task] - Deploy 3 Streamlit apps
+◐ EnterpriseHub-rryk [● P1] [feature] - Phase 3: Seller pricing objection engine
+○ EnterpriseHub-82lt [● P2] [task] - Update tracking files (blocked by: EnterpriseHub-ba5h, EnterpriseHub-ruzg, EnterpriseHub-mvkx, EnterpriseHub-qsmz)
+○ EnterpriseHub-p28d [● P2] [feature] - Phase 3: Close Critical Feedback Loops (5 loops) (blocked by: EnterpriseHub-1638)
+○ EnterpriseHub-nevv [● P2] [task] - Send cold outreach batch 1 (10 emails)
+○ EnterpriseHub-jrgy [● P2] [task] - Execute LinkedIn Week 2 posts
+○ EnterpriseHub-l1ve [● P2] [task] - Connect Gumroad bank account (blocks: EnterpriseHub-vzl1, EnterpriseHub-j4gx)
+◐ EnterpriseHub-tjvr [● P2] [task] - Content launch: Reddit + HN + Dev.to
+◐ EnterpriseHub-5j3j [● P2] [task] - LinkedIn Week 1 posts
+◐ EnterpriseHub-55kl [● P2] [task] - Reddit + HN + Dev.to content launch
+○ EnterpriseHub-4j2 [● P2] [task] - Upwork: Purchase 80 Connects + submit Round 2 proposals
+○ EnterpriseHub-9je [● P2] [task] - LinkedIn: Send 3-5 recommendation requests
+○ EnterpriseHub-pbz [● P3] [task] - LinkedIn: Weekly content + daily engagement cadence
+○ EnterpriseHub-vp9 [● P3] [task] - Upwork: Complete remaining profile improvements
+○ EnterpriseHub-479l.1 [● P4] [event] - State change: state → active (blocked by: EnterpriseHub-479l)

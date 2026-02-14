@@ -295,7 +295,7 @@ class AINegotiationPartner:
             # Inject drift insights into conversation insights
             conversation_insights["drift_analysis"] = drift_analysis
 
-            # Generate immediate guidance
+            # ROADMAP-079: Integrate with human agent notification system (Slack/email/CRM)
             immediate_guidance = await self._generate_immediate_guidance(
                 conversation_insights, intelligence, request.buyer_feedback, request.seller_response
             )
@@ -438,7 +438,7 @@ class AINegotiationPartner:
     ) -> Tuple[Dict[str, Any], Dict[str, Any], ListingHistory]:
         """Gather all required data for negotiation analysis"""
 
-        # TODO: Replace with actual data retrieval from services
+        # ROADMAP-078: Replace with actual data retrieval from property/lead services
         # This is a placeholder implementation
 
         property_data = {
@@ -448,7 +448,7 @@ class AINegotiationPartner:
             "bedrooms": 4,
             "bathrooms": 3,
             "property_type": "single_family",
-            "zip_code": "78701",
+            "zip_code": "91730",
             "days_on_market": 45,
             "year_built": 2010,
             "price_drops": 2,

@@ -2,26 +2,46 @@
 Jorge Seller Bot - Unified Enterprise Implementation
 Combines all research enhancements into production-ready unified implementation.
 
-UNIFIED FEATURES:
-- LangGraph friendly qualification (Jorge's helpful customer service methodology)
-- Track 3.1 Predictive Intelligence (ML-enhanced decision making)
-- Progressive Skills (68% token reduction, optional)
-- Agent Mesh Integration (enterprise orchestration, optional)
-- MCP Protocol Integration (standardized external services, optional)
-- Adaptive Intelligence (conversation memory & dynamic questioning, optional)
+REFACTORED: This module now delegates to specialized services in the seller/ package:
+- CMAService: CMA generation and valuation defense
+- MarketAnalyzer: Market conditions and pricing guidance
+- StallDetector: Stall detection and property condition extraction
+- ResponseGenerator: Response generation with sentiment analysis
+- StrategySelector: Strategy selection with Track 3.1 intelligence
+- ListingService: Listing preparation recommendations
+- FollowUpService: Automated follow-up execution
+- HandoffManager: Handoff context management
+- ConversationMemory/AdaptiveQuestionEngine: Conversation memory and adaptive questioning
+- ExecutiveService: Executive brief generation
+- ObjectionHandler: Objection handling with graduated responses
 
-Feature flags allow selective enablement for different deployment scenarios.
-Jorge now focuses on building relationships and helping customers succeed.
+The public API remains unchanged for backward compatibility.
 """
 
 import time
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
 from langgraph.graph import END, StateGraph
 
+# Import new modular services
+from ghl_real_estate_ai.agents.seller import (
+    JorgeFeatureConfig,
+    QualificationResult,
+    CMAService,
+    MarketAnalyzer,
+    StallDetector,
+    ResponseGenerator,
+    StrategySelector,
+    ListingService,
+    FollowUpService,
+    HandoffManager,
+    ConversationMemory,
+    AdaptiveQuestionEngine,
+    ExecutiveService,
+    ObjectionHandler,
+)
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
@@ -29,19 +49,23 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.bot_context_types import (
     BotMetadata,
     ConversationMessage,
-    QualificationData,
     SellerBotResponse,
 )
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
-from ghl_real_estate_ai.services.jorge.acceptance_predictor_service import get_acceptance_predictor_service
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
 from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
+
+# Phase 1.5 - 1.8 Integration
+from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnalysisService
+from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringIntegration
+from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
+from ghl_real_estate_ai.services.churn_detection_service import ChurnDetectionService
 
 # Phase 3 Loop 3: Handoff context propagation
 try:
@@ -53,7 +77,6 @@ except ImportError:
 
 try:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
-
     GHL_CLIENT_AVAILABLE = True
 except ImportError:
     GHL_CLIENT_AVAILABLE = False
@@ -61,16 +84,18 @@ except ImportError:
 # Track 3.1 Predictive Intelligence Integration
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
+    ML_ANALYTICS_AVAILABLE = True
 except ImportError:
     from ghl_real_estate_ai.stubs.bots_stub import get_ml_analytics_engine
+    ML_ANALYTICS_AVAILABLE = False
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
     from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
-
     BOT_INTELLIGENCE_AVAILABLE = True
 except ImportError as e:
+    logger = get_logger(__name__)
     logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
     BOT_INTELLIGENCE_AVAILABLE = False
 
@@ -78,7 +103,6 @@ except ImportError as e:
 try:
     from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
     from ghl_real_estate_ai.services.token_tracker import get_token_tracker
-
     PROGRESSIVE_SKILLS_AVAILABLE = True
 except ImportError:
     PROGRESSIVE_SKILLS_AVAILABLE = False
@@ -91,208 +115,39 @@ try:
         get_mesh_coordinator,
     )
     from ghl_real_estate_ai.services.mesh_agent_registry import AgentMetrics, AgentStatus, MeshAgent
-
     AGENT_MESH_AVAILABLE = True
 except ImportError:
     AGENT_MESH_AVAILABLE = False
 
 try:
     from ghl_real_estate_ai.services.mcp_client import get_mcp_client
-
     MCP_INTEGRATION_AVAILABLE = True
 except ImportError:
     MCP_INTEGRATION_AVAILABLE = False
 
 logger = get_logger(__name__)
 
-# ================================
-# ENHANCED FEATURES DATACLASSES
-# ================================
-
-
-@dataclass
-class JorgeFeatureConfig:
-    """Configuration for Jorge's enhanced features"""
-
-    enable_progressive_skills: bool = False
-    enable_agent_mesh: bool = False
-    enable_mcp_integration: bool = False
-    enable_adaptive_questioning: bool = False
-    enable_track3_intelligence: bool = True  # Default enabled
-    enable_bot_intelligence: bool = True  # Phase 3.3 Intelligence Integration
-    jorge_handoff_enabled: bool = True
-
-    # Performance settings
-    max_concurrent_tasks: int = 5
-    sla_response_time: int = 15  # seconds
-    cost_per_token: float = 0.000015
-
-    # Jorge-specific settings
-    commission_rate: float = 0.06
-    friendly_approach_enabled: bool = True
-    temperature_thresholds: Dict[str, int] = None
-
-    def __post_init__(self):
-        if self.temperature_thresholds is None:
-            self.temperature_thresholds = {"hot": 75, "warm": 50, "lukewarm": 25}
-
-
-@dataclass
-class QualificationResult:
-    """Comprehensive qualification result with all enhancement metadata"""
-
-    lead_id: str
-    qualification_score: float
-    frs_score: float
-    pcs_score: float
-    temperature: str
-    next_actions: List[str]
-    confidence: float
-    tokens_used: int
-    cost_incurred: float
-
-    # Enhancement metadata
-    progressive_skills_applied: bool = False
-    mesh_task_id: Optional[str] = None
-    orchestrated_tasks: List[str] = None
-    mcp_enrichment_applied: bool = False
-    adaptive_questioning_used: bool = False
-    timeline_ms: Dict[str, float] = None
-
-    def __post_init__(self):
-        if self.orchestrated_tasks is None:
-            self.orchestrated_tasks = []
-        if self.timeline_ms is None:
-            self.timeline_ms = {}
-
-
-class ConversationMemory:
-    """Maintains conversation context and patterns across sessions (Adaptive Feature)"""
-
-    def __init__(self):
-        self._memory: Dict[str, Dict] = {}
-
-    async def get_context(self, conversation_id: str) -> Dict:
-        """Get conversation context including last scores and patterns"""
-        return self._memory.get(
-            conversation_id,
-            {"last_scores": None, "question_history": [], "response_patterns": {}, "adaptation_count": 0},
-        )
-
-    async def update_context(self, conversation_id: str, update: Dict):
-        """Update conversation context with new information"""
-        if conversation_id not in self._memory:
-            self._memory[conversation_id] = {}
-        self._memory[conversation_id].update(update)
-
-
-class AdaptiveQuestionEngine:
-    """Manages dynamic question selection and adaptation (Adaptive Feature)"""
-
-    def __init__(self, questions_config=None):
-        # Core questions (config-first, hardcoded fallback)
-        if questions_config and questions_config.questions:
-            self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions]
-        else:
-            self.jorge_core_questions = [
-                "What's your timeline for selling?",
-                "What's driving you to sell the property?",
-                "What's your bottom-line number?",
-                "Are you flexible on the closing date?",
-            ]
-
-        # Friendly questions for high-intent leads (config-first, hardcoded fallback)
-        if questions_config and questions_config.accelerators:
-            self.high_intent_accelerators = questions_config.accelerators
-        else:
-            self.high_intent_accelerators = [
-                "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
-                "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
-                "I'm excited to help you with this! What timeline would work best for your situation?",
-                "You seem ready to take the next step - that's wonderful! When would be a good time to meet and go over your options?",
-                "I can see this is important to you. Let's find a time to sit down and create a plan that works for your situation.",
-            ]
-
-        self.supportive_clarifiers = {
-            "zestimate": [
-                "Online estimates are a great starting point! I'd love to show you what similar homes in your area have actually sold for recently.",
-                "Those online tools don't see the unique features of your home. Would you like a more personalized market analysis?",
-            ],
-            "thinking": [
-                "I completely understand you need time to consider this. What specific questions can I help answer for you?",
-                "Taking time to think it through is smart! What aspects would be most helpful for us to discuss?",
-            ],
-            "agent": [
-                "That's great that you're working with someone! I'm happy to share some additional market insights that might be helpful.",
-                "Wonderful! If you'd like, I can provide some complementary information that might be useful for your decision.",
-            ],
-        }
-
-    async def select_next_question(self, state: JorgeSellerState, context: Dict) -> str:
-        """Select the optimal next question based on real-time analysis"""
-        current_scores = state["intent_profile"]
-
-        # Fast-track high-intent leads (PCS > 70)
-        if current_scores.pcs.total_score > 70:
-            return await self._fast_track_to_calendar(state)
-
-        # Handle specific concerns with supportive questions
-        if state.get("detected_stall_type"):
-            return await self._select_supportive_clarifier(state["detected_stall_type"])
-
-        # Adaptive questioning based on score progression
-        if context.get("adaptation_count", 0) > 0:
-            return await self._select_adaptive_question(state, context)
-
-        # Default to core questions for first-time qualification
-        return await self._select_standard_question(state)
-
-    async def _fast_track_to_calendar(self, state: JorgeSellerState) -> str:
-        """Direct high-intent leads to calendar scheduling"""
-        import random
-
-        return random.choice(self.high_intent_accelerators)
-
-    async def _select_supportive_clarifier(self, clarifier_type: str) -> str:
-        """Select supportive clarifier based on conversation context"""
-        import random
-
-        questions = self.supportive_clarifiers.get(clarifier_type, self.supportive_clarifiers["thinking"])
-        return random.choice(questions)
-
-    async def _select_adaptive_question(self, state: JorgeSellerState, context: Dict) -> str:
-        """Select question based on conversation history and patterns"""
-        # Analyze what's missing from qualification
-        scores = state["intent_profile"]
-
-        if scores.frs.timeline.score < 50:
-            return "I'd love to better understand your timeline. What would work best for your situation?"
-        elif scores.frs.price.score < 50:
-            return "What price range would make this feel like a great decision for you?"
-        elif scores.frs.condition.score < 50:
-            return "Would you prefer to sell as-is, or are you thinking about making some updates first?"
-
-        # Default fallback
-        return "What's the most important outcome for you in this process?"
-
-    async def _select_standard_question(self, state: JorgeSellerState) -> str:
-        """Select from core Jorge questions"""
-        current_q = state.get("current_question", 1)
-        if current_q <= len(self.jorge_core_questions):
-            return self.jorge_core_questions[current_q - 1]
-        return "How can I best help you with your property goals?"
+# Re-export for backward compatibility
+__all__ = [
+    "JorgeSellerBot",
+    "JorgeFeatureConfig",
+    "QualificationResult",
+    "get_jorge_seller_bot",
+]
 
 
 class JorgeSellerBot:
     """
-    Unified Jorge Seller Bot - Production-ready with optional enhancements
-    Designed to help sellers succeed while identifying 'Serious Sellers'.
-
+    Unified Jorge Seller Bot - Production-ready with optional enhancements.
+    
+    This class now delegates to specialized service classes for specific responsibilities
+    while maintaining full backward compatibility with the original public API.
+    
     CORE FEATURES (always enabled):
     - LangGraph friendly qualification workflow
     - Track 3.1 Predictive Intelligence integration
     - Real-time event publishing and coordination
-
+    
     OPTIONAL ENHANCEMENTS (configurable):
     - Progressive Skills (68% token reduction)
     - Agent Mesh Integration (enterprise orchestration)
@@ -308,7 +163,6 @@ class JorgeSellerBot:
     ):
         # Industry-agnostic configuration layer (backward compatible)
         from ghl_real_estate_ai.config.industry_config import IndustryConfig
-
         self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
 
         # Core components (always initialized)
@@ -370,12 +224,22 @@ class JorgeSellerBot:
         elif self.config.enable_bot_intelligence:
             logger.warning("Jorge bot: Bot Intelligence requested but dependencies not available")
 
+        # Phase 1.5 - 1.8 Services Initialization
+        self.sentiment_service = SentimentAnalysisService()
+        self.lead_scoring_integration = LeadScoringIntegration()
+        self.workflow_service = GHLWorkflowService()
+        self.churn_service = ChurnDetectionService(sentiment_service=self.sentiment_service)
+        logger.info("Jorge bot: Phase 1.5-1.8 services (Sentiment, Scoring, Workflow, Churn) initialized")
+
         # Monitoring services (singletons — cheap to instantiate)
         self.performance_tracker = PerformanceTracker()
         self.metrics_collector = BotMetricsCollector()
         self.alerting_service = AlertingService()
         self.ab_testing = ABTestingService()
         self._init_ab_experiments()
+
+        # Initialize modular service layer (NEW: Decomposed services)
+        self._init_service_layer()
 
         # Performance tracking
         self.workflow_stats = {
@@ -391,6 +255,34 @@ class JorgeSellerBot:
 
         # Build appropriate workflow based on enabled features
         self.workflow = self._build_unified_graph()
+
+    def _init_service_layer(self):
+        """Initialize the decomposed service layer."""
+        # Core workflow services
+        self.cma_service = CMAService(
+            cma_generator=self.cma_generator,
+            claude=self.claude
+        )
+        self.market_analyzer = MarketAnalyzer(ab_testing=self.ab_testing)
+        self.stall_detector = StallDetector(event_publisher=self.event_publisher)
+        self.response_generator = ResponseGenerator(
+            claude=self.claude,
+            event_publisher=self.event_publisher,
+            sentiment_service=self.sentiment_service,
+            ab_testing=self.ab_testing
+        )
+        self.strategy_selector = StrategySelector(
+            event_publisher=self.event_publisher,
+            ml_analytics=self.ml_analytics,
+            tenant_id=self.tenant_id
+        )
+        self.listing_service = ListingService()
+        self.followup_service = FollowUpService(event_publisher=self.event_publisher)
+        self.handoff_manager = HandoffManager()
+        self.executive_service = ExecutiveService(event_publisher=self.event_publisher)
+        self.objection_handler = ObjectionHandler(event_publisher=self.event_publisher)
+        
+        logger.info("Jorge bot: Service layer initialized with decomposed modules")
 
     def _init_ab_experiments(self) -> None:
         """Create default A/B experiments if not already registered."""
@@ -412,28 +304,29 @@ class JorgeSellerBot:
     def _build_standard_graph(self) -> StateGraph:
         workflow = StateGraph(JorgeSellerState)
 
-        # Define Nodes
+        # Define Nodes - delegate to service layer
         workflow.add_node("analyze_intent", self.analyze_intent)
 
         # Add intelligence gathering node if enabled
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_intelligence", self.gather_intelligence_context)
 
-        # Phase 2.2: Objection handling node
-        workflow.add_node("handle_objection", self.handle_objection)
+        # Phase 2.2: Objection handling node - delegated to service
+        workflow.add_node("handle_objection", self._handle_objection_node)
 
-        # CMA & Market Intelligence nodes
-        workflow.add_node("generate_cma", self.generate_cma)
-        workflow.add_node("provide_pricing_guidance", self.provide_pricing_guidance)
-        workflow.add_node("analyze_market_conditions", self.analyze_market_conditions)
+        # CMA & Market Intelligence nodes - delegated to services
+        workflow.add_node("generate_cma", self._generate_cma_node)
+        workflow.add_node("provide_pricing_guidance", self._provide_pricing_guidance_node)
+        workflow.add_node("analyze_market_conditions", self._analyze_market_conditions_node)
 
-        workflow.add_node("detect_stall", self.detect_stall)
-        workflow.add_node("defend_valuation", self.defend_valuation)
-        workflow.add_node("prepare_listing", self.prepare_listing)
-        workflow.add_node("select_strategy", self.select_strategy)
-        workflow.add_node("generate_jorge_response", self.generate_jorge_response)
+        workflow.add_node("detect_stall", self._detect_stall_node)
+        workflow.add_node("defend_valuation", self._defend_valuation_node)
+        workflow.add_node("prepare_listing", self._prepare_listing_node)
+        workflow.add_node("select_strategy", self._select_strategy_node)
+        workflow.add_node("generate_jorge_response", self._generate_jorge_response_node)
+        workflow.add_node("generate_executive_brief", self._generate_executive_brief_node)
         workflow.add_node("recalculate_pcs", self.recalculate_pcs_node)
-        workflow.add_node("execute_follow_up", self.execute_follow_up)
+        workflow.add_node("execute_follow_up", self._execute_follow_up_node)
 
         # Define Edges
         workflow.set_entry_point("analyze_intent")
@@ -484,7 +377,8 @@ class JorgeSellerBot:
         )
 
         workflow.add_edge("generate_jorge_response", "recalculate_pcs")
-        workflow.add_edge("recalculate_pcs", END)
+        workflow.add_edge("recalculate_pcs", "generate_executive_brief")
+        workflow.add_edge("generate_executive_brief", END)
         workflow.add_edge("execute_follow_up", END)
         workflow.add_edge("prepare_listing", "generate_jorge_response")
 
@@ -501,12 +395,13 @@ class JorgeSellerBot:
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_intelligence", self.gather_intelligence_context)
 
-        workflow.add_node("detect_stall", self.detect_stall)
-        workflow.add_node("adaptive_strategy", self.adaptive_strategy_selection)
-        workflow.add_node("generate_adaptive_response", self.generate_adaptive_response)
+        workflow.add_node("detect_stall", self._detect_stall_node)
+        workflow.add_node("adaptive_strategy", self._adaptive_strategy_node)
+        workflow.add_node("generate_adaptive_response", self._generate_adaptive_response_node)
+        workflow.add_node("generate_executive_brief", self._generate_executive_brief_node)
         workflow.add_node("recalculate_pcs", self.recalculate_pcs_node)
-        workflow.add_node("execute_follow_up", self.execute_follow_up)
-        workflow.add_node("update_memory", self.update_conversation_memory)
+        workflow.add_node("execute_follow_up", self._execute_follow_up_node)
+        workflow.add_node("update_memory", self._update_conversation_memory_node)
 
         # Enhanced Flow
         workflow.set_entry_point("analyze_intent")
@@ -533,13 +428,144 @@ class JorgeSellerBot:
         )
 
         workflow.add_edge("generate_adaptive_response", "recalculate_pcs")
-        workflow.add_edge("recalculate_pcs", "update_memory")
+        workflow.add_edge("recalculate_pcs", "generate_executive_brief")
+        workflow.add_edge("generate_executive_brief", "update_memory")
         workflow.add_edge("execute_follow_up", "update_memory")
         workflow.add_edge("update_memory", END)
 
         return workflow.compile()
 
-    # --- Node Implementations ---
+    # ================================
+    # DELEGATED NODE METHODS (NEW)
+    # ================================
+
+    async def _generate_cma_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate CMA generation to CMAService."""
+        return await self.cma_service.generate_cma(state)
+
+    async def _defend_valuation_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate valuation defense to CMAService."""
+        return await self.cma_service.defend_valuation(state)
+
+    async def _analyze_market_conditions_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate market analysis to MarketAnalyzer."""
+        return await self.market_analyzer.analyze_market_conditions(state)
+
+    async def _provide_pricing_guidance_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate pricing guidance to MarketAnalyzer."""
+        return await self.market_analyzer.provide_pricing_guidance(state)
+
+    async def _detect_stall_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate stall detection to StallDetector."""
+        return await self.stall_detector.detect_stall(state)
+
+    async def _select_strategy_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate strategy selection to StrategySelector."""
+        return await self.strategy_selector.select_strategy(state)
+
+    async def _adaptive_strategy_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate adaptive strategy selection to StrategySelector."""
+        # Create base strategy with adaptive mode
+        pcs = state.get("psychological_commitment", 0)
+        adaptation_count = state.get("adaptation_count", 0)
+        
+        if pcs > 70:
+            strategy = {"current_tone": "DIRECT", "next_action": "fast_track", "adaptive_mode": "calendar_focused"}
+        elif state.get("stall_detected"):
+            strategy = {"current_tone": "UNDERSTANDING", "next_action": "respond", "adaptive_mode": "supportive_guidance"}
+        elif adaptation_count > 2:
+            strategy = {"current_tone": "HONEST", "next_action": "respond", "adaptive_mode": "clarity_focused"}
+        else:
+            strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond", "adaptive_mode": "standard_qualification"}
+        
+        return strategy
+
+    async def _generate_jorge_response_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate response generation to ResponseGenerator."""
+        tone_variant = state.get("tone_variant")
+        return await self.response_generator.generate_jorge_response(state, tone_variant)
+
+    async def _generate_adaptive_response_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate adaptive response generation to ResponseGenerator."""
+        conversation_id = f"jorge_{state['lead_id']}"
+        context = await self.conversation_memory.get_context(conversation_id)
+        next_question = await self.question_engine.select_next_question(state, context)
+        
+        self.workflow_stats["adaptive_question_selections"] += 1
+        
+        tone_variant = state.get("tone_variant")
+        return await self.response_generator.generate_adaptive_response(state, next_question, tone_variant)
+
+    async def _prepare_listing_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate listing preparation to ListingService."""
+        return await self.listing_service.prepare_listing(state)
+
+    async def _execute_follow_up_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate follow-up execution to FollowUpService."""
+        return await self.followup_service.execute_follow_up(state)
+
+    async def _generate_executive_brief_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate executive brief generation to ExecutiveService."""
+        return await self.executive_service.generate_executive_brief(state)
+
+    async def _handle_objection_node(self, state: JorgeSellerState) -> Dict:
+        """Delegate objection handling to ObjectionHandler."""
+        return await self.objection_handler.handle_objection(state)
+
+    async def _update_conversation_memory_node(self, state: JorgeSellerState) -> Dict:
+        """Update conversation memory with new interaction."""
+        conversation_id = f"jorge_{state['lead_id']}"
+        context = await self.conversation_memory.get_context(conversation_id)
+        
+        update = {
+            "last_scores": {"frs": state["intent_profile"].frs.total_score if state.get("intent_profile") else 0, 
+                          "pcs": state.get("psychological_commitment", 0)},
+            "last_interaction_time": datetime.now(timezone.utc),
+            "adaptation_count": context.get("adaptation_count", 0) + 1,
+            "response_patterns": {
+                "adaptive_mode": state.get("adaptive_mode"),
+                "question_used": state.get("adaptive_question_used"),
+            },
+        }
+        
+        await self.conversation_memory.update_context(conversation_id, update)
+        return {"memory_updated": True}
+
+    # ================================
+    # ROUTING METHODS
+    # ================================
+
+    def _route_seller_action(
+        self, state: JorgeSellerState
+    ) -> Literal["respond", "follow_up", "listing_prep", "end"]:
+        """Determine if we should respond immediately or queue a follow-up."""
+        return self.strategy_selector.route_seller_action(state)
+
+    def _route_after_stall_detection(
+        self, state: JorgeSellerState
+    ) -> Literal["defend_valuation", "select_strategy"]:
+        """Route to valuation defense if Zestimate stall detected with CMA data."""
+        return self.strategy_selector.route_after_stall_detection(state)
+
+    def _route_after_objection(
+        self, state: JorgeSellerState
+    ) -> Literal["objection_response", "continue_normal"]:
+        """Route based on objection detection."""
+        return self.strategy_selector.route_after_objection(state)
+
+    def _route_adaptive_action(
+        self, state: JorgeSellerState
+    ) -> Literal["respond", "follow_up", "fast_track", "end"]:
+        """Enhanced routing with fast-track capability."""
+        return self.strategy_selector.route_adaptive_action(state)
+
+    # ================================
+    # EXISTING METHODS (maintained for compatibility)
+    # ================================
+
+    async def generate_executive_brief(self, state: JorgeSellerState) -> Dict:
+        """Legacy method - delegates to ExecutiveService."""
+        return await self.executive_service.generate_executive_brief(state)
 
     async def analyze_intent(self, state: JorgeSellerState) -> Dict:
         """Score the lead and identify psychological commitment."""
@@ -581,7 +607,7 @@ class JorgeSellerBot:
         profile = self.intent_decoder.analyze_lead(state["lead_id"], state["conversation_history"])
 
         # Classify seller temperature based on scores
-        seller_temperature = self._classify_temperature(profile)
+        seller_temperature = self.stall_detector.classify_temperature(profile)
 
         # Emit qualification progress
         await self.event_publisher.publish_jorge_qualification_progress(
@@ -594,7 +620,7 @@ class JorgeSellerBot:
         )
 
         # Extract property condition from conversation
-        property_condition = self._extract_property_condition(
+        property_condition = self.stall_detector.extract_property_condition(
             state.get("conversation_history", [])
         )
 
@@ -609,6 +635,26 @@ class JorgeSellerBot:
             custom_fields=state.get("metadata", {}).get("custom_fields") if state.get("metadata") else None,
         )
 
+        # Phase 1.6: Calculate Composite Lead Score
+        composite_score_data = {}
+        try:
+            temp_state = {
+                "frs_score": profile.frs.total_score,
+                "pcs_score": profile.pcs.total_score,
+                "conversation_history": state["conversation_history"],
+                "seller_persona": seller_classification
+            }
+            
+            scoring_result = await self.lead_scoring_integration.calculate_and_store_composite_score(
+                state=temp_state,
+                contact_id=state["lead_id"],
+                use_ml_ensemble=self.config.enable_track3_intelligence
+            )
+            composite_score_data = scoring_result.get("composite_score_data", {})
+            logger.info(f"Composite score calculated for {state['lead_id']}: {composite_score_data.get('total_score', 0)}")
+        except Exception as e:
+            logger.error(f"Failed to calculate composite score: {e}")
+
         return {
             "intent_profile": profile,
             "psychological_commitment": profile.pcs.total_score,
@@ -618,54 +664,11 @@ class JorgeSellerBot:
             "property_condition": property_condition,
             "seller_intent_profile": seller_intent_profile,
             "seller_persona": seller_classification,
+            "composite_score": composite_score_data,
         }
 
-    def _extract_property_condition(
-        self, conversation_history: List[ConversationMessage]
-    ) -> Optional[str]:
-        """Extract property condition from conversation keywords."""
-        if not conversation_history:
-            return None
-
-        text = " ".join(
-            msg.get("content", "").lower()
-            for msg in conversation_history
-            if msg.get("role") == "user"
-        )
-
-        move_in_ready_markers = [
-            "move-in ready", "move in ready", "turnkey", "just remodeled",
-            "recently renovated", "updated", "great condition", "perfect condition",
-        ]
-        needs_work_markers = [
-            "needs work", "needs some work", "needs updating", "dated",
-            "cosmetic", "needs paint", "some updates", "a little work",
-        ]
-        major_repairs_markers = [
-            "major repairs", "fixer", "fixer-upper", "foundation",
-            "roof issues", "structural", "condemned", "tear down",
-        ]
-
-        if any(m in text for m in major_repairs_markers):
-            return "major_repairs"
-        elif any(m in text for m in needs_work_markers):
-            return "needs_work"
-        elif any(m in text for m in move_in_ready_markers):
-            return "move_in_ready"
-
-        return None
-
     async def gather_intelligence_context(self, state: JorgeSellerState) -> Dict:
-        """
-        Phase 3.3: Gather intelligence context for enhanced decision making.
-
-        Integrates with Bot Intelligence Middleware to provide:
-        - Property matching intelligence for better recommendations
-        - Conversation intelligence for objection detection
-        - Preference learning for personalized approaches
-
-        Graceful fallback on service failures - never blocks Jorge's workflow.
-        """
+        """Phase 3.3: Gather intelligence context for enhanced decision making."""
         # Update bot status
         await self.event_publisher.publish_bot_status_update(
             bot_type="jorge-seller",
@@ -689,7 +692,7 @@ class JorgeSellerBot:
                 intelligence_context = await self.intelligence_middleware.enhance_bot_context(
                     bot_type="jorge-seller",
                     lead_id=state["lead_id"],
-                    location_id=state.get("location_id", "rancho_cucamonga"),  # Default to Rancho Cucamonga market
+                    location_id=state.get("location_id", "rancho_cucamonga"),
                     conversation_context=state.get("conversation_history", []),
                     preferences=preferences,
                 )
@@ -771,855 +774,43 @@ class JorgeSellerBot:
         return preferences
 
     async def handle_objection(self, state: JorgeSellerState) -> Dict:
-        """
-        Phase 2.2: Handle seller objections with graduated responses.
-
-        Detects objections across 6 categories (pricing, timing, competition,
-        trust, authority, value) and provides tailored responses using
-        A/B-tested variants.
-
-        Graceful fallback: never blocks workflow if objection handling fails.
-        """
-        # Update bot status
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="handle_objection",
-        )
-
-        objection_detected = False
-        objection_response_text = None
-        objection_metadata = {}
-
-        try:
-            # Import objection engine
-            from ghl_real_estate_ai.services.jorge.pricing_objection_engine import get_pricing_objection_engine
-
-            engine = get_pricing_objection_engine()
-
-            # Get last seller message
-            last_msg = ""
-            if state.get("conversation_history"):
-                for msg in reversed(state["conversation_history"]):
-                    if msg.get("role") == "user":
-                        last_msg = msg.get("content", "")
-                        break
-
-            if not last_msg:
-                return {"objection_detected": False}
-
-            # Detect objection
-            detection = engine.detect_objection(last_msg)
-
-            if detection.detected and detection.confidence >= 0.7:
-                logger.info(
-                    f"Objection detected for {state['lead_id']}: "
-                    f"{detection.objection_category.value}/{detection.objection_type.value} "
-                    f"(confidence: {detection.confidence:.2f})"
-                )
-
-                objection_detected = True
-                objection_metadata = {
-                    "objection_type": detection.objection_type.value,
-                    "objection_category": detection.objection_category.value if detection.objection_category else None,
-                    "confidence": detection.confidence,
-                    "matched_text": detection.matched_text,
-                }
-
-                # Get A/B test variant for objection responses
-                variant_index = 0
-                try:
-                    seller_id = state.get("lead_id", "unknown")
-                    # Use contact ID hash to deterministically assign variant
-                    import hashlib
-                    hash_val = int(hashlib.md5(seller_id.encode()).hexdigest(), 16)
-                    # Get variant count from response templates
-                    from ghl_real_estate_ai.prompts.objection_responses import get_variant_count
-                    from ghl_real_estate_ai.services.jorge.pricing_objection_engine import ResponseGraduation
-
-                    # Get current graduation level
-                    grad_level_idx = engine.get_graduation_level(seller_id, detection.objection_type)
-                    graduation_order = list(ResponseGraduation)
-                    graduation_level = graduation_order[min(grad_level_idx, len(graduation_order) - 1)]
-
-                    variant_count = get_variant_count(detection.objection_type, graduation_level)
-                    if variant_count > 1:
-                        variant_index = hash_val % variant_count
-                except Exception as e:
-                    logger.warning(f"Failed to assign A/B variant, using default: {e}")
-
-                # Gather market data for template interpolation
-                market_data = {}
-                cma_report = state.get("cma_report")
-                if cma_report:
-                    market_data.update({
-                        "estimated_value": f"${cma_report.get('estimated_value', 0):,.0f}",
-                        "median_price": f"${cma_report.get('estimated_value', 0):,.0f}",
-                        "suggested_price": f"${cma_report.get('estimated_value', 0):,.0f}",
-                    })
-
-                market_context = state.get("market_data", {})
-                if market_context:
-                    market_data.update({
-                        "avg_days_on_market": str(market_context.get("dom_average", 30)),
-                        "market_trend": market_context.get("price_trend", "stable"),
-                        "inventory_level": str(market_context.get("inventory_level", 1450)),
-                    })
-
-                # Generate objection response
-                response = engine.generate_response(
-                    detection,
-                    contact_id=state["lead_id"],
-                    market_data=market_data,
-                    variant_index=variant_index,
-                )
-
-                if response:
-                    objection_response_text = response.response_text
-                    objection_metadata.update({
-                        "graduation_level": response.graduation_level.value,
-                        "response_variant": variant_index,
-                        "next_graduation": response.next_graduation.value if response.next_graduation else None,
-                    })
-
-                    logger.info(
-                        f"Objection response generated: {response.objection_category.value} "
-                        f"at {response.graduation_level.value} level (variant {variant_index})"
-                    )
-
-                    # Fire-and-forget: Save objection event to database
-                    try:
-                        from ghl_real_estate_ai.repositories.jorge_metrics_repository import JorgeMetricsRepository
-                        import os
-                        dsn = os.getenv("DATABASE_URL")
-                        if dsn:
-                            repo = JorgeMetricsRepository(dsn)
-                            await repo.save_objection_event(
-                                contact_id=state["lead_id"],
-                                objection_type=detection.objection_type.value,
-                                objection_category=response.objection_category.value,
-                                confidence=detection.confidence,
-                                matched_text=detection.matched_text,
-                                graduation_level=response.graduation_level.value,
-                                response_variant=variant_index,
-                                response_text=objection_response_text,
-                                market_data=market_data,
-                            )
-                    except Exception as db_exc:
-                        logger.warning(f"Failed to save objection event (non-blocking): {db_exc}")
-
-                    # Emit objection handling event for monitoring
-                    await self.event_publisher.publish_conversation_update(
-                        conversation_id=f"jorge_{state['lead_id']}",
-                        lead_id=state["lead_id"],
-                        stage="objection_handled",
-                        message=f"Objection handled: {response.objection_category.value} "
-                                f"({response.graduation_level.value} level, variant {variant_index})",
-                    )
-
-        except Exception as e:
-            logger.warning(f"Objection handling failed for {state['lead_id']} (non-blocking): {e}")
-            # Graceful fallback: don't block workflow on objection handling failures
-
-        return {
-            "objection_detected": objection_detected,
-            "objection_response_text": objection_response_text,
-            "objection_metadata": objection_metadata,
-        }
+        """Legacy method - delegates to ObjectionHandler."""
+        return await self.objection_handler.handle_objection(state)
 
     async def generate_cma(self, state: JorgeSellerState) -> Dict:
-        """Generate CMA report if property address is available."""
-        property_address = state.get("property_address")
-        if not property_address:
-            return {}
-
-        try:
-            zestimate = state.get("zestimate", 0.0)
-            report = await self.cma_generator.generate_report(
-                property_address, zestimate or 0.0
-            )
-
-            comparable_properties = []
-            for comp in report.comparables:
-                comparable_properties.append({
-                    "address": comp.address,
-                    "sale_price": comp.sale_price,
-                    "sqft": comp.sqft,
-                    "beds": comp.beds,
-                    "baths": comp.baths,
-                    "price_per_sqft": comp.price_per_sqft,
-                })
-
-            market_data = {
-                "market_name": report.market_context.market_name,
-                "price_trend": report.market_context.price_trend,
-                "dom_average": report.market_context.dom_average,
-                "inventory_level": report.market_context.inventory_level,
-                "narrative": report.market_narrative,
-            }
-
-            logger.info(
-                f"CMA generated for {property_address}: "
-                f"estimated value ${report.estimated_value:,.0f}"
-            )
-
-            return {
-                "cma_report": {
-                    "estimated_value": report.estimated_value,
-                    "value_range_low": report.value_range_low,
-                    "value_range_high": report.value_range_high,
-                    "confidence_score": report.confidence_score,
-                    "zillow_variance_percent": report.zillow_variance_percent,
-                    "zillow_explanation": report.zillow_explanation,
-                    "market_narrative": report.market_narrative,
-                },
-                "estimated_value": report.estimated_value,
-                "comparable_properties": comparable_properties,
-                "market_data": market_data,
-            }
-
-        except Exception as e:
-            logger.warning(f"CMA generation failed for {property_address}: {e}")
-            return {}
+        """Legacy method - delegates to CMAService."""
+        return await self.cma_service.generate_cma(state)
 
     async def provide_pricing_guidance(self, state: JorgeSellerState) -> Dict:
-        """
-        Generate ML-powered pricing guidance using acceptance predictions.
-
-        Phase 4 Task #13: Integrates AcceptancePredictorService to provide
-        data-driven pricing recommendations with acceptance probabilities.
-
-        Includes A/B test: ML predictions vs static CMA-only guidance.
-        """
-        contact_id = state.get("contact_id", "unknown")
-        property_address = state.get("property_address")
-        cma_report = state.get("cma_report")
-
-        # Skip if no property data available
-        if not property_address or not cma_report:
-            logger.debug(f"Skipping pricing guidance for {contact_id} - no CMA data")
-            return {}
-
-        try:
-            # A/B Test: ML pricing vs static CMA
-            variant = await self.ab_testing.assign_variant(
-                experiment_id="seller_ml_pricing_v1",
-                contact_id=contact_id,
-                metadata={"has_cma": True, "pcs_score": state.get("intent_profile", {}).get("pcs", {}).get("total_score", 0)},
-            )
-
-            if variant == "control":
-                # Control: Static CMA-only guidance (existing behavior)
-                logger.info(f"Pricing guidance for {contact_id}: control (static CMA)")
-                return {"pricing_guidance_variant": "control"}
-
-            # Treatment: ML-powered acceptance predictions
-            logger.info(f"Pricing guidance for {contact_id}: treatment (ML predictions)")
-
-            predictor = get_acceptance_predictor_service()
-
-            # Build prediction context
-            context = {
-                "pcs_score": state.get("intent_profile", {}).get("pcs", {}).get("total_score", 50),
-                "estimated_value": cma_report.get("estimated_value", 0),
-                "cma_report": cma_report,
-                "market_trend": state.get("market_trend", "balanced"),
-                "property_address": property_address,
-            }
-
-            # Get optimal pricing strategy
-            optimal_pricing = await predictor.get_optimal_price_range(
-                seller_id=contact_id,
-                target_probability=0.85,  # Target 85% acceptance probability
-                context=context,
-            )
-
-            # Get predictions for seller's asking price if available
-            asking_price = state.get("asking_price") or cma_report.get("estimated_value", 0)
-            asking_prediction = None
-
-            if asking_price and asking_price > 0:
-                asking_prediction = await predictor.predict_acceptance_probability(
-                    seller_id=contact_id,
-                    offer_price=asking_price,
-                    context=context,
-                )
-
-            # Format conversational guidance
-            guidance = self._format_pricing_guidance(
-                optimal_pricing=optimal_pricing,
-                asking_prediction=asking_prediction,
-                asking_price=asking_price,
-                cma_value=cma_report.get("estimated_value", 0),
-            )
-
-            # Track ML usage
-            await self.ab_testing.track_event(
-                experiment_id="seller_ml_pricing_v1",
-                contact_id=contact_id,
-                event_type="ml_pricing_shown",
-                properties={
-                    "recommended_price": optimal_pricing.recommended_price,
-                    "acceptance_probability": optimal_pricing.acceptance_probability,
-                    "days_to_acceptance": optimal_pricing.time_to_acceptance_days,
-                },
-            )
-
-            logger.info(
-                f"ML pricing guidance for {contact_id}: "
-                f"${optimal_pricing.recommended_price:,.0f} "
-                f"({optimal_pricing.acceptance_probability:.0%} acceptance)"
-            )
-
-            return {
-                "pricing_guidance": guidance,
-                "pricing_guidance_variant": "treatment",
-                "optimal_pricing": {
-                    "min_price": optimal_pricing.min_price,
-                    "max_price": optimal_pricing.max_price,
-                    "recommended_price": optimal_pricing.recommended_price,
-                    "acceptance_probability": optimal_pricing.acceptance_probability,
-                    "time_to_acceptance_days": optimal_pricing.time_to_acceptance_days,
-                },
-            }
-
-        except Exception as e:
-            logger.error(f"Pricing guidance failed for {contact_id}: {e}", exc_info=True)
-            # Graceful fallback to control behavior
-            return {"pricing_guidance_variant": "control"}
-
-    def _format_pricing_guidance(
-        self,
-        optimal_pricing,
-        asking_prediction,
-        asking_price: float,
-        cma_value: float,
-    ) -> str:
-        """Format pricing guidance in conversational style for Jorge."""
-        lines = ["📊 Based on current market analysis and seller engagement patterns:"]
-
-        # If seller has an asking price, show prediction
-        if asking_prediction and asking_price:
-            lines.append("")
-            lines.append(f"Your asking price of ${asking_price:,.0f}:")
-            lines.append(f"   • Acceptance probability: {asking_prediction.acceptance_probability:.0%}")
-            lines.append(
-                f"   • Typical time to acceptance: {asking_prediction.estimated_days_to_acceptance} days"
-            )
-
-        # Show optimal pricing strategy
-        lines.append("")
-        lines.append("💡 Optimal pricing strategy:")
-
-        # Show recommended price with acceptance probability
-        lines.append(
-            f"   • ${optimal_pricing.recommended_price:,.0f} → "
-            f"{optimal_pricing.acceptance_probability:.0%} acceptance probability "
-            f"({optimal_pricing.time_to_acceptance_days} days)"
-        )
-
-        # Show price range
-        if optimal_pricing.min_price and optimal_pricing.max_price:
-            lines.append(
-                f"   • Competitive range: ${optimal_pricing.min_price:,.0f} - ${optimal_pricing.max_price:,.0f}"
-            )
-
-        # Add rationale
-        if optimal_pricing.strategy_rationale:
-            lines.append("")
-            lines.append(f"📈 {optimal_pricing.strategy_rationale}")
-
-        lines.append("")
-        lines.append("Would you like to explore pricing strategies to maximize both speed and value?")
-
-        return "\n".join(lines)
+        """Legacy method - delegates to MarketAnalyzer."""
+        return await self.market_analyzer.provide_pricing_guidance(state)
 
     async def analyze_market_conditions(self, state: JorgeSellerState) -> Dict:
-        """Determine market trend from available data."""
-        market_data = state.get("market_data")
-        if not market_data:
-            return {"market_trend": "balanced"}
-
-        try:
-            inventory_level = market_data.get("inventory_level", 1450)
-            # Use months of inventory approximation:
-            # < 3 months supply = sellers market
-            # > 6 months supply = buyers market
-            # Rancho Cucamonga: ~480 sales/month avg, so months = inventory / 480
-            months_of_inventory = inventory_level / 480
-
-            if months_of_inventory < 3:
-                trend = "sellers_market"
-            elif months_of_inventory > 6:
-                trend = "buyers_market"
-            else:
-                trend = "balanced"
-
-            return {"market_trend": trend}
-
-        except Exception as e:
-            logger.warning(f"Market conditions analysis failed: {e}")
-            return {"market_trend": "balanced"}
+        """Legacy method - delegates to MarketAnalyzer."""
+        return await self.market_analyzer.analyze_market_conditions(state)
 
     async def defend_valuation(self, state: JorgeSellerState) -> Dict:
-        """Build Zillow-defense response using CMA data when Zestimate stall detected."""
-        cma_report = state.get("cma_report")
-        if not cma_report:
-            return {}
-
-        try:
-            estimated_value = cma_report.get("estimated_value", 0)
-            variance = cma_report.get("zillow_variance_percent", 0)
-            explanation = cma_report.get("zillow_explanation", "")
-            comp_count = len(state.get("comparable_properties", []))
-            market_narrative = cma_report.get("market_narrative", "")
-
-            defense_context = (
-                f"Our CMA analysis of {comp_count} recent comparable sales shows "
-                f"an estimated value of ${estimated_value:,.0f}. "
-                f"The Zillow Zestimate differs by {abs(variance):.1f}%. "
-                f"{explanation} {market_narrative}"
-            )
-
-            prompt = f"""
-            As Jorge, the seller mentioned Zillow/Zestimate. Use this CMA data to
-            gently educate them about why real comparable sales are more accurate:
-
-            {defense_context}
-
-            Be helpful and educational, not dismissive. Keep under 160 chars for SMS.
-            """
-
-            response = await self.claude.analyze_with_context(prompt)
-            content = (
-                response.get("content")
-                or response.get("analysis")
-                or f"Real comps show ${estimated_value:,.0f} — Zillow can't walk through your house!"
-            )
-
-            return {"response_content": content}
-
-        except Exception as e:
-            logger.warning(f"Valuation defense failed: {e}")
-            return {}
+        """Legacy method - delegates to CMAService."""
+        return await self.cma_service.defend_valuation(state)
 
     async def prepare_listing(self, state: JorgeSellerState) -> Dict:
-        """Generate listing preparation recommendations."""
-        if not state.get("is_qualified") or not state.get("property_address"):
-            return {}
-
-        property_condition = state.get("property_condition")
-        staging_recs = self._generate_staging_recommendations(property_condition)
-        repair_estimates = self._estimate_repairs(property_condition)
-
-        return {
-            "staging_recommendations": staging_recs,
-            "repair_estimates": repair_estimates,
-            "current_journey_stage": "listing_prep",
-        }
-
-    def _generate_staging_recommendations(
-        self, condition: Optional[str]
-    ) -> List[str]:
-        """Generate staging recommendations based on property condition."""
-        base_recs = [
-            "Declutter all rooms and remove personal photos",
-            "Deep clean entire property including windows",
-            "Maximize natural lighting — open all blinds and curtains",
-            "Add fresh flowers or plants to key rooms",
-        ]
-
-        if condition == "move_in_ready":
-            base_recs.extend([
-                "Professional photography to showcase turnkey condition",
-                "Highlight recent upgrades in listing description",
-            ])
-        elif condition == "needs_work":
-            base_recs.extend([
-                "Fresh neutral paint in main living areas",
-                "Replace dated light fixtures and hardware",
-                "Consider professional staging for primary living spaces",
-            ])
-        elif condition == "major_repairs":
-            base_recs.extend([
-                "Get pre-listing inspection to identify all issues",
-                "Obtain contractor estimates for major repairs",
-                "Consider selling as-is with repair credit",
-                "Price accordingly to reflect condition",
-            ])
-
-        return base_recs
-
-    def _estimate_repairs(
-        self, condition: Optional[str]
-    ) -> Dict[str, float]:
-        """Estimate repair costs based on condition (Rancho Cucamonga rates)."""
-        if condition == "move_in_ready":
-            return {
-                "deep_cleaning": 500.0,
-                "touch_up_paint": 300.0,
-                "landscaping_refresh": 400.0,
-                "total": 1200.0,
-            }
-        elif condition == "needs_work":
-            return {
-                "interior_paint": 3500.0,
-                "flooring_update": 5000.0,
-                "fixture_replacement": 1500.0,
-                "deep_cleaning": 500.0,
-                "landscaping": 800.0,
-                "total": 11300.0,
-            }
-        elif condition == "major_repairs":
-            return {
-                "roof_repair": 8000.0,
-                "hvac_update": 6000.0,
-                "plumbing_repair": 4000.0,
-                "electrical_update": 3500.0,
-                "foundation_assessment": 2000.0,
-                "total": 23500.0,
-            }
-        return {"minimal_prep": 800.0, "total": 800.0}
+        """Legacy method - delegates to ListingService."""
+        return await self.listing_service.prepare_listing(state)
 
     async def detect_stall(self, state: JorgeSellerState) -> Dict:
-        """Detect if the lead is using standard stalling language."""
-        # Update bot status
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="detect_stall"
-        )
-
-        last_msg = state["conversation_history"][-1]["content"].lower() if state["conversation_history"] else ""
-
-        stall_map = {
-            "thinking": ["think", "pondering", "consider", "decide"],
-            "get_back": ["get back", "later", "next week", "busy"],
-            "zestimate": ["zestimate", "zillow", "online value", "estimate says"],
-            "agent": ["agent", "realtor", "broker", "with someone"],
-        }
-
-        detected_type = None
-        for stall_type, keywords in stall_map.items():
-            if any(k in last_msg for k in keywords):
-                detected_type = stall_type
-                break
-
-        # Emit conversation event for stall detection
-        if detected_type:
-            await self.event_publisher.publish_conversation_update(
-                conversation_id=f"jorge_{state['lead_id']}",
-                lead_id=state["lead_id"],
-                stage="stall_detected",
-                message=f"Stall type detected: {detected_type}",
-            )
-
-        return {"stall_detected": detected_type is not None, "detected_stall_type": detected_type}
+        """Legacy method - delegates to StallDetector."""
+        return await self.stall_detector.detect_stall(state)
 
     async def select_strategy(self, state: JorgeSellerState) -> Dict:
-        """
-        Enhanced strategy selection with Track 3.1 Predictive Intelligence.
-
-        Maintains Jorge's confrontational methodology while adding:
-        - Journey progression analysis for strategic timing
-        - Behavioral pattern recognition for optimal approach
-        - Market context injection for enhanced effectiveness
-        - Conversion probability-driven decision making
-        """
-        # Update bot status
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="select_strategy_enhanced",
-        )
-
-        lead_id = state["lead_id"]
-        pcs = state["psychological_commitment"]
-
-        # FRIENDLY APPROACH: Jorge's helpful consultation foundation
-        # Check for listing prep routing (qualified + address + listing_prep stage)
-        if (
-            state.get("is_qualified")
-            and state.get("property_address")
-            and state.get("current_journey_stage") == "listing_prep"
-        ):
-            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "listing_prep"}
-        elif state["stall_detected"]:
-            base_strategy = {"current_tone": "UNDERSTANDING", "next_action": "respond"}
-        elif pcs < 30:
-            # Low commitment = Supportive approach (help them understand)
-            base_strategy = {"current_tone": "EDUCATIONAL", "next_action": "respond"}
-        elif pcs >= 70:
-            # High commitment = Enthusiastic support
-            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "respond"}
-        else:
-            base_strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond"}
-
-        try:
-            # TRACK 3.1 ENHANCEMENT: Predictive Intelligence Layer
-            logger.info(f"Applying Track 3.1 predictive intelligence for lead {lead_id}")
-
-            # Get comprehensive predictive analysis
-            journey_analysis = await self.ml_analytics.predict_lead_journey(lead_id)
-            conversion_analysis = await self.ml_analytics.predict_conversion_probability(
-                lead_id, state.get("current_journey_stage", "qualification")
-            )
-            touchpoint_analysis = await self.ml_analytics.predict_optimal_touchpoints(lead_id)
-
-            # BEHAVIORAL ENHANCEMENT: Adjust strategy based on response patterns
-            enhanced_strategy = await self._apply_behavioral_intelligence(
-                base_strategy, journey_analysis, conversion_analysis, touchpoint_analysis, state
-            )
-
-            # MARKET TIMING ENHANCEMENT: Add urgency and timing context
-            final_strategy = await self._apply_market_timing_intelligence(
-                enhanced_strategy, journey_analysis, conversion_analysis, state
-            )
-
-            # Emit enhanced conversation event with predictive context
-            await self.event_publisher.publish_conversation_update(
-                conversation_id=f"jorge_{state['lead_id']}",
-                lead_id=state["lead_id"],
-                stage="strategy_selected_enhanced",
-                message=f"Jorge tone: {final_strategy['current_tone']} (PCS: {pcs}) [Track 3.1: Conv={journey_analysis.conversion_probability:.2f}, Pattern={touchpoint_analysis.response_pattern}]",
-            )
-
-            # Emit Track 3.1 predictive insights event
-            await self.event_publisher.publish_bot_status_update(
-                bot_type="jorge-seller",
-                contact_id=state["lead_id"],
-                status="enhanced",
-                current_step="predictive_analysis_complete",
-                additional_data={
-                    "conversion_probability": journey_analysis.conversion_probability,
-                    "stage_progression_velocity": journey_analysis.stage_progression_velocity,
-                    "response_pattern": touchpoint_analysis.response_pattern,
-                    "urgency_score": conversion_analysis.urgency_score,
-                    "optimal_action": conversion_analysis.optimal_action,
-                    "enhancement_applied": True,
-                    "processing_time_ms": (
-                        journey_analysis.processing_time_ms
-                        + conversion_analysis.processing_time_ms
-                        + touchpoint_analysis.processing_time_ms
-                    ),
-                },
-            )
-
-            logger.info(
-                f"Track 3.1 enhanced strategy for {lead_id}: {final_strategy['current_tone']} "
-                f"(conv_prob={journey_analysis.conversion_probability:.3f}, "
-                f"pattern={touchpoint_analysis.response_pattern})"
-            )
-
-            # PHASE 3.3 ENHANCEMENT: Bot Intelligence Middleware Integration
-            if state.get("intelligence_available") and state.get("intelligence_context"):
-                final_strategy = await self._apply_conversation_intelligence(
-                    final_strategy, state["intelligence_context"], state
-                )
-                logger.info(f"Phase 3.3 intelligence applied to strategy for {lead_id}")
-
-            return final_strategy
-
-        except Exception as e:
-            # GRACEFUL FALLBACK: Use Jorge's proven logic if Track 3.1 fails
-            logger.warning(f"Track 3.1 enhancement failed for lead {lead_id}, using base strategy: {e}")
-
-            await self.event_publisher.publish_conversation_update(
-                conversation_id=f"jorge_{state['lead_id']}",
-                lead_id=state["lead_id"],
-                stage="strategy_selected",
-                message=f"Jorge tone: {base_strategy['current_tone']} (PCS: {pcs}) [Fallback mode]",
-            )
-
-            return base_strategy
+        """Legacy method - delegates to StrategySelector."""
+        return await self.strategy_selector.select_strategy(state)
 
     async def generate_jorge_response(self, state: JorgeSellerState) -> Dict:
-        """Generate the actual response content using Jorge's specific persona."""
-        # Update bot status
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="generate_response"
-        )
-
-        friendly_responses = {
-            "thinking": "Totally get it—big decision. What's the main thing holding you back? Happy to pull numbers if that helps.",
-            "get_back": "No rush! Has anything changed with your timeline? I can send fresh comps if useful.",
-            "zestimate": "Zillow can't walk through your house! Want to see what neighbors actually sold for? Real numbers might surprise you.",
-            "agent": "Great you have someone! Happy to share comps from your area—could be useful for your agent too.",
-            "price": "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing every time.",
-            "timeline": "Makes sense. What's driving your timeline—market, a move, or something else?",
-        }
-
-        tone_instructions = {
-            "consultative": "Be helpful and supportive. Understand their concerns and provide guidance.",
-            "educational": "Share knowledge patiently. Help them understand their options without pressure.",
-            "understanding": "Show empathy and patience. Address their concerns with care and expertise.",
-            "enthusiastic": "Share their excitement while staying professional. Guide them toward success.",
-            "supportive": "Provide comfort and reassurance. Help them feel confident in their decisions.",
-        }
-
-        # Use A/B test variant from state (assigned in process_seller_message)
-        tone_variant = state.get("tone_variant")
-        if not tone_variant:
-            seller_id = state.get("lead_id", "unknown")
-            try:
-                tone_variant = await self.ab_testing.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, seller_id)
-            except (KeyError, ValueError):
-                tone_variant = "empathetic"
-
-        # Phase 1.2: Get seller persona classification
-        seller_persona = state.get("seller_persona", {})
-        persona_type = seller_persona.get("persona_type", "Traditional")
-        persona_confidence = seller_persona.get("confidence", 0.0)
-
-        # Persona-specific response guidance
-        persona_guidance = {
-            "Investor": """
-            INVESTOR SELLER APPROACH:
-            - Focus on ROI, cash flow analysis, and tax benefits
-            - Discuss 1031 exchange opportunities if timeline fits
-            - Emphasize cap rate and market appreciation trends
-            - Reference portfolio strategy and investment property performance
-            - Be data-driven and business-focused
-            """,
-            "Distressed": """
-            DISTRESSED SELLER APPROACH:
-            - Emphasize speed, certainty, and flexible closing
-            - Highlight as-is purchase acceptance
-            - Show empathy for their situation without being pushy
-            - Provide clear timeline expectations and next steps
-            - Stress confidentiality and quick resolution
-            """,
-            "Traditional": """
-            TRADITIONAL SELLER APPROACH:
-            - Standard home sale process and marketing strategy
-            - Focus on maximizing value through proper preparation
-            - Emphasize local market expertise and negotiation skills
-            - Build trust through education and relationship
-            """,
-        }
-
-        # Base prompt for Jorge Persona
-        prompt = f"""
-        You are Jorge Salas, a caring and knowledgeable real estate professional.
-        Your approach is: HELPFUL, CONSULTATIVE, and RELATIONSHIP-FOCUSED.
-        You genuinely want to help sellers achieve their goals and make great decisions.
-
-        CORE VALUES:
-        - Put the seller's success first
-        - Build trust through expertise and care
-        - Provide valuable insights and education
-        - Be patient and understanding
-        - Focus on long-term relationships
-
-        CURRENT CONTEXT:
-        Lead: {state["lead_name"]}
-        Tone Mode: {state["current_tone"]} ({tone_instructions.get(state["current_tone"], "Be helpful and professional")})
-        Tone style: {tone_variant}
-        Conversation Context: {state["detected_stall_type"] or "None"}
-        FRS Classification: {state["intent_profile"].frs.classification}
-        Seller Type: {persona_type} (confidence: {persona_confidence:.0%})
-
-        {persona_guidance.get(persona_type, "")}
-
-        TASK: Generate a helpful, friendly response that builds trust and provides value.
-        Tailor your response to the seller's persona type above.
-        """
-
-        # Inject CMA market context if available
-        cma_report = state.get("cma_report")
-        if cma_report:
-            estimated_value = cma_report.get("estimated_value", 0)
-            market_trend = state.get("market_trend", "balanced")
-            market_data = state.get("market_data", {})
-            dom_average = market_data.get("dom_average", 0)
-            comp_count = len(state.get("comparable_properties", []))
-
-            prompt += f"""
-        MARKET DATA CONTEXT (use naturally in response when relevant):
-        - Estimated property value: ${estimated_value:,.0f}
-        - Average days on market: {dom_average}
-        - Market trend: {market_trend.replace('_', ' ')}
-        - Comparable properties analyzed: {comp_count}
-        """
-
-        # Phase 4: Inject ML pricing guidance if available
-        pricing_guidance = state.get("pricing_guidance")
-        if pricing_guidance and state.get("pricing_guidance_variant") == "treatment":
-            prompt += f"""
-
-        ML-POWERED PRICING INSIGHTS (Phase 4 - weave naturally into conversation):
-        {pricing_guidance}
-
-        Use this data-driven pricing analysis to provide specific, actionable recommendations.
-        Present it conversationally as part of your expert guidance.
-        """
-
-        if state["stall_detected"] and state["detected_stall_type"] in friendly_responses:
-            prompt += f"\nSUGGESTED HELPFUL RESPONSE: {friendly_responses[state['detected_stall_type']]}"
-
-        # Phase 2.2: Use objection response if available
-        if state.get("objection_detected") and state.get("objection_response_text"):
-            objection_response = state.get("objection_response_text")
-            objection_metadata = state.get("objection_metadata", {})
-            prompt += f"\n\nOBJECTION HANDLING RESPONSE (Phase 2.2):"
-            prompt += f"\n- Type: {objection_metadata.get('objection_category', 'unknown')}/{objection_metadata.get('objection_type', 'unknown')}"
-            prompt += f"\n- Graduation level: {objection_metadata.get('graduation_level', 'validate')}"
-            prompt += f"\n- Suggested response: {objection_response}"
-            prompt += "\nUSE THIS OBJECTION RESPONSE as your primary reply, personalizing it to Jorge's style."
-
-        # PHASE 3.3 ENHANCEMENT: Apply Bot Intelligence for Enhanced Responses
-        if state.get("intelligence_available") and state.get("intelligence_context"):
-            prompt = await self._enhance_prompt_with_intelligence(prompt, state["intelligence_context"], state)
-
-        response = await self.claude.analyze_with_context(prompt)
-        content = (
-            response.get("content")
-            or response.get("analysis")
-            or state.get("objection_response_text")  # Fallback to objection response
-            or "Are we selling this property or just talking about it?"
-        )
-
-        # Update qualification progress - increment question count
-        current_q = state.get("current_question", 1)
-        questions_answered = len([h for h in state.get("conversation_history", []) if h.get("role") == "user"])
-
-        intent_profile = state.get("intent_profile")
-        frs_score = 0
-        if intent_profile:
-            if hasattr(intent_profile, "frs"):
-                frs_score = intent_profile.frs.total_score
-            elif isinstance(intent_profile, dict):
-                frs_score = intent_profile.get("frs", {}).get("total_score", 0)
-
-        await self.event_publisher.publish_jorge_qualification_progress(
-            contact_id=state["lead_id"],
-            current_question=min(current_q + 1, 4),
-            questions_answered=min(questions_answered, 4),
-            seller_temperature=state.get("seller_temperature", "cold"),
-            qualification_scores={"frs_score": frs_score, "pcs_score": state.get("psychological_commitment", 0)},
-            next_action="await_response",
-        )
-
-        # Emit conversation event for response generated
-        await self.event_publisher.publish_conversation_update(
-            conversation_id=f"jorge_{state['lead_id']}",
-            lead_id=state["lead_id"],
-            stage="response_generated",
-            message=content,
-        )
-
-        # Mark bot as active (waiting for response)
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller", contact_id=state["lead_id"], status="active", current_step="awaiting_response"
-        )
-
-        return {"response_content": content}
+        """Legacy method - delegates to ResponseGenerator."""
+        return await self.response_generator.generate_jorge_response(state)
 
     async def recalculate_pcs_node(self, state: JorgeSellerState) -> Dict:
-        """
-        Recalculate PCS dynamically based on conversation flow.
-        Called after each message to track engagement evolution.
-        """
+        """Recalculate PCS dynamically based on conversation flow."""
         await self.event_publisher.publish_bot_status_update(
             bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="recalculate_pcs"
         )
@@ -1680,13 +871,14 @@ class JorgeSellerBot:
 
             # Sync updated PCS to GHL custom field
             try:
-                if hasattr(self, "ghl_client") and self.ghl_client:
+                if GHL_CLIENT_AVAILABLE and EnhancedGHLClient:
                     contact_id = state.get("lead_id")
-                    await self.ghl_client.update_contact(
-                        contact_id=contact_id,
-                        updates={"custom_fields": {"pcs": str(int(updated_pcs))}},
-                    )
-                    logger.info(f"Synced PCS={updated_pcs:.1f} to GHL for contact {contact_id}")
+                    async with EnhancedGHLClient() as ghl:
+                        await ghl.update_contact(
+                            contact_id=contact_id,
+                            updates={"custom_fields": {"pcs": str(int(updated_pcs))}},
+                        )
+                        logger.info(f"Synced PCS={updated_pcs:.1f} to GHL for contact {contact_id}")
             except Exception as e:
                 logger.warning(f"Failed to sync PCS to GHL: {e}")
 
@@ -1708,162 +900,29 @@ class JorgeSellerBot:
 
         return {"psychological_commitment": updated_pcs}
 
-
     async def execute_follow_up(self, state: JorgeSellerState) -> Dict:
-        """Execute automated follow-up for unresponsive or lukewarm sellers."""
-        follow_up_count = state.get("follow_up_count", 0) + 1
-
-        # Update bot status
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="execute_follow_up"
-        )
-
-        logger.info(f"Executing follow-up for {state['lead_name']} (Attempt {follow_up_count})")
-
-        # Follow-up scripts based on previous stage
-        follow_ups = {
-            "qualification": "Checking back—did you ever decide on a timeline for {address}?",
-            "valuation_defense": "I've updated the comps for your neighborhood. Zillow is still high. Ready for the truth?",
-            "listing_prep": "The photographer is in your area Thursday. Should I book him for your place?",
-        }
-
-        stage = state.get("current_journey_stage", "qualification")
-        template = follow_ups.get(stage, "Still interested in selling {address} or should I close the file?")
-        follow_up_message = template.format(address=state.get("property_address", "your property"))
-
-        # Emit conversation event for follow-up
-        await self.event_publisher.publish_conversation_update(
-            conversation_id=f"jorge_{state['lead_id']}",
-            lead_id=state["lead_id"],
-            stage="follow_up_sent",
-            message=f"Follow-up #{follow_up_count}: {follow_up_message[:50]}...",
-        )
-
-        # Mark bot as completed for this cycle
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller", contact_id=state["lead_id"], status="completed", current_step="follow_up_sent"
-        )
-
-        # In prod, send via GHL
-        return {"response_content": follow_up_message, "follow_up_count": follow_up_count}
+        """Legacy method - delegates to FollowUpService."""
+        return await self.followup_service.execute_follow_up(state)
 
     # ================================
-    # ENHANCED FEATURE METHODS
+    # ADAPTIVE INTELLIGENCE METHODS
     # ================================
-
-    # --- Adaptive Intelligence Methods ---
 
     async def adaptive_strategy_selection(self, state: JorgeSellerState) -> Dict:
-        """Enhanced strategy selection with adaptive questioning"""
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="unified-jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="adaptive_strategy",
-        )
-
-        pcs = state["psychological_commitment"]
-        conversation_id = f"jorge_{state['lead_id']}"
-        context = await self.conversation_memory.get_context(conversation_id)
-
-        # Enhanced strategy logic
-        if pcs > 70:  # High commitment - fast track
-            strategy = {"current_tone": "DIRECT", "next_action": "fast_track", "adaptive_mode": "calendar_focused"}
-        elif state["stall_detected"]:
-            strategy = {
-                "current_tone": "UNDERSTANDING",
-                "next_action": "respond",
-                "adaptive_mode": "supportive_guidance",
-            }
-        elif context.get("adaptation_count", 0) > 2:  # Multiple adaptations
-            strategy = {"current_tone": "HONEST", "next_action": "respond", "adaptive_mode": "clarity_focused"}
-        else:
-            strategy = {
-                "current_tone": "CONSULTATIVE",
-                "next_action": "respond",
-                "adaptive_mode": "standard_qualification",
-            }
-
-        return strategy
+        """Legacy adaptive strategy method."""
+        return await self._adaptive_strategy_node(state)
 
     async def generate_adaptive_response(self, state: JorgeSellerState) -> Dict:
-        """Generate response using adaptive question selection"""
-        await self.event_publisher.publish_bot_status_update(
-            bot_type="unified-jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="generate_adaptive_response",
-        )
-
-        conversation_id = f"jorge_{state['lead_id']}"
-        context = await self.conversation_memory.get_context(conversation_id)
-
-        # Select optimal question using adaptive engine
-        next_question = await self.question_engine.select_next_question(state, context)
-        self.workflow_stats["adaptive_question_selections"] += 1
-
-        # Use A/B test variant from state (assigned in process_seller_message)
-        tone_variant = state.get("tone_variant")
-        if not tone_variant:
-            seller_id = state.get("lead_id", "unknown")
-            try:
-                tone_variant = await self.ab_testing.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, seller_id)
-            except (KeyError, ValueError):
-                tone_variant = "empathetic"
-
-        # Enhanced prompt with adaptive context
-        prompt = f"""
-        You are Jorge Salas, helpful real estate advisor and relationship builder.
-
-        CURRENT CONTEXT:
-        Lead: {state["lead_name"]}
-        Adaptive Mode: {state.get("adaptive_mode", "standard")}
-        Tone: {state["current_tone"]}
-        Tone style: {tone_variant}
-        PCS Score: {state["psychological_commitment"]}
-        FRS Classification: {state["intent_profile"].frs.classification}
-        Previous Adaptations: {context.get("adaptation_count", 0)}
-
-        RECOMMENDED QUESTION: {next_question}
-
-        TASK: Deliver the question in Jorge's helpful, consultative style that builds trust and rapport.
-        """
-
-        response = await self.claude.analyze_with_context(prompt)
-        content = response.get("content", next_question)
-
-        return {"response_content": content, "adaptive_question_used": next_question, "adaptation_applied": True}
+        """Legacy adaptive response method."""
+        return await self._generate_adaptive_response_node(state)
 
     async def update_conversation_memory(self, state: JorgeSellerState) -> Dict:
-        """Update conversation memory with new interaction patterns"""
-        conversation_id = f"jorge_{state['lead_id']}"
-        context = await self.conversation_memory.get_context(conversation_id)
+        """Legacy memory update method."""
+        return await self._update_conversation_memory_node(state)
 
-        # Update context with new information
-        update = {
-            "last_scores": {"frs": state["intent_profile"].frs.total_score, "pcs": state["psychological_commitment"]},
-            "last_interaction_time": datetime.now(timezone.utc),
-            "adaptation_count": context.get("adaptation_count", 0) + 1,
-            "response_patterns": {
-                "adaptive_mode": state.get("adaptive_mode"),
-                "question_used": state.get("adaptive_question_used"),
-            },
-        }
-
-        await self.conversation_memory.update_context(conversation_id, update)
-        return {"memory_updated": True}
-
-    def _route_adaptive_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "fast_track", "end"]:
-        """Enhanced routing with fast-track capability"""
-        if state.get("adaptive_mode") == "calendar_focused":
-            return "fast_track"
-        if state["next_action"] == "follow_up":
-            return "follow_up"
-        if state["next_action"] == "end":
-            return "end"
-        return "respond"
-
-    # --- Progressive Skills Methods ---
+    # ================================
+    # PROGRESSIVE SKILLS METHODS
+    # ================================
 
     async def _execute_progressive_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Progressive skills-based qualification (68% token reduction)"""
@@ -1943,10 +1002,10 @@ class JorgeSellerBot:
         address_lower = address.lower()
         return any(
             [
-                "rancho_cucamonga" in address_lower,
+                "rancho cucamonga" in address_lower,
                 "tx 78" in address_lower,
                 " atx" in address_lower,
-                "rancho_cucamonga, ca" in address_lower,
+                "rancho cucamonga, ca" in address_lower,
             ]
         )
 
@@ -1956,11 +1015,11 @@ class JorgeSellerBot:
             return None
 
         rancho_cucamonga_neighborhoods = {
-            "alta_loma": ["alta_loma", "west lake hills"],
-            "tarrytown": ["tarrytown"],
-            "mueller": ["mueller"],
+            "alta_loma": ["alta_loma", "alta loma"],
+            "north rancho": ["north rancho"],
+            "haven city": ["haven city"],
             "central_rc": ["central_rc", "west 6th", "rainey"],
-            "south_congress": ["soco", "south congress", "zilker"],
+            "day_creek": ["day creek", "day creek", "victoria gardens"],
             "east_rancho_cucamonga": ["east rancho_cucamonga", "cherrywood"],
             "etiwanda": ["cedar park"],
             "victoria_gardens": ["round rock"],
@@ -2005,7 +1064,9 @@ class JorgeSellerBot:
             "seller_temperature": "lukewarm",
         }
 
-    # --- Agent Mesh Integration Methods ---
+    # ================================
+    # AGENT MESH INTEGRATION METHODS
+    # ================================
 
     async def _create_mesh_qualification_task(self, lead_data: Dict[str, Any]) -> Optional[str]:
         """Create mesh task for Jorge qualification"""
@@ -2065,7 +1126,9 @@ class JorgeSellerBot:
             logger.error(f"Task orchestration failed: {e}")
             return orchestrated_tasks
 
-    # --- MCP Integration Methods ---
+    # ================================
+    # MCP INTEGRATION METHODS
+    # ================================
 
     async def _enrich_with_mcp_data(self, lead_data: Dict[str, Any], qualification: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich qualification with MCP data sources"""
@@ -2140,7 +1203,9 @@ class JorgeSellerBot:
         except Exception as e:
             logger.error(f"MCP CRM sync failed: {e}")
 
-    # --- Utility Methods ---
+    # ================================
+    # UTILITY METHODS
+    # ================================
 
     def _confidence_to_temperature(self, confidence: float) -> str:
         """Convert confidence score to Jorge's temperature scale"""
@@ -2158,215 +1223,9 @@ class JorgeSellerBot:
         parts = address.split(",")
         return parts[-2].strip() if len(parts) > 2 else "Phoenix"
 
-    # --- Helper Logic ---
-
-    def _classify_temperature(self, profile) -> str:
-        """Classify seller temperature based on intent scores."""
-        total_score = profile.pcs.total_score + profile.frs.total_score
-
-        if total_score >= 75:
-            return "hot"
-        elif total_score >= 50:
-            return "warm"
-        else:
-            return "cold"
-
-    def _route_seller_action(
-        self, state: JorgeSellerState
-    ) -> Literal["respond", "follow_up", "listing_prep", "end"]:
-        """Determine if we should respond immediately or queue a follow-up."""
-        next_action = state.get("next_action", "respond")
-        if next_action == "follow_up":
-            return "follow_up"
-        if next_action == "end":
-            return "end"
-        if next_action == "listing_prep":
-            return "listing_prep"
-        return "respond"
-
-    def _route_after_stall_detection(
-        self, state: JorgeSellerState
-    ) -> Literal["defend_valuation", "select_strategy"]:
-        """Route to valuation defense if Zestimate stall detected with CMA data."""
-        if (
-            state.get("detected_stall_type") == "zestimate"
-            and state.get("cma_report") is not None
-        ):
-            return "defend_valuation"
-        return "select_strategy"
-
-    def _route_after_objection(
-        self, state: JorgeSellerState
-    ) -> Literal["objection_response", "continue_normal"]:
-        """Route based on objection detection.
-
-        If objection detected and response generated, skip to strategy selection.
-        Otherwise, continue with normal CMA generation flow.
-        """
-        if state.get("objection_detected") and state.get("objection_response_text"):
-            return "objection_response"
-        return "continue_normal"
-
     # ================================
-    # TRACK 3.1: PREDICTIVE INTELLIGENCE ENHANCEMENT METHODS
+    # PUBLIC API (process_seller_message)
     # ================================
-
-    async def _apply_behavioral_intelligence(
-        self, base_strategy: Dict, journey_analysis, conversion_analysis, touchpoint_analysis, state: JorgeSellerState
-    ) -> Dict:
-        """
-        Apply behavioral intelligence to enhance Jorge's confrontational approach.
-
-        Uses Track 3.1 behavioral patterns to optimize strategy effectiveness while
-        maintaining Jorge's proven confrontational methodology.
-        """
-        enhanced_strategy = base_strategy.copy()
-
-        # BEHAVIORAL PATTERN ANALYSIS
-        response_pattern = touchpoint_analysis.response_pattern
-        conversion_prob = journey_analysis.conversion_probability
-        stage_velocity = journey_analysis.stage_progression_velocity
-
-        # ENHANCEMENT 1: Response Pattern Optimization
-        if response_pattern == "fast" and conversion_prob > 0.6:
-            # Fast responders with high conversion probability = MORE ENTHUSIASTIC
-            if enhanced_strategy["current_tone"] == "CONSULTATIVE":
-                enhanced_strategy["current_tone"] = "ENTHUSIASTIC"
-                enhanced_strategy["enhancement_reason"] = "fast_responder_high_conversion"
-            elif enhanced_strategy["current_tone"] == "EDUCATIONAL":
-                enhanced_strategy["current_tone"] = "CONSULTATIVE"
-                enhanced_strategy["enhancement_reason"] = "fast_responder_upgrade"
-
-        elif response_pattern == "slow" and conversion_prob < 0.3:
-            # Slow responders with low conversion = MORE EDUCATIONAL
-            if enhanced_strategy["current_tone"] == "CONSULTATIVE":
-                enhanced_strategy["current_tone"] = "EDUCATIONAL"
-                enhanced_strategy["enhancement_reason"] = "slow_responder_education_needed"
-            elif enhanced_strategy["current_tone"] == "ENTHUSIASTIC":
-                enhanced_strategy["current_tone"] = "CONSULTATIVE"
-                enhanced_strategy["enhancement_reason"] = "slow_responder_gentle_approach"
-
-        # ENHANCEMENT 2: Stage Progression Velocity
-        if stage_velocity > 0.8:
-            # Fast-moving leads = MAINTAIN MOMENTUM WITH ENTHUSIASM
-            enhanced_strategy["enthusiasm_boost"] = True
-            enhanced_strategy["momentum_factor"] = "high"
-        elif stage_velocity < 0.3:
-            # Stalled progression = PROVIDE MORE SUPPORT
-            if enhanced_strategy["current_tone"] != "EDUCATIONAL":
-                enhanced_strategy["support_increase"] = True
-                enhanced_strategy["educational_focus"] = True
-
-        # ENHANCEMENT 3: Conversion Probability Context
-        if conversion_prob > 0.7:
-            # High conversion probability = MAINTAIN CURRENT APPROACH
-            enhanced_strategy["confidence_level"] = "high"
-            enhanced_strategy["approach_validation"] = "maintain_course"
-        elif conversion_prob < 0.3 and enhanced_strategy["current_tone"] != "EDUCATIONAL":
-            # Low conversion probability = PROVIDE MORE EDUCATION
-            enhanced_strategy["education_emphasis"] = True
-
-        # Track behavioral intelligence application
-        enhanced_strategy["track3_behavioral_applied"] = True
-        enhanced_strategy["behavioral_factors"] = {
-            "response_pattern": response_pattern,
-            "conversion_probability": conversion_prob,
-            "stage_progression_velocity": stage_velocity,
-        }
-
-        logger.info(
-            f"Applied behavioral intelligence for {state['lead_id']}: "
-            f"{base_strategy['current_tone']} → {enhanced_strategy['current_tone']}"
-        )
-
-        return enhanced_strategy
-
-    async def _apply_market_timing_intelligence(
-        self, strategy: Dict, journey_analysis, conversion_analysis, state: JorgeSellerState
-    ) -> Dict:
-        """
-        Apply market timing intelligence to enhance Jorge's strategic effectiveness.
-
-        Incorporates market context and timing urgency to optimize confrontational approach.
-        """
-        final_strategy = strategy.copy()
-
-        urgency_score = conversion_analysis.urgency_score
-        optimal_action = conversion_analysis.optimal_action
-        stage_bottlenecks = journey_analysis.stage_bottlenecks
-
-        # MARKET TIMING ENHANCEMENT 1: Urgency-Based Support
-        if urgency_score > 0.8:
-            # HIGH URGENCY = MAXIMUM SUPPORT AND ENTHUSIASM
-            final_strategy["market_urgency"] = "high"
-
-            if final_strategy["current_tone"] == "CONSULTATIVE":
-                final_strategy["current_tone"] = "ENTHUSIASTIC"
-                final_strategy["timing_reason"] = "high_market_urgency"
-            elif final_strategy["current_tone"] == "EDUCATIONAL":
-                final_strategy["current_tone"] = "CONSULTATIVE"
-                final_strategy["timing_reason"] = "urgency_upgrade_support"
-
-        elif urgency_score < 0.3:
-            # LOW URGENCY = PATIENT EDUCATION
-            if final_strategy["current_tone"] == "ENTHUSIASTIC":
-                final_strategy["current_tone"] = "CONSULTATIVE"
-                final_strategy["timing_reason"] = "low_urgency_patience"
-
-        # MARKET TIMING ENHANCEMENT 2: Optimal Action Integration
-        jorge_action_mapping = {
-            "schedule_qualification_call": "CONSULTATIVE",
-            "schedule_appointment": "ENTHUSIASTIC",
-            "clarify_requirements": "EDUCATIONAL",
-            "nurture_relationship": "SUPPORTIVE",  # Build relationships over time
-            "follow_up_contact": "CONSULTATIVE",
-        }
-
-        suggested_tone = jorge_action_mapping.get(optimal_action)
-        if suggested_tone and suggested_tone != final_strategy["current_tone"]:
-            # Adjust to maintain helpfulness while being effective
-            tone_helpfulness = {"EDUCATIONAL": 1, "CONSULTATIVE": 2, "ENTHUSIASTIC": 3, "SUPPORTIVE": 2}
-
-            current_helpfulness = tone_helpfulness.get(final_strategy["current_tone"], 2)
-            suggested_helpfulness = tone_helpfulness.get(suggested_tone, 2)
-
-            # Always use the suggested tone that best serves the customer
-            final_strategy["current_tone"] = suggested_tone
-            final_strategy["action_alignment"] = True
-            final_strategy["optimal_action_applied"] = optimal_action
-
-        # MARKET TIMING ENHANCEMENT 3: Bottleneck-Based Strategy
-        if "stalled_in_stage" in stage_bottlenecks or "slow_response_time" in stage_bottlenecks:
-            # STALLS = SUPPORTIVE BREAKTHROUGH
-            if final_strategy["current_tone"] == "CONSULTATIVE":
-                final_strategy["current_tone"] = "UNDERSTANDING"
-                final_strategy["bottleneck_reason"] = "stage_stall_detected"
-
-        elif "price_misalignment" in stage_bottlenecks:
-            # PRICE ISSUES = GENTLE EDUCATION
-            final_strategy["current_tone"] = "EDUCATIONAL"
-            final_strategy["bottleneck_reason"] = "price_education_needed"
-
-        # Track market timing intelligence application
-        final_strategy["track3_timing_applied"] = True
-        final_strategy["timing_factors"] = {
-            "urgency_score": urgency_score,
-            "optimal_action": optimal_action,
-            "stage_bottlenecks": stage_bottlenecks,
-        }
-
-        # JORGE PHILOSOPHY: Always prioritize customer success and relationship building
-        # If Track 3.1 suggests being less helpful, Jorge maintains his caring approach
-        if final_strategy.get("suggested_de_escalation"):
-            final_strategy["current_tone"] = "SUPPORTIVE"
-            final_strategy["jorge_override"] = "always_helpful"
-
-        logger.info(
-            f"Applied market timing intelligence for {state['lead_id']}: "
-            f"urgency={urgency_score:.2f}, action={optimal_action}"
-        )
-
-        return final_strategy
 
     async def process_seller_message(
         self,
@@ -2377,8 +1236,12 @@ class JorgeSellerBot:
         seller_phone: Optional[str] = None,
         seller_email: Optional[str] = None,
         metadata: Optional[BotMetadata] = None,
-        handoff_context: Optional["EnrichedHandoffContext"] = None,
+        handoff_context: Optional[Any] = None,
     ) -> SellerBotResponse:
+        """
+        Main public API for processing seller messages.
+        Maintains full backward compatibility while delegating to service layer.
+        """
         try:
             _workflow_start = time.time()
 
@@ -2425,9 +1288,9 @@ class JorgeSellerBot:
             if metadata:
                 initial_state["metadata"] = metadata
 
-            # Phase 3 Loop 3: Apply handoff context if valid
-            if handoff_context and self._has_valid_handoff_context(handoff_context):
-                initial_state = self._populate_state_from_context(handoff_context, initial_state)
+            # Phase 3 Loop 3: Apply handoff context if valid (delegated to HandoffManager)
+            if handoff_context and self.handoff_manager.has_valid_handoff_context(handoff_context):
+                initial_state = self.handoff_manager.populate_state_from_context(handoff_context, initial_state)
                 logger.info(f"Seller bot using handoff context for {conversation_id} - skipping re-qualification")
 
             result = await self.workflow.ainvoke(initial_state)
@@ -2439,27 +1302,45 @@ class JorgeSellerBot:
             handoff_signals = {}
             if self.config.jorge_handoff_enabled:
                 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
-
                 handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
 
             intent_profile = result.get("intent_profile")
+            seller_persona = result.get("seller_persona", {})
             frs_score = 0.0
             pcs_score = 0.0
             if intent_profile:
                 frs_score = getattr(getattr(intent_profile, "frs", None), "total_score", 0.0)
                 pcs_score = getattr(getattr(intent_profile, "pcs", None), "total_score", 0.0)
 
-            # Phase 1.2: Sync seller persona to GHL (non-blocking)
-            seller_persona = result.get("seller_persona")
-            if seller_persona and seller_persona.get("persona_type"):
-                try:
-                    await self._sync_seller_persona_to_ghl(
-                        contact_id=conversation_id,
-                        persona_type=seller_persona["persona_type"],
-                        confidence=seller_persona.get("confidence", 0.0),
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to sync persona tag (non-blocking): {e}")
+            # Phase 1.7: GHL Workflow Integration (Auto-tagging & Pipeline)
+            try:
+                scores = {"frs": frs_score, "pcs": pcs_score, "composite": 0.0}
+                persona_str = seller_persona.get("persona_type") if seller_persona else None
+
+                await self.workflow_service.apply_tag_rules(
+                    contact_id=conversation_id,
+                    scores=scores,
+                    persona=persona_str,
+                    sentiment=None,
+                    escalation=False,
+                    appointment_booked=False
+                )
+                logger.info(f"Applied GHL workflow tags for {conversation_id}")
+            except Exception as e:
+                logger.warning(f"Failed to execute GHL workflow operations: {e}")
+
+            # Phase 1.8: Churn Detection Integration
+            churn_assessment = None
+            try:
+                last_activity = datetime.now(timezone.utc)
+                churn_assessment = await self.churn_service.assess_churn_risk(
+                    contact_id=conversation_id,
+                    conversation_history=conversation_history,
+                    last_activity=last_activity
+                )
+                logger.info(f"Churn risk assessed for {conversation_id}: {churn_assessment.risk_level}")
+            except Exception as e:
+                logger.warning(f"Failed to assess churn risk: {e}")
 
             # Record performance metrics
             await self.performance_tracker.track_operation("seller_bot", "process", _workflow_duration_ms, success=True)
@@ -2471,7 +1352,7 @@ class JorgeSellerBot:
             except Exception as e:
                 logger.debug(f"Failed to feed metrics to alerting: {str(e)}")
 
-            # Record A/B test outcome (reuse variant from pre-workflow assignment)
+            # Record A/B test outcome
             try:
                 await self.ab_testing.record_outcome(
                     ABTestingService.RESPONSE_TONE_EXPERIMENT,
@@ -2496,8 +1377,20 @@ class JorgeSellerBot:
                 "engagement_status": result.get("current_journey_stage", "qualification"),
                 "frs_score": frs_score,
                 "pcs_score": pcs_score,
+                "composite_score": result.get("composite_score", {}).get("total_score", 0.0),
                 "handoff_signals": handoff_signals,
                 "seller_persona": seller_persona,
+                "churn_assessment": churn_assessment,
+                "property_address": result.get("property_address"),
+                "seller_motivation": result.get("seller_motivation"),
+                "timeline_urgency": result.get("timeline_urgency"),
+                "property_condition": result.get("property_condition"),
+                "price_expectation": result.get("price_expectation"),
+                "seller_liens": result.get("seller_liens"),
+                "seller_repairs": result.get("seller_repairs"),
+                "seller_listing_history": result.get("seller_listing_history"),
+                "seller_decision_maker": result.get("seller_decision_maker"),
+                "seller_contact_method": result.get("seller_contact_method"),
                 "ab_test": {
                     "experiment_id": ABTestingService.RESPONSE_TONE_EXPERIMENT,
                     "variant": _tone_variant,
@@ -2530,27 +1423,11 @@ class JorgeSellerBot:
         persona_type: str,
         confidence: float,
     ) -> bool:
-        """
-        Sync seller persona classification to GHL as tags.
-
-        Tags applied:
-        - "Investor-Seller" for persona_type == "Investor"
-        - "Distressed-Seller" for persona_type == "Distressed"
-        - "Traditional-Seller" for persona_type == "Traditional"
-
-        Args:
-            contact_id: GHL contact ID
-            persona_type: Classified persona type
-            confidence: Classification confidence (0.0-1.0)
-
-        Returns:
-            True if sync successful, False otherwise
-        """
+        """Sync seller persona classification to GHL as tags."""
         if not GHL_CLIENT_AVAILABLE:
             logger.warning("GHL client not available, skipping persona tag sync")
             return False
 
-        # Only sync if confidence is above threshold (30%)
         if confidence < 0.3:
             logger.info(f"Skipping persona tag sync for {contact_id} - confidence too low: {confidence:.2f}")
             return False
@@ -2559,24 +1436,17 @@ class JorgeSellerBot:
             persona_tag = f"{persona_type}-Seller"
 
             async with EnhancedGHLClient() as ghl:
-                # Get existing tags
                 contact = await ghl.get_contact(contact_id)
                 if not contact:
                     logger.warning(f"Contact {contact_id} not found in GHL")
                     return False
 
                 existing_tags = contact.tags or []
-
-                # Remove old persona tags
                 persona_tags = ["Investor-Seller", "Distressed-Seller", "Traditional-Seller"]
                 cleaned_tags = [tag for tag in existing_tags if tag not in persona_tags]
-
-                # Add new persona tag
                 updated_tags = cleaned_tags + [persona_tag]
 
-                # Update contact with new tags
                 from ghl_real_estate_ai.models.ghl_webhook_types import GHLContactUpdatePayload
-
                 update_payload = GHLContactUpdatePayload(tags=updated_tags)
                 success = await ghl.update_contact(contact_id, update_payload)
 
@@ -2709,262 +1579,21 @@ class JorgeSellerBot:
             actions.append("Apply return lead relationship-building script")
 
         if temperature == "hot" and qualification_score >= 75:
-            actions.extend(
-                [
-                    "Schedule immediate listing appointment",
-                    "Send Jorge's 6% commission structure",
-                    "Provide market analysis with value proposition",
-                ]
-            )
+            actions.extend([
+                "Schedule immediate listing appointment",
+                "Send Jorge's 6% commission structure",
+                "Provide market analysis with value proposition",
+            ])
         elif temperature == "warm" and qualification_score >= 50:
-            actions.extend(
-                [
-                    "Schedule follow-up call within 48 hours",
-                    "Send market statistics and Jorge's track record",
-                    "Prepare preliminary home value estimate",
-                ]
-            )
+            actions.extend([
+                "Schedule follow-up call within 48 hours",
+                "Send market statistics and Jorge's track record",
+                "Prepare preliminary home value estimate",
+            ])
         else:
             actions.extend(["Add to 30-day nurture sequence", "Monitor for re-engagement signals"])
 
         return actions
-
-    # ================================
-    # PHASE 3.3 INTELLIGENCE HELPER METHODS
-    # ================================
-
-    async def _apply_conversation_intelligence(
-        self, strategy: Dict[str, Any], intelligence_context: "BotIntelligenceContext", state: JorgeSellerState
-    ) -> Dict[str, Any]:
-        """
-        Apply conversation intelligence to refine Jorge's strategy.
-
-        Uses objection detection and sentiment analysis to adjust approach while
-        maintaining Jorge's friendly, relationship-focused methodology.
-        """
-        try:
-            conversation_intel = intelligence_context.conversation_intelligence
-
-            # Analyze objections for supportive breakthrough opportunities
-            if conversation_intel.objections_detected:
-                primary_objection = conversation_intel.objections_detected[0]
-                objection_type = primary_objection.get("type", "unknown")
-                severity = primary_objection.get("severity", 0.5)
-
-                logger.info(f"Jorge addressing {objection_type} concern with care (severity: {severity})")
-
-                # Jorge's helpful response to common concerns
-                if objection_type in ["price", "pricing"] and severity > 0.6:
-                    # Strong price objection - provide education and support
-                    strategy["support_angle"] = "price_education_with_care"
-                    strategy["talking_points"] = primary_objection.get("suggested_responses", [])
-                elif objection_type in ["timing", "timeline"] and severity > 0.5:
-                    # Timeline concern - understand their needs
-                    strategy["support_angle"] = "timeline_understanding"
-                elif objection_type in ["trust", "agent"]:
-                    # Trust/agent concern - build relationships
-                    strategy["current_tone"] = "SUPPORTIVE"  # Build trust through care
-
-            # Adjust approach based on sentiment
-            sentiment = conversation_intel.overall_sentiment
-            if sentiment < -0.3:
-                # Negative sentiment - provide more care and understanding
-                strategy["care_modifier"] = "extra_supportive"
-            elif sentiment > 0.3:
-                # Positive sentiment - opportunity for enthusiastic engagement
-                strategy["enthusiasm_modifier"] = "confident_partnership"
-
-            # Use response recommendations for coaching opportunities
-            if conversation_intel.response_recommendations:
-                best_response = conversation_intel.response_recommendations[0]
-                strategy["recommended_response"] = best_response.get("response_text")
-                strategy["recommended_tone"] = best_response.get("tone", strategy.get("current_tone"))
-
-            strategy["intelligence_enhanced"] = True
-            return strategy
-
-        except Exception as e:
-            logger.warning(f"Conversation intelligence application failed: {e}")
-            return strategy
-
-    async def _enhance_prompt_with_intelligence(
-        self, base_prompt: str, intelligence_context: "BotIntelligenceContext", state: JorgeSellerState
-    ) -> str:
-        """
-        Enhance Claude prompt with intelligence context for better responses.
-
-        Adds property recommendations, objection handling guidance, and
-        personalized approach suggestions while maintaining Jorge's style.
-        """
-        try:
-            enhanced_prompt = base_prompt
-
-            # Add property intelligence if available
-            property_intel = intelligence_context.property_intelligence
-            if property_intel.match_count > 0:
-                enhanced_prompt += f"\n\nPROPERTY INTELLIGENCE:"
-                enhanced_prompt += f"\n- Found {property_intel.match_count} relevant properties for this seller"
-                enhanced_prompt += f"\n- Best match score: {property_intel.best_match_score:.1f}%"
-                if property_intel.behavioral_reasoning:
-                    enhanced_prompt += f"\n- Reasoning: {property_intel.behavioral_reasoning}"
-
-            # Add conversation intelligence insights
-            conversation_intel = intelligence_context.conversation_intelligence
-            if conversation_intel.objections_detected:
-                enhanced_prompt += f"\n\nOBJECTION INTELLIGENCE:"
-                for objection in conversation_intel.objections_detected[:2]:  # Top 2 objections
-                    objection_type = objection.get("type", "unknown")
-                    confidence = objection.get("confidence", 0.0)
-                    context = objection.get("context", "")
-                    enhanced_prompt += f"\n- {objection_type.upper()} objection detected ({confidence:.0%}): {context}"
-
-                    # Add suggested responses
-                    suggestions = objection.get("suggested_responses", [])
-                    if suggestions:
-                        enhanced_prompt += f"\n  Suggested approach: {suggestions[0]}"
-
-            # Add preference intelligence insights
-            preference_intel = intelligence_context.preference_intelligence
-            if preference_intel.profile_completeness > 0.3:
-                enhanced_prompt += f"\n\nPREFERENCE INTELLIGENCE:"
-                enhanced_prompt += f"\n- Profile completeness: {preference_intel.profile_completeness:.0%}"
-                enhanced_prompt += f"\n- Urgency level: {preference_intel.urgency_level:.1f}"
-
-                if preference_intel.budget_range:
-                    budget = preference_intel.budget_range
-                    enhanced_prompt += f"\n- Budget range: ${budget.get('min', 0):,} - ${budget.get('max', 0):,}"
-
-            # Add intelligent approach recommendations
-            enhanced_prompt += f"\n\nINTELLIGENT APPROACH:"
-            enhanced_prompt += f"\n- Recommended approach: {intelligence_context.recommended_approach}"
-            enhanced_prompt += f"\n- Engagement score: {intelligence_context.composite_engagement_score:.1f}"
-
-            if intelligence_context.priority_insights:
-                enhanced_prompt += f"\n- Key insights: {', '.join(intelligence_context.priority_insights[:2])}"
-
-            enhanced_prompt += "\n\nUSE THIS INTELLIGENCE to craft a more targeted, effective response while maintaining Jorge's authentic style."
-
-            return enhanced_prompt
-
-        except Exception as e:
-            logger.warning(f"Prompt enhancement failed: {e}")
-            return base_prompt
-
-    # ================================
-    # PHASE 3 LOOP 3: HANDOFF CONTEXT HELPERS
-    # ================================
-
-    def _has_valid_handoff_context(self, handoff_context: Optional["EnrichedHandoffContext"]) -> bool:
-        """Check if handoff context is valid and recent (<24h).
-
-        Args:
-            handoff_context: The handoff context to validate
-
-        Returns:
-            True if context is valid and recent, False otherwise
-        """
-        if not handoff_context or not HANDOFF_CONTEXT_AVAILABLE:
-            return False
-
-        # Check if context has timestamp and is recent
-        if hasattr(handoff_context, 'timestamp'):
-            from datetime import timedelta
-            try:
-                if isinstance(handoff_context.timestamp, str):
-                    context_time = datetime.fromisoformat(handoff_context.timestamp.replace('Z', '+00:00'))
-                else:
-                    context_time = handoff_context.timestamp
-
-                age = datetime.now(timezone.utc) - context_time
-                if age > timedelta(hours=24):
-                    logger.info(f"Handoff context is stale (age: {age.total_seconds() / 3600:.1f}h)")
-                    return False
-            except (ValueError, AttributeError) as e:
-                logger.warning(f"Failed to parse handoff context timestamp: {e}")
-                return False
-
-        # Check if context has meaningful data
-        has_data = (
-            handoff_context.property_address or
-            handoff_context.cma_summary or
-            handoff_context.conversation_summary or
-            handoff_context.key_insights
-        )
-
-        if not has_data:
-            logger.info("Handoff context present but lacks meaningful data")
-            return False
-
-        logger.info("Valid handoff context detected - will skip re-qualification")
-        return True
-
-    def _populate_state_from_context(
-        self,
-        handoff_context: "EnrichedHandoffContext",
-        initial_state: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Populate seller state from handoff context to skip re-qualification.
-
-        Args:
-            handoff_context: The validated handoff context
-            initial_state: The initial seller state dict
-
-        Returns:
-            Updated state dict with context data
-        """
-        try:
-            # Populate property address
-            if handoff_context.property_address:
-                initial_state["property_address"] = handoff_context.property_address
-                logger.info(f"Populated property address from handoff: {handoff_context.property_address}")
-
-            # Populate CMA summary if available
-            if handoff_context.cma_summary:
-                initial_state["cma_summary"] = handoff_context.cma_summary
-                logger.info("Populated CMA summary from handoff")
-
-            # Populate urgency level
-            if handoff_context.urgency_level:
-                initial_state["urgency_level"] = handoff_context.urgency_level
-                logger.info(f"Populated urgency from handoff: {handoff_context.urgency_level}")
-
-            # Add key insights to metadata for context
-            if handoff_context.key_insights:
-                if "metadata" not in initial_state:
-                    initial_state["metadata"] = {}
-                initial_state["metadata"]["handoff_insights"] = handoff_context.key_insights
-                logger.info(f"Added {len(handoff_context.key_insights)} key insights from handoff")
-
-            # Add conversation summary for continuity
-            if handoff_context.conversation_summary:
-                # Prepend summary to conversation history as system message
-                summary_msg = {
-                    "role": "system",
-                    "content": f"[HANDOFF CONTEXT] {handoff_context.conversation_summary}",
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
-                if "conversation_history" not in initial_state:
-                    initial_state["conversation_history"] = []
-                initial_state["conversation_history"].insert(0, summary_msg)
-                logger.info("Added conversation summary from handoff")
-
-            # Set high initial scores since this came from a qualified lead
-            initial_state["qualification_score"] = 70.0
-            initial_state["psychological_commitment"] = 65.0
-
-            # Mark that we should skip qualification
-            initial_state["skip_qualification"] = True
-            initial_state["handoff_context_used"] = True
-            initial_state["current_journey_stage"] = "pricing_strategy"  # Skip to strategy
-
-            logger.info("Successfully populated state from handoff context")
-            return initial_state
-
-        except Exception as e:
-            logger.error(f"Error populating state from handoff context: {e}")
-            # Return original state on error - fall back to normal qualification
-            initial_state["skip_qualification"] = False
-            return initial_state
 
     # ================================
     # FACTORY METHODS AND UTILITIES
@@ -2982,7 +1611,7 @@ class JorgeSellerBot:
         config = JorgeFeatureConfig(
             enable_track3_intelligence=True,
             enable_progressive_skills=True,
-            enable_bot_intelligence=True,  # Phase 3.3 enabled
+            enable_bot_intelligence=True,
             friendly_approach_enabled=True,
         )
         return cls(tenant_id=tenant_id, config=config)
@@ -2996,7 +1625,7 @@ class JorgeSellerBot:
             enable_agent_mesh=True,
             enable_mcp_integration=True,
             enable_adaptive_questioning=True,
-            enable_bot_intelligence=True,  # Phase 3.3 enabled
+            enable_bot_intelligence=True,
             friendly_approach_enabled=True,
         )
         return cls(tenant_id=tenant_id, config=config)
@@ -3013,7 +1642,7 @@ class JorgeSellerBot:
                 "agent_mesh": self.config.enable_agent_mesh,
                 "mcp_integration": self.config.enable_mcp_integration,
                 "adaptive_questioning": self.config.enable_adaptive_questioning,
-                "bot_intelligence": self.config.enable_bot_intelligence,  # Phase 3.3
+                "bot_intelligence": self.config.enable_bot_intelligence,
             },
         }
 

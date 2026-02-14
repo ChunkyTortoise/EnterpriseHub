@@ -356,7 +356,7 @@ class TokenTracker:
 
         try:
             # Current hour's data
-            current_hour_start = datetime.now().replace(minute=0, second=0, microsecond=0)
+            datetime.now().replace(minute=0, second=0, microsecond=0)
 
             # Get today's totals
             progressive_tokens_today = int(await redis_client.get(f"daily_tokens:{today}:progressive") or 0)

@@ -660,7 +660,7 @@ class CorporateBillingService:
     async def _create_enterprise_customer(self, contract: Dict[str, Any]) -> Any:
         """Create enterprise customer in Stripe."""
         # Use the existing billing service to create enterprise customer
-        customer_data = {
+        {
             "email": contract["billing_contacts"]["primary_email"],
             "name": f"Enterprise Contract {contract['contract_id']}",
             "description": f"Enterprise customer for partnership {contract['partnership_id']}",

@@ -15,9 +15,9 @@ from datetime import datetime
 from pathlib import Path
 
 try:
-    from notebooklm import NotebookLM
+    from notebooklm import NotebookLMClient
 except ImportError:
-    NotebookLM = None
+    NotebookLMClient = None
     logging.warning("notebooklm-py not installed. Run: pip install notebooklm-py")
 
 
@@ -47,29 +47,29 @@ class NotebookLMService:
                 - cache_ttl: Cache TTL in seconds
         """
         self.config = config or {}
-        self.client: Optional[NotebookLM] = None
+        self.client: Optional[NotebookLMClient] = None
         self._notebooks_cache: Dict[str, Any] = {}
         self._cache_timestamp: Optional[datetime] = None
 
-        if NotebookLM is None:
+        if NotebookLMClient is None:
             logger.error("NotebookLM client unavailable - install notebooklm-py")
             return
 
-        self._initialize_client()
+        # Initialization is now async and happens on first use or explicitly
 
-    def _initialize_client(self):
-        """Initialize NotebookLM client with credentials."""
+    async def _ensure_client(self):
+        """Ensure the NotebookLM client is initialized."""
+        if self.client is not None:
+            return True
+            
         try:
-            # Initialize client - uses Google OAuth via gcloud or service account
-            credentials_path = self.config.get("credentials_path")
-            if credentials_path:
-                self.client = NotebookLM(credentials_path=credentials_path)
-            else:
-                self.client = NotebookLM()
+            # We use from_storage for simplicity in this integration
+            self.client = await NotebookLMClient.from_storage()
             logger.info("NotebookLM service initialized successfully")
+            return True
         except Exception as e:
             logger.error(f"Failed to initialize NotebookLM client: {e}")
-            raise
+            return False
 
     def is_available(self) -> bool:
         """Check if NotebookLM service is available."""
@@ -92,22 +92,24 @@ class NotebookLMService:
         Returns:
             Notebook details including ID
         """
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
         title = f"{market_name} Real Estate Market Research"
         description = (
             f"Comprehensive market intelligence and research for {market_name}. "
             f"Includes market trends, property data, competitive analysis, and insights."
         )
 
-        notebook = self.client.create_notebook(title=title, description=description)
+        notebook = await self.client.notebooks.create(title=title)
 
         # Add initial sources if provided
         if include_sources:
             for url in include_sources:
                 try:
-                    self.client.add_source(
+                    await self.client.sources.add_url(
                         notebook_id=notebook.id,
-                        source_type="url",
-                        content=url
+                        url=url
                     )
                 except Exception as e:
                     logger.warning(f"Failed to add source {url}: {e}")
@@ -135,6 +137,9 @@ class NotebookLMService:
         Returns:
             Notebook details
         """
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
         title = f"Property Intelligence: {property_address}"
         if mls_id:
             title += f" (MLS #{mls_id})"
@@ -144,7 +149,7 @@ class NotebookLMService:
             f"Includes comparable sales, market positioning, buyer interest, and strategic insights."
         )
 
-        notebook = self.client.create_notebook(title=title, description=description)
+        notebook = await self.client.notebooks.create(title=title)
 
         return {
             "notebook_id": notebook.id,
@@ -168,13 +173,16 @@ class NotebookLMService:
         Returns:
             Notebook details
         """
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
         title = f"Client Insights: {client_name} ({client_type.title()})"
         description = (
             f"Intelligence and preference tracking for {client_type} client {client_name}. "
             f"Includes conversation insights, property preferences, and behavioral patterns."
         )
 
-        notebook = self.client.create_notebook(title=title, description=description)
+        notebook = await self.client.notebooks.create(title=title)
 
         return {
             "notebook_id": notebook.id,
@@ -217,10 +225,12 @@ class NotebookLMService:
             header += "\n# Transcript\n\n"
             formatted_content = header + transcript
 
-        source = self.client.add_source(
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        source = await self.client.sources.add_text(
             notebook_id=notebook_id,
-            source_type="text",
-            content=formatted_content,
+            text=formatted_content,
             title=title
         )
 
@@ -247,11 +257,12 @@ class NotebookLMService:
         Returns:
             Source details
         """
-        source = self.client.add_source(
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        source = await self.client.sources.add_url(
             notebook_id=notebook_id,
-            source_type="url",
-            content=report_url,
-            title=report_title or "Market Report"
+            url=report_url
         )
 
         return {
@@ -297,10 +308,12 @@ class NotebookLMService:
 
         title = f"Listing: {listing_data.get('address', 'Unknown Address')}"
 
-        source = self.client.add_source(
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        source = await self.client.sources.add_text(
             notebook_id=notebook_id,
-            source_type="text",
-            content=content,
+            text=content,
             title=title
         )
 
@@ -329,16 +342,18 @@ class NotebookLMService:
         Returns:
             Answer with optional citations
         """
-        result = self.client.query(
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        result = await self.client.chat.ask(
             notebook_id=notebook_id,
-            query=question,
-            include_citations=include_citations
+            query=question
         )
 
         return {
             "question": question,
             "answer": result.answer,
-            "citations": result.citations if include_citations else [],
+            "citations": [str(c) for c in result.references] if include_citations else [],
             "notebook_id": notebook_id
         }
 
@@ -367,15 +382,17 @@ class NotebookLMService:
                 "pricing patterns, inventory levels, and key insights."
             )
 
-        result = self.client.query(
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        result = await self.client.chat.ask(
             notebook_id=notebook_id,
-            query=query,
-            include_citations=True
+            query=query
         )
 
         return {
             "insights": result.answer,
-            "sources": result.citations,
+            "sources": [str(c) for c in result.references],
             "focus_areas": focus_areas or ["general market analysis"],
             "generated_at": datetime.utcnow().isoformat()
         }
@@ -409,16 +426,18 @@ class NotebookLMService:
         else:
             query = f"Analyze the client's {analysis_type} based on all interactions."
 
-        result = self.client.query(
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        result = await self.client.chat.ask(
             notebook_id=notebook_id,
-            query=query,
-            include_citations=True
+            query=query
         )
 
         return {
             "analysis": result.answer,
             "analysis_type": analysis_type,
-            "sources": result.citations
+            "sources": [str(c) for c in result.references]
         }
 
     # ========== Content Generation ==========
@@ -440,15 +459,17 @@ class NotebookLMService:
         Returns:
             Generated training material
         """
-        guide = self.client.generate_study_guide(
-            notebook_id=notebook_id,
-            format=format
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        guide = await self.client.artifacts.get_guide(
+            notebook_id=notebook_id
         )
 
         return {
             "topic": topic,
             "format": format,
-            "content": guide.content,
+            "content": str(guide),
             "notebook_id": notebook_id
         }
 
@@ -467,14 +488,15 @@ class NotebookLMService:
         Returns:
             Audio briefing details with URL
         """
-        audio = self.client.generate_audio_overview(
-            notebook_id=notebook_id,
-            duration_minutes=duration_minutes
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        audio = await self.client.artifacts.generate_audio_overview(
+            notebook_id=notebook_id
         )
 
         return {
-            "audio_url": audio.url,
-            "duration_minutes": audio.duration,
+            "audio_task_id": getattr(audio, 'task_id', 'unknown'),
             "notebook_id": notebook_id,
             "generated_at": datetime.utcnow().isoformat()
         }
@@ -496,7 +518,10 @@ class NotebookLMService:
         Returns:
             List of notebook summaries
         """
-        notebooks = self.client.list_notebooks(limit=limit)
+        if not await self._ensure_client():
+            raise RuntimeError("NotebookLM client not initialized")
+
+        notebooks = await self.client.notebooks.list()
 
         # Filter by category if specified
         if category:

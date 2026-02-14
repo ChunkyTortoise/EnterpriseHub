@@ -333,7 +333,6 @@ class JorgeSellerEngine:
             try:
                 # Phase 7: Slot-Offer Scheduling for Hot Sellers
                 booking_message = ""
-                booking_actions = []
                 pending_appointment_data = None
 
                 if temperature == "hot" and not context.get("pending_appointment"):

@@ -25,7 +25,6 @@ from ghl_real_estate_ai.models.matching_models import (
 )
 from ghl_real_estate_ai.services.personalized_narrative_engine import (
 
-@pytest.mark.integration
     NarrativeComponent,
     NarrativeLength,
     NarrativeStyle,
@@ -43,7 +42,7 @@ class TestPersonalizedNarrativeEngine:
         """Sample property data for testing."""
         return {
             "id": "prop_123",
-            "address": "123 Hill Country Dr, Austin, TX",
+            "address": "123 Hill Country Dr, Rancho Cucamonga, CA",
             "price": 485000,
             "bedrooms": 3,
             "bathrooms": 2,
@@ -112,7 +111,7 @@ class TestPersonalizedNarrativeEngine:
     def mock_llm_response(self) -> LLMResponse:
         """Mock Claude response for testing."""
         return LLMResponse(
-            content="This isn't just a house - it's where your Austin story begins. Wake up to Hill Country views from the master bedroom, walk your golden retriever down tree-lined streets where neighbors wave hello. Your kids bike safely to top-rated Westlake Elementary 4 blocks away. The outdoor kitchen becomes your weekend gathering spot while friends relax around the pool. Our AI predicts 15% appreciation as downtown Austin expands westward. At $485,000, this represents exceptional value in one of Austin's most coveted communities. Schedule your tour today and experience what could be your family's forever home.",
+            content="This isn't just a house - it's where your Rancho Cucamonga story begins. Wake up to Hill Country views from the master bedroom, walk your golden retriever down tree-lined streets where neighbors wave hello. Your kids bike safely to top-rated Westlake Elementary 4 blocks away. The outdoor kitchen becomes your weekend gathering spot while friends relax around the pool. Our AI predicts 15% appreciation as downtown Rancho Cucamonga expands westward. At $485,000, this represents exceptional value in one of Rancho Cucamonga's most coveted communities. Schedule your tour today and experience what could be your family's forever home.",
             provider=LLMProvider.CLAUDE,
             model="claude-3-5-sonnet",
             input_tokens=450,

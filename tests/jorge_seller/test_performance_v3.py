@@ -12,8 +12,6 @@ import pytest
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.core.llm_client import LLMProvider, LLMResponse
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_parallel_pipeline_latency():
@@ -21,7 +19,7 @@ async def test_parallel_pipeline_latency():
     cm = ConversationManager()
 
     # Mock dependencies to simulate latency
-    cm.extract_data = AsyncMock(return_value={"budget": 500000, "location": "Austin"})
+    cm.extract_data = AsyncMock(return_value={"budget": 500000, "location": "Rancho Cucamonga"})
 
     # Mock RAG search_corrective (the async method called by generate_response) to take 100ms
     async def slow_search_corrective(*args, **kwargs):
@@ -66,7 +64,7 @@ async def test_parallel_pipeline_latency():
 
     start_time = time.time()
     response = await cm.generate_response(
-        user_message="I want to buy a house in Austin for 500k",
+        user_message="I want to buy a house in Rancho Cucamonga for 500k",
         contact_info=contact_info,
         context=context,
         ghl_client=mock_ghl,

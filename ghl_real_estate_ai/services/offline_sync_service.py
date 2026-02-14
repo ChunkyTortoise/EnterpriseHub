@@ -246,8 +246,8 @@ class OfflineSyncService:
             # Store resolved conflict
             await self.cache.set(conflict_key, asdict(conflict), ttl=86400)
 
-            # TODO: Apply resolved data to server
-            # This would typically involve updating the entity with resolved data
+            # ROADMAP-057: Apply resolved data to GHL server
+            # This would update the entity with the resolved conflict data
 
             logger.info(f"Conflict resolved: {conflict_id} using {strategy.value}")
 
@@ -471,7 +471,7 @@ class OfflineSyncService:
                 return None  # Entity doesn't exist on server
 
             # Calculate checksums
-            client_hash = self._calculate_data_hash(operation.data)
+            self._calculate_data_hash(operation.data)
             server_hash = self._calculate_data_hash(server_data)
 
             if operation.version_hash and operation.version_hash != server_hash:
@@ -514,7 +514,8 @@ class OfflineSyncService:
     async def _process_property_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
         """Process property-specific sync operation."""
         try:
-            # TODO: Implement property operations
+            # ROADMAP-052: Implement property CRUD operations
+            # Connect to GHL property API endpoints
             return True  # Mock success
 
         except Exception as e:
@@ -524,7 +525,8 @@ class OfflineSyncService:
     async def _process_note_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
         """Process note-specific sync operation."""
         try:
-            # TODO: Implement note operations
+            # ROADMAP-053: Implement note CRUD operations
+            # Connect to GHL notes API
             return True  # Mock success
 
         except Exception as e:
@@ -566,14 +568,15 @@ class OfflineSyncService:
             last_sync_data = await self.cache.get(last_sync_key)
 
             if not last_sync_data:
-                last_sync_timestamp = datetime.utcnow() - timedelta(days=7)  # Default to 1 week
+                datetime.utcnow() - timedelta(days=7)  # Default to 1 week
             else:
-                last_sync_timestamp = datetime.fromisoformat(last_sync_data)
+                datetime.fromisoformat(last_sync_data)
 
             # Update last sync timestamp
             await self.cache.set(last_sync_key, datetime.utcnow().isoformat(), ttl=86400 * 30)
 
-            # TODO: Implement actual server updates retrieval
+            # ROADMAP-054: Fetch server updates since last sync
+            # Query GHL API with timestamp filters
             return []  # Mock empty updates
 
         except Exception as e:
@@ -585,7 +588,8 @@ class OfflineSyncService:
     ) -> Dict[str, List[Dict[str, Any]]]:
         """Get entity changes since timestamp."""
         try:
-            # TODO: Implement actual change tracking
+            # ROADMAP-055: Implement entity change tracking
+            # Requires audit log table and change detection queries
             return {"created": [], "updated": [], "deleted": []}
 
         except Exception as e:
@@ -595,7 +599,7 @@ class OfflineSyncService:
     async def _get_server_entity_checksum(self, entity_id: str) -> str:
         """Get checksum of entity on server."""
         try:
-            # TODO: Implement server checksum retrieval
+            # ROADMAP-056: Get entity checksum from server for integrity validation
             return "mock_checksum"
 
         except Exception as e:

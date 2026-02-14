@@ -417,7 +417,7 @@ In `PropertyCard.jsx`:
 ### Backend
 
 - [ ] Set environment variables
-- [ ] Configure CORS for frontend domain
+- [ ] Configure CORS for frontend ontario_mills
 - [ ] Set up database (migrate from JSON)
 - [ ] Enable error logging (Sentry)
 - [ ] Configure rate limiting
@@ -449,7 +449,7 @@ In `PropertyCard.jsx`:
 |-------|----------|
 | Cards not swiping | Check `react-tinder-card` is installed |
 | API 500 errors | Check backend logs, verify GHL credentials |
-| Images not loading | Check CORS, add image domains to config |
+| Images not loading | Check CORS, add image ontario_millss to config |
 | Modal stuck open | Verify state reset in `onFeedbackSubmit` |
 
 ### Future Enhancements

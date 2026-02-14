@@ -13,7 +13,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import (
 
-@pytest.mark.integration
     VALID_BOT_TYPES,
     BotMetricsCollector,
 )

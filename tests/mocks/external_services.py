@@ -66,7 +66,7 @@ class MockClaudeClient:
 - Active searcher with 15 page views and multiple location searches
 
 **Immediate Actions:**
-1. Schedule property viewing for North Austin properties
+1. Schedule property viewing for North Rancho Cucamonga properties
 2. Send personalized neighborhood analysis
 3. Provide school district information for searched areas
 
@@ -86,7 +86,7 @@ class MockClaudeClient:
     def _generate_property_match_response(self) -> str:
         return """Property Match Analysis:
 
-This 3-bedroom home at $545K in North Austin is an excellent fit because:
+This 3-bedroom home at $545K in North Rancho Cucamonga is an excellent fit because:
 - Matches their $550K budget perfectly
 - Located in highly-rated Round Rock ISD
 - Move-in ready condition aligns with 'soon' timeline
@@ -95,7 +95,7 @@ This 3-bedroom home at $545K in North Austin is an excellent fit because:
     def _generate_conversation_response(self) -> str:
         return """Based on current market conditions and your timeline, I'd recommend moving forward now. Here's why:
 
-Interest rates are showing signs of stabilization, and inventory in North Austin remains competitive. With your pre-approved budget and the excellent schools you're prioritizing, waiting could mean fewer options.
+Interest rates are showing signs of stabilization, and inventory in North Rancho Cucamonga remains competitive. With your pre-approved budget and the excellent schools you're prioritizing, waiting could mean fewer options.
 
 The properties you've been viewing are well-positioned, and given your active search pattern, I can help you structure a competitive offer that protects your interests while moving quickly on the right opportunity."""
 
@@ -186,7 +186,7 @@ class MockDatabaseService:
             {
                 "timestamp": "2026-01-15T10:00:00Z",
                 "action": "email_open",
-                "details": {"subject": "North Austin Properties"},
+                "details": {"subject": "North Rancho Cucamonga Properties"},
             },
             {
                 "timestamp": "2026-01-15T14:30:00Z",
@@ -231,15 +231,15 @@ class MockApolloClient:
             "company": "Tech Solutions Inc",
             "title": "Software Engineer",
             "linkedin_url": "https://linkedin.com/in/sarahj",
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "estimated_income": 120000,
             "homeowner": True,
             "confidence_score": 0.92,
         }
 
-    async def search_companies(self, domain: str) -> Dict[str, Any]:
+    async def search_companies(self, ontario_mills: str) -> Dict[str, Any]:
         self.api_calls.append(
-            {"endpoint": "search_companies", "params": {"domain": domain}, "timestamp": datetime.now().isoformat()}
+            {"endpoint": "search_companies", "params": {"ontario_mills": ontario_mills}, "timestamp": datetime.now().isoformat()}
         )
 
         return {
@@ -247,7 +247,7 @@ class MockApolloClient:
             "industry": "Software Development",
             "size": "100-500 employees",
             "revenue": "$10M-$50M",
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
         }
 
 
@@ -362,7 +362,7 @@ class MockSendGridClient:
                         "event": "click",
                         "timestamp": datetime.now().isoformat(),
                         "message_id": message_id,
-                        "url": "https://enterprisehub.ai/properties/austin",
+                        "url": "https://enterprisehub.ai/properties/rancho_cucamonga",
                     }
                 )
                 self.email_stats["clicked"] += 1
@@ -383,7 +383,7 @@ class MockWebhookPayloads:
             "lastName": "Doe",
             "phone": "+15551234567",
             "source": "Website Form",
-            "customFields": {"budget": "500000", "timeline": "soon", "location": "Austin"},
+            "customFields": {"budget": "500000", "timeline": "soon", "location": "Rancho Cucamonga"},
         }
 
         return {
@@ -488,13 +488,13 @@ def create_test_lead_data(overrides: Dict[str, Any] = None) -> Dict[str, Any]:
         "phone": "+1-555-0123",
         "budget": 550000,
         "timeline": "soon",
-        "location": "North Austin",
+        "location": "North Rancho Cucamonga",
         "email_open_rate": 0.85,
         "email_click_rate": 0.42,
         "avg_response_time_hours": 3.5,
         "avg_message_length": 180,
         "page_views": 15,
-        "searched_locations": ["North Austin", "Round Rock", "Cedar Park"],
+        "searched_locations": ["North Rancho Cucamonga", "Round Rock", "Cedar Park"],
         "viewed_property_prices": [525000, 545000, 560000, 580000],
         "messages_per_day": 1.8,
         "questions_asked": 4,
@@ -590,7 +590,7 @@ def create_mock_service6_response(lead_id: str = "test_lead_001") -> Service6AIR
         immediate_actions=["Schedule property viewing", "Send market analysis", "Provide school information"],
         strategic_recommendations=[
             "Focus on move-in ready properties",
-            "Emphasize North Austin locations",
+            "Emphasize North Rancho Cucamonga locations",
             "Highlight investment potential",
         ],
         risk_alerts=[],

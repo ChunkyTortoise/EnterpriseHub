@@ -927,9 +927,8 @@ class WorkflowAnalyticsService:
             }
 
         # Recent insights
-        recent_insights = []
         for workflow_id in list(self.workflow_executions.keys())[:3]:  # Top 3 workflows
-            insights = asyncio.create_task(self.generate_performance_insights(workflow_id))
+            asyncio.create_task(self.generate_performance_insights(workflow_id))
             # In real implementation, this would be handled differently for async
 
         return {

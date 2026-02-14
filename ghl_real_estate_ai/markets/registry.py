@@ -19,7 +19,6 @@ from typing import Any, Dict, List, Optional, Type
 
 from .base_market_service import BaseMarketService
 from .concrete_services import (
-    AustinMarketService,
     DallasMarketService,
     HoustonMarketService,
     RanchoCucamongaMarketService,
@@ -44,11 +43,10 @@ class MarketRegistry:
 
         # Service mapping
         self.service_classes: Dict[str, Type[BaseMarketService]] = {
-            "austin": AustinMarketService,
+            "rancho_cucamonga": RanchoCucamongaMarketService,
             "dallas": DallasMarketService,
             "houston": HoustonMarketService,
             "san_antonio": SanAntonioMarketService,
-            "rancho_cucamonga": RanchoCucamongaMarketService,
         }
 
         self._load_market_configurations()

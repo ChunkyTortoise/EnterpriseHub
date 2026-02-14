@@ -15,7 +15,6 @@ import pytest
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.services.reengagement_engine import (
 
-@pytest.mark.integration
     ChurnReason,
     CLVEstimate,
     CLVTier,
@@ -333,7 +332,7 @@ class TestReengagementEngine:
     async def test_send_recovery_campaign_success(self, engine, mock_dependencies):
         """Test sending a recovery campaign."""
         clv = CLVEstimate("id", 1000000, 0.03, 1.0)  # 30k CLV -> Medium/High
-        context = {"extracted_preferences": {"budget": "1M", "location": "Austin"}, "conversation_history": []}
+        context = {"extracted_preferences": {"budget": "1M", "location": "Rancho Cucamonga"}, "conversation_history": []}
 
         result = await engine.send_recovery_campaign("contact_123", ChurnReason.TIMING, clv, context)
 

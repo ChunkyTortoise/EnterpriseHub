@@ -31,7 +31,6 @@ from ghl_real_estate_ai.services.competitive_data_pipeline import (
 )
 from ghl_real_estate_ai.services.competitive_response_automation import (
 
-@pytest.mark.integration
     ApprovalLevel,
     CompetitiveResponseEngine,
     EmailMarketingExecutor,

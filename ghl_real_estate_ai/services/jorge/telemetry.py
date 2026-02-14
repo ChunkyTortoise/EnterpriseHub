@@ -149,7 +149,7 @@ def trace_operation(service_name: str, operation_name: str):
 
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs):
-                with optional_span(service_name, operation_name) as span:
+                with optional_span(service_name, operation_name):
                     return await func(*args, **kwargs)
 
             return async_wrapper
@@ -157,7 +157,7 @@ def trace_operation(service_name: str, operation_name: str):
 
             @functools.wraps(func)
             def sync_wrapper(*args, **kwargs):
-                with optional_span(service_name, operation_name) as span:
+                with optional_span(service_name, operation_name):
                     return func(*args, **kwargs)
 
             return sync_wrapper

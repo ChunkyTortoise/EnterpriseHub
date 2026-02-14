@@ -67,7 +67,7 @@ def load_transcript(conversation_id: str = None, file_path: str = None) -> List[
     except ImportError:
         # Sample data for testing
         return [
-            {"role": "lead", "content": "Hi, I'm looking for a home in Austin around $700k"},
+            {"role": "lead", "content": "Hi, I'm looking for a home in Rancho Cucamonga around $700k"},
             {"role": "agent", "content": "Great! I'd love to help. What areas are you interested in?"},
             {"role": "lead", "content": "Probably Round Rock or Pflugerville for the schools"},
             {"role": "agent", "content": "Those are excellent choices for families. How many bedrooms do you need?"},
@@ -259,7 +259,7 @@ def analyze_personalization(agent_msg: str, conversation_context: List[Dict]) ->
             # Look for specific data
             if "$" in content or "budget" in content:
                 lead_info["budget_mentioned"] = True
-            if any(area in content for area in ["austin", "round rock", "pflugerville", "teravista"]):
+            if any(area in content for area in ["rancho_cucamonga", "round rock", "pflugerville", "teravista"]):
                 lead_info["location_mentioned"] = True
             if any(word in content for word in ["kids", "children", "family", "school"]):
                 lead_info["family_mentioned"] = True

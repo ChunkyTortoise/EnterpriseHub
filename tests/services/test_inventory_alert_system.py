@@ -26,7 +26,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.inventory_alert_system import (
 
-@pytest.mark.unit
     AlertChannel,
     AlertInstance,
     AlertRule,

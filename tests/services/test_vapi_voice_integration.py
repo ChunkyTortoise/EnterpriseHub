@@ -26,7 +26,6 @@ import pytest
 
 from ghl_real_estate_ai.services.vapi_voice_integration import (
 
-@pytest.mark.integration
     CallEventResult,
     SpeakerRole,
     TranscriptAnalysis,

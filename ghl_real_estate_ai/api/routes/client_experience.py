@@ -417,7 +417,7 @@ async def health_check() -> Dict[str, Any]:
     """Health check for Client Experience services."""
     try:
         # Test service availability
-        journey_service = get_client_journey_mapping()
+        get_client_journey_mapping()
 
         # Test cache
         cache = get_cache_service()

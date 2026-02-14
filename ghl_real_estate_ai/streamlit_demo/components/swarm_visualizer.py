@@ -79,7 +79,7 @@ def render_agent_debate_log(lead_id: str = None):
             {
                 "timestamp": "2026-01-21T10:00:10",
                 "agent": "market_context_agent",
-                "thought": "Prime Arbitrage found in Austin Zip 78745. 18.8% ROI.",
+                "thought": "Prime Arbitrage found in Rancho Cucamonga Zip 91730. 18.8% ROI.",
                 "action_proposed": "Pitch Arbitrage Pro-forma",
                 "confidence": 0.95,
             },

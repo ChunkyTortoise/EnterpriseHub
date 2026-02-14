@@ -93,7 +93,7 @@ orchestrator = DocumentAutomationOrchestrator()
 # Generate complete client package
 client_package = await orchestrator.generate_complete_client_package(
     client_data={'name': 'John Smith', 'budget': 650000},
-    property_preferences={'location': 'Austin, TX', 'bedrooms': 3},
+    property_preferences={'location': 'Rancho Cucamonga, CA', 'bedrooms': 3},
     package_type='premium'
 )
 

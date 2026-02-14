@@ -1,12 +1,12 @@
 {
   "name": "Hot Lead Example",
   "messages": [
-    {"role": "user", "content": "I'm pre-approved for $400k, need to move ASAP, love Hyde Park"}
+    {"role": "user", "content": "I'm pre-approved for $400k, need to move ASAP, love Alta Loma"}
   ],
   "extracted_data": {
     "budget": 400000,
     "financing": "pre-approved",
     "timeline": "ASAP",
-    "location": "Hyde Park"
+    "location": "Alta Loma"
   }
 }

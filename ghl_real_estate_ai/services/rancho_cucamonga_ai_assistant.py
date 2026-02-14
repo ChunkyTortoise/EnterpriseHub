@@ -7,6 +7,7 @@ logistics/healthcare relocation expertise, and neighborhood insights for Jorge's
 
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 # from ghl_real_estate_ai.services.property_alerts import get_property_alert_system  # Optional import
@@ -372,19 +373,7 @@ Provide a compelling but factual comparison that addresses common concerns.
             return "The Inland Empire offers exceptional value for logistics and healthcare professionals, with affordable housing, strong employment, and excellent quality of life."
 
 
-# Singleton instance
-_rancho_cucamonga_ai_assistant = None
-
-
+@lru_cache(maxsize=1)
 def get_rancho_cucamonga_ai_assistant() -> RanchoCucamongaAIAssistant:
     """Get singleton instance of Rancho Cucamonga AI Assistant."""
-    global _rancho_cucamonga_ai_assistant
-    if _rancho_cucamonga_ai_assistant is None:
-        _rancho_cucamonga_ai_assistant = RanchoCucamongaAIAssistant()
-    return _rancho_cucamonga_ai_assistant
-
-
-# Backward compatibility - alias the old function to new one
-def get_austin_ai_assistant() -> RanchoCucamongaAIAssistant:
-    """Backward compatibility alias for Austin AI Assistant."""
-    return get_rancho_cucamonga_ai_assistant()
+    return RanchoCucamongaAIAssistant()

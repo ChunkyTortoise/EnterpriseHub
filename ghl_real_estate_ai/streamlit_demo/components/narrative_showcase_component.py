@@ -125,8 +125,8 @@ def render_narrative_showcase():
             "Choose property",
             options=[
                 "Westlake Hills - $485K (Family Home)",
-                "Downtown Austin - $620K (Urban Condo)",
-                "Mueller - $395K (Growing Community)",
+                "Downtown Rancho Cucamonga - $620K (Urban Condo)",
+                "Haven City - $395K (Growing Community)",
             ],
             index=0,
         )
@@ -135,7 +135,7 @@ def render_narrative_showcase():
     properties = {
         "Westlake Hills - $485K (Family Home)": {
             "id": "prop_westlake_001",
-            "address": "123 Hill Country Dr, Westlake Hills, TX",
+            "address": "123 Hill Country Dr, Westlake Hills, CA",
             "price": 485000,
             "bedrooms": 3,
             "bathrooms": 2,
@@ -144,25 +144,25 @@ def render_narrative_showcase():
             "features": ["pool", "deck", "two-car garage", "updated kitchen"],
             "property_type": "single_family",
         },
-        "Downtown Austin - $620K (Urban Condo)": {
+        "Downtown Rancho Cucamonga - $620K (Urban Condo)": {
             "id": "prop_downtown_002",
-            "address": "456 Congress Ave, Downtown Austin, TX",
+            "address": "456 Congress Ave, Downtown Rancho Cucamonga, CA",
             "price": 620000,
             "bedrooms": 2,
             "bathrooms": 2,
             "sqft": 1650,
-            "neighborhood": "Downtown Austin",
+            "neighborhood": "Downtown Rancho Cucamonga",
             "features": ["city views", "rooftop pool", "concierge", "parking garage"],
             "property_type": "condo",
         },
-        "Mueller - $395K (Growing Community)": {
-            "id": "prop_mueller_003",
-            "address": "789 Mueller Blvd, Mueller, TX",
+        "Haven City - $395K (Growing Community)": {
+            "id": "prop_haven city_003",
+            "address": "789 Haven City Blvd, Haven City, CA",
             "price": 395000,
             "bedrooms": 4,
             "bathrooms": 3,
             "sqft": 2400,
-            "neighborhood": "Mueller",
+            "neighborhood": "Haven City",
             "features": ["open floor plan", "master suite", "backyard", "community amenities"],
             "property_type": "single_family",
         },
@@ -200,7 +200,7 @@ def render_narrative_showcase():
             "lead_id": "lead_david_kim",
             "lead_name": "David Kim",
             "family_status": "young_professional",
-            "workplace": "Downtown Austin",
+            "workplace": "Downtown Rancho Cucamonga",
             "budget_max": 650000,
             "lifestyle_priorities": ["walkability", "nightlife", "commute"],
             "age": 28,
@@ -335,7 +335,7 @@ def render_batch_narrative_demo():
             properties = [
                 {
                     "id": "prop_1",
-                    "address": "123 Hill Country Dr, Westlake Hills, TX",
+                    "address": "123 Hill Country Dr, Westlake Hills, CA",
                     "price": 485000,
                     "bedrooms": 3,
                     "bathrooms": 2,
@@ -343,19 +343,19 @@ def render_batch_narrative_demo():
                 },
                 {
                     "id": "prop_2",
-                    "address": "456 Congress Ave, Downtown Austin, TX",
+                    "address": "456 Congress Ave, Downtown Rancho Cucamonga, CA",
                     "price": 620000,
                     "bedrooms": 2,
                     "bathrooms": 2,
-                    "neighborhood": "Downtown Austin",
+                    "neighborhood": "Downtown Rancho Cucamonga",
                 },
                 {
                     "id": "prop_3",
-                    "address": "789 Mueller Blvd, Mueller, TX",
+                    "address": "789 Haven City Blvd, Haven City, CA",
                     "price": 395000,
                     "bedrooms": 4,
                     "bathrooms": 3,
-                    "neighborhood": "Mueller",
+                    "neighborhood": "Haven City",
                 },
             ]
 

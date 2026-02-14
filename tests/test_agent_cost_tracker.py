@@ -1,12 +1,10 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 import pytest
 
-@pytest.mark.unit
 """Tests for Agent Decision Cost Tracker."""
-
-from __future__ import annotations
 
 import math
 import os

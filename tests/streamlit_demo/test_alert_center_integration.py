@@ -10,8 +10,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 
 class TestFetchRules:
     """Tests for _fetch_rules API integration."""

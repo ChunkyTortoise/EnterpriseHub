@@ -1,9 +1,8 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 """Tests for HubSpot CRM adapter."""
-
-from __future__ import annotations
 
 import json
 from unittest.mock import AsyncMock, patch
@@ -16,8 +15,6 @@ from ghl_real_estate_ai.services.crm.hubspot_adapter import (
     HubSpotError,
 )
 from ghl_real_estate_ai.services.crm.protocol import CRMContact
-
-@pytest.mark.integration
 
 
 @pytest.fixture()

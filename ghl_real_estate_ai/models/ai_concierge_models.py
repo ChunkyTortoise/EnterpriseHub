@@ -157,7 +157,7 @@ class ProactiveInsight(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_insight_content(cls, values):
-        insight_type = values.get("insight_type")
+        values.get("insight_type")
         priority = values.get("priority")
         confidence = values.get("confidence_score", 0)
 

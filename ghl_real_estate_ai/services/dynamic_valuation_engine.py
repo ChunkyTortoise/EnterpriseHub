@@ -6,7 +6,7 @@ Features:
 - ML-based comparative market analysis (CMA)
 - Market trend integration with predictive modeling
 - Confidence scoring for valuation reliability
-- Integration with Austin market data for local insights
+- Integration with Rancho Cucamonga market data for local insights
 
 Business Impact: $300K+ annual revenue enhancement through intelligent pricing
 """
@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.austin_market_service import AustinMarketService, MarketCondition, PropertyType
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService, MarketCondition, PropertyType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.property_matcher_ml import MLFeaturePipeline, PropertyMatcherML
 
@@ -129,7 +129,7 @@ class DynamicValuationEngine:
 
     def __init__(self):
         self.cache = get_cache_service()
-        self.market_service = AustinMarketService()
+        self.market_service = RanchoCucamongaMarketService()
         self.property_matcher = PropertyMatcherML()
         self.feature_pipeline = MLFeaturePipeline()
 
@@ -194,7 +194,7 @@ class DynamicValuationEngine:
             # Extract basic property information
             property_id = property_data.get("property_id", "valuation_" + str(int(datetime.now().timestamp())))
             address = property_data.get("address", "Unknown Address")
-            neighborhood = property_data.get("neighborhood", "Austin")
+            neighborhood = property_data.get("neighborhood", "Rancho Cucamonga")
 
             # Get market context
             market_metrics = await self.market_service.get_market_metrics(
@@ -265,7 +265,7 @@ class DynamicValuationEngine:
                 valuation_notes=notes,
                 risk_factors=risk_factors,
                 generation_time_ms=generation_time,
-                data_sources_used=["austin_market_service", "ml_model", "cma_analysis"],
+                data_sources_used=["rancho_cucamonga_market_service", "ml_model", "cma_analysis"],
             )
 
         except Exception as e:
@@ -287,7 +287,7 @@ class DynamicValuationEngine:
 
         if not comparables:
             # Fallback to neighborhood median
-            neighborhood = property_data.get("neighborhood", "Austin")
+            neighborhood = property_data.get("neighborhood", "Rancho Cucamonga")
             neighborhood_analysis = await self.market_service.get_neighborhood_analysis(neighborhood)
 
             if neighborhood_analysis:
@@ -454,7 +454,7 @@ class DynamicValuationEngine:
 
             # Convert to comparable format and calculate similarity
             comparables = []
-            subject_sqft = property_data.get("sqft", 2000)
+            property_data.get("sqft", 2000)
 
             for prop in properties:
                 # Calculate similarity score
@@ -626,7 +626,7 @@ class DynamicValuationEngine:
         self, property_data: Dict[str, Any], final_valuation: float, market_adjustment: float
     ) -> ValuationComponents:
         """Build detailed valuation components breakdown"""
-        sqft = property_data.get("sqft", 2000)
+        property_data.get("sqft", 2000)
 
         # Simplified component calculation
         # In production, this would use more sophisticated land value models

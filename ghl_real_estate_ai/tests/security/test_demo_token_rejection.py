@@ -11,8 +11,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, EnterpriseAuthService
 
-@pytest.mark.unit
-
 
 class TestDemoTokenSecurity:
     """Test suite for demo token security enforcement."""

@@ -563,7 +563,7 @@ Key Market Insights:
 • Average days on market: {market_analysis.get('avg_days_on_market', 28)} days
 • Price appreciation forecast: {market_analysis.get('price_appreciation', 3.2)}% annually
 • Inventory levels: {market_analysis.get('inventory_months', 3.1)} months supply
-• Best buying opportunities: {market_analysis.get('opportunity_areas', 'Central Austin, South Lake')}
+• Best buying opportunities: {market_analysis.get('opportunity_areas', 'Central Rancho Cucamonga, South Lake')}
 
 Competitive Advantages:
 • First-to-market alerts for new listings
@@ -593,7 +593,7 @@ Competitive Advantages:
             success_text = """Client Success Highlights:
 
 "EnterpriseHub increased our lead conversion rate by 40% in the first quarter."
-- Sarah Johnson, Premier Realty Austin
+- Sarah Johnson, Premier Realty Rancho Cucamonga
 
 "The AI-powered property matching saves us 15 hours per week per agent."
 - Michael Chen, Texas Property Group
@@ -777,7 +777,7 @@ GROWTH DRIVERS:
 
         # Add example data
         examples_data = [
-            ['High-budget Austin buyer, pre-approved', '85/100', '92/100', '89/100'],
+            ['High-budget Rancho Cucamonga buyer, pre-approved', '85/100', '92/100', '89/100'],
             ['First-time buyer, flexible timeline', '65/100', '78/100', '72/100'],
             ['Investment property seeker', '78/100', '85/100', '82/100'],
             ['Luxury market, specific requirements', '92/100', '88/100', '90/100'],
@@ -1060,7 +1060,7 @@ def demo_pptx_generation():
             'avg_days_on_market': 28,
             'price_appreciation': 3.2,
             'inventory_months': 3.1,
-            'opportunity_areas': 'Central Austin, South Lake'
+            'opportunity_areas': 'Central Rancho Cucamonga, South Lake'
         },
         'testimonials': []
     }
@@ -1071,7 +1071,7 @@ def demo_pptx_generation():
             'property': {
                 'id': 'PROP_001',
                 'price': 625000,
-                'address': {'street': '123 Oak Hill Dr', 'city': 'Austin', 'state': 'TX'},
+                'address': {'street': '123 Oak Hill Dr', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                 'bedrooms': 3,
                 'bathrooms': 2.5
             },
@@ -1085,7 +1085,7 @@ def demo_pptx_generation():
             'property': {
                 'id': 'PROP_002',
                 'price': 580000,
-                'address': {'street': '456 Pine Ridge', 'city': 'Austin', 'state': 'TX'},
+                'address': {'street': '456 Pine Ridge', 'city': 'Rancho Cucamonga', 'state': 'TX'},
                 'bedrooms': 4,
                 'bathrooms': 3
             },
@@ -1099,7 +1099,7 @@ def demo_pptx_generation():
 
     # Sample scoring examples
     sample_scoring = [
-        {'lead_profile': 'High-budget Austin buyer', 'traditional_score': 85, 'ai_score': 92, 'final_score': 89},
+        {'lead_profile': 'High-budget Rancho Cucamonga buyer', 'traditional_score': 85, 'ai_score': 92, 'final_score': 89},
         {'lead_profile': 'First-time buyer', 'traditional_score': 65, 'ai_score': 78, 'final_score': 72}
     ]
 

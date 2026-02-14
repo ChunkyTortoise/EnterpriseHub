@@ -337,7 +337,7 @@ analysis = await analyze_lead_with_claude(
     lead_context={
         "budget": "600k",
         "timeline": "immediate",
-        "location": "downtown austin",
+        "location": "downtown rancho_cucamonga",
         "property_type": "condo"
     }
 )

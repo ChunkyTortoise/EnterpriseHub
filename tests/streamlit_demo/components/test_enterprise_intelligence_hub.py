@@ -15,7 +15,6 @@ import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub import (
 
-@pytest.mark.integration
     CompetitiveIntelligence,
     EnterpriseIntelligenceHub,
     ExecutiveKPI,

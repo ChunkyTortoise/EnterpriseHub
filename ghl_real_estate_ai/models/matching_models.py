@@ -6,7 +6,44 @@ Defines all data structures for the 15-factor contextual matching algorithm.
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
+
+
+class PropertyData(TypedDict, total=False):
+    """TypedDict for property data in matching context."""
+    property_id: str
+    address: str
+    city: str
+    state: str
+    zip_code: str
+    price: float
+    bedrooms: int
+    bathrooms: float
+    sqft: int
+    property_type: str
+    year_built: int
+    lot_size: Optional[float]
+    hoa_fees: Optional[float]
+    images: List[str]
+    description: str
+    days_on_market: int
+
+
+class SearchHistoryEntry(TypedDict, total=False):
+    """TypedDict for search history entry."""
+    timestamp: str
+    search_params: Dict[str, Any]
+    results_count: int
+    clicked_properties: List[str]
+
+
+class MarketConditionsData(TypedDict, total=False):
+    """TypedDict for market conditions data."""
+    market_trend: str  # "hot", "warm", "cool", "cold"
+    avg_days_on_market: float
+    price_per_sqft_trend: float
+    inventory_level: str  # "low", "normal", "high"
+    interest_rate: float
 
 
 class LeadSegment(Enum):
@@ -200,14 +237,14 @@ class MatchReasoning:
 class PropertyMatch:
     """Complete property match result"""
 
-    property: Dict[str, Any]  # Original property data
+    property: PropertyData  # Original property data
     overall_score: float  # Final weighted score 0.0-1.0
     score_breakdown: MatchScoreBreakdown
     reasoning: MatchReasoning
     match_rank: Optional[int]  # Position in results list
     generated_at: datetime
     lead_id: str
-    preferences_used: Dict[str, Any]
+    preferences_used: Dict[str, Any]  # Keep as Dict[str, Any] - truly dynamic
 
     # Performance tracking
     predicted_engagement: float  # Predicted CTR
@@ -220,11 +257,11 @@ class MatchingContext:
     """Context for matching session"""
 
     lead_id: str
-    preferences: Dict[str, Any]
+    preferences: Dict[str, Any]  # Keep as Dict[str, Any] - truly dynamic user preferences
     behavioral_profile: BehavioralProfile
     session_id: str
-    search_history: List[Dict[str, Any]]
-    market_conditions: Dict[str, Any]
+    search_history: List[SearchHistoryEntry]
+    market_conditions: MarketConditionsData
     available_data_sources: List[str]  # APIs available
 
     # Quality controls

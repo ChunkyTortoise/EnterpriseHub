@@ -261,7 +261,7 @@ async def stop_competitive_monitoring(user: dict = Depends(require_permission("w
         performance_metrics = await data_pipeline.get_pipeline_performance_metrics()
 
         # Stop monitoring
-        monitoring_stopped = await data_pipeline.stop_real_time_monitoring()
+        await data_pipeline.stop_real_time_monitoring()
 
         return {
             "status": "monitoring_stopped",
@@ -300,7 +300,7 @@ async def get_competitor_data(
         if data_sources:
             try:
                 source_filters = [DataSource(ds) for ds in data_sources]
-            except ValueError as e:
+            except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid data source")
 
         # Collect competitor data
@@ -479,7 +479,7 @@ async def detect_competitive_threats(
 
         # If no specific competitor, get all monitored competitors
         if not competitor_ids:
-            performance_metrics = await data_pipeline.get_pipeline_performance_metrics()
+            await data_pipeline.get_pipeline_performance_metrics()
             competitor_ids = ["comp_001", "comp_002", "comp_003"]  # Mock data
 
         # Collect data points for analysis

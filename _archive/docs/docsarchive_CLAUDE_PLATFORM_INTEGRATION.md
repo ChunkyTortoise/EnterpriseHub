@@ -125,7 +125,7 @@ Located in expandable "🧠 Claude Platform Controls" section:
 - **📊 Get Context Summary**: View current session analysis
 
 ### **Market Integration**
-- **Austin Market**: Default market context
+- **Rancho Cucamonga Market**: Default market context
 - **Rancho Market**: Alternative market support
 - **Dynamic Context**: Market-aware insights and recommendations
 

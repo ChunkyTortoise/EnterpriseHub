@@ -34,7 +34,7 @@ class VoiceService:
         """
         if settings.test_mode or not self.google_stt_api_key:
             logger.info("[TEST MODE] Transcribing mock audio content")
-            return "Looking for a 3 bedroom house in Austin."
+            return "Looking for a 3 bedroom house in Rancho Cucamonga."
 
         # Real STT implementation would go here
         return "Transcription not implemented"

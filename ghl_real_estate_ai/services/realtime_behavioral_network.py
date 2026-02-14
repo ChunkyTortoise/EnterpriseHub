@@ -1501,7 +1501,7 @@ class RealTimeBehavioralNetwork:
             lead_id = trigger.lead_id
             urgency = trigger.action_payload.get("urgency", "medium")
             confidence = trigger.action_payload.get("confidence", 0.0)
-            recommendations = trigger.action_payload.get("recommendations", [])
+            trigger.action_payload.get("recommendations", [])
             behavioral_trigger = trigger.trigger_condition
 
             # Get lead details and behavioral context
@@ -1647,7 +1647,7 @@ class RealTimeBehavioralNetwork:
             lead_id = trigger.lead_id
             urgency = trigger.action_payload.get("urgency", "medium")
             confidence = trigger.action_payload.get("confidence", 0.0)
-            recommendations = trigger.action_payload.get("recommendations", [])
+            trigger.action_payload.get("recommendations", [])
             behavioral_trigger = trigger.trigger_condition
 
             # Get comprehensive lead profile for personalization
@@ -2014,7 +2014,6 @@ class RealTimeBehavioralNetwork:
     async def _update_agent_workload(self, agent_id: str, lead_id: str, priority: int):
         """Update agent workload tracking."""
         try:
-            workload_key = f"agent_workload:{agent_id}"
             # Update workload tracking logic would go here
             pass
         except Exception as e:
@@ -2334,7 +2333,7 @@ class RealTimeBehavioralNetwork:
         """Generate dynamic website content."""
         try:
             return {"widgets": ["property_recommendations", "market_insights"], "personalized": True}
-        except Exception as e:
+        except Exception:
             return {}
 
     async def _deliver_website_content(
@@ -2352,7 +2351,7 @@ class RealTimeBehavioralNetwork:
         """Generate personalized property report."""
         try:
             return {"report_type": "market_analysis", "properties_analyzed": 5, "ai_generated": True}
-        except Exception as e:
+        except Exception:
             return {}
 
     async def _deliver_property_report(
@@ -2370,7 +2369,7 @@ class RealTimeBehavioralNetwork:
         """Generate interactive content."""
         try:
             return {"tools": ["calculator", "comparison"], "personalized_data": True}
-        except Exception as e:
+        except Exception:
             return {}
 
     async def _deliver_interactive_content(
@@ -2388,7 +2387,7 @@ class RealTimeBehavioralNetwork:
         """Generate video content recommendations."""
         try:
             return {"videos": ["virtual_tour", "market_update"], "personalized": True}
-        except Exception as e:
+        except Exception:
             return {}
 
     async def _deliver_video_content(
@@ -2406,7 +2405,7 @@ class RealTimeBehavioralNetwork:
         """Generate social proof content."""
         try:
             return {"testimonials": 3, "success_stories": 2, "neighborhood_insights": True}
-        except Exception as e:
+        except Exception:
             return {}
 
     async def _deliver_social_proof_content(
@@ -2424,7 +2423,7 @@ class RealTimeBehavioralNetwork:
         """Generate retargeting content for abandonment scenarios."""
         try:
             return {"retargeting_ads": 3, "personalized_offers": 2, "urgency_messaging": True}
-        except Exception as e:
+        except Exception:
             return {}
 
     async def _deliver_retargeting_content(

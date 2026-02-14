@@ -485,7 +485,7 @@ class AzureDeployment:
         if sql_server:
             outputs["sqlServerFqdn"] = {
                 "type": "string",
-                "value": f"[reference('{sql_server.resource_name}').fullyQualifiedDomainName]",
+                "value": f"[reference('{sql_server.resource_name}').fullyQualifiedOntario MillsName]",
             }
 
         # Find storage account in primary region

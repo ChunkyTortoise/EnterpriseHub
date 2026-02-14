@@ -129,7 +129,7 @@ class ConversationSessionManager:
 
     async def get_active_conversations(self, bot_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get list of active conversations, optionally filtered by bot type"""
-        # TODO: For large scale, would need better indexing
+        # ROADMAP-090: For large scale, implement better indexing (Redis search, DB index)
         # For now, scan for conversations active in last 24 hours
         active_conversations = []
 

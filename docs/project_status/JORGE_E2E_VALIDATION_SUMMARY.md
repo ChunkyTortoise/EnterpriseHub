@@ -327,7 +327,7 @@ CPU Usage (peak)          <70%        58%         ✅ PASS
 
 ```
 INPUT:
-  Webhook: "Need to buy house ASAP. Budget $400k, pre-approved, Austin, 3BR"
+  Webhook: "Need to buy house ASAP. Budget $400k, pre-approved, Rancho Cucamonga, 3BR"
   Contact: {tags: ["Needs Qualifying"], prequalified: true}
 
 PROCESSING:

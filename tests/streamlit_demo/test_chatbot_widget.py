@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for the chatbot widget component.
 
 Uses unittest.mock.patch to replace the ``st`` reference inside the widget
@@ -5,15 +6,12 @@ module so that Streamlit session-state can be exercised without a running
 Streamlit server -- and without polluting ``sys.modules`` for other tests.
 """
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from streamlit_cloud.components.chatbot_widget import (
 
-@pytest.mark.unit
     MOCK_RESPONSES,
     SCORE_TRIGGERS,
     ChatbotWidget,

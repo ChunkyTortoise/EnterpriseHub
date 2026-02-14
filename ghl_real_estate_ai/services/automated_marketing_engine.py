@@ -441,7 +441,7 @@ class AutomatedMarketingEngine:
     async def _create_lead_magnet_campaign(self, campaign_id: str, magnet_data: Dict[str, Any]) -> CampaignBrief:
         """Create lead magnet campaign"""
 
-        magnet_type = magnet_data.get("type", "buyer_guide")
+        magnet_data.get("type", "buyer_guide")
 
         return CampaignBrief(
             campaign_id=campaign_id,
@@ -674,7 +674,7 @@ Return in this JSON format:
         """Create seasonal marketing campaigns automatically"""
 
         current_month = datetime.now().month
-        current_year = datetime.now().year
+        datetime.now().year
 
         seasonal_campaigns = []
 
@@ -840,7 +840,7 @@ Return in this JSON format:
         await self._cache_campaign_performance(performance)
 
         # Generate recommendations for optimization
-        recommendations = await self._generate_optimization_recommendations(performance)
+        await self._generate_optimization_recommendations(performance)
 
         logger.info(
             f"Tracked performance for campaign {campaign_id}: {performance.leads_generated} leads, {performance.roi_percentage:.1f}% ROI"

@@ -278,7 +278,7 @@ class EmailNotificationProvider(NotificationProvider):
     async def send_notification(self, delivery: NotificationDelivery, recipient_info: Dict[str, Any]) -> Dict[str, Any]:
         """Send email notification"""
         try:
-            email_data = {
+            {
                 "personalizations": [{"to": [{"email": recipient_info.get("email")}], "subject": delivery.final_title}],
                 "from": {"email": "noreply@enterprisehub.ai"},
                 "content": [{"type": "text/html", "value": delivery.final_message}],
@@ -311,7 +311,7 @@ class SMSNotificationProvider(NotificationProvider):
     async def send_notification(self, delivery: NotificationDelivery, recipient_info: Dict[str, Any]) -> Dict[str, Any]:
         """Send SMS notification"""
         try:
-            sms_data = {
+            {
                 "to": recipient_info.get("phone"),
                 "from": self.from_number,
                 "body": f"{delivery.final_title}: {delivery.final_message}",
@@ -418,7 +418,7 @@ class SlackNotificationProvider(NotificationProvider):
     async def send_notification(self, delivery: NotificationDelivery, recipient_info: Dict[str, Any]) -> Dict[str, Any]:
         """Send Slack notification"""
         try:
-            slack_data = {
+            {
                 "channel": recipient_info.get("slack_channel", "@" + recipient_info.get("slack_user_id")),
                 "text": delivery.final_title,
                 "attachments": [

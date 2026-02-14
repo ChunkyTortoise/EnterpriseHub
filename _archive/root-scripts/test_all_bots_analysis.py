@@ -39,12 +39,12 @@ async def test_all_bots():
         
         # Mocking the LLM response
         MockClaude.return_value.analyze_with_context = AsyncMock(return_value={
-            "content": "I see you're serious about selling due to your job relocation. Let's cut the BS and get your Austin home on the market before you move. When can we meet to finalize the listing?"
+            "content": "I see you're serious about selling due to your job relocation. Let's cut the BS and get your Rancho Cucamonga home on the market before you move. When can we meet to finalize the listing?"
         })
         
         bot = JorgeSellerBot()
         # High intent seller message
-        history = [{"role": "user", "content": "I need to sell my house in Austin by next month because of a job relocation. I'm looking for a top agent who can move fast."}]
+        history = [{"role": "user", "content": "I need to sell my house in Rancho Cucamonga by next month because of a job relocation. I'm looking for a top agent who can move fast."}]
         
         result = await bot.process_seller_message(lead_id, lead_name, history)
         
@@ -73,7 +73,7 @@ async def test_all_bots():
         
         # Mocking property matches and response
         MockClaudeBuyer.return_value.generate_response = AsyncMock(return_value={
-            "content": "That's a great area in Austin. Based on your $600k budget and pre-approval, I've identified 3 properties that match your specific criteria. Would you like to schedule a viewing for this weekend?"
+            "content": "That's a great area in Rancho Cucamonga. Based on your $600k budget and pre-approval, I've identified 3 properties that match your specific criteria. Would you like to schedule a viewing for this weekend?"
         })
         
         buyer_bot = JorgeBuyerBot()
@@ -84,7 +84,7 @@ async def test_all_bots():
             MockFindMatches.return_value = [{"id": "prop1"}, {"id": "prop2"}, {"id": "prop3"}]
             
             # High intent buyer message
-            history = [{"role": "user", "content": "I'm looking for a 3-bedroom house in Austin, budget is around $600k. I'm already pre-approved and ready to buy."}]
+            history = [{"role": "user", "content": "I'm looking for a 3-bedroom house in Rancho Cucamonga, budget is around $600k. I'm already pre-approved and ready to buy."}]
             
             result = await buyer_bot.process_buyer_conversation(lead_id, lead_name, history)
             

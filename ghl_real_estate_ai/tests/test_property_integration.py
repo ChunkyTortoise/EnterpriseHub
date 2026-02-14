@@ -15,8 +15,6 @@ os.environ["GHL_LOCATION_ID"] = "loc-test-123"
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_property_recommendation_for_warm_lead():
@@ -30,10 +28,10 @@ async def test_property_recommendation_for_warm_lead():
     # Warm lead context (score should be 2 because location and budget are provided)
     context = {
         "conversation_history": [
-            {"role": "user", "content": "I want a house in Austin"},
+            {"role": "user", "content": "I want a house in Rancho Cucamonga"},
             {"role": "assistant", "content": "What is your budget?"},
         ],
-        "extracted_preferences": {"location": "Austin", "budget": 500000},
+        "extracted_preferences": {"location": "Rancho Cucamonga", "budget": 500000},
         "created_at": datetime.utcnow().isoformat(),
     }
 
@@ -45,4 +43,4 @@ async def test_property_recommendation_for_warm_lead():
     # Verify properties were included in system prompt
     system_prompt = cm.llm_client.agenerate.call_args.kwargs["system_prompt"]
     assert "PROPERTY RECOMMENDATIONS" in system_prompt
-    assert "Austin" in system_prompt or "Duval" in system_prompt
+    assert "Rancho Cucamonga" in system_prompt or "Duval" in system_prompt

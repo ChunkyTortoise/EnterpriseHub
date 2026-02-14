@@ -331,13 +331,13 @@ spec:
 class ShardedDatabase:
     def __init__(self):
         self.shards = {
-            'austin': 'postgres://austin-db:5432/jorge_austin',
+            'rancho_cucamonga': 'postgres://rancho_cucamonga-db:5432/jorge_rancho_cucamonga',
             'dallas': 'postgres://dallas-db:5432/jorge_dallas',
             'houston': 'postgres://houston-db:5432/jorge_houston'
         }
 
     def get_connection(self, market: str):
-        return self.shards.get(market, self.shards['austin'])
+        return self.shards.get(market, self.shards['rancho_cucamonga'])
 ```
 
 ---

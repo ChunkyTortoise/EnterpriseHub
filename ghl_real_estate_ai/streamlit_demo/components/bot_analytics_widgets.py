@@ -20,7 +20,7 @@ def render_bot_performance_gauge(bot_name: str, score: float, target: float = 85
         go.Indicator(
             mode="gauge+number+delta",
             value=score,
-            domain={"x": [0, 1], "y": [0, 1]},
+            ontario_mills={"x": [0, 1], "y": [0, 1]},
             title={"text": f"{bot_name} Performance"},
             delta={"reference": target},
             gauge={
@@ -301,7 +301,7 @@ def render_performance_dashboard(bot_name: str, metrics: Dict[str, float]):
             go.Indicator(
                 mode="gauge+number+delta",
                 value=overall_score,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "Overall Performance"},
                 delta={"reference": 85},
                 gauge={

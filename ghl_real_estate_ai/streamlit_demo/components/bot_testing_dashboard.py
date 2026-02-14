@@ -162,7 +162,7 @@ class BotTestRunner:
                     "preferences_captured": {
                         "budget": test_lead_data.get("budget", "$400K-$600K"),
                         "bedrooms": test_lead_data.get("bedrooms", 3),
-                        "area": test_lead_data.get("area", "Austin, TX"),
+                        "area": test_lead_data.get("area", "Rancho Cucamonga, CA"),
                     },
                 },
             }
@@ -350,7 +350,7 @@ def render_test_configuration():
         elif "Buyer" in scenario:
             budget = st.text_input("Budget Range:", value="$400K-$600K")
             bedrooms = st.selectbox("Bedrooms:", [1, 2, 3, 4, 5])
-            area = st.text_input("Preferred Area:", value="Austin, TX")
+            area = st.text_input("Preferred Area:", value="Rancho Cucamonga, CA")
 
         # Advanced options
         with st.expander("🔧 Advanced Test Options"):
@@ -404,7 +404,7 @@ def render_live_testing_interface():
         "timeline": "3-6 months",
         "budget": "$400K-$600K",
         "bedrooms": 3,
-        "area": "Austin, TX",
+        "area": "Rancho Cucamonga, CA",
     }
 
     # Seller Bot Test

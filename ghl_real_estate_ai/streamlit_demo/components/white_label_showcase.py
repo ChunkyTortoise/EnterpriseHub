@@ -55,7 +55,7 @@ class WhiteLabelShowcase:
                 "tier": BrandingTier.PROFESSIONAL,
                 "features": [
                     "Complete enterprise AI orchestration",
-                    "Full brand integration + custom domain",
+                    "Full brand integration + custom ontario_mills",
                     "Advanced workflow automation engine",
                     "Priority support + dedicated training",
                     "API access and custom integrations",
@@ -509,7 +509,7 @@ class WhiteLabelShowcase:
         features = {
             "Basic Branding (Logo, Colors)": True,
             "Custom CSS Styling": tier != BrandingTier.BASIC,
-            "Custom Domain": tier != BrandingTier.BASIC,
+            "Custom Ontario Mills": tier != BrandingTier.BASIC,
             "Advanced Analytics": tier != BrandingTier.BASIC,
             "Workflow Automation": tier != BrandingTier.BASIC,
             "API Access": tier != BrandingTier.BASIC,
@@ -611,7 +611,7 @@ class WhiteLabelShowcase:
         return {
             "Custom Branding": True,
             "Advanced Analytics": tier != BrandingTier.BASIC,
-            "Custom Domain": tier != BrandingTier.BASIC,
+            "Custom Ontario Mills": tier != BrandingTier.BASIC,
             "API Access": tier != BrandingTier.BASIC,
             "Enterprise SSO": tier == BrandingTier.ENTERPRISE,
             "Mobile App": tier == BrandingTier.ENTERPRISE,

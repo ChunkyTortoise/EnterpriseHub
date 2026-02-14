@@ -228,7 +228,7 @@ class MarketOpportunityDetector:
         Detect undervalued properties using AI-powered market analysis.
 
         Args:
-            market_area: Geographic area to analyze (e.g., "Austin, TX")
+            market_area: Geographic area to analyze (e.g., "Rancho Cucamonga, CA")
             max_opportunities: Maximum number of opportunities to return
 
         Returns:
@@ -398,7 +398,7 @@ class MarketOpportunityDetector:
                     "max_risk_level": "medium",
                     "preferred_property_types": ["single_family", "townhouse"],
                     "max_days_on_market": 60,
-                    "target_markets": ["austin", "cedar_park", "round_rock"],
+                    "target_markets": ["rancho_cucamonga", "cedar_park", "round_rock"],
                 }
 
             # Collect recent market opportunities
@@ -1167,7 +1167,7 @@ if __name__ == "__main__":
 
         # Demo market analysis
         print("\n🔍 Detecting undervalued properties...")
-        opportunities = await detector.detect_undervalued_properties("Austin, TX", max_opportunities=5)
+        opportunities = await detector.detect_undervalued_properties("Rancho Cucamonga, CA", max_opportunities=5)
 
         print(f"✅ Found {len(opportunities)} investment opportunities")
         for opp in opportunities:

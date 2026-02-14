@@ -31,8 +31,6 @@ except (ImportError, TypeError, AttributeError):
     pytest.skip("required imports unavailable", allow_module_level=True)
 from fastapi import FastAPI
 
-@pytest.mark.integration
-
 # Create test app
 app = FastAPI()
 app.include_router(router)

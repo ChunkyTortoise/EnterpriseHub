@@ -1,6 +1,6 @@
 """
 White-Label Platform API Schemas
-Pydantic models for white-label agency and domain management APIs
+Pydantic models for white-label agency and ontario_mills management APIs
 supporting the $500K ARR platform foundation.
 """
 
@@ -33,8 +33,8 @@ class AgencyTier(str, Enum):
     ENTERPRISE = "enterprise"
 
 
-class DomainType(str, Enum):
-    """Domain configuration types."""
+class Ontario MillsType(str, Enum):
+    """Ontario Mills configuration types."""
 
     AGENCY = "agency"
     CLIENT = "client"
@@ -42,7 +42,7 @@ class DomainType(str, Enum):
 
 
 class VerificationMethod(str, Enum):
-    """Domain verification methods."""
+    """Ontario Mills verification methods."""
 
     DNS = "dns"
     FILE = "file"
@@ -107,7 +107,7 @@ class AgencyCreateRequest(BaseModel):
     contract_end_date: datetime
     auto_renewal: bool = True
     max_clients: int = Field(50, gt=0, le=1000)
-    max_custom_domains: int = Field(10, gt=0, le=100)
+    max_custom_ontario_millss: int = Field(10, gt=0, le=100)
     metadata: Dict[str, Any] = {}
 
     @field_validator("contract_end_date")
@@ -137,7 +137,7 @@ class AgencyUpdateRequest(BaseModel):
     contract_end_date: Optional[datetime] = None
     auto_renewal: Optional[bool] = None
     max_clients: Optional[int] = Field(None, gt=0, le=1000)
-    max_custom_domains: Optional[int] = Field(None, gt=0, le=100)
+    max_custom_ontario_millss: Optional[int] = Field(None, gt=0, le=100)
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -158,7 +158,7 @@ class AgencyResponse(BaseModel):
     auto_renewal: bool
 
     max_clients: int
-    max_custom_domains: int
+    max_custom_ontario_millss: int
 
     onboarding_completed: bool
     metadata: Dict[str, Any]
@@ -172,7 +172,7 @@ class AgencyStatsResponse(BaseModel):
     agency_id: str
     agency_name: str
     client_count: int
-    active_domains: int
+    active_ontario_millss: int
     total_assets: int
     monthly_revenue: Decimal
     platform_fees: Decimal
@@ -261,11 +261,11 @@ class DNSRecordSchema(BaseModel):
     priority: Optional[int] = Field(None, ge=0)
 
 
-class DomainCreateRequest(BaseModel):
-    """Request schema for creating a domain configuration."""
+class Ontario MillsCreateRequest(BaseModel):
+    """Request schema for creating a ontario_mills configuration."""
 
-    domain_name: str = Field(..., min_length=4, max_length=255)
-    domain_type: DomainType
+    ontario_mills_name: str = Field(..., min_length=4, max_length=255)
+    ontario_mills_type: Ontario MillsType
     client_id: Optional[str] = None
 
     # DNS Configuration
@@ -288,31 +288,31 @@ class DomainCreateRequest(BaseModel):
 
     configuration_metadata: Dict[str, Any] = {}
 
-    @field_validator("domain_name")
+    @field_validator("ontario_mills_name")
     @classmethod
-    def validate_domain_name(cls, v):
+    def validate_ontario_mills_name(cls, v):
         import re
 
-        domain_regex = re.compile(
+        ontario_mills_regex = re.compile(
             r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
         )
-        if not domain_regex.match(v):
-            raise ValueError("Invalid domain name format")
+        if not ontario_mills_regex.match(v):
+            raise ValueError("Invalid ontario_mills name format")
         return v.lower()
 
     @field_validator("client_id")
     @classmethod
-    def validate_client_domain_type(cls, v, info: ValidationInfo):
-        if "domain_type" in info.data:
-            if info.data["domain_type"] == DomainType.CLIENT and not v:
-                raise ValueError("Client ID required for client domain type")
-            if info.data["domain_type"] == DomainType.AGENCY and v:
-                raise ValueError("Client ID should not be provided for agency domain type")
+    def validate_client_ontario_mills_type(cls, v, info: ValidationInfo):
+        if "ontario_mills_type" in info.data:
+            if info.data["ontario_mills_type"] == Ontario MillsType.CLIENT and not v:
+                raise ValueError("Client ID required for client ontario_mills type")
+            if info.data["ontario_mills_type"] == Ontario MillsType.AGENCY and v:
+                raise ValueError("Client ID should not be provided for agency ontario_mills type")
         return v
 
 
-class DomainUpdateRequest(BaseModel):
-    """Request schema for updating a domain configuration."""
+class Ontario MillsUpdateRequest(BaseModel):
+    """Request schema for updating a ontario_mills configuration."""
 
     ssl_enabled: Optional[bool] = None
     ssl_auto_renew: Optional[bool] = None
@@ -323,16 +323,16 @@ class DomainUpdateRequest(BaseModel):
     configuration_metadata: Optional[Dict[str, Any]] = None
 
 
-class DomainResponse(BaseModel):
-    """Response schema for domain configuration."""
+class Ontario MillsResponse(BaseModel):
+    """Response schema for ontario_mills configuration."""
 
-    domain_id: str
+    ontario_mills_id: str
     agency_id: str
     client_id: Optional[str]
 
-    domain_name: str
-    subdomain: Optional[str]
-    domain_type: DomainType
+    ontario_mills_name: str
+    subontario_mills: Optional[str]
+    ontario_mills_type: Ontario MillsType
 
     # DNS Configuration
     dns_provider: Optional[DNSProvider]
@@ -369,10 +369,10 @@ class DomainResponse(BaseModel):
     updated_at: datetime
 
 
-class DomainHealthCheckResponse(BaseModel):
-    """Response schema for domain health check."""
+class Ontario MillsHealthCheckResponse(BaseModel):
+    """Response schema for ontario_mills health check."""
 
-    domain_name: str
+    ontario_mills_name: str
     overall_status: str
     checks: Dict[str, Dict[str, Any]]
     failed_checks: Optional[List[str]]
@@ -630,7 +630,7 @@ class DeploymentCreateRequest(BaseModel):
     """Request schema for creating deployment configuration."""
 
     client_id: Optional[str] = None
-    primary_domain_id: str
+    primary_ontario_mills_id: str
     brand_config_id: Optional[str] = None
 
     enabled_modules: List[str] = Field(default_factory=lambda: ["leads", "analytics", "messaging"])
@@ -687,8 +687,8 @@ class DeploymentResponse(BaseModel):
     agency_id: str
     client_id: Optional[str]
 
-    primary_domain_id: str
-    additional_domain_ids: List[str]
+    primary_ontario_mills_id: str
+    additional_ontario_mills_ids: List[str]
     brand_config_id: Optional[str]
 
     app_version: str
@@ -738,7 +738,7 @@ class PlatformAnalyticsResponse(BaseModel):
     time_bucket: datetime
     granularity: str
     segment_dimensions: Dict[str, Any]
-    source_domain: Optional[str]
+    source_ontario_mills: Optional[str]
     analytics_metadata: Dict[str, Any]
     recorded_at: datetime
 

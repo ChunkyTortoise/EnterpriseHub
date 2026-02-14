@@ -832,9 +832,9 @@ class PredictiveLeadScorer:
         # Persona-based responses
         if "sarah chen" in lead_name.lower():
             if "commute" in message_lower or "work" in message_lower:
-                return f"Sarah, I've analyzed the commute from Teravista to the Apple North Austin campus. During peak hours, it's approximately 22 minutes. I've also verified that the fiber-optic infrastructure in that specific cul-de-sac supports gigabit speeds for your remote work days. Would you like to see the floor plan for the unit with the dedicated office space?"
+                return f"Sarah, I've analyzed the commute from Teravista to the Apple North Rancho Cucamonga campus. During peak hours, it's approximately 22 minutes. I've also verified that the fiber-optic infrastructure in that specific cul-de-sac supports gigabit speeds for your remote work days. Would you like to see the floor plan for the unit with the dedicated office space?"
             elif "budget" in message_lower or "price" in message_lower:
-                return f"The North Austin market is seeing a slight stabilization, Sarah. The $550k range is highly competitive but manageable given your pre-approval. I recommend we target units that have been on the market for 10+ days where we have more negotiation leverage. Shall I send over the latest absorption report for Round Rock?"
+                return f"The North Rancho Cucamonga market is seeing a slight stabilization, Sarah. The $550k range is highly competitive but manageable given your pre-approval. I recommend we target units that have been on the market for 10+ days where we have more negotiation leverage. Shall I send over the latest absorption report for Fontana?"
             else:
                 return f"Sarah, based on your preference for efficiency and data-driven decisions, I've shortlisted three properties that meet your 45-day relocation timeline. They all feature modern construction and high-speed connectivity. When would you be available for a virtual walk-through?"
 
@@ -845,10 +845,10 @@ class PredictiveLeadScorer:
                 return f"David, I've flagged two off-market opportunities in the tech corridor that meet your institutional criteria. Both are turnkey 2018+ builds with high rental demand. I've already requested the property tax history for your analyst to review. Should I drop them into your portal?"
 
         elif "rodriguez" in lead_name.lower():
-            return f"Mike, Jessica, I completely understand wanting a safe fenced yard for the kids. The Pflugerville neighborhood we discussed has a top-rated elementary school within walking distance and the street has very low traffic. I've also checked the monthly payment including taxes and insurance, and it fits within your $380k comfort zone. Would you like to drive by the area this weekend?"
+            return f"Mike, Jessica, I completely understand wanting a safe fenced yard for the kids. The Ontario neighborhood we discussed has a top-rated elementary school within walking distance and the street has very low traffic. I've also checked the monthly payment including taxes and insurance, and it fits within your $380k comfort zone. Would you like to drive by the area this weekend?"
 
         elif "sarah johnson" in lead_name.lower():
-            return f"Sarah, I've cross-referenced the latest Avery Ranch school boundary maps with the properties we looked at. The home on Highland Ave is confirmed to stay within the preferred district for the 2026-27 year. I've also pulled the property tax history so we can calculate the exact monthly escrow. Does 2:00 PM tomorrow work for a quick tour?"
+            return f"Sarah, I've cross-referenced the latest Etiwanda school boundary maps with the properties we looked at. The home on Highland Ave is confirmed to stay within the preferred district for the 2026-27 year. I've also pulled the property tax history so we can calculate the exact monthly escrow. Does 2:00 PM tomorrow work for a quick tour?"
 
         # Default smart response
         if "?" in message:

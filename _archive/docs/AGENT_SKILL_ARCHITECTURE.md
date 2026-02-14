@@ -9,7 +9,7 @@ Create specialized Claude Code agents and skills for real estate AI automation.
 I'm continuing EnterpriseHub development with focus on Claude Code agents and skills. MCP setup is complete (PostgreSQL, GoHighLevel, GitHub, Firecrawl, Memory, Sequential Thinking).
 
 PRIORITY: Create specialized agents and skills for real estate AI automation:
-- Market Intelligence Agent (Austin property analysis)
+- Market Intelligence Agent (Rancho Cucamonga property analysis)
 - Lead Qualification Agent (Jorge's GHL pipeline optimization)
 - Performance Monitoring Agent (BI dashboard insights)
 - Security Audit Agent (compliance and data protection)
@@ -25,10 +25,10 @@ Context: EnterpriseHub real estate AI with Jorge's GoHighLevel integration
 ### **Specialized Agents Needed**
 
 #### 1. **Market Intelligence Agent**
-- **Purpose**: Austin real estate market analysis and property intelligence
+- **Purpose**: Rancho Cucamonga real estate market analysis and property intelligence
 - **Tools**: Firecrawl, Sequential Thinking, Memory, PostgreSQL
 - **Capabilities**:
-  - Scrape and analyze Austin property listings
+  - Scrape and analyze Rancho Cucamonga property listings
   - Identify market trends and opportunities
   - Generate comparative market analysis (CMA)
   - Track price movements and inventory levels
@@ -94,7 +94,7 @@ Context: EnterpriseHub real estate AI with Jorge's GoHighLevel integration
 #### 2. **Property Intelligence Skill**
 - **Path**: `.claude/skills/real-estate-ai/property-intelligence/`
 - **Commands**:
-  - `/find-properties` - Search Austin properties with criteria
+  - `/find-properties` - Search Rancho Cucamonga properties with criteria
   - `/market-analysis` - Generate CMA and market insights
   - `/property-match` - Match leads to property inventory
 - **Integration**: Firecrawl MCP, market data APIs
@@ -118,7 +118,7 @@ Context: EnterpriseHub real estate AI with Jorge's GoHighLevel integration
 #### 5. **Market Intelligence Skill**
 - **Path**: `.claude/skills/real-estate-ai/market-intelligence/`
 - **Commands**:
-  - `/austin-market` - Austin market analysis and trends
+  - `/rancho_cucamonga-market` - Rancho Cucamonga market analysis and trends
   - `/opportunity-scan` - Identify investment opportunities
   - `/competitor-analysis` - Market competitive intelligence
 - **Integration**: Firecrawl MCP, external data sources
@@ -129,13 +129,13 @@ Context: EnterpriseHub real estate AI with Jorge's GoHighLevel integration
 ```
 Lead Analysis Agent → Property Intelligence Agent → Performance Monitor
    ↓                      ↓                          ↓
-Jorge's GHL Data    →   Austin Properties    →    BI Metrics
+Jorge's GHL Data    →   Rancho Cucamonga Properties    →    BI Metrics
 ```
 
 ### **Parallel Agent Swarm**
 ```
 ┌─ Market Intelligence Agent ─┐
-│  (Austin property analysis) │
+│  (Rancho Cucamonga property analysis) │
 ├─ Lead Qualification Agent ──┤ → Strategic Recommendations
 │  (Jorge's pipeline optimization) │
 ├─ Performance Monitor Agent ──┤
@@ -153,7 +153,7 @@ Jorge's GHL Data    →   Austin Properties    →    BI Metrics
 
 ### **Phase 1: Core Agents (Priority)**
 1. **Create Market Intelligence Agent**
-   - Austin property expertise
+   - Rancho Cucamonga property expertise
    - Firecrawl integration patterns
    - Market trend analysis capabilities
 

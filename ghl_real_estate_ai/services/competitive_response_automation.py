@@ -331,7 +331,7 @@ class EmailMarketingExecutor(ResponseActionExecutor):
         """Send competitive alert email."""
         try:
             recipients = action.get("recipients", [])
-            alert_content = action.get("alert_content", "")
+            action.get("alert_content", "")
 
             # Simulate email sending
             logger.info(f"Sending competitive alert email to {len(recipients)} recipients")

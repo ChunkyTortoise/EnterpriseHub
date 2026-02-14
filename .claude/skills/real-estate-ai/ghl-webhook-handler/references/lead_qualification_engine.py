@@ -199,7 +199,7 @@ def is_meaningful_answer(answer: Any) -> bool:
         # Budget indicators
         '$', 'k', 'thousand', 'million', 'budget', 'afford',
         # Location indicators
-        'austin', 'dallas', 'houston', 'neighborhood', 'area', 'district',
+        'rancho_cucamonga', 'dallas', 'houston', 'neighborhood', 'area', 'district',
         # Timeline indicators
         'month', 'week', 'year', 'spring', 'summer', 'fall', 'winter',
         'january', 'february', 'march', 'april', 'may', 'june',

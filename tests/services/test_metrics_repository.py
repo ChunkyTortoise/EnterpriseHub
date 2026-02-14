@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.repositories.jorge_metrics_repository import (
 
-@pytest.mark.integration
     JorgeMetricsRepository,
 )
 

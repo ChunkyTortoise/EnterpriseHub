@@ -9,7 +9,7 @@ PERSONAS = {
         "behavior": "Anxious, asks basic questions.",
     },
     "The Aggressive Investor": {
-        "initial_query": "I'm looking for high-yield properties in Austin. Don't show me anything with a cap rate below 8%. Also, I'm only paying 4% commission, take it or leave it.",
+        "initial_query": "I'm looking for high-yield properties in Rancho Cucamonga. Don't show me anything with a cap rate below 8%. Also, I'm only paying 4% commission, take it or leave it.",
         "goal": "Objection Handling & ROI",
         "behavior": "Pushy, focused strictly on numbers.",
     },
@@ -39,7 +39,7 @@ PERSONAS = {
         "behavior": "Cautious, focuses on local regulations and data privacy, tests for local knowledge.",
     },
     "The Sophisticated Global Arbitrageur": {
-        "initial_query": "I'm liquidating my London portfolio to pivot into Singapore and Austin. I need 12% cash-on-cash yield or I'm walking. Also, I'm under strict GDPR and PDPA data mandates. Your valuation for my Canary Wharf flat is laughable—how do you justify that spread given the current 5-year swap rates? If your compliance isn't airtight, we're done.",
+        "initial_query": "I'm liquidating my London portfolio to pivot into Singapore and Rancho Cucamonga. I need 12% cash-on-cash yield or I'm walking. Also, I'm under strict GDPR and PDPA data mandates. Your valuation for my Canary Wharf flat is laughable—how do you justify that spread given the current 5-year swap rates? If your compliance isn't airtight, we're done.",
         "goal": "Multi-Stressor (ROI Defense + Arbitrage + Global Compliance)",
         "behavior": "Extremely aggressive, highly technical, legally defensive, and numbers-obsessed.",
     },

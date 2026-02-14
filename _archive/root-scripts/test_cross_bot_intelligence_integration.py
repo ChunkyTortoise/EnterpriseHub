@@ -219,7 +219,7 @@ def simulate_seller_bot_intelligence_context():
         "bot_type": "jorge-seller",
         "intelligence_gathered": True,
         "seller_qualification": {
-            "property_address": "123 Austin St, Austin, TX",
+            "property_address": "123 Rancho Cucamonga St, Rancho Cucamonga, CA",
             "motivation_score": 0.8,
             "timeline": "3-6 months",
             "asking_price": 485000
@@ -245,7 +245,7 @@ def simulate_buyer_bot_intelligence_context(seller_context):
         "bot_type": "jorge-buyer",
         "inherited_preferences": True,
         "seller_context_inherited": {
-            "property_location_preference": "Austin area",
+            "property_location_preference": "Rancho Cucamonga area",
             "budget_range": {"min": 400000, "max": 500000},
             "timeline": seller_context["seller_qualification"]["timeline"]
         },
@@ -253,7 +253,7 @@ def simulate_buyer_bot_intelligence_context(seller_context):
             "buyer_type": "first_time",
             "financing_preapproved": True,
             "property_preferences": ["modern", "move_in_ready"],
-            "location_preferences": ["central_austin", "west_austin"]
+            "location_preferences": ["central_rancho_cucamonga", "west_rancho_cucamonga"]
         },
         "property_matches": {
             "behavioral_matches": 5,

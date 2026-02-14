@@ -434,7 +434,7 @@ class TranscriptAnalyzer:
 
         for transcript in self.transcripts:
             if transcript["outcome"] == "closed":
-                bot_questions = [
+                [
                     msg["message"]
                     for msg in transcript["messages"]
                     if msg["speaker"] == "bot" and "?" in msg["message"]

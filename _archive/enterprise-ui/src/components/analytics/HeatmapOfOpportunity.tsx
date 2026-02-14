@@ -18,8 +18,8 @@ interface HeatPoint {
 
 export function HeatmapOfOpportunity() {
   const [points, setPoints] = useState<HeatPoint[]>([
-    { id: '1', x: 250, y: 150, intensity: 0.9, label: 'Downtown Austin', type: 'hot' },
-    { id: '2', x: 320, y: 220, intensity: 0.7, label: 'East Austin', type: 'hot' },
+    { id: '1', x: 250, y: 150, intensity: 0.9, label: 'Downtown Rancho Cucamonga', type: 'hot' },
+    { id: '2', x: 320, y: 220, intensity: 0.7, label: 'East Rancho Cucamonga', type: 'hot' },
     { id: '3', x: 180, y: 180, intensity: 0.5, label: 'Zilker', type: 'warm' },
     { id: '4', x: 400, y: 100, intensity: 0.4, label: 'Mueller', type: 'warm' },
     { id: '5', x: 100, y: 300, intensity: 0.8, label: 'South Lamar', type: 'hot' },
@@ -44,7 +44,7 @@ export function HeatmapOfOpportunity() {
         </defs>
         <rect width="600" height="400" fill="url(#grid)" />
         
-        {/* Stylized Roads / Boundaries (Abstracted Austin-like) */}
+        {/* Stylized Roads / Boundaries (Abstracted Rancho Cucamonga-like) */}
         <path d="M0 200 Q 150 180 300 200 T 600 200" stroke="white" strokeWidth="1" strokeOpacity="0.1" />
         <path d="M300 0 L 300 400" stroke="white" strokeWidth="1" strokeOpacity="0.1" />
         <path d="M100 0 Q 120 200 100 400" stroke="white" strokeWidth="0.5" strokeOpacity="0.1" />
@@ -122,7 +122,7 @@ export function HeatmapOfOpportunity() {
       <div className="absolute top-4 right-4">
         <div className="px-3 py-1.5 bg-jorge-dark/80 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-jorge-glow animate-pulse" />
-          <span className="text-[10px] font-bold jorge-code text-gray-300 uppercase tracking-widest">Austin Market Intelligence</span>
+          <span className="text-[10px] font-bold jorge-code text-gray-300 uppercase tracking-widest">Rancho Cucamonga Market Intelligence</span>
         </div>
       </div>
 

@@ -122,7 +122,7 @@ def render_personalization_engine(services, selected_lead_name, analysis_result=
             raw_content = st.session_state.generated_outreach
             merged_content = raw_content.replace("[Name]", selected_lead_name.split()[0])
             merged_content = merged_content.replace("[Agent]", "Jorge")
-            merged_content = merged_content.replace("[Market]", "Austin")
+            merged_content = merged_content.replace("[Market]", "Rancho Cucamonga")
 
             # Preview Container - Obsidian Edition
             if device_view == "Mobile":

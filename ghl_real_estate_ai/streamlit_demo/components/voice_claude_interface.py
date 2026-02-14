@@ -407,7 +407,7 @@ def render_voice_claude_interface():
                         """
                         <div style="background:rgba(0, 255, 65, 0.1); padding:10px; border-radius:8px; border:1px solid #00ff41;">
                             <b style="color:#00ff41;">INSTANT TALKING POINT:</b><br>
-                            "Sarah, Teravista actually just ranked in the Top 5% for safety in Austin. 
+                            "Sarah, Teravista actually just ranked in the Top 5% for safety in Rancho Cucamonga. 
                             The local school district has a dedicated security patrol 24/7."
                         </div>
                         <div style="margin-top:10px; font-size:0.8rem; color:#8B949E;">

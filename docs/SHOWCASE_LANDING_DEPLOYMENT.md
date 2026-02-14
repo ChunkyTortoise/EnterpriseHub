@@ -40,7 +40,7 @@ pandas>=2.1.0
 # Set secrets in cloud dashboard Settings > Secrets
 ```
 
-#### 3. Custom Domain (Optional)
+#### 3. Custom Ontario Mills (Optional)
 - Configure DNS CNAME record
 - Update in Streamlit Cloud settings
 - SSL automatically provisioned

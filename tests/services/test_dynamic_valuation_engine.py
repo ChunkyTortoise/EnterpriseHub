@@ -18,10 +18,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import MarketCondition, PropertyType
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
 
-@pytest.mark.integration
     DynamicValuationEngine,
     MarketComparable,
     ValuationComponents,
@@ -45,7 +44,7 @@ class TestDynamicValuationEngine:
         """Sample property data for testing"""
         return {
             "property_id": "test_prop_001",
-            "address": "123 Test Street, Austin, TX 78701",
+            "address": "123 Test Street, Rancho Cucamonga, CA 91701",
             "neighborhood": "Downtown",
             "price": 750000,
             "sqft": 2100,
@@ -439,7 +438,7 @@ class TestDynamicValuationEngine:
         # High-quality property data should achieve high confidence
         high_quality_property = {
             "property_id": "high_quality_001",
-            "address": "123 Premium Street, Austin, TX",
+            "address": "123 Premium Street, Rancho Cucamonga, CA",
             "neighborhood": "Downtown",
             "price": 750000,
             "sqft": 2100,

@@ -83,7 +83,7 @@ Enhance the Buyer Bot with sophisticated property matching capabilities:
    - Offer strategy recommendations
    - Closing timeline management
 
-Integrate with Austin market specifics and real estate workflows.
+Integrate with Rancho Cucamonga market specifics and real estate workflows.
 ```
 
 ### **Prompt 4: Agent Mesh Coordinator Enhancement**
@@ -193,7 +193,7 @@ Build on existing LangGraph patterns for enterprise scale.
 Add real estate-specific AI capabilities to all agents:
 
 1. **Market Intelligence Engine** - Advanced market analysis
-   - Austin market trend prediction using local data
+   - Rancho Cucamonga market trend prediction using local data
    - Neighborhood analysis with demographic insights
    - Investment property ROI calculations
    - Market timing recommendations
@@ -204,7 +204,7 @@ Add real estate-specific AI capabilities to all agents:
    - Legal document review and flagging
    - Risk assessment for transactions
 
-3. **Austin-Specific Expertise** - Local market specialization
+3. **Rancho Cucamonga-Specific Expertise** - Local market specialization
    - School district analysis and ratings
    - Commute optimization for tech professionals
    - HOA and property tax considerations

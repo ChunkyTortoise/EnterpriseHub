@@ -67,9 +67,9 @@ QUALIFICATION_RESPONSES = {
         "Seven hundred fifty thousand",
     ],
     "location": [
-        "Austin downtown",
+        "Rancho Cucamonga downtown",
         "West Lake Hills area",
-        "Anywhere in Central Austin",
+        "Anywhere in Central Rancho Cucamonga",
         "Near UT campus",
     ],
     "bedrooms": [
@@ -92,7 +92,7 @@ QUALIFICATION_RESPONSES = {
     ],
     "motivation": [
         "Growing family, need more space",
-        "Job relocation to Austin",
+        "Job relocation to Rancho Cucamonga",
         "Investment property",
         "First time buyer",
     ]

@@ -252,7 +252,7 @@ npm run build
 
 ```bash
 # .env.production
-REACT_APP_API_URL=https://api.yourdomain.com
+REACT_APP_API_URL=https://api.yourontario_mills.com
 REACT_APP_GA_ID=UA-XXXXXXXXX-X
 ```
 

@@ -11,9 +11,10 @@ Built for Jorge's Real Estate AI Platform - Phase 7: Advanced AI Intelligence
 import asyncio
 import json
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.intelligence.market_intelligence_automation import (
@@ -23,33 +24,38 @@ from ghl_real_estate_ai.intelligence.market_intelligence_automation import (
 from ghl_real_estate_ai.services.cache_service import CacheService
 
 router = APIRouter(prefix="/api/v1/market-intelligence-phase7", tags=["Phase 7 Market Intelligence"])
-# Lazy singleton — defer initialization until first request
-_cache = None
+
+# FastAPI dependency injection - using @lru_cache for singleton behavior
 
 
-def _get_cache():
-    global _cache
-    if _cache is None:
-        _cache = CacheService()
-    return _cache
+@lru_cache(maxsize=1)
+def _get_cache() -> CacheService:
+    """Get CacheService singleton instance."""
+    return CacheService()
 
 
-# Global automation instance
-market_intelligence: Optional[EnhancedMarketIntelligenceAutomation] = None
+@lru_cache(maxsize=1)
+def _get_market_intelligence_automation() -> EnhancedMarketIntelligenceAutomation:
+    """Get market intelligence automation singleton instance."""
+    # Note: Using a synchronous wrapper because lru_cache doesn't support async
+    # The actual initialization happens via a factory
+    from ghl_real_estate_ai.intelligence.market_intelligence_automation import EnhancedMarketIntelligenceAutomation
+    return EnhancedMarketIntelligenceAutomation()
 
 
-async def get_market_intelligence() -> EnhancedMarketIntelligenceAutomation:
-    """Get or create market intelligence automation instance"""
-    global market_intelligence
-    if market_intelligence is None:
-        from ghl_real_estate_ai.intelligence.market_intelligence_automation import create_market_intelligence_automation
-
-        market_intelligence = await create_market_intelligence_automation()
-    return market_intelligence
+async def get_market_intelligence(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(_get_market_intelligence_automation)
+) -> EnhancedMarketIntelligenceAutomation:
+    """Get market intelligence automation instance via DI"""
+    if not hasattr(automation, 'initialized') or not automation.initialized:
+        await automation.initialize()
+    return automation
 
 
 @router.get("/dashboard-data")
-async def get_market_intelligence_dashboard() -> Dict[str, Any]:
+async def get_market_intelligence_dashboard(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """
     Get comprehensive market intelligence dashboard data
 
@@ -61,7 +67,6 @@ async def get_market_intelligence_dashboard() -> Dict[str, Any]:
     - Real-time market health indicators
     """
     try:
-        automation = await get_market_intelligence()
         dashboard_data = await automation.get_market_intelligence_dashboard_data()
 
         return {
@@ -71,13 +76,16 @@ async def get_market_intelligence_dashboard() -> Dict[str, Any]:
             "phase": "7_advanced_intelligence",
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/market-trends")
 async def get_current_market_trends(
-    severity_filter: Optional[str] = None, market_area: Optional[str] = None, limit: Optional[int] = 20
+    severity_filter: Optional[str] = None, 
+    market_area: Optional[str] = None, 
+    limit: Optional[int] = 20,
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
 ) -> Dict[str, Any]:
     """
     Get current market trends with optional filtering
@@ -88,8 +96,6 @@ async def get_current_market_trends(
     - limit: Maximum number of trends to return
     """
     try:
-        automation = await get_market_intelligence()
-
         # Get fresh market trends
         trends = await automation.detect_market_trends()
 
@@ -130,12 +136,14 @@ async def get_current_market_trends(
             "last_updated": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/competitive-analysis")
-async def get_competitive_positioning() -> Dict[str, Any]:
+async def get_competitive_positioning(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """
     Get competitive positioning analysis and alerts
 
@@ -146,8 +154,6 @@ async def get_competitive_positioning() -> Dict[str, Any]:
     - Recommended response strategies
     """
     try:
-        automation = await get_market_intelligence()
-
         # Get competitive positioning alerts
         competitive_alerts = await automation.analyze_competitive_positioning()
 
@@ -185,13 +191,16 @@ async def get_competitive_positioning() -> Dict[str, Any]:
             "last_analysis": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/market-opportunities")
 async def get_market_opportunities(
-    opportunity_type: Optional[str] = None, min_value: Optional[float] = None, time_sensitivity: Optional[str] = None
+    opportunity_type: Optional[str] = None, 
+    min_value: Optional[float] = None, 
+    time_sensitivity: Optional[str] = None,
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
 ) -> Dict[str, Any]:
     """
     Get identified market opportunities with filtering
@@ -202,8 +211,6 @@ async def get_market_opportunities(
     - time_sensitivity: Filter by time sensitivity level
     """
     try:
-        automation = await get_market_intelligence()
-
         # Get market opportunities
         opportunities = await automation.identify_market_opportunities()
 
@@ -255,12 +262,14 @@ async def get_market_opportunities(
             },
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/strategic-insights")
-async def get_strategic_insights() -> Dict[str, Any]:
+async def get_strategic_insights(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """
     Get AI-generated strategic market insights
 
@@ -271,8 +280,6 @@ async def get_strategic_insights() -> Dict[str, Any]:
     - Commission defense strategies
     """
     try:
-        automation = await get_market_intelligence()
-
         # Generate strategic insights
         insights = await automation.generate_strategic_market_insights()
 
@@ -283,12 +290,15 @@ async def get_strategic_insights() -> Dict[str, Any]:
             "insights_type": "claude_ai_powered",
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/start-monitoring")
-async def start_automated_monitoring(background_tasks: BackgroundTasks) -> Dict[str, Any]:
+async def start_automated_monitoring(
+    background_tasks: BackgroundTasks,
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """
     Start automated market intelligence monitoring
 
@@ -299,8 +309,6 @@ async def start_automated_monitoring(background_tasks: BackgroundTasks) -> Dict[
     - Strategic insights generation
     """
     try:
-        automation = await get_market_intelligence()
-
         # Start monitoring in background
         background_tasks.add_task(automation.start_automated_monitoring)
 
@@ -316,12 +324,14 @@ async def start_automated_monitoring(background_tasks: BackgroundTasks) -> Dict[
             "started_at": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/stream/market-alerts")
-async def stream_market_alerts():
+async def stream_market_alerts(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+):
     """
     Stream real-time market intelligence alerts
 
@@ -335,8 +345,6 @@ async def stream_market_alerts():
     async def generate_alert_stream():
         """Generate real-time market alert stream"""
         try:
-            automation = await get_market_intelligence()
-
             while True:
                 # Check for new alerts
                 dashboard_data = await automation.get_market_intelligence_dashboard_data()
@@ -379,7 +387,9 @@ async def stream_market_alerts():
 
 
 @router.get("/market-health-score")
-async def get_market_health_score() -> Dict[str, Any]:
+async def get_market_health_score(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """
     Get comprehensive market health score and metrics
 
@@ -391,7 +401,6 @@ async def get_market_health_score() -> Dict[str, Any]:
     """
     try:
         # Calculate market health score from various factors
-        automation = await get_market_intelligence()
         dashboard_data = await automation.get_market_intelligence_dashboard_data()
 
         # Market health calculation logic
@@ -443,12 +452,14 @@ async def get_market_health_score() -> Dict[str, Any]:
             "trend_direction": "stable",  # Would be calculated from historical data
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/jorge-performance-summary")
-async def get_jorge_performance_summary() -> Dict[str, Any]:
+async def get_jorge_performance_summary(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """
     Get Jorge's performance summary in current market conditions
 
@@ -459,7 +470,6 @@ async def get_jorge_performance_summary() -> Dict[str, Any]:
     - Strategic positioning analysis
     """
     try:
-        automation = await get_market_intelligence()
         dashboard_data = await automation.get_market_intelligence_dashboard_data()
 
         performance_metrics = dashboard_data.get("jorge_performance_metrics", {})
@@ -509,17 +519,17 @@ async def get_jorge_performance_summary() -> Dict[str, Any]:
             "generated_at": datetime.now().isoformat(),
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Health check endpoint
 @router.get("/health")
-async def market_intelligence_health() -> Dict[str, Any]:
+async def market_intelligence_health(
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+) -> Dict[str, Any]:
     """Health check for Phase 7 market intelligence system"""
     try:
-        automation = await get_market_intelligence()
-
         return {
             "status": "healthy",
             "service": "Enhanced Market Intelligence Automation",
@@ -535,3 +545,4 @@ async def market_intelligence_health() -> Dict[str, Any]:
 
     except Exception as e:
         return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+

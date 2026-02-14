@@ -42,7 +42,6 @@ from ghl_real_estate_ai.streamlit_demo.components.multi_market_analytics_view im
 )
 from ghl_real_estate_ai.streamlit_demo.components.roi_calculator_component import (
 
-@pytest.mark.integration
     ChannelInvestment,
     InvestmentScenario,
     ROICalculation,
@@ -75,7 +74,7 @@ class TestAdvancedChurnRecoveryDashboard:
 
         for market in markets:
             assert isinstance(market, MarketMetrics)
-            assert market.name in ["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"]
+            assert market.name in ["Rancho Cucamonga Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"]
             assert 0 <= market.churn_rate <= 1
             assert 0 <= market.recovery_rate <= 1
             assert market.active_campaigns >= 0
@@ -125,8 +124,8 @@ class TestAdvancedChurnRecoveryDashboard:
         assert all(col in geo_data.columns for col in required_columns)
 
         # Check data ranges
-        assert all(geo_data["Latitude"].between(25, 35))  # Texas latitude range
-        assert all(geo_data["Longitude"].between(-105, -90))  # Texas longitude range
+        assert all(geo_data["Latitude"].between(32, 42))  # California latitude range
+        assert all(geo_data["Longitude"].between(-124, -114))  # California longitude range
         assert all(geo_data["Churn_Rate"].between(0, 20))  # Reasonable churn rate range
         assert all(geo_data["Recovery_Rate"].between(50, 100))  # Recovery rate range
         assert all(geo_data["At_Risk_Count"] >= 0)

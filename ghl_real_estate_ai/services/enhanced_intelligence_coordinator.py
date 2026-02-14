@@ -214,7 +214,7 @@ class EnhancedIntelligenceCoordinator:
             sentiment_radar = await self.get_sentiment_radar()
 
             # Analyze key areas in Jorge's territory
-            territory = ["78731", "78746", "78759", "78704", "78745"]  # Austin ZIP codes
+            territory = ["91737", "91737", "91739", "91730", "91730"]  # Rancho Cucamonga ZIP codes
 
             sentiment_analysis = []
             total_motivation = 0
@@ -270,7 +270,7 @@ class EnhancedIntelligenceCoordinator:
             sentiment_radar = await self.get_sentiment_radar()
 
             # Get location recommendations
-            territory = ["78731", "78746", "78759", "78704", "78745", "78738", "78735"]
+            territory = ["91737", "91737", "91739", "91730", "91730", "91737", "91737"]
             recommendations = await sentiment_radar.get_location_recommendations(territory, max_locations=5)
 
             # Convert to opportunity format

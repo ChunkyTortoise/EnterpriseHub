@@ -217,7 +217,7 @@ EXPECTED WORKFLOW:
 2. System asks: "What's your budget range?"
 3. Lead responds: "Around 500k"
 4. System asks: "Which areas interest you?"
-5. Lead responds: "Austin downtown"
+5. Lead responds: "Rancho Cucamonga downtown"
 6. System asks: "How many bedrooms?"
 7. Lead responds: "3 bedrooms"
 

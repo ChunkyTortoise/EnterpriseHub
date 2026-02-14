@@ -13,7 +13,6 @@ import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.jorge_alert_dashboard import (
 
-@pytest.mark.unit
     SEVERITY_COLORS,
     SEVERITY_EMOJI,
     format_alert_row,

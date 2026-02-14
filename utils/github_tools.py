@@ -29,7 +29,7 @@ class GitHubManager:
             file = self.repo.get_contents(file_path, ref=branch)
             self.repo.update_file(file_path, message, content, file.sha, branch=branch)
             return f"Updated {file_path} on {branch}"
-        except:
+        except Exception:
             self.repo.create_file(file_path, message, content, branch=branch)
             return f"Created {file_path} on {branch}"
 

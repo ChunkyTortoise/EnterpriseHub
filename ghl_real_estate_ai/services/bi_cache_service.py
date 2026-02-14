@@ -26,6 +26,7 @@ from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
+from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -590,7 +591,6 @@ class BICacheService:
 
     async def get_cache_analytics(self) -> Dict[str, Any]:
         """Get BI cache analytics and metrics."""
-        total_queries = self.metrics.analytics_queries
         hit_rate = (
             (self.metrics.cache_hits / (self.metrics.cache_hits + self.metrics.cache_misses) * 100)
             if (self.metrics.cache_hits + self.metrics.cache_misses) > 0
@@ -667,16 +667,10 @@ class BICacheService:
         }
 
 
-# Global BI cache service instance
-_bi_cache_service = None
-
-
+@lru_cache(maxsize=1)
 def get_bi_cache_service() -> BICacheService:
     """Get singleton BI cache service instance."""
-    global _bi_cache_service
-    if _bi_cache_service is None:
-        _bi_cache_service = BICacheService()
-    return _bi_cache_service
+    return BICacheService()
 
 
 # Convenience functions for common BI cache operations

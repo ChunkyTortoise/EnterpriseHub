@@ -13,8 +13,6 @@ sys.path.insert(0, str(project_root))
 
 from ghl_real_estate_ai.services.advanced_analytics import ABTestManager, ConversationOptimizer, PerformanceAnalyzer
 
-@pytest.mark.unit
-
 
 class TestABTestManager:
     """Test A/B testing functionality."""
@@ -192,7 +190,7 @@ class TestConversationOptimizer:
         optimizer = ConversationOptimizer()
 
         suggestion = optimizer.suggest_next_question(
-            conversation_history=["Hi!", "Budget $500k", "Need in 2 months", "Austin area"],
+            conversation_history=["Hi!", "Budget $500k", "Need in 2 months", "Rancho Cucamonga area"],
             current_lead_score=75,
             questions_answered=["budget", "timeline", "location"],
         )

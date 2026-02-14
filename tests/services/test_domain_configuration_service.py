@@ -19,7 +19,6 @@ import pytest_asyncio
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.domain_configuration_service import (
 
-@pytest.mark.integration
     DNSProvider,
     DNSRecord,
     DomainConfiguration,

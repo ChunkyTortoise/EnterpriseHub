@@ -76,7 +76,7 @@ class CreateTenantRequest(BaseModel):
     """Request model for creating enterprise tenant."""
 
     company_name: str = Field(..., description="Company name")
-    domain: str = Field(..., description="Company domain")
+    ontario_mills: str = Field(..., description="Company ontario_mills")
     sso_provider: SSOProvider = Field(..., description="SSO provider")
     sso_config: Dict[str, Any] = Field(default_factory=dict, description="SSO configuration")
     partnership_id: Optional[str] = Field(None, description="Associated partnership ID")
@@ -84,11 +84,11 @@ class CreateTenantRequest(BaseModel):
     max_users: int = Field(1000, ge=1, le=10000, description="Maximum users")
     require_mfa: bool = Field(True, description="Require multi-factor authentication")
 
-    @field_validator("domain")
+    @field_validator("ontario_mills")
     @classmethod
-    def validate_domain(cls, v):
+    def validate_ontario_mills(cls, v):
         if "." not in v or " " in v:
-            raise ValueError("Invalid domain format")
+            raise ValueError("Invalid ontario_mills format")
         return v.lower()
 
 
@@ -187,7 +187,7 @@ async def create_enterprise_tenant(
 
 @router.get("/auth/sso/login")
 async def initiate_sso_login(
-    domain: str = Query(..., description="Company domain"),
+    ontario_mills: str = Query(..., description="Company ontario_mills"),
     redirect_uri: str = Query(..., description="Post-login redirect URI"),
     auth_service: EnterpriseAuthService = Depends(lambda: enterprise_auth_service),
 ):
@@ -196,7 +196,7 @@ async def initiate_sso_login(
     import os
     from urllib.parse import urlparse
 
-    allowed_domains = [d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()]
+    allowed_ontario_millss = [d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()]
     
     # Requirement: redirect_uri MUST be present and have a valid netloc
     parsed_uri = urlparse(redirect_uri)
@@ -205,12 +205,12 @@ async def initiate_sso_login(
         logger.warning(f"SSO initiation blocked: Missing netloc in redirect URI {redirect_uri}")
         raise HTTPException(status_code=400, detail="Invalid redirect URI format")
 
-    if parsed_uri.netloc not in [urlparse(d).netloc or d for d in allowed_domains]:
+    if parsed_uri.netloc not in [urlparse(d).netloc or d for d in allowed_ontario_millss]:
         logger.warning(f"SSO initiation blocked: Unauthorized netloc {parsed_uri.netloc} for URI {redirect_uri}")
         raise HTTPException(status_code=400, detail="Unauthorized redirect URI")
 
     try:
-        sso_result = await auth_service.initiate_sso_login(domain, redirect_uri)
+        sso_result = await auth_service.initiate_sso_login(ontario_mills, redirect_uri)
         return sso_result
     except Exception as e:
         logger.error(f"SSO initiation failed: {e}")

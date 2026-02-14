@@ -181,7 +181,7 @@ class PropertyMatchingWithCache:
             properties.append({
                 "property_id": f"prop_{hash(str(preferences))%10000 + i}",
                 "address": f"{100 + i * 10} {['Oak', 'Pine', 'Maple', 'Cedar'][i%4]} Street",
-                "city": preferences.get("location", "Austin, TX").split(",")[0],
+                "city": preferences.get("location", "Rancho Cucamonga, CA").split(",")[0],
                 "price": preferences.get("min_price", 300000) + i * 50000,
                 "bedrooms": preferences.get("min_bedrooms", 3) + (i % 2),
                 "bathrooms": 2 + (i % 3),
@@ -322,14 +322,14 @@ async def demonstrate_integration_performance():
         "phone": "+15125551234",
         "budget": 500000,
         "timeline": "3_months",
-        "preferred_location": "Austin, TX",
+        "preferred_location": "Rancho Cucamonga, CA",
         "source": "website",
         "page_views": 8,
         "time_on_site_seconds": 480
     }
 
     preferences = {
-        "location": "Austin, TX",
+        "location": "Rancho Cucamonga, CA",
         "min_price": 400000,
         "max_price": 600000,
         "min_bedrooms": 3,
@@ -351,7 +351,7 @@ async def demonstrate_integration_performance():
 
     # Market insights
     market_start = time.perf_counter()
-    market_data = await property_matching.get_market_insights("Austin, TX", "single_family")
+    market_data = await property_matching.get_market_insights("Rancho Cucamonga, CA", "single_family")
     market_time = time.perf_counter() - market_start
 
     # Claude analysis
@@ -386,7 +386,7 @@ async def demonstrate_integration_performance():
     matching_time_cached = time.perf_counter() - property_start
 
     market_start = time.perf_counter()
-    market_data = await property_matching.get_market_insights("Austin, TX", "single_family")
+    market_data = await property_matching.get_market_insights("Rancho Cucamonga, CA", "single_family")
     market_time_cached = time.perf_counter() - market_start
 
     claude_start = time.perf_counter()

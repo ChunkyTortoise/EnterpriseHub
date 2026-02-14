@@ -22,6 +22,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -547,16 +548,10 @@ class BIStreamProcessor:
         return await self.cache_service.get(cache_key)
 
 
-# Global BI stream processor instance
-_bi_stream_processor = None
-
-
+@lru_cache(maxsize=1)
 def get_bi_stream_processor() -> BIStreamProcessor:
     """Get singleton BI stream processor instance."""
-    global _bi_stream_processor
-    if _bi_stream_processor is None:
-        _bi_stream_processor = BIStreamProcessor()
-    return _bi_stream_processor
+    return BIStreamProcessor()
 
 
 # Enhanced Event Publisher Integration

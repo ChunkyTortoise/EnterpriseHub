@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 #!/usr/bin/env python3
 """
 🚀 Jorge Bot Performance Baseline Load Tests

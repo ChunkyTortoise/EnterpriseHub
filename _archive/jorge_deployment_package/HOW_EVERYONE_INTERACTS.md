@@ -71,7 +71,7 @@ Questions 3 & 4 → Final offer → Deal or no deal
 ```
 🔵 NEW LEAD ALERT:
 Contact: Sarah Martinez
-Message: "Looking for 4BR house under $500k in North Austin"
+Message: "Looking for 4BR house under $500k in North Rancho Cucamonga"
 Status: UNPROCESSED
 
 [PROCESS WITH JORGE BOT] ← Agent clicks
@@ -83,11 +83,11 @@ Status: UNPROCESSED
 Lead Score: 8.2/10 (HOT LEAD)
 Budget: $500k (qualified)
 Timeline: 60 days (urgent)
-Location: North Austin (target area)
+Location: North Rancho Cucamonga (target area)
 Financing: Pre-approved (ready to buy)
 
 Recommended Response:
-"Great! North Austin has excellent options in your range..."
+"Great! North Rancho Cucamonga has excellent options in your range..."
 
 [SEND AUTOMATICALLY] [EDIT FIRST] [MANUAL OVERRIDE]
 ```

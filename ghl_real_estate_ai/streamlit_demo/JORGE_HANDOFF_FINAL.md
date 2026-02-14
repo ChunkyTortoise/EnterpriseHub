@@ -46,7 +46,7 @@ To connect this AI system to your live GoHighLevel account:
 2.  Create a new workflow (e.g., "AI Lead Route").
 3.  Add a **Webhook** action.
 4.  Method: `POST`
-5.  URL: `[Your Streamlit App URL]/ghl/webhook` (or your custom domain)
+5.  URL: `[Your Streamlit App URL]/ghl/webhook` (or your custom ontario_mills)
 6.  Save and Publish.
 
 ### Step 1b: Tag-Added Webhook (Initial Outreach)

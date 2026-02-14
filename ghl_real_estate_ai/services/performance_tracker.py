@@ -173,8 +173,8 @@ class MetricsCollector:
         memory_percent = memory.percent
 
         # Network and disk I/O
-        disk_io = psutil.disk_io_counters()
-        network_io = psutil.net_io_counters()
+        psutil.disk_io_counters()
+        psutil.net_io_counters()
 
         # Calculate rates (simplified for demo)
         disk_io_mb_per_sec = 0  # Would calculate from previous sample
@@ -253,7 +253,7 @@ class MetricsCollector:
     def _calculate_leads_per_hour(self) -> int:
         """Calculate leads processed per hour"""
         current_time = time.time()
-        hour_ago = current_time - 3600
+        current_time - 3600
 
         # Count leads processed in last hour (simplified)
         # In production, this would query from database or event stream

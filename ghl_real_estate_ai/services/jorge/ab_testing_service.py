@@ -35,7 +35,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.models.bot_context_types import (
-    ABTestExperimentResult,
     ABTestOutcome,
 )
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation

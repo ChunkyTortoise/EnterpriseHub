@@ -32,7 +32,6 @@ from ghl_real_estate_ai.models.ghl_webhook_types import (
     GHLOpportunityData,
     GHLSearchParams,
     GHLWebhookPayload,
-    GHLWorkflowData,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
@@ -747,7 +746,7 @@ class EnhancedGHLClient(GHLClient):
         """Process incoming GHL webhook."""
         try:
             webhook_type = webhook_data.get("type")
-            contact_id = webhook_data.get("contactId")
+            webhook_data.get("contactId")
             location_id = webhook_data.get("locationId")
 
             # Verify location
@@ -828,7 +827,7 @@ class EnhancedGHLClient(GHLClient):
 
             # Add enhanced metrics for Service 6
             conversations = base_data.get("conversations", [])
-            opportunities = base_data.get("opportunities", [])
+            base_data.get("opportunities", [])
 
             # Calculate Service 6 specific metrics
             silent_leads = [c for c in conversations if self._is_lead_silent(c)]

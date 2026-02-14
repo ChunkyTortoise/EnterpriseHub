@@ -406,7 +406,7 @@
         "touchpoint": "with col2:\n        st.write(",
         "Select Template Type:": ["Day 3 SMS", "Day 7 Voice Script", "Day 30 CMA Email"],
         "Day 3 SMS": "template_content =",
-        "Hi {lead_name}! Jorge here from Austin Real Estate.\n\nQuick market update: Your area is seeing 15% price growth this quarter. Curious if you're still considering a move?\n\nBest timing to chat briefly: Reply STOP to opt out.\"": "elif template_type ==",
+        "Hi {lead_name}! Jorge here from Rancho Cucamonga Real Estate.\n\nQuick market update: Your area is seeing 15% price growth this quarter. Curious if you're still considering a move?\n\nBest timing to chat briefly: Reply STOP to opt out.\"": "elif template_type ==",
         "Day 7 Voice Script": "template_content =",
         "Hi {lead_name}, this is Jorge calling about your real estate inquiry.\n\nI've been tracking the market in your area and wanted to share some insights that could save you thousands.\n\nDo you have 2 minutes to chat about your timeline and goals?\"": "else:  # Day 30 CMA Email\n            template_content =",
         "Subject: Your Personalized Market Analysis - {property_address}\n\nHi {lead_name},\n\nI've prepared a detailed market analysis for your area. This shows:\n\n\u2022 Current market values in your neighborhood\n\u2022 Recent sales and price trends\n\u2022 Strategic timing recommendations\n\nAttached is your personalized CMA. Best time to discuss?\n\nJorge\"": "st.text_area(\n            f",

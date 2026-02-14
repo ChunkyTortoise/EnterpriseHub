@@ -108,7 +108,7 @@ class AzureADTenant:
 
     tenant_id: str
     tenant_name: str
-    domain: str
+    ontario_mills: str
     subscription_id: Optional[str]
     customer_id: str
     is_active: bool
@@ -161,7 +161,7 @@ class AzureAuthIntegration:
         }
 
     async def register_tenant(
-        self, tenant_id: str, tenant_name: str, domain: str, customer_id: str, subscription_id: Optional[str] = None
+        self, tenant_id: str, tenant_name: str, ontario_mills: str, customer_id: str, subscription_id: Optional[str] = None
     ) -> AzureADTenant:
         """
         Register Azure AD tenant for SSO integration.
@@ -169,7 +169,7 @@ class AzureAuthIntegration:
         Args:
             tenant_id: Azure AD tenant identifier
             tenant_name: Display name for the tenant
-            domain: Primary domain for the tenant
+            ontario_mills: Primary ontario_mills for the tenant
             customer_id: EnterpriseHub customer ID
             subscription_id: Azure marketplace subscription ID
 
@@ -186,7 +186,7 @@ class AzureAuthIntegration:
             tenant = AzureADTenant(
                 tenant_id=tenant_id,
                 tenant_name=tenant_name,
-                domain=domain,
+                ontario_mills=ontario_mills,
                 subscription_id=subscription_id,
                 customer_id=customer_id,
                 is_active=True,
@@ -221,7 +221,7 @@ class AzureAuthIntegration:
         tenant_info = {
             "tenant_id": tenant_id,
             "verified": True,
-            "domain_verified": True,
+            "ontario_mills_verified": True,
             "accessible": True,
             "tenant_type": "organization",
             "country_code": "US",
@@ -238,7 +238,7 @@ class AzureAuthIntegration:
             "logout_url": f"https://app.enterprisehub.ai/logout?tenant={tenant.tenant_id}",
             "session_timeout_minutes": 480,  # 8 hours
             "require_mfa": False,  # Can be enabled per tenant
-            "allowed_domains": [tenant.domain],
+            "allowed_ontario_millss": [tenant.ontario_mills],
             "jit_provisioning": {"enabled": True, "default_role": "user", "auto_assign_groups": []},
         }
 

@@ -17,7 +17,6 @@ import pytest
 
 from ghl_real_estate_ai.ml.behavioral_signal_processor import (
 
-@pytest.mark.unit
     BehavioralSignal,
     BehavioralSignalProcessor,
     EngagementPattern,
@@ -49,7 +48,7 @@ class TestBehavioralSignalProcessor:
             "source": "organic",
             "days_since_first_contact": 5,
             "unique_sessions": 7,
-            "search_terms": ["Austin homes", "tech corridor properties", "home office space"],
+            "search_terms": ["Rancho Cucamonga homes", "tech corridor properties", "home office space"],
         }
 
     @pytest.fixture
@@ -57,7 +56,7 @@ class TestBehavioralSignalProcessor:
         """Sample conversation history for testing"""
         return [
             {
-                "text": "Hi, I'm looking for a house in Austin with a good home office setup",
+                "text": "Hi, I'm looking for a house in Rancho Cucamonga with a good home office setup",
                 "timestamp": "2026-01-15T10:00:00Z",
                 "sender": "lead",
                 "response_time_seconds": 1800,

@@ -409,7 +409,7 @@ if __name__ == "__main__":
     property_data = {
         "id": "prop_12345",
         "address": "123 Main St",
-        "city": "Austin",
+        "city": "Rancho Cucamonga",
         "state": "TX",
         "zip": "78701",
         "price": 450000,

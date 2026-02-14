@@ -11,8 +11,6 @@ import pytest
 
 from ghl_real_estate_ai.services.property_matcher_ml import ConfidenceScore, PropertyMatcherML
 
-@pytest.mark.integration
-
 
 class TestConfidenceScore:
     """Test the ConfidenceScore dataclass"""
@@ -53,7 +51,7 @@ class TestPropertyMatcherML:
         return {
             "id": "prop_123",
             "price": 750000,
-            "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Austin", "zip": "78701"},
+            "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Rancho Cucamonga", "zip": "91730"},
             "bedrooms": 3,
             "bathrooms": 2.5,
             "sqft": 2100,
@@ -128,7 +126,7 @@ class TestPropertyMatcherML:
 
         # Test different neighborhood
         diff_location_prefs = sample_preferences.copy()
-        diff_location_prefs["location"] = "South Austin"
+        diff_location_prefs["location"] = "South Rancho Cucamonga"
         confidence_diff = matcher.calculate_location_confidence(sample_property, diff_location_prefs)
         assert confidence_diff < confidence
 

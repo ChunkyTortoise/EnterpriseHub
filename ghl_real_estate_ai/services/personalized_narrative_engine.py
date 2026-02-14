@@ -440,7 +440,7 @@ Generate ONLY the narrative text - no headers, bullet points, or additional form
         bedrooms = property_data.get("bedrooms", 0)
         bathrooms = property_data.get("bathrooms", 0)
         neighborhood = property_data.get("neighborhood", "a desirable neighborhood")
-        lead_name = lead_data.get("lead_name", "you")
+        lead_data.get("lead_name", "you")
 
         # Template-based narratives by style
         templates = {

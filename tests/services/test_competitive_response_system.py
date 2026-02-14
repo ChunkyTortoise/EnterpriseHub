@@ -26,8 +26,6 @@ from ghl_real_estate_ai.prompts.competitive_responses import (
 )
 from ghl_real_estate_ai.services.competitor_intelligence import CompetitorMention, RiskLevel
 
-@pytest.mark.integration
-
 
 class TestCompetitiveResponseSystem:
     """Test suite for competitive response system"""
@@ -143,7 +141,7 @@ class TestCompetitiveResponseSystem:
 
     def test_message_personalization(self, system, sample_competitor_mentions):
         """Test message personalization with conversation context"""
-        context = {"lead_name": "John", "property_type": "condo", "location": "Austin"}
+        context = {"lead_name": "John", "property_type": "condo", "location": "Rancho Cucamonga"}
 
         response = system.get_competitive_response(
             risk_level=RiskLevel.MEDIUM, competitor_mentions=sample_competitor_mentions, conversation_context=context
@@ -298,17 +296,17 @@ class TestCompetitiveResponseSystem:
         assert kw_response is not None
         assert remax_response is not None
 
-    def test_austin_market_advantages_integration(self, system):
+    def test_rancho_cucamonga_market_advantages_integration(self, system):
         """Test Rancho Cucamonga/Inland Empire market advantages integration"""
-        austin_advantages = system.rc_advantages
+        rancho_cucamonga_advantages = system.rc_advantages
 
-        assert "market_timing" in austin_advantages
-        assert "neighborhood_expertise" in austin_advantages
-        assert "development_pipeline" in austin_advantages
-        assert "local_connections" in austin_advantages
+        assert "market_timing" in rancho_cucamonga_advantages
+        assert "neighborhood_expertise" in rancho_cucamonga_advantages
+        assert "development_pipeline" in rancho_cucamonga_advantages
+        assert "local_connections" in rancho_cucamonga_advantages
 
         # Each advantage should have relevant data
-        for advantage_type, advantage_data in austin_advantages.items():
+        for advantage_type, advantage_data in rancho_cucamonga_advantages.items():
             assert isinstance(advantage_data, dict)
             assert len(advantage_data) > 0
 

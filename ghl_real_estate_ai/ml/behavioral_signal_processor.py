@@ -939,7 +939,7 @@ if __name__ == "__main__":
     }
 
     conversation_history = [
-        {"text": "Hi, I'm looking for a house in Austin", "timestamp": "2026-01-15T10:00:00Z"},
+        {"text": "Hi, I'm looking for a house in Rancho Cucamonga", "timestamp": "2026-01-15T10:00:00Z"},
         {
             "text": "I'm pre-approved for $500K and need to buy ASAP for my new job at Apple",
             "timestamp": "2026-01-15T10:15:00Z",

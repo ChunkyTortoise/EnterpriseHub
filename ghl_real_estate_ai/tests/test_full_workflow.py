@@ -7,8 +7,6 @@ from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.models.lead_scoring import FinancialReadinessScore, LeadIntentProfile, PriceResponsiveness
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 def mock_dependencies():
@@ -45,7 +43,7 @@ def mock_dependencies():
         cma_report.market_context.dom_average = 30
         cma_report.market_context.inventory_level = 100
         cma_report.market_context.zillow_zestimate = 500000.0
-        cma_report.market_context.market_name = "Austin, TX"
+        cma_report.market_context.market_name = "Rancho Cucamonga, CA"
 
         # Mocking Subject Property
         cma_report.subject_property = MagicMock()
@@ -101,7 +99,7 @@ async def test_day_7_call_workflow(mock_dependencies):
         "lead_name": "John Doe",
         "contact_phone": "+15551234567",
         "contact_email": "john@example.com",
-        "property_address": "123 Austin Blvd",
+        "property_address": "123 Rancho Cucamonga Blvd",
         "conversation_history": [],
         "intent_profile": None,  # Will be filled by analyze_intent
         "current_step": "day_7",

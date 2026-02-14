@@ -374,7 +374,7 @@ class ContextAwarenessEngine:
     def _detect_context(self, activity: Dict[str, Any]) -> PlatformContext:
         """Detect current platform context from activity."""
         page = activity.get("page", "").lower()
-        action = activity.get("action", "").lower()
+        activity.get("action", "").lower()
 
         if "dashboard" in page or "overview" in page:
             return PlatformContext.DASHBOARD
@@ -726,10 +726,10 @@ class MultiAgentCoordinator:
         try:
             from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
-            lead_bot = LeadBotWorkflow()
+            LeadBotWorkflow()
 
             # Extract lead context
-            lead_id = context.get("user_id", "concierge_user")
+            context.get("user_id", "concierge_user")
             sequence_day = context.get("sequence_day", 3)
 
             # For now, provide guidance on lead bot capabilities
@@ -1104,7 +1104,7 @@ class ClaudeConciergeAgent:
         1. Request type (question, task, problem, exploration)
         2. Complexity level (simple, moderate, complex)
         3. Urgency (low, medium, high)
-        4. Required knowledge domains
+        4. Required knowledge ontario_millss
         5. Whether multi-agent coordination is needed
 
         Respond with JSON format.
@@ -1120,7 +1120,7 @@ class ClaudeConciergeAgent:
                 "request_type": "question",
                 "complexity": "moderate",
                 "urgency": "medium",
-                "knowledge_domains": ["general"],
+                "knowledge_ontario_millss": ["general"],
                 "needs_coordination": False,
             }
 

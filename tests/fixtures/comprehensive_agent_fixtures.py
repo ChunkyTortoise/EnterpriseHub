@@ -56,7 +56,7 @@ class LeadProfileFactory:
                 "down_payment": 25000,
                 "employment_status": "employed",
                 "family_size": 4,
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "budget_min": 350000,
                 "budget_max": 450000,
                 "property_type": "single_family",
@@ -78,7 +78,7 @@ class LeadProfileFactory:
                 {
                     "timestamp": datetime.now() - timedelta(hours=2),
                     "action": "property_search",
-                    "details": {"criteria": "3br, 2ba, Austin", "results_viewed": 8},
+                    "details": {"criteria": "3br, 2ba, Rancho Cucamonga", "results_viewed": 8},
                 },
                 {
                     "timestamp": datetime.now() - timedelta(hours=1),
@@ -125,7 +125,7 @@ class LeadProfileFactory:
             },
             expected_routing_decision={
                 "priority": "urgent",
-                "agent_expertise_required": ["luxury_homes", "austin_market"],
+                "agent_expertise_required": ["luxury_homes", "rancho_cucamonga_market"],
                 "estimated_response_time": 15,  # minutes
                 "predicted_success_rate": 0.82,
                 "routing_confidence": 0.91,
@@ -292,7 +292,7 @@ class LeadProfileFactory:
                 "down_payment": 100000,
                 "employment_status": "self_employed",
                 "family_size": 2,
-                "location": "Austin, TX",
+                "location": "Rancho Cucamonga, CA",
                 "budget_min": 300000,
                 "budget_max": 800000,
                 "property_type": "investment",
@@ -321,7 +321,7 @@ class LeadProfileFactory:
                 {
                     "timestamp": datetime.now() - timedelta(hours=1),
                     "action": "market_report_download",
-                    "details": {"report": "austin_investment_trends_q4_2025"},
+                    "details": {"report": "rancho_cucamonga_investment_trends_q4_2025"},
                 },
             ],
             expected_agent_insights={

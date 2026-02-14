@@ -101,7 +101,7 @@ class MarketTimingService:
         timing_score = self.calculate_market_timing_score(property_data)
 
         days_on_market = property_data.get("days_on_market", 0)
-        current_price = property_data.get("price", 0)
+        property_data.get("price", 0)
 
         insights = {
             "negotiation_opportunity": self._assess_negotiation_opportunity(days_on_market),
@@ -206,7 +206,7 @@ class MarketTimingService:
         - Time since last price change
         """
         days_on_market = property_data.get("days_on_market", 0)
-        current_price = property_data.get("price", 0)
+        property_data.get("price", 0)
 
         # Estimate price reductions based on DOM (heuristic)
         if days_on_market > 45:
@@ -646,7 +646,7 @@ def demo_market_timing():
     test_properties = [
         {
             "id": "test_hot",
-            "address": {"neighborhood": "Hyde Park"},
+            "address": {"neighborhood": "Alta Loma"},
             "property_type": "Single Family",
             "price": 675000,
             "days_on_market": 5,
@@ -654,7 +654,7 @@ def demo_market_timing():
         },
         {
             "id": "test_stale",
-            "address": {"neighborhood": "Steiner Ranch"},
+            "address": {"neighborhood": "North Rancho"},
             "property_type": "Single Family",
             "price": 725000,
             "days_on_market": 78,
@@ -662,7 +662,7 @@ def demo_market_timing():
         },
         {
             "id": "test_normal",
-            "address": {"neighborhood": "Circle C Ranch"},
+            "address": {"neighborhood": "Alta Loma"},
             "property_type": "Single Family",
             "price": 520000,
             "days_on_market": 24,

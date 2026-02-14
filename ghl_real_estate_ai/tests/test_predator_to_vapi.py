@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 import asyncio
 import json
 import uuid
@@ -46,8 +45,8 @@ class SwarmE2EValidator:
         # 1. Simulate Price Drop
         print("🔍 Step 1: Simulating Price Drop Detection...")
         property_data = {
-            "id": "prop_austin_001",
-            "address": "123 Tech Lane, Austin, TX",
+            "id": "prop_rancho_cucamonga_001",
+            "address": "123 Tech Lane, Rancho Cucamonga, CA",
             "old_price": 850000,
             "new_price": 799000,
             "leads": ["lead_jorge_001", "lead_buyer_002"],

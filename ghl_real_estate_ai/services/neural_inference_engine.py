@@ -1120,7 +1120,7 @@ class NeuralInferenceEngine:
                 request = await asyncio.wait_for(self.request_queue.get(), timeout=1.0)
 
                 # Process request
-                response = await self.predict_match(
+                await self.predict_match(
                     request.property_data, request.client_data, request.conversation_context, request.request_id
                 )
 

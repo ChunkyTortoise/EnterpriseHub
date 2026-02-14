@@ -361,7 +361,6 @@ class RetellCallManager:
                 logger.info(f"Successfully cancelled call {call_id}")
 
                 # Update cache
-                cache_key = f"retell_call_result:{call_id}"
                 result = CallResult(
                     call_id=call_id,
                     status=CallStatus.CANCELLED,

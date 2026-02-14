@@ -150,7 +150,6 @@ class ExpertiseMatcherAgent(RoutingAnalyzerAgent):
         """Match lead requirements with agent specialties."""
         try:
             # Extract lead requirements from swarm analysis
-            lead_profile = swarm_analysis.consensus if swarm_analysis else {}
             lead_requirements = lead_data.get("requirements", {})
 
             best_match_agent = None
@@ -407,7 +406,7 @@ class WorkloadBalancerAgent(RoutingAnalyzerAgent):
         try:
             # Calculate workload distribution
             total_capacity = sum(agent.max_capacity for agent in available_agents)
-            total_current_load = sum(agent.current_load for agent in available_agents)
+            sum(agent.current_load for agent in available_agents)
 
             if total_capacity == 0:
                 raise ValueError("No agent capacity available")

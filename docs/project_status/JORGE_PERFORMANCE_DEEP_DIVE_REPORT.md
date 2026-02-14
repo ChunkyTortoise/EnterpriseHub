@@ -79,7 +79,7 @@ CREATE INDEX CONCURRENTLY idx_active_leads_performance
 # Enhanced cache warming for Jorge's specific patterns
 JORGE_CACHE_WARMING = {
     # High-frequency lead data
-    "top_leads_austin": (load_market_leads, ("austin", "top"), {"priority": "critical"}),
+    "top_leads_rancho_cucamonga": (load_market_leads, ("rancho_cucamonga", "top"), {"priority": "critical"}),
     "lead_scoring_models": (load_scoring_models, (), {"priority": "critical"}),
     "market_analytics_cache": (load_market_analytics, (), {"priority": "high"}),
     
@@ -248,9 +248,9 @@ def get_shared_services():
 ```python
 # Add to app.py startup
 JORGE_STREAMLIT_CACHE_WARMING = {
-    "top_leads_active": (load_lead_dashboard_data, ("austin", "active"), {}),
+    "top_leads_active": (load_lead_dashboard_data, ("rancho_cucamonga", "active"), {}),
     "properties_featured": (load_featured_properties, (), {}),
-    "market_analytics": (load_market_summary, ("austin",), {}),
+    "market_analytics": (load_market_summary, ("rancho_cucamonga",), {}),
     "ai_templates": (load_response_templates, (), {}),
 }
 

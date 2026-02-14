@@ -10,7 +10,6 @@ Extends the basic PropertyMatcher with:
 """
 
 import json
-import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -426,7 +425,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
 
         city = address.get("city", "").lower()
         neighborhood = address.get("neighborhood", "").lower()
-        state = address.get("state", "").lower()
+        address.get("state", "").lower()
         zip_code = address.get("zip", "")
 
         pref_lower = preferred_location.lower()
@@ -606,7 +605,7 @@ class EnhancedPropertyMatcher(PropertyMatcher):
         """Basic safety scoring."""
         # Placeholder: would integrate with crime data
         neighborhood = property_data.get("address", {}).get("neighborhood", "")
-        safe_neighborhoods = ["steiner ranch", "westlake", "avery ranch", "circle c"]
+        safe_neighborhoods = ["rancho etiwanda", "westlake", "avery ranch", "circle c"]
 
         if any(safe_area in neighborhood.lower() for safe_area in safe_neighborhoods):
             return 0.8 * weight
@@ -1066,7 +1065,7 @@ def demo_enhanced_matching():
     test_preferences = {
         "lead_id": "demo_lead_001",
         "budget": 600000,
-        "location": "Austin",
+        "location": "Rancho Cucamonga",
         "bedrooms": 3,
         "bathrooms": 2,
         "property_type": "Single Family",

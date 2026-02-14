@@ -27,8 +27,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 try:
     from ghl_real_estate_ai.services.client_outcome_verification_service import (
         ClientOutcomeVerificationService,
@@ -333,7 +331,7 @@ class TestClientOutcomeVerificationService:
             "transaction_id": "txn_123",
             "agent_id": "test_agent_001",
             "client_id": "test_client_001",
-            "property_address": "123 Test St, Austin, TX",
+            "property_address": "123 Test St, Rancho Cucamonga, CA",
             "listed_price": 440000,
             "sold_price": 447000,
             "commission_paid": 15645,

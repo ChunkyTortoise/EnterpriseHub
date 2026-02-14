@@ -338,7 +338,7 @@ class AdvancedAnalyticsVisualizationEngine:
             self.dashboard_cache[dashboard.dashboard_id] = dashboard
 
             # Generate initial dashboard insights
-            insights = await self._generate_dashboard_insights(dashboard)
+            await self._generate_dashboard_insights(dashboard)
 
             # Track performance
             processing_time = time.time() - start_time
@@ -908,7 +908,7 @@ class AdvancedAnalyticsVisualizationEngine:
         """Apply advanced styling to visualization"""
         try:
             # Color scheme
-            color_scheme = config.get("color_scheme", "default")
+            config.get("color_scheme", "default")
 
             # Update layout with advanced styling
             fig.update_layout(

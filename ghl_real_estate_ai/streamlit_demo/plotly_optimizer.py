@@ -89,7 +89,7 @@ class PlotlyOptimizer:
             go.Indicator(
                 mode="gauge+number",
                 value=value,
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": title, "font": {"size": 14, "color": "#8B949E", "family": "Space Grotesk"}},
                 gauge={
                     "axis": {"range": [min_val, max_val], "tickwidth": 1, "tickcolor": "#8B949E"},

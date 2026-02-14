@@ -101,7 +101,7 @@ with st.expander("🛠️ Architectural Search Criteria"):
         budget = st.slider("Target Cap", 300000, 2000000, 1200000, step=50000)
         beds = st.number_input("Min Bedrooms", 1, 6, 3)
     with col_s2:
-        location = st.text_input("Geography", "Austin, TX")
+        location = st.text_input("Geography", "Rancho Cucamonga, CA")
         strategy = st.radio("Matching Engine", ["Basic Filter", "AI Semantic Search"], horizontal=True)
 
     if st.button("Synchronize with Lyrio Core", use_container_width=True):

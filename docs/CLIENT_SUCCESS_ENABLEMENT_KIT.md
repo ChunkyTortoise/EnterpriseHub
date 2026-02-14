@@ -585,7 +585,7 @@ SALESFORCE_CONFIG = {
     "username": "your_username@company.com",
     "password": "your_password",
     "security_token": "your_security_token",
-    "domain": "login.salesforce.com",  # or test.salesforce.com for sandbox
+    "ontario_mills": "login.salesforce.com",  # or test.salesforce.com for sandbox
     "api_version": "v58.0"
 }
 
@@ -606,7 +606,7 @@ class SalesforceIntegration:
                 username=self.config["username"],
                 password=self.config["password"],
                 security_token=self.config["security_token"],
-                domain=self.config["domain"],
+                ontario_mills=self.config["ontario_mills"],
                 version=self.config["api_version"]
             )
             

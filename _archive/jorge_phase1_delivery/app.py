@@ -62,8 +62,8 @@ def load_mock_data():
 
 # Initialize services
 @st.cache_resource
-def get_services(market="Austin"):
-    listings_file = "property_listings.json" if market == "Austin" else "property_listings_rancho.json"
+def get_services(market="Rancho Cucamonga"):
+    listings_file = "property_listings.json" if market == "Rancho Cucamonga" else "property_listings_rancho.json"
     listings_path = Path(__file__).parent.parent / "data" / "knowledge_base" / listings_file
     
     return {
@@ -99,8 +99,8 @@ st.set_page_config(
 # Sidebar - Settings (Early for service init)
 with st.sidebar:
     st.markdown("### ⚙️ AI Configuration")
-    selected_market = st.selectbox("Select Market:", ["Austin, TX", "Rancho Cucamonga, CA"])
-    market_key = "Austin" if "Austin" in selected_market else "Rancho"
+    selected_market = st.selectbox("Select Market:", ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"])
+    market_key = "Rancho Cucamonga" if "Rancho Cucamonga" in selected_market else "Rancho"
     
     ai_tone = st.select_slider(
         "AI Voice Tone:",
@@ -709,7 +709,7 @@ elif selected_hub == "🧠 Lead Intelligence Hub":
             "budget": 650000,
             "engagement_score": 78,
             "last_activity_days_ago": 2,
-            "location": "Austin, TX",
+            "location": "Rancho Cucamonga, CA",
             "device": "mobile",
             "source": "paid",
             "preferences": {
@@ -989,7 +989,7 @@ elif selected_hub == "💰 Sales Copilot":
         col1, col2 = st.columns(2)
         with col1:
             party_name = st.text_input("Buyer/Client Name:", "John Doe")
-            address = st.text_input("Property Address:", "123 Main St, Austin, TX")
+            address = st.text_input("Property Address:", "123 Main St, Rancho Cucamonga, CA")
             
         with col2:
             price_doc = st.number_input("Transaction Price ($):", value=450000)

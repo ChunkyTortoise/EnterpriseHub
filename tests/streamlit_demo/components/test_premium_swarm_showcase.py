@@ -14,7 +14,6 @@ import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.components.premium_swarm_showcase import (
 
-@pytest.mark.integration
     AgentReasoningStep,
     ConsensusVisualization,
     PremiumSwarmMetrics,
@@ -79,7 +78,7 @@ def sample_agent():
 def sample_lead_data():
     """Sample lead data for testing."""
     return {
-        "demographics": {"age": 35, "income": 150000, "location": "Austin, TX", "job": "Engineer"},
+        "demographics": {"age": 35, "income": 150000, "location": "Rancho Cucamonga, CA", "job": "Engineer"},
         "behavior": {"engagement_score": 85, "urgency": "High", "decision_style": "Data-Driven"},
         "intent": {"timeline": "30 days", "budget": "500K-700K", "motivation": "Upgrade"},
         "risk_score": 20,
@@ -400,7 +399,7 @@ def test_agent_insights_quality_validation():
 
     # Test each agent type with sample data
     sample_lead = {
-        "demographics": {"age": 40, "income": 200000, "location": "Austin, TX", "job": "Director"},
+        "demographics": {"age": 40, "income": 200000, "location": "Rancho Cucamonga, CA", "job": "Director"},
         "behavior": {"engagement_score": 90, "urgency": "High", "decision_style": "Analytical"},
         "intent": {"timeline": "60 days", "budget": "800K-1M", "motivation": "Investment"},
         "risk_score": 15,

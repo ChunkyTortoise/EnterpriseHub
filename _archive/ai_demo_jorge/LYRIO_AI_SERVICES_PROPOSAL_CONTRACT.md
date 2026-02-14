@@ -271,7 +271,7 @@ Title: Senior AI Developer & Technical Consultant
 
 ### **System Integration Requirements**
 - GoHighLevel API integration and workflow compatibility
-- MLS data feed connectivity (Austin MLS + statewide access)
+- MLS data feed connectivity (Rancho Cucamonga MLS + statewide access)
 - Real-time synchronization with existing client database
 - Mobile-responsive dashboard for remote access
 

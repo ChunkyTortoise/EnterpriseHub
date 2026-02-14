@@ -11,7 +11,6 @@ Analyzes lead behavioral patterns to dynamically adjust matching weights:
 """
 
 import json
-import asyncio
 import statistics
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -619,7 +618,6 @@ class BehavioralWeightingEngine:
         traditional_factors = ["budget", "location", "bedrooms", "bathrooms", "property_type", "sqft"]
         lifestyle_factors = ["schools", "commute", "walkability", "safety"]
         contextual_factors = ["hoa_fee", "lot_size", "home_age", "parking", "property_condition"]
-        market_timing_factors = ["market_timing"]
 
         traditional_weights = {f: all_weights.get(f, FACTOR_WEIGHTS_BASE.get(f, 0)) for f in traditional_factors}
         lifestyle_weights = {f: all_weights.get(f, FACTOR_WEIGHTS_BASE.get(f, 0)) for f in lifestyle_factors}
@@ -777,7 +775,7 @@ class BehavioralWeightingEngine:
         if len(prices) < 2:
             return 0.5
 
-        price_range = max(prices) - min(prices)
+        max(prices) - min(prices)
         avg_price = statistics.mean(prices)
         cv = (statistics.stdev(prices) / avg_price) if avg_price > 0 else 1.0
 
@@ -802,7 +800,7 @@ class BehavioralWeightingEngine:
         if len(sqfts) < 2:
             return 0.5
 
-        size_range = max(sqfts) - min(sqfts)
+        max(sqfts) - min(sqfts)
         avg_size = statistics.mean(sqfts)
         cv = (statistics.stdev(sqfts) / avg_size) if avg_size > 0 else 1.0
 
@@ -850,11 +848,11 @@ def demo_behavioral_weighting():
     test_scenarios = [
         {
             "lead_id": "test_contact_api",
-            "preferences": {"budget": 600000, "location": "Austin", "bedrooms": 3, "property_type": "Single Family"},
+            "preferences": {"budget": 600000, "location": "Rancho Cucamonga", "bedrooms": 3, "property_type": "Single Family"},
         },
         {
             "lead_id": "test_interactions_api",
-            "preferences": {"budget": 450000, "location": "East Austin", "bedrooms": 2, "property_type": "Condo"},
+            "preferences": {"budget": 450000, "location": "East Rancho Cucamonga", "bedrooms": 2, "property_type": "Condo"},
         },
     ]
 

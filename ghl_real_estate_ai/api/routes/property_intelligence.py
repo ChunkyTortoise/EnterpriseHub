@@ -476,9 +476,15 @@ async def analyze_property(request: PropertyAnalysisRequest, current_user=Depend
         start_time = datetime.now()
         logger.info(f"Starting {request.analysisLevel} property analysis")
 
-        # TODO: Integrate with actual property intelligence agent
-        # property_agent = get_property_intelligence_agent()
-        # analysis = await property_agent.analyze_property(request)
+        # ROADMAP-031: Integrate with Property Intelligence Agent
+        # Current: Mock analysis generation
+        # Required:
+        #   1. Initialize property intelligence agent
+        #   2. Fetch property data from MLS/data sources
+        #   3. Run AI analysis for investment metrics
+        #   4. Cache results for 24 hours
+        #   5. Return comprehensive PropertyAnalysis
+        # Dependencies: None
 
         # Generate comprehensive mock analysis
         analysis = generate_mock_property_analysis(request)
@@ -516,7 +522,15 @@ async def get_property_analysis(property_id: str, current_user=Depends(get_curre
     try:
         logger.info(f"Fetching property analysis: {property_id}")
 
-        # TODO: Fetch from database/cache
+        # ROADMAP-032: Property Analysis Database/Cache Retrieval
+        # Current: Generating mock analysis on every request
+        # Required:
+        #   1. Check Redis cache first (L1 - 1 hour TTL)
+        #   2. Query property_analyses table (L2 - persistent)
+        #   3. Cache miss: trigger async analysis job
+        #   4. Return cached or placeholder with job_id
+        # Dependencies: ROADMAP-031
+
         # For now, generate a mock analysis
         mock_request = PropertyAnalysisRequest(
             propertyId=property_id, analysisLevel="STANDARD", investmentStrategy="BUY_AND_HOLD"
@@ -526,7 +540,7 @@ async def get_property_analysis(property_id: str, current_user=Depends(get_curre
         logger.info(f"Property analysis retrieved: {property_id}")
         return analysis
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch property analysis")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -539,7 +553,16 @@ async def update_analysis(property_id: str, updates: PropertyAnalysisRequest, cu
     try:
         logger.info(f"Updating property analysis: {property_id}")
 
-        # TODO: Update analysis in database
+        # ROADMAP-033: Property Analysis Database Update
+        # Current: Mock analysis, no persistence
+        # Required:
+        #   1. Validate property exists and user has access
+        #   2. Update property_analyses table with new data
+        #   3. Invalidate Redis cache
+        #   4. Version history: Store previous analysis
+        #   5. Trigger re-analysis if investment params changed
+        # Dependencies: ROADMAP-032
+
         # For now, return updated mock analysis
         analysis = generate_mock_property_analysis(updates)
         analysis.propertyId = property_id
@@ -548,7 +571,7 @@ async def update_analysis(property_id: str, updates: PropertyAnalysisRequest, cu
         logger.info(f"Property analysis updated: {property_id}")
         return analysis
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to update property analysis")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -561,7 +584,16 @@ async def delete_analysis(property_id: str, current_user=Depends(get_current_use
     try:
         logger.info(f"Deleting property analysis: {property_id}")
 
-        # TODO: Delete from database
+        # ROADMAP-034: Property Analysis Deletion with Cleanup
+        # Current: Publishing event only
+        # Required:
+        #   1. Soft-delete: Set deleted_at timestamp
+        #   2. Remove from Redis cache
+        #   3. Archive analysis history
+        #   4. Cascade: Remove related comparisons and benchmarks
+        #   5. Notify dependent services
+        # Dependencies: ROADMAP-032, ROADMAP-033
+
         # Publish deletion event
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
@@ -571,7 +603,7 @@ async def delete_analysis(property_id: str, current_user=Depends(get_current_use
         logger.info(f"Property analysis deleted: {property_id}")
         return {"success": True, "propertyId": property_id}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to delete property analysis")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -593,7 +625,15 @@ async def compare_properties(
         property_id_list = property_ids.get("propertyIds", [])
         logger.info(f"Comparing {len(property_id_list)} properties")
 
-        # TODO: Implement actual property comparison logic
+        # ROADMAP-035: Property Comparison Logic
+        # Current: Mock comparison with generated data
+        # Required:
+        #   1. Fetch analyses for all property IDs
+        #   2. Calculate comparative scores (ROI, cash flow, risk)
+        #   3. Rank properties by different criteria
+        #   4. Generate recommendations based on strategy
+        #   5. Cache comparison results
+        # Dependencies: ROADMAP-032
 
         # Generate mock comparison
         comparison = PropertyComparison(
@@ -684,7 +724,7 @@ async def get_benchmark_analysis(property_id: str, radius: int = 5, current_user
         logger.info(f"Benchmark analysis completed for property {property_id}")
         return benchmark_data
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to generate benchmark analysis")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -736,7 +776,7 @@ async def get_realtime_market_data(property_id: str, current_user=Depends(get_cu
         logger.info(f"Real-time data retrieved for property {property_id}")
         return realtime_data
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch real-time market data")
         raise HTTPException(status_code=500, detail="Internal server error")
 

@@ -44,7 +44,7 @@ Each app has:
 - **Repository**: `ChunkyTortoise/ai-orchestrator`
 - **Branch**: `main`
 - **Main file path**: `app.py`
-- **App URL**: `ct-agentforge` (custom subdomain)
+- **App URL**: `ct-agentforge` (custom subontario_mills)
 
 **Settings**:
 - Python version: 3.11
@@ -63,7 +63,7 @@ curl -I https://ct-agentforge.streamlit.app
 - **Repository**: `ChunkyTortoise/prompt-engineering-lab`
 - **Branch**: `main`
 - **Main file path**: `app.py`
-- **App URL**: `ct-prompt-lab` (custom subdomain)
+- **App URL**: `ct-prompt-lab` (custom subontario_mills)
 
 **Settings**:
 - Python version: 3.11
@@ -82,7 +82,7 @@ curl -I https://ct-prompt-lab.streamlit.app
 - **Repository**: `ChunkyTortoise/llm-integration-starter`
 - **Branch**: `main`
 - **Main file path**: `app.py`
-- **App URL**: `ct-llm-starter` (custom subdomain)
+- **App URL**: `ct-llm-starter` (custom subontario_mills)
 
 **Settings**:
 - Python version: 3.11

@@ -120,13 +120,13 @@ class SalesCopilotHub:
         with col_input:
             st.markdown("""
                 <div style="background: rgba(22, 27, 34, 0.6); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
-                    <p style="color: #8B949E; font-size: 0.9rem; margin: 0; font-family: 'Inter', sans-serif;">Enter lead concern to generate a high-conversion Austin-market counter strategy.</p>
+                    <p style="color: #8B949E; font-size: 0.9rem; margin: 0; font-family: 'Inter', sans-serif;">Enter lead concern to generate a high-conversion Rancho Cucamonga-market counter strategy.</p>
                 </div>
             """, unsafe_allow_html=True)
             
             lead_options = st.session_state.get('lead_options', {})
             lead_name = st.selectbox("Select Target Lead", list(lead_options.keys()), key="sc_lead_sel")
-            objection_text = st.text_area("Live Objection / Barrier", placeholder="e.g., 'The property taxes in Austin are making me nervous...'", height=120)
+            objection_text = st.text_area("Live Objection / Barrier", placeholder="e.g., 'The property taxes in Rancho Cucamonga are making me nervous...'", height=120)
             
             persona = st.select_slider("Strategy Aggression:", options=["Consultative", "Balanced", "Assertive"], value="Balanced")
             
@@ -422,7 +422,7 @@ class SalesCopilotHub:
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number",
                 value = avg_prob,
-                domain = {'x': [0, 1], 'y': [0, 1]},
+                ontario_mills = {'x': [0, 1], 'y': [0, 1]},
                 title = {'text': "<b>Average Win Probability</b>", 'font': {'size': 16, 'color': '#E6EDF3'}},
                 number = {'font': {'color': '#FFFFFF', 'family': 'Space Grotesk'}},
                 gauge = {
@@ -566,7 +566,7 @@ class SalesCopilotHub:
                 "why": "Reframes the rate as temporary and provides a tangible financial solution."
             },
             {
-                "objection": "I'm worried about the Austin property tax spikes.",
+                "objection": "I'm worried about the Rancho Cucamonga property tax spikes.",
                 "counter": "It's a valid concern. However, your Homestead Exemption caps increases at 10% annually, and we're seeing value growth consistently outpace tax growth by 3x.",
                 "why": "Educates on legal protections and focuses on the spread (ROI)."
             },

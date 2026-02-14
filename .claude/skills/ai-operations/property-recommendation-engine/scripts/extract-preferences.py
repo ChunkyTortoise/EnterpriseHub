@@ -441,7 +441,7 @@ def load_messages(lead_id: str, conversations_file: Optional[str] = None) -> Lis
         {"role": "agent", "content": "And how many bedrooms do you need?"},
         {"role": "lead", "content": "We need at least 4 bedrooms and 3 bathrooms. Must have a pool - that's non-negotiable."},
         {"role": "agent", "content": "Any other must-haves?"},
-        {"role": "lead", "content": "Good schools are really important - we have two kids. I work in downtown Austin so commute matters too."},
+        {"role": "lead", "content": "Good schools are really important - we have two kids. I work in downtown Rancho Cucamonga so commute matters too."},
         {"role": "lead", "content": "Also, we'd prefer at least 2500 square feet. No HOA if possible."},
     ]
 

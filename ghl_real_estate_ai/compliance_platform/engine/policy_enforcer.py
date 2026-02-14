@@ -44,7 +44,7 @@ class PolicyScope(str, Enum):
     GLOBAL = "global"  # Applies to all models
     HIGH_RISK = "high_risk"  # Only high-risk models
     PERSONAL_DATA = "personal_data"  # Models processing personal data
-    HEALTHCARE = "healthcare"  # Healthcare domain
+    HEALTHCARE = "healthcare"  # Healthcare ontario_mills
     FINANCE = "finance"  # Financial services
     SPECIFIC_MODEL = "specific"  # Specific model types
 

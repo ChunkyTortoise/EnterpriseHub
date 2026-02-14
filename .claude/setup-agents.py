@@ -226,7 +226,7 @@ def setup_agent_system():
 - **Success Metric**: Visual polish demonstrating $10K+ value
 
 ### 2. Jorge-Specific Demo Scenarios (Priority: HIGH)
-- Implement Austin market scenarios showing $136,700 commission capture
+- Implement Rancho Cucamonga market scenarios showing $136,700 commission capture
 - Create realistic lead progression demonstrations
 - Build competitive advantage showcases
 - **Timeline**: 2-3 hours

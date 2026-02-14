@@ -14,7 +14,7 @@
     "partnership_tier": "platinum",
     "preferred_markets": [
       "seattle",
-      "austin",
+      "rancho_cucamonga",
       "denver",
       "phoenix"
     ],
@@ -43,7 +43,7 @@
     "partnership_tier": "platinum",
     "preferred_markets": [
       "seattle",
-      "austin",
+      "rancho_cucamonga",
       "denver",
       "phoenix"
     ],
@@ -71,7 +71,7 @@
     "fortune_ranking": 29,
     "partnership_tier": "platinum",
     "preferred_markets": [
-      "austin",
+      "rancho_cucamonga",
       "denver",
       "seattle"
     ],
@@ -128,7 +128,7 @@
     "partnership_tier": "gold",
     "preferred_markets": [
       "phoenix",
-      "austin",
+      "rancho_cucamonga",
       "denver"
     ],
     "relocation_volume_annual": 225,

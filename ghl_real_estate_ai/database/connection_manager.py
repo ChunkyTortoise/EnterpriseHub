@@ -94,7 +94,7 @@ class DatabaseConnectionManager:
             "max_size": pool_config.get("max_size", 50),
             "max_queries": pool_config.get("max_queries", 100000),
             "max_inactive_connection_lifetime": pool_config.get("max_inactive_connection_lifetime", 300),
-            "command_timeout": pool_config.get("command_timeout", 60),
+            "command_timeout": pool_config.get("command_timeout", 15),  # Reduced from 60 to catch slow queries
             "server_settings": {
                 "application_name": "service6-enterprise",
                 "jit": "off",

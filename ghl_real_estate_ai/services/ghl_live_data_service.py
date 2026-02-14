@@ -940,7 +940,7 @@ class GHLLiveDataService:
                     "target_commission_rate": 0.06,
                 },
                 "market_preferences": {
-                    "target_areas": ["Austin", "Cedar Park", "Round Rock", "Lakeway"],
+                    "target_areas": ["Rancho Cucamonga", "Upland", "Fontana", "Lakeway"],
                     "property_types": ["single_family", "townhouse", "luxury_condo"],
                     "avoid_fixer_uppers": True,
                 },
@@ -1048,7 +1048,7 @@ class GHLLiveDataService:
         try:
             # Quick intent analysis
             if self.intent_decoder:
-                intent_result = await self.intent_decoder.analyze_single_message(contact_id, message_content)
+                await self.intent_decoder.analyze_single_message(contact_id, message_content)
 
                 # Check for urgent scenarios
                 urgency_indicators = ["urgent", "today", "need asap", "leaving town", "other agent"]

@@ -556,7 +556,7 @@ class NationalMarketIntelligence:
         patterns = []
 
         # Generate patterns between major markets
-        for source in ["austin", "dallas", "houston"]:
+        for source in ["rancho_cucamonga", "dallas", "houston"]:
             if source not in markets:
                 continue
 
@@ -714,7 +714,7 @@ class NationalMarketIntelligence:
         """
         Phase 4: Cross-Market Hive Mind.
         Predict demand in a destination market based on source market migration data.
-        Example: Austin tech-migration driving luxury demand in Miami.
+        Example: Rancho Cucamonga tech-migration driving luxury demand in Miami.
         """
         # Find the relevant migration pattern
         pattern = next(
@@ -728,7 +728,7 @@ class NationalMarketIntelligence:
         )
 
         dest_metrics = await self.get_market_metrics(destination_market)
-        source_metrics = await self.get_market_metrics(source_market)
+        await self.get_market_metrics(source_market)
 
         if not pattern or not dest_metrics:
             return {"demand_score": 0.0, "reason": "Insufficient migration data"}

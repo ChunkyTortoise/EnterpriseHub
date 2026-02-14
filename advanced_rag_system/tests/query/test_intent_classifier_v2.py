@@ -6,7 +6,6 @@ import pytest
 from src.core.exceptions import RetrievalError
 from src.query.intent_classifier_v2 import (
 
-@pytest.mark.unit
     ClassifierConfig,
     ConfidenceCalibrator,
     IntentClassificationResult,
@@ -14,6 +13,9 @@ from src.query.intent_classifier_v2 import (
     IntentType,
     MultiLabelResult,
 )
+
+
+@pytest.mark.unit
 
 
 class TestConfidenceCalibrator:

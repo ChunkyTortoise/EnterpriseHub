@@ -137,7 +137,7 @@ class TransactionIntelligenceDemo:
             transaction_data = TransactionCreate(
                 ghl_lead_id="GHL_DEMO_2026_001",
                 property_id="PROP_123_AUSTIN_TX",
-                property_address="123 Oak Street, Austin, TX 78701",
+                property_address="123 Oak Street, Rancho Cucamonga, CA 78701",
                 buyer_name="John & Jane Smith",
                 buyer_email="john.jane.smith@email.com",
                 purchase_price=525000.00,
@@ -317,7 +317,7 @@ class TransactionIntelligenceDemo:
                     {
                         "factor": "Market Conditions",
                         "weight": 0.15,
-                        "description": "Austin market - moderate activity level", 
+                        "description": "Rancho Cucamonga market - moderate activity level", 
                         "severity": "low"
                     }
                 ],
@@ -483,7 +483,7 @@ class TransactionIntelligenceDemo:
             dashboard_data = {
                 "transaction_id": self.demo_transaction_id,
                 "buyer_name": "John & Jane Smith",
-                "property_address": "123 Oak Street, Austin, TX 78701",
+                "property_address": "123 Oak Street, Rancho Cucamonga, CA 78701",
                 "purchase_price": 525000.00,
                 "progress_percentage": 75.0,
                 "health_score": 95,

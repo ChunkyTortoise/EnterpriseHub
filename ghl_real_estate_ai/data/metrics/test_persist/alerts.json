@@ -439,5 +439,19 @@
     "message": "Test",
     "timestamp": "2026-02-08T18:47:46.577387",
     "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-02-12T19:53:29.318387",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-02-12T20:16:47.029067",
+    "location_id": "test_persist"
   }
 ]

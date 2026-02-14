@@ -202,7 +202,7 @@ async def get_at_risk_leads(
     Returns leads with health scores below the threshold.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        LeadLifecycleTracker(location_id)
 
         # Get all journeys and filter by low progression rate (at-risk)
         # For now, return empty list as we'd need to iterate all journeys
@@ -232,7 +232,7 @@ async def create_reengagement_campaign(
     Automatically selects leads based on filters or uses provided contact list.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        LeadLifecycleTracker(location_id)
 
         # Generate campaign ID
         import time
@@ -267,7 +267,7 @@ async def get_eligible_for_reengagement(
     Returns leads that haven't been contacted in specified days.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        LeadLifecycleTracker(location_id)
 
         # Get eligible leads based on inactivity
         # In production, this would query all journeys and filter by last activity
@@ -329,7 +329,7 @@ async def start_nurture_sequence(
     Start an automated nurture sequence for a lead.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        LeadLifecycleTracker(location_id)
 
         # Generate sequence ID
         import time
@@ -359,11 +359,10 @@ async def stop_nurture_sequence(location_id: str, sequence_id: str):
     Stop an active nurture sequence.
     """
     try:
-        lifecycle_tracker = LeadLifecycleTracker(location_id)
+        LeadLifecycleTracker(location_id)
 
         # Log sequence stop
         logger.info(f"Stopped nurture sequence {sequence_id}")
-        result = {"stopped": True}
 
         return {
             "sequence_id": sequence_id,

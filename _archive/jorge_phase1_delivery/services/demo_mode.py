@@ -148,7 +148,7 @@ class DemoModeManager:
         ]
         
         warm_lead_messages = [
-            "Looking for information about homes in Austin",
+            "Looking for information about homes in Rancho Cucamonga",
             "What's the market like right now?",
             "I'm thinking about buying in the next few months",
             "Can you tell me more about the area?",

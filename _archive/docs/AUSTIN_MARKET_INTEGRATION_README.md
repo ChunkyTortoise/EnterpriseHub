@@ -1,13 +1,13 @@
-# Austin Real Estate Market Integration
+# Rancho Cucamonga Real Estate Market Integration
 
 ## Overview
 
-Comprehensive Austin real estate market integration for Jorge's lead bot, transforming the system into the definitive Austin market expert with unmatched local knowledge and corporate relocation expertise.
+Comprehensive Rancho Cucamonga real estate market integration for Jorge's lead bot, transforming the system into the definitive Rancho Cucamonga market expert with unmatched local knowledge and corporate relocation expertise.
 
 ## 🎯 Key Features
 
 ### 1. **Real-Time Market Intelligence**
-- Live Austin MLS integration with current property listings
+- Live Rancho Cucamonga MLS integration with current property listings
 - Dynamic market metrics and trending analysis
 - Neighborhood-specific performance data
 - Inventory tracking and absorption rates
@@ -25,13 +25,13 @@ Comprehensive Austin real estate market integration for Jorge's lead bot, transf
 - Corporate expansion impact alerts
 
 ### 4. **AI-Powered Neighborhood Matching**
-- Context-aware Austin market insights in conversations
+- Context-aware Rancho Cucamonga market insights in conversations
 - Psychological and strategic narratives (not just raw stats)
 - Lifestyle-based recommendations
 - Commute optimization for tech workers
 
 ### 5. **Market Timing Intelligence**
-- Seasonal pattern analysis specific to Austin
+- Seasonal pattern analysis specific to Rancho Cucamonga
 - Corporate hiring cycle integration
 - Interest rate and inventory impact modeling
 - Transaction timing optimization
@@ -39,15 +39,15 @@ Comprehensive Austin real estate market integration for Jorge's lead bot, transf
 ## 🏗️ Architecture
 
 ```
-Austin Market Integration/
+Rancho Cucamonga Market Integration/
 ├── services/
-│   ├── austin_market_service.py       # Core market data and analysis
+│   ├── rancho_cucamonga_market_service.py       # Core market data and analysis
 │   ├── property_alerts.py             # Automated alert system
-│   └── austin_ai_assistant.py         # Enhanced AI with Austin expertise
+│   └── rancho_cucamonga_ai_assistant.py         # Enhanced AI with Rancho Cucamonga expertise
 ├── api/routes/
 │   └── market_intelligence.py         # RESTful API endpoints
 ├── data/knowledge_base/
-│   └── austin_expertise.json          # Comprehensive Austin knowledge
+│   └── rancho_cucamonga_expertise.json          # Comprehensive Rancho Cucamonga knowledge
 └── tests/
     ├── services/                      # Service-level tests
     └── api/                          # API integration tests
@@ -62,13 +62,13 @@ pip install -r requirements.txt
 
 # Set up environment variables
 cp .env.template .env
-# Configure Austin MLS credentials, cache settings
+# Configure Rancho Cucamonga MLS credentials, cache settings
 ```
 
 ### 2. Run Demo
 ```bash
-# Full Austin market integration demo
-python demo_austin_market_integration.py
+# Full Rancho Cucamonga market integration demo
+python demo_rancho_cucamonga_market_integration.py
 
 # API server with market intelligence endpoints
 python -m uvicorn ghl_real_estate_ai.api.main:app --reload
@@ -77,7 +77,7 @@ python -m uvicorn ghl_real_estate_ai.api.main:app --reload
 ### 3. Test Suite
 ```bash
 # Run comprehensive test suite
-pytest tests/services/test_austin_market_service.py -v
+pytest tests/services/test_rancho_cucamonga_market_service.py -v
 pytest tests/services/test_property_alerts.py -v
 pytest tests/api/test_market_intelligence_routes.py -v
 
@@ -91,7 +91,7 @@ pytest tests/ -m integration
 ## 🏘️ Neighborhood Expertise
 
 ### **Round Rock** - Apple Campus Hub
-- **Elevator Pitch**: The epicenter of Austin's tech boom, home to Apple's massive campus
+- **Elevator Pitch**: The epicenter of Rancho Cucamonga's tech boom, home to Apple's massive campus
 - **Perfect For**: Apple employees, families prioritizing schools
 - **Commute**: 5-10 minutes to Apple campus
 - **School Rating**: 9.1/10 (Round Rock ISD)
@@ -105,13 +105,13 @@ pytest tests/ -m integration
 - **Tech Appeal**: 92/100
 
 ### **South Lamar** - Cultural Heart
-- **Elevator Pitch**: Austin's cultural heart where tech professionals live authentically
+- **Elevator Pitch**: Rancho Cucamonga's cultural heart where tech professionals live authentically
 - **Perfect For**: Young Google professionals, cultural enthusiasts
 - **Commute**: 10-15 minutes to downtown Google
 - **School Rating**: 8.1/10
 - **Tech Appeal**: 85/100
 
-### **East Austin** - Creative Tech Hub
+### **East Rancho Cucamonga** - Creative Tech Hub
 - **Elevator Pitch**: Where creative and tech communities collide
 - **Perfect For**: Tesla employees, startup professionals
 - **Commute**: 15-20 minutes to Tesla Gigafactory
@@ -155,11 +155,11 @@ pytest tests/ -m integration
 - **Preferred Neighborhoods**: Round Rock, Cedar Park, Domain
 - **Relocation Support**: 60-90 days temporary housing, house-hunting trips
 
-### **Google** (Downtown Austin)
+### **Google** (Downtown Rancho Cucamonga)
 - **Employees**: 2,500 (steady growth)
 - **Average Salary**: $155,000
 - **Focus**: Creative culture alignment
-- **Preferred Neighborhoods**: Downtown, South Lamar, East Austin
+- **Preferred Neighborhoods**: Downtown, South Lamar, East Rancho Cucamonga
 - **Culture Fit**: Urban lifestyle, walkability, cultural amenities
 
 ### **Meta** (Domain Location)
@@ -169,18 +169,18 @@ pytest tests/ -m integration
 - **Preferred Neighborhoods**: Domain, Downtown, Round Rock
 - **Benefits**: Premium lifestyle, networking opportunities
 
-### **Tesla** (East Austin Gigafactory)
+### **Tesla** (East Rancho Cucamonga Gigafactory)
 - **Employees**: 20,000 (major manufacturing hub)
 - **Average Salary**: $95,000
 - **Focus**: Innovation and disruption
-- **Preferred Neighborhoods**: East Austin, Mueller, Manor
+- **Preferred Neighborhoods**: East Rancho Cucamonga, Mueller, Manor
 - **Culture**: Non-traditional, creative, value-conscious
 
 ## 📊 API Endpoints
 
 ### Market Intelligence
 ```bash
-# Get Austin market metrics
+# Get Rancho Cucamonga market metrics
 GET /api/v1/market-intelligence/metrics
 GET /api/v1/market-intelligence/metrics?neighborhood=Round+Rock
 
@@ -260,7 +260,7 @@ GET /api/v1/market-intelligence/alerts/{lead_id}/summary
 
 ### AI Insights
 ```bash
-# Get lead analysis with Austin context
+# Get lead analysis with Rancho Cucamonga context
 POST /api/v1/market-intelligence/ai-insights/lead-analysis
 {
   "lead_data": {
@@ -285,9 +285,9 @@ POST /api/v1/market-intelligence/ai-insights/conversation
 
 ### 1. Apple Employee Consultation
 ```python
-from ghl_real_estate_ai.services.austin_ai_assistant import get_austin_ai_assistant
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import get_rancho_cucamonga_ai_assistant
 
-ai_assistant = get_austin_ai_assistant()
+ai_assistant = get_rancho_cucamonga_ai_assistant()
 
 # Analyze Apple employee relocating with family
 lead_data = {
@@ -297,7 +297,7 @@ lead_data = {
     "budget_range": [600000, 900000]
 }
 
-analysis = await ai_assistant.analyze_lead_with_austin_context(lead_data)
+analysis = await ai_assistant.analyze_lead_with_rancho_cucamonga_context(lead_data)
 
 # Get neighborhood match explanation
 explanation = await ai_assistant.get_neighborhood_match_explanation(
@@ -308,9 +308,9 @@ explanation = await ai_assistant.get_neighborhood_match_explanation(
 
 ### 2. Market Intelligence Dashboard
 ```python
-from ghl_real_estate_ai.services.austin_market_service import get_austin_market_service
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import get_rancho_cucamonga_market_service
 
-market_service = get_austin_market_service()
+market_service = get_rancho_cucamonga_market_service()
 
 # Get comprehensive market view
 metrics = await market_service.get_market_metrics()
@@ -345,8 +345,8 @@ results = await alert_system.process_all_alerts()
 
 ### Unit Tests
 ```bash
-# Austin Market Service
-pytest tests/services/test_austin_market_service.py::TestAustinMarketService::test_get_market_metrics_basic -v
+# Rancho Cucamonga Market Service
+pytest tests/services/test_rancho_cucamonga_market_service.py::TestRanchoCucamongaMarketService::test_get_market_metrics_basic -v
 
 # Property Alerts
 pytest tests/services/test_property_alerts.py::TestPropertyAlertSystem::test_setup_lead_alerts -v
@@ -361,7 +361,7 @@ pytest tests/api/test_market_intelligence_routes.py::TestMarketMetricsEndpoints:
 pytest tests/ -m integration -v
 
 # Corporate relocation workflow
-pytest tests/services/test_austin_market_service.py::TestAustinMarketServiceIntegration::test_corporate_relocation_complete_workflow -v
+pytest tests/services/test_rancho_cucamonga_market_service.py::TestRanchoCucamongaMarketServiceIntegration::test_corporate_relocation_complete_workflow -v
 ```
 
 ### Performance Tests
@@ -370,7 +370,7 @@ pytest tests/services/test_austin_market_service.py::TestAustinMarketServiceInte
 pytest tests/ -m performance -v
 
 # Concurrent load testing
-pytest tests/services/test_austin_market_service.py::TestAustinMarketServicePerformance::test_concurrent_load -v
+pytest tests/services/test_rancho_cucamonga_market_service.py::TestRanchoCucamongaMarketServicePerformance::test_concurrent_load -v
 ```
 
 ## 📈 Performance Benchmarks
@@ -392,9 +392,9 @@ pytest tests/services/test_austin_market_service.py::TestAustinMarketServicePerf
 
 ### Environment Variables
 ```bash
-# Austin MLS Integration
+# Rancho Cucamonga MLS Integration
 AUSTIN_MLS_API_KEY=your_mls_api_key
-AUSTIN_MLS_BASE_URL=https://api.austinmls.com/v1
+AUSTIN_MLS_BASE_URL=https://api.rancho_cucamongamls.com/v1
 
 # Market Data Caching
 REDIS_URL=redis://localhost:6379
@@ -429,17 +429,17 @@ ENABLE_MARKET_TIMING = True
 ### Production Setup
 ```bash
 # 1. Environment setup
-cp .env.austin.production.template .env
+cp .env.rancho_cucamonga.production.template .env
 # Configure production API keys and database URLs
 
 # 2. Database migrations
-python scripts/setup_austin_market_database.py
+python scripts/setup_rancho_cucamonga_market_database.py
 
 # 3. Deploy to production
-./deploy-austin-market.sh
+./deploy-rancho_cucamonga-market.sh
 
 # 4. Validate deployment
-python scripts/validate_austin_integration.py
+python scripts/validate_rancho_cucamonga_integration.py
 ```
 
 ### Health Monitoring
@@ -454,9 +454,9 @@ curl https://api.jorgemartinez.com/api/v1/market-intelligence/metrics?monitor=tr
 ## 💡 Key Insights & Benefits
 
 ### For Jorge's Business
-1. **Competitive Differentiation**: Only Austin realtor with comprehensive tech relocation expertise
+1. **Competitive Differentiation**: Only Rancho Cucamonga realtor with comprehensive tech relocation expertise
 2. **Lead Quality**: Higher conversion rates through precise neighborhood matching
-3. **Market Authority**: Positioned as the definitive Austin market expert
+3. **Market Authority**: Positioned as the definitive Rancho Cucamonga market expert
 4. **Efficiency**: Automated insights reduce research time per lead
 5. **Scalability**: System handles multiple leads simultaneously
 
@@ -472,7 +472,7 @@ curl https://api.jorgemartinez.com/api/v1/market-intelligence/metrics?monitor=tr
 2. **Informed**: Real-time market insights in every conversation
 3. **Proactive**: Automated alerts and market updates
 4. **Strategic**: Timing guidance for optimal purchase decisions
-5. **Expert**: Access to unmatched Austin market knowledge
+5. **Expert**: Access to unmatched Rancho Cucamonga market knowledge
 
 ## 🔮 Future Enhancements
 
@@ -483,7 +483,7 @@ curl https://api.jorgemartinez.com/api/v1/market-intelligence/metrics?monitor=tr
 - Advanced property recommendation algorithms
 
 ### Phase 3: Expanded Integration
-- Multiple MLS integration beyond Austin
+- Multiple MLS integration beyond Rancho Cucamonga
 - Corporate HR system integration
 - Automated tour scheduling
 - Virtual property tour integration
@@ -510,6 +510,6 @@ curl https://api.jorgemartinez.com/api/v1/market-intelligence/metrics?monitor=tr
 
 ---
 
-**Built with ❤️ for Austin Real Estate Excellence**
+**Built with ❤️ for Rancho Cucamonga Real Estate Excellence**
 
-*Transforming Jorge's lead bot into the definitive Austin market expert with unmatched local knowledge and corporate relocation expertise.*
+*Transforming Jorge's lead bot into the definitive Rancho Cucamonga market expert with unmatched local knowledge and corporate relocation expertise.*

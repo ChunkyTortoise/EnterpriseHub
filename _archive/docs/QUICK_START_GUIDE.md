@@ -43,7 +43,7 @@ streamlit run app.py
 ## 🎯 **DEMO FEATURES (Ready to Test)**
 
 ### **🏢 Executive Command Center**
-- **$2.4M Active Pipeline** - Realistic Austin market data
+- **$2.4M Active Pipeline** - Realistic Rancho Cucamonga market data
 - **Real-time Metrics** - Conversion rates, deal sizes, revenue tracking
 - **Business Intelligence** - Performance analytics and insights
 - **System Health** - API status and performance monitoring
@@ -139,7 +139,7 @@ LOCATION_ID=your-location-id
 
 ### **Step 5: Document Generation (2 min)**
 1. Go to "Sales Copilot"
-2. Generate a CMA for Austin property
+2. Generate a CMA for Rancho Cucamonga property
 3. Create listing description with AI
 4. Review quality and time savings
 

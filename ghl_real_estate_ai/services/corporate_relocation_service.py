@@ -658,7 +658,7 @@ class CorporateRelocationService:
             "denver": "Alex Thompson",
             "phoenix": "Maria Garcia",
             "seattle": "James Liu",
-            "austin": "Rachel Green",
+            "rancho_cucamonga": "Rachel Green",
             "dallas": "Mark Wilson",
             "houston": "Sandra Kim",
             "san_antonio": "Carlos Rodriguez",

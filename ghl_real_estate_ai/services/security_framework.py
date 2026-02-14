@@ -87,7 +87,7 @@ class SecurityConfig(BaseModel):
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "X-XSS-Protection": "1; mode=block",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Strict-Transport-Security": "max-age=31536000; includeSubOntario Millss",
         "Referrer-Policy": "strict-origin-when-cross-origin",
         "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
     }
@@ -678,7 +678,7 @@ class SecurityMiddleware:
     async def __call__(self, scope, receive, send):
         """Process request through security controls."""
         if scope["type"] == "http":
-            request = Request(scope, receive)
+            Request(scope, receive)
 
             # Add security headers
             async def send_wrapper(message):

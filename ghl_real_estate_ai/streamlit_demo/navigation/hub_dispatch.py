@@ -41,6 +41,7 @@ try:
     from ghl_real_estate_ai.streamlit_demo.components.executive_hub import render_executive_hub
     from ghl_real_estate_ai.streamlit_demo.components.financing_calculator import render_financing_calculator
     from ghl_real_estate_ai.streamlit_demo.components.floating_claude import render_floating_claude
+    from ghl_real_estate_ai.streamlit_demo.components.landing_page import render_landing_page
     from ghl_real_estate_ai.streamlit_demo.components.lead_intelligence_hub import render_lead_intelligence_hub
     from ghl_real_estate_ai.streamlit_demo.components.marketplace_management import render_marketplace_management
     from ghl_real_estate_ai.streamlit_demo.components.neighborhood_intelligence import render_neighborhood_explorer
@@ -94,11 +95,13 @@ def dispatch_hub(
 
     render_claude_assistant(claude)
 
-    selected_market = st.session_state.get("selected_market", "Austin, TX")
-    market_key = "Austin" if "Austin" in selected_market else "Rancho"
+    selected_market = st.session_state.get("selected_market", "Rancho Cucamonga, CA")
+    market_key = "Rancho Cucamonga" if "Rancho Cucamonga" in selected_market else "Rancho"
     elite_mode = st.session_state.get("elite_mode", False)
 
-    if selected_hub == "Executive Command Center":
+    if selected_hub == "Jorge AI Landing Page":
+        render_landing_page()
+    elif selected_hub == "Executive Command Center":
         _render_executive_command_center(services, mock_data, sparkline_fn)
     elif selected_hub == "Lead Intelligence Hub":
         render_lead_intelligence_hub(
@@ -248,6 +251,22 @@ def dispatch_hub(
         from ghl_real_estate_ai.streamlit_demo.case_studies import render_case_studies
 
         render_case_studies()
+    elif selected_hub == "Revenue-Sprint Case Study":
+        from ghl_real_estate_ai.streamlit_demo.case_study_revenue_sprint import render_revenue_sprint_case_study
+
+        render_revenue_sprint_case_study()
+    elif selected_hub == "Advanced RAG Case Study":
+        from ghl_real_estate_ai.streamlit_demo.case_study_advanced_rag import render_advanced_rag_case_study
+
+        render_advanced_rag_case_study()
+    elif selected_hub == "DocQA Engine Case Study":
+        from ghl_real_estate_ai.streamlit_demo.case_study_docqa import render_docqa_case_study
+
+        render_docqa_case_study()
+    elif selected_hub == "Request Quote":
+        from ghl_real_estate_ai.streamlit_demo.components.quote_request_form import render_quote_request_form
+
+        render_quote_request_form()
 
     # Floating Claude Assistant (always rendered)
     render_floating_claude()
@@ -285,7 +304,7 @@ def _render_executive_command_center(services, mock_data, sparkline_fn):
 
     if st.session_state.get("deploy_executive_swarm", False):
         with st.status("Swarm Intelligence Online. Synchronizing Agents...", expanded=True) as status:
-            st.write("Market Analyst: Initializing semantic scan of Austin real estate trends...")
+            st.write("Market Analyst: Initializing semantic scan of Rancho Cucamonga real estate trends...")
             time.sleep(0.8)
             st.write("Performance Analyst: Auditing GHL lead conversion pipelines and response velocity...")
             time.sleep(0.8)
@@ -296,7 +315,7 @@ def _render_executive_command_center(services, mock_data, sparkline_fn):
 
             # Simulated business data for swarm
             business_data = {
-                "market": st.session_state.get("selected_market", "Austin, TX"),
+                "market": st.session_state.get("selected_market", "Rancho Cucamonga, CA"),
                 "metrics": mock_data.get("executive_metrics", {}),
                 "pipeline": mock_data.get("pipeline_data", {}),
             }
@@ -305,7 +324,7 @@ def _render_executive_command_center(services, mock_data, sparkline_fn):
                 swarm_results = run_async(claude_companion.run_executive_analysis(business_data))
             else:
                 swarm_results = {
-                    "executive_summary": "Market analysis complete. Key opportunities identified in Austin real estate sector.",
+                    "executive_summary": "Market analysis complete. Key opportunities identified in Rancho Cucamonga real estate sector.",
                     "recommendations": [
                         "Focus on high-value listings",
                         "Expand digital marketing",
@@ -349,7 +368,7 @@ def _render_executive_command_center(services, mock_data, sparkline_fn):
 
             arbitrage_data = pd.DataFrame(
                 {
-                    "Zip Code": ["78701", "78704", "78745", "78751", "78758", "78702"],
+                    "Zip Code": ["91730", "91730", "91730", "91737", "91758", "91739"],
                     "Net Yield %": [14.7, 14.6, 18.8, 13.9, 19.2, 20.1],
                     "Potential Profit": [125000, 110000, 85000, 95000, 75000, 105000],
                 }

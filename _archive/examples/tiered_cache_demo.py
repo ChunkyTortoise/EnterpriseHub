@@ -99,7 +99,7 @@ async def simulate_lead_processing_without_cache():
 
     leads = [f"lead_{i:03d}" for i in range(1, 11)]
     preferences = [
-        {"location": "Austin, TX", "max_price": 500000, "min_bedrooms": 3},
+        {"location": "Rancho Cucamonga, CA", "max_price": 500000, "min_bedrooms": 3},
         {"location": "Seattle, WA", "max_price": 700000, "min_bedrooms": 2},
         {"location": "Miami, FL", "max_price": 600000, "min_bedrooms": 4}
     ]
@@ -128,7 +128,7 @@ async def simulate_lead_processing_with_cache():
 
     leads = [f"lead_{i:03d}" for i in range(1, 11)]
     preferences = [
-        {"location": "Austin, TX", "max_price": 500000, "min_bedrooms": 3},
+        {"location": "Rancho Cucamonga, CA", "max_price": 500000, "min_bedrooms": 3},
         {"location": "Seattle, WA", "max_price": 700000, "min_bedrooms": 2},
         {"location": "Miami, FL", "max_price": 600000, "min_bedrooms": 4}
     ]

@@ -678,8 +678,8 @@ def demo_luxury_components():
 
     sample_properties = [
         {
-            "address": "123 West Lake Hills Estate",
-            "neighborhood": "West Lake Hills",
+            "address": "123 Alta Loma Estate",
+            "neighborhood": "Alta Loma",
             "price": 4_850_000,
             "price_per_sqft": 675,
             "bedrooms": 6,
@@ -689,8 +689,8 @@ def demo_luxury_components():
             "amenities": ["Wine Cellar", "Home Theater", "Pool", "Tennis Court", "Guest House", "Spa"],
         },
         {
-            "address": "456 Tarrytown Manor",
-            "neighborhood": "Tarrytown",
+            "address": "456 North Rancho Manor",
+            "neighborhood": "North Rancho",
             "price": 3_200_000,
             "price_per_sqft": 580,
             "bedrooms": 5,
@@ -719,7 +719,7 @@ def demo_luxury_components():
             "satisfaction_score": 97.5,
             "portfolio_value": 8_500_000,
             "referrals_given": 5,
-            "preferred_locations": ["West Lake Hills", "Tarrytown", "Rollingwood"],
+            "preferred_locations": ["Alta Loma", "North Rancho", "Deer Creek"],
         },
         {
             "name": "Investment Group Beta",
@@ -728,7 +728,7 @@ def demo_luxury_components():
             "satisfaction_score": 98.2,
             "portfolio_value": 15_200_000,
             "referrals_given": 8,
-            "preferred_locations": ["Downtown", "Zilker", "Hyde Park", "Clarksville"],
+            "preferred_locations": ["Downtown", "Victoria Gardens", "Alta Loma", "Central Rancho"],
         },
     ]
 

@@ -286,7 +286,7 @@ property_demo = pptx_gen.generate_property_matching_demo(
 ### Market Analysis Integration
 ```python
 # Generate market analysis presentation
-market_data = market_timing_service.analyze_market_trends('Austin_TX')
+market_data = market_timing_service.analyze_market_trends('Rancho Cucamonga_TX')
 market_presentation = pptx_gen.generate_market_analysis_presentation(
     market_data=market_data,
     forecast_period='12_months',

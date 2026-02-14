@@ -936,7 +936,7 @@ class FeatureFlagDeploymentService:
 
             # Check if flag already exists
             if flag_id not in self.active_flags:
-                flag = await self.create_feature_flag(
+                await self.create_feature_flag(
                     flag_id=flag_id,
                     name=f"{system_name.replace('_', ' ').title()} System",
                     description=config["description"],

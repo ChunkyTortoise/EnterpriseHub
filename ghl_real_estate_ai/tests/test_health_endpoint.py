@@ -13,8 +13,6 @@ from fastapi.testclient import TestClient
 # Import the FastAPI app
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
-
 client = TestClient(app)
 
 

@@ -28,8 +28,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 try:
     import threading
 

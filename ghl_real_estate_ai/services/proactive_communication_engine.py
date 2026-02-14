@@ -1040,7 +1040,7 @@ class ProactiveCommunicationEngine:
     async def _get_transaction_context(self, transaction_id: str) -> Dict[str, Any]:
         """Get transaction context for message generation."""
         return {
-            "property_address": "123 Main St, Austin, TX",
+            "property_address": "123 Main St, Rancho Cucamonga, CA",
             "buyer_name": "John Doe",
             "seller_name": "Jane Smith",
             "purchase_price": 450000,

@@ -408,7 +408,7 @@ def optimized_endpoint(endpoint_name: str = ""):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 success = False
                 raise
             finally:

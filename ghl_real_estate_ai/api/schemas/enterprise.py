@@ -126,26 +126,26 @@ class TimestampedModel(BaseModel):
 class TenantConfigurationRequest(BaseModel):
     """Request to create or update tenant configuration."""
     company_name: str = Field(..., min_length=2, max_length=100)
-    domain: str = Field(..., pattern=r'^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$')
+    ontario_mills: str = Field(..., pattern=r'^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$')
     sso_provider: SSOProvider
     sso_config: Dict[str, Any] = Field(default_factory=dict)
     partnership_id: Optional[str] = None
     admin_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
-    allowed_domains: Optional[List[str]] = Field(default_factory=list)
+    allowed_ontario_millss: Optional[List[str]] = Field(default_factory=list)
     max_users: int = Field(1000, ge=1, le=10000)
     session_timeout_hours: int = Field(8, ge=1, le=24)
     require_mfa: bool = True
     auto_provision_users: bool = True
 
-    @field_validator('allowed_domains', mode='before')
+    @field_validator('allowed_ontario_millss', mode='before')
     @classmethod
-    def ensure_domain_in_allowed(cls, v, info: ValidationInfo):
-        """Ensure primary domain is in allowed domains list."""
+    def ensure_ontario_mills_in_allowed(cls, v, info: ValidationInfo):
+        """Ensure primary ontario_mills is in allowed ontario_millss list."""
         if v is None:
             v = []
-        domain = info.data.get('domain')
-        if domain and domain not in v:
-            v.append(domain)
+        ontario_mills = info.data.get('ontario_mills')
+        if ontario_mills and ontario_mills not in v:
+            v.append(ontario_mills)
         return v
 
 
@@ -153,7 +153,7 @@ class TenantResponse(BaseModel):
     """Response model for tenant information."""
     tenant_id: str
     company_name: str
-    domain: str
+    ontario_mills: str
     sso_provider: SSOProvider
     partnership_id: Optional[str]
     status: str
@@ -201,7 +201,7 @@ class EnterpriseUserResponse(BaseModel):
 
 class SSOLoginRequest(BaseModel):
     """Request to initiate SSO login."""
-    domain: str = Field(..., description="Company domain for tenant lookup")
+    ontario_mills: str = Field(..., description="Company ontario_mills for tenant lookup")
     redirect_uri: str = Field(..., description="Post-authentication redirect URI")
 
 

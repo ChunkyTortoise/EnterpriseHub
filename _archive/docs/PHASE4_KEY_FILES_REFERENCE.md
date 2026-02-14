@@ -121,7 +121,7 @@ cat .claude/skills/real-estate-ai/market-intelligence/SKILL.md
 ### **Business Impact Targets**
 - **Revenue Growth**: +50% through advanced agent capabilities
 - **Conversion Rate**: +40% with predictive analytics
-- **Market Share**: +25% through Austin intelligence
+- **Market Share**: +25% through Rancho Cucamonga intelligence
 - **Customer LTV**: +60% through relationship management
 
 ### **Technical Performance**

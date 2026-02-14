@@ -17,7 +17,6 @@ from typing import List
 import numpy as np
 import pytest
 
-@pytest.mark.integration
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -28,6 +27,8 @@ try:
     from ghl_real_estate_ai.core.rag_engine import VectorStore
 except ImportError:
     # Mock RAG system for testing
+
+@pytest.mark.integration
     class MockRAGResponse:
         def __init__(self, answer: str, sources: List[str], query: str):
             self.answer = answer
@@ -111,8 +112,6 @@ class TestAnswerQuality:
             },
         ]
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_answer_relevance(self, rag_system, qa_dataset):
         """
         Measure answer relevance to query using LLM-as-judge.
@@ -149,8 +148,6 @@ class TestAnswerQuality:
             "individual_scores": relevance_scores,
         }
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_faithfulness(self, rag_system, qa_dataset):
         """
         Measure answer faithfulness to provided context.
@@ -187,8 +184,6 @@ class TestAnswerQuality:
             "individual_scores": faithfulness_scores,
         }
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_context_precision(self, rag_system, qa_dataset):
         """
         Measure context precision - relevance of retrieved context.
@@ -225,8 +220,6 @@ class TestAnswerQuality:
             "individual_scores": precision_scores,
         }
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_context_recall(self, rag_system, qa_dataset):
         """
         Measure context recall - coverage of necessary information.
@@ -263,8 +256,6 @@ class TestAnswerQuality:
             "individual_scores": recall_scores,
         }
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_answer_completeness(self, rag_system, qa_dataset):
         """
         Evaluate answer completeness - does it address all aspects of the query?
@@ -297,8 +288,6 @@ class TestAnswerQuality:
 
         return {"answer_completeness": mean_completeness, "individual_scores": completeness_scores}
 
-    @pytest.mark.quality
-    @pytest.mark.asyncio
     async def test_answer_consistency(self, rag_system):
         """
         Test answer consistency - similar queries should get similar answers.

@@ -48,7 +48,7 @@ def render_realtime_intelligence_dashboard():
         """
         <div style="background: rgba(13, 17, 23, 0.9); padding: 10px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 2rem;">
             <div style="display: inline-block; animation: marquee 30s linear infinite; color: #6366F1; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em;">
-                <span style="color: #10b981;">[LIVE]</span> Sarah Martinez just qualified for 78704 Luxury cluster ... <span style="color: #f59e0b;">[WEBHOOK]</span> Inbound SMS from Node #9921 processed in 12ms ... <span style="color: #6366F1;">[SWARM]</span> Analyst Agent #4 identifying price-drop opportunities in West Lake ... <span style="color: #10b981;">[DEAL]</span> Emma Wilson win probability increased to 92% ... <span style="color: #ef4444;">[ALERT]</span> High-velocity lead David Kim requires manual handoff ... <span style="color: #6366F1;">[SYSTEM]</span> All 12 Austin Edge nodes operational ... 
+                <span style="color: #10b981;">[LIVE]</span> Sarah Martinez just qualified for 91730 Luxury cluster ... <span style="color: #f59e0b;">[WEBHOOK]</span> Inbound SMS from Node #9921 processed in 12ms ... <span style="color: #6366F1;">[SWARM]</span> Analyst Agent #4 identifying price-drop opportunities in West Lake ... <span style="color: #10b981;">[DEAL]</span> Emma Wilson win probability increased to 92% ... <span style="color: #ef4444;">[ALERT]</span> High-velocity lead David Kim requires manual handoff ... <span style="color: #6366F1;">[SYSTEM]</span> All 12 Rancho Cucamonga Edge nodes operational ... 
             </div>
         </div>
         <style>
@@ -145,7 +145,7 @@ def render_realtime_intelligence_dashboard():
                                     analysis_context = {
                                         "metrics": metrics,
                                         "events": event_summary,
-                                        "market": st.session_state.get("selected_market", "Austin"),
+                                        "market": st.session_state.get("selected_market", "Rancho Cucamonga"),
                                     }
 
                                     # Use report synthesis task for live summary
@@ -209,7 +209,7 @@ def render_realtime_intelligence_dashboard():
             from ghl_real_estate_ai.streamlit_demo.components.whisper_dashboard import render_whisper_dashboard
 
             render_whisper_dashboard(
-                lead_id="tech_professional_sarah", lead_name="Sarah Chen", property_address="789 Pine Ave, Austin, TX"
+                lead_id="tech_professional_sarah", lead_name="Sarah Chen", property_address="789 Pine Ave, Rancho Cucamonga, CA"
             )
 
     except ImportError as e:

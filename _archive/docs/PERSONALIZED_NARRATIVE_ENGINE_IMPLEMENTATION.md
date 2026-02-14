@@ -184,13 +184,13 @@ Emotional Resonance:          8.3/10 average appeal score
 
 #### After: Emotional Lifestyle Narratives
 ```
-"This isn't just a house - it's where your Austin story begins.
+"This isn't just a house - it's where your Rancho Cucamonga story begins.
 Wake up to Hill Country views from the master bedroom, walk your
 golden retriever down tree-lined streets where neighbors wave hello.
 Your kids bike safely to top-rated Westlake Elementary 4 blocks away.
 The outdoor kitchen becomes your weekend gathering spot while friends
 relax around the pool. Our AI predicts 15% appreciation as downtown
-Austin expands westward."
+Rancho Cucamonga expands westward."
 ```
 
 ### Measurable Benefits

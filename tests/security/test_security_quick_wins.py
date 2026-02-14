@@ -49,13 +49,13 @@ class TestSecurityQuickWinsIsolated:
     async def test_open_redirect_logic(self):
         # We test the validation logic we added to enterprise_partnerships.py
         with patch.dict(os.environ, {"ALLOWED_REDIRECT_DOMAINS": "trusted.com,localhost:3000"}):
-            allowed_domains = [d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()]
+            allowed_ontario_millss = [d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()]
             
             def validate_uri(redirect_uri):
                 parsed_uri = urlparse(redirect_uri)
                 if not parsed_uri.netloc:
                     raise HTTPException(status_code=400, detail="Invalid redirect URI format")
-                if parsed_uri.netloc not in [urlparse(d).netloc or d for d in allowed_domains]:
+                if parsed_uri.netloc not in [urlparse(d).netloc or d for d in allowed_ontario_millss]:
                     raise HTTPException(status_code=400, detail="Unauthorized redirect URI")
             
             # Should pass

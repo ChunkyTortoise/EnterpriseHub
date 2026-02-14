@@ -56,7 +56,7 @@ async def process_voice_input(request: Request, background_tasks: BackgroundTask
     )
 
     # 4. Synthesize AI response back to speech
-    voice_response = await voice_service.synthesize_speech(ai_response.message)
+    await voice_service.synthesize_speech(ai_response.message)
 
     # 5. Return TwiML to play the response
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>

@@ -7,7 +7,7 @@ Advanced agent orchestration system delivering unprecedented lead intelligence t
 - Real-time consensus building for lead scoring and prioritization
 - Autonomous decision-making with human oversight and approval
 - Dynamic agent deployment based on lead complexity and value
-- Cross-domain knowledge synthesis for holistic lead understanding
+- Cross-ontario_mills knowledge synthesis for holistic lead understanding
 - Continuous learning and adaptation through agent feedback loops
 
 Date: January 17, 2026
@@ -128,7 +128,7 @@ class LeadIntelligenceAgent:
         base_knowledge = {
             "version": "2.0.0",
             "last_updated": datetime.utcnow().isoformat(),
-            "expertise_domain": self.agent_type.value,
+            "expertise_ontario_mills": self.agent_type.value,
             "confidence_thresholds": {"high": 0.85, "medium": 0.65, "low": 0.45},
         }
 
@@ -668,7 +668,7 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
         # Extract intent signals
         communications = lead_data.get("communications", [])
         form_submissions = lead_data.get("form_submissions", [])
-        search_queries = lead_data.get("search_queries", [])
+        lead_data.get("search_queries", [])
 
         # Analyze language patterns
         intent_signals = self._extract_intent_signals(communications)
@@ -857,7 +857,7 @@ class IntentDetectorAgent(LeadIntelligenceAgent):
 
     def _classify_intent_level(self, intent_score: float) -> str:
         """Classify intent level based on score"""
-        intent_levels = self.knowledge_base["intent_levels"]
+        self.knowledge_base["intent_levels"]
 
         if intent_score >= 80:
             return "immediate"
@@ -1183,7 +1183,7 @@ class LeadIntelligenceSwarm:
         avg_confidence = sum(insight.confidence for insight in insights) / len(insights)
 
         # Determine primary recommendation through voting
-        recommendations = [insight.primary_finding for insight in insights]
+        [insight.primary_finding for insight in insights]
         primary_recommendation = self._select_primary_recommendation(insights)
 
         # Determine action priority

@@ -1,7 +1,7 @@
 # EnterpriseHub Project Overview
 
 ## Project Purpose
-EnterpriseHub is a professional AI services platform showcasing production-grade AI engineering and strategy. Originally a freelance portfolio platform, it has evolved into a comprehensive real estate AI ecosystem called "Lyrio.io Elite v4.0" - a proprietary AI platform for Jorge Sales (Austin Real Estate).
+EnterpriseHub is a professional AI services platform showcasing production-grade AI engineering and strategy. Originally a freelance portfolio platform, it has evolved into a comprehensive real estate AI ecosystem called "Lyrio.io Elite v4.0" - a proprietary AI platform for Jorge Sales (Rancho Cucamonga Real Estate).
 
 ### Key Value Propositions
 - **Real Estate AI Platform**: 26+ Streamlit components for lead intelligence, property matching, and behavioral analytics

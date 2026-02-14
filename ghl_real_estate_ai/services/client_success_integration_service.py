@@ -3,7 +3,7 @@ Client Success System Integration Service
 
 Integrates the Client Success Scoring & Accountability system with existing
 Transaction Intelligence Dashboard, AI Negotiation Partner, GHL CRM,
-Austin Market Service, and Claude AI services.
+Rancho Cucamonga Market Service, and Claude AI services.
 
 Key Features:
 - Real-time metric synchronization
@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from .ai_negotiation_partner import AINetworkingPartner
-from .austin_market_service import AustinMarketService
+from .rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from .cache_service import CacheService
 from .claude_assistant import ClaudeAssistant
 from .client_outcome_verification_service import get_client_outcome_verification_service
@@ -92,7 +92,7 @@ class ClientSuccessIntegrationService:
         # Initialize existing services
         self.transaction_intelligence = TransactionIntelligenceEngine()
         self.ai_negotiation = AINetworkingPartner()
-        self.market_service = AustinMarketService()
+        self.market_service = RanchoCucamongaMarketService()
         self.claude = ClaudeAssistant()
         self.ghl_client = GHLClient()
         self.cache = CacheService()
@@ -128,13 +128,13 @@ class ClientSuccessIntegrationService:
                 logger.error(f"AI Negotiation Partner integration failed: {e}")
                 integration_status["ai_negotiation_partner"] = False
 
-            # Test Austin Market Service integration
+            # Test Rancho Cucamonga Market Service integration
             try:
                 test_result = await self._test_market_service_connection()
-                integration_status["austin_market_service"] = test_result
+                integration_status["rancho_cucamonga_market_service"] = test_result
             except Exception as e:
-                logger.error(f"Austin Market Service integration failed: {e}")
-                integration_status["austin_market_service"] = False
+                logger.error(f"Rancho Cucamonga Market Service integration failed: {e}")
+                integration_status["rancho_cucamonga_market_service"] = False
 
             # Test Claude AI integration
             try:
@@ -529,7 +529,7 @@ class ClientSuccessIntegrationService:
             return False
 
     async def _test_market_service_connection(self) -> bool:
-        """Test connection to Austin Market Service"""
+        """Test connection to Rancho Cucamonga Market Service"""
         try:
             test_result = await self.market_service.get_current_market_conditions()
             return test_result is not None

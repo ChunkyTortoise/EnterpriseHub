@@ -711,7 +711,7 @@ property_data = {
     "property_type": "Single Family",
     "address": {
         "neighborhood": "Hyde Park",
-        "city": "Austin",
+        "city": "Rancho Cucamonga",
         "state": "TX",
         "zip": "78751"
     }
@@ -720,7 +720,7 @@ property_data = {
 preferences = {
     "budget": 800000,
     "bedrooms": 3,
-    "location": "Austin",
+    "location": "Rancho Cucamonga",
     "bathrooms": 2
 }
 

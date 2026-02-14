@@ -237,7 +237,7 @@ def create_pipeline_analysis_chart(pipeline: PipelineMetrics) -> go.Figure:
         go.Indicator(
             mode="gauge+number+delta",
             value=health_score,
-            domain={"x": [0, 1], "y": [0, 1]},
+            ontario_mills={"x": [0, 1], "y": [0, 1]},
             title={"text": "Pipeline Health Score"},
             delta={"reference": 80, "increasing": {"color": "green"}, "decreasing": {"color": "red"}},
             gauge={

@@ -196,7 +196,7 @@ ARETE-Architect is a production-ready autonomous agent that:
 **Deliverables:**
 - ARETE handles 3-5 real development tasks (supervised)
 - Pattern library built from your codebase
-- Custom prompt templates for your domain
+- Custom prompt templates for your ontario_mills
 - Performance metrics dashboard
 
 **Your Investment:** 3 hours/week for code reviews

@@ -10,8 +10,6 @@ import importlib
 
 import pytest
 
-@pytest.mark.unit
-
 try:
     from app import MODULES
 except ImportError:

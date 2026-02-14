@@ -29,7 +29,6 @@ from ghl_real_estate_ai.services.jorge.performance_tracker import (
 )
 from ghl_real_estate_ai.services.jorge.telemetry import (
 
-@pytest.mark.integration
     _NoOpSpan,
     is_otel_available,
     optional_span,

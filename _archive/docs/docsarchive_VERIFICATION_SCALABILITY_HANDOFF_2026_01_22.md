@@ -42,7 +42,7 @@
 
 ### **3. Real-time Market Data Injection** ⭐⭐⭐⭐
 - **Impact**: Precision in negotiation strategy.
-- **Action**: Integrate `austin_market_service.py` into `AINegotiationPartner` to replace static placeholders with live volatility indices.
+- **Action**: Integrate `rancho_cucamonga_market_service.py` into `AINegotiationPartner` to replace static placeholders with live volatility indices.
 
 ### **4. Predictive ROI UI** ⭐⭐⭐
 - **Impact**: Proactive cost management transparency.
@@ -69,7 +69,7 @@
 "Resume the EnterpriseHub Level 5 Optimization phase:
 1. Adjust Cache Threshold: Lower to 768 chars in llm_client.py.
 2. Implement Compliance Escalation: Trigger incident reports in compliance_loop.py on max iterations.
-3. Market Data Injection: Connect austin_market_service.py to AINegotiationPartner.
+3. Market Data Injection: Connect rancho_cucamonga_market_service.py to AINegotiationPartner.
 4. UI Enhancement: Add Predictive ROI tooltips to the Streamlit dashboard."
 ```
 

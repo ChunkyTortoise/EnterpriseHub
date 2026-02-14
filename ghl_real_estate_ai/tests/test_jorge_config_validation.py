@@ -9,8 +9,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
-
 
 class TestJorgeConfigValidation:
     """Test cases for Jorge configuration validation."""

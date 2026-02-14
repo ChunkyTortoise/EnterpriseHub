@@ -101,7 +101,7 @@ if elite_mode and CLAUDE_SERVICES_AVAILABLE:
    ```
 
 2. **Navigate to Lead Intelligence Hub:**
-   - Select a market (Rancho or Austin)
+   - Select a market (Rancho or Rancho Cucamonga)
    - Enter Lead Intelligence Hub section
    - **Enable Elite Mode** (critical for Claude features)
 

@@ -512,7 +512,6 @@ Return JSON with: intents, emotion, urgency, qualification_signals, red_flags
                 score += 10
 
         # Pre-approval/financing readiness (15 points)
-        financing_indicators = []
         for transcript_item in context.transcript:
             if any(
                 indicator in transcript_item["text"].lower()

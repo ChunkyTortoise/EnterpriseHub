@@ -973,7 +973,7 @@ class ProactiveConversationIntelligence:
     async def _publish_proactive_insight_event(self, conversation_id: str, insight: ProactiveInsight):
         """Publish proactive insight event via WebSocket."""
         try:
-            event_data = {
+            {
                 "conversation_id": conversation_id,
                 "insight_id": insight.insight_id,
                 "insight_type": insight.insight_type.value,

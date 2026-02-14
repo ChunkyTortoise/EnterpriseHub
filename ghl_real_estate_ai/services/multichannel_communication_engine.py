@@ -341,12 +341,6 @@ class EmailChannelProvider(ChannelProvider):
     async def send_message(self, message: Message, contact: CommunicationContact) -> Dict[str, Any]:
         """Send email message"""
         try:
-            email_data = {
-                "to": contact.email,
-                "subject": message.subject or "Message from EnterpriseHub",
-                "html_content": message.content,
-                "text_content": message.content,
-            }
 
             # Mock successful email sending
             return {"success": True, "provider_message_id": f"email_{uuid.uuid4()}", "status": "sent"}
@@ -381,7 +375,7 @@ class SMSChannelProvider(ChannelProvider):
     async def send_message(self, message: Message, contact: CommunicationContact) -> Dict[str, Any]:
         """Send SMS message"""
         try:
-            sms_data = {
+            {
                 "to": contact.phone,
                 "from": self.twilio_config["from_number"],
                 "body": message.content[:1600],  # SMS length limit
@@ -420,12 +414,6 @@ class WhatsAppChannelProvider(ChannelProvider):
     async def send_message(self, message: Message, contact: CommunicationContact) -> Dict[str, Any]:
         """Send WhatsApp message"""
         try:
-            whatsapp_data = {
-                "messaging_product": "whatsapp",
-                "to": contact.whatsapp_number or contact.phone,
-                "type": "text",
-                "text": {"body": message.content},
-            }
 
             # Mock successful WhatsApp sending
             return {"success": True, "provider_message_id": f"whatsapp_{uuid.uuid4()}", "status": "sent"}
@@ -468,7 +456,7 @@ class VoiceChannelProvider(ChannelProvider):
     async def send_message(self, message: Message, contact: CommunicationContact) -> Dict[str, Any]:
         """Initiate voice call with AI voice"""
         try:
-            voice_data = {
+            {
                 "to": contact.phone,
                 "voice_script": message.content,
                 "ai_enabled": self.voice_config.get("ai_voice_enabled", True),

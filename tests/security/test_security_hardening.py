@@ -29,8 +29,6 @@ from ghl_real_estate_ai.api.middleware.security_headers import SecurityHeadersMi
 from ghl_real_estate_ai.api.middleware.websocket_security import WebSocketConnectionManager
 from ghl_real_estate_ai.services.security_monitor import EventType, SecurityMonitor, ThreatLevel
 
-@pytest.mark.integration
-
 
 class TestRateLimiting:
     """Test enhanced rate limiting functionality."""

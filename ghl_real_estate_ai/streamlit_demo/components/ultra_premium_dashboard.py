@@ -40,15 +40,15 @@ class LuxuryMarketConfig:
     target_commission_rate: float = 0.038  # 3.8% target commission
     market_zip_codes: List[str] = field(
         default_factory=lambda: [
-            "78746",
-            "78738",
-            "78733",
-            "78704",
-            "78759",  # Austin luxury areas
+            "91737",
+            "91737",
+            "91737",
+            "91730",
+            "91739",  # Rancho Cucamonga luxury areas
             "78613",
-            "78732",
+            "91739",
             "78669",
-            "78734",  # West Lake Hills, Bee Cave
+            "91737",  # Alta Loma, Bee Cave
         ]
     )
     wealth_tiers: Dict[str, int] = field(
@@ -124,13 +124,13 @@ class UltraPremiumDashboard:
             # Determine tier based on value
             if property_value >= self.config.mega_luxury_threshold:
                 tier = "Mega-Luxury"
-                neighborhood = random.choice(["West Lake Hills", "Tarrytown", "Rollingwood"])
+                neighborhood = random.choice(["Alta Loma", "North Rancho", "Deer Creek"])
             elif property_value >= self.config.ultra_luxury_threshold:
                 tier = "Ultra-Luxury"
-                neighborhood = random.choice(["Zilker", "Hyde Park", "Clarksville"])
+                neighborhood = random.choice(["Victoria Gardens", "Alta Loma", "Central Rancho"])
             else:
                 tier = "Luxury"
-                neighborhood = random.choice(["Mueller", "East Austin", "South Lamar"])
+                neighborhood = random.choice(["Haven City", "East Rancho Cucamonga", "South Lamar"])
 
             properties.append(
                 {
@@ -186,7 +186,7 @@ class UltraPremiumDashboard:
         """Generate competitive analysis data"""
         competitors = [
             {"name": "Elite Luxury Realty", "market_share": 0.18, "avg_commission": 0.032, "luxury_focus": True},
-            {"name": "Austin Premier Properties", "market_share": 0.15, "avg_commission": 0.029, "luxury_focus": True},
+            {"name": "Rancho Cucamonga Premier Properties", "market_share": 0.15, "avg_commission": 0.029, "luxury_focus": True},
             {"name": "Luxury Home Specialists", "market_share": 0.12, "avg_commission": 0.035, "luxury_focus": True},
             {"name": "Traditional Realty Co", "market_share": 0.25, "avg_commission": 0.026, "luxury_focus": False},
             {"name": "Jorge's AI-Enhanced Luxury", "market_share": 0.08, "avg_commission": 0.038, "luxury_focus": True},
@@ -218,7 +218,7 @@ class UltraPremiumDashboard:
                     "satisfaction_score": random.uniform(8.5, 10.0),
                     "referrals_given": random.randint(0, 8),
                     "preferred_neighborhoods": random.sample(
-                        ["West Lake Hills", "Tarrytown", "Zilker", "Hyde Park"], random.randint(1, 3)
+                        ["Alta Loma", "North Rancho", "Victoria Gardens", "Alta Loma"], random.randint(1, 3)
                     ),
                     "last_transaction": datetime.now() - timedelta(days=random.randint(30, 730)),
                 }
@@ -344,7 +344,7 @@ class UltraPremiumDashboard:
         inventory_trend = trends["inventory_count"].pct_change().mean() * 100
 
         prompt = f"""
-        As a luxury real estate market analyst, provide executive-level insights on the Austin luxury market:
+        As a luxury real estate market analyst, provide executive-level insights on the Rancho Cucamonga luxury market:
 
         Current Market Data:
         - Average luxury property price: ${avg_price:,.0f}

@@ -261,7 +261,7 @@ YOUR GOAL:
 3. Provide a clear "Value Hook" (e.g. "I found a new match in Downtown" or "I wanted to see if your timeline shifted").
 4. Keep it under 160 characters for SMS.
 
-Example: "Hi {contact_name}, I just saw a new 3-bed in Austin that hits your $500k target. Still looking to move next month? - Jorge's team"
+Example: "Hi {contact_name}, I just saw a new 3-bed in Rancho Cucamonga that hits your $500k target. Still looking to move next month? - Jorge's team"
 """
         try:
             response = await self.llm_client.agenerate(

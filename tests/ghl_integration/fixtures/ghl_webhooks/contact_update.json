@@ -1,0 +1,30 @@
+{
+  "event": "ContactUpdate",
+  "version": "v2",
+  "timestamp": "2026-02-11T11:15:00Z",
+  "trace_id": "evt_contact_update_67890",
+  "data": {
+    "id": "contact_abc123",
+    "locationId": "loc_xyz789",
+    "firstName": "John",
+    "lastName": "Smith",
+    "name": "John Smith",
+    "email": "john.smith.new@example.com",
+    "phone": "+1-909-555-0123",
+    "dateUpdated": "2026-02-11T11:15:00Z",
+    "tags": ["lead", "website_inquiry", "hot_lead"],
+    "changes": {
+      "email": {
+        "old": "john.smith@example.com",
+        "new": "john.smith.new@example.com"
+      },
+      "tags": {
+        "added": ["hot_lead"]
+      }
+    },
+    "customFields": {
+      "ai_lead_score": 85,
+      "lead_temperature": "hot"
+    }
+  }
+}

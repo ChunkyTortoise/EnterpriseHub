@@ -581,7 +581,7 @@ async def apply_suggestion(suggestion_id: str, current_user=Depends(get_current_
         logger.info(f"Suggestion {suggestion_id} applied successfully")
         return result
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to apply suggestion")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -598,8 +598,14 @@ async def dismiss_suggestion(
         reason = dismiss_reason.get("reason", "User dismissed")
         logger.info(f"Dismissing suggestion {suggestion_id}: {reason}")
 
-        # TODO: Implement suggestion dismissal logic
-        # This would remove the suggestion and potentially learn from the dismissal
+        # ROADMAP-045: Implement Suggestion Dismissal with Learning
+        # Current: Publishing event only
+        # Required:
+        #   1. Update suggestion status to 'dismissed' in database
+        #   2. Store dismissal reason for analytics
+        #   3. Machine learning: Adjust future suggestions based on patterns
+        #   4. Track dismissal rate by suggestion type
+        # Dependencies: None
 
         # Publish suggestion dismissed event
         event_publisher = get_event_publisher()
@@ -616,7 +622,7 @@ async def dismiss_suggestion(
         logger.info(f"Suggestion {suggestion_id} dismissed")
         return {"success": True, "message": "Suggestion dismissed"}
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to dismiss suggestion")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -716,7 +722,7 @@ async def analyze_customer_journeys(current_user=Depends(get_current_user_option
         logger.info("Analyzing customer journeys via orchestrator")
 
         orchestrator = get_claude_concierge_orchestrator()
-        guidance = await orchestrator.generate_live_guidance(
+        await orchestrator.generate_live_guidance(
             current_page="Customer Journeys", mode=ConciergeMode.REACTIVE
         )
 
@@ -831,7 +837,7 @@ async def get_context(session_id: str, current_user=Depends(get_current_user_opt
 
         return context
 
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch session context")
 
         raise HTTPException(status_code=500, detail="Internal server error")

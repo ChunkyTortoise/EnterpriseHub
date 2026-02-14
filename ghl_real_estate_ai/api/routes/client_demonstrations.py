@@ -476,7 +476,7 @@ async def demo_service_health():
         await demo_service.initialize()
 
         # Test Redis connectivity
-        test_session = await demo_service.get_demo_session("health-check-test")
+        await demo_service.get_demo_session("health-check-test")
 
         return JSONResponse(
             {

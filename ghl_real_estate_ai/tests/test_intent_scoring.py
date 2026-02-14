@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.unit
 import unittest
 from datetime import datetime
 

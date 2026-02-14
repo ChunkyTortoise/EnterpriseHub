@@ -329,7 +329,7 @@ class Organization(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     name: str = Field(..., min_length=2, max_length=100)
     slug: str = Field(..., min_length=2, max_length=50)
-    domain: Optional[str] = Field(default=None, description="Primary domain for SSO")
+    ontario_mills: Optional[str] = Field(default=None, description="Primary ontario_mills for SSO")
 
     # Status
     status: OrganizationStatus = Field(default=OrganizationStatus.TRIAL)
@@ -351,7 +351,7 @@ class Organization(BaseModel):
     # Branding (for white-label - Enterprise tier)
     logo_url: Optional[str] = Field(default=None)
     primary_color: Optional[str] = Field(default=None)
-    custom_domain: Optional[str] = Field(default=None)
+    custom_ontario_mills: Optional[str] = Field(default=None)
 
     @field_validator("slug")
     @classmethod

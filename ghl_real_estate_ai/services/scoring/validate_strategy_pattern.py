@@ -182,7 +182,7 @@ def validate_batch_processing():
         prop = base_property.copy()
         prop["id"] = f"batch-{i:03d}"
         prop["price"] = 700000 + (i * 25000)
-        prop["neighborhood"] = ["Downtown", "Domain", "Mueller", "Highland", "Westlake"][i]
+        prop["neighborhood"] = ["Downtown", "Ontario Mills", "Haven City", "Highland", "Westlake"][i]
         properties.append(prop)
 
     # Test batch scoring
@@ -247,12 +247,12 @@ def main():
 
     try:
         # Run all validation tests
-        basic_result = validate_basic_scorer()
-        enhanced_result = validate_enhanced_scorer()
-        strategy_results = validate_strategy_pattern()
-        factory = validate_scoring_factory()
-        batch_results = validate_batch_processing()
-        legacy_result = validate_legacy_compatibility()
+        validate_basic_scorer()
+        validate_enhanced_scorer()
+        validate_strategy_pattern()
+        validate_scoring_factory()
+        validate_batch_processing()
+        validate_legacy_compatibility()
 
         print("\n" + "=" * 50)
         print("📊 Validation Summary")

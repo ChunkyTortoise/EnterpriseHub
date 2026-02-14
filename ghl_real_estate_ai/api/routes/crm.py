@@ -68,6 +68,6 @@ async def get_ghl_fields():
         if not fields:
             return {"message": "No fields found or API key not configured"}
         return fields
-    except Exception as e:
+    except Exception:
         logger.exception("Error fetching GHL fields")
         raise HTTPException(status_code=500, detail="Internal server error")

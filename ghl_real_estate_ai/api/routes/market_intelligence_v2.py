@@ -11,14 +11,14 @@ Features:
 - Configuration-driven market data
 
 Supported Markets:
-- Austin (tech_hub)
+- Rancho Cucamonga (tech_hub)
 - Dallas (finance_hub)
 - Houston (energy_hub)
 - San Antonio (mixed_economy)
 - Rancho Cucamonga (logistics_hub)
 
 Usage:
-    GET /api/v2/market-intelligence/metrics?market_id=austin
+    GET /api/v2/market-intelligence/metrics?market_id=rancho_cucamonga
     GET /api/v2/market-intelligence/properties?market_id=dallas&min_price=400000
     GET /api/v2/market-intelligence/neighborhoods?market_id=houston
 """
@@ -576,13 +576,15 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
         # Get property recommendations
         properties = await market_service.search_properties(criteria, 20)
 
-        # TODO: Integrate with AI assistant for personalized recommendations
-        # ai_assistant = get_market_ai_assistant(request.market_id)
-        # recommendations = await ai_assistant.generate_property_recommendations(
-        #     lead_id=request.lead_id,
-        #     properties=properties,
-        #     preferences=criteria
-        # )
+        # ROADMAP-047: AI-Powered Property Recommendations
+        # Current: Returning basic search results
+        # Required:
+        #   1. Initialize market AI assistant for request.market_id
+        #   2. Generate personalized recommendations using Claude
+        #   3. Rank properties by lead preference match score
+        #   4. Add explanation for why each property is recommended
+        #   5. Cache recommendations for 1 hour
+        # Dependencies: None
 
         return {
             "market_id": request.market_id,

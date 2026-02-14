@@ -206,8 +206,8 @@ def load_market_performance_data() -> List[MarketPerformance]:
     """Load comprehensive market performance data"""
     return [
         MarketPerformance(
-            name="Austin Metro",
-            region="Central Texas",
+            name="Inland Empire Metro",
+            region="Inland Empire",
             active_leads=342,
             conversion_rate=0.18,
             avg_deal_size=485000,
@@ -219,8 +219,8 @@ def load_market_performance_data() -> List[MarketPerformance]:
             attribution_sources={"Organic": 145, "Paid": 98, "Referral": 67, "Social": 32},
         ),
         MarketPerformance(
-            name="San Antonio",
-            region="South Texas",
+            name="Ontario",
+            region="San Bernardino",
             active_leads=278,
             conversion_rate=0.14,
             avg_deal_size=365000,
@@ -232,8 +232,8 @@ def load_market_performance_data() -> List[MarketPerformance]:
             attribution_sources={"Organic": 118, "Paid": 87, "Referral": 45, "Social": 28},
         ),
         MarketPerformance(
-            name="Houston West",
-            region="Greater Houston",
+            name="Fontana",
+            region="Riverside",
             active_leads=456,
             conversion_rate=0.21,
             avg_deal_size=525000,
@@ -245,8 +245,8 @@ def load_market_performance_data() -> List[MarketPerformance]:
             attribution_sources={"Organic": 203, "Paid": 142, "Referral": 78, "Social": 33},
         ),
         MarketPerformance(
-            name="Dallas North",
-            region="North Texas",
+            name="Upland",
+            region="East LA",
             active_leads=389,
             conversion_rate=0.16,
             avg_deal_size=412000,
@@ -258,8 +258,8 @@ def load_market_performance_data() -> List[MarketPerformance]:
             attribution_sources={"Organic": 165, "Paid": 124, "Referral": 67, "Social": 33},
         ),
         MarketPerformance(
-            name="Fort Worth",
-            region="Tarrant County",
+            name="Chino",
+            region="Chino Valley",
             active_leads=234,
             conversion_rate=0.13,
             avg_deal_size=348000,
@@ -277,7 +277,7 @@ def load_market_performance_data() -> List[MarketPerformance]:
 def generate_time_series_data() -> pd.DataFrame:
     """Generate market performance trends over time"""
     dates = pd.date_range(start="2023-09-01", end="2024-01-18", freq="W")
-    markets = ["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"]
+    markets = ["Inland Empire Metro", "Ontario", "Fontana", "Upland", "Chino"]
 
     data = []
     for market in markets:
@@ -307,17 +307,17 @@ def generate_time_series_data() -> pd.DataFrame:
 @st.cache_data(ttl=300)
 def generate_cross_market_flows() -> List[CrossMarketFlow]:
     """Generate cross-market attribution data"""
-    markets = ["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"]
+    markets = ["Inland Empire Metro", "Ontario", "Fontana", "Upland", "Chino"]
     flows = []
 
     # Simulate realistic cross-market flows
     flow_patterns = [
-        ("Austin Metro", "San Antonio", 23, 0.16, 380000),
-        ("Houston West", "Dallas North", 34, 0.19, 445000),
-        ("Dallas North", "Fort Worth", 18, 0.14, 325000),
-        ("Austin Metro", "Houston West", 29, 0.21, 498000),
-        ("San Antonio", "Austin Metro", 15, 0.18, 472000),
-        ("Fort Worth", "Dallas North", 12, 0.15, 368000),
+        ("Inland Empire Metro", "Ontario", 23, 0.16, 380000),
+        ("Fontana", "Upland", 34, 0.19, 445000),
+        ("Upland", "Chino", 18, 0.14, 325000),
+        ("Inland Empire Metro", "Fontana", 29, 0.21, 498000),
+        ("Ontario", "Inland Empire Metro", 15, 0.18, 472000),
+        ("Chino", "Upland", 12, 0.15, 368000),
     ]
 
     for source, target, count, rate, value in flow_patterns:
@@ -817,8 +817,8 @@ def render_multi_market_analytics_view():
 
         selected_markets = st.multiselect(
             "Select Markets",
-            ["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
-            default=["Austin Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"],
+            ["Inland Empire Metro", "Ontario", "Fontana", "Upland", "Chino"],
+            default=["Inland Empire Metro", "Ontario", "Fontana", "Upland", "Chino"],
         )
 
         metric_focus = st.selectbox(

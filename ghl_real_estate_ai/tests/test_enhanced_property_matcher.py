@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 """
 Comprehensive tests for the enhanced property matching system.
 
@@ -50,7 +49,7 @@ class MockPropertyMatcher:
         return [
             {
                 "id": "prop_001",
-                "address": {"street": "123 Test St", "neighborhood": "Hyde Park", "city": "Austin", "zip": "78751"},
+                "address": {"street": "123 Test St", "neighborhood": "Alta Loma", "city": "Rancho Cucamonga", "zip": "91737"},
                 "price": 675000,
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -71,9 +70,9 @@ class MockPropertyMatcher:
                 "id": "prop_002",
                 "address": {
                     "street": "456 Demo Ave",
-                    "neighborhood": "Steiner Ranch",
-                    "city": "Austin",
-                    "zip": "78732",
+                    "neighborhood": "Rancho Etiwanda",
+                    "city": "Rancho Cucamonga",
+                    "zip": "91739",
                 },
                 "price": 725000,
                 "bedrooms": 4,
@@ -93,7 +92,7 @@ class MockPropertyMatcher:
             },
             {
                 "id": "prop_003",
-                "address": {"street": "789 Sample Dr", "neighborhood": "East Austin", "city": "Austin", "zip": "78702"},
+                "address": {"street": "789 Sample Dr", "neighborhood": "East Rancho Cucamonga", "city": "Rancho Cucamonga", "zip": "91739"},
                 "price": 425000,
                 "bedrooms": 2,
                 "bathrooms": 2,
@@ -371,7 +370,7 @@ class TestEnhancedPropertyMatcher:
         self.test_preferences = {
             "lead_id": "test_lead_001",
             "budget": 700000,
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "bedrooms": 3,
             "bathrooms": 2,
             "property_type": "Single Family",
@@ -407,15 +406,15 @@ class TestEnhancedPropertyMatcher:
 
     def test_location_preferences(self):
         """Test location-based matching"""
-        austin_prefs = self.test_preferences.copy()
-        austin_prefs["location"] = "Austin"
+        rancho_cucamonga_prefs = self.test_preferences.copy()
+        rancho_cucamonga_prefs["location"] = "Rancho Cucamonga"
 
-        matches = self.matcher.find_enhanced_matches(preferences=austin_prefs, min_score=0.3)
+        matches = self.matcher.find_enhanced_matches(preferences=rancho_cucamonga_prefs, min_score=0.3)
 
-        # Should prioritize Austin properties
+        # Should prioritize Rancho Cucamonga properties
         for match in matches:
             city = match.property.get("address", {}).get("city", "")
-            assert "Austin" in city, "Should match location preference"
+            assert "Rancho Cucamonga" in city, "Should match location preference"
 
     def test_bedroom_requirements(self):
         """Test bedroom requirement matching"""
@@ -524,7 +523,7 @@ class TestEnhancedPropertyMatcher:
         family_prefs = {
             "lead_id": "family_001",
             "budget": 650000,
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "bedrooms": 4,
             "property_type": "Single Family",
         }
@@ -535,7 +534,7 @@ class TestEnhancedPropertyMatcher:
         professional_prefs = {
             "lead_id": "prof_001",
             "budget": 450000,
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "bedrooms": 2,
             "property_type": "Condo",
         }
@@ -613,7 +612,7 @@ class TestComponentIntegration:
         walkable_prefs = {
             "lead_id": "walkable_001",
             "budget": 500000,
-            "location": "Austin",
+            "location": "Rancho Cucamonga",
             "bedrooms": 2,
             "lifestyle_priority": "walkability",
         }
@@ -649,7 +648,7 @@ class TestComponentIntegration:
         matches = matcher.find_enhanced_matches(
             preferences=self.test_preferences
             if hasattr(self, "test_preferences")
-            else {"budget": 600000, "location": "Austin", "bedrooms": 3},
+            else {"budget": 600000, "location": "Rancho Cucamonga", "bedrooms": 3},
             behavioral_profile=behavioral_profile,
             segment=LeadSegment.FAMILY_WITH_KIDS,
             min_score=0.3,
@@ -675,7 +674,7 @@ def run_manual_test():
             "preferences": {
                 "lead_id": "family_001",
                 "budget": 700000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "bedrooms": 3,
                 "property_type": "Single Family",
             },
@@ -686,7 +685,7 @@ def run_manual_test():
             "preferences": {
                 "lead_id": "prof_001",
                 "budget": 450000,
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "bedrooms": 2,
                 "property_type": "Condo",
             },
@@ -694,7 +693,7 @@ def run_manual_test():
         },
         {
             "name": "Budget-Conscious Buyer",
-            "preferences": {"lead_id": "budget_001", "budget": 500000, "location": "Austin", "bedrooms": 2},
+            "preferences": {"lead_id": "budget_001", "budget": 500000, "location": "Rancho Cucamonga", "bedrooms": 2},
             "expected": "Should find affordable options",
         },
     ]

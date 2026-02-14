@@ -117,7 +117,7 @@ class MockTwitterSentimentSource(DataSourceInterface):
 
 
 class MockPermitDataSource(DataSourceInterface):
-    """Mock permit data source - replace with Travis County/Williamson County APIs."""
+    """Mock permit data source - replace with San Bernardino County/Riverside County APIs."""
 
     async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
         """Mock permit pressure analysis."""
@@ -142,7 +142,7 @@ class MockPermitDataSource(DataSourceInterface):
 
 
 class MockNewsSource(DataSourceInterface):
-    """Mock local news sentiment - replace with NewsAPI + Austin American-Statesman RSS."""
+    """Mock local news sentiment - replace with NewsAPI + Rancho Cucamonga American-Statesman RSS."""
 
     async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
         """Mock news sentiment analysis."""
@@ -210,8 +210,8 @@ class MarketSentimentRadar:
 
         # Initialize data sources (mix of real and mock for progressive rollout)
         self.data_sources: List[DataSourceInterface] = [
-            MockTwitterSentimentSource(),  # TODO: Replace with real Twitter Academic API
-            MockHOADataSource(),  # TODO: Replace with real HOA/community data
+            MockTwitterSentimentSource(),  # ROADMAP-076: Replace with real Twitter/X API
+            MockHOADataSource(),  # ROADMAP-076: Replace with real HOA/community data
         ]
 
         # Note: Real data sources are added dynamically to avoid blocking initialization

@@ -128,8 +128,8 @@ class TestJorgeIntelligenceFlow:
         mock_ghl_client = MagicMock()
         
         engine = JorgeSellerEngine(conversation_manager=mock_conv_manager, ghl_client=mock_ghl_client)
-        insight = await engine._get_market_insight("Austin, TX")
+        insight = await engine._get_market_insight("Rancho Cucamonga, CA")
         
-        assert "Austin, TX" in insight
+        assert "Rancho Cucamonga, CA" in insight
         assert "exploding" in insight
         assert "losing leverage" in insight

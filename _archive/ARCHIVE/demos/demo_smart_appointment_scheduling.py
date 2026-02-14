@@ -8,7 +8,7 @@ Demonstrates Jorge's smart appointment scheduling system for lead bot:
 - Automatic booking for qualified leads (score ≥ 5)
 - Real-time calendar integration with GHL
 - SMS confirmations to leads
-- Timezone handling for Austin market
+- Timezone handling for Rancho Cucamonga market
 - 40% faster lead→appointment conversion target
 
 🎯 Jorge's Business Requirements:
@@ -112,7 +112,7 @@ async def demo_qualified_buyer_lead():
 
     extracted_data = {
         "budget": 450000,
-        "location": ["Austin", "Cedar Park"],
+        "location": ["Rancho Cucamonga", "Cedar Park"],
         "timeline": "next month",
         "bedrooms": 3,
         "bathrooms": 2,
@@ -121,7 +121,7 @@ async def demo_qualified_buyer_lead():
     }
 
     lead_score = 6  # High score - 6 questions answered
-    message_content = "Yes, I'm pre-approved up to $450k and ready to start looking at 3BR homes in Austin!"
+    message_content = "Yes, I'm pre-approved up to $450k and ready to start looking at 3BR homes in Rancho Cucamonga!"
 
     print(f"👤 Lead: {contact_info['first_name']} {contact_info['last_name']}")
     print(f"📊 Score: {lead_score}/7 questions answered (85% qualification)")
@@ -166,9 +166,9 @@ async def demo_qualified_buyer_lead():
             print(f"\n📅 Appointments created:")
             for apt in mock_client.appointments_created:
                 start_time = datetime.fromisoformat(apt['start_time'].replace('Z', '+00:00'))
-                austin_time = start_time.astimezone(AUSTIN_TZ)
+                rancho_cucamonga_time = start_time.astimezone(AUSTIN_TZ)
                 print(f"   • {apt['title']}")
-                print(f"     Time: {austin_time.strftime('%A, %B %d at %I:%M %p CT')}")
+                print(f"     Time: {rancho_cucamonga_time.strftime('%A, %B %d at %I:%M %p CT')}")
                 print(f"     ID: {apt['id']}")
 
         # Show SMS confirmations
@@ -261,7 +261,7 @@ async def demo_unqualified_lead():
     }
 
     extracted_data = {
-        "location": ["Austin"]  # Only 1 question answered
+        "location": ["Rancho Cucamonga"]  # Only 1 question answered
     }
 
     lead_score = 1  # Below threshold
@@ -304,7 +304,7 @@ async def demo_business_hours_validation():
         ("Sunday 2:00 PM", datetime(2024, 1, 21, 14, 0, 0, tzinfo=AUSTIN_TZ)),
     ]
 
-    print("Jorge's Austin Business Hours:")
+    print("Jorge's Rancho Cucamonga Business Hours:")
     print("Monday-Friday: 9:00 AM - 6:00 PM CT")
     print("Saturday: 10:00 AM - 4:00 PM CT")
     print("Sunday: CLOSED")
@@ -350,7 +350,7 @@ def display_system_overview():
     print("   • Automatic booking for qualified leads (score ≥ 5)")
     print("   • Professional SMS confirmations")
     print("   • Zero double-bookings")
-    print("   • Austin timezone handling")
+    print("   • Rancho Cucamonga timezone handling")
     print()
 
     print("🏠 Appointment Types:")

@@ -32,8 +32,6 @@ from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadI
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from tests.mocks.external_services import MockClaudeClient, MockRedisClient, create_test_lead_data
 
-@pytest.mark.integration
-
 
 class LeadIntentLevel(Enum):
     """Business-defined lead intent levels"""
@@ -106,7 +104,7 @@ class TestHighIntentLeadContracts:
             {
                 "budget": "$650,000",
                 "timeline": "ASAP - need to move in 30 days",
-                "location": "North Austin",
+                "location": "North Rancho Cucamonga",
                 "bedrooms": "4",
                 "financing": "Pre-approved with Wells Fargo",
                 "motivation": "Job relocation, must close quickly",
@@ -203,7 +201,7 @@ class TestLeadTemperatureConsistency:
         Business Impact: Prevents scoring inconsistencies due to format variations
         """
         # GIVEN: Same lead data in different formats
-        base_lead = {"budget": "400000", "timeline": "soon", "location": "Austin"}
+        base_lead = {"budget": "400000", "timeline": "soon", "location": "Rancho Cucamonga"}
 
         variations = [
             # Numeric vs string budget
@@ -215,9 +213,9 @@ class TestLeadTemperatureConsistency:
             {**base_lead, "timeline": "within 3 months"},
             {**base_lead, "timeline": "soon"},
             # Location variations
-            {**base_lead, "location": "Austin, TX"},
-            {**base_lead, "location": "austin texas"},
-            {**base_lead, "location": "ATX"},
+            {**base_lead, "location": "Rancho Cucamonga, CA"},
+            {**base_lead, "location": "rancho_cucamonga california"},
+            {**base_lead, "location": "IE"},
         ]
 
         # WHEN: All variations are scored
@@ -251,12 +249,12 @@ class TestLeadTemperatureConsistency:
         # GIVEN: Progressive lead information gathering
         stages = [
             {},  # Initial contact
-            {"location": "Austin"},  # Location interest
-            {"location": "Austin", "timeline": "soon"},  # Timeline added
-            {"location": "Austin", "timeline": "soon", "budget": "500000"},  # Budget qualified
-            {"location": "Austin", "timeline": "soon", "budget": "500000", "bedrooms": "3"},  # Requirements
+            {"location": "Rancho Cucamonga"},  # Location interest
+            {"location": "Rancho Cucamonga", "timeline": "soon"},  # Timeline added
+            {"location": "Rancho Cucamonga", "timeline": "soon", "budget": "500000"},  # Budget qualified
+            {"location": "Rancho Cucamonga", "timeline": "soon", "budget": "500000", "bedrooms": "3"},  # Requirements
             {
-                "location": "Austin",
+                "location": "Rancho Cucamonga",
                 "timeline": "soon",
                 "budget": "500000",
                 "bedrooms": "3",
@@ -303,7 +301,7 @@ class TestPropertyRecommendationContracts:
         budget_conscious_lead = {
             "lead_name": "Budget-Conscious Buyer",
             "budget": "$350,000",
-            "location": "Austin suburbs",
+            "location": "Rancho Cucamonga suburbs",
             "timeline": "within 6 months",
             "bedrooms": "3",
             "motivation": "First-time home buyer, strict budget",
@@ -399,7 +397,7 @@ class TestBusinessOutcomeValidation:
                     "budget": "$750,000",
                     "financing": "Cash purchase",
                     "timeline": "Must close in 30 days",
-                    "location": "West Austin",
+                    "location": "West Rancho Cucamonga",
                     "bedrooms": "4",
                     "motivation": "Corporate relocation",
                 },
@@ -410,7 +408,7 @@ class TestBusinessOutcomeValidation:
                     "budget": "$600,000",
                     "financing": "Pre-approved with excellent credit",
                     "timeline": "Ready to make offer",
-                    "location": "Specific neighborhood: Steiner Ranch",
+                    "location": "Specific neighborhood: Rancho Etiwanda",
                     "bedrooms": "3-4",
                     "bathrooms": "2+",
                     "motivation": "Upsizing for growing family",
@@ -530,7 +528,7 @@ class TestCrossServiceBehavioralConsistency:
             "lead_name": "Consistency Test Lead",
             "budget": "$500,000",
             "timeline": "next 90 days",
-            "location": "North Austin",
+            "location": "North Rancho Cucamonga",
             "bedrooms": "3",
             "financing": "pre-qualified",
         }
@@ -569,7 +567,7 @@ class TestCrossServiceBehavioralConsistency:
                 "name": "Maximum Score Lead",
                 "data": {
                     "budget": "$600,000",
-                    "location": "Specific: Steiner Ranch",
+                    "location": "Specific: Rancho Etiwanda",
                     "timeline": "Immediate - 30 days",
                     "bedrooms": "4",
                     "bathrooms": "3",
@@ -582,7 +580,7 @@ class TestCrossServiceBehavioralConsistency:
             },
             {
                 "name": "Minimum Qualifying Lead",
-                "data": {"budget": "$400,000", "location": "Austin area", "timeline": "soon"},
+                "data": {"budget": "$400,000", "location": "Rancho Cucamonga area", "timeline": "soon"},
                 "expected_score": 3,
                 "expected_actions": ["hot", "schedule", "24", "48"],
             },
@@ -619,7 +617,7 @@ class TestBusinessRuleCompliance:
         Business Impact: Ensures legal compliance and fair treatment
         """
         # GIVEN: Identical leads with different personal characteristics
-        base_lead_data = {"budget": "$500,000", "timeline": "within 6 months", "location": "Austin", "bedrooms": "3"}
+        base_lead_data = {"budget": "$500,000", "timeline": "within 6 months", "location": "Rancho Cucamonga", "bedrooms": "3"}
 
         # Personal characteristics that should NOT affect scoring
         personal_variations = [
@@ -654,7 +652,7 @@ class TestBusinessRuleCompliance:
         privacy_compliant_lead = {
             "budget": "$450,000",
             "timeline": "next quarter",
-            "location": "Central Austin",
+            "location": "Central Rancho Cucamonga",
             "bedrooms": "2-3",
             "financing": "conventional loan",
         }

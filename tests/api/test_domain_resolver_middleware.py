@@ -31,8 +31,6 @@ from ghl_real_estate_ai.api.middleware.domain_resolver_middleware import (
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 
-@pytest.mark.integration
-
 
 @pytest.fixture
 async def mock_db_pool():

@@ -58,7 +58,6 @@ except (ImportError, TypeError, AttributeError, Exception):
 from tests.fixtures.sample_data import AnalyticsData, LeadProfiles
 from tests.mocks.external_services import (
 
-@pytest.mark.integration
     MockApolloClient,
     MockClaudeClient,
     MockDatabaseService,
@@ -222,7 +221,7 @@ class TestLeadIngestionToConversionWorkflow:
                     "budget": "600000",
                     "timeline": "soon",
                     "property_type": "single_family",
-                    "location": "Austin",
+                    "location": "Rancho Cucamonga",
                 },
             }
         )
@@ -403,7 +402,7 @@ class TestLeadIngestionToConversionWorkflow:
         # Step 2: Simulate real-time audio processing
         # Mock audio chunks and transcription
         audio_chunks = [
-            {"speaker": "lead", "text": "Hi, I am interested in properties in North Austin"},
+            {"speaker": "lead", "text": "Hi, I am interested in properties in North Rancho Cucamonga"},
             {"speaker": "agent", "text": "Great! I have some excellent options. What is your budget range?"},
             {"speaker": "lead", "text": "We are looking at around 600 to 700 thousand"},
             {"speaker": "agent", "text": "Perfect, that opens up some wonderful neighborhoods..."},
@@ -432,7 +431,7 @@ class TestLeadIngestionToConversionWorkflow:
             "conversion_probability": 0.78,
             "key_insights": [
                 "Budget confirmed: $600-700K",
-                "Strong interest in North Austin",
+                "Strong interest in North Rancho Cucamonga",
                 "Ready to view properties",
             ],
             "recommended_follow_up": "Send 3-5 property options within 24 hours",

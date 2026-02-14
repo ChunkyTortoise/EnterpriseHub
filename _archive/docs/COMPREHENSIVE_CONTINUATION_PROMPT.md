@@ -167,7 +167,7 @@ The bot integration is **perfect**. Focus on additional business features:
 - Kubernetes orchestration for auto-scaling
 
 **Advanced Integrations:**
-- Additional MLS systems beyond Austin market
+- Additional MLS systems beyond Rancho Cucamonga market
 - Enhanced voice AI with Retell optimization
 - Blockchain transaction tracking and verification
 - Predictive modeling with external market data

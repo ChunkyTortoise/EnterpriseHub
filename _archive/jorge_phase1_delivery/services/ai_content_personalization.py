@@ -291,7 +291,7 @@ async def demo_personalization():
         "budget": 650000,
         "engagement_score": 78,
         "last_activity_days_ago": 2,
-        "location": "Austin, TX",
+        "location": "Rancho Cucamonga, CA",
         "device": "mobile",
         "source": "paid",
         "preferences": {

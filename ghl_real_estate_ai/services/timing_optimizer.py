@@ -327,7 +327,7 @@ class TimingOptimizer:
             profile.preferred_hours[channel] = []
 
         # Add hour to preferences (weighted by engagement quality)
-        weight = self._get_engagement_weight(engagement_event.event_type)
+        self._get_engagement_weight(engagement_event.event_type)
 
         # Simple frequency-based learning
         profile.preferred_hours[channel].append(hour)

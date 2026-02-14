@@ -105,7 +105,7 @@ class AgentStateSync:
                 "current_step": "facilitate_offer",
                 "extracted_preferences": {
                     "budget": 500000,
-                    "location": "Austin, TX",
+                    "location": "Rancho Cucamonga, CA",
                     "timeline": "ASAP",
                     "bedrooms": 3,
                     "motivation": "Relocating for job",

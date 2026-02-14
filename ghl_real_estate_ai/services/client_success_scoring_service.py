@@ -26,7 +26,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from .analytics_service import AnalyticsService
-from .austin_market_service import AustinMarketService
+from .rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from .cache_service import CacheService
 from .claude_assistant import ClaudeAssistant
 from .ghl_client import GHLClient
@@ -120,14 +120,14 @@ class ClientSuccessScoringService:
         self,
         analytics_service: Optional[AnalyticsService] = None,
         transaction_service: Optional[TransactionService] = None,
-        market_service: Optional[AustinMarketService] = None,
+        market_service: Optional[RanchoCucamongaMarketService] = None,
         claude_assistant: Optional[ClaudeAssistant] = None,
         cache_service: Optional[CacheService] = None,
         ghl_client: Optional[GHLClient] = None,
     ):
         self.analytics = analytics_service or AnalyticsService()
         self.transactions = transaction_service or TransactionService()
-        self.market_service = market_service or AustinMarketService()
+        self.market_service = market_service or RanchoCucamongaMarketService()
         self.claude = claude_assistant or ClaudeAssistant()
         self.cache = cache_service or CacheService()
         self.ghl = ghl_client or GHLClient()

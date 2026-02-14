@@ -262,7 +262,7 @@ class SHAPVisualizationBuilder:
         fig = go.Figure()
 
         # Colors for positive/negative impacts
-        colors = ["#2E8B57" if val > 0 else "#DC143C" for val in shap_vals]
+        ["#2E8B57" if val > 0 else "#DC143C" for val in shap_vals]
 
         # Create waterfall chart
         cumulative = explanation.base_value

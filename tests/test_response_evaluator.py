@@ -1,12 +1,10 @@
+from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.integration
 
 import pytest
 
-@pytest.mark.unit
 """Tests for Jorge Response Evaluator."""
-
-from __future__ import annotations
 
 import os
 import sys

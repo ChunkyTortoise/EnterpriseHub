@@ -16,8 +16,6 @@ os.environ["GHL_LOCATION_ID"] = "loc-test-123"
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
-@pytest.mark.integration
-
 
 @pytest.mark.asyncio
 async def test_slot_fetching_for_hot_lead():
@@ -42,9 +40,9 @@ async def test_slot_fetching_for_hot_lead():
             {"role": "assistant", "content": "Great, what is your budget?"},
             {"role": "user", "content": "400k"},
             {"role": "assistant", "content": "And where?"},
-            {"role": "user", "content": "Austin"},
+            {"role": "user", "content": "Rancho Cucamonga"},
         ],
-        "extracted_preferences": {"budget": 400000, "location": "Austin", "timeline": "ASAP"},
+        "extracted_preferences": {"budget": 400000, "location": "Rancho Cucamonga", "timeline": "ASAP"},
         "created_at": datetime.utcnow().isoformat(),
     }
 

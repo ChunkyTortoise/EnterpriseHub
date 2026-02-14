@@ -20,7 +20,6 @@ from ghl_real_estate_ai.services.jorge.abandonment_detector import (
 )
 from ghl_real_estate_ai.services.jorge.market_trigger_service import (
     MarketTrigger,
-    TriggerType,
     get_market_trigger_service,
 )
 

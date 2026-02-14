@@ -19,18 +19,18 @@ VALIDATION SUMMARY:
 
 WARNINGS:
 ----------------------------------------
-⚠️  AustinMarketService compatibility issue: cannot import name 'AustinMarketService' from 'ghl_real_estate_ai.services.austin_market_service' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/services/austin_market_service.py)
+⚠️  RanchoCucamongaMarketService compatibility issue: cannot import name 'RanchoCucamongaMarketService' from 'ghl_real_estate_ai.services.rancho_cucamonga_market_service' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/services/rancho_cucamonga_market_service.py)
 ⚠️  Schema compatibility issue: cannot import name 'ContactData' from 'ghl_real_estate_ai.api.schemas.ghl' (/Users/cave/Documents/GitHub/EnterpriseHub/ghl_real_estate_ai/api/schemas/ghl.py)
 ⚠️  Potential sensitive data in realtime_environments.yaml
 
 ERRORS:
 ----------------------------------------
 ❌ Failed to create service for dallas: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'
-❌ Failed to create service for austin: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'
+❌ Failed to create service for rancho_cucamonga: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'
 ❌ Failed to create service for san_antonio: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'
 ❌ Failed to create service for rancho_cucamonga: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'
 ❌ Failed to create service for houston: Can't instantiate abstract class BaseMarketService without an implementation for abstract methods '_fetch_market_metrics', '_fetch_school_district_data', '_search_mls_properties'
-❌ austin.yaml missing sections: ['demographics']
+❌ rancho_cucamonga.yaml missing sections: ['demographics']
 ❌ dallas.yaml missing sections: ['demographics']
 ❌ houston.yaml missing sections: ['demographics']
 ❌ san_antonio.yaml missing sections: ['demographics']

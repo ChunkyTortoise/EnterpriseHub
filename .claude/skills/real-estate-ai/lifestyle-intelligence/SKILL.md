@@ -213,7 +213,7 @@ class WalkabilityAnalyzer:
 ### Cached Intelligence Database
 ```python
 NEIGHBORHOOD_INTELLIGENCE = {
-    "Hyde Park, Austin": {
+    "Hyde Park, Rancho Cucamonga": {
         "walkability": {
             "walk_score": 85,
             "grocery_within_quarter_mile": True,

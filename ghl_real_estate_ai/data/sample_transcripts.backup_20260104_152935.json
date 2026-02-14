@@ -20,7 +20,7 @@
         {
           "timestamp": "2025-12-15T14:23:45Z",
           "speaker": "user",
-          "message": "Hi! I'm looking to buy a house in Austin",
+          "message": "Hi! I'm looking to buy a house in Rancho Cucamonga",
           "metadata": {"intent": "buying"}
         },
         {
@@ -44,8 +44,8 @@
         {
           "timestamp": "2025-12-15T14:26:00Z",
           "speaker": "user",
-          "message": "Round Rock or Pflugerville, good schools for my kids",
-          "metadata": {"extracted_data": {"location": "Round Rock, Pflugerville", "must_haves": "good schools"}}
+          "message": "Fontana or Ontario, good schools for my kids",
+          "metadata": {"extracted_data": {"location": "Fontana, Ontario", "must_haves": "good schools"}}
         },
         {
           "timestamp": "2025-12-15T14:26:30Z",
@@ -141,8 +141,8 @@
         {
           "timestamp": "2025-12-16T10:16:45Z",
           "speaker": "user",
-          "message": "Hyde Park, 3 bed 2 bath",
-          "metadata": {"extracted_data": {"location": "Hyde Park", "bedrooms": "3", "bathrooms": "2"}}
+          "message": "Alta Loma, 3 bed 2 bath",
+          "metadata": {"extracted_data": {"location": "Alta Loma", "bedrooms": "3", "bathrooms": "2"}}
         },
         {
           "timestamp": "2025-12-16T10:17:15Z",
@@ -268,14 +268,14 @@
         {
           "timestamp": "2025-12-17T16:51:30Z",
           "speaker": "bot",
-          "message": "Round Rock or Pflugerville work? More house for the money",
+          "message": "Fontana or Ontario work? More house for the money",
           "metadata": {"stage": "educating", "offering_alternatives": true}
         },
         {
           "timestamp": "2025-12-17T16:52:10Z",
           "speaker": "user",
           "message": "Yeah open to that",
-          "metadata": {"extracted_data": {"location": "Round Rock, Pflugerville", "flexibility": "high"}}
+          "metadata": {"extracted_data": {"location": "Fontana, Ontario", "flexibility": "high"}}
         },
         {
           "timestamp": "2025-12-17T16:52:40Z",
@@ -360,8 +360,8 @@
         {
           "timestamp": "2025-12-18T11:32:00Z",
           "speaker": "user",
-          "message": "East Austin, 78721",
-          "metadata": {"extracted_data": {"location": "East Austin", "zip": "78721"}}
+          "message": "East Rancho Cucamonga, 91739",
+          "metadata": {"extracted_data": {"location": "East Rancho Cucamonga", "zip": "91739"}}
         },
         {
           "timestamp": "2025-12-18T11:32:30Z",
@@ -591,8 +591,8 @@
         {
           "timestamp": "2025-12-20T09:46:55Z",
           "speaker": "user",
-          "message": "Tarrytown, near the lake",
-          "metadata": {"extracted_data": {"location": "Tarrytown", "neighborhood_features": "near lake"}}
+          "message": "North Rancho, near the lake",
+          "metadata": {"extracted_data": {"location": "North Rancho", "neighborhood_features": "near lake"}}
         },
         {
           "timestamp": "2025-12-20T09:47:25Z",
@@ -645,7 +645,7 @@
         {
           "timestamp": "2025-12-20T09:52:35Z",
           "speaker": "bot",
-          "message": "Tarrytown is hot right now. Want me to schedule a consultation? Agent can walk through comps and current market",
+          "message": "North Rancho is hot right now. Want me to schedule a consultation? Agent can walk through comps and current market",
           "metadata": {"stage": "closing", "action": "offer_consultation", "value_proposition": "market education"}
         },
         {

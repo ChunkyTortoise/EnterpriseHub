@@ -848,7 +848,7 @@ class NeuralPropertyMatcher:
         features = []
 
         # Coordinates (if available)
-        lat = address.get("latitude", 30.2672)  # Default to Austin
+        lat = address.get("latitude", 30.2672)  # Default to Rancho Cucamonga
         lng = address.get("longitude", -97.7431)
 
         # Normalize coordinates
@@ -860,12 +860,12 @@ class NeuralPropertyMatcher:
         quality_scores = {
             "downtown": 0.9,
             "westlake": 0.95,
-            "domain": 0.8,
-            "south congress": 0.85,
-            "mueller": 0.8,
+            "ontario_mills": 0.8,
+            "day creek": 0.85,
+            "haven city": 0.8,
             "circle c": 0.7,
-            "east austin": 0.6,
-            "north austin": 0.7,
+            "east rancho_cucamonga": 0.6,
+            "north rancho_cucamonga": 0.7,
         }
 
         neighborhood_score = 0.5  # Default
@@ -893,7 +893,7 @@ class NeuralPropertyMatcher:
         features.append(0.8 if "downtown" in neighborhood else 0.5)
 
         # Employment centers proximity
-        features.append(0.9 if "domain" in neighborhood else 0.6)
+        features.append(0.9 if "ontario_mills" in neighborhood else 0.6)
 
         return features
 
@@ -1489,14 +1489,14 @@ async def test_neural_property_matcher():
         "property_type": "Single Family",
         "amenities": ["pool", "garage", "garden"],
         "address": {"neighborhood": "Downtown", "latitude": 30.2672, "longitude": -97.7431},
-        "description": "Beautiful modern home in downtown Austin with pool and garden",
+        "description": "Beautiful modern home in downtown Rancho Cucamonga with pool and garden",
     }
 
     client_data = {
         "id": "test_client_1",
         "preferences": {
             "budget": 800000,
-            "location": "downtown austin",
+            "location": "downtown rancho_cucamonga",
             "bedrooms": 3,
             "property_type": "single family",
             "must_haves": ["pool", "garage"],
@@ -1506,7 +1506,7 @@ async def test_neural_property_matcher():
 
     conversation_context = {
         "conversation_history": [
-            {"role": "user", "text": "I'm looking for a 3-bedroom house in downtown Austin with a pool"},
+            {"role": "user", "text": "I'm looking for a 3-bedroom house in downtown Rancho Cucamonga with a pool"},
             {"role": "assistant", "text": "I can help you find the perfect home. What's your budget?"},
             {"role": "user", "text": "Around $800,000. I need to move by March for my job."},
         ],

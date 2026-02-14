@@ -732,7 +732,7 @@ class AuthManager:
 
     async def _check_rate_limiting(self, username: str, ip_address: str):
         """Check rate limiting for authentication attempts"""
-        # TODO: Implement Redis-based rate limiting
+        # ROADMAP-088: Implement Redis-based rate limiting for auth attempts
         pass
 
     async def _check_suspicious_activity(self, ip_address: str):

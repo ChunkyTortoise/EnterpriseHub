@@ -33,7 +33,6 @@ from ghl_real_estate_ai.ml.price_prediction_engine import PredictionTimeframe, P
 from ghl_real_estate_ai.services.inventory_alert_system import AlertInstance, AlertSeverity, AlertStatus, AlertType
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
 
-@pytest.mark.integration
     InvestmentGrade,
     MarketTrend,
     NeighborhoodMetrics,

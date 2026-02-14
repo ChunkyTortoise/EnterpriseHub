@@ -51,7 +51,7 @@ def test_performance_improvements():
         # Test market context loading performance
         async def test_market_context():
             context_start = time.time()
-            context = await assistant.get_market_context_minimal("austin")
+            context = await assistant.get_market_context_minimal("rancho_cucamonga")
             context_time = (time.time() - context_start) * 1000
             return context_time, context
         

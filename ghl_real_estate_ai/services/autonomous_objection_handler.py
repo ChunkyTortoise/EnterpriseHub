@@ -700,7 +700,7 @@ class AutonomousObjectionHandler:
                             get_competitive_intelligence_system,
                         )
 
-                        comp_intel = get_competitive_intelligence_system()
+                        get_competitive_intelligence_system()
 
                         # Simulate finding a stale competitor
                         stale_listing = (
@@ -720,7 +720,7 @@ class AutonomousObjectionHandler:
 
             if analysis.category in market_related_categories:
                 try:
-                    market_area = lead_profile.get("preferred_neighborhood", "austin").lower()
+                    market_area = lead_profile.get("preferred_neighborhood", "rancho_cucamonga").lower()
                     dashboard = await self.market_engine.get_opportunity_dashboard(market_area)
                     market_overview = dashboard.get("market_overview", {})
                     timing_insights = dashboard.get("timing_insights", {})

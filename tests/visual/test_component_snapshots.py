@@ -20,8 +20,6 @@ Key components tested:
 import pytest
 from playwright.sync_api import Page, expect
 
-@pytest.mark.integration
-
 # ============================================================================
 # Individual Component Tests (Critical Components)
 # ============================================================================

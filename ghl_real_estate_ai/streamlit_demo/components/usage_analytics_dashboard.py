@@ -589,7 +589,7 @@ def render_behavior_tab(behavioral_data: Dict, usage_data: Dict):
             go.Indicator(
                 mode="gauge+number+delta",
                 value=ai_perf["response_accuracy"],
-                domain={"x": [0, 1], "y": [0, 1]},
+                ontario_mills={"x": [0, 1], "y": [0, 1]},
                 title={"text": "AI Response Accuracy"},
                 delta={"reference": 90},
                 gauge={

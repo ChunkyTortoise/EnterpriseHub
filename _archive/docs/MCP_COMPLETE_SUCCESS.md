@@ -7,7 +7,7 @@
 | **PostgreSQL** | ✅ **READY** | Database queries, BI analytics |
 | **GoHighLevel** | ✅ **READY** | Jorge's CRM data (3xt4qayAh35BIDLaUv7P) |
 | **GitHub** | ✅ **READY** | Repository operations, code deployment |
-| **Firecrawl** | ✅ **READY** | Austin property scraping, market data |
+| **Firecrawl** | ✅ **READY** | Rancho Cucamonga property scraping, market data |
 | **Memory** | ✅ **READY** | Knowledge graph, project insights |
 | **Sequential Thinking** | ✅ **READY** | Advanced AI reasoning, strategy planning |
 
@@ -39,9 +39,9 @@ claude
 "List the 5 most recent leads from Jorge's GoHighLevel account and show their contact details"
 ```
 
-### **2. Test Austin Property Scraping**
+### **2. Test Rancho Cucamonga Property Scraping**
 ```
-"Use Firecrawl to find 3 luxury properties in Austin under $800k in West Lake Hills"
+"Use Firecrawl to find 3 luxury properties in Rancho Cucamonga under $800k in West Lake Hills"
 ```
 
 ### **3. Test Database Analytics**
@@ -51,7 +51,7 @@ claude
 
 ### **4. Test Full AI Workflow**
 ```
-"Query Jorge's GHL for leads with budget over $500k, find matching Austin properties using Firecrawl, then create a personalized follow-up strategy using Sequential Thinking"
+"Query Jorge's GHL for leads with budget over $500k, find matching Rancho Cucamonga properties using Firecrawl, then create a personalized follow-up strategy using Sequential Thinking"
 ```
 
 ### **5. Test GitHub Integration**
@@ -69,7 +69,7 @@ claude
 
 ### **Property Intelligence**
 - Scrape MLS, Zillow, Realtor.com data
-- Austin market analysis and trends
+- Rancho Cucamonga market analysis and trends
 - Property matching algorithms
 - Investment opportunity identification
 
@@ -103,7 +103,7 @@ claude
 After restart, you should be able to:
 
 - ✅ Query live GHL lead data
-- ✅ Scrape current Austin property listings
+- ✅ Scrape current Rancho Cucamonga property listings
 - ✅ Generate AI-powered lead insights
 - ✅ Store and analyze data in PostgreSQL
 - ✅ Deploy code changes via GitHub
@@ -114,7 +114,7 @@ After restart, you should be able to:
 **You now have a fully autonomous Real Estate AI platform with:**
 
 - **Live CRM Integration** (Jorge's actual data)
-- **Market Intelligence** (Austin property scraping)
+- **Market Intelligence** (Rancho Cucamonga property scraping)
 - **AI Strategy Engine** (Advanced reasoning)
 - **Business Intelligence** (Database analytics)
 - **Code Automation** (GitHub operations)
