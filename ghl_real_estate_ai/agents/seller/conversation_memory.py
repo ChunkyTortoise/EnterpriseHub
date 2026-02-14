@@ -43,22 +43,62 @@ class ConversationMemory:
 class AdaptiveQuestionEngine:
     """Manages dynamic question selection and adaptation (Adaptive Feature)"""
 
-    def __init__(self, questions_config=None):
-        # Core questions (config-first, hardcoded fallback)
-        if questions_config and hasattr(questions_config, 'questions') and questions_config.questions:
-            self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions]
+    def __init__(self, questions_config=None, simple_mode: bool = True):
+        """Initialize adaptive question engine with mode-based question selection.
+
+        Args:
+            questions_config: QuestionConfig object from IndustryConfig
+            simple_mode: If True, use 4-question flow. If False, use 10-question flow.
+        """
+        # Determine which question set to use based on mode
+        if questions_config:
+            if simple_mode and hasattr(questions_config, 'questions_simple') and questions_config.questions_simple:
+                # Simple mode: 4 questions from config
+                self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions_simple]
+            elif not simple_mode and hasattr(questions_config, 'questions_full') and questions_config.questions_full:
+                # Full mode: 10 questions from config
+                self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions_full]
+            elif hasattr(questions_config, 'questions') and questions_config.questions:
+                # Fallback to default questions
+                self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions]
+            else:
+                # No config questions found, use hardcoded fallback based on mode
+                self.jorge_core_questions = self._get_hardcoded_questions(simple_mode)
         else:
-            self.jorge_core_questions = [
-                "What's the address of the property you're thinking of selling?",
-                "How would you describe the overall condition of the home?",
-                "What's your ideal timeline for getting the property sold?",
-                "What's the main motivation behind your move?",
-                "Do you have a specific bottom-line price in mind that would make this a win for you?",
-                "Are there any liens, second mortgages, or solar panel leases we should be aware of?",
-                "Are there any major repairs or updates the home might need before hitting the market?",
-                "Have you ever had the property listed before, or is this the first time?",
-                "Are there any other decision-makers involved in the sale that we should include in the conversation?",
-                "What's the best way to reach you if we need to chat about a specific offer or update?",
+            # No config provided, use hardcoded fallback based on mode
+            self.jorge_core_questions = self._get_hardcoded_questions(simple_mode)
+
+        self.simple_mode = simple_mode
+        logger.info(f"AdaptiveQuestionEngine initialized: {'simple' if simple_mode else 'full'} mode ({len(self.jorge_core_questions)} questions)")
+
+    def _get_hardcoded_questions(self, simple_mode: bool) -> list[str]:
+        """Get hardcoded question set based on mode.
+
+        Args:
+            simple_mode: If True, return 4-question set. Otherwise return 10-question set.
+
+        Returns:
+            List of question strings.
+        """
+        if simple_mode:
+            return [
+                "What's got you considering wanting to sell, where would you move to?",
+                "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
+                "How would you describe your home, would you say it's move-in ready or would it need some work?",
+                "What price would incentivize you to sell?",
+            ]
+        else:
+            return [
+                "What's the address of the property you're thinking about selling?",
+                "What's got you considering wanting to sell, where would you move to?",
+                "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
+                "How would you describe your home, would you say it's move-in ready or would it need some work?",
+                "What price would incentivize you to sell?",
+                "Do you have any existing mortgage or liens on the property?",
+                "Are there any repairs or improvements needed before listing?",
+                "Have you tried listing this property before?",
+                "Are you the primary decision-maker, or would anyone else need to be involved?",
+                "What's the best way to reach you - call, text, or email?",
             ]
 
         # Friendly questions for high-intent leads (config-first, hardcoded fallback)

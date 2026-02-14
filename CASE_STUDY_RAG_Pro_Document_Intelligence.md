@@ -161,6 +161,6 @@ RAG Pro gives you the speed of AI with the reliability your business demands.
 
 ---
 
-*Case study data based on actual client results. Individual results may vary.*
+*Projected results based on system capabilities and industry benchmarks. Individual results may vary.*
 
 *© 2026 docqa-engine — Compliance-Grade Document Intelligence*

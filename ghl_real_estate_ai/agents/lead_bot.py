@@ -1,3 +1,5 @@
+
+
 import asyncio
 import threading
 import time
@@ -1304,7 +1306,7 @@ class LeadBotWorkflow:
         logger.info(f"Sending intelligence-adaptive Day 14 message for {state['lead_name']}")
 
         optimization = state.get("enhanced_optimization", state.get("sequence_optimization"))
-        state.get("personality_type", "relationship")
+        personality = state.get("personality_type", "relationship")
         journey_analysis = state.get("journey_analysis")
         conversion_analysis = state.get("conversion_analysis")
 
@@ -1377,7 +1379,7 @@ class LeadBotWorkflow:
         logger.info(f"Executing intelligent Day 30 final engagement for {state['lead_name']}")
 
         optimization = state.get("enhanced_optimization", state.get("sequence_optimization"))
-        state.get("temperature_prediction")
+        temperature_pred = state.get("temperature_prediction")
         journey_analysis = state.get("journey_analysis")
         conversion_analysis = state.get("conversion_analysis")
 
@@ -1898,7 +1900,7 @@ class LeadBotWorkflow:
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
         msg = action["content"]
 
-        logger.info(f"Day 3 SMS to {state.get('contact_phone', 'Unknown')}: {msg} (Logic: {action.get('logic')})")
+        logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg} (Logic: {action.get('logic')})")
         await sync_service.record_lead_event(state["lead_id"], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
 
         # Emit lead bot sequence update - message sent
@@ -2110,7 +2112,7 @@ class LeadBotWorkflow:
         )
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
 
-        logger.info(f"Sending Day 30 SMS to {state.get('contact_phone', 'Unknown')}: {action['content']}")
+        logger.info(f"Sending Day 30 SMS to {state['contact_phone']}: {action['content']}")
         await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 30 final nudge SMS.", "sms")
 
         # Mark Day 30 as completed in sequence state
@@ -2142,15 +2144,19 @@ class LeadBotWorkflow:
         # Phase 7: Use Smart Scheduler
         from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
 
-        get_smart_scheduler(self.ghl_client)
+        scheduler = get_smart_scheduler(self.ghl_client)
 
         address = state.get("property_address", "the property")
         market_metrics = await self.market_intel.get_market_metrics(address)
 
         # Inject urgency if market is hot
+        urgency_msg = ""
         if market_metrics and market_metrics.inventory_days < 15:
-            pass
+            urgency_msg = (
+                f" This market is moving fast ({market_metrics.inventory_days} days avg), so we should see it soon."
+            )
 
+        msg = f"Great choice! I'm coordinating with the listing agent for {address}.{urgency_msg} Does tomorrow afternoon work for a tour?"
 
         await sync_service.record_lead_event(state["lead_id"], "AI", f"Showing inquiry sent for {address}.", "sms")
 
@@ -2166,6 +2172,7 @@ class LeadBotWorkflow:
         )
 
         # Use Tone Engine (Jorge style if applicable, or standard)
+        msg = "How was the tour? On a scale of 1-10, how well does this home fit what you're looking for?"
 
         await sync_service.record_lead_event(state["lead_id"], "AI", "Post-showing survey sent.", "sms")
 
@@ -2183,12 +2190,14 @@ class LeadBotWorkflow:
         metrics = await self.market_intel.get_market_metrics(address)
 
         # Generate offer strategy advice
+        strategy = "We should look at recent comps to find the right number."
         if metrics:
             if metrics.price_appreciation_1y > 10:
-                pass
+                strategy = "Given the 10%+ appreciation in this area, we might need to be aggressive with the terms."
             else:
-                pass
+                strategy = "Market is stable here, so we have some room to negotiate on repairs."
 
+        msg = f"I've prepared an offer strategy for {address}. {strategy} Ready to review the numbers?"
 
         await sync_service.record_lead_event(state["lead_id"], "AI", "Offer strategy sent to lead.", "sms")
 
@@ -2204,7 +2213,7 @@ class LeadBotWorkflow:
 
         # Real milestone tracking based on lead state and engagement
         milestone = self._determine_escrow_milestone(state)
-        self._get_milestone_message(milestone, state["lead_name"])
+        msg = self._get_milestone_message(milestone, state["lead_name"])
 
         await sync_service.record_lead_event(
             state["lead_id"], "AI", f"Escrow update: {milestone} milestone tracked.", "thought"
