@@ -29,6 +29,10 @@ from ghl_real_estate_ai.services.conversation_session_manager import Conversatio
 from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
 from ghl_real_estate_ai.services.performance_monitor import PerformanceMonitor, get_performance_monitor
 
+# Jorge Handoff Service imports
+from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService, HandoffDecision
+from ghl_real_estate_ai.models.bot_context_types import IntentSignals
+
 logger = get_logger(__name__)
 router = APIRouter(tags=["Bot Management"])
 
@@ -73,6 +77,26 @@ class IntentScoreResponse(BaseModel):
     breakdown: Dict[str, Any]
 
 
+class HandoffRequest(BaseModel):
+    """Request model for triggering bot handoff."""
+    target_bot: Literal["lead", "buyer", "seller"] = Field(default="lead", description="Target bot to handoff to")
+    reason: str = Field(default="qualification_complete", description="Reason for handoff")
+    confidence: float = Field(default=0.7, ge=0.0, le=1.0, description="Confidence score for handoff")
+    conversation_history: Optional[List[Dict[str, str]]] = Field(default=None, description="Recent conversation messages")
+    message: Optional[str] = Field(default=None, description="Current message for intent extraction")
+
+
+class HandoffResponse(BaseModel):
+    """Response model for handoff result."""
+    success: bool
+    handoff_id: str
+    target_bot: str
+    actions: List[Dict[str, Any]]
+    blocked: bool = False
+    block_reason: Optional[str] = None
+    estimated_time_seconds: int = 30
+
+
 # Bot singletons - FastAPI dependency injection pattern
 # Using @lru_cache for singleton behavior (cached after first call)
 
@@ -108,6 +132,24 @@ def get_intent_decoder() -> LeadIntentDecoder:
     decoder = LeadIntentDecoder()
     logger.info("Initialized Intent Decoder singleton")
     return decoder
+
+
+# Module-level handoff service instance (lazy initialization)
+_handoff_service: Optional[JorgeHandoffService] = None
+
+
+def get_handoff_service() -> JorgeHandoffService:
+    """Get or create JorgeHandoffService singleton instance.
+    
+    Uses module-level caching to ensure same instance is used across requests.
+    The service is initialized with analytics_service=None for the API route,
+    but can be wired with a repository in api/main.py.
+    """
+    global _handoff_service
+    if _handoff_service is None:
+        _handoff_service = JorgeHandoffService(analytics_service=None)
+        logger.info("Initialized JorgeHandoffService singleton")
+    return _handoff_service
 
 
 # --- ENDPOINT 1: GET /api/bots/health ---
@@ -1163,38 +1205,112 @@ async def apply_jorge_stall_breaker(lead_id: str, request: dict):
         raise HTTPException(status_code=500, detail="Failed to apply stall-breaker")
 
 
-@router.post("/jorge-seller/{lead_id}/handoff")
+@router.post("/jorge-seller/{lead_id}/handoff", response_model=HandoffResponse)
 async def trigger_jorge_handoff(
-    lead_id: str, 
-    request: dict,
-    event_publisher: EventPublisher = Depends(get_event_publisher),
+    lead_id: str,
+    request: HandoffRequest,
+    handoff_service: JorgeHandoffService = Depends(get_handoff_service),
 ):
     """
-    Trigger handoff from Jorge Seller Bot to Lead Bot.
+    Trigger handoff from Jorge Seller Bot to another bot (Lead/Buyer/Seller).
+    
+    Implements proper handoff logic via JorgeHandoffService:
+    - Circular prevention (30-min window)
+    - Rate limiting (3/hr, 10/day)
+    - Confidence threshold (0.7 default)
+    - CoordinationEngine pattern for proper handoff coordination
+    
     Expected by frontend: jorge-seller-api.ts line 245
     """
     try:
-        target_bot = request.get("target_bot", "lead-bot")
-        reason = request.get("reason", "qualification_complete")
-
+        # Map target_bot from request format to service format
+        target_bot_map = {
+            "lead-bot": "lead",
+            "lead": "lead",
+            "buyer-bot": "buyer",
+            "buyer": "buyer",
+            "jorge-seller-bot": "seller",
+            "seller-bot": "seller",
+            "seller": "seller",
+        }
+        target_bot = target_bot_map.get(request.target_bot, request.target_bot)
+        source_bot = "seller"  # This endpoint is for handoff FROM seller bot
+        
         # Generate handoff ID
         handoff_id = f"handoff_{int(time.time())}_{lead_id[:8]}"
-
+        
+        # Extract intent signals from message if provided
+        intent_signals: IntentSignals = {
+            "buyer_intent_score": 0.0,
+            "seller_intent_score": 0.0,
+            "detected_intent_phrases": [],
+        }
+        
+        if request.message:
+            # Use the handoff service's intent signal extraction
+            intent_signals = JorgeHandoffService.extract_intent_signals(request.message)
+            logger.debug(f"Extracted intent signals from message: {intent_signals}")
+        
+        # Also include any conversation history if provided
+        conversation_history = request.conversation_history or []
+        
         # ROADMAP-019: Implement handoff logic with CoordinationEngine
-        # Current: Logging only, no actual handoff
-        # Required: Integrate with JorgeHandoffService for proper handoff
-        # See: jorge_real_estate_bots/bots/shared/jorge_handoff_service.py
-        # Status: Handoff service exists, integration pending
-        logger.info(f"Jorge handoff triggered: {lead_id} -> {target_bot}, reason: {reason}")
-
-        # Publish handoff event (using generic event publishing)
-        # ROADMAP-020: Implement bot_coordination_event publishing
-        # Current: Generic event publisher
-        # Required: Use dedicated coordination event schema for agent mesh
-        # Status: CoordinationEngine in development
-        logger.info(f"Jorge handoff completed: {lead_id} -> {target_bot}, handoff_id: {handoff_id}")
-
-        return {"success": True, "handoff_id": handoff_id, "target_bot": target_bot, "estimated_time_seconds": 30}
+        # Step 1: Evaluate if handoff should happen based on intent signals and thresholds
+        decision = await handoff_service.evaluate_handoff(
+            current_bot=source_bot,
+            contact_id=lead_id,
+            conversation_history=conversation_history,
+            intent_signals=intent_signals,
+        )
+        
+        # If no decision (threshold not met), return early with info
+        if decision is None:
+            logger.info(
+                f"Handoff evaluation: no decision for {lead_id} -> {target_bot}, "
+                f"confidence below threshold (need {JorgeHandoffService.THRESHOLDS.get((source_bot, target_bot), 0.7)})"
+            )
+            return HandoffResponse(
+                success=False,
+                handoff_id=handoff_id,
+                target_bot=target_bot,
+                actions=[],
+                blocked=True,
+                block_reason="confidence_below_threshold",
+                estimated_time_seconds=0,
+            )
+        
+        # Step 2: Execute the handoff (adds/removes tags, records analytics)
+        actions = await handoff_service.execute_handoff(
+            decision=decision,
+            contact_id=lead_id,
+            location_id="",  # Could be passed from request if needed
+        )
+        
+        # Check if handoff was executed or blocked
+        handoff_executed = any(action.get("handoff_executed", True) for action in actions)
+        block_reason = None
+        
+        if not handoff_executed:
+            for action in actions:
+                if not action.get("handoff_executed", True):
+                    block_reason = action.get("reason", "unknown")
+                    break
+        
+        logger.info(
+            f"Jorge handoff {'completed' if handoff_executed else 'blocked'}: "
+            f"{lead_id} -> {target_bot}, handoff_id: {handoff_id}, reason: {block_reason or 'executed'}"
+        )
+        
+        return HandoffResponse(
+            success=handoff_executed,
+            handoff_id=handoff_id,
+            target_bot=target_bot,
+            actions=actions,
+            blocked=not handoff_executed,
+            block_reason=block_reason,
+            estimated_time_seconds=30 if handoff_executed else 0,
+        )
+        
     except Exception as e:
         logger.error(f"Failed to trigger handoff: {e}")
-        raise HTTPException(status_code=500, detail="Failed to trigger handoff")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger handoff: {str(e)}")
