@@ -489,15 +489,120 @@ async def cancel_subscription(
             }
         )
 
-        # ROADMAP-010: Get subscription from database before Stripe cancellation
-        # Current: Direct Stripe cancellation without local validation
-        # Required: Validate subscription exists locally, then call Stripe
-        # Impact: Prevents orphaned Stripe subscriptions
-        #
-        # subscription = await db.subscriptions.get(id=subscription_id)
-        # stripe_subscription = await billing_service.cancel_subscription(
-        #     subscription.stripe_subscription_id, immediate
-        # )
+        # ROADMAP-010: Validate subscription exists locally before Stripe cancellation
+        # Query subscriptions table first, then call Stripe
+        from ghl_real_estate_ai.services.database_service import get_database
+        
+        db = await get_database()
+        
+        async with db.get_connection() as conn:
+            # Query subscription by ID to validate it exists locally
+            subscription_row = await conn.fetchrow(
+                """
+                SELECT 
+                    id,
+                    stripe_subscription_id,
+                    stripe_customer_id,
+                    location_id,
+                    tier,
+                    status,
+                    cancel_at_period_end
+                FROM subscriptions
+                WHERE id = $1
+                """,
+                subscription_id
+            )
+        
+        # Validate subscription exists in local database
+        if not subscription_row:
+            logger.warning(
+                f"Subscription {subscription_id} not found in local database",
+                extra={
+                    "subscription_id": subscription_id,
+                    "action": "cancellation_blocked"
+                }
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error_code": "subscription_not_found",
+                    "error_message": f"Subscription with ID {subscription_id} not found in local database",
+                    "error_type": "not_found",
+                    "recoverable": True,
+                    "suggested_action": "Verify the subscription ID and try again"
+                }
+            )
+        
+        stripe_subscription_id = subscription_row["stripe_subscription_id"]
+        
+        # Validate we have a Stripe subscription ID to cancel
+        if not stripe_subscription_id:
+            logger.warning(
+                f"Subscription {subscription_id} has no Stripe subscription ID",
+                extra={
+                    "subscription_id": subscription_id,
+                    "location_id": subscription_row["location_id"],
+                    "action": "cancellation_blocked_no_stripe_id"
+                }
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error_code": "no_stripe_subscription",
+                    "error_message": "Subscription has no associated Stripe subscription ID",
+                    "error_type": "invalid_state",
+                    "recoverable": True,
+                    "suggested_action": "Contact support to resolve this subscription"
+                }
+            )
+        
+        # Log audit trail for database validation passed
+        logger.info(
+            f"Local subscription validation passed for {subscription_id}",
+            extra={
+                "subscription_id": subscription_id,
+                "stripe_subscription_id": stripe_subscription_id,
+                "location_id": subscription_row["location_id"],
+                "current_status": subscription_row["status"],
+                "tier": subscription_row["tier"],
+                "action": "proceeding_to_stripe_cancellation"
+            }
+        )
+        
+        # Now proceed to cancel in Stripe
+        try:
+            stripe_result = await billing_service.cancel_subscription(
+                stripe_subscription_id, immediate
+            )
+            logger.info(
+                f"Successfully canceled Stripe subscription {stripe_subscription_id}",
+                extra={
+                    "subscription_id": subscription_id,
+                    "stripe_subscription_id": stripe_subscription_id,
+                    "stripe_response": stripe_result,
+                    "immediate": immediate
+                }
+            )
+        except BillingServiceError as e:
+            logger.error(
+                f"Stripe cancellation failed for subscription {subscription_id}",
+                extra={
+                    "subscription_id": subscription_id,
+                    "stripe_subscription_id": stripe_subscription_id,
+                    "error": str(e),
+                    "stripe_error_code": e.stripe_error_code
+                }
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error_code": "stripe_cancellation_failed",
+                    "error_message": f"Failed to cancel subscription in Stripe: {str(e)}",
+                    "error_type": "stripe_error",
+                    "recoverable": e.recoverable,
+                    "suggested_action": "Verify Stripe subscription status and try again"
+                }
+            )
 
         # Track subscription cancellation
         background_tasks.add_task(
