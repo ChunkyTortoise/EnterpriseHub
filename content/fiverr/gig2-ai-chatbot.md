@@ -1,8 +1,8 @@
 # Fiverr Gig: AI Chatbot with Multi-Agent Handoff
 
-**Category:** AI Services > AI Chatbots  
-**Gig Title:** Build a Multi-Agent AI Chatbot with Smart Handoff & CRM Integration  
-**Price Range:** $200 - $500 USD
+**Category:** AI Services > AI Chatbots
+**Gig Title:** I Will Integrate Claude/GPT Chatbot into Your Website
+**Price Range:** $400 - $1,500 USD
 
 ---
 
@@ -26,68 +26,74 @@ The chatbot uses a swarm architecture where specialized agents handle different 
 
 ## Packages
 
-### Basic — $200 — 5 Days
+### Basic — $400 — 5 Days
 
-**For:** Single bot with basic conversation flows
+**For:** Single chatbot with custom training on your content
 
 **Deliverables:**
-- Single AI chatbot persona setup
-- Basic conversation flows & FAQs
-- Web widget integration
-- Basic analytics (message count, popular queries)
-- 100 conversations/month included
+- Single AI chatbot persona (Claude or GPT powered)
+- Custom conversation flows & FAQ handling
+- Web widget integration (copy/paste embed code)
+- Intent recognition (30+ intents)
+- Basic analytics (message count, popular queries, response times)
+- 500 conversations/month included
 
 **What's Included:**
-- Custom bot personality & tone
-- Intent recognition (20+ intents)
-- Web chat widget (copy/paste embed)
-- CSV contact export
-- 2 revision rounds
+- Custom bot personality & tone configuration
+- Training on your business content/FAQs
+- Responsive web chat widget
+- CSV contact and conversation export
+- Docker deployment files
+- 3 revision rounds
 - 1 month of post-delivery support
 
 ---
 
-### Standard — $350 — 7 Days
+### Standard — $800 — 10 Days
 
-**For:** Multi-bot handoff with context preservation
+**For:** Multi-bot handoff with CRM integration
 
 **Deliverables:**
-- Multi-bot system (up to 3 agents)
-- Automatic handoff between specialists
-- Full conversation context transfer
-- CRM integration (GoHighLevel/HubSpot)
-- Lead scoring & tagging
+- Multi-bot system (up to 3 specialized agents)
+- Automatic context-aware handoff between specialists
+- Full conversation history preservation across handoffs
+- CRM integration (GoHighLevel/HubSpot/Salesforce)
+- Lead scoring with Hot/Warm/Cold tagging
+- Email notifications for high-priority leads
 
 **What's Included:**
 - Everything in Basic
-- 3 specialized bot personas
-- Smart handoff triggers & logic
-- Contact sync (create/update contacts)
-- Email notifications for hot leads
-- Conversation logging
+- 3 specialized bot personas with unique training
+- Smart handoff triggers with 0.7 confidence threshold
+- Circular handoff prevention and rate limiting
+- Contact sync (create/update with custom fields)
+- Conversation logging and search
+- CI/CD pipeline setup
 - 2 months of post-delivery support
 
 ---
 
-### Premium — $500 — 10 Days
+### Premium — $1,500 — 14 Days
 
-**For:** Full multi-agent swarm with analytics
+**For:** Full multi-agent swarm with analytics dashboard
 
 **Deliverables:**
-- Complete multi-agent swarm (5+ agents)
-- Full CRM integration with custom fields
-- Analytics dashboard (conversions, latency, sentiment)
-- A/B testing framework
-- API access for custom integrations
-- Rate limiting & abuse protection
+- Complete multi-agent swarm (5+ specialized agents)
+- Full CRM integration with custom fields and workflows
+- Analytics dashboard (conversions, latency, sentiment, funnels)
+- A/B testing framework for response optimization
+- REST API access for custom integrations
+- Rate limiting, abuse protection, and monitoring
+- Human-in-the-loop escalation system
 
 **What's Included:**
 - Everything in Standard
-- Custom agent creation
-- Advanced sentiment analysis
+- Custom agent creation framework
+- Advanced sentiment analysis per conversation
 - Performance tracking (P50/P95/P99 latency)
-- Alerting & monitoring
-- SLA compliance tools
+- Configurable alerting rules with cooldowns
+- SLA compliance monitoring
+- Pattern learning from handoff outcomes
 - 3 months of post-delivery support
 
 ---
@@ -97,8 +103,8 @@ The chatbot uses a swarm architecture where specialized agents handle different 
 | Package | Duration | Milestones |
 |---------|----------|------------|
 | Basic | 5 days | Setup (1) → Bot Config (2) → Integration (1) → Final (1) |
-| Standard | 7 days | Setup (1) → Multi-Bot (3) → CRM (2) → Final (1) |
-| Premium | 10 days | Setup (1) → Swarm (4) → Analytics (2) → Deploy (2) → Final (1) |
+| Standard | 10 days | Setup (1) → Multi-Bot (4) → CRM (3) → Testing (1) → Final (1) |
+| Premium | 14 days | Setup (1) → Swarm (5) → Analytics (3) → Deploy (3) → Testing (1) → Final (1) |
 
 ---
 

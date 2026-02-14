@@ -1,8 +1,8 @@
 # Fiverr Gig: Data Dashboard from CSV/Excel
 
-**Category:** Data Science > Data Visualization  
-**Gig Title:** Transform Your CSV/Excel Data into Interactive Dashboards  
-**Price Range:** $50 - $200 USD
+**Category:** Data Science > Data Visualization
+**Gig Title:** I Will Create a Custom Streamlit Analytics Dashboard
+**Price Range:** $200 - $800 USD
 
 ---
 
@@ -30,70 +30,77 @@ Most people waste hours in Excel making charts that don't communicate insights. 
 
 ## Packages
 
-### Basic — $50 — 2 Days
+### Basic — $200 — 3 Days
 
-**For:** Single file, simple visualization needs
+**For:** Single file, professional dashboard
 
 **Deliverables:**
 - Single CSV/Excel file upload
-- 3 professional charts
+- 5 professional interactive charts (Plotly)
+- Auto-profiling with column type detection
 - Basic filtering (date range, categories)
-- Export to PNG
+- Export to PNG and PDF
+- Data quality scoring
 
 **What's Included:**
 - Data cleaning & formatting
-- Chart type selection
+- Smart chart type recommendation
 - Color scheme matching your brand
-- Interactive tooltips
-- Responsive layout
-- 2 revision rounds
-- 2 weeks of post-delivery support
-
----
-
-### Standard — $100 — 4 Days
-
-**For:** Multi-file analysis with advanced features
-
-**Deliverables:**
-- Multi-file import (up to 5 files)
-- 8 professional charts
-- Advanced filtering & drill-down
-- PDF export with branding
-- Summary statistics panel
-
-**What's Included:**
-- Everything in Basic
-- Data joining/merging across files
-- Custom calculated fields
-- Comparison views
-- Trend indicators
-- Dashboard filters sidebar
-- CSV data export
+- Interactive tooltips and hover details
+- Responsive layout (desktop + mobile)
+- Outlier detection (Z-score, IQR)
+- Docker deployment files
+- 3 revision rounds
 - 1 month of post-delivery support
 
 ---
 
-### Premium — $200 — 5 Days
+### Standard — $400 — 5 Days
 
-**For:** Full analytics suite with ML predictions
+**For:** Multi-file analysis with advanced features
 
 **Deliverables:**
-- Unlimited file imports
-- Full analytics suite (15+ charts)
-- ML predictions & forecasting
+- Multi-file import (up to 10 files)
+- 10 professional charts with drill-down
+- Advanced filtering sidebar with cross-filtering
+- Branded PDF report generation
+- Summary statistics and KPI panels
+- Correlation heatmaps with significance testing
+
+**What's Included:**
+- Everything in Basic
+- Data joining/merging across files
+- Custom calculated fields and metrics
+- Comparison views and trend indicators
+- Statistical hypothesis testing (t-test, chi-square, ANOVA)
+- Customer segmentation (K-means clustering)
+- CSV/JSON data export
+- CI/CD pipeline setup
+- 2 months of post-delivery support
+
+---
+
+### Premium — $800 — 7 Days
+
+**For:** Full analytics suite with ML predictions and real-time alerts
+
+**Deliverables:**
+- Unlimited file imports + database connections
+- Full analytics suite (20+ charts)
+- ML predictions and time series forecasting
+- Marketing attribution models (first-touch, last-touch, linear, time-decay)
 - Custom branding (logo, colors, fonts)
-- API access for live updates
+- REST API access for live data updates
 - White-label deployment
 
 **What's Included:**
 - Everything in Standard
-- Time series forecasting (ARIMA/Prophet)
-- Anomaly detection
-- Sentiment analysis (if text data)
-- Correlation matrix
-- Monte Carlo simulations
+- Time series forecasting (ARIMA, exponential smoothing, ensemble)
+- Advanced anomaly detection (isolation forest, LOF)
+- SHAP explainability for predictions
+- PCA/t-SNE dimensionality reduction
 - Role-based access control
+- Automated alerting on KPI thresholds
 - 3 months of post-delivery support
 
 ---
@@ -102,9 +109,9 @@ Most people waste hours in Excel making charts that don't communicate insights. 
 
 | Package | Duration | Milestones |
 |---------|----------|------------|
-| Basic | 2 days | Review (0.5) → Build (1) → Polish (0.5) → Final |
-| Standard | 4 days | Review (0.5) → Data Prep (1) → Charts (2) → Final (0.5) |
-| Premium | 5 days | Review (0.5) → Data Prep (1) → Charts (2) → ML (1) → Final (0.5) |
+| Basic | 3 days | Review (0.5) → Build (1.5) → Polish (0.5) → Final (0.5) |
+| Standard | 5 days | Review (0.5) → Data Prep (1) → Charts (2) → Testing (1) → Final (0.5) |
+| Premium | 7 days | Review (0.5) → Data Prep (1) → Charts (2) → ML (2) → Deploy (1) → Final (0.5) |
 
 ---
 

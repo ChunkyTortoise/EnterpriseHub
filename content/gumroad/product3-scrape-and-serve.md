@@ -1,4 +1,4 @@
-# Web Scraper & Price Monitor Toolkit — $29
+# Web Scraper & Price Monitor Toolkit — $49 / $149 / $699 (3-tier)
 
 ## Tagline
 **YAML-configurable scrapers with price history tracking and SEO scoring**

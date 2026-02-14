@@ -1,4 +1,4 @@
-# AI Document Q&A Engine — $49
+# AI Document Q&A Engine — $59 / $249 / $1,499 (3-tier)
 
 ## Tagline
 **Build production-ready RAG pipelines in hours, not weeks**
