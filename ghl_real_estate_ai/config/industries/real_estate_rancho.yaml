@@ -122,11 +122,33 @@ intents:
     lukewarm: 25
 
 questions:
+  # Simple mode (4 questions) - high conversion, friendly approach
+  questions_simple:
+    - {id: 1, text: "What's got you considering wanting to sell, where would you move to?"}
+    - {id: 2, text: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"}
+    - {id: 3, text: "How would you describe your home, would you say it's move-in ready or would it need some work?"}
+    - {id: 4, text: "What price would incentivize you to sell?"}
+
+  # Full mode (10 questions) - deep qualification, original spec
+  questions_full:
+    - {id: 1, text: "What's the address of the property you're thinking about selling?"}
+    - {id: 2, text: "What's got you considering wanting to sell, where would you move to?"}
+    - {id: 3, text: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"}
+    - {id: 4, text: "How would you describe your home, would you say it's move-in ready or would it need some work?"}
+    - {id: 5, text: "What price would incentivize you to sell?"}
+    - {id: 6, text: "Do you have any existing mortgage or liens on the property?"}
+    - {id: 7, text: "Are there any repairs or improvements needed before listing?"}
+    - {id: 8, text: "Have you tried listing this property before?"}
+    - {id: 9, text: "Are you the primary decision-maker, or would anyone else need to be involved?"}
+    - {id: 10, text: "What's the best way to reach you - call, text, or email?"}
+
+  # Default to simple mode (backward compatibility)
   questions:
-    - {id: 1, text: "What's your timeline for selling?"}
-    - {id: 2, text: "What's driving you to sell the property?"}
-    - {id: 3, text: "What's your bottom-line number?"}
-    - {id: 4, text: "Are you flexible on the closing date?"}
+    - {id: 1, text: "What's got you considering wanting to sell, where would you move to?"}
+    - {id: 2, text: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"}
+    - {id: 3, text: "How would you describe your home, would you say it's move-in ready or would it need some work?"}
+    - {id: 4, text: "What price would incentivize you to sell?"}
+
   follow_ups:
     zestimate:
       - "Online estimates are a great starting point! I'd love to show you what similar homes have actually sold for."

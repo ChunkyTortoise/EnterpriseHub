@@ -216,3 +216,6 @@ multi_market_*.json
 
 # Playwright MCP screenshots
 .playwright-mcp/
+
+# Obsidian vault (local knowledge base)
+.obsidian-vault/

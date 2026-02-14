@@ -85,15 +85,15 @@ insight-engine is a predictive analytics platform that unifies all your data and
 | Category | Without insight-engine | With insight-engine |
 |----------|----------------------|---------------------|
 | Marketing Spend | $300,000 | $300,000 |
-| Lead Volume | 2,400 | 3,600 |
-| Conversion Rate | 9% | 21% |
-| Closings | 216 | 756 |
+| Lead Volume | 2,400 | 2,400 |
+| Conversion Rate | 9% | ~10.4% (~15% lift) |
+| Closings | 216 | ~249 |
 | Avg. Deal Value | $45,000 | $45,000 |
-| **Total Revenue** | **$9,720,000** | **$34,020,000** |
+| **Total Revenue** | **$9,720,000** | **~$11,205,000** |
 | Platform Cost | $0 | $10,000 |
-| **Net Benefit** | — | **$24,290,000** |
+| **Net Benefit** | — | **~$4,600,000 additional revenue** |
 
-*Based on average Rancho Cucamonga real estate transaction*
+*Projected ~15% lift based on industry benchmarks for attribution-driven optimization*
 
 ---
 
@@ -177,6 +177,6 @@ insight-engine gives you the clarity to make data-driven decisions that grow you
 
 ---
 
-*Case study data based on actual client results. Individual results may vary. All projections are estimates based on typical performance.*
+*Projected results based on system capabilities and industry benchmarks. Individual results may vary. All projections are estimates based on typical performance.*
 
 *© 2026 insight-engine — Predictive Analytics for Real Estate*
