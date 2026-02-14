@@ -266,7 +266,7 @@ class TenantContext:
 class TenantToken:
     """JWT-like token for tenant authentication"""
 
-    SECRET_KEY = os.environ.get("TEST_SECRET_KEY", "test_secret_key_for_testing_only")
+    SECRET_KEY = os.environ.get("TEST_SECRET_KEY", "test-secret-key-for-ci-only-min-32-chars")
 
     @classmethod
     def create_token(
