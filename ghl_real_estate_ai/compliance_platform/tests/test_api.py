@@ -1,3 +1,4 @@
+import os
 """
 Comprehensive Test Suite for Compliance Platform API Endpoints
 
@@ -211,8 +212,8 @@ def mock_report_generator():
 
 @pytest.fixture
 def webhook_secret() -> str:
-    """Webhook signing secret for tests"""
-    return "test_webhook_secret_key_12345"
+    """Webhook signing secret for tests (from environment)"""
+    return os.environ.get("TEST_WEBHOOK_SECRET", "test-webhook-secret-for-ci-only-min-32-chars")
 
 
 # ============================================================================
