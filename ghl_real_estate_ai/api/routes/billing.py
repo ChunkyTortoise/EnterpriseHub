@@ -253,37 +253,96 @@ async def get_subscription(subscription_id: int):
     """
     try:
         # ROADMAP-008: Implement subscription database lookup
-        # Current: Using placeholder data from Stripe
-        # Required: Query subscriptions table by ID, join with customers
-        # Acceptance: Return real subscription data with proper error handling
-        # Status: Database schema ready, awaiting implementation
-        #
-        # subscription = await db.subscriptions.get(id=subscription_id)
-        # if not subscription:
-        #     raise HTTPException(404, "Subscription not found")
-
-        # Get from Stripe for now (placeholder)
-        # stripe_subscription = await billing_service.get_subscription(subscription.stripe_subscription_id)
-
-        logger.info(f"Retrieved subscription {subscription_id}")
-
-        # Placeholder response - replace with actual database data
+        # Query subscriptions table by ID, join with customers for customer details
+        from ghl_real_estate_ai.services.database_service import get_database
+        
+        db = await get_database()
+        
+        async with db.get_connection() as conn:
+            # Query subscription by ID with customer join
+            row = await conn.fetchrow(
+                """
+                SELECT 
+                    s.id,
+                    s.location_id,
+                    s.stripe_subscription_id,
+                    s.stripe_customer_id,
+                    s.tier,
+                    s.status,
+                    s.currency,
+                    s.current_period_start,
+                    s.current_period_end,
+                    s.usage_allowance,
+                    s.usage_current,
+                    s.overage_rate,
+                    s.base_price,
+                    s.trial_end,
+                    s.cancel_at_period_end,
+                    s.created_at,
+                    s.updated_at,
+                    c.email as customer_email,
+                    c.name as customer_name
+                FROM subscriptions s
+                LEFT JOIN stripe_customers c ON s.stripe_customer_id = c.stripe_customer_id
+                WHERE s.id = $1
+                """,
+                subscription_id
+            )
+        
+        if not row:
+            logger.warning(f"Subscription {subscription_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error_code": "subscription_not_found",
+                    "error_message": f"Subscription with ID {subscription_id} not found",
+                    "error_type": "not_found",
+                    "recoverable": True,
+                    "suggested_action": "Verify the subscription ID and try again"
+                }
+            )
+        
+        # Convert row to dict and calculate usage percentage
+        sub_data = dict(row)
+        usage_percentage = (
+            (sub_data["usage_current"] / sub_data["usage_allowance"]) * 100
+            if sub_data["usage_allowance"] > 0
+            else 0.0
+        )
+        
+        # Build next invoice date (current period end)
+        next_invoice_date = sub_data["current_period_end"]
+        
+        logger.info(
+            f"Retrieved subscription {subscription_id}",
+            extra={
+                "subscription_id": subscription_id,
+                "location_id": sub_data["location_id"],
+                "tier": sub_data["tier"],
+                "status": sub_data["status"]
+            }
+        )
+        
         return SubscriptionResponse(
-            id=subscription_id,
-            location_id="placeholder_location",
-            stripe_subscription_id="sub_placeholder",
-            stripe_customer_id="cus_placeholder",
-            tier=SubscriptionTier.PROFESSIONAL,
-            status=SubscriptionStatus.ACTIVE,
-            current_period_start=datetime.now(),
-            current_period_end=datetime.now(),
-            usage_allowance=150,
-            usage_current=87,
-            usage_percentage=58.0,
-            overage_rate=1.50,
-            base_price=249.00,
-            next_invoice_date=datetime.now(),
-            created_at=datetime.now()
+            id=sub_data["id"],
+            location_id=sub_data["location_id"],
+            stripe_subscription_id=sub_data["stripe_subscription_id"],
+            stripe_customer_id=sub_data["stripe_customer_id"],
+            tier=SubscriptionTier(sub_data["tier"]),
+            status=SubscriptionStatus(sub_data["status"]),
+            currency=sub_data.get("currency", "usd"),
+            current_period_start=sub_data["current_period_start"],
+            current_period_end=sub_data["current_period_end"],
+            usage_allowance=sub_data["usage_allowance"],
+            usage_current=sub_data["usage_current"],
+            usage_percentage=round(usage_percentage, 2),
+            overage_rate=sub_data["overage_rate"],
+            base_price=sub_data["base_price"],
+            trial_end=sub_data.get("trial_end"),
+            cancel_at_period_end=sub_data.get("cancel_at_period_end", False),
+            next_invoice_date=next_invoice_date,
+            created_at=sub_data["created_at"],
+            updated_at=sub_data.get("updated_at")
         )
 
     except HTTPException:
