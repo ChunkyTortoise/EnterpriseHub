@@ -1,8 +1,8 @@
 # Fiverr Gig: RAG Document Q&A System
 
-**Category:** AI Services > AI Applications  
-**Gig Title:** Build a Custom RAG Document Q&A System with Citations  
-**Price Range:** $100 - $500 USD
+**Category:** AI Services > AI Applications
+**Gig Title:** I Will Build a Custom RAG AI System for Your Documents
+**Price Range:** $300 - $1,200 USD
 
 ---
 
@@ -26,65 +26,72 @@ Unlike basic keyword search, RAG understands context and meaning. It retrieves r
 
 ## Packages
 
-### Basic — $100 — 3 Days
+### Basic — $300 — 5 Days
 
-**For:** Single document Q&A needs
+**For:** Simple document Q&A needs (up to 10 documents)
 
 **Deliverables:**
-- Single document RAG setup (PDF, DOCX, or TXT)
-- Basic web interface for asking questions
-- Source citation display
-- 50 questions included
+- Multi-document RAG setup (PDF, DOCX, TXT, MD)
+- Professional web interface for asking questions
+- Source citation display with page numbers
+- Hybrid search (keyword + semantic)
+- 200 questions included
 - Standard embedding model
 
 **What's Included:**
 - Document ingestion pipeline
-- Basic search interface
-- Answer generation with 1-2 sentence citations
-- 2 revision rounds
-- 2 weeks of post-delivery support
-
----
-
-### Standard — $250 — 5 Days
-
-**For:** Multi-document knowledge bases
-
-**Deliverables:**
-- Multi-document RAG system (up to 100 docs)
-- Custom UI with your branding
-- Advanced citation system with page numbers
-- Conversation history & context
-- Export answers to PDF
-
-**What's Included:**
-- Everything in Basic
-- Hybrid search (keyword + semantic)
-- Relevance tuning
-- Admin dashboard
-- 500 questions included
+- Clean search interface with your branding
+- Answer generation with cited passages
+- Basic analytics (query count, popular topics)
+- Docker deployment files
+- 3 revision rounds
 - 1 month of post-delivery support
 
 ---
 
-### Premium — $500 — 7 Days
+### Standard — $600 — 7 Days
 
-**For:** Enterprise production deployments
+**For:** Multi-document knowledge bases (up to 500 docs)
 
 **Deliverables:**
-- Full RAG pipeline with evaluation metrics
+- Full RAG system with up to 500 documents
+- Custom branded UI with admin dashboard
+- Advanced citation system with highlighted passages
+- Conversation history & multi-turn context
+- Export answers to PDF/CSV
+- REST API access for integration
+
+**What's Included:**
+- Everything in Basic
+- Cross-encoder re-ranking for precision
+- Query expansion (synonyms, decomposition)
+- Admin dashboard with analytics
+- 1,000 questions included
+- CI/CD pipeline setup
+- 2 months of post-delivery support
+
+---
+
+### Premium — $1,200 — 10 Days
+
+**For:** Enterprise production deployments (unlimited docs)
+
+**Deliverables:**
+- Full RAG pipeline with RAGAS evaluation metrics
 - Production deployment (Docker/Kubernetes)
 - Custom embedding model fine-tuning
-- Analytics dashboard (queries, latency, satisfaction)
-- API access for integration
-- Multi-user support with permissions
+- Analytics dashboard (queries, latency, satisfaction, cost)
+- REST API with JWT auth and rate limiting
+- Multi-user support with role-based permissions
+- Multi-hop reasoning across document chains
 
 **What's Included:**
 - Everything in Standard
-- RAGAS evaluation metrics
-- Performance optimization
-- Rate limiting & caching
+- RAGAS evaluation metrics (faithfulness, relevance, context)
+- Performance optimization (<100ms p95 latency)
+- L1/L2/L3 caching architecture
 - SSO integration option
+- Monitoring and alerting
 - 3 months of post-delivery support
 
 ---
@@ -93,9 +100,9 @@ Unlike basic keyword search, RAG understands context and meaning. It retrieves r
 
 | Package | Duration | Milestones |
 |---------|----------|------------|
-| Basic | 3 days | Setup (1) → Demo (1) → Final (1) |
-| Standard | 5 days | Setup (1) → Core Dev (2) → UI Polish (1) → Final (1) |
-| Premium | 7 days | Setup (1) → Core Dev (3) → Evaluation (1) → Deploy (1) → Final (1) |
+| Basic | 5 days | Setup (1) → Core Dev (2) → UI Polish (1) → Final (1) |
+| Standard | 7 days | Setup (1) → Core Dev (3) → API + UI (2) → Final (1) |
+| Premium | 10 days | Setup (1) → Core Dev (4) → Evaluation (2) → Deploy (2) → Final (1) |
 
 ---
 

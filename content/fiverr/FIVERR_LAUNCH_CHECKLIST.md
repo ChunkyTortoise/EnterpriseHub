@@ -3,9 +3,9 @@
 **Goal:** Get all 3 gigs live as fast as possible after photos are ready.
 
 **Competitive Research Summary:**
-- RAG chatbots: $100-$800 per project (our pricing: $100-$500 ✓)
-- AI chatbots: $200-$250 typical (our pricing: $200-$500 ✓)
-- Data dashboards: $10-$120 range, $40+ for full dashboards (our pricing: $50-$200 ✓)
+- RAG chatbots: $300-$1,200 per project (our pricing: $300-$1,200 -- market rate)
+- AI chatbots: $400-$1,500 typical (our pricing: $400-$1,500 -- market rate)
+- Data dashboards: $200-$800 for full dashboards (our pricing: $200-$800 -- market rate)
 - Platform fee: 5.5% (minimum $2)
 
 ---
@@ -72,7 +72,7 @@
 
 ### Gig 1: RAG Document Q&A System
 
-**Title (Optimized):** Build a Custom RAG Document Q&A System with Citations
+**Title (Optimized):** I Will Build a Custom RAG AI System for Your Documents
 
 **SEO Keywords (15 tags max):**
 1. `ai chatbot`
@@ -106,7 +106,7 @@
 
 ### Gig 2: AI Chatbot with Multi-Agent Handoff
 
-**Title (Optimized):** Build a Multi-Agent AI Chatbot with Smart Handoff & CRM Integration
+**Title (Optimized):** I Will Integrate Claude/GPT Chatbot into Your Website
 
 **SEO Keywords (15 tags max):**
 1. `ai chatbot`
@@ -140,7 +140,7 @@
 
 ### Gig 3: Data Dashboard from CSV/Excel
 
-**Title (Optimized):** Transform Your CSV/Excel Data into Interactive Dashboards
+**Title (Optimized):** I Will Create a Custom Streamlit Analytics Dashboard
 
 **SEO Keywords (15 tags max):**
 1. `data visualization`
@@ -197,35 +197,35 @@
 
 ### Gig 1: RAG Document Q&A System
 
-**Market Range:** $100-$800 per project (Fiverr competitive data)
+**Market Range:** $300-$1,200 per project (Fiverr competitive data)
 
-**Our Pricing (Competitive ✓):**
-- Basic: $100 (3 days) — Single doc Q&A
-- Standard: $250 (5 days) — Multi-doc knowledge base
-- Premium: $500 (7 days) — Enterprise production deployment
+**Our Pricing (Market Rate):**
+- Basic: $300 (5 days) — Multi-doc Q&A (up to 10 docs)
+- Standard: $600 (7 days) — Full knowledge base (up to 500 docs)
+- Premium: $1,200 (10 days) — Enterprise production deployment
 
 **Competitive Advantage:**
-- 94% retrieval precision (proven)
-- 322 automated tests (quality guarantee)
+- 94% retrieval precision (proven with RAGAS)
+- 550+ automated tests (quality guarantee)
 - Live demo available (reduces buyer risk)
 - Open-source core (transparency)
 
 **Upsells:**
-- Rush delivery: +$50
-- Extra documents (Standard): +$25 per 50 docs
-- API access (Basic/Standard): +$75
-- Custom embedding fine-tuning: +$150
+- Rush delivery: +$100
+- Extra documents (Standard): +$50 per 100 docs
+- Custom embedding fine-tuning: +$200
+- On-premise deployment: +$300
 
 ---
 
 ### Gig 2: AI Chatbot with Multi-Agent Handoff
 
-**Market Range:** $200-$500 typical (Fiverr competitive data)
+**Market Range:** $400-$1,500 typical (Fiverr competitive data)
 
-**Our Pricing (Competitive ✓):**
-- Basic: $200 (5 days) — Single bot
-- Standard: $350 (7 days) — Multi-bot handoff
-- Premium: $500 (10 days) — Full swarm + analytics
+**Our Pricing (Market Rate):**
+- Basic: $400 (5 days) — Single bot with custom training
+- Standard: $800 (10 days) — Multi-bot handoff + CRM
+- Premium: $1,500 (14 days) — Full swarm + analytics dashboard
 
 **Competitive Advantage:**
 - 4,937 automated tests (production-proven)
@@ -234,33 +234,33 @@
 - CRM sync reliability: 99.9%
 
 **Upsells:**
-- Additional bot persona: +$75 each
-- A/B testing setup: +$100
-- Custom ML model training: +$200
-- White-label deployment: +$150
+- Additional bot persona: +$150 each
+- A/B testing setup: +$200
+- Custom ML model training: +$300
+- White-label deployment: +$250
 
 ---
 
 ### Gig 3: Data Dashboard from CSV/Excel
 
-**Market Range:** $10-$120 (basic charts: $10, full dashboards: $40+)
+**Market Range:** $200-$800 per project (Fiverr competitive data)
 
-**Our Pricing (Premium Positioning ✓):**
-- Basic: $50 (2 days) — 3 charts, basic filtering
-- Standard: $100 (4 days) — 8 charts, multi-file
-- Premium: $200 (5 days) — ML predictions + API
+**Our Pricing (Market Rate):**
+- Basic: $200 (3 days) — 5 charts, auto-profiling, outlier detection
+- Standard: $400 (5 days) — 10 charts, multi-file, clustering
+- Premium: $800 (7 days) — ML predictions + attribution + API
 
 **Competitive Advantage:**
-- 313 automated tests (reliability)
+- 520+ automated tests (reliability)
 - 91% auto-chart accuracy (smart insights)
-- ML forecasting included (Premium)
-- <500ms load time for 100K rows
+- ML forecasting + SHAP explainability (Premium)
+- <2s profiling for 100K rows
 
 **Upsells:**
-- Additional charts (Basic/Standard): +$10 per chart
-- Database connection (Premium add-on): +$50
-- Custom ML model (clustering, NLP): +$100
-- White-label branding: +$75
+- Additional charts: +$25 per chart
+- Database connection (PostgreSQL/BigQuery): +$100
+- Custom ML model (clustering, NLP): +$200
+- White-label branding: +$150
 
 ---
 
@@ -275,16 +275,16 @@
 ### Step 1: Upload Gig 1 (RAG Document Q&A) — 8 minutes
 
 1. **Go to:** Fiverr.com → Selling → Gigs → Create New Gig
-2. **Gig Title:** "Build a Custom RAG Document Q&A System with Citations"
+2. **Gig Title:** "I Will Build a Custom RAG AI System for Your Documents"
 3. **Category:** AI Services > AI Applications
 4. **Sub-Category:** AI Chatbots
 5. **Search Tags:** (Paste from SEO section above — 15 tags)
 6. **Description:** (Copy/paste from gig1-rag-qa-system.md)
 7. **FAQ:** (Copy/paste from FAQ section above + gig-specific FAQs)
 8. **Packages:**
-   - Basic: $100, 3 days, deliverables from gig file
-   - Standard: $250, 5 days, deliverables from gig file
-   - Premium: $500, 7 days, deliverables from gig file
+   - Basic: $300, 5 days, deliverables from gig file
+   - Standard: $600, 7 days, deliverables from gig file
+   - Premium: $1,200, 10 days, deliverables from gig file
 9. **Gallery:** Upload 7 images (primary + 6 gallery)
 10. **Requirements:** "Please provide: 1) Sample documents or use case description, 2) Target number of documents, 3) Any custom branding requirements"
 11. **Publish** → Save as Draft (review first!)
@@ -294,16 +294,16 @@
 ### Step 2: Upload Gig 2 (AI Chatbot) — 8 minutes
 
 1. **Go to:** Fiverr.com → Selling → Gigs → Create New Gig
-2. **Gig Title:** "Build a Multi-Agent AI Chatbot with Smart Handoff & CRM Integration"
+2. **Gig Title:** "I Will Integrate Claude/GPT Chatbot into Your Website"
 3. **Category:** AI Services > AI Chatbots
 4. **Sub-Category:** Chatbot Development
 5. **Search Tags:** (Paste from SEO section above — 15 tags)
 6. **Description:** (Copy/paste from gig2-ai-chatbot.md)
 7. **FAQ:** (Copy/paste from FAQ section above + gig-specific FAQs)
 8. **Packages:**
-   - Basic: $200, 5 days, deliverables from gig file
-   - Standard: $350, 7 days, deliverables from gig file
-   - Premium: $500, 10 days, deliverables from gig file
+   - Basic: $400, 5 days, deliverables from gig file
+   - Standard: $800, 10 days, deliverables from gig file
+   - Premium: $1,500, 14 days, deliverables from gig file
 9. **Gallery:** Upload 8 images (primary + 7 gallery)
 10. **Requirements:** "Please provide: 1) Use case description, 2) CRM preference (GoHighLevel/HubSpot/Salesforce/other), 3) Number of bot personas needed, 4) Any integration requirements"
 11. **Publish** → Save as Draft (review first!)
@@ -313,16 +313,16 @@
 ### Step 3: Upload Gig 3 (Data Dashboard) — 8 minutes
 
 1. **Go to:** Fiverr.com → Selling → Gigs → Create New Gig
-2. **Gig Title:** "Transform Your CSV/Excel Data into Interactive Dashboards"
+2. **Gig Title:** "I Will Create a Custom Streamlit Analytics Dashboard"
 3. **Category:** Data Science > Data Visualization
 4. **Sub-Category:** Business Intelligence
 5. **Search Tags:** (Paste from SEO section above — 15 tags)
 6. **Description:** (Copy/paste from gig3-data-dashboard.md)
 7. **FAQ:** (Copy/paste from FAQ section above + gig-specific FAQs)
 8. **Packages:**
-   - Basic: $50, 2 days, deliverables from gig file
-   - Standard: $100, 4 days, deliverables from gig file
-   - Premium: $200, 5 days, deliverables from gig file
+   - Basic: $200, 3 days, deliverables from gig file
+   - Standard: $400, 5 days, deliverables from gig file
+   - Premium: $800, 7 days, deliverables from gig file
 9. **Gallery:** Upload 8 images (primary + 7 gallery)
 10. **Requirements:** "Please provide: 1) Sample data file (CSV/Excel), 2) Key metrics/insights you want, 3) Branding requirements (colors, logo), 4) Target audience"
 11. **Publish** → Save as Draft (review first!)

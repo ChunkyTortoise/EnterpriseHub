@@ -1,4 +1,4 @@
-# AgentForge — Multi-LLM Orchestrator — $39
+# AgentForge — Multi-LLM Orchestrator — $49 / $199 / $999 (3-tier)
 
 ## Tagline
 **Unified async interface for Claude, Gemini, OpenAI, and Perplexity**

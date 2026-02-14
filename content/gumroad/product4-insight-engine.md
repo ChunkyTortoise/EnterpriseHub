@@ -1,4 +1,4 @@
-# Data Intelligence Dashboard — $39
+# Data Intelligence Dashboard — $49 / $199 / $999 (3-tier)
 
 ## Tagline
 **Upload data → Get dashboards, predictions, and PDF reports in 30 seconds**
