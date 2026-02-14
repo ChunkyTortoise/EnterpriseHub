@@ -1,0 +1,66 @@
+# AgentForge Architecture Consultation - Booking Instructions
+
+Thank you for purchasing AgentForge Pro or Enterprise!
+
+## Book Your Consultation
+
+**Pro Tier**: 30-minute architecture consultation
+**Enterprise Tier**: 60-minute deep-dive session
+
+### Booking Link
+https://calendly.com/caymanroden/agentforge-consult
+
+### What to Prepare
+
+Before our call, please prepare:
+
+1. **Your Use Case** (1-2 sentences)
+   - What are you building?
+   - What problem are you solving?
+
+2. **Current Setup** (if applicable)
+   - Which LLM providers are you using?
+   - Estimated request volume (requests/month)
+   - Current monthly LLM costs
+
+3. **Questions** (2-3 top questions)
+   - Provider selection?
+   - Cost optimization?
+   - Architecture review?
+   - Production deployment?
+   - Compliance (HIPAA, SOC2)?
+
+### What We'll Cover
+
+**Pro (30 minutes)**:
+- Review your use case
+- Recommend optimal provider mix
+- Identify cost optimization opportunities
+- Answer 3-5 technical questions
+- Share best practices for your domain
+
+**Enterprise (60 minutes)**:
+- Everything in Pro, PLUS:
+- Screen share code walkthrough
+- Custom architecture design
+- Cost modeling for your workload
+- Security & compliance review
+- Team Q&A (up to 10 people)
+- Performance optimization guidance
+
+### After Booking
+
+1. You'll receive a calendar invite
+2. I'll send a pre-call questionnaire (5 minutes to fill out)
+3. We'll meet via Zoom/Google Meet
+4. I'll send follow-up notes + recommendations within 24 hours
+
+### Questions?
+
+Email: caymanroden@gmail.com
+Subject: "AgentForge Consultation - [Your Name]"
+
+Looking forward to helping you optimize your LLM infrastructure!
+
+- Cayman Roden
+  Creator, AgentForge
