@@ -1,8 +1,10 @@
 # Fiverr Gig: Data Dashboard from CSV/Excel
 
 **Category:** Data Science > Data Visualization
-**Gig Title:** I Will Create a Custom Streamlit Analytics Dashboard
+**Gig Title:** I will create a custom Streamlit analytics dashboard from your data
 **Price Range:** $200 - $800 USD
+
+**SEO Keywords**: data visualization, Excel dashboard, business intelligence, Streamlit dashboard, interactive charts, CSV dashboard, analytics, data analysis, Plotly charts, KPI dashboard
 
 ---
 
@@ -201,11 +203,18 @@ Most people waste hours in Excel making charts that don't communicate insights. 
 
 ---
 
-## Tags (SEO Optimized — High-Volume Keywords)
+## Fiverr Search Tags (5 max)
 
-`data visualization`, `excel dashboard`, `business intelligence`, `dashboard`, `interactive charts`, `excel`, `csv`, `analytics`, `reporting`, `python`, `data analysis`, `tableau alternative`, `power bi alternative`, `charts`, `kpi dashboard`
+1. `data visualization`
+2. `dashboard`
+3. `business intelligence`
+4. `excel`
+5. `data analysis`
 
-**Search Intent Keywords:**
+**SEO Keywords for Description** (already embedded above):
+data visualization, excel dashboard, business intelligence, dashboard, interactive charts, excel, csv, analytics, reporting, python, data analysis, tableau alternative, power bi alternative, charts, kpi dashboard, streamlit
+
+**Search Intent Keywords** (high-volume):
 - "excel dashboard" (40K+ searches/month)
 - "data visualization" (25K+ searches/month)
 - "dashboard" (60K+ searches/month)
@@ -226,10 +235,34 @@ Most people waste hours in Excel making charts that don't communicate insights. 
 
 ---
 
+## Requirements from Buyer
+
+To ensure fast delivery, please provide:
+1. Sample data file — CSV, Excel, or Google Sheets export (3-5 representative rows minimum)
+2. Column descriptions — What does each column represent?
+3. Key questions to answer — Revenue by region? Customer churn trends?
+4. Branding preferences — Colors, logo, fonts (optional)
+5. Audience — Who will view this? Executives? Analysts? Team members?
+6. Update frequency — One-time static dashboard or needs regular data updates?
+
+---
+
+## Delivery Timeline
+
+| Package | Delivery | Revisions | Support |
+|---------|----------|-----------|---------|
+| Basic | 3 days | 3 rounds | 1 month |
+| Standard | 5 days | 5 rounds | 2 months |
+| Premium | 7 days | Unlimited | 3 months |
+
+**Rush delivery available**: +$100 for 24-hour delivery acceleration
+
+---
+
 ## Ordering Instructions
 
-1. Select your package
-2. Upload or describe your data (columns, rows, what insights you need)
-3. Specify any branding requirements (colors, logo, fonts)
-4. I'll send a custom offer with timeline
-5. Receive your interactive dashboard!
+1. Select your package (Basic/Standard/Premium)
+2. Click "Continue" and provide requirements + sample data
+3. I'll send a custom offer with chart mockup within 12 hours
+4. Upon acceptance, work begins immediately
+5. Draft dashboard delivered at day 2 for feedback before finalization

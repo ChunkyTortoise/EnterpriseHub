@@ -1,8 +1,10 @@
 # Fiverr Gig: RAG Document Q&A System
 
 **Category:** AI Services > AI Applications
-**Gig Title:** I Will Build a Custom RAG AI System for Your Documents
+**Gig Title:** I will build a custom RAG AI system for your documents
 **Price Range:** $300 - $1,200 USD
+
+**SEO Keywords**: document AI, RAG system, PDF search, intelligent search, document chatbot, knowledge base AI, semantic search, vector database, document Q&A, enterprise search
 
 ---
 
@@ -182,11 +184,18 @@ Unlike basic keyword search, RAG understands context and meaning. It retrieves r
 
 ---
 
-## Tags (SEO Optimized — High-Volume Keywords)
+## Fiverr Search Tags (5 max)
 
-`ai chatbot`, `document qa`, `rag system`, `retrieval augmented generation`, `pdf search`, `ai assistant`, `knowledge base`, `semantic search`, `openai`, `vector database`, `machine learning`, `nlp`, `chatgpt integration`, `langchain`, `ai automation`
+1. `ai chatbot`
+2. `document processing`
+3. `machine learning`
+4. `data analysis`
+5. `api development`
 
-**Search Intent Keywords:**
+**SEO Keywords for Description** (already embedded above):
+ai chatbot, document qa, rag system, retrieval augmented generation, pdf search, ai assistant, knowledge base, semantic search, openai, vector database, machine learning, nlp, chatgpt integration, langchain, ai automation
+
+**Search Intent Keywords** (high-volume):
 - "rag document search" (2K+ searches/month)
 - "ai pdf question answering" (5K+ searches/month)
 - "intelligent document search" (3K+ searches/month)
@@ -207,9 +216,33 @@ Unlike basic keyword search, RAG understands context and meaning. It retrieves r
 
 ---
 
+## Requirements from Buyer
+
+To ensure fast delivery, please provide:
+1. Sample documents (PDFs, DOCX, or TXT files) — 3-5 representative files
+2. Use case description — Who will use this? What questions will they ask?
+3. Integration requirements — Standalone UI or embed in existing app?
+4. Branding assets — Logo, color scheme, preferred fonts (if applicable)
+5. Document volume estimate — How many documents initially? Growth expected?
+
+---
+
+## Delivery Timeline
+
+| Package | Delivery | Revisions | Support |
+|---------|----------|-----------|---------|
+| Basic | 5 days | 3 rounds | 1 month |
+| Standard | 7 days | 5 rounds | 2 months |
+| Premium | 10 days | Unlimited | 3 months |
+
+**Rush delivery available**: +$150 for 24-hour delivery acceleration
+
+---
+
 ## Ordering Instructions
 
-1. Select your package
-2. Provide document samples or describe your use case
-3. Specify any custom requirements (branding, integrations, etc.)
-4. I'll send a custom offer with timeline confirmation
+1. Select your package (Basic/Standard/Premium)
+2. Click "Continue" and provide requirements listed above
+3. I'll review and send custom offer with timeline within 12 hours
+4. Upon acceptance, work begins immediately
+5. Milestones delivered every 2 days for review

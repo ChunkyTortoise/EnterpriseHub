@@ -55,7 +55,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | Fractional AI CTO
 caymanroden@gmail.com | (310) 982-0492
-Portfolio: [DEMO_URL]
+Portfolio: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -95,7 +95,7 @@ Last note. I wanted to share the complete case study since EliseAI's multi-chann
 - Zero context loss during cross-channel handoffs
 - Auto-tagging (Hot/Warm/Cold) triggering CRM workflows
 
-The full technical writeup is available at: [DEMO_URL]
+The full technical writeup is available at: https://chunkytortoise.github.io
 
 For EliseAI's use case (multi-channel communication at scale), the same architectural patterns apply. The biggest savings come from:
 1. Semantic caching across similar queries
@@ -144,7 +144,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | Multi-Agent AI Systems
 caymanroden@gmail.com | (310) 982-0492
-Demo: [DEMO_URL]
+Demo: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -197,7 +197,7 @@ For Luxury Presence's Autonomous AI Marketing Team, the same patterns apply:
 2. **Confidence-scored routing** — direct queries to the right specialist
 3. **Fallback chains** — multi-LLM orchestration (Claude, GPT-4, Gemini)
 
-Demo available at: [DEMO_URL]
+Demo available at: https://chunkytortoise.github.io
 
 If you'd like to explore what this architecture would look like for Luxury Presence's scale (65K agents), I'm offering a **free 30-minute technical consultation** this month.
 
@@ -306,7 +306,7 @@ For Forethought's multi-agent support system, the same patterns apply:
 2. **Multi-LLM fallback** — no single-vendor dependency (Claude, GPT-4, Gemini)
 3. **Confidence-scored routing** — direct queries to the right specialist agent
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 If you'd like to explore what a similar architecture would look like for Forethought's scale, I'm offering a **free 30-minute technical consultation** this month.
 
@@ -361,7 +361,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | Fractional AI CTO
 caymanroden@gmail.com | (310) 982-0492
-Portfolio: [DEMO_URL]
+Portfolio: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -421,7 +421,7 @@ Final note. I wanted to share the complete stack I've built on top of RAG infras
 - Sentiment analysis
 - Churn detection
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 For Vectara's enterprise customers, this is the complete stack they need. Vectara provides the RAG foundation, I provide the application layer.
 
@@ -469,7 +469,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | RAG & Multi-LLM Orchestration
 caymanroden@gmail.com | (310) 982-0492
-Demo: [DEMO_URL]
+Demo: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -521,7 +521,7 @@ For Ylopo's use case (AI voice + text at scale), the same architectural patterns
 2. **Semantic caching** — "what's my budget?" and "how much can I afford?" hit the same cache
 3. **Multi-LLM fallback** — automatic routing to Claude, GPT-4, or Gemini based on query type
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 If you'd like to explore what a similar system would look like for Ylopo's infrastructure, I'm offering a **free 30-minute technical consultation** this month.
 
@@ -574,7 +574,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | Conversational AI Systems
 caymanroden@gmail.com | (310) 982-0492
-Demo: [DEMO_URL]
+Demo: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -627,7 +627,7 @@ Final note. Here's the complete case study since we're both solving the same pro
 | Context handling | Single context window | Specialized context per bot |
 | Scalability | Vertical (bigger prompts) | Horizontal (add more bots) |
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 If you'd like to explore a hybrid approach (combining Aisa's empathy features with my multi-bot orchestration), I'm offering a **free 30-minute architecture consultation** this month.
 
@@ -680,7 +680,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | GHL + AI Specialist
 caymanroden@gmail.com | (310) 982-0492
-Demo: [DEMO_URL]
+Demo: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -741,7 +741,7 @@ For E2M's Fractional AI offering, this system becomes the foundation:
 3. E2M monitors performance across all clients
 4. Aggregate cost savings create strong ROI story
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 If you'd like to explore a white-label partnership or licensing arrangement, I'm offering a **free 30-minute strategy session** this month.
 
@@ -799,7 +799,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | Fractional AI CTO
 caymanroden@gmail.com | (310) 982-0492
-Portfolio: [DEMO_URL]
+Portfolio: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -857,7 +857,7 @@ Final note. Here's the complete application stack I've built on top of AI search
 
 For Glean's enterprise customers, this is the complete stack. Glean provides search intelligence, I provide workflow automation.
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 If you'd like to explore a formal partnership or referral arrangement, I'm offering a **free 30-minute strategy session** this month.
 
@@ -913,7 +913,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | GHL + AI Specialist
 caymanroden@gmail.com | (310) 982-0492
-Demo: [DEMO_URL]
+Demo: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -974,7 +974,7 @@ Final thought: agencies using UpHex for ad automation + an AI qualification laye
 
 **Integration**: Simple webhook from GHL form submission → AI qualification API → response + tagging
 
-Full case study: [DEMO_URL]
+Full case study: https://chunkytortoise.github.io
 
 If you'd like to explore a formal integration or partnership, I'm offering a **free 30-minute strategy session** this month.
 
@@ -1033,7 +1033,7 @@ Best,
 Cayman Roden
 Python/AI Engineer | GHL + AI Specialist
 caymanroden@gmail.com | (310) 982-0492
-Demo: [DEMO_URL]
+Demo: https://chunkytortoise.github.io
 
 ### Email 2 — Value Add (Send Day 3)
 
@@ -1091,7 +1091,7 @@ Final note. Here's the complete white-label architecture since Fusemate's model 
 4. Client sees $3,000/mo savings → 3-6x ROI
 5. Fusemate captures recurring revenue at scale
 
-Full technical writeup: [DEMO_URL]
+Full technical writeup: https://chunkytortoise.github.io
 
 If you'd like to explore a white-label licensing arrangement, I'm offering a **free 30-minute strategy session** this month.
 
@@ -1144,7 +1144,7 @@ caymanroden@gmail.com | (310) 982-0492
 ---
 
 **Next Steps**:
-1. Replace `[DEMO_URL]` with actual Streamlit demo URLs after deployment
+1. Replace `https://chunkytortoise.github.io` with actual Streamlit demo URLs after deployment
 2. Set up email tracking (open rates, click rates)
 3. Prepare technical brief PDF for "send it" replies
 4. Configure Calendly for discovery calls

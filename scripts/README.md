@@ -36,6 +36,8 @@ export APOLLO_API_KEY="your_apollo_io_api_key"  # Alternative to Hunter
 | `outreach_helper.py` | Email verification, UTM, CRM setup | 2h 20m → 7m | P1 |
 | `linkedin_helper.py` | Calendar events, connections, tracking | 1h 10m → 4.5m | P2 |
 | `fiverr_formatter.py` | SEO tags, descriptions, FAQs | 1h 5m → 4m | P2 |
+| `upwork_job_monitor.py` | Automated job alert monitoring | Manual → 15m intervals | P1 |
+| `crm_tracker.py` | Freelance pipeline management | Manual → Real-time | P1 |
 
 ---
 
@@ -497,6 +499,174 @@ python scripts/linkedin_helper.py calendar --posts posts.yaml  # Will trigger OA
 - Use all 5 tag slots with high-volume keywords
 - Update descriptions quarterly based on search trends
 - Monitor competitor gigs for pricing and positioning
+
+---
+
+## Freelance Automation Tools
+
+### 6. Upwork Job Monitor (`upwork_job_monitor.py`)
+
+**Purpose**: Automated monitoring of Upwork RSS feeds for matching freelance opportunities.
+
+**Features**:
+- Parses Upwork RSS feeds for AI/ML jobs
+- Keyword filtering (positive + negative)
+- Job scoring based on keyword match count
+- Deduplication using persistent storage
+- macOS desktop notifications
+- Appends new jobs to `jobs/new-jobs.md`
+
+**Setup**:
+```bash
+# Install dependency
+pip install feedparser
+
+# Make executable
+chmod +x scripts/upwork_job_monitor.py
+
+# Run manually
+./scripts/upwork_job_monitor.py
+
+# Add to crontab for automatic monitoring (every 15 minutes)
+*/15 * * * * cd /Users/cave/Documents/GitHub/EnterpriseHub && python3 scripts/upwork_job_monitor.py
+```
+
+**Configuration**:
+- **Positive keywords**: RAG, LLM, Claude, GPT, chatbot, FastAPI, multi-agent, AI automation, Python
+- **Negative keywords**: WordPress, Shopify, $5/hr, data entry, blog writing
+- **Minimum score**: 2 keyword matches
+- **Storage**: `~/.upwork_seen_jobs.json`
+- **Output**: `jobs/new-jobs.md`
+
+**Example Output**:
+```bash
+$ ./scripts/upwork_job_monitor.py
+[2026-02-14 15:00:00] Upwork Job Monitor started
+Monitoring 4 RSS feeds...
+
+NEW JOB: Build RAG-based chatbot with FastAPI (score: 5)
+NEW JOB: Multi-agent AI automation system (score: 4)
+REJECTED: WordPress blog setup (reason: wordpress)
+LOW SCORE: Data entry task (score: 1)
+
+Found 2 new matching jobs!
+
+✓ Logged 2 jobs to jobs/new-jobs.md
+✓ Desktop notification sent for top job
+
+Top job: Build RAG-based chatbot with FastAPI (score: 5)
+Link: https://www.upwork.com/jobs/~...
+```
+
+---
+
+### 7. CRM Pipeline Tracker (`crm_tracker.py`)
+
+**Purpose**: Lightweight CLI for tracking freelance prospects and pipeline.
+
+**Features**:
+- Add/update prospects with contact info
+- Track pipeline status (lead → won/lost)
+- Funnel visualization with colorized output
+- Conversion rate analytics
+- CSV export
+- No external dependencies (stdlib only)
+
+**Setup**:
+```bash
+# Make executable
+chmod +x scripts/crm_tracker.py
+
+# View help
+./scripts/crm_tracker.py --help
+```
+
+**Commands**:
+
+```bash
+# Add prospect
+./scripts/crm_tracker.py add "Acme Corp" \
+  --source=upwork \
+  --rate=150 \
+  --contact="John Doe" \
+  --deal-size=5000
+
+# Update status
+./scripts/crm_tracker.py update "Acme Corp" --status=proposal_sent
+
+# View pipeline funnel
+./scripts/crm_tracker.py pipeline
+
+# Show conversion stats
+./scripts/crm_tracker.py stats
+
+# List prospects (with optional filtering)
+./scripts/crm_tracker.py list --status=negotiation
+./scripts/crm_tracker.py list --source=upwork
+
+# Export to CSV
+./scripts/crm_tracker.py export --output=pipeline.csv
+```
+
+**Pipeline Statuses**:
+- `lead` - New prospect identified
+- `contacted` - Initial outreach sent
+- `proposal_sent` - Proposal submitted
+- `negotiation` - In active negotiation
+- `won` - Deal closed successfully
+- `lost` - Deal lost to competitor or declined
+- `inactive` - Prospect went cold
+
+**Example Workflow**:
+```bash
+# Add new prospect from Upwork
+./scripts/crm_tracker.py add "TechCo" --source=upwork --rate=175 --contact="Jane Smith" --deal-size=8000
+
+# Update as you progress
+./scripts/crm_tracker.py update "TechCo" --status=contacted
+./scripts/crm_tracker.py update "TechCo" --status=proposal_sent
+./scripts/crm_tracker.py update "TechCo" --status=negotiation --deal-size=12000  # Updated deal size
+./scripts/crm_tracker.py update "TechCo" --status=won
+
+# Check pipeline
+./scripts/crm_tracker.py pipeline
+```
+
+**Example Output**:
+```bash
+$ ./scripts/crm_tracker.py pipeline
+
+FREELANCE PIPELINE
+
+Total Prospects: 15
+Pipeline Value: $87,500
+
+Lead            ████████████  8 ( 32,000 USD)
+Contacted       ████████      4 ( 18,000 USD)
+Proposal Sent   ████          2 ( 15,000 USD)
+Negotiation     ██            1 ( 12,000 USD)
+Won             ██████        3 ( 35,500 USD)
+Lost            ██            2 (  8,000 USD)
+
+Conversion Rate: 60.0%
+```
+
+**Storage**:
+- Location: `~/.freelance_crm.json`
+- Format: JSON with metadata
+- Backup recommended before major updates
+
+**Integration with Upwork Monitor**:
+```bash
+# Monitor new jobs
+./scripts/upwork_job_monitor.py
+
+# Review jobs/new-jobs.md and add promising leads
+./scripts/crm_tracker.py add "Acme Corp" --source=upwork --rate=150
+
+# Track progress through pipeline
+./scripts/crm_tracker.py update "Acme Corp" --status=contacted
+```
 
 ---
 
