@@ -1,1 +1,20 @@
-{"mcpServers":{"memory":{"command":"npx","args":["-y","@modelcontextprotocol/server-memory"]},"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"alwaysAllow":["browser_click","browser_navigate","browser_type"]}}}
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "alwaysAllow": ["browser_click", "browser_navigate", "browser_type"]
+    },
+    "notebooklm": {
+      "command": "python3",
+      "args": [".claude/mcp-servers/notebooklm/server.py"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+      }
+    }
+  }
+}
