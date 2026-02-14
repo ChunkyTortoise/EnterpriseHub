@@ -1,0 +1,95 @@
+# AgentForge Priority Support - Pro Tier
+
+Thank you for purchasing AgentForge Pro!
+
+## Your Priority Support Details
+
+**Email**: caymanroden@gmail.com
+**Subject Line**: "AgentForge Pro Support - [Your Name]"
+**Response SLA**: 48 hours (business days, Mon-Fri)
+
+### What's Covered
+
+✅ **Implementation Questions**
+- How do I integrate provider X?
+- Best practices for Y use case?
+- Configuration troubleshooting
+
+✅ **Bug Reports**
+- Your bugs are prioritized over community issues
+- Reproduction steps appreciated
+- Fixes deployed within 1 week
+
+✅ **Architecture Guidance**
+- "Should I use provider X or Y for Z task?"
+- "How do I structure my agents for ABC?"
+- "What's the best caching strategy for DEF?"
+
+✅ **Performance Optimization**
+- "My requests are slow, how do I speed them up?"
+- "How do I reduce costs?"
+- "What's causing high latency?"
+
+### What's NOT Covered
+
+❌ Custom development (see Enterprise tier)
+❌ Real-time debugging (use Slack in Enterprise)
+❌ Free consulting beyond 30-min session
+❌ Non-AgentForge infrastructure issues
+
+### Response Time Examples
+
+| Question Type | Typical Response |
+|--------------|------------------|
+| Quick clarification | 4-8 hours |
+| Implementation guidance | 12-24 hours |
+| Bug investigation | 24-48 hours |
+| Architecture review | 48 hours |
+
+### Upgrade to Enterprise?
+
+Need faster support or custom development?
+
+**Enterprise Tier** ($999) includes:
+- 4-hour response SLA (vs 48 hours)
+- 90-day private Slack channel
+- Direct access during business hours
+- Custom code examples for your domain
+- "War room" support for critical issues
+
+Upgrade: Email caymanroden@gmail.com with subject "Pro → Enterprise Upgrade"
+
+### Tips for Faster Support
+
+1. **Be Specific**: Include error messages, code snippets, logs
+2. **Share Context**: What are you trying to achieve?
+3. **Show What You Tried**: Saves back-and-forth
+4. **Use Pastebin**: For long logs, use pastebin.com or gist.github.com
+
+### Example Good Support Request
+
+```
+Subject: AgentForge Pro Support - John Doe
+
+Hi Cayman,
+
+I'm building a legal document analyzer and getting timeout errors
+when using Claude for long PDFs (50+ pages).
+
+What I'm trying: Chunking documents into 10-page sections
+Error: "Request timeout after 60 seconds"
+Provider: Anthropic Claude Opus
+Code: https://gist.github.com/johndoe/abc123
+
+Question: Should I reduce chunk size or increase timeout?
+Is there a better approach?
+
+Thanks,
+John
+```
+
+---
+
+Looking forward to supporting your AgentForge deployment!
+
+- Cayman
