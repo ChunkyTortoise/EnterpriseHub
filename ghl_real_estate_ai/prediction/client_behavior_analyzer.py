@@ -161,11 +161,11 @@ class ClientBehaviorAnalyzer:
 
         # Jorge's client methodology
         self.jorge_client_methodology = {
-            "confrontational_fit_factors": [
-                "pressure_tolerance",
-                "direct_communication_preference",
+            "consultative_fit_factors": [
+                "communication_preference",
+                "relationship_orientation",
                 "results_orientation",
-                "time_consciousness",
+                "timeline_flexibility",
                 "value_recognition",
             ],
             "qualification_thresholds": {
@@ -206,7 +206,7 @@ class ClientBehaviorAnalyzer:
 
             # Generate psychological profile using Jorge's methodology
             psychology_prompt = f"""
-            Analyze client psychology using Jorge's confrontational methodology and behavioral science.
+            Analyze client psychology using Jorge's consultative methodology and behavioral science.
 
             Client ID: {client_id}
             Interaction History: {interaction_history}
@@ -215,21 +215,21 @@ class ClientBehaviorAnalyzer:
 
             Jorge's Client Psychology Framework:
             1. Personality Type Classification - How does this client make decisions?
-            2. Communication Style Analysis - Direct vs collaborative preferences
-            3. Pressure Tolerance Assessment - Can they handle Jorge's approach?
+            2. Communication Style Analysis - Collaborative vs independent preferences
+            3. Support Needs Assessment - What level of guidance do they prefer?
             4. Authority Level Determination - Who makes the final decisions?
             5. Motivation Trigger Identification - What drives their actions?
-            6. Stress Response Pattern - How do they react under pressure?
+            6. Decision Style Pattern - How do they evaluate options?
 
             Analyze comprehensive client psychology including:
             1. Primary personality type classification
             2. Decision-making style and risk tolerance
-            3. Communication preferences and pressure sensitivity
+            3. Communication preferences and support needs
             4. Authority level and decision-making structure
             5. Emotional and logical triggers
-            6. Stress indicators and management strategies
+            6. Confidence indicators and relationship preferences
 
-            Provide specific insights for Jorge's confrontational methodology application.
+            Provide specific insights for Jorge's consultative methodology application.
             """
 
             psychology_response = await self.claude.generate_response(psychology_prompt)
