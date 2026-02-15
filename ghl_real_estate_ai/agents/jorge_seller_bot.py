@@ -241,13 +241,6 @@ class JorgeSellerBot(BaseBotWorkflow):
         self.churn_service = ChurnDetectionService(sentiment_service=self.sentiment_service)
         logger.info("Jorge bot: Phase 1.5-1.8 services (Sentiment, Scoring, Workflow, Churn) initialized")
 
-        # Monitoring services (singletons — cheap to instantiate)
-        self.performance_tracker = PerformanceTracker()
-        self.metrics_collector = BotMetricsCollector()
-        self.alerting_service = AlertingService()
-        self.ab_testing = ABTestingService()
-        self._init_ab_experiments()
-
         # Initialize modular service layer (NEW: Decomposed services)
         self._init_service_layer()
 
@@ -293,16 +286,6 @@ class JorgeSellerBot(BaseBotWorkflow):
         self.objection_handler = ObjectionHandler(event_publisher=self.event_publisher)
         
         logger.info("Jorge bot: Service layer initialized with decomposed modules")
-
-    def _init_ab_experiments(self) -> None:
-        """Create default A/B experiments if not already registered."""
-        try:
-            self.ab_testing.create_experiment(
-                ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                ["formal", "casual", "empathetic"],
-            )
-        except ValueError:
-            pass  # Already exists
 
     def _build_unified_graph(self) -> StateGraph:
         """Build workflow graph based on enabled features"""

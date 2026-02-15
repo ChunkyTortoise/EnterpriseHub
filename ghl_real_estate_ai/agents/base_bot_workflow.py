@@ -4,10 +4,12 @@ Base workflow class for all Jorge bots.
 This module provides a shared base class that deduplicates common service
 initialization and monitoring patterns across Lead, Buyer, and Seller bots.
 
-Task #18: Create BaseBotWorkflow shared base class
+Task #18: Create BaseBotWorkflow shared base class (Enhanced)
 - Reduces 50+ duplicate service initializations across 3 bots
 - Provides consistent monitoring, metrics, and event publishing
 - Enables easier testing and maintenance
+- NEW: Includes monitoring services (PerformanceTracker, BotMetricsCollector, AlertingService, ABTestingService)
+- NEW: Includes A/B testing initialization
 """
 
 import logging
@@ -27,8 +29,9 @@ class BaseBotWorkflow:
     - Industry configuration management
     - Event publishing
     - ML analytics engine (optional)
-    - Performance tracking foundation
-    - Metrics collection hooks
+    - Performance tracking (PerformanceTracker, BotMetricsCollector)
+    - Alerting and monitoring (AlertingService)
+    - A/B testing infrastructure (ABTestingService)
 
     Subclasses:
     - LeadBotWorkflow (lead_bot.py)
@@ -52,6 +55,10 @@ class BaseBotWorkflow:
         """
         from ghl_real_estate_ai.config.industry_config import IndustryConfig
         from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+        from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 
         # Core configuration
         self.tenant_id = tenant_id
@@ -59,6 +66,15 @@ class BaseBotWorkflow:
 
         # Shared services
         self.event_publisher = get_event_publisher()
+
+        # Monitoring services (singletons — cheap to instantiate)
+        self.performance_tracker = PerformanceTracker()
+        self.metrics_collector = BotMetricsCollector()
+        self.alerting_service = AlertingService()
+        self.ab_testing = ABTestingService()
+
+        # Initialize A/B experiments
+        self._init_ab_experiments()
 
         # Optional ML analytics (Track 3.1)
         self.ml_analytics = None
@@ -73,6 +89,28 @@ class BaseBotWorkflow:
                 )
 
         logger.info(f"{self.__class__.__name__}: Initialized with tenant_id={tenant_id}")
+
+    def _init_ab_experiments(self) -> None:
+        """
+        Create default A/B experiments if not already registered.
+
+        This method is shared across all bots and creates the standard
+        response tone experiment with three variants: formal, casual, empathetic.
+
+        Subclasses can override this method to add bot-specific experiments.
+        """
+        try:
+            from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+
+            self.ab_testing.create_experiment(
+                ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                ["formal", "casual", "empathetic"],
+            )
+        except ValueError:
+            # Experiment already exists (singleton service shared across bots)
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to initialize A/B experiments: {e}")
 
     def publish_event(self, event_type: str, data: dict) -> None:
         """
