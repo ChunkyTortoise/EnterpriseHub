@@ -1,0 +1,72 @@
+# ==============================================================================
+# EnterpriseHub - OpenTelemetry Observability Stack
+# ==============================================================================
+# Jaeger for distributed tracing visualization
+# Usage: docker-compose -f docker-compose.observability.yml up -d
+#
+# Access:
+#   Jaeger UI: http://localhost:16686
+#   OTLP gRPC: localhost:4317
+#   OTLP HTTP: localhost:4318
+# ==============================================================================
+version: '3.8'
+
+services:
+  # Jaeger All-in-One (includes collector, query, and UI)
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: jorge_jaeger
+    ports:
+      # Jaeger UI
+      - "16686:16686"
+      # OTLP gRPC receiver
+      - "4317:4317"
+      # OTLP HTTP receiver
+      - "4318:4318"
+      # Jaeger legacy ports (optional)
+      - "5778:5778"   # Agent config
+      - "14268:14268" # Jaeger collector HTTP
+      - "14250:14250" # Jaeger collector gRPC
+      - "9411:9411"   # Zipkin compatible endpoint
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - SPAN_STORAGE_TYPE=memory
+      - METRICS_STORAGE_TYPE=prometheus
+      # Memory limits (adjust based on traffic)
+      - MEMORY_MAX_TRACES=10000
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - observability
+
+  # Prometheus for metrics (optional, pairs well with Jaeger)
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: jorge_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    restart: unless-stopped
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  prometheus_data:
