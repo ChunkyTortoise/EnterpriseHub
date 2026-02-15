@@ -146,6 +146,58 @@ class TestBookAppointment:
         assert result["success"] is False
 
 
+    @pytest.mark.asyncio
+    async def test_booking_fails_negative_slot_index(self, service_with_calendar):
+        """Should fail gracefully when slot index is negative."""
+        await service_with_calendar.offer_appointment_slots("contact_1")
+
+        result = await service_with_calendar.book_appointment("contact_1", slot_index=-1)
+
+        assert result["success"] is False
+        assert "valid option" in result["message"].lower()
+
+
+class TestHotSellerBookingFlow:
+    """End-to-end tests for HOT seller calendar booking trigger."""
+
+    @pytest.mark.asyncio
+    async def test_hot_seller_full_booking_flow(self, service_with_calendar, mock_ghl_client):
+        """Simulate full HOT seller flow: offer slots -> select -> book -> confirm."""
+        contact_id = "hot_seller_001"
+
+        # Step 1: HOT seller triggers slot offer
+        offer = await service_with_calendar.offer_appointment_slots(contact_id)
+        assert offer["fallback"] is False
+        assert len(offer["slots"]) == 3
+
+        # Step 2: Seller selects slot 2 (index 1)
+        result = await service_with_calendar.book_appointment(contact_id, slot_index=1)
+        assert result["success"] is True
+        assert result["appointment"]["status"] == "confirmed"
+
+        # Step 3: Verify the correct slot was booked (second slot)
+        mock_ghl_client.create_appointment.assert_awaited_once_with(
+            calendar_id="cal_abc123",
+            contact_id=contact_id,
+            start_time="2026-02-15T10:00:00-08:00",
+            end_time="2026-02-15T10:30:00-08:00",
+            title="Seller Consultation",
+        )
+
+    @pytest.mark.asyncio
+    async def test_multiple_contacts_independent_slots(self, service_with_calendar, mock_ghl_client):
+        """Verify each contact gets independent pending slot tracking."""
+        await service_with_calendar.offer_appointment_slots("contact_a")
+        await service_with_calendar.offer_appointment_slots("contact_b")
+
+        # Book for contact_a — should not affect contact_b
+        await service_with_calendar.book_appointment("contact_a", slot_index=0)
+
+        # contact_b should still be bookable
+        result = await service_with_calendar.book_appointment("contact_b", slot_index=2)
+        assert result["success"] is True
+
+
 class TestSlotFormatting:
     """Tests for slot time formatting."""
 
