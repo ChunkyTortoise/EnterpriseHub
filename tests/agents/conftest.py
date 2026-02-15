@@ -267,3 +267,77 @@ def concurrent_requests():
         {"conversation_id": f"conv_{i}", "message": f"Message {i}"}
         for i in range(10)
     ]
+
+
+# ==============================
+# Configuration Fixtures (Hybrid Isolation Strategy)
+# ==============================
+
+@pytest.fixture(scope="session")
+def session_config():
+    """
+    Load config once per test session (fast, shared state).
+    
+    Use this for read-only tests that don't modify environment.
+    ~5ms overhead per test run.
+    """
+    from ghl_real_estate_ai.config.jorge_config_loader import get_config
+    return get_config()
+
+
+@pytest.fixture(scope="function")
+def isolated_config(monkeypatch):
+    """
+    Reload config for tests that modify environment (slower, full isolation).
+    
+    Use this for:
+    - Environment override tests
+    - Config mutation tests
+    - Tests requiring fresh config state
+    
+    ~50-100ms overhead per test (YAML parse + dataclass instantiation).
+    """
+    import os
+    from ghl_real_estate_ai.config.jorge_config_loader import reload_config, get_config
+    
+    # Save original env
+    original_env = os.environ.get("DEPLOYMENT_ENV")
+    
+    yield get_config()
+    
+    # Restore original env and reload
+    if original_env:
+        monkeypatch.setenv("DEPLOYMENT_ENV", original_env)
+    else:
+        monkeypatch.delenv("DEPLOYMENT_ENV", raising=False)
+    reload_config()
+
+
+@pytest.fixture
+def mock_minimal_config():
+    """
+    Minimal config for unit tests without file I/O.
+    
+    Uses dataclass defaults, no YAML parsing.
+    Fastest option for pure unit tests.
+    """
+    from ghl_real_estate_ai.config.jorge_config_loader import JorgeBotsConfig
+    return JorgeBotsConfig()
+
+
+@pytest.fixture
+def temp_thresholds(session_config):
+    """Lead bot temperature thresholds from config."""
+    return session_config.lead_bot.temperature_thresholds
+
+
+@pytest.fixture
+def handoff_config(session_config):
+    """Handoff configuration from unified config."""
+    return session_config.shared.handoff
+
+
+@pytest.fixture
+def sla_config(session_config):
+    """Performance SLA configuration."""
+    return session_config.shared.performance

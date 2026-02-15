@@ -73,6 +73,14 @@ shared:
       prediction_window_days: 30
       model_refresh_hours: 24
 
+    # Conversion Tracking (Task #24)
+    conversion_tracking:
+      enabled: true
+      min_samples_for_calibration: 100
+      calibration_schedule_hours: 168  # Weekly recalibration
+      track_by_channel: true
+      track_by_segment: true
+
   ab_testing:
     # A/B Testing Configuration (Tasks #19, #22, #23)
     enabled: true
@@ -113,7 +121,22 @@ lead_bot:
       budget_clarity: 0.25
       motivation_strength: 0.25
       property_specificity: 0.20
-    
+
+    # Propensity to Convert Score (Task #24)
+    pcs_weights:
+      response_velocity: 0.20
+      message_length: 0.15
+      question_depth: 0.20
+      objection_handling: 0.25
+      call_acceptance: 0.20
+
+    # Intent scoring weights (Task #24)
+    intent_weights:
+      motivation: 0.35
+      timeline: 0.30
+      condition: 0.20
+      price: 0.15
+
   temperature_thresholds:
     hot: 80  # HOT >= 80
     warm: 40  # WARM 40-79
@@ -129,19 +152,35 @@ lead_bot:
 # ===================================================================
 buyer_bot:
   enabled: true
-  
+
   features:
     enable_bot_intelligence: false
     enable_handoff: true
     enable_persona_classification: true  # Phase 1.4
     enable_conversation_memory: false  # Task #29 will enable this
-    
+
   workflow:
     enable_financial_readiness: true
     enable_affordability_calc: true
     enable_property_matching: true
     enable_objection_handling: true
-    
+
+  scoring:
+    # Propensity to Convert Score (Task #24)
+    pcs_weights:
+      response_velocity: 0.20
+      message_length: 0.15
+      question_depth: 0.20
+      objection_handling: 0.25
+      call_acceptance: 0.20
+
+    # Intent scoring weights (Task #24)
+    intent_weights:
+      motivation: 0.35
+      timeline: 0.30
+      budget: 0.20
+      location: 0.15
+
   affordability:
     default_dti_ratio: 0.43  # 43% debt-to-income max
     default_down_payment_percent: 0.20  # 20% down
@@ -194,13 +233,22 @@ seller_bot:
       motivation_strength: 0.25
       property_condition: 0.20
       price_expectations: 0.25
-      
-    pcs_weights:  # Propensity to Convert Score
-      engagement_frequency: 0.30
-      objection_severity: 0.25
-      response_sentiment: 0.20
-      information_completeness: 0.25
-      
+
+    # Propensity to Convert Score (Task #24)
+    pcs_weights:
+      response_velocity: 0.20
+      message_length: 0.15
+      question_depth: 0.20
+      objection_handling: 0.25
+      call_acceptance: 0.20
+
+    # Intent scoring weights (Task #24)
+    intent_weights:
+      motivation: 0.35
+      timeline: 0.30
+      condition: 0.20
+      price: 0.15
+
   temperature_thresholds:
     hot: 75  # HOT >= 75
     warm: 50  # WARM 50-74
