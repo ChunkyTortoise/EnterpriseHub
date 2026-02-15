@@ -1,3 +1,10 @@
+> **Status**: Tooling ready, setup deferred (2026-02-15)
+> **Reason**: GHL access revoked - cannot obtain API key
+> **Tooling**: Enhanced jorge_ghl_setup.py committed (93c68ce)
+> **Next steps**: Resume when GHL access restored (~30 min to complete)
+
+---
+
 # GHL Custom Field Reference - Jorge Bots
 
 **Last Updated**: 2026-02-15
