@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "insight-engine"
+version = "0.1.0"
+description = "Obsidian-themed Streamlit BI dashboard components with glassmorphism, design tokens, and type-safe primitives"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    {name = "Cayman Roden"},
+]
+keywords = ["streamlit", "dashboard", "bi", "data-visualization", "dark-theme", "glassmorphism", "components"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Framework :: Streamlit",
+    "Typing :: Typed",
+]
+dependencies = [
+    "streamlit>=1.20.0",
+    "plotly>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "ruff>=0.1.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/CaymanRoden/EnterpriseHub"
+Repository = "https://github.com/CaymanRoden/EnterpriseHub"
+Documentation = "https://github.com/CaymanRoden/EnterpriseHub/tree/main/insight_engine"
+
+[tool.setuptools.packages.find]
+include = ["insight_engine*"]

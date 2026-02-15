@@ -61,16 +61,26 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for complete system design.
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/advanced-rag-system.git
-cd advanced-rag-system
+# Install from PyPI
+pip install docqa-engine
 
-# Install dependencies
+# With optional dependencies
+pip install docqa-engine[cohere]    # Cohere re-ranking
+pip install docqa-engine[spacy]     # spaCy NLP
+pip install docqa-engine[all]       # Everything
+
+# Or install from source
+git clone https://github.com/CaymanRoden/EnterpriseHub.git
+cd EnterpriseHub/advanced_rag_system
 pip install -e ".[dev]"
+```
 
+### Environment Setup
+
+```bash
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your API keys (OPENAI_API_KEY required)
 
 # Run the API
 make run
