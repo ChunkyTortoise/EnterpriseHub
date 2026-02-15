@@ -179,9 +179,9 @@ class ComplianceAutomationEngine:
 
         # Jorge-specific compliance considerations
         self.jorge_compliance_factors = {
-            "confrontational_methodology": {
+            "consultative_methodology": {
                 "fair_housing_considerations": [
-                    "ensure_pressure_tactics_non_discriminatory",
+                    "ensure_recommendations_non_discriminatory",
                     "document_equal_treatment_across_demographics",
                     "maintain_professional_standards",
                 ],

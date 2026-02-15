@@ -19,7 +19,7 @@ class FollowUpService:
     # Follow-up scripts based on previous stage
     FOLLOW_UP_SCRIPTS = {
         "qualification": "Checking back—did you ever decide on a timeline for {address}?",
-        "valuation_defense": "I've updated the comps for your neighborhood. Zillow is still high. Ready for the truth?",
+        "valuation_defense": "I've updated the comps for your neighborhood. Want me to send over the latest market data?",
         "listing_prep": "The photographer is in your area Thursday. Should I book him for your place?",
     }
 

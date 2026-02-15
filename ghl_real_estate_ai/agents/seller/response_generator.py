@@ -210,7 +210,7 @@ class ResponseGenerator:
             response.get("content")
             or response.get("analysis")
             or state.get("objection_response_text")  # Fallback to objection response
-            or "Are we selling this property or just talking about it?"
+            or "Happy to help with any questions about your property. What would be most useful to know?"
         )
 
         # Update qualification progress - increment question count

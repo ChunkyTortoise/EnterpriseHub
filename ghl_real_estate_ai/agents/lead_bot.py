@@ -55,6 +55,37 @@ except ImportError:
 
 logger = get_logger(__name__)
 
+
+# ── Background Task Error Tracking (P0 Fix) ──────────────────────────
+async def _safe_background_task(coro, task_name: str, retry_count: int = 0):
+    """Execute a coroutine in the background with error logging and optional retry.
+
+    Args:
+        coro: Coroutine to execute
+        task_name: Human-readable name for logging
+        retry_count: Number of retries on failure (default: 0 = no retry)
+
+    This wrapper prevents silent failures in fire-and-forget async tasks.
+    All errors are logged with full context for debugging and monitoring.
+    """
+    try:
+        await coro
+        logger.debug(f"Background task succeeded: {task_name}")
+    except Exception as e:
+        logger.error(
+            f"Background task failed: {task_name}",
+            extra={
+                "task_name": task_name,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "retry_count": retry_count,
+            },
+            exc_info=True,
+        )
+        # TODO: Implement retry logic if retry_count > 0
+        # TODO: Send to DLQ or alerting system for critical tasks
+
+
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
@@ -571,7 +602,14 @@ class PersonalityAdapter:
 
 
 class TemperaturePredictionEngine:
-    """Predicts lead temperature changes and provides early warnings"""
+    """Predicts lead temperature changes and provides early warnings
+
+    WARNING: Temperature history is stored in volatile memory and will be lost on restart.
+    For production deployments, configure Redis persistence to retain trend data across restarts.
+    See improvement roadmap item P0-3 for Redis migration guide.
+    """
+
+    MAX_LEADS_IN_MEMORY = 10000  # Prevent unbounded memory growth
 
     def __init__(self):
         self.temperature_history: Dict[str, List[float]] = {}
@@ -583,6 +621,12 @@ class TemperaturePredictionEngine:
         current_temp = (current_scores.get("frs_score", 0) + current_scores.get("pcs_score", 0)) / 2
 
         if lead_id not in self.temperature_history:
+            # Basic memory protection: if we're at capacity, evict oldest lead
+            if len(self.temperature_history) >= self.MAX_LEADS_IN_MEMORY:
+                # Remove the first (oldest) lead
+                oldest_lead = next(iter(self.temperature_history))
+                del self.temperature_history[oldest_lead]
+
             self.temperature_history[lead_id] = []
 
         self.temperature_history[lead_id].append(current_temp)
@@ -1679,10 +1723,13 @@ class LeadBotWorkflow:
         # Sync to Lyrio (Phase 4)
         lyrio = LyrioClient()
 
-        # Run sync in background
+        # Run sync in background with error tracking
         asyncio.create_task(
-            lyrio.sync_lead_score(
-                state["lead_id"], profile.frs.total_score, profile.pcs.total_score, [profile.frs.classification]
+            _safe_background_task(
+                lyrio.sync_lead_score(
+                    state["lead_id"], profile.frs.total_score, profile.pcs.total_score, [profile.frs.classification]
+                ),
+                task_name=f"lyrio_lead_score_sync:{state['lead_id']}",
             )
         )
 
@@ -1850,8 +1897,13 @@ class LeadBotWorkflow:
         # Mock URL for digital twin
         digital_twin_url = f"https://enterprise-hub.ai/visualize/{address.replace(' ', '-').lower()}"
 
-        # Sync Digital Twin URL to Lyrio in background
-        asyncio.create_task(lyrio.sync_digital_twin_url(state["lead_id"], address, digital_twin_url))
+        # Sync Digital Twin URL to Lyrio in background with error tracking
+        asyncio.create_task(
+            _safe_background_task(
+                lyrio.sync_digital_twin_url(state["lead_id"], address, digital_twin_url),
+                task_name=f"lyrio_digital_twin_sync:{state['lead_id']}",
+            )
+        )
 
         # Construct Response
         response_msg = (
@@ -1956,11 +2008,14 @@ class LeadBotWorkflow:
                 logger.error(f"Background Retell call failed for {state['lead_name']}: {e}")
 
         task = asyncio.create_task(
-            self.retell_client.create_call(
-                to_number=state["contact_phone"],
-                lead_name=state["lead_name"],
-                lead_context=context,
-                metadata={"contact_id": state["lead_id"]},
+            _safe_background_task(
+                self.retell_client.create_call(
+                    to_number=state["contact_phone"],
+                    lead_name=state["lead_name"],
+                    lead_context=context,
+                    metadata={"contact_id": state["lead_id"]},
+                ),
+                task_name=f"retell_voice_call:{state['lead_id']}",
             )
         )
         task.add_done_callback(_call_finished)
