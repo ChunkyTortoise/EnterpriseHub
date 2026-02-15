@@ -141,6 +141,41 @@ class ABTestingConfig:
 
 
 @dataclass
+class BotWorkflowMLAnalytics:
+    """Configuration for ML analytics in BaseBotWorkflow (Task #18 - Phase 1)"""
+    enable_by_default: bool = False
+    fallback_on_import_error: bool = True
+
+
+@dataclass
+class BotWorkflowEvents:
+    """Configuration for event publishing in BaseBotWorkflow (Task #18 - Phase 1)"""
+    enable_publishing: bool = True
+    inject_tenant_id: bool = True
+    log_publish_errors: bool = True
+
+
+@dataclass
+class BotWorkflowConfig:
+    """
+    Configuration for BaseBotWorkflow base class (Task #18).
+
+    Phase 1 (current): Basic infrastructure
+    - Industry configuration
+    - Event publishing
+    - ML analytics (optional)
+
+    Phase 2 (future): Monitoring quartet
+    - PerformanceTracker
+    - BotMetricsCollector
+    - AlertingService
+    - ABTestingService
+    """
+    ml_analytics: BotWorkflowMLAnalytics = field(default_factory=BotWorkflowMLAnalytics)
+    events: BotWorkflowEvents = field(default_factory=BotWorkflowEvents)
+
+
+@dataclass
 class SharedConfig:
     performance: PerformanceConfig = field(default_factory=PerformanceConfig)
     caching: CachingConfig = field(default_factory=CachingConfig)
@@ -149,6 +184,7 @@ class SharedConfig:
     handoff: HandoffConfig = field(default_factory=HandoffConfig)
     analytics: AnalyticsConfig = field(default_factory=AnalyticsConfig)
     ab_testing: ABTestingConfig = field(default_factory=ABTestingConfig)
+    bot_workflow: BotWorkflowConfig = field(default_factory=BotWorkflowConfig)
 
 
 @dataclass
@@ -251,9 +287,14 @@ class BuyerBotAffordability:
 
 @dataclass
 class BuyerBotMemory:
-    enable_redis_persistence: bool = False
-    conversation_window_size: int = 5
+    """Configuration for conversation memory persistence (Task #29)"""
+    enabled: bool = True
     ttl_days: int = 30
+    ttl_days_min: int = 7
+    ttl_days_max: int = 90
+    compress_threshold_bytes: int = 5120
+    max_history_messages: int = 50
+    cache_key_prefix: str = "buyer_conversation_memory"
 
 
 @dataclass
@@ -283,7 +324,7 @@ class BuyerBotConfig:
     affordability: BuyerBotAffordability = field(default_factory=BuyerBotAffordability)
     personas: List[str] = field(default_factory=list)
     objection_types: List[str] = field(default_factory=list)
-    memory: BuyerBotMemory = field(default_factory=BuyerBotMemory)
+    conversation_memory: BuyerBotMemory = field(default_factory=BuyerBotMemory)
 
 
 @dataclass
@@ -462,6 +503,13 @@ class JorgeConfigLoader:
             response_tone=ResponseToneConfig(**ab_testing_data.get("response_tone", {})),
         )
 
+        # Parse bot_workflow (Task #18 - Phase 1)
+        bot_workflow_data = shared_data.get("bot_workflow", {})
+        bot_workflow = BotWorkflowConfig(
+            ml_analytics=BotWorkflowMLAnalytics(**bot_workflow_data.get("ml_analytics", {})),
+            events=BotWorkflowEvents(**bot_workflow_data.get("events", {})),
+        )
+
         shared = SharedConfig(
             performance=PerformanceConfig(**shared_data.get("performance", {})),
             caching=caching,
@@ -470,6 +518,7 @@ class JorgeConfigLoader:
             handoff=handoff,
             analytics=analytics,
             ab_testing=ab_testing,
+            bot_workflow=bot_workflow,
         )
 
         lead_data = raw.get("lead_bot", {})
@@ -492,7 +541,7 @@ class JorgeConfigLoader:
             affordability=BuyerBotAffordability(**buyer_data.get("affordability", {})),
             personas=buyer_data.get("personas", []),
             objection_types=buyer_data.get("objection_types", []),
-            memory=BuyerBotMemory(**buyer_data.get("memory", {})),
+            conversation_memory=BuyerBotMemory(**buyer_data.get("conversation_memory", {})),
         )
 
         seller_data = raw.get("seller_bot", {})

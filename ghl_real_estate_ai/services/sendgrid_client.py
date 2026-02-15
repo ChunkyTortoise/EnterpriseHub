@@ -26,6 +26,7 @@ from sendgrid.helpers.mail import Attachment, Content, Email, FileContent, FileN
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.circuit_breaker import get_circuit_manager
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
 from ghl_real_estate_ai.services.template_library_service import get_template_library_service
@@ -179,6 +180,10 @@ class SendGridClient:
             SuppressionType.INVALID_EMAIL: set(),
         }
 
+        # Circuit breaker for fault tolerance
+        circuit_manager = get_circuit_manager()
+        self.circuit_breaker = circuit_manager.get_or_create_breaker("sendgrid")
+
     async def __aenter__(self):
         """Async context manager entry."""
         await self._ensure_session()
@@ -223,37 +228,47 @@ class SendGridClient:
     async def _make_request(
         self, method: str, endpoint: str, data: Dict[str, Any] = None, params: Dict[str, Any] = None
     ) -> Dict[str, Any]:
-        """Make HTTP request to SendGrid API."""
-        await self._ensure_session()
+        """Make HTTP request to SendGrid API with circuit breaker."""
 
-        url = f"https://api.sendgrid.com/v3/{endpoint.lstrip('/')}"
+        async def _execute_sendgrid_request():
+            """Internal function to execute SendGrid API request"""
+            await self._ensure_session()
 
-        for attempt in range(self.config.max_retries + 1):
-            try:
-                if method.upper() == "GET":
-                    async with self.session.get(url, params=params) as response:
-                        return await self._handle_response(response)
-                elif method.upper() == "POST":
-                    async with self.session.post(url, json=data, params=params) as response:
-                        return await self._handle_response(response)
-                elif method.upper() == "DELETE":
-                    async with self.session.delete(url, json=data, params=params) as response:
-                        return await self._handle_response(response)
-                else:
-                    raise ValueError(f"Unsupported HTTP method: {method}")
+            url = f"https://api.sendgrid.com/v3/{endpoint.lstrip('/')}"
 
-            except aiohttp.ClientError as e:
-                if attempt < self.config.max_retries:
-                    delay = self.config.retry_delay * (2**attempt)
-                    logger.warning(f"SendGrid API request failed, retrying in {delay}s: {e}")
-                    await asyncio.sleep(delay)
-                    continue
-                else:
-                    raise SendGridAPIException(f"Network error after {self.config.max_retries} retries: {e}")
+            for attempt in range(self.config.max_retries + 1):
+                try:
+                    if method.upper() == "GET":
+                        async with self.session.get(url, params=params) as response:
+                            return await self._handle_response(response)
+                    elif method.upper() == "POST":
+                        async with self.session.post(url, json=data, params=params) as response:
+                            return await self._handle_response(response)
+                    elif method.upper() == "DELETE":
+                        async with self.session.delete(url, json=data, params=params) as response:
+                            return await self._handle_response(response)
+                    else:
+                        raise ValueError(f"Unsupported HTTP method: {method}")
 
-            except Exception as e:
-                logger.error(f"Unexpected error in SendGrid API request: {e}")
-                raise SendGridAPIException(f"Unexpected error: {e}")
+                except aiohttp.ClientError as e:
+                    if attempt < self.config.max_retries:
+                        delay = self.config.retry_delay * (2**attempt)
+                        logger.warning(f"SendGrid API request failed, retrying in {delay}s: {e}")
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        raise SendGridAPIException(f"Network error after {self.config.max_retries} retries: {e}")
+
+                except Exception as e:
+                    logger.error(f"Unexpected error in SendGrid API request: {e}")
+                    raise SendGridAPIException(f"Unexpected error: {e}")
+
+        # Execute through circuit breaker
+        try:
+            return await self.circuit_breaker.call(_execute_sendgrid_request)
+        except Exception as e:
+            logger.error(f"SendGrid request failed through circuit breaker: {e}")
+            raise
 
     async def _handle_response(self, response: aiohttp.ClientResponse) -> Dict[str, Any]:
         """Handle SendGrid API response."""

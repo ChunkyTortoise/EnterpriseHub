@@ -34,6 +34,7 @@ from ghl_real_estate_ai.models.ghl_webhook_types import (
     GHLWebhookPayload,
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.services.circuit_breaker import CircuitBreakerConfig, get_circuit_manager
 from ghl_real_estate_ai.services.database_service import DatabaseService, log_communication
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.optimized_cache_service import cached
@@ -194,6 +195,10 @@ class EnhancedGHLClient(GHLClient):
         self.session: Optional[aiohttp.ClientSession] = None
         self._rate_limit_semaphore = asyncio.Semaphore(self.config.rate_limit_requests_per_minute)
 
+        # Circuit breaker for fault tolerance
+        circuit_manager = get_circuit_manager()
+        self.circuit_breaker = circuit_manager.get_or_create_breaker("ghl")
+
     async def __aenter__(self):
         """Async context manager entry."""
         await self._ensure_session()
@@ -243,38 +248,48 @@ class EnhancedGHLClient(GHLClient):
     async def _execute_request(
         self, method: str, endpoint: str, data: Dict[str, Any] = None, params: Dict[str, Any] = None
     ) -> GHLAPIResponse:
-        """Execute HTTP request with retry logic."""
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        """Execute HTTP request with circuit breaker and retry logic."""
 
-        for attempt in range(self.config.max_retries + 1):
-            try:
-                if method.upper() == "GET":
-                    async with self.session.get(url, params=params) as response:
-                        return await self._handle_response(response)
-                elif method.upper() == "POST":
-                    async with self.session.post(url, json=data, params=params) as response:
-                        return await self._handle_response(response)
-                elif method.upper() == "PUT":
-                    async with self.session.put(url, json=data, params=params) as response:
-                        return await self._handle_response(response)
-                elif method.upper() == "DELETE":
-                    async with self.session.delete(url, params=params) as response:
-                        return await self._handle_response(response)
-                else:
-                    raise ValueError(f"Unsupported HTTP method: {method}")
+        async def _make_http_request():
+            """Internal function to execute the actual HTTP request"""
+            url = f"{self.base_url}/{endpoint.lstrip('/')}"
 
-            except aiohttp.ClientError as e:
-                if attempt < self.config.max_retries:
-                    delay = self.config.retry_delay * (2**attempt)
-                    logger.warning(f"GHL API request failed, retrying in {delay}s: {e}")
-                    await asyncio.sleep(delay)
-                    continue
-                else:
-                    raise GHLAPIException(f"Network error after {self.config.max_retries} retries: {e}")
+            for attempt in range(self.config.max_retries + 1):
+                try:
+                    if method.upper() == "GET":
+                        async with self.session.get(url, params=params) as response:
+                            return await self._handle_response(response)
+                    elif method.upper() == "POST":
+                        async with self.session.post(url, json=data, params=params) as response:
+                            return await self._handle_response(response)
+                    elif method.upper() == "PUT":
+                        async with self.session.put(url, json=data, params=params) as response:
+                            return await self._handle_response(response)
+                    elif method.upper() == "DELETE":
+                        async with self.session.delete(url, params=params) as response:
+                            return await self._handle_response(response)
+                    else:
+                        raise ValueError(f"Unsupported HTTP method: {method}")
 
-            except Exception as e:
-                logger.error(f"Unexpected error in GHL API request: {e}")
-                raise GHLAPIException(f"Unexpected error: {e}")
+                except aiohttp.ClientError as e:
+                    if attempt < self.config.max_retries:
+                        delay = self.config.retry_delay * (2**attempt)
+                        logger.warning(f"GHL API request failed, retrying in {delay}s: {e}")
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        raise GHLAPIException(f"Network error after {self.config.max_retries} retries: {e}")
+
+                except Exception as e:
+                    logger.error(f"Unexpected error in GHL API request: {e}")
+                    raise GHLAPIException(f"Unexpected error: {e}")
+
+        # Execute through circuit breaker
+        try:
+            return await self.circuit_breaker.call(_make_http_request)
+        except Exception as e:
+            logger.error(f"GHL request failed through circuit breaker: {e}")
+            raise
 
     async def _handle_response(self, response: aiohttp.ClientResponse) -> GHLAPIResponse:
         """Handle GHL API response."""
