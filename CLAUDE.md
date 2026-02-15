@@ -208,6 +208,128 @@ decision = await handoff_service.evaluate_handoff_from_profile(
 - **Richer context**: Handoffs now include qualification scores
 - **Easier testing**: Single model to mock instead of separate dicts
 
+---
+
+## FRS/PCS Weight Calibration (Task #24 - Feb 2026)
+
+**Status**: Config-driven weights now available via `jorge_bots.yaml`
+
+### How It Works
+
+All scoring weights (FRS and PCS) are now configurable and can be hot-reloaded without restart:
+
+```python
+from ghl_real_estate_ai.config.jorge_config_loader import get_config
+
+config = get_config()
+
+# FRS intent weights (motivation, timeline, condition, price)
+frs_weights = config.lead_bot.scoring.intent_weights
+
+# PCS weights (velocity, length, questions, objections, calls)
+pcs_weights = config.lead_bot.scoring.pcs_weights
+```
+
+### Configuration Location
+
+**File**: `/ghl_real_estate_ai/config/jorge_bots.yaml`
+
+```yaml
+lead_bot:
+  scoring:
+    intent_weights:
+      motivation: 0.35  # 35% of FRS
+      timeline: 0.30    # 30% of FRS
+      condition: 0.20   # 20% of FRS
+      price: 0.15       # 15% of FRS
+
+    pcs_weights:
+      response_velocity: 0.20
+      message_length: 0.15
+      question_depth: 0.20
+      objection_handling: 0.25
+      call_acceptance: 0.20
+
+# Environment-specific calibration
+environments:
+  production:
+    lead_bot:
+      scoring:
+        intent_weights:
+          # Tuned from conversion data
+          motivation: 0.38  # +3%
+          timeline: 0.32    # +2%
+          condition: 0.18   # -2%
+          price: 0.12       # -3%
+```
+
+### Hot Reload (Zero Downtime)
+
+```bash
+# 1. Update weights in jorge_bots.yaml
+vim ghl_real_estate_ai/config/jorge_bots.yaml
+
+# 2. Reload config (no restart needed)
+python -c "from ghl_real_estate_ai.config.jorge_config_loader import reload_config; reload_config()"
+
+# 3. Verify new weights loaded
+python -c "from ghl_real_estate_ai.config.jorge_config_loader import get_config; print(get_config().lead_bot.scoring.intent_weights)"
+```
+
+### Conversion Tracking
+
+```python
+from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+decoder = LeadIntentDecoder()
+
+# After lead converts or outcome is known
+decoder.record_conversion_outcome(
+    contact_id="abc123",
+    frs_score=85.5,
+    pcs_score=72.3,
+    lead_type="buyer",
+    outcome="converted",  # or "nurturing", "lost", "qualified"
+    channel="sms",
+    segment="hot"
+)
+```
+
+### Calibration Process
+
+**When to Calibrate**: After collecting 100+ conversion outcomes (configurable via `min_samples_for_calibration`)
+
+**Steps**:
+1. Query conversion outcomes from logs/database
+2. Run logistic regression to find optimal weights
+3. Update production environment weights in `jorge_bots.yaml`
+4. Hot reload config
+5. Monitor conversion rate improvement
+
+**Weight Constraints**:
+- All weights must sum to 1.0 (± 0.01 tolerance)
+- Config loader validates on startup
+- Invalid weights trigger error
+
+### A/B Testing Weights
+
+```yaml
+# Test different weights in staging
+environments:
+  staging:
+    lead_bot:
+      scoring:
+        intent_weights:
+          motivation: 0.40  # Test higher motivation weight
+          timeline: 0.28
+          condition: 0.18
+          price: 0.14
+```
+
+Monitor conversion rates in staging vs production, then promote winning weights.
+
+---
+
 ## Security Essentials
 - **PII**: Encrypted at rest (Fernet) | **API Keys**: Env vars only, never hardcoded
 - **Auth**: JWT (1hr), 100 req/min rate limit | **Validation**: Pydantic on all inputs

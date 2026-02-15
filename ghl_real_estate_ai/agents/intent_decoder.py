@@ -256,12 +256,26 @@ class LeadIntentDecoder:
         price_data = self._analyze_price(all_text)
 
         # 2. Calculate FRS (config-driven weights with fallback)
-        cfg = self._cfg
-        weights = cfg.intents.scoring_weights if cfg and cfg.intents.scoring_weights else {}
-        w_motivation = weights.get("motivation", 0.35)
-        w_timeline = weights.get("timeline", 0.30)
-        w_condition = weights.get("condition", 0.20)
-        w_price = weights.get("price", 0.15)
+        # Priority: jorge_bots.yaml > IndustryConfig > hardcoded defaults
+        # This allows gradual migration from IndustryConfig to unified config (Task #24)
+        try:
+            from ghl_real_estate_ai.config.jorge_config_loader import get_config
+            unified_config = get_config()
+            intent_weights = unified_config.lead_bot.scoring.intent_weights
+            w_motivation = intent_weights["motivation"]
+            w_timeline = intent_weights["timeline"]
+            w_condition = intent_weights["condition"]
+            w_price = intent_weights["price"]
+            logger.debug("Using FRS weights from unified config (jorge_bots.yaml)")
+        except Exception as e:
+            # Fallback to IndustryConfig
+            logger.debug(f"Unified config not available, using IndustryConfig: {e}")
+            cfg = self._cfg
+            weights = cfg.intents.scoring_weights if cfg and cfg.intents.scoring_weights else {}
+            w_motivation = weights.get("motivation", 0.35)
+            w_timeline = weights.get("timeline", 0.30)
+            w_condition = weights.get("condition", 0.20)
+            w_price = weights.get("price", 0.15)
         frs_total = (
             (motivation_data.score * w_motivation)
             + (timeline_data.score * w_timeline)
@@ -611,6 +625,15 @@ class LeadIntentDecoder:
         return PriceResponsiveness(score=score, zestimate_mentioned=zestimate, category=category)
 
     def _calculate_pcs(self, history: List[Dict[str, str]]) -> PsychologicalCommitmentScore:
+        """Calculate Psychological Commitment Score using config-driven weights.
+
+        PCS weights are now configurable via jorge_bots.yaml, allowing for:
+        - Hot reload of weights without restart
+        - Environment-specific calibration (dev vs prod)
+        - A/B testing of different weight configurations
+
+        Weights default to hardcoded values if config not available (backward compatible).
+        """
         if not history:
             return PsychologicalCommitmentScore(
                 total_score=0,
@@ -639,13 +662,30 @@ class LeadIntentDecoder:
         velocity_score = 80
         objection_score = 60
 
-        total = (
-            (velocity_score * 0.20)
-            + (len_score * 0.15)
-            + (q_score * 0.20)
-            + (objection_score * 0.25)
-            + (call_score * 0.20)
-        )
+        # Get PCS weights from unified config (Task #24: Weight Calibration)
+        # Falls back to hardcoded defaults if config not available
+        try:
+            from ghl_real_estate_ai.config.jorge_config_loader import get_config
+            config = get_config()
+            pcs_weights = config.lead_bot.scoring.pcs_weights
+
+            total = (
+                (velocity_score * pcs_weights["response_velocity"])
+                + (len_score * pcs_weights["message_length"])
+                + (q_score * pcs_weights["question_depth"])
+                + (objection_score * pcs_weights["objection_handling"])
+                + (call_score * pcs_weights["call_acceptance"])
+            )
+        except Exception as e:
+            # Fallback to hardcoded weights if config fails (backward compatible)
+            logger.debug(f"Failed to load PCS weights from config, using defaults: {e}")
+            total = (
+                (velocity_score * 0.20)
+                + (len_score * 0.15)
+                + (q_score * 0.20)
+                + (objection_score * 0.25)
+                + (call_score * 0.20)
+            )
 
         return PsychologicalCommitmentScore(
             total_score=round(total, 2),
@@ -655,3 +695,67 @@ class LeadIntentDecoder:
             objection_handling_score=objection_score,
             call_acceptance_score=call_score,
         )
+
+    def record_conversion_outcome(
+        self,
+        contact_id: str,
+        frs_score: float,
+        pcs_score: float,
+        lead_type: str,
+        outcome: str,
+        channel: Optional[str] = None,
+        segment: Optional[str] = None,
+    ) -> None:
+        """Record conversion outcome for weight calibration (Task #24).
+
+        Stores conversion data that can be analyzed to optimize FRS/PCS weights.
+        When enough samples are collected (min_samples_for_calibration), weights
+        can be recalibrated based on actual conversion rates.
+
+        Args:
+            contact_id: GHL contact ID
+            frs_score: Financial Readiness Score (0-100)
+            pcs_score: Psychological Commitment Score (0-100)
+            lead_type: "buyer", "seller", or "unknown"
+            outcome: "converted", "nurturing", "lost", "qualified"
+            channel: Optional channel (e.g., "sms", "email", "call")
+            segment: Optional segment (e.g., "hot", "warm", "cold")
+
+        Example:
+            >>> decoder.record_conversion_outcome(
+            ...     contact_id="abc123",
+            ...     frs_score=85.5,
+            ...     pcs_score=72.3,
+            ...     lead_type="buyer",
+            ...     outcome="converted",
+            ...     channel="sms",
+            ...     segment="hot"
+            ... )
+        """
+        # Check if conversion tracking is enabled
+        try:
+            from ghl_real_estate_ai.config.jorge_config_loader import get_config
+            config = get_config()
+
+            if not config.shared.analytics.conversion_tracking.enabled:
+                logger.debug("Conversion tracking disabled in config")
+                return
+
+            # Log conversion outcome (for now, just logging - can be extended to store in DB)
+            logger.info(
+                f"Conversion outcome recorded: contact={contact_id}, "
+                f"frs={frs_score:.1f}, pcs={pcs_score:.1f}, "
+                f"type={lead_type}, outcome={outcome}, "
+                f"channel={channel or 'unknown'}, segment={segment or 'unknown'}"
+            )
+
+            # TODO: Store in database for calibration analysis
+            # When min_samples_for_calibration is reached, trigger weight optimization
+            # This would involve:
+            # 1. Query all conversion outcomes
+            # 2. Perform logistic regression to find optimal weights
+            # 3. Update production environment weights in jorge_bots.yaml
+            # 4. Hot reload config without restart
+
+        except Exception as e:
+            logger.debug(f"Failed to record conversion outcome: {e}")
