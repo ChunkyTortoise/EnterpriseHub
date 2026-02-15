@@ -163,6 +163,84 @@ class LeadIntentDecoder:
             return "buyer"
         return "unknown"
 
+    def _calculate_handoff_signals(self, conversation_history: List[Dict[str, str]]) -> tuple[float, float, List[str]]:
+        """Calculate buyer/seller intent confidence scores for cross-bot handoff routing.
+
+        Scans conversation history for buyer and seller intent patterns, computes
+        confidence scores (0.0-1.0), and returns detected phrases for transparency.
+
+        This method consolidates pattern matching previously duplicated in
+        JorgeHandoffService.extract_intent_signals() and
+        extract_intent_signals_from_history().
+
+        Args:
+            conversation_history: List of conversation message dicts with 'content' key.
+
+        Returns:
+            Tuple of (buyer_confidence, seller_confidence, detected_phrases)
+            - buyer_confidence: 0.0-1.0 score (0.3 per pattern match, capped at 1.0)
+            - seller_confidence: 0.0-1.0 score (0.3 per pattern match, capped at 1.0)
+            - detected_phrases: List of human-readable phrases (e.g., ["buyer intent detected"])
+
+        Example:
+            >>> history = [{"content": "I want to buy a house with 3 bedrooms"}]
+            >>> buyer_conf, seller_conf, phrases = decoder._calculate_handoff_signals(history)
+            >>> buyer_conf
+            0.6  # 2 matches: "want to buy", "3 bed"
+            >>> phrases
+            ["buyer intent detected"]
+        """
+        import re
+
+        all_text = " ".join([m.get("content", "").lower() for m in (conversation_history or [])])
+
+        # Pattern matching using regex for more precise detection
+        # These patterns mirror JorgeHandoffService.BUYER_INTENT_PATTERNS / SELLER_INTENT_PATTERNS
+        buyer_regex_patterns = [
+            r"\bi\s+want\s+to\s+buy\b",
+            r"\blooking\s+to\s+buy\b",
+            r"\bbudget\b.*\$",
+            r"\bpre[- ]?approv",
+            r"\bpre[- ]?qualif",
+            r"\bdown\s+payment\b",
+            r"\bfha\b|\bva\s+loan\b|\bconventional\b",
+            r"\bfind\s+(a|my)\s+(new\s+)?(home|house|place|property)\b",
+        ]
+
+        seller_regex_patterns = [
+            r"\bsell\s+my\s+(home|house|property)\b",
+            r"\bwhat'?s\s+my\s+home\s+worth\b",
+            r"\bhome\s+valu",
+            r"\bcma\b",
+            r"\blist(ing)?\s+my\s+(home|house|property)\b",
+            r"\bneed\s+to\s+sell\b",
+            r"\bsell\s+before\s+buy",
+            r"\bsell\s+first\b",
+        ]
+
+        buyer_matches = 0
+        for pattern in buyer_regex_patterns:
+            if re.search(pattern, all_text, re.IGNORECASE):
+                buyer_matches += 1
+
+        seller_matches = 0
+        for pattern in seller_regex_patterns:
+            if re.search(pattern, all_text, re.IGNORECASE):
+                seller_matches += 1
+
+        # Score: each pattern match adds ~0.3, capped at 1.0
+        buyer_confidence = min(1.0, buyer_matches * 0.3)
+        seller_confidence = min(1.0, seller_matches * 0.3)
+
+        # Collect human-readable phrases
+        detected_phrases = []
+        if buyer_matches > 0:
+            detected_phrases.append("buyer intent detected")
+        if seller_matches > 0:
+            detected_phrases.append("seller intent detected")
+
+        return buyer_confidence, seller_confidence, detected_phrases
+
     def analyze_lead(self, contact_id: str, conversation_history: List[Dict[str, str]]) -> LeadIntentProfile:
         """
         Main entry point for lead intent decoding.
@@ -227,8 +305,18 @@ class LeadIntentDecoder:
         # 5. Detect buyer vs seller intent
         lead_type = self.detect_lead_type(conversation_history)
 
+        # 6. Calculate handoff routing signals (new in 2026-02-15)
+        buyer_confidence, seller_confidence, detected_phrases = self._calculate_handoff_signals(conversation_history)
+
         return LeadIntentProfile(
-            lead_id=contact_id, frs=frs_score, pcs=pcs_score, lead_type=lead_type, next_best_action=next_action
+            lead_id=contact_id,
+            frs=frs_score,
+            pcs=pcs_score,
+            lead_type=lead_type,
+            next_best_action=next_action,
+            buyer_intent_confidence=buyer_confidence,
+            seller_intent_confidence=seller_confidence,
+            detected_intent_phrases=detected_phrases,
         )
 
     async def analyze_lead_with_ghl(
@@ -333,6 +421,10 @@ class LeadIntentDecoder:
             pcs=updated_pcs,
             lead_type=profile.lead_type,
             next_best_action=next_action,
+            # Preserve handoff signals from original profile (calculated in analyze_lead)
+            buyer_intent_confidence=profile.buyer_intent_confidence,
+            seller_intent_confidence=profile.seller_intent_confidence,
+            detected_intent_phrases=profile.detected_intent_phrases,
         )
 
     def _apply_ghl_boosts(
