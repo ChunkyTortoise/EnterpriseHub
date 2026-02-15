@@ -1769,7 +1769,12 @@ class JorgeSellerBot:
         if self.config.enable_progressive_skills and self.skills_manager:
             try:
                 health_status["progressive_skills"] = "healthy"
+            except AttributeError as e:
+                logger.warning(f"Progressive skills health check failed (not initialized): {e}")
+                health_status["progressive_skills"] = f"error: {e}"
+                health_status["overall_status"] = "degraded"
             except Exception as e:
+                logger.error(f"Unexpected error in progressive skills health check: {e}", exc_info=True)
                 health_status["progressive_skills"] = f"error: {e}"
                 health_status["overall_status"] = "degraded"
 
@@ -1777,7 +1782,12 @@ class JorgeSellerBot:
         if self.config.enable_agent_mesh and self.mesh_coordinator:
             try:
                 health_status["agent_mesh"] = "healthy"
+            except AttributeError as e:
+                logger.warning(f"Agent mesh health check failed (not initialized): {e}")
+                health_status["agent_mesh"] = f"error: {e}"
+                health_status["overall_status"] = "degraded"
             except Exception as e:
+                logger.error(f"Unexpected error in agent mesh health check: {e}", exc_info=True)
                 health_status["agent_mesh"] = f"error: {e}"
                 health_status["overall_status"] = "degraded"
 
@@ -1788,7 +1798,16 @@ class JorgeSellerBot:
                 health_status["mcp_integration"] = mcp_health
                 if isinstance(mcp_health, dict) and mcp_health.get("status") != "healthy":
                     health_status["overall_status"] = "degraded"
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"MCP health check failed (connection issue): {e}")
+                health_status["mcp_integration"] = f"error: {e}"
+                health_status["overall_status"] = "degraded"
+            except AttributeError as e:
+                logger.warning(f"MCP health check failed (not initialized): {e}")
+                health_status["mcp_integration"] = f"error: {e}"
+                health_status["overall_status"] = "degraded"
             except Exception as e:
+                logger.error(f"Unexpected error in MCP health check: {e}", exc_info=True)
                 health_status["mcp_integration"] = f"error: {e}"
                 health_status["overall_status"] = "degraded"
 
