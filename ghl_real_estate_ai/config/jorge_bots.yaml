@@ -1,0 +1,317 @@
+# Jorge Bots Unified Configuration
+# Centralized settings for Lead, Buyer, and Seller bots
+# Last Updated: February 15, 2026
+
+# ===================================================================
+# SHARED SETTINGS
+# ===================================================================
+shared:
+  performance:
+    sla_response_time_seconds: 15
+    max_concurrent_tasks: 5
+    cost_per_token: 0.000015  # Claude Sonnet 4.5 pricing
+    enable_response_streaming: true
+    
+  caching:
+    enable_l1_redis: true
+    enable_l2_memory: true
+    enable_l3_disk: false
+
+    # TTL-based LRU cache (Task #15 extraction)
+    ttl_lru:
+      max_entries: 1000
+      ttl_seconds: 3600
+
+    ttl_seconds:
+      intent_analysis: 3600  # 1 hour
+      cma_results: 86400  # 24 hours
+      property_matches: 7200  # 2 hours
+      affordability_calc: 3600  # 1 hour
+      
+  observability:
+    enable_opentelemetry: false  # Task #25 will enable this
+    enable_performance_tracking: true
+    enable_metrics_collection: true
+    log_level: INFO
+    log_format: json
+    
+  integrations:
+    enable_ghl: true
+    ghl_rate_limit_per_second: 10
+    enable_retell: true
+    enable_sendgrid: true
+    enable_lyrio: true
+    enable_stripe: false  # Billing not yet implemented
+    
+  handoff:
+    enable_jorge_handoff: true
+    confidence_threshold: 0.7
+    circular_prevention_window_minutes: 30
+    rate_limits:
+      per_hour: 3
+      per_day: 10
+    enable_pattern_learning: true
+    min_data_points_for_adjustment: 10
+
+    # Early detection for handoff signals (Task #19)
+    early_detection:
+      enabled: true
+      threshold: 0.7  # Same as full handoff for now, can tune independently
+      log_all_signals: true
+      performance_mode: "fast"  # vs "comprehensive"
+
+  analytics:
+    # Behavioral Analytics Engine (Task #15 extraction)
+    behavioral_engine:
+      cache_max_entries: 1000
+      cache_ttl_seconds: 3600
+      pattern_min_samples: 5
+
+    # Temperature Prediction Engine (Task #15 extraction)
+    temperature_prediction:
+      max_leads_in_memory: 10000
+      prediction_window_days: 30
+      model_refresh_hours: 24
+
+  ab_testing:
+    # A/B Testing Configuration (Tasks #19, #22, #23)
+    enabled: true
+    response_tone:
+      experiment_name: "response_tone_v1"
+      variants: ["formal", "casual", "empathetic"]
+      default: "empathetic"
+      assignment_strategy: "deterministic"  # hash-based per contact
+
+# ===================================================================
+# LEAD BOT CONFIGURATION
+# ===================================================================
+lead_bot:
+  enabled: true
+  
+  features:
+    enable_predictive_analytics: false
+    enable_behavioral_optimization: false
+    enable_personality_adaptation: false
+    enable_track3_intelligence: false
+    enable_bot_intelligence: false  # Requires intelligence_middleware
+    
+  workflow:
+    default_sequence_timing: true
+    sequence_days: [3, 7, 14, 30]
+    personality_detection_enabled: true
+
+  sequence:
+    # Sequence day mapping configuration (Task #23)
+    default_initial_day: "day_3"
+    valid_days: [0, 3, 7, 14, 30]
+    boundary_handling: "round_down"  # day=5 → day_3, day=2 → day_0
+    invalid_fallback: "day_3"
+    
+  scoring:
+    frs_weights:
+      timeline_urgency: 0.30
+      budget_clarity: 0.25
+      motivation_strength: 0.25
+      property_specificity: 0.20
+    
+  temperature_thresholds:
+    hot: 80  # HOT >= 80
+    warm: 40  # WARM 40-79
+    # COLD < 40
+    
+  follow_up:
+    enable_ghost_followup: true
+    stall_breaker_enabled: true
+    max_follow_ups: 4
+
+# ===================================================================
+# BUYER BOT CONFIGURATION
+# ===================================================================
+buyer_bot:
+  enabled: true
+  
+  features:
+    enable_bot_intelligence: false
+    enable_handoff: true
+    enable_persona_classification: true  # Phase 1.4
+    enable_conversation_memory: false  # Task #29 will enable this
+    
+  workflow:
+    enable_financial_readiness: true
+    enable_affordability_calc: true
+    enable_property_matching: true
+    enable_objection_handling: true
+    
+  affordability:
+    default_dti_ratio: 0.43  # 43% debt-to-income max
+    default_down_payment_percent: 0.20  # 20% down
+    default_interest_rate: 0.065  # 6.5% (fallback if not provided)
+    pmi_threshold: 0.20  # PMI required if down payment < 20%
+    
+  personas:
+    - first_time_buyer
+    - upgrader
+    - investor
+    - relocation
+    - downsizer
+    
+  objection_types:
+    - affordability_concern
+    - feature_mismatch
+    - location_preference
+    - timing_issue
+    
+  memory:  # Task #29
+    enable_redis_persistence: false
+    conversation_window_size: 5
+    ttl_days: 30
+
+# ===================================================================
+# SELLER BOT CONFIGURATION
+# ===================================================================
+seller_bot:
+  enabled: true
+  
+  features:
+    enable_progressive_skills: false
+    enable_agent_mesh: false
+    enable_mcp_integration: false
+    enable_adaptive_questioning: false
+    enable_track3_intelligence: true
+    enable_bot_intelligence: true
+    enable_adaptive_negotiation: false  # Enhanced workflow
+    
+  workflow:
+    enable_cma_generation: true
+    enable_pricing_guidance: true
+    enable_market_analysis: true
+    enable_objection_handling: true
+    enable_stall_detection: true
+    
+  scoring:
+    frs_weights:
+      timeline_urgency: 0.30
+      motivation_strength: 0.25
+      property_condition: 0.20
+      price_expectations: 0.25
+      
+    pcs_weights:  # Propensity to Convert Score
+      engagement_frequency: 0.30
+      objection_severity: 0.25
+      response_sentiment: 0.20
+      information_completeness: 0.25
+      
+  temperature_thresholds:
+    hot: 75  # HOT >= 75
+    warm: 50  # WARM 50-74
+    lukewarm: 25  # LUKEWARM 25-49
+    # COLD < 25
+    
+  commission_settings:
+    default_rate: 0.06  # 6%
+    friendly_approach_enabled: true
+    
+  objection_categories:
+    - price_concern
+    - timing_hesitation
+    - market_doubt
+    - condition_worry
+    - commission_negotiation
+    - competing_offer
+    
+  follow_up:
+    enable_calendar_booking: true  # For HOT sellers (PCS >= 75)
+    calendar_id_env_var: JORGE_SELLER_CALENDAR_ID
+
+# ===================================================================
+# CIRCUIT BREAKER CONFIGURATION (Task #27)
+# ===================================================================
+circuit_breaker:
+  enabled: false  # Will be enabled by Task #27
+  
+  defaults:
+    failure_threshold: 5  # Open circuit after 5 failures
+    success_threshold: 3  # Close circuit after 3 successes
+    timeout_seconds: 60
+    half_open_max_calls: 2
+    
+  services:
+    ghl:
+      failure_threshold: 3
+      timeout_seconds: 30
+      
+    retell:
+      failure_threshold: 5
+      timeout_seconds: 45
+      
+    sendgrid:
+      failure_threshold: 3
+      timeout_seconds: 20
+      
+    lyrio:
+      failure_threshold: 5
+      timeout_seconds: 30
+      
+    claude:
+      failure_threshold: 3
+      timeout_seconds: 120  # LLM calls can be slower
+
+# ===================================================================
+# OPENTELEMETRY CONFIGURATION (Task #25)
+# ===================================================================
+opentelemetry:
+  enabled: false  # Will be enabled by Task #25
+  
+  exporter:
+    type: otlp  # Options: otlp, jaeger, zipkin
+    endpoint: http://localhost:4318  # OTLP gRPC endpoint
+    
+  sampling:
+    rate: 1.0  # 100% sampling in dev, reduce to 0.1 in prod
+    
+  resource_attributes:
+    service.name: jorge-bots
+    service.version: "4.7"
+    deployment.environment: production  # Override with env var
+    
+  spans:
+    enable_workflow_nodes: true
+    enable_llm_calls: true
+    enable_external_services: true
+    enable_database_queries: true
+
+# ===================================================================
+# DEPLOYMENT ENVIRONMENT OVERRIDES
+# ===================================================================
+environments:
+  development:
+    shared:
+      observability:
+        log_level: DEBUG
+      performance:
+        sla_response_time_seconds: 30  # Relaxed for local dev
+        
+  staging:
+    shared:
+      observability:
+        log_level: INFO
+    opentelemetry:
+      sampling:
+        rate: 0.5  # 50% sampling in staging
+        
+  production:
+    shared:
+      observability:
+        log_level: WARNING
+      caching:
+        enable_l3_disk: true
+        ttl_lru:
+          max_entries: 5000  # 5x larger in prod
+      analytics:
+        temperature_prediction:
+          max_leads_in_memory: 50000  # 5x larger in prod
+    opentelemetry:
+      sampling:
+        rate: 0.1  # 10% sampling in production
+    circuit_breaker:
+      enabled: true
