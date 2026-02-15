@@ -1,0 +1,78 @@
+{
+  "general": {
+    "autonomous_execution": true
+  },
+  "experimental": {
+    "enableAgents": true,
+    "plan": true,
+    "toolOutputMasking": {
+      "enabled": true,
+      "toolProtectionThreshold": 1000
+    },
+    "agents": [
+      {
+        "name": "Performance-Engineer",
+        "description": "Expert in system profiling, latency optimization, and N+1 query detection. Use for benchmarking, bottleneck analysis, and caching strategy.",
+        "instructions": ".claude/agents/performance-optimizer.md",
+        "tools": [
+          "read_file",
+          "list_directory",
+          "grep_search",
+          "glob",
+          "run_shell_command",
+          "replace",
+          "write_file"
+        ]
+      },
+      {
+        "name": "Security-Compliance",
+        "description": "Specialized in security auditing, OWASP compliance, and vulnerability scanning. Use for authentication reviews, credential detection, and risk assessment.",
+        "instructions": ".claude/agents/security-auditor.md",
+        "tools": [
+          "read_file",
+          "list_directory",
+          "grep_search",
+          "glob",
+          "run_shell_command"
+        ]
+      }
+    ]
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "security-scan",
+            "type": "command",
+            "command": "node .gemini/hooks/security_scan.js"
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "notebooklm": {
+      "command": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix/bin/python",
+      "args": [
+        ".claude/mcp-servers/notebooklm/server.py"
+      ],
+      "env": {
+        "VIRTUAL_ENV": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix",
+        "PYTHONPATH": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix/lib/python3.14/site-packages"
+      }
+    },
+    "obsidian": {
+      "command": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix/bin/python",
+      "args": [
+        ".claude/mcp-servers/obsidian/server.py"
+      ],
+      "env": {
+        "VIRTUAL_ENV": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix",
+        "PYTHONPATH": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix/lib/python3.14/site-packages",
+        "OBSIDIAN_VAULT_PATH": "/Users/cave/Documents/GitHub/EnterpriseHub/.obsidian-vault"
+      }
+    }
+  }
+}

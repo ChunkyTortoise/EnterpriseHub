@@ -1,0 +1,328 @@
+<!DOCTYPE html><html lang="en" prefix="og: https://ogp.me/ns#"><head>
+        <link rel="stylesheet" type="text/css" href="https://builds.contra.com/f75147f7/assets/static/styled-system.Cq6sY-0e.css">
+        <meta charset="utf-8">
+        
+        <meta content="width=device-width, initial-scale=1" name="viewport">
+
+        <link href="/manifest.json" rel="manifest">
+
+        <meta content="white" name="apple-mobile-web-app-status-bar-style">
+
+        <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAA60lEQVR42sXVwRmDIAyG4W8ER8goblQ3kBHcQDdxFEbICOnB1qJGFDwUr/lfBB4C5EZEEJTK0WIIgtHWAdMKDDVxwVZAaerm/wJGqJv/ByhSBsQdYMwl8f4TSgGjL49vAaO7E38lgT1w4y/6TfkRyBLCvCv2ACN6J9LQo4dSHzCMMUVaBjecAxakBU6j18CyHCT7LXuTrXgMxEdL0GUTpwpAGdJGIyeIDyjB6xDiLMcD5tzVDpfAZWsJWeDWfexOgduNLbhAUV+cD0Asbaq6A6S0L4cNMJa/Cw2aAFLzNg0rMP7pcQVFkPz+vwHMT2e8UCabXgAAAABJRU5ErkJggg==">
+<link rel="preload" href="https://builds.contra.com/static/fonts/GT-Standard-L-VF.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="https://builds.contra.com/static/fonts/GT-Standard-M-VF.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="https://builds.contra.com/static/fonts/GT-Standard-Mono-Standard-Regular.woff2" as="font" type="font/woff2" crossorigin=""><link rel="canonical" href="https://contra.com/signup">
+<title>Contra - A professional network for the jobs and skills of the future</title><title>Contra - A professional network for the jobs and skills of the future</title>
+<meta content="Connect with next-gen talent and tools to get work underway. Hire more independents. Start more projects. Get more creative." name="description"><meta content="2383064805289505" property="fb:app_id">
+
+<meta content="website" property="og:type">
+<meta content="Connect with next-gen talent and tools to get work underway. Hire more independents. Start more projects. Get more creative." property="og:description">
+<meta content="https://contra.com/static/opengraph-assets/v2/fallbacks/contra-fallback-open-graph-image.png" property="og:image">
+<meta content="Contra - A professional network for the jobs and skills of the future" property="og:image:alt">
+<meta content="1200" property="og:image:width">
+<meta content="630" property="og:image:height">
+<meta content="Contra - A professional network for the jobs and skills of the future" property="og:title">
+<meta content="https://contra.com/signup" property="og:url">
+
+<meta content="@contra" property="twitter:site">
+<meta content="summary_large_image" property="twitter:card">
+<meta content="Connect with next-gen talent and tools to get work underway. Hire more independents. Start more projects. Get more creative." property="twitter:description">
+<meta content="Contra - A professional network for the jobs and skills of the future" property="twitter:image:alt">
+<meta content="https://contra.com/static/opengraph-assets/v2/fallbacks/contra-fallback-open-graph-image.png" property="twitter:image">
+<meta content="Contra - A professional network for the jobs and skills of the future" property="twitter:title">
+<meta content="https://contra.com/signup" property="twitter:url">
+<meta name="jam:team" content="1d17a67e-c4d8-459c-98c9-60797f240363"><link rel="apple-touch-icon" href="/static/media/touch-icon.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/static/media/touch-icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/media/touch-icon@2x.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/media/touch-icon@3x.png">
+        <style data-styled="active" data-styled-version="6.1.22"></style>
+
+        <script src="/static/scripts/guide.js" defer=""></script>
+        <script>window.CONTRA_VISIT_ID = "WyJWaXNpdCIsIjAxOWM2MjdmLWUzMzMtNzc3Ny1hMjZiLWI0M2YxNjgxZjE5MSJd";</script>
+      <link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/dictionary.umd--uv3srix.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/rolldown-runtime-B4D4gqXk.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/assets/entries/src_pages_-username.Bjrjzw-4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/_onPageTransitionEnd-DnNuEWVx.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Intercom-D1JktUw0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/constants-Cl3ztFWz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAppConfiguration-cwTBXPD2.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useLocation-DcT_WOKq.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useSidebar-DlNz0BnD.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasUserInterfaceFlags-ujCMMzkn.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCurrentUser-BXfKmm7F.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIsMobile-DP5htWPw.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/theme-klKgNHvy.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/textStyles-vfWfhKXi.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useMediaQuery-BNNrCSEQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/storage-oPV-u4WT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/logger-BHwGyC0O.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useMount-DjJV2U6R.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/dist-giwjU0Ud.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useActiveCommunityTopicRoute-7wUC1FG-.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/styled-system-CYfA_QIa.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Button-j7qp_0lA.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/LoadingSpinner-CaMDb_4R.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/icons-DuH2COSe.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Text-1kBolSUQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/styles-CIaFMsM4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/chatRoutesToHideOn-CxmcOnlO.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ErrorBoundary-CvV38Q8i.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useModal--JSZ0_jc.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAnalytics-DhAAEWvc.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Redirect-BQ7qhOfq.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useNavigation-Fft8-_6M.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useToast-Ca7bBBKn.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useLastLocation-z8JzGFzS.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MenuContext-2Z7O92Lv.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePostHog-Di-l7B3p.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AppLoader-DK1iDkJT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ContraLogoSuspenseLoader-WNv8if84.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useContraMutation-6pwRAmED.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCurrentRouteKey-BhLIryAy.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useFirstReferrerUrl-D5cuonmR.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/findVisitorSessionInputs-DBTfAJ9v.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIndyAIExtension-r7Z-4pyD.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useMatchMedia-I8acGOj1.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useRouter-s20Uz7Pa.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useURLParameters-D4OkkdYQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useVisitor-CGMTUhpt.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/appendSearch-DoLIg2LT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/onIdle-DoL2jXpa.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/parseMediaQueryForMatchMedia-BjqTrORz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/prettifyRouteKey-KJoCwKOJ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/pure-CAzpYlGW.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/define-properties--f3vEkNl.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDebouncedCallback-50GCr_ZW.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUnmount-gA6ApACE.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIsomorphicLayoutEffect-DVUca7s8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ContraLogo-9nEwnHPR.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Downvote-KupdSu0c.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AvatarPlaceholder-BRHgdqP-.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/utilities-Dy9BpnSM.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/VerifiedGradient-CTkhhSWv.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAddToListMenu-CAHApIkQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useSaveUserAsContact-BSRuZu8t.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUserListMutations-lB6rNLvW.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Checkbox-BJ1QFKss.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDialogSelect-CATNpx4N.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AddVerticalFades-BMaFFkoF.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Animated-iGX6z76f.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MountedPortal-wvg_MhfJ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Menu-BwN-SzxV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/constants-iWhS98ic.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Tooltip-CqS2AdLH.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/animation-kzQRM_Sg.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/dist-BFiGLfxQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useClickAway-BAchenOr.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/TextInput-QG_CZP7l.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/HelperText-C0tBwB7k.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/money-BresVVSK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIsMediumScreen-DdGWI61E.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIsSmallScreen-CTT2d_dp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AvatarGroup-CvxAzVCc.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProjectCoverWrapper-42-OU2K1.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProjectCover-BBlKMfXi.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Image-Ft0ViwxI.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getFallbackCover-BCsdJfIV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Avatar-Dv_nxsjO.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AvatarImage-CPxmNqRE.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AvatarWithDetails-DzL201Fz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Tag-RoktXgx1.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Card-Di1Z9oMh.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Link-C0PP1EDy.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/formatName-BpRSH2UR.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioProjectDetailsModal-uEkN1Gra.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/CollaboratorSearchInput-DpNunFrA.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/CircularIconButton-Dpf9lEdK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ImportedContactSourceIcon-DB7aWijp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ImportedContactsReferralInfoButton-CQlrwthY.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Tooltip-BxY6nVWM.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ModalTemplateWrapper-CzbVwyDg.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SlideUpDrawerV2-BAcuUEJM.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/context-oUN5-fmx.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProBadge-8fsbEMNV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ModalV2-B678vgpG.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Modal.styles-Dk81pqvo.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDisableBodyPointerEvents-CMwdk2J_.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AddContactModalHero-ybZ5Aqdq.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ReferAndEarnTag-RGaXs8kh.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SelectMenu-Dsrzv8iw.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/TextField-VB3Sz1s1.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/context-M1qCBEca.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDebounceValue-CpGUyIDX.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useForm-Dm0jjKfl.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/isValidEmail-CDf1s76T.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/downshift.esm-CgJouScQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MaybeAdvertisement-CcZMnQXU.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAdEvents-geGEBejr.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDiscoverFormState-BlkSuAJA.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/typedObjectKeys-BIeZDvRg.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDeepCompareMemo-Cz-m62MX.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useQueue-_nVLsQm-.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useOnElementViewed-DyoUkcd8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePandaBreakpoint-DcNiZz3V.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndustryCategoryInput-Di2hCZ5J.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MultiSelectComboBox-BL0A5Ev2.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/FormField-Dy07CCdw.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MultiSelectComboBox.styles-BnRgMOFu.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/TagGroup-BRfoC3Re.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDeleteSocialPostPortfolioProject-CugbVzIz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUpload-CAABa5M9.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/BrandedLinkInput-CHSgbZcu.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProfileExternalLinkBrandIcon-DW2ppo9g.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SocialMediaIcon-Dxbd0yJt.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/utilities-ClRurwjp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/utilities-Q6DpZlXq.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/formatUrl-CZdWEYu_.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/EditLinkForm-C79dzjBZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/isValidPublicUrl-EFOduHW3.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/CharacterCounter-DWmnwtPP.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Container-DaUzf9FB.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Dropzone-IaxdmqiQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/es-CmvYmhCV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/FeatureFeedback-C8D3VcP9.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ImageZoomInput-8jwlBfnz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Loader-YYjwhzdy.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/OrganizationAvatar-CDpRx3fk.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/OrganizationLogoEmptyState-Vo-K4zgL.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ZodErrorMessage-CToYwIuK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/reducer-qWgXE6ct.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useBreakpoint-Q7AXgfyd.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCarousel-BXd_b2hp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useEnhancedReducer-ByR_bK_i.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useInteractionTimer-BiJDwAxi.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePolling-DwIL3moP.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/file-DsDFTuBC.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/formatVerifiedProjectCost-BzYa0t1y.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getZodErrorMessageForPath-_K94c0mT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/hasZodValidationError-CTB6Q_iG.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioProjectCard-lM9dAkr5.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioProjectCardCover-B0iZV5UC.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioProjectProfileActions-Cwuu1GeM.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/InquiryButton-C3d84w0T.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useOnboardingRedirection-CepLa102.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getOnboardingFlowType-Dcx2gJ2z.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/constants-OEEyuSpn.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useFeatureFlag-BwXmV71F.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/generated-posthog-feature-flags-hgL-8179.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useSelectedUserType-DJ_vXrxc.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useShouldUserOnboard-3IdiWXvR.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/shouldRedirectToOnboarding-B4ZTMPVb.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/GetInTouchButton-GPHRNBGZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useGetInTouch-BiuKKdQJ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ChatPopupEventManager-ccGPidST.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasCompletedProfile-BvgBs3lU.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasUserGroups-CC5cyUc5.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasDmsAccess-B-H2p7CC.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasOnboarded-CvUP1n0H.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/removeSearchParameter-8Jx3Cpy0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SocialPostFollowButton-CZ_6pEd8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAdvertisement-CpcPFIqt.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAddUserInterfaceFlag-1KbM-bKK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDeletePortfolioProject-tggab_u3.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useFetchPortfolioProjectData-DRZeZQy0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/HeartToggle-UekXwxy4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SaveUserButton-BRTj_Las.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useLazyLoadedRoles-Uwz8YSrk.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useLazyLoadedTools-DjQ8nd8x.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SocialPostActionTooltip-WjZzM08E.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCurrentUserDiscoveryScore-Dnsje1gs.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useRegisterEventListener-jdgK7awZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MediaElementWithPlaceholder-DAbx5qHC.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Popover-F-UxXRDS.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioProjectCollaboratorAvatarStack-DRalY6cu.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ExpertBadgesWithPopover-jOnUL8M8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ExpertBadgeIcon-N8_obxNf.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useWindowSize-CCYpZ-mn.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SocialProof-vDzHRmBk.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/handleLinkClickOverrideDefault-DyLiCByA.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/dist-BKYtzKOa.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioProjectTags-D5lM2Aw_.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioCardTag-CvZWhSLD.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioCardTags-ltBQvwsA.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getTagLink-DDVitYxW.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCreateSocialPostImpression-_l9Xnnpp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/RectangularTag-FiXI3pii.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/constants-BAw8FvYE.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useImpersonator-CD0I1_t1.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/FeaturedProfileImageDisplayState-BDC8b-bJ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePortfolioImportStatusVisibility-B7gg7721.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/LoadingSpinner-BnKKGbXi.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getClosestAspectRatioForDimensions-CIWfbJUO.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/HumanProfileHeader-D-t0Difc.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useDiscoverFollow-Bc5nf0rF.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AvatarWithTags-B0YT0wS9.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProTag-DotSRumV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/FullNameDisplayState-ajxpLENz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/TitleDisplayState-CMJ_RIJ4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Organization-Dj3SO5yz.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProfileHeaderLayout-DX9SHuAK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SocialMediaLinkWithTooltip-e-k-ue3U.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCopyProfileUrl-DEWNpt8s.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCopyToClipboard-Dk7norgC.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasDefaultReferralProgramAccess-CWQRJC8b.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasUserFeatures-Bmq6CnGr.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useElementSize-KnDzoZkX.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useEventListener-CTxmK085.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/_layoutConcreteRequest-Dk7gmF22.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePortfolioSiteImport-CNHGh-IK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useRegisterAnalyticEvent-B8rkgGwL.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/NotFound--iwQ9VMI.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MainLayout-CJWeb7i8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useOnboardingStep-iW6FvRTw.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AppBar-C1jUJjJu.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUpgradeToPro-Dr0YuLoa.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePersistedReferralIntent-keu2oKLK.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/referral-Xk87QayZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/AppBar.styles-BBe2-vMd.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/constants-DtHeLVDV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyAILogo-Bdbdcon8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Logo-Cpc4IZiR.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useNavbar-V2hQSqcQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProfileLayout-BpUE5rZ2.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/FooterV2-Cv6M_vTV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyAIAvatarVideo-Bg79d1H9.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useLoopingIndyAIAvatarVideo-CjaPQdKl.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SSRSafeRender-CngEvxuT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useRouteParameter-BtJk8KPX.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioServiceCard-BfrMVaER.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/WorkExperience-DT20ZaXQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePollIndyAIExtensionDetails-DgFOtIcy.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyAIAvatar-D6O2CY5A.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useCreateAndPersistReferralIntentId-CDkSCiuT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyPortfolioProjectsOwnerEmptyState-CVu1ZD-A.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useAddWorkFlow-DO44GQOI.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ContraTurns5Banner-Dw_wzZRM.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIsElementVisible-6-_efHYG.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/utilities-DF9uIiF0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IdentityImportEntryPoint-CMnXL1RD.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyPortfolioServicesOwnerEmptyState-Cx4_qjX0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProfilePageOwnerCreateMore-DU-yzlyp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProfilePageOwnerEmptyState-BzFanq7e.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProfilePageVisitorEmptyState-MCSx9RQP.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/HumanProfileReviewsPageOwnerEmptyState-k5CJMUh4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PortfolioCardGrid-CrtZ0Ibp.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/RecommendationCardGrid-BnlSWcv8.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasDefaultReferralProgramV2Access-DqTlQwPV.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useMaybeAttachReferralUrlParametersToCurrentLocation-CKpq2fD0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getExternalReviewerName-lteU2BC4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getWorkDetailsLabel-IjOkvGNf.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/money-B8XpOi0D.js"><style type="text/css">[data-vaul-drawer]{touch-action:none;will-change:transform;transition:transform .5s cubic-bezier(.32, .72, 0, 1);animation-duration:.5s;animation-timing-function:cubic-bezier(0.32,0.72,0,1)}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=bottom][data-state=open]{animation-name:slideFromBottom}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=bottom][data-state=closed]{animation-name:slideToBottom}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=top][data-state=open]{animation-name:slideFromTop}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=top][data-state=closed]{animation-name:slideToTop}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=left][data-state=open]{animation-name:slideFromLeft}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=left][data-state=closed]{animation-name:slideToLeft}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=right][data-state=open]{animation-name:slideFromRight}[data-vaul-drawer][data-vaul-snap-points=false][data-vaul-drawer-direction=right][data-state=closed]{animation-name:slideToRight}[data-vaul-drawer][data-vaul-snap-points=true][data-vaul-drawer-direction=bottom]{transform:translate3d(0,var(--initial-transform,100%),0)}[data-vaul-drawer][data-vaul-snap-points=true][data-vaul-drawer-direction=top]{transform:translate3d(0,calc(var(--initial-transform,100%) * -1),0)}[data-vaul-drawer][data-vaul-snap-points=true][data-vaul-drawer-direction=left]{transform:translate3d(calc(var(--initial-transform,100%) * -1),0,0)}[data-vaul-drawer][data-vaul-snap-points=true][data-vaul-drawer-direction=right]{transform:translate3d(var(--initial-transform,100%),0,0)}[data-vaul-drawer][data-vaul-delayed-snap-points=true][data-vaul-drawer-direction=top]{transform:translate3d(0,var(--snap-point-height,0),0)}[data-vaul-drawer][data-vaul-delayed-snap-points=true][data-vaul-drawer-direction=bottom]{transform:translate3d(0,var(--snap-point-height,0),0)}[data-vaul-drawer][data-vaul-delayed-snap-points=true][data-vaul-drawer-direction=left]{transform:translate3d(var(--snap-point-height,0),0,0)}[data-vaul-drawer][data-vaul-delayed-snap-points=true][data-vaul-drawer-direction=right]{transform:translate3d(var(--snap-point-height,0),0,0)}[data-vaul-overlay][data-vaul-snap-points=false]{animation-duration:.5s;animation-timing-function:cubic-bezier(0.32,0.72,0,1)}[data-vaul-overlay][data-vaul-snap-points=false][data-state=open]{animation-name:fadeIn}[data-vaul-overlay][data-state=closed]{animation-name:fadeOut}[data-vaul-animate=false]{animation:none!important}[data-vaul-overlay][data-vaul-snap-points=true]{opacity:0;transition:opacity .5s cubic-bezier(.32, .72, 0, 1)}[data-vaul-overlay][data-vaul-snap-points=true]{opacity:1}[data-vaul-drawer]:not([data-vaul-custom-container=true])::after{content:'';position:absolute;background:inherit;background-color:inherit}[data-vaul-drawer][data-vaul-drawer-direction=top]::after{top:initial;bottom:100%;left:0;right:0;height:200%}[data-vaul-drawer][data-vaul-drawer-direction=bottom]::after{top:100%;bottom:initial;left:0;right:0;height:200%}[data-vaul-drawer][data-vaul-drawer-direction=left]::after{left:initial;right:100%;top:0;bottom:0;width:200%}[data-vaul-drawer][data-vaul-drawer-direction=right]::after{left:100%;right:initial;top:0;bottom:0;width:200%}[data-vaul-overlay][data-vaul-snap-points=true]:not([data-vaul-snap-points-overlay=true]):not(
+[data-state=closed]
+){opacity:0}[data-vaul-overlay][data-vaul-snap-points-overlay=true]{opacity:1}[data-vaul-handle]{display:block;position:relative;opacity:.7;background:#e2e2e4;margin-left:auto;margin-right:auto;height:5px;width:32px;border-radius:1rem;touch-action:pan-y}[data-vaul-handle]:active,[data-vaul-handle]:hover{opacity:1}[data-vaul-handle-hitarea]{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(100%,2.75rem);height:max(100%,2.75rem);touch-action:inherit}@media (hover:hover) and (pointer:fine){[data-vaul-drawer]{user-select:none}}@media (pointer:fine){[data-vaul-handle-hitarea]:{width:100%;height:100%}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes fadeOut{to{opacity:0}}@keyframes slideFromBottom{from{transform:translate3d(0,var(--initial-transform,100%),0)}to{transform:translate3d(0,0,0)}}@keyframes slideToBottom{to{transform:translate3d(0,var(--initial-transform,100%),0)}}@keyframes slideFromTop{from{transform:translate3d(0,calc(var(--initial-transform,100%) * -1),0)}to{transform:translate3d(0,0,0)}}@keyframes slideToTop{to{transform:translate3d(0,calc(var(--initial-transform,100%) * -1),0)}}@keyframes slideFromLeft{from{transform:translate3d(calc(var(--initial-transform,100%) * -1),0,0)}to{transform:translate3d(0,0,0)}}@keyframes slideToLeft{to{transform:translate3d(calc(var(--initial-transform,100%) * -1),0,0)}}@keyframes slideFromRight{from{transform:translate3d(var(--initial-transform,100%),0,0)}to{transform:translate3d(0,0,0)}}@keyframes slideToRight{to{transform:translate3d(var(--initial-transform,100%),0,0)}}</style><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyAIMiniChat-CHXWoyUY.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/core-Da0Ow0JH.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Calendar-BXx820gY.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/Contra-Uv1ZOCiQ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/StartConversationPlaceholder-Comwxm5R.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useContraChat-CJJoeGz4.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUnreadConversationMessageCount-Bvdm3mx3.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useContraSubscription-BjP3oqGJ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUploadFile-3Lh_XJPt.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useContactSearch-Bzi83zAM.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ContactSearchInputSuggestedItem-DVgHUCRZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/MessageEditor-BoG-llXB.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/UploadedFile-CYTxwCf0.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/formatProductizedServiceDuration-Caz1cLNk.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/formatProductizedServicePrice-DUaYq_4C.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useMessageInputMobileKeyboardPadding-DTrguCrd.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/IndyAIScanner-BBjNonxT.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIndyAIScanner-B4j6A0LZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/PromotionalBadge-D9SfGgfo.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/formatEstimatedHours-C0a_lJ9k.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/usePaginatedInfiniteLoad-DrG62zOr.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useHasMounted-BLlwg44I.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getBudgetVariantTimeframe-CLZx0AHZ.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/getShortRelativeTime-UxbDzIDX.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/renderJobBudgetValue-CUaUzSSg.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/duration-C1qJSAio.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useUnreadDmRequestCount-DiZPre1p.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SplitButton-Cn5FZ-pf.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/ProgressBar-pwlr2XS_.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/NotificationCircle-DDttMNnO.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/RadialProgress-DmcEAa_e.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/SegmentedControl-CrQSoTR9.js"><link rel="modulepreload" as="script" crossorigin="" href="https://builds.contra.com/f75147f7/useIsInNewOnboardingExperience-DqKO3cOW.js"></head>
+    
+      <body style="background: rgb(251, 252, 253);">
+        <div id="root"><div data-overlay-container="true" data-sentry-element="OverlayProvider" data-sentry-source-file="AppClient.tsx"><div class="fPSBzf diVeFv jTWvec hYZFkb" data-sentry-component="MainLayout" data-sentry-source-file="MainLayout.tsx"><div class="kdFIjO OUhqU hVpAQY jTWvec"><div class="bCShOO fPSBzf kdFIjO iRgpoQ ZWNVL hYZFjI eHHjFj iyUXbC hVpAQY jTWvec itRfdc hYZFkb AxjtK"><header class="bCShOO gtdXBw lnopcr qbeer hYZFkb iDTTXf fnpsMs"><nav class="bYPztT fPSBzf dDWCpe hkIdtl jlrCMh eYHxsY jTWvec hYZFkb Axjab"><div class="bYPztT fPSBzf Axikl"><a aria-label="to home" class="jrHZPA fPSBzf gnlqYH eAjTMn" href="/"><div class="fPSBzf" data-sentry-component="FullBlackLogo" data-sentry-source-file="Logo.tsx"><svg fill="none" height="30" viewBox="0 0 160 40" width="120" xmlns="http://www.w3.org/2000/svg" data-sentry-element="svg" data-sentry-source-file="Logo.tsx"><path clip-rule="evenodd" d="M58.2511 24.7945C57.2263 28.4204 54.3494 30.7457 50.0141 30.7457C44.4571 30.7457 40.6738 26.9225 40.6738 20.9718C40.6738 14.7842 45.2455 10.3306 51.6694 10.3306C54.231 10.3306 55.9652 10.8822 57.0294 11.2764L57.6205 16.9517L57.2263 17.0306C54.9405 13.4442 52.8516 11.1189 51.1177 11.1189C48.8714 11.1189 47.0582 13.917 47.0582 18.4101C47.0582 24.0851 50.0536 26.2924 53.4821 26.2924C55.3741 26.2924 57.108 25.6224 58.0542 24.6762L58.2511 24.7945Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M74.0866 20.5776C74.0866 14.9812 72.8255 11.0795 70.0271 11.0795C67.1897 11.0795 65.968 14.9812 65.968 20.5776C65.968 26.174 67.2291 29.9968 70.0271 29.9968C72.8255 29.9968 74.0866 26.174 74.0866 20.5776ZM59.4258 20.5776C59.4258 15.0995 64.2338 10.3306 70.0272 10.3306C75.8208 10.3306 80.6289 15.0995 80.6289 20.5776C80.6289 26.0556 75.8208 30.7457 70.0272 30.7457C64.2338 30.7457 59.4258 26.0556 59.4258 20.5776Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M90.751 30.1545H82.514V30.0756C83.1445 28.1444 83.4993 26.5677 83.4993 23.218L83.4598 18.7644C83.4598 15.8483 82.9082 14.1536 81.4893 12.4983V12.4194L89.6473 10.1335V14.0747L89.8052 14.1141C90.869 12.4588 92.9185 10.3305 96.4263 10.3305C99.8943 10.3305 102.338 12.4588 102.338 15.8089V23.1786C102.338 26.5286 102.614 28.1444 103.283 30.0756V30.1545H95.0468V30.0756C95.7168 28.1444 95.9927 26.4497 95.9927 23.2575V16.2031C95.9927 14.5478 95.1648 13.2863 93.2732 13.2863C91.8152 13.2863 90.5537 14.1536 89.8052 15.2174V23.218C89.8052 26.4892 90.1204 28.1444 90.751 30.0756V30.1545Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M106.46 25.2676V11.8284H104.253V11.4736L112.372 6.3894H112.805V10.9611H126.998V11.8284H112.805V25.1098C112.805 27.4745 114.066 28.2234 115.643 28.2234C117.022 28.2234 117.85 27.5929 117.889 27.5534L118.007 27.6718C117.14 29.2087 115.012 30.7456 111.899 30.7456C108.706 30.7456 106.46 29.2087 106.46 25.2676Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M119.868 30.1544V30.0754C120.498 28.1443 120.813 26.5676 120.813 23.2179V18.7642C120.813 15.8482 121 13.4348 119.581 11.7791V11.7006L127.001 10.9591V14.9024C128.656 13.2077 130.587 10.094 133.977 10.3304L133.267 16.9515H133.07C132.085 15.6115 129.957 14.6262 128.971 14.6262C128.38 14.6262 127.711 15.0993 127.159 15.7693V23.2179C127.159 26.4891 127.474 28.1443 128.105 30.0754V30.1544H119.868Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M144.382 26.9227V20.2086C141.623 20.9571 140.086 22.9026 140.086 24.7552C140.086 26.2921 140.993 27.3169 142.727 27.3169C143.357 27.3169 143.948 27.159 144.382 26.9227ZM144.5 27.6716C143.397 29.2874 141.505 30.7454 138.983 30.7454C136.579 30.7454 134.529 28.9965 134.529 26.0664C134.529 21.8097 139.928 20.3266 144.382 19.3808V17.3062C144.382 15.0204 143.397 13.9171 140.598 13.9171C139.062 13.9171 137.249 14.232 135.475 14.9809L135.317 14.7055C137.209 12.4193 140.323 10.3303 144.579 10.3303C148.796 10.3303 150.727 12.4193 150.727 15.4935V25.6221C150.727 26.5679 151.161 27.3958 152.422 27.3958C152.855 27.3958 153.407 27.2774 153.92 26.9227L153.999 27.0801C153.447 28.381 152.067 30.7063 148.717 30.7063C146.313 30.7063 144.855 29.4449 144.5 27.6716Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M111.549 11.661H127.002V10.7244H111.549V11.661Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M20.8107 19.0432H33.3399C33.4819 19.0432 33.5969 18.9281 33.5969 18.7862V18.4019C33.5969 18.2847 33.5176 18.1825 33.404 18.153C27.5285 16.6434 22.9181 12.0599 21.3712 6.19175C21.3413 6.07891 21.2392 6 21.1227 6H20.8107C20.6688 6 20.5537 6.11505 20.5537 6.25701V18.7862C20.5537 18.9281 20.6688 19.0432 20.8107 19.0432Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M20.8107 33.5811H21.195C21.3122 33.5811 21.4147 33.5019 21.4439 33.3883C22.9535 27.5131 27.537 22.9023 33.4055 21.3555C33.5184 21.3256 33.5969 21.2235 33.5969 21.1069V20.795C33.5969 20.6534 33.4819 20.5383 33.3399 20.5383H20.8107C20.6688 20.5383 20.5537 20.6534 20.5537 20.795V33.3241C20.5537 33.4661 20.6688 33.5811 20.8107 33.5811Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M18.4742 33.5815H18.7858C18.9278 33.5815 19.0428 33.4665 19.0428 33.3241V20.7953C19.0428 20.6534 18.9278 20.5383 18.7858 20.5383H6.25701C6.11505 20.5383 6 20.6534 6 20.7953V21.1792C6 21.2968 6.07928 21.399 6.19285 21.4285C12.068 22.9381 16.6788 27.5212 18.2257 33.3898C18.2556 33.5026 18.3573 33.5815 18.4742 33.5815Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path><path clip-rule="evenodd" d="M6.25701 19.0432H18.7858C18.9278 19.0432 19.0428 18.9281 19.0428 18.7862V6.25701C19.0428 6.11505 18.9278 6 18.7858 6H18.4019C18.2847 6 18.1822 6.07965 18.153 6.19322C16.643 12.0684 12.0599 16.6792 6.19138 18.2261C6.07854 18.2556 6 18.3577 6 18.4746V18.7862C6 18.9281 6.11505 19.0432 6.25701 19.0432Z" fill="#131313" fill-rule="evenodd" data-sentry-element="path" data-sentry-source-file="Logo.tsx"></path></svg></div></a></div><div class="dxwoWU bYPztT fPSBzf jsCBtQ"><div class="kiGNkO bYPztT fPSBzf dAaUHp coigcm jTWvec Axjab diIEev"><button type="button" variant="V2Primary" class="Buttonstyles__StyledButton-sc-w63a17-0 iRgQcN"><span class="ButtonContainerstyles__StyledButtonContainer-sc-e8rsx8-0 bvRzws"><span textstyle="text-base-medium" variant="V2Primary" class="Text-sc-1k5lnf-0 ButtonTextstyles__StyledButtonText-sc-1smg0pq-0 gDtfPS cUjFSt">Sign Up</span></span></button><button aria-label="Open menu" class="kFYpif kFYpjY bZRhvx AxiDU" type="button"><svg fill="none" focusable="false" height="24" role="img" stroke-width="1" viewBox="0 0 24 24" width="24"><path d="M2 7.5H22V6H2V7.5Z" fill="currentColor"></path><path d="M2 18H22V16.5H2V18Z" fill="currentColor"></path></svg></button></div><div class="kiGNkO bYPztT ddgODW dAaUHp coigcm jTWvec Axjab kWNLQG"><button type="button" variant="V2Secondary" class="Buttonstyles__StyledButton-sc-w63a17-0 ihhjHd"><span class="ButtonContainerstyles__StyledButtonContainer-sc-e8rsx8-0 bvRzws"><span textstyle="text-base-medium" variant="V2Secondary" class="Text-sc-1k5lnf-0 ButtonTextstyles__StyledButtonText-sc-1smg0pq-0 gDtfPS cUjFSt">Post a job</span></span></button><button type="button" variant="V2Primary" class="Buttonstyles__StyledButton-sc-w63a17-0 iRgQcN"><span class="ButtonContainerstyles__StyledButtonContainer-sc-e8rsx8-0 bvRzws"><span textstyle="text-base-medium" variant="V2Primary" class="Text-sc-1k5lnf-0 ButtonTextstyles__StyledButtonText-sc-1smg0pq-0 gDtfPS cUjFSt">Sign Up</span></span></button><a variant="V2Link" rel="nofollow" class="Buttonstyles__StyledButton-sc-w63a17-0 ewVvlS" data-is-active-link="false" href="/log-in?redirectTo=%2Fsignup"><span class="ButtonContainerstyles__StyledButtonContainer-sc-e8rsx8-0 bvRzws"><span textstyle="text-base-medium" variant="V2Link" class="Text-sc-1k5lnf-0 ButtonTextstyles__StyledButtonText-sc-1smg0pq-0 gDtfPS kAoZxv">Log In</span></span></a></div></div></nav></header><div class="hgbzoH fZIHAr jZzPrs kdFIjO fzpolx! dmmjlu dJhISP fzpnVC jTWvec kHFHOh hYZFkb ddGxFg RSIoK fzpnVj"><div class="bYPztT fPSBzf iRgpoQ hYZFjI bYPznK AxjtB! jTWvec" style="background-image: url(&quot;https://builds.contra.com/f75147f7/assets/static/404.Dz5nRd_0.webp&quot;); background-position: left bottom; background-repeat: no-repeat; background-size: cover;"><div class="bYPztT fPSBzf iRgpoQ dUxEjX hYZFjI bYPznK tVFwr hZbjqy"><div class="bYPztT fPSBzf iRgpoQ jrIcfy bYPznK"><span class="cHzrOo jrPIoj jRXTuE ljSWay dCyYju eUSxAy bYPzoC">404</span><span class="cHzrOo jsMWUo jRXTuE ljSWay dCyYju MaWcI kqYyvv davmuU bYPzoC hYZFkb">Uh oh. This page doesn't exist.</span></div><div class="bYPztT fPSBzf iRgpoQ jrIcfy bYPznK"><a variant="V2Primary" class="Buttonstyles__StyledButton-sc-w63a17-0 iRgQcN" data-is-active-link="false" href="/"><span class="ButtonContainerstyles__StyledButtonContainer-sc-e8rsx8-0 bvRzws"><span textstyle="text-base-medium" variant="V2Primary" class="Text-sc-1k5lnf-0 ButtonTextstyles__StyledButtonText-sc-1smg0pq-0 gDtfPS cUjFSt">Back to home</span></span></a></div><div class="bYPztT fPSBzf iRgpoQ jrIcfy bYPznK"><span class="kCVQTc ipfIqt cSHqyh cHzrOo fPSBzf iRgpoQ jsgMqa jRYfTR jsnMfm hRaBVl loHZLb bYPzoC">Not finding what you're looking for?<a href="mailto:hello@contra.com" rel="noreferrer" target="_blank">Shoot us a message.</a></span></div></div></div></div></div></div></div><div id="onboarding-tooltip-portal"></div><div id="guided-tooltip-portal"></div><div data-sentry-element="StyledToaster" data-sentry-component="Toaster" data-sentry-source-file="Toaster.tsx" class="Toaster__StyledToaster-sc-7h6mxi-0 iIzdeE" style="pointer-events: none;"></div></div></div>
+    
+        <script>
+  var global = global || window;
+</script>
+
+
+        <script id="vike_pageContext" type="application/json">{"routeParams":{"username":"signup","queryVariables":"{\"username\":\"signup\"}"},"origin":"https:\\/\\/contra.com","publicAppConfiguration":{"relayRecordMap":{"client:root":{"__id":"client:root","__typename":"__Root","visitor":{"__ref":"WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ=="},"userProfileByUsername(username:\"signup\")":null,"socialPosts(filter:{\"username\":\"signup\"},first:1)":{"__ref":"client:root:socialPosts(filter:{\"username\":\"signup\"},first:1)"}},"WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==":{"__id":"WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==","__typename":"Visitor","featureFlags":{"challengesUGCPage":false,"fasterPayouts":false,"hideAdminCurationMenus":false,"contraProBlackFridayDiscount":false,"paymentOnboarding":false,"contraProFreeTrial":false,"groupChatComposer":false,"directMessages":false,"agentCommerce":false,"oneOffPayments":false,"indyAiLaunchBanner":false,"paidProjectPageV3":false,"pendingAndEscrowTabs":false,"communityPostsInDiscover":false,"workExperience":false,"arenaNewPromptFlow":false,"companyContraUrl":false,"newFeesStructure":false,"toggleAdminDetailsForRelatedPosts":false,"contraMaxEnabled":false,"feedRankingV5":false,"productsV1":true,"servicesV3":true,"newPaymentsFlowFixedPriceProject":true,"membersOnly":true,"paymentLinkSubscriptions":true,"paidProjectsV3":true,"cashAppPaymentMethod":true,"newOnboardingExperience":true,"paymentLinks":true,"indyAIChallengeLinkCollection":true,"newPaymentsFlowOngoingProjects":true,"updatedProjectTables":true,"newPaymentsFlow":true,"totpVerification":true,"paymentsNav":true,"newPaymentsFlowHourlyRateProject":true,"invoicesV2":true,"newPaymentsFlowMilestones":true},"userAccount":null,"id":"WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==","sessionId":"019c627f-e2ce-769e-b339-fed2ab5fcd32","traits":null,"impersonator":null,"ipAddress":null,"advertisementCampaigns":{"__refs":["client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:0","client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:1","client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:2"]}},"client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:0":{"__id":"client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:0","__typename":"VisitorAdvertisementCampaign","campaign":"HOVER_ADS","locations":["JOB_FEED","SOCIAL_LINKS_MODAL","CUSTOM_DOMAIN_PAGE","PROFILE_ABOUT_SECTION"]},"client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:1":{"__id":"client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:1","__typename":"VisitorAdvertisementCampaign","campaign":"BRANCH_ADS","locations":["DISCOVER_PROJECTS_SECTION"]},"client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:2":{"__id":"client:WyJWaXNpdG9yIiwiQ09OVFJBX1ZJU0lUT1JfSUQiXQ==:advertisementCampaigns:2","__typename":"VisitorAdvertisementCampaign","campaign":"IDEOGRAM_ADS","locations":["SOCIAL_FEED_MEDIA_MODAL","SOCIAL_FEED_ADD_WORK_TO_PROFILE_MODAL","SOCIAL_POST_INPUT","PORTFOLIO_PROJECT_CREATION_PAGE"]},"client:root:socialPosts(filter:{\"username\":\"signup\"},first:1)":{"__id":"client:root:socialPosts(filter:{\"username\":\"signup\"},first:1)","__typename":"SocialPostConnection","count":149521}},"apiUrl":"https:\\/\\/contra.com\\/api\\/","baseAssetsUrl":"\\/static\\/","cloudflareTurnstileSiteKey":"0x4AAAAAAAVmjW-C49CZs6gk","disableAnalytics":false,"enableLogs":false,"enablePersistedQueries":false,"explicitFeatureFlags":false,"fileUploadApiUrl":"https:\\/\\/contra.api-fast.cloudinary.com\\/v1_1\\/contra","googleApiKey":"AIzaSyBnqMDQxxQvm-npNgg31h1ExCQQLCeB7fg","googleSigninClientId":"939918834766-m2uvdo8hpubsnittqm2r5lj56vgjjeuj.apps.googleusercontent.com","intercomAppId":"de1o0crp","mixpanelProjectToken":"50ae13a3153212b89f8cd40903260135","paypalProductionClientId":"AZCkJKeQ2P7osxdMq-qRVWYAFhcFDLCo4Nhna6PaXhNwofGjd7_i6grX9ScdnOvuwFN190hysh_0JZa8","paypalSandboxClientId":"ARpHE1tp3pXbOqQKGzFMxOm2wjJ8i-vyZg-_pvEefkrs6od6UbGic-K5y4YJq7E-EcWJXvRnRnqlZN43","posthogApiToken":"phc_O2zL5SHQwfeuBHVxmtZRCOsDfMMC6vwWeBPaGOu1BVx","publicSelfUrl":"https:\\/\\/contra.com\\/","recaptchaSiteKey":"6LcPjikaAAAAANNVMAKZiiUQxZqAcia-S33YA3Li","releaseVersion":"f75147f7","segmentCdnUrl":"https:\\/\\/seg-cdn.contra.com","segmentWriteKey":"bk2f7ZIDS8d9jQZJQqO47tNGFo2Mrevz","sentry":{"dsn":"https:\\/\\/3545da037ee749aa92a658508243b17d@o382696.ingest.sentry.io\\/5302437","environment":"production","release":"contra-web-app@f75147f7"},"stripeProductionApiKey":"pk_live_51IiObqIkaYJTQiHGtYvBsjlUsNWetrjcKUkHuuoje4UpF4jh9By2a9AjCLiPVyAzL7zrmqa6pRu20f293VkCzrkQ00rPPj6iUh","stripeProductionIndependentPortfoliosApiKey":"pk_live_51LxGiWCdDL2ItXJ98sChtSowhQJUaXx72RQuqnugv0XQL2GP4jBadTbkLQYIzhLhluN0EsBO0ckjFmMungUE6xea00SNVlKqkG","stripeSandboxApiKey":"pk_test_51IiObqIkaYJTQiHGwOhP0BONwHPOp2c54fpRaiyIY2n7GoKkMtOxzBi5EWbemXd9heC0hkzPg3GrJIMI9n9eNzND000RcWW0WP","stripeSandboxIndependentPortfoliosApiKey":"pk_test_51LxGiWCdDL2ItXJ96bfWCVns3sdE17qD1K2jB5cS1vZsDlLSEzoZ7Q2i0gb0OntVdytPpWaQcyF9Z94taJBl88n900VpSE8aMJ","segmentCdnSettings":{"_lastModified":"2026-02-13T17:55:28.912Z","integrations":{"Actions Customerio":{"versionSettings":{"componentTypes":[]}},"PostHog":{"versionSettings":{"componentTypes":[]}},"Amazon Kinesis":{"versionSettings":{"componentTypes":["server"]},"type":"server"},"Google AdWords New":{"accountId":"AW-11126366527","clickConversions":[{"event":"button","id":"JzmYCI_smPgbEL_Cu7kp","accountId":""}],"conversionLinker":true,"defaultPageConversion":"","disableAdPersonalization":false,"floodlightAccountId":"","pageLoadConversions":[],"sendPageView":true,"versionSettings":{"version":"1.3.0","componentTypes":["browser"]},"type":"browser","bundlingStatus":"bundled"},"Segment.io":{"apiKey":"bk2f7ZIDS8d9jQZJQqO47tNGFo2Mrevz","unbundledIntegrations":[],"addBundledMetadata":true,"maybeBundledConfigIds":{"Google AdWords New":["697ccad12db4f40906f982c4"]},"versionSettings":{"version":"4.4.7","componentTypes":["browser"]},"apiHost":"seg-telemetry.contra.com\\/v1"}},"plan":{"track":{"__default":{"enabled":true,"integrations":{}}},"identify":{"__default":{"enabled":true},"work_chat_sidebar_optimization":{"enabled":true},"work_navbar_v2":{"enabled":true},"work_unlock_chat":{"enabled":true}},"group":{"__default":{"enabled":true}}},"edgeFunction":{},"analyticsNextEnabled":true,"middlewareSettings":{},"enabledMiddleware":{},"metrics":{"sampleRate":0.1,"host":"seg-telemetry.contra.com\\/v1"},"legacyVideoPluginsEnabled":false,"remotePlugins":[],"autoInstrumentationSettings":{"disableTraffic":false,"sampleRate":0}}},"pageTitle":"Contra - A professional network for the jobs and skills of the future","isContributorContent":"!undefined","isAuthenticated":false,"pageId":"\\/src\\/pages\\/@username","_pageContextInitIsPassedToClient":true}</script>
+        <script id="vike_globalContext" type="application/json">{}</script>
+        <script src="https://builds.contra.com/f75147f7/assets/entries/entry-client-routing.bMyWI5K6.js" type="module" async=""></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    
+  </body></html>
