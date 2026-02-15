@@ -1,0 +1,33 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	analyze_buyer_intent(analyze_buyer_intent)
+	classify_buyer_persona(classify_buyer_persona)
+	generate_executive_brief(generate_executive_brief)
+	assess_financial_readiness(assess_financial_readiness)
+	calculate_affordability(calculate_affordability)
+	qualify_property_needs(qualify_property_needs)
+	match_properties(match_properties)
+	handle_objections(handle_objections)
+	generate_buyer_response(generate_buyer_response)
+	schedule_next_action(schedule_next_action)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> analyze_buyer_intent;
+	analyze_buyer_intent --> classify_buyer_persona;
+	assess_financial_readiness --> calculate_affordability;
+	calculate_affordability --> qualify_property_needs;
+	classify_buyer_persona --> assess_financial_readiness;
+	generate_buyer_response --> generate_executive_brief;
+	generate_executive_brief --> schedule_next_action;
+	handle_objections --> generate_buyer_response;
+	match_properties -. &nbsp;generate_response&nbsp; .-> generate_buyer_response;
+	match_properties -.-> handle_objections;
+	qualify_property_needs --> match_properties;
+	schedule_next_action --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

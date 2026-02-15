@@ -1,0 +1,29 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	analyze_intent(analyze_intent)
+	detect_stall(detect_stall)
+	adaptive_strategy(adaptive_strategy)
+	generate_adaptive_response(generate_adaptive_response)
+	generate_executive_brief(generate_executive_brief)
+	recalculate_pcs(recalculate_pcs)
+	execute_follow_up(execute_follow_up)
+	update_memory(update_memory)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> analyze_intent;
+	adaptive_strategy -.-> generate_adaptive_response;
+	adaptive_strategy -.-> update_memory;
+	analyze_intent --> detect_stall;
+	detect_stall --> adaptive_strategy;
+	generate_adaptive_response --> generate_executive_brief;
+	generate_executive_brief --> recalculate_pcs;
+	recalculate_pcs --> update_memory;
+	update_memory --> execute_follow_up;
+	execute_follow_up --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
