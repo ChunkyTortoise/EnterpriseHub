@@ -1,0 +1,49 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	analyze_intent(analyze_intent)
+	behavioral_analysis(behavioral_analysis)
+	predict_optimization(predict_optimization)
+	track3_market_intelligence(track3_market_intelligence)
+	determine_path(determine_path)
+	generate_cma(generate_cma)
+	send_optimized_day_3(send_optimized_day_3)
+	initiate_predictive_day_7(initiate_predictive_day_7)
+	send_adaptive_day_14(send_adaptive_day_14)
+	send_intelligent_day_30(send_intelligent_day_30)
+	schedule_showing(schedule_showing)
+	post_showing_survey(post_showing_survey)
+	facilitate_offer(facilitate_offer)
+	contract_to_close_nurture(contract_to_close_nurture)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> analyze_intent;
+	analyze_intent --> behavioral_analysis;
+	behavioral_analysis --> predict_optimization;
+	determine_path -. &nbsp;nurture&nbsp; .-> __end__;
+	determine_path -. &nbsp;closing_nurture&nbsp; .-> contract_to_close_nurture;
+	determine_path -.-> facilitate_offer;
+	determine_path -.-> generate_cma;
+	determine_path -. &nbsp;day_7&nbsp; .-> initiate_predictive_day_7;
+	determine_path -. &nbsp;post_showing&nbsp; .-> post_showing_survey;
+	determine_path -.-> schedule_showing;
+	determine_path -. &nbsp;day_14&nbsp; .-> send_adaptive_day_14;
+	determine_path -. &nbsp;day_30&nbsp; .-> send_intelligent_day_30;
+	determine_path -. &nbsp;day_3&nbsp; .-> send_optimized_day_3;
+	predict_optimization --> track3_market_intelligence;
+	track3_market_intelligence --> determine_path;
+	contract_to_close_nurture --> __end__;
+	facilitate_offer --> __end__;
+	generate_cma --> __end__;
+	initiate_predictive_day_7 --> __end__;
+	post_showing_survey --> __end__;
+	schedule_showing --> __end__;
+	send_adaptive_day_14 --> __end__;
+	send_intelligent_day_30 --> __end__;
+	send_optimized_day_3 --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

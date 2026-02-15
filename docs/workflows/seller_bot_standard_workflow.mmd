@@ -1,0 +1,44 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	analyze_intent(analyze_intent)
+	handle_objection(handle_objection)
+	generate_cma(generate_cma)
+	provide_pricing_guidance(provide_pricing_guidance)
+	analyze_market_conditions(analyze_market_conditions)
+	detect_stall(detect_stall)
+	defend_valuation(defend_valuation)
+	prepare_listing(prepare_listing)
+	select_strategy(select_strategy)
+	generate_jorge_response(generate_jorge_response)
+	generate_executive_brief(generate_executive_brief)
+	recalculate_pcs(recalculate_pcs)
+	execute_follow_up(execute_follow_up)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> analyze_intent;
+	analyze_intent --> detect_stall;
+	analyze_market_conditions --> select_strategy;
+	defend_valuation --> select_strategy;
+	detect_stall -. &nbsp;market_analysis&nbsp; .-> analyze_market_conditions;
+	detect_stall -.-> defend_valuation;
+	detect_stall -.-> generate_cma;
+	detect_stall -.-> handle_objection;
+	detect_stall -.-> prepare_listing;
+	detect_stall -. &nbsp;pricing_guidance&nbsp; .-> provide_pricing_guidance;
+	detect_stall -.-> select_strategy;
+	generate_cma --> select_strategy;
+	generate_executive_brief --> recalculate_pcs;
+	generate_jorge_response --> generate_executive_brief;
+	handle_objection --> select_strategy;
+	prepare_listing --> select_strategy;
+	provide_pricing_guidance --> select_strategy;
+	recalculate_pcs --> execute_follow_up;
+	select_strategy --> generate_jorge_response;
+	execute_follow_up --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
