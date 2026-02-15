@@ -86,6 +86,8 @@ try:
 except ImportError:
     GHL_CLIENT_AVAILABLE = False
 
+from ghl_real_estate_ai.services.jorge.calendar_booking_service import CalendarBookingService
+
 # Track 3.1 Predictive Intelligence Integration
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
@@ -261,6 +263,16 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     def _init_service_layer(self):
         """Initialize the decomposed service layer."""
+        # Calendar booking service for HOT sellers
+        self.calendar_service = None
+        if GHL_CLIENT_AVAILABLE:
+            try:
+                ghl_client = EnhancedGHLClient()
+                self.calendar_service = CalendarBookingService(ghl_client)
+                logger.info("Jorge bot: CalendarBookingService initialized")
+            except Exception as e:
+                logger.warning(f"Jorge bot: CalendarBookingService unavailable: {e}")
+
         # Core workflow services
         self.cma_service = CMAService(
             cma_generator=self.cma_generator,
@@ -272,7 +284,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             claude=self.claude,
             event_publisher=self.event_publisher,
             sentiment_service=self.sentiment_service,
-            ab_testing=self.ab_testing
+            ab_testing=self.ab_testing,
+            calendar_service=self.calendar_service,
         )
         self.strategy_selector = StrategySelector(
             event_publisher=self.event_publisher,
@@ -1234,6 +1247,29 @@ class JorgeSellerBot(BaseBotWorkflow):
     # UTILITY METHODS
     # ================================
 
+    @staticmethod
+    def _detect_slot_selection(message: str) -> Optional[int]:
+        """Detect if the user message is selecting a calendar slot.
+
+        Recognizes patterns like "1", "slot 1", "option 2", "#3", "number 2".
+        Returns 0-based index or None if no slot selection detected.
+        """
+        import re
+
+        msg = message.strip().lower()
+        # Direct number: "1", "2", "3"
+        if re.fullmatch(r"\d+", msg):
+            num = int(msg)
+            if 1 <= num <= 10:
+                return num - 1
+        # Patterns: "slot 1", "option 2", "#3", "number 2"
+        match = re.search(r"(?:slot|option|number|#)\s*(\d+)", msg)
+        if match:
+            num = int(match.group(1))
+            if 1 <= num <= 10:
+                return num - 1
+        return None
+
     def _confidence_to_temperature(self, confidence: float) -> str:
         """Convert confidence score to Jorge's temperature scale"""
         if confidence >= 0.8:
@@ -1286,6 +1322,21 @@ class JorgeSellerBot(BaseBotWorkflow):
                 )
             except (KeyError, ValueError):
                 _tone_variant = "empathetic"
+
+            # Check if this is a calendar slot selection response
+            if self.calendar_service:
+                slot_index = self._detect_slot_selection(user_message)
+                if slot_index is not None:
+                    booking_result = await self.calendar_service.book_appointment(conversation_id, slot_index)
+                    return {
+                        "response_content": booking_result["message"],
+                        "lead_id": conversation_id,
+                        "current_step": "calendar_booked" if booking_result["success"] else "calendar_retry",
+                        "engagement_status": "appointment_booked" if booking_result["success"] else "qualification",
+                        "frs_score": 0.0,
+                        "pcs_score": 0.0,
+                        "handoff_signals": {},
+                    }
 
             initial_state = {
                 "lead_id": conversation_id,
