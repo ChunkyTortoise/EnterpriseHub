@@ -694,6 +694,23 @@ The following constraints apply to Streamlit-based dashboards. They are addresse
 | Production deployment, team training, handoff |
 | **TOTAL** | 100% | $20,000 |
 
+### Ongoing Infrastructure Costs (Estimated)
+
+| Service | Monthly Cost | Notes |
+|---------|-------------|-------|
+| Claude API (Anthropic) | $100-$400 | Sentiment analysis, conversation analytics |
+| Streamlit Cloud (or self-hosted) | $0-$250 | Free tier available; Teams plan for auth/sharing |
+| Redis (managed) | $15-$50 | L1/L2/L3 cache layer |
+| PostgreSQL (managed) | $25-$100 | Data warehouse, materialized views |
+| GoHighLevel CRM | $0 | Uses client's existing GHL subscription |
+| Hosting (Docker/VPS) | $50-$200 | FastAPI backend, Nginx reverse proxy |
+| Market Data APIs | $0-$100 | MLS aggregators, FRED API (free tier) |
+| Report Delivery (email) | $0-$20 | SendGrid/SES for scheduled reports |
+| Monitoring (Prometheus/Grafana) | $0-$30 | Self-hosted or managed |
+| **Total** | **$190-$1,150/mo** | Scales with data volume and user count |
+
+*Costs are estimates based on typical small-to-medium brokerage volumes (500-2,000 leads/month). Streamlit Cloud free tier is sufficient for single-team use; Teams plan needed for SSO and multiple viewers.*
+
 ### Optional Add-Ons
 
 | Feature | Price | Description |

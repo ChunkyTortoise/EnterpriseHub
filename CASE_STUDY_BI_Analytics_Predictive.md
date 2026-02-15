@@ -171,9 +171,9 @@ insight-engine gives you the clarity to make data-driven decisions that grow you
 2. **Get ROI Projections** — Custom projection based on your numbers
 3. **Start Implementation** — Full setup in as little as 2 weeks
 
-📧 **Contact**: [Your Email]  
-📞 **Schedule**: [Calendar Link]  
-🌐 **Learn More**: [Website]
+📧 **Contact**: cave@enterprisehub.ai
+📞 **Schedule**: https://calendly.com/enterprisehub
+🌐 **Learn More**: https://enterprisehub.ai
 
 ---
 

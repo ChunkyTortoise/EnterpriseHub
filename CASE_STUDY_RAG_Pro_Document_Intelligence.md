@@ -155,9 +155,9 @@ RAG Pro gives you the speed of AI with the reliability your business demands.
 2. **Get a Custom Quote** — Pricing based on your volume
 3. **Start Free Trial** — 7-day pilot with full features
 
-📧 **Contact**: [Your Email]  
-📞 **Schedule**: [Calendar Link]  
-🌐 **Learn More**: [Website]
+📧 **Contact**: cave@enterprisehub.ai
+📞 **Schedule**: https://calendly.com/enterprisehub
+🌐 **Learn More**: https://enterprisehub.ai
 
 ---
 

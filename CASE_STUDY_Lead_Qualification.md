@@ -103,9 +103,9 @@ A couple inquiring about multi-family properties were quickly identified as seri
 
 Don't let another lead slip through the cracks. With EnterpriseHub, you can:
 
-- 🚀 Respond to every lead in minutes, not hours
-- 📊 Know exactly which leads are worth your time
-- 💰 Reduce costs while increasing conversions
+- Respond to every lead in minutes, not hours
+- Know exactly which leads are worth your time
+- Reduce costs while increasing conversions
 
 ### Next Steps
 
@@ -113,9 +113,9 @@ Don't let another lead slip through the cracks. With EnterpriseHub, you can:
 2. **Get a Custom Quote** — Pricing based on your volume
 3. **Start Free Trial** — 14-day pilot with full features
 
-📧 **Contact**: [Your Email]  
-📞 **Schedule**: [Calendar Link]  
-🌐 **Learn More**: [Website]
+📧 **Contact**: cave@enterprisehub.ai
+📞 **Schedule**: https://calendly.com/enterprisehub
+🌐 **Learn More**: https://enterprisehub.ai
 
 ---
 

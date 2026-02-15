@@ -107,8 +107,8 @@ EnterpriseHub deployed a **Multi-Agent Mesh Architecture** with Claude as the ce
 
 3. **Three-Tier Cache Architecture**:
    - L1 (Redis): Hot conversations, 80%+ hit rate
-   - L2 (PostgreSQL): Session persistence, 52% hit rate
-   - L3 (Computed): Heavy operations, 34% hit rate
+   - L2 (PostgreSQL): Session persistence, 20.5% hit rate
+   - L3 (Computed): Heavy operations, 8.5% hit rate
 
 4. **GoHighLevel Integration**:
    - Real-time CRM sync
@@ -217,7 +217,7 @@ class ClaudeOrchestrator:
 | API Response P95 | <400ms | 380ms |
 | API Response P99 | <800ms | 720ms |
 | Cache Hit Rate (L1) | >80% | 82% |
-| Cache Hit Rate (L2) | >50% | 52% |
+| Cache Hit Rate (L2) | >50% | 20.5% |
 | Throughput | >100 req/s | 127 req/s |
 | Token Cost/Request | <$0.01 | $0.007 |
 
@@ -259,9 +259,9 @@ Don't let disconnected bots cost you leads. With EnterpriseHub's Multi-Agent Orc
 2. **Get a Custom Quote** — Pricing based on your agent count
 3. **Start Pilot Program** — 30-day proof of concept
 
-📧 **Contact**: [Your Email]  
-📞 **Schedule**: [Calendar Link]  
-🌐 **Learn More**: [Website]
+📧 **Contact**: cave@enterprisehub.ai
+📞 **Schedule**: https://calendly.com/enterprisehub
+🌐 **Learn More**: https://enterprisehub.ai
 
 ---
 
