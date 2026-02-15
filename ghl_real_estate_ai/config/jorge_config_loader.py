@@ -107,10 +107,21 @@ class TemperaturePredictionConfig:
 
 
 @dataclass
+class ConversionTrackingConfig:
+    """Configuration for conversion tracking and calibration (Task #24)"""
+    enabled: bool = True
+    min_samples_for_calibration: int = 100
+    calibration_schedule_hours: int = 168
+    track_by_channel: bool = True
+    track_by_segment: bool = True
+
+
+@dataclass
 class AnalyticsConfig:
     """Configuration for analytics engines"""
     behavioral_engine: BehavioralEngineConfig = field(default_factory=BehavioralEngineConfig)
     temperature_prediction: TemperaturePredictionConfig = field(default_factory=TemperaturePredictionConfig)
+    conversion_tracking: ConversionTrackingConfig = field(default_factory=ConversionTrackingConfig)
 
 
 @dataclass
@@ -157,8 +168,41 @@ class LeadBotWorkflow:
 
 
 @dataclass
+class ScoringWeights:
+    """Base class for scoring weights with validation (Task #24)"""
+    weights: Dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Validate that weights sum to approximately 1.0"""
+        if self.weights:
+            total = sum(self.weights.values())
+            if not (0.99 <= total <= 1.01):
+                logger.warning(
+                    f"Scoring weights sum to {total:.3f}, expected 1.0. "
+                    f"Weights: {self.weights}"
+                )
+
+
+@dataclass
 class LeadBotScoring:
     frs_weights: Dict[str, float] = field(default_factory=dict)
+    pcs_weights: Dict[str, float] = field(default_factory=dict)
+    intent_weights: Dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Validate all weight dictionaries"""
+        for name, weights in [
+            ("FRS", self.frs_weights),
+            ("PCS", self.pcs_weights),
+            ("Intent", self.intent_weights),
+        ]:
+            if weights:
+                total = sum(weights.values())
+                if not (0.99 <= total <= 1.01):
+                    logger.warning(
+                        f"{name} weights sum to {total:.3f}, expected 1.0. "
+                        f"Weights: {weights}"
+                    )
 
 
 @dataclass
@@ -213,10 +257,29 @@ class BuyerBotMemory:
 
 
 @dataclass
+class BuyerBotScoring:
+    """Buyer bot scoring configuration (Task #24)"""
+    pcs_weights: Dict[str, float] = field(default_factory=dict)
+    intent_weights: Dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Validate all weight dictionaries"""
+        for name, weights in [("PCS", self.pcs_weights), ("Intent", self.intent_weights)]:
+            if weights:
+                total = sum(weights.values())
+                if not (0.99 <= total <= 1.01):
+                    logger.warning(
+                        f"Buyer bot {name} weights sum to {total:.3f}, expected 1.0. "
+                        f"Weights: {weights}"
+                    )
+
+
+@dataclass
 class BuyerBotConfig:
     enabled: bool = True
     features: BuyerBotFeatures = field(default_factory=BuyerBotFeatures)
     workflow: BuyerBotWorkflow = field(default_factory=BuyerBotWorkflow)
+    scoring: BuyerBotScoring = field(default_factory=BuyerBotScoring)
     affordability: BuyerBotAffordability = field(default_factory=BuyerBotAffordability)
     personas: List[str] = field(default_factory=list)
     objection_types: List[str] = field(default_factory=list)
@@ -247,6 +310,22 @@ class SellerBotWorkflow:
 class SellerBotScoring:
     frs_weights: Dict[str, float] = field(default_factory=dict)
     pcs_weights: Dict[str, float] = field(default_factory=dict)
+    intent_weights: Dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Validate all weight dictionaries"""
+        for name, weights in [
+            ("FRS", self.frs_weights),
+            ("PCS", self.pcs_weights),
+            ("Intent", self.intent_weights),
+        ]:
+            if weights:
+                total = sum(weights.values())
+                if not (0.99 <= total <= 1.01):
+                    logger.warning(
+                        f"Seller bot {name} weights sum to {total:.3f}, expected 1.0. "
+                        f"Weights: {weights}"
+                    )
 
 
 @dataclass
@@ -355,11 +434,12 @@ class JorgeConfigLoader:
             ttl_seconds=caching_data.get("ttl_seconds", {}),
         )
 
-        # Parse analytics with behavioral and temperature prediction engines
+        # Parse analytics with behavioral, temperature prediction, and conversion tracking engines
         analytics_data = shared_data.get("analytics", {})
         analytics = AnalyticsConfig(
             behavioral_engine=BehavioralEngineConfig(**analytics_data.get("behavioral_engine", {})),
             temperature_prediction=TemperaturePredictionConfig(**analytics_data.get("temperature_prediction", {})),
+            conversion_tracking=ConversionTrackingConfig(**analytics_data.get("conversion_tracking", {})),
         )
 
         # Parse handoff with early detection (Task #19)
@@ -408,6 +488,7 @@ class JorgeConfigLoader:
             enabled=buyer_data.get("enabled", True),
             features=BuyerBotFeatures(**buyer_data.get("features", {})),
             workflow=BuyerBotWorkflow(**buyer_data.get("workflow", {})),
+            scoring=BuyerBotScoring(**buyer_data.get("scoring", {})),
             affordability=BuyerBotAffordability(**buyer_data.get("affordability", {})),
             personas=buyer_data.get("personas", []),
             objection_types=buyer_data.get("objection_types", []),
