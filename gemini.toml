@@ -27,6 +27,25 @@ command = "python ghl_real_estate_ai/core/mcp_servers/prompt_library.py"
 transport = "stdio"
 auto_approve_tools = true
 
+[[mcp.servers]]
+name = "enterprise-hub"
+command = "python mcp_server.py"
+transport = "stdio"
+auto_approve_tools = true
+
+[[mcp.servers]]
+name = "notebooklm"
+command = "python .claude/mcp-servers/notebooklm/server.py"
+transport = "stdio"
+auto_approve_tools = true
+
+[[mcp.servers]]
+name = "obsidian"
+command = "python .claude/mcp-servers/obsidian/server.py"
+transport = "stdio"
+auto_approve_tools = true
+env = { OBSIDIAN_VAULT_PATH = "/Users/cave/Documents/GitHub/EnterpriseHub/.obsidian-vault" }
+
 [logging]
 enabled = true
 log_file = "gemini_api.log"

@@ -25,12 +25,8 @@
       "args": ["-y", "@chinchillaenterprises/mcp-upwork@latest"]
     },
     "notebooklm": {
-      "command": "/Users/cave/Documents/GitHub/EnterpriseHub/venv/bin/python",
-      "args": [".claude/mcp-servers/notebooklm/server.py"],
-      "env": {
-        "VIRTUAL_ENV": "/Users/cave/Documents/GitHub/EnterpriseHub/venv",
-        "PYTHONPATH": "/Users/cave/Documents/GitHub/EnterpriseHub/venv/lib/python3.14/site-packages"
-      }
+      "command": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv_fix/bin/python",
+      "args": [".claude/mcp-servers/notebooklm/server.py"]
     },
     "obsidian": {
       "command": "/Users/cave/Documents/GitHub/EnterpriseHub/venv/bin/python",
