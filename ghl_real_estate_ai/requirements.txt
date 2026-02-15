@@ -3,59 +3,59 @@
 # Tested on: Linux (amd64), macOS (arm64/Intel)
 
 # FastAPI + ASGI Server
-fastapi==0.110.0
-uvicorn[standard]==0.27.1
-pydantic==2.6.1
-pydantic-settings==2.1.0
+fastapi==0.128.6
+uvicorn[standard]==0.39.0
+pydantic==2.12.5
+pydantic-settings==2.11.0
 
 # Anthropic Claude SDK
-anthropic==0.18.1
+anthropic==0.79.0
 
 # Vector Database & Embeddings (pinned for stability)
 chromadb==0.5.23
 sentence-transformers==2.3.1
-onnxruntime==1.16.3; sys_platform == 'linux' or (sys_platform == 'darwin' and platform_machine == 'x86_64')
+onnxruntime==1.20.1; sys_platform == 'linux' or (sys_platform == 'darwin' and platform_machine == 'x86_64')
 onnxruntime-silicon==1.16.3; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # HTTP Client (for GHL API calls)
-httpx==0.26.0
-requests==2.31.0
+httpx==0.28.1
+requests==2.32.5
 
 # Utilities
-python-dotenv==1.0.1
-python-multipart==0.0.6
+python-dotenv==1.2.1
+python-multipart==0.0.20
 
 # Numpy (compatible with all platforms)
 numpy==1.26.3
 
 # Security Dependencies
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 
 # UI & Dashboard
-streamlit==1.30.0
+streamlit==1.50.0
 pandas==2.1.4
 plotly==5.18.0
 
 # Additional ML dependencies
-scikit-learn==1.4.0
-tokenizers==0.15.1
-spacy==3.7.2
+scikit-learn==1.6.1
+tokenizers==0.22.2
+spacy==3.8.11
 pytz==2023.4
 en-core-web-sm>=3.7.0,<3.8.0
 
 # Real-time Features & WebSocket Support
 redis==5.0.1
 websockets==12.0
-websocket-client==1.6.4
+websocket-client==1.9.0
 # aioredis removed - async support is now included in redis>=4.2
 
 # Async Support
-asyncio-mqtt==0.13.0
+asyncio-mqtt==0.16.2
 aiofiles==23.2.1
 
 # Statistical Analysis for A/B Testing
-scipy==1.11.4
+scipy==1.13.1
 
 # Advanced Analytics and Data Processing
 matplotlib==3.8.2
