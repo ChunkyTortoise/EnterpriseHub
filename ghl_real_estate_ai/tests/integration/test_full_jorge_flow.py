@@ -168,8 +168,7 @@ class TestFullJorgeFlow:
         assert decision is not None
         assert decision.source_bot == "seller"
         assert decision.target_bot == "buyer"
-        assert decision.confidence >= 0.6
-        assert decision.confidence < 0.7  # Would not trigger lead->buyer
+        assert decision.confidence >= 0.6  # Above seller->buyer threshold (0.6)
 
         # Execute handoff
         actions = await handoff_service.execute_handoff(

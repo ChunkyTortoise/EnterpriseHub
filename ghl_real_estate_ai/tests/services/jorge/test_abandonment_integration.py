@@ -161,8 +161,8 @@ class TestAbandonmentRecoveryFlow:
 class TestBackgroundTaskIntegration:
     """Test background task integration."""
 
-    @patch("ghl_real_estate_ai.services.jorge.abandonment_background_task.get_abandonment_detector")
-    @patch("ghl_real_estate_ai.services.jorge.abandonment_background_task.get_recovery_orchestrator")
+    @patch("ghl_real_estate_ai.services.jorge.abandonment_detector.get_abandonment_detector")
+    @patch("ghl_real_estate_ai.services.jorge.recovery_orchestrator.get_recovery_orchestrator")
     async def test_background_task_one_iteration(
         self, mock_get_orchestrator, mock_get_detector
     ):

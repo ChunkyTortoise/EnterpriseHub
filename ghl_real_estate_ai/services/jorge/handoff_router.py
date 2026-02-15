@@ -190,8 +190,14 @@ class HandoffRouter:
         Returns:
             DeferralDecision with should_defer flag and detailed reason.
         """
+        # Normalize bot name to match PerformanceTracker convention
+        tracker_bot_name = (
+            target_bot
+            if target_bot.endswith("_bot") or target_bot == "handoff"
+            else f"{target_bot}_bot"
+        )
         # Get performance stats for target bot
-        stats = await self._tracker.get_bot_stats(target_bot, window)
+        stats = await self._tracker.get_bot_stats(tracker_bot_name, window)
 
         # If no data, allow handoff (assume bot is healthy)
         if stats["count"] == 0:
@@ -202,7 +208,7 @@ class HandoffRouter:
             )
 
         # Get SLA targets for the target bot's "process" operation
-        sla_target = SLA_CONFIG.get(target_bot, {}).get("process", {}).get("p95_target")
+        sla_target = SLA_CONFIG.get(tracker_bot_name, {}).get("process", {}).get("p95_target")
         if not sla_target:
             # Fallback: allow handoff if no SLA configured
             return DeferralDecision(

@@ -100,15 +100,23 @@ All agents are **domain-agnostic** -- they adapt to this project's domain via CL
 | **Alerting** | `services/jorge/alerting_service.py` | Configurable rules, cooldowns, 7 default alert rules |
 | **Bot Metrics** | `services/jorge/bot_metrics_collector.py` | Per-bot stats, cache hits, alerting integration |
 
-## Bot Public APIs (Jorge Bot Audit — Feb 2026)
+## Bot Public APIs (Jorge Bot — Feb 2026, 157 passing tests)
 
-All three bots have unified public API entry points:
+All three bots have unified public API entry points. Tone: friendly/consultative.
 
 | Bot | Method | Key Returns |
 |-----|--------|------------|
 | Lead | `LeadBotWorkflow.process_lead_conversation()` | response, temperature, handoff_signals |
 | Buyer | `JorgeBuyerBot.process_buyer_conversation()` | response, financial_readiness, handoff_signals |
 | Seller | `JorgeSellerBot.process_seller_message()` | response, frs_score, pcs_score, handoff_signals |
+
+### Supporting Services
+| Service | File | Purpose |
+|---------|------|---------|
+| Calendar Booking | `services/jorge/calendar_booking_service.py` | Offer/book GHL calendar slots for HOT sellers |
+| Response Pipeline | `services/jorge/response_pipeline/` | 5-stage post-processing (language mirror, TCPA, compliance, AI disclosure, SMS truncation) |
+| Handoff Router | `services/jorge/handoff_router.py` | Performance-based routing, auto-deferral when target bot is slow |
+| GHL Setup Validation | `ghl_utils/jorge_ghl_setup.py` | Validate all custom fields, workflows, calendar IDs (`python -m ghl_real_estate_ai.ghl_utils.jorge_ghl_setup`) |
 
 ### Intent Decoders (GHL-Enhanced)
 | Decoder | Standard Method | GHL Method |
@@ -121,6 +129,7 @@ All three bots have unified public API entry points:
 - **Rate limiting**: 3 handoffs/hr, 10/day per contact
 - **Conflict resolution**: Contact-level locking prevents concurrent handoffs
 - **Pattern learning**: Dynamic threshold adjustment from outcome history (min 10 data points)
+- **Performance routing**: Auto-defer handoffs when target P95 > 120% SLA or error rate > 10%
 
 ### Temperature Tag Publishing
 | Lead Score | Temperature Tag | Actions |
@@ -136,6 +145,9 @@ Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate
 |-----------|---------------------|-----------------|
 | Lead → Buyer | 0.7 | "I want to buy", "budget $", "pre-approval" |
 | Lead → Seller | 0.7 | "Sell my house", "home worth", "CMA" |
+
+### Deployment
+See [`agents/DEPLOYMENT_CHECKLIST.md`](ghl_real_estate_ai/agents/DEPLOYMENT_CHECKLIST.md) for full deployment guide, env var reference, smoke tests, and monitoring setup.
 
 ## Security Essentials
 - **PII**: Encrypted at rest (Fernet) | **API Keys**: Env vars only, never hardcoded
@@ -158,4 +170,4 @@ Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate
 ## Task Tracking
 Uses **Beads** (`bd`) for task tracking. `bd ready` for available work, `bd close` when done, `bd sync` + `git push` before ending sessions. See `bd prime` for full command reference.
 
-**Version**: 8.2 | **Last Updated**: February 7, 2026
+**Version**: 8.3 | **Last Updated**: February 14, 2026
