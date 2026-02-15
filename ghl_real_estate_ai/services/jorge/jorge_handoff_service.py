@@ -105,20 +105,11 @@ class JorgeHandoffService:
     DAY_SECONDS = 86400
     HANDOFF_LOCK_TIMEOUT = 30  # seconds before a handoff lock expires
 
-    _handoff_history: Dict[str, List[HandoffData]] = {}
-    _handoff_outcomes: Dict[str, List[HandoffOutcome]] = {}
-    _active_handoffs: Dict[str, float] = {}
-    _analytics: Dict[str, Any] = {
-        "total_handoffs": 0,
-        "successful_handoffs": 0,
-        "failed_handoffs": 0,
-        "processing_times_ms": [],
-        "handoffs_by_route": {},
-        "handoffs_by_hour": {h: 0 for h in range(24)},
-        "blocked_by_rate_limit": 0,
-        "blocked_by_circular": 0,
-        "blocked_by_performance": 0,
-    }
+    # WARNING: These instance-level dictionaries are NOT safe for multi-worker deployments.
+    # For production with multiple workers (gunicorn --workers N, uvicorn --workers N),
+    # you MUST configure a repository backend (Redis/PostgreSQL) via set_repository()
+    # and ensure load_from_database() is called on service initialization.
+    # See improvement roadmap item P0-1 for full Redis migration guide.
 
     # Minimum data points required before learned adjustments apply
     MIN_LEARNING_SAMPLES = 10
@@ -150,6 +141,24 @@ class JorgeHandoffService:
         self.analytics_service = analytics_service
         self._repository: Any = None
         self._outcome_publisher = outcome_publisher
+
+        # Initialize instance-level state dictionaries
+        # NOTE: In multi-worker deployments, each worker has its own copy.
+        # For production safety, configure a repository backend via set_repository()
+        self._handoff_history: Dict[str, List[HandoffData]] = {}
+        self._handoff_outcomes: Dict[str, List[HandoffOutcome]] = {}
+        self._active_handoffs: Dict[str, float] = {}
+        self._analytics: Dict[str, Any] = {
+            "total_handoffs": 0,
+            "successful_handoffs": 0,
+            "failed_handoffs": 0,
+            "processing_times_ms": [],
+            "handoffs_by_route": {},
+            "handoffs_by_hour": {h: 0 for h in range(24)},
+            "blocked_by_rate_limit": 0,
+            "blocked_by_circular": 0,
+            "blocked_by_performance": 0,
+        }
 
         # Initialize HandoffRouter for performance-based routing
         if HandoffRouter is not None:

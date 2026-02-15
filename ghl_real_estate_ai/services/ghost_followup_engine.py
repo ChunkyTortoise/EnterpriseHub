@@ -91,7 +91,7 @@ class GhostFollowUpEngine:
         - IF FRS < 40: 'No rush' frame
         """
         if state.frs_score > 60:
-            frame = "We have qualified buyers interested in your market RIGHT NOW. Still thinking about it?"
+            frame = "We have qualified buyers interested in your market right now. Want me to share the latest activity?"
         elif state.frs_score >= 40:
             frame = "Just wanted to share some new market data for your neighborhood. Still exploring?"
         else:
@@ -149,18 +149,18 @@ class GhostFollowUpEngine:
         elif state.frs_score >= 40:
             content = (
                 f"Market shifted around {address} since we last talked. "
-                f"Worth a second look or should I close your file?"
+                f"Want me to share the updates or would you prefer I close your file for now?"
             )
             logic = f"FRS {state.frs_score} - Mid intent final nudge with market update"
         else:
-            content = f"Last check: still thinking about {address}? If not, I'll close your file. No hard feelings."
+            content = f"Last check: still interested in exploring {address}? If not, I'll close your file for now—happy to reconnect anytime."
             logic = f"FRS {state.frs_score} - Low intent graceful close"
 
         return {"channel": "sms", "content": content, "logic": logic}
 
     def get_stall_breaker(self, objection_type: str) -> str:
-        """Returns a specific confrontational question from the library."""
-        return self.stall_breakers.get(objection_type, {}).get("question", "Still thinking about it?")
+        """Returns a specific question from the library to re-engage leads."""
+        return self.stall_breakers.get(objection_type, {}).get("question", "What questions can I answer for you?")
 
 
 _ghost_engine = None

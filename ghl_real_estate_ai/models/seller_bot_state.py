@@ -56,7 +56,7 @@ class SellerPersona(TypedDict, total=False):
 class JorgeSellerState(TypedDict):
     """
     State for Jorge's Motivated Seller Bot.
-    Focuses on confrontational qualification and stall-breaking.
+    Focuses on consultative qualification and relationship-building.
     """
 
     lead_id: str
@@ -68,7 +68,7 @@ class JorgeSellerState(TypedDict):
     intent_profile: Optional[LeadIntentProfile]
 
     # Bot Logic
-    current_tone: str  # "direct", "confrontational", "take-away"
+    current_tone: str  # "consultative", "educational", "understanding", "enthusiastic", "supportive"
     stall_detected: bool
     detected_stall_type: Optional[str]  # "thinking", "get_back", "zestimate", "agent"
 
