@@ -107,8 +107,8 @@ class JorgeSellerConfig:
         "psychology_type": "",
         "urgency_level": "",
         # Phase 2: Additional fields from original spec
-        "mortgage_balance": "",
-        "repair_estimate": "",
+        "mortgage_balance": os.environ.get("CUSTOM_FIELD_MORTGAGE_BALANCE", ""),
+        "repair_estimate": os.environ.get("CUSTOM_FIELD_REPAIR_ESTIMATE", ""),
         "listing_history": "",
         "decision_maker_confirmed": "",
         "preferred_contact_method": "",
@@ -209,9 +209,9 @@ class JorgeSellerConfig:
 
     # ========== HOT SELLER HANDOFF MESSAGES ==========
     HOT_SELLER_HANDOFF_MESSAGES = [
-        "Based on what you've shared, it sounds like we can really help you achieve your goals. I'd love to schedule a time to discuss your options in detail. What would work better for you, morning or afternoon?",
-        "Perfect. You're a great fit for our program. I'm connecting you with our team now. Are mornings or afternoons better for a quick call?",
-        "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team today. Morning or afternoon?",
+        "Based on what you've shared, it sounds like we can really help you achieve your goals. I'd love to schedule a consultation. Let me pull up our available time slots for you.",
+        "Perfect. You're a great fit for our program. Let me check our calendar and find the best time for a consultation call.",
+        "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team. Here are the available times.",
     ]
 
     # ========== BUYER BOT SETTINGS ==========

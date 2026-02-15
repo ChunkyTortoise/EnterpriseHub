@@ -12,6 +12,7 @@ from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+from ghl_real_estate_ai.services.jorge.calendar_booking_service import CalendarBookingService
 from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnalysisService
 
 logger = get_logger(__name__)
@@ -61,12 +62,14 @@ class ResponseGenerator:
         claude: Optional[ClaudeAssistant] = None,
         event_publisher: Optional[EventPublisher] = None,
         sentiment_service: Optional[SentimentAnalysisService] = None,
-        ab_testing: Optional[ABTestingService] = None
+        ab_testing: Optional[ABTestingService] = None,
+        calendar_service: Optional[CalendarBookingService] = None,
     ):
         self.claude = claude or ClaudeAssistant()
         self.event_publisher = event_publisher or get_event_publisher()
         self.sentiment_service = sentiment_service or SentimentAnalysisService()
         self.ab_testing = ab_testing or ABTestingService()
+        self.calendar_service = calendar_service
 
     async def generate_jorge_response(
         self,
@@ -213,6 +216,14 @@ class ResponseGenerator:
             or "Happy to help with any questions about your property. What would be most useful to know?"
         )
 
+        # Calendar-focused mode: append real calendar slots for HOT sellers
+        if state.get("adaptive_mode") == "calendar_focused" and self.calendar_service:
+            try:
+                slot_result = await self.calendar_service.offer_appointment_slots(state["lead_id"])
+                content = content.rstrip() + "\n\n" + slot_result["message"]
+            except Exception as e:
+                logger.warning(f"Calendar slot offering failed for {state['lead_id']}: {e}")
+
         # Update qualification progress - increment question count
         current_q = state.get("current_question", 1)
         questions_answered = len([h for h in state.get("conversation_history", []) if h.get("role") == "user"])
@@ -296,6 +307,14 @@ class ResponseGenerator:
 
         response = await self.claude.analyze_with_context(prompt)
         content = response.get("content", next_question)
+
+        # Calendar-focused mode: append real calendar slots for HOT sellers
+        if state.get("adaptive_mode") == "calendar_focused" and self.calendar_service:
+            try:
+                slot_result = await self.calendar_service.offer_appointment_slots(state["lead_id"])
+                content = content.rstrip() + "\n\n" + slot_result["message"]
+            except Exception as e:
+                logger.warning(f"Calendar slot offering failed for {state['lead_id']}: {e}")
 
         return {
             "response_content": content,

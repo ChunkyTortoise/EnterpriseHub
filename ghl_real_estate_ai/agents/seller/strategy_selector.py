@@ -68,8 +68,8 @@ class StrategySelector:
             # Low commitment = Supportive approach (help them understand)
             base_strategy = {"current_tone": "EDUCATIONAL", "next_action": "respond"}
         elif pcs >= 70:
-            # High commitment = Enthusiastic support
-            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "respond"}
+            # High commitment = Enthusiastic support + calendar booking
+            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "respond", "adaptive_mode": "calendar_focused"}
         else:
             base_strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond"}
 
