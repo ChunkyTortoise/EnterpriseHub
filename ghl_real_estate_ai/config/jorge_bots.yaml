@@ -90,6 +90,20 @@ shared:
       default: "empathetic"
       assignment_strategy: "deterministic"  # hash-based per contact
 
+  bot_workflow:
+    # BaseBotWorkflow base class configuration (Task #18 - Phase 1)
+    # Phase 1: Basic infrastructure (industry config, event publishing, ML analytics)
+    # Phase 2 (future): Monitoring quartet (PerformanceTracker, BotMetricsCollector, etc.)
+
+    ml_analytics:
+      enable_by_default: false  # Opt-in per bot instance
+      fallback_on_import_error: true  # Gracefully degrade if dependencies missing
+
+    events:
+      enable_publishing: true  # Event bus integration
+      inject_tenant_id: true  # Auto-inject tenant_id into all events
+      log_publish_errors: true  # Don't raise, just log failures
+
 # ===================================================================
 # LEAD BOT CONFIGURATION
 # ===================================================================
@@ -157,7 +171,17 @@ buyer_bot:
     enable_bot_intelligence: false
     enable_handoff: true
     enable_persona_classification: true  # Phase 1.4
-    enable_conversation_memory: false  # Task #29 will enable this
+    enable_conversation_memory: true  # Task #29 - Persistent multi-session state
+
+  conversation_memory:
+    # Task #29: Multi-session conversation state persistence
+    enabled: true
+    ttl_days: 30  # Default: 30 days retention
+    ttl_days_min: 7  # Minimum allowed retention
+    ttl_days_max: 90  # Maximum allowed retention
+    compress_threshold_bytes: 5120  # Compress state > 5KB (gzip)
+    max_history_messages: 50  # Limit persisted conversation history
+    cache_key_prefix: "buyer_conversation_memory"
 
   workflow:
     enable_financial_readiness: true
@@ -275,8 +299,8 @@ seller_bot:
 # CIRCUIT BREAKER CONFIGURATION (Task #27)
 # ===================================================================
 circuit_breaker:
-  enabled: false  # Will be enabled by Task #27
-  
+  enabled: true  # Enabled as of Task #27 (2026-02-15)
+
   defaults:
     failure_threshold: 5  # Open circuit after 5 failures
     success_threshold: 3  # Close circuit after 3 successes

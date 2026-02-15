@@ -23,6 +23,7 @@ from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
+from ghl_real_estate_ai.services.circuit_breaker import get_circuit_manager
 from ghl_real_estate_ai.services.database_service import DatabaseService, get_database
 from ghl_real_estate_ai.services.monitoring_service import MonitoringService
 from ghl_real_estate_ai.services.security_framework import SecurityFramework
@@ -637,3 +638,108 @@ async def service_status(
     except Exception as e:
         logger.error(f"Status endpoint failed: {e}")
         return JSONResponse(content={"message": "Service status check failed", "error": str(e)}, status_code=500)
+
+
+@router.get("/circuit-breakers")
+async def circuit_breaker_status(current_user: UserDep):
+    """
+    Get status of all circuit breakers protecting external service calls.
+
+    Returns detailed metrics on circuit breaker states, failure counts,
+    and response times for GHL, Retell, SendGrid, and Lyrio services.
+
+    Circuit breaker states:
+    - CLOSED: Normal operation, requests flowing through
+    - OPEN: Service failures exceeded threshold, blocking requests
+    - HALF_OPEN: Testing recovery, allowing limited requests
+    """
+    try:
+        circuit_manager = get_circuit_manager()
+        health_summary = circuit_manager.get_health_summary()
+        all_stats = circuit_manager.get_all_stats()
+
+        # Calculate overall health
+        total_breakers = health_summary["total_breakers"]
+        open_breakers = health_summary["states"].get("OPEN", 0)
+        half_open_breakers = health_summary["states"].get("HALF_OPEN", 0)
+
+        if open_breakers == 0 and half_open_breakers == 0:
+            overall_status = "healthy"
+        elif open_breakers > 0:
+            overall_status = "degraded" if open_breakers < total_breakers else "critical"
+        else:
+            overall_status = "recovering"
+
+        return {
+            "overall_status": overall_status,
+            "timestamp": datetime.utcnow().isoformat(),
+            "summary": {
+                "total_circuit_breakers": total_breakers,
+                "states": health_summary["states"],
+                "total_requests": health_summary["total_requests"],
+                "total_failures": health_summary["total_failures"],
+                "success_rate": (
+                    (health_summary["total_requests"] - health_summary["total_failures"])
+                    / health_summary["total_requests"]
+                    * 100
+                    if health_summary["total_requests"] > 0
+                    else 100
+                ),
+            },
+            "circuit_breakers": all_stats,
+            "recommendations": _generate_circuit_breaker_recommendations(all_stats),
+        }
+
+    except Exception as e:
+        logger.error(f"Circuit breaker status check failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Circuit breaker status check failed: {str(e)}")
+
+
+def _generate_circuit_breaker_recommendations(stats: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Generate recommendations based on circuit breaker stats"""
+    recommendations = []
+
+    for service_name, service_stats in stats.items():
+        state = service_stats.get("state")
+        success_rate = service_stats.get("success_rate", 1.0)
+        circuit_opens = service_stats.get("stats", {}).get("circuit_opens", 0)
+
+        if state == "open":
+            recommendations.append(
+                {
+                    "service": service_name,
+                    "severity": "critical",
+                    "message": f"{service_name} circuit is OPEN - service is experiencing failures",
+                    "action": f"Check {service_name} service health and connectivity",
+                }
+            )
+        elif state == "half_open":
+            recommendations.append(
+                {
+                    "service": service_name,
+                    "severity": "warning",
+                    "message": f"{service_name} circuit is HALF_OPEN - testing recovery",
+                    "action": "Monitor closely for full recovery or reopening",
+                }
+            )
+        elif success_rate < 0.95 and circuit_opens > 0:
+            recommendations.append(
+                {
+                    "service": service_name,
+                    "severity": "warning",
+                    "message": f"{service_name} success rate is {success_rate * 100:.1f}% (opened {circuit_opens} times)",
+                    "action": "Investigate intermittent failures",
+                }
+            )
+
+    if not recommendations:
+        recommendations.append(
+            {
+                "service": "all",
+                "severity": "info",
+                "message": "All circuit breakers are healthy",
+                "action": "No action required",
+            }
+        )
+
+    return recommendations
