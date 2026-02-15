@@ -11,6 +11,7 @@ from modules.appointment_manager import AppointmentManager
 from modules.ghl_sync import GHLSyncService
 from modules.inventory_manager import InventoryManager
 from modules.voice_trigger import trigger_outbound_call
+from portal_api.models import TenantContext
 
 
 @dataclass
@@ -25,6 +26,25 @@ class DemoAuthError(Exception):
     """Raised when demo API key auth is enabled and a request is unauthorized."""
 
     pass
+
+
+class AuthMisconfiguredError(Exception):
+    """Raised when required auth mode is enabled without a configured API key."""
+
+    pass
+
+
+AUTH_MODE_OPTIONAL = "optional"
+AUTH_MODE_REQUIRED = "required"
+DEFAULT_TENANT_ID = "tenant_default"
+TENANT_HEADER = "X-Tenant-ID"
+
+
+def _get_auth_mode() -> str:
+    auth_mode = os.getenv("PORTAL_API_AUTH_MODE", AUTH_MODE_OPTIONAL).strip().lower()
+    if auth_mode not in {AUTH_MODE_OPTIONAL, AUTH_MODE_REQUIRED}:
+        return AUTH_MODE_OPTIONAL
+    return auth_mode
 
 
 @lru_cache(maxsize=1)
@@ -50,28 +70,63 @@ def reset_services() -> Dict[str, int]:
     return summary
 
 
-def get_service_state() -> Dict[str, int]:
+def get_service_state(tenant_id: str = DEFAULT_TENANT_ID) -> Dict[str, Any]:
     services = get_services()
     return {
+        "tenant_id": tenant_id,
         "inventory_leads": services.inventory.lead_count,
         "inventory_properties": services.inventory.property_count,
-        "inventory_interactions": services.inventory.interaction_count,
-        "ghl_actions": services.ghl.action_count,
-        "appointments": services.appointment.booking_count,
+        "inventory_interactions": services.inventory.get_interaction_count(tenant_id=tenant_id),
+        "ghl_actions": services.ghl.get_action_count(tenant_id=tenant_id),
+        "appointments": services.appointment.get_booking_count(tenant_id=tenant_id),
     }
 
 
-def get_detailed_service_state(recent_limit: int = 5) -> Dict[str, Any]:
+def get_detailed_service_state(tenant_id: str = DEFAULT_TENANT_ID, recent_limit: int = 5) -> Dict[str, Any]:
     services = get_services()
     return {
-        "inventory": services.inventory.get_state_snapshot(recent_limit=recent_limit),
-        "ghl": services.ghl.get_state_snapshot(recent_limit=recent_limit),
-        "appointment": services.appointment.get_state_snapshot(recent_limit=recent_limit),
+        "inventory": services.inventory.get_state_snapshot(tenant_id=tenant_id, recent_limit=recent_limit),
+        "ghl": services.ghl.get_state_snapshot(tenant_id=tenant_id, recent_limit=recent_limit),
+        "appointment": services.appointment.get_state_snapshot(tenant_id=tenant_id, recent_limit=recent_limit),
     }
+
+
+def get_idempotency_key(idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")) -> str | None:
+    return idempotency_key
+
+
+def _normalize_tenant_id(tenant_id: str | None) -> str | None:
+    if tenant_id is None:
+        return None
+    normalized = tenant_id.strip()
+    return normalized or None
+
+
+def resolve_tenant_context(x_tenant_id: str | None = Header(default=None, alias=TENANT_HEADER)) -> TenantContext:
+    tenant_id = _normalize_tenant_id(x_tenant_id)
+    if tenant_id:
+        return TenantContext(tenant_id=tenant_id, source="header")
+    return TenantContext(tenant_id=DEFAULT_TENANT_ID, source="default")
+
+
+def apply_payload_tenant_context(tenant_context: TenantContext, payload_tenant_id: str | None) -> TenantContext:
+    if tenant_context.source == "header":
+        return tenant_context
+    tenant_id = _normalize_tenant_id(payload_tenant_id)
+    if tenant_id:
+        return TenantContext(tenant_id=tenant_id, source="payload")
+    return tenant_context
 
 
 def require_demo_api_key(request: Request, x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
+    auth_mode = _get_auth_mode()
     expected_api_key = os.getenv("PORTAL_API_DEMO_KEY")
+    if auth_mode == AUTH_MODE_REQUIRED:
+        if not expected_api_key:
+            raise AuthMisconfiguredError("Authentication is required but PORTAL_API_DEMO_KEY is not configured")
+        if x_api_key == expected_api_key:
+            return
+        raise DemoAuthError("Invalid API key")
     if not expected_api_key:
         return
     if x_api_key == expected_api_key:

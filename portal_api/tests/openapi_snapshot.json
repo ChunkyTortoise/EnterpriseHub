@@ -55,12 +55,17 @@
           "slot_time": {
             "title": "Slot Time",
             "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
           }
         },
         "required": [
           "contact_id",
           "property_address",
-          "slot_time"
+          "slot_time",
+          "tenant_id"
         ],
         "title": "AppointmentBookingSnapshot",
         "type": "object"
@@ -77,11 +82,16 @@
             },
             "title": "Recent Bookings",
             "type": "array"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
           }
         },
         "required": [
           "booking_count",
-          "recent_bookings"
+          "recent_bookings",
+          "tenant_id"
         ],
         "title": "AppointmentDetailedState",
         "type": "object"
@@ -151,11 +161,16 @@
             },
             "title": "Recent Actions",
             "type": "array"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
           }
         },
         "required": [
           "action_count",
-          "recent_actions"
+          "recent_actions",
+          "tenant_id"
         ],
         "title": "GHLDetailedState",
         "type": "object"
@@ -341,13 +356,18 @@
             },
             "title": "Recent Interactions",
             "type": "array"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
           }
         },
         "required": [
           "interaction_count",
           "lead_count",
           "property_count",
-          "recent_interactions"
+          "recent_interactions",
+          "tenant_id"
         ],
         "title": "InventoryDetailedState",
         "type": "object"
@@ -368,6 +388,10 @@
           },
           "property_id": {
             "title": "Property Id",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
             "type": "string"
           },
           "time_on_card": {
@@ -391,9 +415,55 @@
           "feedback",
           "lead_id",
           "property_id",
+          "tenant_id",
           "timestamp"
         ],
         "title": "InventoryInteractionSnapshot",
+        "type": "object"
+      },
+      "LanguageDetectRequest": {
+        "properties": {
+          "text": {
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "LanguageDetectRequest",
+        "type": "object"
+      },
+      "LanguageDetectResponse": {
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "language": {
+            "enum": [
+              "en",
+              "es",
+              "he",
+              "unknown"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "strategy": {
+            "title": "Strategy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "confidence",
+          "language",
+          "strategy"
+        ],
+        "title": "LanguageDetectResponse",
         "type": "object"
       },
       "PropertyCard": {
@@ -531,6 +601,10 @@
           "inventory_properties": {
             "title": "Inventory Properties",
             "type": "integer"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
           }
         },
         "required": [
@@ -538,7 +612,8 @@
           "ghl_actions",
           "inventory_interactions",
           "inventory_leads",
-          "inventory_properties"
+          "inventory_properties",
+          "tenant_id"
         ],
         "title": "StateSnapshot",
         "type": "object"
@@ -741,6 +816,22 @@
               ],
               "title": "X-Api-Key"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "responses": {
@@ -764,6 +855,16 @@
             },
             "description": "API key missing or invalid"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Idempotency key conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -773,6 +874,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication is misconfigured"
           }
         },
         "summary": "Reset Demo State",
@@ -784,6 +895,24 @@
     "/admin/state": {
       "get": {
         "operationId": "get_demo_state_admin_state_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -794,6 +923,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Get Demo State",
@@ -816,6 +955,22 @@
               "minimum": 0,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
             }
           }
         ],
@@ -895,6 +1050,22 @@
               ],
               "title": "X-Api-Key"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "responses": {
@@ -917,6 +1088,16 @@
               }
             },
             "description": "API key missing or invalid"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Idempotency key conflict"
           },
           "422": {
             "content": {
@@ -963,6 +1144,47 @@
         "summary": "Health"
       }
     },
+    "/language/detect": {
+      "post": {
+        "operationId": "detect_language_language_detect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LanguageDetectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LanguageDetectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detect Language",
+        "tags": [
+          "language"
+        ]
+      }
+    },
     "/portal/deck": {
       "get": {
         "operationId": "get_smart_deck_portal_deck_get",
@@ -974,6 +1196,22 @@
             "schema": {
               "title": "Contact Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
             }
           }
         ],
@@ -1024,6 +1262,38 @@
               ],
               "title": "X-Api-Key"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
           }
         ],
         "requestBody": {
@@ -1057,6 +1327,16 @@
             },
             "description": "API key missing or invalid"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Idempotency key conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -1066,6 +1346,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication is misconfigured"
           }
         },
         "summary": "Log Swipe",
@@ -1093,6 +1383,22 @@
               ],
               "title": "X-Api-Key"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "responses": {
@@ -1116,6 +1422,16 @@
             },
             "description": "API key missing or invalid"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Idempotency key conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -1125,6 +1441,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication is misconfigured"
           }
         },
         "summary": "Reset Demo State",
@@ -1136,6 +1462,24 @@
     "/state": {
       "get": {
         "operationId": "get_demo_state_state_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1146,6 +1490,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Get Demo State",
@@ -1168,6 +1522,22 @@
               "minimum": 0,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
             }
           }
         ],
@@ -1218,6 +1588,22 @@
               ],
               "title": "X-Api-Key"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "responses": {
@@ -1241,6 +1627,16 @@
             },
             "description": "API key missing or invalid"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Idempotency key conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -1250,6 +1646,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication is misconfigured"
           }
         },
         "summary": "Reset Demo State",
@@ -1261,6 +1667,24 @@
     "/system/state": {
       "get": {
         "operationId": "get_demo_state_system_state_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1271,6 +1695,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Get Demo State",
@@ -1293,6 +1727,22 @@
               "minimum": 0,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
             }
           }
         ],
@@ -1343,6 +1793,38 @@
               ],
               "title": "X-Api-Key"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
           }
         ],
         "requestBody": {
@@ -1376,6 +1858,16 @@
             },
             "description": "API key missing or invalid"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Idempotency key conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -1385,6 +1877,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Authentication is misconfigured"
           }
         },
         "summary": "Vapi Book Tour",

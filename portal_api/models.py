@@ -14,6 +14,21 @@ class Interaction(BaseModel):
     feedback: Optional[Dict[str, Any]] = None
 
 
+class TenantContext(BaseModel):
+    tenant_id: str
+    source: Literal["header", "payload", "default"]
+
+
+class LanguageDetectRequest(BaseModel):
+    text: str = Field(min_length=1)
+
+
+class LanguageDetectResponse(BaseModel):
+    language: Literal["en", "es", "he", "unknown"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    strategy: str
+
+
 class RootResponse(BaseModel):
     message: str
     docs: str
@@ -35,6 +50,7 @@ class ResetResponse(BaseModel):
 
 
 class StateSnapshot(BaseModel):
+    tenant_id: str
     inventory_leads: int
     inventory_properties: int
     inventory_interactions: int
@@ -67,6 +83,7 @@ class SwipeResponse(BaseModel):
 
 
 class InventoryInteractionSnapshot(BaseModel):
+    tenant_id: str
     lead_id: str
     property_id: str
     action: str
@@ -76,6 +93,7 @@ class InventoryInteractionSnapshot(BaseModel):
 
 
 class InventoryDetailedState(BaseModel):
+    tenant_id: str
     lead_count: int
     property_count: int
     interaction_count: int
@@ -83,17 +101,20 @@ class InventoryDetailedState(BaseModel):
 
 
 class GHLDetailedState(BaseModel):
+    tenant_id: str
     action_count: int
     recent_actions: list[Dict[str, Any]]
 
 
 class AppointmentBookingSnapshot(BaseModel):
+    tenant_id: str
     contact_id: str
     slot_time: str
     property_address: str
 
 
 class AppointmentDetailedState(BaseModel):
+    tenant_id: str
     booking_count: int
     recent_bookings: list[AppointmentBookingSnapshot]
 

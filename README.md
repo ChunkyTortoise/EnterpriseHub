@@ -239,15 +239,32 @@ Standalone FastAPI module used for the client showcase and deterministic API val
 | POST | `/system/reset` | Reset in-memory demo state |
 | GET | `/system/state` | Aggregate service counters |
 | GET | `/system/state/details` | Detailed counters + recent records |
+| POST | `/language/detect` | Deterministic language detection (`en/es/he/unknown`) |
+
+### Business Flow Mapping
+
+- `GET /portal/deck`: serves prioritized inventory so agents can respond fast without manual list curation.
+- `POST /portal/swipe`: captures buyer intent; `like` drives CRM tagging/field updates and proactive outreach.
+- `POST /vapi/tools/check-availability` + `POST /vapi/tools/book-tour`: turns intent into scheduled tours.
+- `POST /ghl/sync` + `GET /ghl/fields`: keeps CRM contact data and custom-field mapping aligned.
+- `GET /system/state` + `GET /system/state/details`: gives deterministic tenant-scoped counters for QA, demos, and operator checks.
+- `POST /language/detect`: demonstrates multilingual readiness with deterministic baseline detection for interview proof.
 
 ### Contract Guarantees
 
 - Typed request/response contracts are enforced with Pydantic models and locked OpenAPI schema assertions.
 - `POST /portal/swipe` accepts only `action` values `like` or `pass`.
+- Tenant context resolution is deterministic: `X-Tenant-ID` header (preferred), payload fallback (`location_id` on swipe), else `tenant_default`.
+- Read and write activity is tenant-scoped for deck selection and state counters/details (zero cross-tenant leakage in tests).
 - `GET /system/state/details` enforces `limit` bounds: `ge=0`, `le=100`, default `5`.
 - `POST /ghl/sync` documents both success (`200`) and service-failure (`500`) contracts with `ApiErrorResponse`.
-- Demo auth guard is env-gated on mutating routes: unset `PORTAL_API_DEMO_KEY` keeps current behavior; set it to require matching `X-API-Key`.
+- `POST /language/detect` returns a typed contract: `language`, `confidence`, and `strategy` with fixture-tested `en/es/he`.
+- Mutating routes support optional `Idempotency-Key`; replays return the original response with `X-Idempotency-Replayed: true`, and key/body mismatches return `409` `ApiErrorResponse` (`code: idempotency_conflict`).
+- Auth mode is env-gated via `PORTAL_API_AUTH_MODE=optional|required` (default `optional`):
+  - `optional` preserves current behavior: no `PORTAL_API_DEMO_KEY` means open mutating routes; setting it requires matching `X-API-Key`.
+  - `required` always enforces `X-API-Key`; missing `PORTAL_API_DEMO_KEY` returns `500` `ApiErrorResponse` (`code: auth_misconfigured`).
 - Every response includes an `X-Request-ID` header (propagated when provided, generated when absent).
+- Request lifecycle logs include method/path/status/request-id/duration for quick triage during demos.
 - Full `portal_api` OpenAPI schema is snapshot-locked at `portal_api/tests/openapi_snapshot.json`.
 
 ### Alias Map
@@ -264,11 +281,23 @@ Run from repository root:
 bash scripts/portal_api_validate.sh
 ```
 
-### Interview Demo Run (5 minutes)
+### Interview Demo Run (10/10 deterministic)
 
 ```bash
 bash scripts/portal_api_interview_demo.sh
 ```
+
+Notes:
+
+- If `PORTAL_API_BASE_URL` points to localhost and `/health` is unreachable, the script auto-starts `uvicorn` for you.
+- Set `PORTAL_API_AUTO_START=0` to disable auto-start and require a manually running API server.
+- `Step 8/10`: tenant isolation proof (`tenant_a` vs `tenant_b`) with zero-leak assertions.
+- `Step 9/10`: performance gate via `scripts/portal_api_latency_sanity.py` (`health/deck/swipe` p95 thresholds).
+- `Step 10/10`: multilingual detection proof for `en/es/he`.
+- Optional perf tuning flags for noisy environments:
+  - `PORTAL_API_PERF_RUNS` (default `10`)
+  - `PORTAL_API_PERF_TIMEOUT` (default `5`)
+  - `PORTAL_API_PERF_TENANT_ID` (default `tenant_perf`)
 
 ### OpenAPI Snapshot Refresh
 
@@ -291,15 +320,27 @@ If demo auth is enabled:
 PORTAL_API_DEMO_KEY=demo-secret python3 scripts/portal_api_client_example.py --api-key demo-secret
 ```
 
-### Optional P2 Helpers
+If forcing production-style auth in local runs:
 
 ```bash
-# Ensure local toolchain + API health are ready before interview demo
-bash scripts/portal_api_preflight.sh
+PORTAL_API_AUTH_MODE=required PORTAL_API_DEMO_KEY=demo-secret \
+  python3 scripts/portal_api_client_example.py --api-key demo-secret
+```
 
-# Lightweight repeated-run timing sanity (not a benchmark)
+### Performance Gate Helper
+
+```bash
+# Deterministic repeated-run timing with p95 threshold pass/fail gates
 python3 scripts/portal_api_latency_sanity.py --runs 10
 ```
+
+Default thresholds:
+
+- `health` p95 `<= 50ms`
+- `deck` p95 `<= 200ms`
+- `swipe` p95 `<= 100ms`
+
+The command exits non-zero if any threshold is breached.
 
 Known limitations / next steps: full auth/authz, real external provider hardening, and deeper observability are intentionally out of scope for this interview slice.
 
