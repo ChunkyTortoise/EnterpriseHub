@@ -1,18 +1,22 @@
 """
 Enterprise Circuit Breaker Pattern Implementation
 Provides fault tolerance for external service calls with intelligent recovery
+
+Integrated with jorge_bots.yaml configuration for service-specific thresholds.
 """
 
 import asyncio
 import functools
-import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, Optional
 
-logger = logging.getLogger(__name__)
+from ghl_real_estate_ai.config.jorge_config_loader import get_config
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class CircuitState(Enum):
@@ -31,8 +35,28 @@ class CircuitBreakerConfig:
     recovery_timeout: float = 60.0  # Seconds before trying half-open
     success_threshold: int = 3  # Successes to close from half-open
     timeout: float = 30.0  # Request timeout seconds
+    half_open_max_calls: int = 2  # Max requests allowed in half-open state
     expected_exception: type = Exception  # Exception type that triggers failure
     fallback: Optional[Callable] = None  # Fallback function
+
+    @classmethod
+    def from_yaml_config(cls, service_name: str) -> "CircuitBreakerConfig":
+        """Create circuit breaker config from jorge_bots.yaml"""
+        config = get_config()
+
+        if not config.circuit_breaker.enabled:
+            logger.warning(f"Circuit breaker disabled in config for {service_name}")
+
+        defaults = config.circuit_breaker.defaults
+        service_config = config.circuit_breaker.services.get(service_name, {})
+
+        return cls(
+            failure_threshold=service_config.get("failure_threshold", defaults.failure_threshold),
+            recovery_timeout=float(service_config.get("timeout_seconds", defaults.timeout_seconds)),
+            success_threshold=service_config.get("success_threshold", defaults.success_threshold),
+            timeout=float(service_config.get("timeout_seconds", defaults.timeout_seconds)),
+            half_open_max_calls=defaults.half_open_max_calls,
+        )
 
 
 @dataclass
@@ -53,6 +77,9 @@ class CircuitBreakerStats:
 class CircuitBreaker:
     """
     Circuit Breaker implementation for fault tolerance
+
+    Prevents cascading failures by tracking service health and blocking
+    requests when failure threshold is exceeded.
     """
 
     def __init__(self, name: str, config: CircuitBreakerConfig):
@@ -61,9 +88,16 @@ class CircuitBreaker:
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.success_count = 0
+        self.half_open_calls = 0
         self.last_failure_time: Optional[float] = None
         self.stats = CircuitBreakerStats()
         self._lock = asyncio.Lock()
+        logger.info(
+            f"Circuit breaker '{name}' initialized: "
+            f"failure_threshold={config.failure_threshold}, "
+            f"timeout={config.timeout}s, "
+            f"recovery_timeout={config.recovery_timeout}s"
+        )
 
     async def call(self, func: Callable, *args, **kwargs) -> Any:
         """
@@ -83,11 +117,15 @@ class CircuitBreaker:
             if self._should_attempt_reset():
                 self.state = CircuitState.HALF_OPEN
                 self.success_count = 0
+                self.half_open_calls = 0
                 logger.info(f"Circuit breaker {self.name} transitioning to HALF_OPEN")
                 return True
             return False
         elif self.state == CircuitState.HALF_OPEN:
-            return True
+            if self.half_open_calls < self.config.half_open_max_calls:
+                self.half_open_calls += 1
+                return True
+            return False
 
         return False
 
@@ -142,7 +180,8 @@ class CircuitBreaker:
             if self.success_count >= self.config.success_threshold:
                 self.state = CircuitState.CLOSED
                 self.failure_count = 0
-                logger.info(f"Circuit breaker {self.name} closed after successful recovery")
+                self.half_open_calls = 0
+                logger.info(f"Circuit breaker '{self.name}' CLOSED after {self.success_count} successful recoveries")
 
         # Reset failure count on success in CLOSED state
         if self.state == CircuitState.CLOSED:
@@ -161,12 +200,14 @@ class CircuitBreaker:
             if self.failure_count >= self.config.failure_threshold:
                 self.state = CircuitState.OPEN
                 self.stats.circuit_opens += 1
-                logger.warning(
-                    f"Circuit breaker {self.name} opened after {self.failure_count} failures. Last error: {exception}"
+                logger.error(
+                    f"Circuit breaker '{self.name}' OPEN after {self.failure_count} consecutive failures. "
+                    f"Last error: {type(exception).__name__}: {str(exception)[:100]}"
                 )
         elif self.state == CircuitState.HALF_OPEN:
             self.state = CircuitState.OPEN
-            logger.warning(f"Circuit breaker {self.name} reopened during recovery attempt")
+            self.half_open_calls = 0
+            logger.warning(f"Circuit breaker '{self.name}' re-OPEN during recovery attempt")
 
     async def _handle_timeout(self, start_time: float):
         """Handle request timeout"""
@@ -227,8 +268,9 @@ class CircuitBreaker:
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.success_count = 0
+        self.half_open_calls = 0
         self.last_failure_time = None
-        logger.info(f"Circuit breaker {self.name} manually reset")
+        logger.info(f"Circuit breaker '{self.name}' manually reset to CLOSED state")
 
 
 class CircuitBreakerError(Exception):
@@ -247,10 +289,21 @@ class CircuitBreakerManager:
 
     def create_breaker(self, name: str, config: CircuitBreakerConfig) -> CircuitBreaker:
         """Create a new circuit breaker"""
+        if name in self.breakers:
+            logger.debug(f"Circuit breaker '{name}' already exists, returning existing instance")
+            return self.breakers[name]
+
         breaker = CircuitBreaker(name, config)
         self.breakers[name] = breaker
-        logger.info(f"Created circuit breaker: {name}")
         return breaker
+
+    def get_or_create_breaker(self, service_name: str) -> CircuitBreaker:
+        """Get existing breaker or create from YAML config"""
+        if service_name in self.breakers:
+            return self.breakers[service_name]
+
+        config = CircuitBreakerConfig.from_yaml_config(service_name)
+        return self.create_breaker(service_name, config)
 
     def get_breaker(self, name: str) -> Optional[CircuitBreaker]:
         """Get existing circuit breaker by name"""
@@ -259,6 +312,29 @@ class CircuitBreakerManager:
     def get_all_stats(self) -> Dict[str, Dict[str, Any]]:
         """Get statistics for all circuit breakers"""
         return {name: breaker.get_stats() for name, breaker in self.breakers.items()}
+
+    def get_health_summary(self) -> Dict[str, Any]:
+        """Get health summary of all circuit breakers"""
+        summary = {
+            "total_breakers": len(self.breakers),
+            "states": {"CLOSED": 0, "OPEN": 0, "HALF_OPEN": 0},
+            "total_requests": 0,
+            "total_failures": 0,
+            "breakers": {},
+        }
+
+        for name, breaker in self.breakers.items():
+            stats = breaker.get_stats()
+            summary["states"][stats["state"].upper()] += 1
+            summary["total_requests"] += stats["stats"]["total_requests"]
+            summary["total_failures"] += stats["stats"]["failed_requests"]
+            summary["breakers"][name] = {
+                "state": stats["state"],
+                "success_rate": stats["success_rate"],
+                "avg_response_time_ms": stats["stats"]["avg_response_time_ms"],
+            }
+
+        return summary
 
     def reset_all(self):
         """Reset all circuit breakers"""
