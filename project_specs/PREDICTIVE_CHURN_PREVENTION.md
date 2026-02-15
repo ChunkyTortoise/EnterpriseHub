@@ -521,6 +521,22 @@ Assumes 1,000 active leads, 25% annual churn rate (250 churning leads), $3,600 a
 | Additional Integrations | $2,000 | Slack, email, other CRM |
 | Advanced Analytics | $1,500 | Custom dashboard features |
 
+### Ongoing Infrastructure Costs (Estimated)
+
+| Service | Monthly Cost | Notes |
+|---------|-------------|-------|
+| Claude API (Anthropic) | $100-$400 | Sentiment analysis, content generation |
+| Gemini API (Google) | $30-$100 | Fast batch processing |
+| Redis (managed) | $15-$50 | Score caching (L1) |
+| PostgreSQL (managed) | $25-$100 | Feature storage, training data, prediction logs |
+| ML Training Compute | $20-$80 | Model retraining (monthly/quarterly); XGBoost/LightGBM |
+| GoHighLevel CRM | $0 | Uses client's existing GHL subscription |
+| Hosting (Docker/VPS) | $50-$200 | API servers, batch scoring jobs |
+| Monitoring (Prometheus/Grafana) | $0-$30 | Self-hosted or managed |
+| **Total** | **$240-$960/mo** | Scales with lead volume and scoring frequency |
+
+*Costs are estimates based on typical agency volumes (500-2,000 active leads). ML training compute is minimal since XGBoost/LightGBM run on CPU.*
+
 ### ROI Projection
 
 | Metric | Conservative | Optimistic |

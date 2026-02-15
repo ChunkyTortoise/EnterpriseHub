@@ -2,6 +2,10 @@
 Marketing Automation MCP Server
 Exposes marketing automation tools for email campaigns, lead nurturing, and analytics.
 
+NOTE: This is a reference implementation / API design demo.
+All data returned is simulated. Replace mock handlers with
+real API integrations before production use.
+
 Environment Variables Required:
 - HUBSPOT_API_KEY: HubSpot API key
 - MAILCHIMP_API_KEY: Mailchimp API key

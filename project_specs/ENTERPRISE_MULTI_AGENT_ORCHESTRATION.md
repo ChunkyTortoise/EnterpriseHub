@@ -473,7 +473,7 @@ Deployment uses Docker Compose with horizontal scaling via container orchestrati
 |--------|----------|--------|-------------|
 | Lead Conversion Rate | 12% | 25% | Monthly GHL data |
 | API Response Time P95 | 380ms | <200ms | Prometheus |
-| Cache Hit Rate (L1) | 78% | 80%+ | Redis metrics |
+| Cache Hit Rate (L1) | 59.1% | 80%+ (target) | Redis metrics |
 | Average Project Size | $8,500 | $12,000 | Billing data |
 | Customer Satisfaction | 4.2/5 | 4.7/5 | Survey data |
 
@@ -579,6 +579,22 @@ The $25,000 base package covers core functionality (~200 hours). The full 560-ho
 | Performance Optimization | 60 | $125 | $7,500 |
 | Extended Testing & Docs | 45 | $100 | $4,500 |
 | **Advanced Total** | **360 hours** | | **$43,875** |
+
+### Ongoing Infrastructure Costs (Estimated)
+
+| Service | Monthly Cost | Notes |
+|---------|-------------|-------|
+| Claude API (Anthropic) | $300-$1,200 | Primary inference; scales with conversation volume |
+| Gemini API (Google) | $50-$200 | Secondary/bulk operations |
+| Perplexity API | $20-$100 | Research and context enrichment queries |
+| Redis (managed) | $15-$50 | L1/L2/L3 cache layer |
+| PostgreSQL (managed) | $25-$100 | Primary database + Alembic migrations |
+| GoHighLevel CRM | $97-$497 | GHL subscription (client's existing plan) |
+| Hosting (Docker/VPS) | $100-$400 | Application servers, orchestrator, bot instances |
+| Monitoring (Prometheus/Grafana) | $0-$50 | Self-hosted or managed |
+| **Total** | **$607-$2,597/mo** | Scales with agent count and conversation volume |
+
+*Costs are estimates based on typical 50-agent brokerage volumes (2,000-10,000 conversations/month). Claude API is the largest variable cost.*
 
 ### Enterprise Value
 

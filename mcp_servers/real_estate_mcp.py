@@ -2,9 +2,13 @@
 Real Estate API MCP Server
 Exposes real estate data integration tools for Zillow, Redfin, and MLS APIs.
 
+NOTE: This is a reference implementation / API design demo.
+All data returned is simulated. Replace mock handlers with
+real API integrations before production use.
+
 Environment Variables Required:
 - ZILLOW_API_KEY: Zillow API key for property data
-- REDFIN_API_KEY: Redfin API key for property data  
+- REDFIN_API_KEY: Redfin API key for property data
 - MLS_API_KEY: MLS API key (via Bridge API)
 - GREAT_SCHOOLS_API_KEY: GreatSchools API key for school ratings
 - NICHES_API_KEY: Niche API key for school ratings

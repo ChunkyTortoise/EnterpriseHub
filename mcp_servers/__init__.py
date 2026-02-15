@@ -6,6 +6,10 @@ This package contains custom MCP (Model Context Protocol) servers for Enterprise
 - Voice/Twilio: Voice calls, SMS, transcription
 - Marketing Automation: Email campaigns, lead nurturing, analytics
 
+NOTE: All servers in this package are reference implementations / API design demos.
+All data returned is simulated. Replace mock handlers with real API integrations
+before production use.
+
 Usage:
     # Run individual servers:
     python -m mcp_servers.real_estate_mcp

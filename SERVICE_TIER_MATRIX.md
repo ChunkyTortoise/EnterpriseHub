@@ -556,10 +556,10 @@ Based on existing EnterpriseHub implementations:
 
 ### Contact Information
 
-- 📧 **Email**: [Your Email]
+- 📧 **Email**: cave@enterprisehub.ai
 - 📞 **Phone**: [Your Phone]
-- 📅 **Schedule**: [Calendar Link]
-- 🌐 **Website**: [Your Website]
+- 📅 **Schedule**: https://calendly.com/enterprisehub
+- 🌐 **Website**: https://enterprisehub.ai
 
 ---
 

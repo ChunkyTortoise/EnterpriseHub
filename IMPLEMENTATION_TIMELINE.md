@@ -76,7 +76,7 @@ This timeline translates the [PORTFOLIO_ASSETS_DEV_SPEC.md](./PORTFOLIO_ASSETS_D
 | **Avg Project Size** | $5,000 | **$12,000** | Week 10 | Deal pipeline analysis |
 | **Premium Pricing** | Baseline | **+20%** | Week 10 | Proposal acceptance rate |
 | **API Response P50** | 320ms | **<150ms** | Week 6 | Performance benchmarks |
-| **Cache Hit Rate (L1)** | 65% | **>78%** | Week 6 | Redis metrics |
+| **Cache Hit Rate (L1)** | 65% | **>59.1%** | Week 6 | Redis metrics |
 | **Test Coverage** | 60% | **>80%** | Week 6 | pytest coverage |
 
 ### Secondary KPIs
@@ -229,7 +229,7 @@ This timeline translates the [PORTFOLIO_ASSETS_DEV_SPEC.md](./PORTFOLIO_ASSETS_D
 | Full bot suite operational | 3 bots | Internal testing |
 | Intent decoder accuracy | >85% | Test set evaluation |
 | Claude orchestrator latency | <200ms | APM metrics |
-| L1 cache hit rate | >78% | Redis monitoring |
+| L1 cache hit rate | >59.1% | Redis monitoring |
 | Test coverage | >80% | pytest --cov |
 | A/B test framework | Operational | Feature flag system |
 
