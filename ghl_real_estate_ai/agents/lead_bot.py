@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from langgraph.graph import END, StateGraph
 
+from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
@@ -121,10 +122,12 @@ class LeadBotConfig:
     jorge_handoff_enabled: bool = True
 
 
-class LeadBotWorkflow:
+class LeadBotWorkflow(BaseBotWorkflow):
     """
     Enhanced Lead Bot - Orchestrates the 3-7-30 Day Follow-Up Sequence using LangGraph.
     Implements the 'Ghost-in-the-Machine' Re-engagement Strategy with optional enhancements.
+
+    Inherits from BaseBotWorkflow to share common monitoring and service patterns.
 
     CORE FEATURES (always enabled):
     - LangGraph 3-7-30 day follow-up sequence
@@ -148,20 +151,21 @@ class LeadBotWorkflow:
         sendgrid_client=None,
         industry_config: Optional["IndustryConfig"] = None,
     ):
-        # Industry-agnostic configuration layer (backward compatible)
-        from ghl_real_estate_ai.config.industry_config import IndustryConfig
-
-        self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
-
-        # Core components (always initialized)
+        # Initialize base workflow (handles industry_config, event_publisher, ml_analytics)
         self.config = config or LeadBotConfig()
+        super().__init__(
+            tenant_id="jorge_lead_bot",
+            industry_config=industry_config,
+            enable_ml_analytics=self.config.enable_track3_intelligence and TRACK3_ML_AVAILABLE,
+        )
+
+        # Core components (bot-specific)
         self.intent_decoder = LeadIntentDecoder(industry_config=self.industry_config)
         self.retell_client = RetellClient()
         self.cma_generator = CMAGenerator()
         self.ghost_engine = get_ghost_followup_engine()
         self.ghl_client = ghl_client
         self.sendgrid_client = sendgrid_client
-        self.event_publisher = get_event_publisher()
         self.sequence_service = get_sequence_service()
         self.scheduler = get_lead_scheduler()
         from ghl_real_estate_ai.services.national_market_intelligence import get_national_market_intelligence
@@ -172,7 +176,6 @@ class LeadBotWorkflow:
         self.analytics_engine = None
         self.personality_adapter = None
         self.temperature_engine = None
-        self.ml_analytics = None
 
         if self.config.enable_behavioral_optimization:
             self.analytics_engine = BehavioralAnalyticsEngine()
@@ -185,13 +188,6 @@ class LeadBotWorkflow:
         if self.config.enable_predictive_analytics:
             self.temperature_engine = TemperaturePredictionEngine()
             logger.info("Lead Bot: Predictive analytics enabled")
-
-        # Track 3.1 ML Analytics Engine (optional)
-        if self.config.enable_track3_intelligence and TRACK3_ML_AVAILABLE:
-            self.ml_analytics = MLAnalyticsEngine(tenant_id="jorge_lead_bot")
-            logger.info("Lead Bot: Track 3.1 ML intelligence enabled")
-        elif self.config.enable_track3_intelligence:
-            logger.warning("Lead Bot: Track 3.1 requested but dependencies not available")
 
         # Phase 3.3 Bot Intelligence Middleware Integration
         self.intelligence_middleware = None

@@ -63,6 +63,7 @@ from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCo
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
 from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
+from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 
 # Phase 1.5 - 1.8 Integration
 from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnalysisService
@@ -140,18 +141,20 @@ __all__ = [
 ]
 
 
-class JorgeSellerBot:
+class JorgeSellerBot(BaseBotWorkflow):
     """
     Unified Jorge Seller Bot - Production-ready with optional enhancements.
-    
+
+    Inherits from BaseBotWorkflow to share common monitoring and service patterns.
+
     This class now delegates to specialized service classes for specific responsibilities
     while maintaining full backward compatibility with the original public API.
-    
+
     CORE FEATURES (always enabled):
     - LangGraph friendly qualification workflow
     - Track 3.1 Predictive Intelligence integration
     - Real-time event publishing and coordination
-    
+
     OPTIONAL ENHANCEMENTS (configurable):
     - Progressive Skills (68% token reduction)
     - Agent Mesh Integration (enterprise orchestration)
@@ -165,26 +168,21 @@ class JorgeSellerBot:
         config: Optional[JorgeFeatureConfig] = None,
         industry_config: Optional["IndustryConfig"] = None,
     ):
-        # Industry-agnostic configuration layer (backward compatible)
-        from ghl_real_estate_ai.config.industry_config import IndustryConfig
-        self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
-
-        # Core components (always initialized)
-        self.tenant_id = tenant_id
+        # Initialize base workflow (handles industry_config, event_publisher, ml_analytics)
         self.config = config or JorgeFeatureConfig()
+        super().__init__(
+            tenant_id=tenant_id,
+            industry_config=industry_config,
+            enable_ml_analytics=self.config.enable_track3_intelligence,
+        )
+
+        # Core components (bot-specific)
         self.intent_decoder = LeadIntentDecoder(industry_config=self.industry_config)
         self.seller_intent_decoder = SellerIntentDecoder(industry_config=self.industry_config)
         self.cma_generator = CMAGenerator()
         self.market_intelligence = get_market_intelligence()
         self.claude = ClaudeAssistant()
-        self.event_publisher = get_event_publisher()
         self.seller_psychology_analyzer = get_seller_psychology_analyzer()
-
-        # Track 3.1 Predictive Intelligence Engine (always enabled)
-        if self.config.enable_track3_intelligence:
-            self.ml_analytics = get_ml_analytics_engine(tenant_id)
-        else:
-            self.ml_analytics = None
 
         # Progressive Skills components (optional)
         self.skills_manager = None
