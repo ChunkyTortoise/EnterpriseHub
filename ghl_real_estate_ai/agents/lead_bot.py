@@ -15,6 +15,7 @@ from langgraph.graph import END, StateGraph
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
+from ghl_real_estate_ai.config.industry_config import IndustryConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.integrations.lyrio import LyrioClient
 from ghl_real_estate_ai.integrations.retell import RetellClient
@@ -23,7 +24,7 @@ from ghl_real_estate_ai.models.bot_context_types import (
     ConversationMessage,
 )
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
-from ghl_real_estate_ai.services.agent_state_sync import sync_service
+from ghl_real_estate_ai.services.agent_state_sync import get_ghl_sync_service, sync_service
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
@@ -39,6 +40,13 @@ from ghl_real_estate_ai.services.lead_sequence_state_service import (
     get_sequence_service,
 )
 from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
+
+# Enhanced Analytics Components (extracted from god class)
+from ghl_real_estate_ai.services.jorge.analytics.behavioral_analytics import BehavioralAnalyticsEngine
+from ghl_real_estate_ai.services.jorge.analytics.models import ResponsePattern, SequenceOptimization
+from ghl_real_estate_ai.services.jorge.analytics.personality_adapter import PersonalityAdapter
+from ghl_real_estate_ai.services.jorge.analytics.temperature_prediction import TemperaturePredictionEngine
+from ghl_real_estate_ai.services.jorge.caching.ttl_lru_cache import TTLLRUCache
 
 # Enhanced Features (Track 3.1 Integration)
 try:
@@ -96,33 +104,6 @@ except ImportError as e:
     logger.warning(f"Bot Intelligence Middleware unavailable: {e}")
     BOT_INTELLIGENCE_AVAILABLE = False
 
-# ================================
-# ENHANCED FEATURES DATACLASSES
-# ================================
-
-
-@dataclass
-class ResponsePattern:
-    """Tracks lead response patterns for optimization"""
-
-    avg_response_hours: float
-    response_count: int
-    channel_preferences: Dict[str, float]  # SMS, Email, Voice, WhatsApp
-    engagement_velocity: str  # "fast", "moderate", "slow"
-    best_contact_times: List[int]  # Hours of day (0-23)
-    message_length_preference: str  # "brief", "detailed"
-
-
-@dataclass
-class SequenceOptimization:
-    """Optimized sequence timing based on behavioral patterns"""
-
-    day_3: int
-    day_7: int
-    day_14: int
-    day_30: int
-    channel_sequence: List[str]  # Ordered list of channels to use
-
 
 @dataclass
 class LeadBotConfig:
@@ -138,544 +119,6 @@ class LeadBotConfig:
     default_sequence_timing: bool = True
     personality_detection_enabled: bool = True
     jorge_handoff_enabled: bool = True
-
-
-class TTLLRUCache:
-    """
-    Thread-safe LRU cache with TTL (Time-To-Live) support.
-
-    Features:
-    - Maximum entry limit to prevent unbounded memory growth
-    - TTL-based expiration for stale data eviction
-    - LRU eviction when max entries reached
-    - Thread-safe operations
-    """
-
-    def __init__(self, max_entries: int = 1000, ttl_seconds: int = 3600):
-        """
-        Initialize TTL-aware LRU cache.
-
-        Args:
-            max_entries: Maximum number of entries (default: 1000)
-            ttl_seconds: Time-to-live in seconds (default: 3600 = 60 minutes)
-        """
-        self._cache: OrderedDict[str, Tuple[Any, float]] = OrderedDict()
-        self._max_entries = max_entries
-        self._ttl_seconds = ttl_seconds
-        self._lock = threading.Lock()
-        self._stats = {
-            "hits": 0,
-            "misses": 0,
-            "evictions_ttl": 0,
-            "evictions_lru": 0,
-        }
-
-    def get(self, key: str) -> Optional[Any]:
-        """
-        Get value from cache if exists and not expired.
-
-        Returns:
-            Cached value or None if not found/expired
-        """
-        with self._lock:
-            if key not in self._cache:
-                self._stats["misses"] += 1
-                return None
-
-            value, timestamp = self._cache[key]
-            current_time = datetime.now().timestamp()
-
-            # Check if expired
-            if current_time - timestamp > self._ttl_seconds:
-                del self._cache[key]
-                self._stats["evictions_ttl"] += 1
-                self._stats["misses"] += 1
-                return None
-
-            # Move to end (most recently used)
-            self._cache.move_to_end(key)
-            self._stats["hits"] += 1
-            return value
-
-    def set(self, key: str, value: Any) -> None:
-        """
-        Set value in cache with current timestamp.
-
-        Evicts LRU entries if max_entries exceeded.
-        """
-        with self._lock:
-            current_time = datetime.now().timestamp()
-
-            # If key exists, update and move to end
-            if key in self._cache:
-                self._cache[key] = (value, current_time)
-                self._cache.move_to_end(key)
-                return
-
-            # Evict oldest entries if at capacity
-            while len(self._cache) >= self._max_entries:
-                oldest_key = next(iter(self._cache))
-                del self._cache[oldest_key]
-                self._stats["evictions_lru"] += 1
-                logger.debug(f"LRU eviction: {oldest_key} (cache size: {len(self._cache)})")
-
-            # Add new entry
-            self._cache[key] = (value, current_time)
-
-    def contains(self, key: str) -> bool:
-        """Check if key exists and is not expired."""
-        return self.get(key) is not None
-
-    def delete(self, key: str) -> bool:
-        """Delete entry from cache."""
-        with self._lock:
-            if key in self._cache:
-                del self._cache[key]
-                return True
-            return False
-
-    def clear(self) -> None:
-        """Clear all entries from cache."""
-        with self._lock:
-            self._cache.clear()
-
-    def cleanup_expired(self) -> int:
-        """
-        Remove all expired entries.
-
-        Returns:
-            Number of entries removed
-        """
-        with self._lock:
-            current_time = datetime.now().timestamp()
-            expired_keys = [
-                key for key, (_, timestamp) in self._cache.items() if current_time - timestamp > self._ttl_seconds
-            ]
-            for key in expired_keys:
-                del self._cache[key]
-                self._stats["evictions_ttl"] += 1
-
-            if expired_keys:
-                logger.debug(f"TTL cleanup: removed {len(expired_keys)} expired entries")
-
-            return len(expired_keys)
-
-    def get_stats(self) -> Dict[str, Any]:
-        """Get cache statistics."""
-        with self._lock:
-            total_requests = self._stats["hits"] + self._stats["misses"]
-            hit_rate = self._stats["hits"] / total_requests if total_requests > 0 else 0.0
-            return {
-                "size": len(self._cache),
-                "max_entries": self._max_entries,
-                "ttl_seconds": self._ttl_seconds,
-                "hits": self._stats["hits"],
-                "misses": self._stats["misses"],
-                "hit_rate": hit_rate,
-                "evictions_ttl": self._stats["evictions_ttl"],
-                "evictions_lru": self._stats["evictions_lru"],
-            }
-
-    def __len__(self) -> int:
-        """Return number of entries in cache."""
-        with self._lock:
-            return len(self._cache)
-
-
-class BehavioralAnalyticsEngine:
-    """
-    Analyzes lead behavior patterns for predictive optimization.
-
-    Uses TTL-aware LRU cache to prevent unbounded memory growth:
-    - Max 1000 entries to limit memory usage
-    - 60 minute TTL to ensure fresh analysis
-    - LRU eviction when capacity reached
-    """
-
-    # Class-level cache configuration constants
-    CACHE_MAX_ENTRIES = 1000
-    CACHE_TTL_SECONDS = 3600  # 60 minutes
-
-    def __init__(self):
-        self._patterns_cache = TTLLRUCache(max_entries=self.CACHE_MAX_ENTRIES, ttl_seconds=self.CACHE_TTL_SECONDS)
-        logger.info(
-            f"BehavioralAnalyticsEngine initialized with TTL cache "
-            f"(max_entries={self.CACHE_MAX_ENTRIES}, ttl={self.CACHE_TTL_SECONDS}s)"
-        )
-
-    async def analyze_response_patterns(self, lead_id: str, conversation_history: List[Dict]) -> ResponsePattern:
-        """
-        Analyze lead's response patterns for optimization.
-
-        Uses TTL-aware LRU cache to:
-        - Return cached patterns if available and fresh (< 60 min)
-        - Evict stale patterns automatically
-        - Prevent unbounded memory growth
-        """
-        # Check cache first (handles TTL expiration automatically)
-        cached_pattern = self._patterns_cache.get(lead_id)
-        if cached_pattern is not None:
-            logger.debug(f"Cache hit for lead {lead_id} response pattern")
-            return cached_pattern
-
-        logger.debug(f"Cache miss for lead {lead_id}, computing response pattern")
-
-        # Calculate response velocity using actual timestamps
-        response_times = []
-        for i in range(1, len(conversation_history)):
-            current_msg = conversation_history[i]
-            prev_msg = conversation_history[i - 1]
-
-            # Real timestamp analysis using conversation timestamps
-            if current_msg.get("role") == "user" and prev_msg.get("role") == "assistant":
-                current_ts = current_msg.get("timestamp")
-                prev_ts = prev_msg.get("timestamp")
-
-                if current_ts and prev_ts:
-                    try:
-                        # Parse timestamps (support ISO format and Unix timestamps)
-                        if isinstance(current_ts, (int, float)):
-                            current_dt = datetime.fromtimestamp(current_ts, tz=timezone.utc)
-                        else:
-                            current_dt = datetime.fromisoformat(str(current_ts).replace("Z", "+00:00"))
-
-                        if isinstance(prev_ts, (int, float)):
-                            prev_dt = datetime.fromtimestamp(prev_ts, tz=timezone.utc)
-                        else:
-                            prev_dt = datetime.fromisoformat(str(prev_ts).replace("Z", "+00:00"))
-
-                        # Calculate hours between messages
-                        delta_hours = (current_dt - prev_dt).total_seconds() / 3600
-                        if delta_hours > 0:  # Only count positive deltas
-                            response_times.append(delta_hours)
-                    except (ValueError, TypeError) as e:
-                        logger.debug(f"Could not parse timestamps for lead {lead_id}: {e}")
-                        # Fallback to default if timestamp parsing fails
-                        response_times.append(4.5)
-
-        avg_response_hours = sum(response_times) / len(response_times) if response_times else 24.0
-
-        # Determine engagement velocity
-        if avg_response_hours < 2:
-            velocity = "fast"
-        elif avg_response_hours < 12:
-            velocity = "moderate"
-        else:
-            velocity = "slow"
-
-        # Analyze channel preferences from GHL contact data
-        channel_prefs = await self._get_channel_preferences(lead_id, conversation_history)
-
-        # Analyze message length preference
-        avg_msg_length = sum(len(m.get("content", "").split()) for m in conversation_history if m.get("role") == "user")
-        avg_msg_length = avg_msg_length / max(1, len([m for m in conversation_history if m.get("role") == "user"]))
-
-        length_pref = "brief" if avg_msg_length < 10 else "detailed"
-
-        # Calculate best contact times from engagement patterns
-        best_times = self._calculate_best_contact_times(conversation_history)
-
-        pattern = ResponsePattern(
-            avg_response_hours=avg_response_hours,
-            response_count=len([m for m in conversation_history if m.get("role") == "user"]),
-            channel_preferences=channel_prefs,
-            engagement_velocity=velocity,
-            best_contact_times=best_times,
-            message_length_preference=length_pref,
-        )
-
-        # Store in cache (handles LRU eviction automatically)
-        self._patterns_cache.set(lead_id, pattern)
-        return pattern
-
-    def get_cache_stats(self) -> Dict[str, Any]:
-        """Get cache statistics for monitoring."""
-        return self._patterns_cache.get_stats()
-
-    def cleanup_stale_patterns(self) -> int:
-        """Manually trigger cleanup of expired patterns."""
-        return self._patterns_cache.cleanup_expired()
-
-    async def _get_channel_preferences(self, lead_id: str, conversation_history: List[Dict]) -> Dict[str, float]:
-        """
-        Get channel preferences from GHL contact data or infer from conversation history.
-
-        Returns:
-            Dict mapping channel names to preference scores (0.0-1.0)
-        """
-        channel_prefs = {"SMS": 0.5, "Email": 0.5, "Voice": 0.5, "WhatsApp": 0.3}
-
-        try:
-            # Try to fetch contact preferences from GHL
-            from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
-
-            async with EnhancedGHLClient() as ghl_client:
-                contact = await ghl_client.get_contact(lead_id)
-                if contact:
-                    # Extract channel preferences from contact custom fields
-                    custom_fields = getattr(contact, "custom_fields", {}) or {}
-
-                    # Check for explicit channel preferences
-                    if custom_fields.get("preferred_channel"):
-                        preferred = custom_fields["preferred_channel"].upper()
-                        if preferred in channel_prefs:
-                            channel_prefs[preferred] = 0.9
-
-                    # Check DND (Do Not Disturb) settings
-                    if getattr(contact, "dnd", False):
-                        channel_prefs["Voice"] = 0.1
-
-                    # Check email opt-out
-                    if getattr(contact, "email_opt_out", False):
-                        channel_prefs["Email"] = 0.0
-
-                    # Check SMS opt-out
-                    if getattr(contact, "sms_opt_out", False):
-                        channel_prefs["SMS"] = 0.0
-
-        except Exception as e:
-            logger.debug(f"Could not fetch GHL contact preferences for {lead_id}: {e}")
-
-        # Infer preferences from conversation history
-        channel_counts = {"SMS": 0, "Email": 0, "Voice": 0, "WhatsApp": 0}
-        for msg in conversation_history:
-            channel = msg.get("channel", "").upper()
-            if channel in channel_counts:
-                channel_counts[channel] += 1
-
-        total_messages = sum(channel_counts.values())
-        if total_messages > 0:
-            for channel, count in channel_counts.items():
-                # Blend GHL preferences with observed behavior (70% observed, 30% GHL)
-                observed_pref = count / total_messages
-                channel_prefs[channel] = 0.7 * observed_pref + 0.3 * channel_prefs[channel]
-
-        return channel_prefs
-
-    def _calculate_best_contact_times(self, conversation_history: List[Dict]) -> List[int]:
-        """
-        Calculate best contact times based on engagement patterns.
-
-        Analyzes when the lead typically responds to determine optimal contact hours.
-
-        Returns:
-            List of hours (0-23) when lead is most responsive
-        """
-        hour_engagement = {}  # hour -> response count
-
-        for msg in conversation_history:
-            if msg.get("role") == "user":
-                timestamp = msg.get("timestamp")
-                if timestamp:
-                    try:
-                        if isinstance(timestamp, (int, float)):
-                            dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-                        else:
-                            dt = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
-
-                        hour = dt.hour
-                        hour_engagement[hour] = hour_engagement.get(hour, 0) + 1
-                    except (ValueError, TypeError):
-                        continue
-
-        if hour_engagement:
-            # Sort hours by engagement count and return top 3
-            sorted_hours = sorted(hour_engagement.items(), key=lambda x: x[1], reverse=True)
-            best_times = [hour for hour, _ in sorted_hours[:3]]
-
-            # Ensure we have at least 3 times, pad with business hours defaults
-            default_times = [9, 14, 18]
-            while len(best_times) < 3:
-                for default in default_times:
-                    if default not in best_times:
-                        best_times.append(default)
-                        break
-
-            return best_times[:3]
-
-        # Default to standard business hours if no engagement data
-        return [9, 14, 18]
-
-    async def predict_optimal_sequence(self, pattern: ResponsePattern) -> SequenceOptimization:
-        """Predict optimal sequence timing based on behavioral patterns"""
-
-        # Optimize intervals based on response velocity
-        if pattern.engagement_velocity == "fast":
-            # Accelerate sequence for fast responders
-            optimization = SequenceOptimization(
-                day_3=1,  # Contact tomorrow
-                day_7=3,  # Contact in 3 days
-                day_14=7,  # Contact in 1 week
-                day_30=14,  # Contact in 2 weeks
-                channel_sequence=["SMS", "Voice", "SMS", "Email"],
-            )
-        elif pattern.engagement_velocity == "slow":
-            # Extend intervals for slow responders
-            optimization = SequenceOptimization(
-                day_3=5,  # Wait 5 days
-                day_7=14,  # Wait 2 weeks
-                day_14=21,  # Wait 3 weeks
-                day_30=45,  # Wait 6+ weeks
-                channel_sequence=["Email", "SMS", "Voice", "SMS"],
-            )
-        else:
-            # Standard intervals for moderate responders
-            optimization = SequenceOptimization(
-                day_3=3, day_7=7, day_14=14, day_30=30, channel_sequence=["SMS", "Email", "Voice", "SMS"]
-            )
-
-        # Adjust channel sequence based on preferences
-        sorted_channels = sorted(pattern.channel_preferences.items(), key=lambda x: x[1], reverse=True)
-        optimization.channel_sequence = [ch[0] for ch in sorted_channels]
-
-        return optimization
-
-
-class PersonalityAdapter:
-    """Adapts messaging based on lead personality and preferences"""
-
-    def __init__(self):
-        self.personality_profiles = {
-            "analytical": {
-                "style": "data-driven",
-                "tone": "professional",
-                "format": "bullet points",
-                "keywords": ["analysis", "data", "research", "comparison"],
-            },
-            "relationship": {
-                "style": "personal",
-                "tone": "warm",
-                "format": "conversational",
-                "keywords": ["understand", "help", "partnership", "together"],
-            },
-            "results": {
-                "style": "direct",
-                "tone": "urgent",
-                "format": "brief",
-                "keywords": ["action", "results", "quickly", "efficiently"],
-            },
-            "security": {
-                "style": "cautious",
-                "tone": "reassuring",
-                "format": "detailed",
-                "keywords": ["safe", "secure", "guaranteed", "protected"],
-            },
-        }
-
-    async def detect_personality(self, conversation_history: List[Dict]) -> str:
-        """Detect lead personality type from conversation patterns"""
-        all_text = " ".join([m.get("content", "").lower() for m in conversation_history])
-
-        personality_scores = {}
-        for personality, profile in self.personality_profiles.items():
-            score = sum(1 for keyword in profile["keywords"] if keyword in all_text)
-            personality_scores[personality] = score
-
-        # Return highest scoring personality or default to 'relationship'
-        return (
-            max(personality_scores, key=personality_scores.get) if any(personality_scores.values()) else "relationship"
-        )
-
-    async def adapt_message(self, base_message: str, personality_type: str, pattern: ResponsePattern) -> str:
-        """Adapt message based on personality type and response patterns"""
-        profile = self.personality_profiles.get(personality_type, self.personality_profiles["relationship"])
-
-        # Adjust message length based on preference
-        if pattern.message_length_preference == "brief" and profile["format"] != "brief":
-            # Shorten message for brief preference
-            sentences = base_message.split(". ")
-            adapted_message = ". ".join(sentences[:2]) + "."
-        else:
-            adapted_message = base_message
-
-        # Add personality-specific elements
-        if personality_type == "analytical":
-            adapted_message = f"Based on market data: {adapted_message}"
-        elif personality_type == "relationship":
-            adapted_message = f"I wanted to personally reach out: {adapted_message}"
-        elif personality_type == "results":
-            adapted_message = f"Quick update: {adapted_message}"
-        elif personality_type == "security":
-            adapted_message = f"To ensure we're on the right track: {adapted_message}"
-
-        return adapted_message
-
-
-class TemperaturePredictionEngine:
-    """Predicts lead temperature changes and provides early warnings
-
-    WARNING: Temperature history is stored in volatile memory and will be lost on restart.
-    For production deployments, configure Redis persistence to retain trend data across restarts.
-    See improvement roadmap item P0-3 for Redis migration guide.
-    """
-
-    MAX_LEADS_IN_MEMORY = 10000  # Prevent unbounded memory growth
-
-    def __init__(self):
-        self.temperature_history: Dict[str, List[float]] = {}
-
-    async def predict_temperature_trend(self, lead_id: str, current_scores: Dict[str, float]) -> Dict:
-        """Predict lead temperature trend and provide early warnings"""
-
-        # Store current temperature score
-        current_temp = (current_scores.get("frs_score", 0) + current_scores.get("pcs_score", 0)) / 2
-
-        if lead_id not in self.temperature_history:
-            # Basic memory protection: if we're at capacity, evict oldest lead
-            if len(self.temperature_history) >= self.MAX_LEADS_IN_MEMORY:
-                # Remove the first (oldest) lead
-                oldest_lead = next(iter(self.temperature_history))
-                del self.temperature_history[oldest_lead]
-
-            self.temperature_history[lead_id] = []
-
-        self.temperature_history[lead_id].append(current_temp)
-
-        # Keep only last 10 interactions for trend analysis
-        if len(self.temperature_history[lead_id]) > 10:
-            self.temperature_history[lead_id] = self.temperature_history[lead_id][-10:]
-
-        history = self.temperature_history[lead_id]
-
-        # Predict trend
-        diff = 0
-        if len(history) < 2:
-            trend = "stable"
-            confidence = 0.5
-        else:
-            # Simple linear trend analysis
-            recent_avg = sum(history[-3:]) / min(3, len(history))
-            older_avg = sum(history[:-3]) / max(1, len(history) - 3) if len(history) > 3 else recent_avg
-
-            diff = recent_avg - older_avg
-
-            if abs(diff) < 5:
-                trend = "stable"
-                confidence = 0.8
-            elif diff > 0:
-                trend = "heating_up"
-                confidence = 0.7
-            else:
-                trend = "cooling_down"
-                confidence = 0.7
-
-        # Generate early warning if cooling
-        early_warning = None
-        if trend == "cooling_down" and current_temp > 40:
-            early_warning = {
-                "type": "temperature_declining",
-                "urgency": "medium",
-                "recommendation": "Immediate engagement recommended - lead showing signs of disengagement",
-                "suggested_action": "Schedule call within 24 hours",
-            }
-
-        return {
-            "current_temperature": current_temp,
-            "trend": trend,
-            "confidence": confidence,
-            "early_warning": early_warning,
-            "prediction_next_interaction": max(0, current_temp + (diff * 1.5)),
-        }
 
 
 class LeadBotWorkflow:
@@ -843,6 +286,7 @@ class LeadBotWorkflow:
 
         # Define Nodes
         workflow.add_node("analyze_intent", self.analyze_intent)
+        workflow.add_node("check_handoff_signals", self.check_handoff_signals)
         workflow.add_node("determine_path", self.determine_path)
         workflow.add_node("generate_cma", self.generate_cma)
 
@@ -860,7 +304,18 @@ class LeadBotWorkflow:
 
         # Define Edges
         workflow.set_entry_point("analyze_intent")
-        workflow.add_edge("analyze_intent", "determine_path")
+        workflow.add_edge("analyze_intent", "check_handoff_signals")
+
+        # Conditional routing: if handoff required, skip to END; otherwise continue
+        def route_after_handoff_check(state):
+            if state.get("handoff_required"):
+                return END
+            return "determine_path"
+
+        workflow.add_conditional_edges(
+            "check_handoff_signals",
+            route_after_handoff_check,
+        )
 
         # Conditional Routing based on 'current_step' and 'engagement_status'
         workflow.add_conditional_edges(
@@ -1651,6 +1106,77 @@ class LeadBotWorkflow:
 
     # --- Node Implementations ---
 
+    async def check_handoff_signals(self, state: LeadFollowUpState) -> Dict:
+        """
+        Early handoff detection to short-circuit workflow when handoff is needed.
+
+        This node executes immediately after intent analysis to detect buyer/seller
+        intent patterns. If handoff confidence exceeds threshold (0.7), workflow
+        terminates early, skipping expensive response generation.
+
+        Returns:
+            Dict with:
+                - handoff_required: bool
+                - handoff_signals: Dict with buyer/seller intent scores
+                - handoff_target: str ("buyer-bot" or "seller-bot")
+        """
+        if not self.config.jorge_handoff_enabled:
+            return {"handoff_required": False, "handoff_signals": {}}
+
+        # Extract intent signals from latest message
+        last_msg = state.get("user_message", "")
+        if not last_msg:
+            return {"handoff_required": False, "handoff_signals": {}}
+
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        # Fast regex-based intent detection
+        signals = JorgeHandoffService.extract_intent_signals(last_msg)
+
+        buyer_score = signals.get("buyer_intent_score", 0.0)
+        seller_score = signals.get("seller_intent_score", 0.0)
+
+        # Check if handoff threshold exceeded
+        HANDOFF_THRESHOLD = 0.7
+        handoff_required = False
+        handoff_target = None
+
+        if buyer_score >= HANDOFF_THRESHOLD:
+            handoff_required = True
+            handoff_target = "buyer-bot"
+            logger.info(
+                f"Early handoff triggered for {state['lead_id']}: buyer intent {buyer_score:.2f} >= {HANDOFF_THRESHOLD}"
+            )
+        elif seller_score >= HANDOFF_THRESHOLD:
+            handoff_required = True
+            handoff_target = "seller-bot"
+            logger.info(
+                f"Early handoff triggered for {state['lead_id']}: seller intent {seller_score:.2f} >= {HANDOFF_THRESHOLD}"
+            )
+
+        if handoff_required:
+            # Emit handoff event
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="lead-bot",
+                contact_id=state["lead_id"],
+                status="handoff_detected",
+                current_step="check_handoff_signals",
+            )
+
+            sync_service = get_ghl_sync_service()
+            await sync_service.record_lead_event(
+                state["lead_id"],
+                "AI",
+                f"Handoff to {handoff_target} detected early (score={max(buyer_score, seller_score):.2f})",
+                "handoff",
+            )
+
+        return {
+            "handoff_required": handoff_required,
+            "handoff_signals": signals,
+            "handoff_target": handoff_target,
+        }
+
     async def analyze_intent(self, state: LeadFollowUpState) -> Dict:
         """Score the lead using the Phase 1 Intent Decoder."""
         logger.info(f"Analyzing intent for lead {state['lead_id']}")
@@ -1771,6 +1297,51 @@ class LeadBotWorkflow:
 
         return {"intent_profile": profile, "sequence_state": sequence_state.to_dict()}
 
+    def _map_int_to_sequence_day(self, sequence_day: int) -> SequenceDay:
+        """
+        Safely map integer sequence day to SequenceDay enum with validation.
+
+        Args:
+            sequence_day: Integer day value (0, 3, 7, 14, 30, etc.)
+
+        Returns:
+            SequenceDay enum value
+
+        Raises:
+            ValueError: If sequence_day is not a valid mapping
+        """
+        # Define valid mappings
+        day_map = {
+            0: SequenceDay.INITIAL,
+            3: SequenceDay.DAY_3,
+            7: SequenceDay.DAY_7,
+            14: SequenceDay.DAY_14,
+            30: SequenceDay.DAY_30,
+        }
+
+        if sequence_day in day_map:
+            return day_map[sequence_day]
+
+        # Handle edge cases with intelligent defaults
+        if sequence_day < 0:
+            logger.warning(f"Invalid negative sequence_day {sequence_day}, defaulting to INITIAL")
+            return SequenceDay.INITIAL
+        elif sequence_day < 3:
+            logger.warning(f"Sequence day {sequence_day} < 3, defaulting to INITIAL")
+            return SequenceDay.INITIAL
+        elif sequence_day < 7:
+            logger.warning(f"Sequence day {sequence_day} in range [3,7), mapping to DAY_3")
+            return SequenceDay.DAY_3
+        elif sequence_day < 14:
+            logger.warning(f"Sequence day {sequence_day} in range [7,14), mapping to DAY_7")
+            return SequenceDay.DAY_7
+        elif sequence_day < 30:
+            logger.warning(f"Sequence day {sequence_day} in range [14,30), mapping to DAY_14")
+            return SequenceDay.DAY_14
+        else:
+            logger.warning(f"Sequence day {sequence_day} >= 30, mapping to DAY_30")
+            return SequenceDay.DAY_30
+
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
         """Decide the next step based on engagement and timeline."""
 
@@ -1805,14 +1376,8 @@ class LeadBotWorkflow:
 
         if sequence_day_val is not None:
             # Simulation/Direct mode: create temporary sequence state from sequence_day
-            # Map numeric day to SequenceDay enum
-            day_enum = SequenceDay.DAY_3
-            if sequence_day_val == 7:
-                day_enum = SequenceDay.DAY_7
-            elif sequence_day_val == 14:
-                day_enum = SequenceDay.DAY_14
-            elif sequence_day_val == 30:
-                day_enum = SequenceDay.DAY_30
+            # Map numeric day to SequenceDay enum using validated helper
+            day_enum = self._map_int_to_sequence_day(sequence_day_val)
 
             sequence_state = LeadSequenceState(
                 lead_id=state["lead_id"],
@@ -1837,14 +1402,8 @@ class LeadBotWorkflow:
         # Determine routing based on sequence day
         current_day = sequence_state.current_day
         if sequence_day_val is not None:
-            if sequence_day_val == 3:
-                current_day = SequenceDay.DAY_3
-            elif sequence_day_val == 7:
-                current_day = SequenceDay.DAY_7
-            elif sequence_day_val == 14:
-                current_day = SequenceDay.DAY_14
-            elif sequence_day_val == 30:
-                current_day = SequenceDay.DAY_30
+            # Override with validated int-to-enum mapping
+            current_day = self._map_int_to_sequence_day(sequence_day_val)
 
         if current_day == SequenceDay.DAY_3:
             logger.debug("determine_path - Routing to day_3")
