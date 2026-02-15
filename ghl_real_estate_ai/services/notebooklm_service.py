@@ -64,7 +64,8 @@ class NotebookLMService:
             
         try:
             # We use from_storage for simplicity in this integration
-            self.client = await NotebookLMClient.from_storage()
+            client = await NotebookLMClient.from_storage()
+            self.client = await client.__aenter__()
             logger.info("NotebookLM service initialized successfully")
             return True
         except Exception as e:

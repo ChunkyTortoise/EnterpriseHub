@@ -4,7 +4,15 @@
 
 ---
 
+
 ## Executive Summary
+
+
+
+
+
+
+
 
 A premier real estate brokerage in Southern California with 65 agents was struggling with fragmented customer journeys—prospects engaged with multiple disconnected bots but experienced poor handoffs, duplicated conversations, and lost leads. Each bot operated in isolation, creating data silos and inconsistent experiences.
 
