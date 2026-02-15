@@ -275,8 +275,8 @@ Formalize internal performance data into a shareable document that justifies pre
 | API Response P50 | 145ms | <200ms ✓ |
 | API Response P95 | 380ms | <500ms ✓ |
 | API Response P99 | 720ms | <1000ms ✓ |
-| Cache Hit Rate (L1) | 78% | >70% ✓ |
-| Cache Hit Rate (L2) | 52% | >50% ✓ |
+| Cache Hit Rate (L1) | 59.1% | >70% |
+| Cache Hit Rate (L2) | 20.5% | >50% |
 | Throughput | 127 req/s | >100 req/s ✓ |
 | Token Cost/Request | $0.007 | <$0.01 ✓ |
 
@@ -322,9 +322,9 @@ Formalize internal performance data into a shareable document that justifies pre
 
 | Layer | Hit Rate | Avg Response | Savings |
 |-------|----------|--------------|---------|
-| L1 (Redis) | 78% | 12ms | 91% |
-| L2 (Postgres) | 52% | 45ms | 78% |
-| L3 (Computed) | 34% | 180ms | 44% |
+| L1 (Redis) | 59.1% | 0.30ms | 91% |
+| L2 (Postgres) | 20.5% | 1.89ms | 78% |
+| L3 (Computed) | 8.5% | 45.2ms | 44% |
 
 #### Cost Analysis
 

@@ -2,6 +2,10 @@
 Voice/Twilio MCP Server
 Exposes Twilio integration tools for voice calls, SMS, call recording and transcription.
 
+NOTE: This is a reference implementation / API design demo.
+All data returned is simulated. Replace mock handlers with
+real API integrations before production use.
+
 Environment Variables Required:
 - TWILIO_ACCOUNT_SID: Twilio Account SID
 - TWILIO_AUTH_TOKEN: Twilio Auth Token
