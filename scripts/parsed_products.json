@@ -1,0 +1,209 @@
+[
+  {
+    "spec_name": "AgentForge Starter",
+    "title": "AgentForge Starter \u2014 Multi-LLM Orchestration Framework",
+    "price": "$49 (pay what you want, minimum $49)",
+    "url_slug": "`agentforge-starter`",
+    "short_description": "Production-ready Python framework for Claude, GPT-4, Gemini orchestration. 550+ tests, Docker ready, MIT licensed. Get started in 5 minutes.",
+    "tags": "llm-orchestrator, multi-provider, claude, gemini, openai, python, async, production-ready, ai-api, agent-framework",
+    "description": "# Get Started with Production-Ready Multi-LLM Orchestration\n\nStop wrestling with different API signatures, rate limits, and response formats. AgentForge gives you a single, elegant Python interface for Claude, GPT-4, Gemini, and Perplexity.\n\n## What You Get\n\n### Complete Framework\n- \u2705 **550+ tests, 80%+ coverage** \u2014 Production-grade code you can trust\n- \u2705 **4 LLM providers** \u2014 Claude, GPT-4, Gemini, Perplexity unified under one API\n- \u2705 **Mock provider** \u2014 Test without API keys or costs\n- \u2705 **Docker setup** \u2014 Dockerfile + docker-compose.yml included\n- \u2705 **CLI tool** \u2014 Quick testing from command line\n- \u2705 **Streamlit demo app** \u2014 Interactive provider comparison\n- \u2705 **MIT License** \u2014 Use in unlimited commercial projects\n\n### Core Features\n- **Unified async interface** \u2014 Same API for all providers\n- **Token-aware rate limiting** \u2014 Automatic throttling\n- **Exponential backoff** \u2014 Intelligent retry on failures\n- **Function calling** \u2014 Tool use across all providers\n- **Structured JSON output** \u2014 Pydantic validation built-in\n- **Cost tracking** \u2014 Per-request and cumulative monitoring\n- **Streaming support** \u2014 Real-time responses\n- **15KB core** \u2014 3x smaller than LangChain\n\n### Quick Start (3 Steps)\n1. `pip install -r requirements.txt`\n2. Set API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY)\n3. `python examples/chat_example.py`\n\n### Documentation Included\n- README.md \u2014 Getting started guide\n- API_REFERENCE.md \u2014 Complete API documentation\n- CUSTOMIZATION.md \u2014 Provider customization guide\n- ARCHITECTURE.md \u2014 System design overview\n- 4 code examples (chat, function calling, cost tracking, streaming)\n\n## Perfect For\n- Developers building their first AI app\n- Hobbyists exploring LLM APIs\n- Students learning AI development\n- Side project builders\n\n## License & Guarantee\n- **License**: MIT License \u2014 use in unlimited commercial projects\n- **Refund**: 30-day money-back guarantee\n\n\ud83d\udd17 **Live Demo**: https://ct-agentforge.streamlit.app\n\ud83d\udd17 **Upgrade to Pro**: Get 3 case studies + expert consult for $199"
+  },
+  {
+    "spec_name": "AgentForge Pro",
+    "title": "AgentForge Pro \u2014 Framework + Case Studies + Expert Consult",
+    "price": "$199 (fixed)",
+    "url_slug": "`agentforge-pro`",
+    "short_description": "Everything in Starter + 3 production case studies ($147K savings proven) + 30-min expert consult + priority support. Ship faster with confidence.",
+    "tags": "llm-orchestrator, production-ready, case-studies, consulting, expert-support, claude, gpt-4, cost-optimization, hipaa, fintech",
+    "description": "# AgentForge Pro \u2014 Production Deployment Made Easy\n\nGet everything you need to ship LLM features with confidence.\n\n## What You Get\n\n### 1. Complete Framework (Worth $49)\nEverything in Starter: 550+ tests, 4 LLM providers, Docker, CLI, Streamlit demo, MIT License.\n\n### 2. Real-World Case Studies (Worth $299)\n\n**LegalTech Startup: 70% Cost Reduction**\nReduced LLM costs from $18.5K to $6.2K/month ($147K annual savings). Includes full implementation code, cost breakdown analysis, provider selection matrix, caching strategy templates.\n\n**Healthcare Platform: HIPAA-Compliant Routing**\n99.99% uptime across 3M requests with zero PHI leaks. Includes HIPAA-compliant routing code, compliance checklist, audit logging implementation.\n\n**Fintech Fraud Detection: 5-Agent Consensus**\n98.7% fraud detection accuracy, sub-100ms response time. Includes multi-agent orchestration code, consensus algorithm, performance optimization guide.\n\n### 3. Expert Architecture Consultation (Worth $150)\n30-minute 1-on-1 call: provider selection, cost optimization, architecture review, best practices, Q&A. Calendly link included.\n\n### 4. Advanced Examples (9 Total)\nLegal contract review, healthcare HIPAA routing, fintech fraud detection, e-commerce generation, multi-agent consensus, structured output, custom provider plugins, advanced retry, cost-aware routing.\n\n### 5. CI/CD Templates\nGitHub Actions workflow, Docker deployment guide, environment configuration, monitoring setup.\n\n### 6. Priority Email Support\n48-hour response SLA, direct maintainer access, implementation guidance, prioritized bug fixes.\n\n## Total Value: $548 \u2192 You pay $199 (save 64%)\n\n## Perfect For\n- Small teams (2-5 developers) shipping LLM features\n- Consultants building AI solutions for clients\n- Startups with AI product roadmaps\n\n## License & Guarantee\n- MIT License \u2014 unlimited commercial projects\n- 30-day money-back guarantee\n\n\ud83d\udd17 **Live Demo**: https://ct-agentforge.streamlit.app\n\ud83d\udd17 **Need more?** Upgrade to Enterprise ($999) for white-label rights + Slack support"
+  },
+  {
+    "spec_name": "AgentForge Enterprise",
+    "title": "AgentForge Enterprise \u2014 Framework + Consulting + White-Label Rights",
+    "price": "$999 (fixed)",
+    "url_slug": "`agentforge-enterprise`",
+    "short_description": "Full Pro + 60-min deep-dive + custom code examples + 90-day Slack support (4hr SLA) + white-label rights. Production-ready for teams at scale.",
+    "tags": "llm-orchestrator, enterprise, white-label, consulting, slack-support, sla, hipaa, soc2, compliance, team-training",
+    "description": "# AgentForge Enterprise \u2014 Ship with Expert Support\n\nEverything in Pro + hands-on support for production deployment at scale.\n\n## What You Get\n\n### Everything in Pro ($199 value)\n550+ tests, 4 providers, 3 case studies, 30-min consult, 9 advanced examples, CI/CD templates, priority support, lifetime updates.\n\n### PLUS Enterprise Additions\n\n**60-Minute Architecture Deep-Dive ($500 value)**\nScreen share code walkthrough, custom architecture design, cost modeling, security & compliance review (HIPAA, SOC2, GDPR), performance optimization. Bring your whole team (up to 10). Zoom/Google Meet, recorded.\n\n**Custom Code Examples ($800 value)**\n2-3 custom examples tailored to YOUR use case. Delivered in 2 weeks, fully tested, production-ready, matches your coding conventions. Any domain: healthcare, finance, e-commerce, legal, real estate, education.\n\n**Private Slack Channel \u2014 90 Days ($1,200 value)**\n4-hour response SLA (business hours, 9am-5pm PST). Implementation troubleshooting, performance optimization, production incident support, code reviews, prioritized feature requests. Extension: $400/month after 90 days.\n\n**White-Label & Resale Rights ($2,000 value)**\nRemove all branding, unlimited client projects, sell as part of your product, no attribution required, no royalties.\n\n**Team Training Session ($400 value)**\n1-hour live onboarding for up to 10 people. Best practices walkthrough, live Q&A, recorded session.\n\n**Premium Documentation**\nSecurity hardening checklist, HIPAA/SOC2/GDPR compliance docs, multi-tenant architecture patterns, HA deployment guide, monitoring & observability setup.\n\n## Total Value: $5,099+ \u2192 You pay $999 (save 80%)\n\n## Implementation Timeline\n- Week 1: Kickoff + Architecture Deep-Dive\n- Week 2-3: Custom Examples Development\n- Week 4: Delivery + Team Training\n- Ongoing: 90-Day Support Period\n\n## License & Guarantee\n- Full commercial license with white-label rights\n- 30-day money-back guarantee\n- 90-day Slack + lifetime email support\n\n\ud83d\udd17 **Live Demo**: https://ct-agentforge.streamlit.app\n\ud83d\udce7 **Pre-sales questions?** caymanroden@gmail.com"
+  },
+  {
+    "spec_name": "Prompt Engineering Toolkit \u2014 Starter",
+    "title": "Prompt Engineering Toolkit \u2014 8 Production Patterns + Template Manager",
+    "price": "$29 (pay what you want, minimum $29)",
+    "url_slug": "`prompt-toolkit-starter`",
+    "short_description": "8 battle-tested prompt patterns, template manager, token counter. 190 tests. Works with Claude, GPT, Gemini. Ship better prompts faster.",
+    "tags": "prompt-engineering, llm-prompts, claude-prompts, ai-prompts, prompt-templates, token-counting, python, developer-tools",
+    "description": "# Prompt Engineering Toolkit \u2014 Stop Guessing, Start Shipping\n\nGet 8 production-ready prompt patterns with template management and token counting. Everything you need to write effective prompts for Claude, GPT, and other LLMs.\n\n## 8 Production-Ready Prompt Patterns\n- **Chain-of-Thought**: Step-by-step reasoning for complex problems\n- **Few-Shot**: Examples-based learning for consistent outputs\n- **Role-Playing**: Perspective-shifting for nuanced responses\n- **Socratic**: Question-driven exploration\n- **Tree-of-Thought**: Multi-path reasoning and comparison\n- **Constraint-Based**: Bounded outputs with strict requirements\n- **Iterative Refinement**: Progressive improvement loops\n- **Multi-Perspective**: Multiple viewpoints for balanced analysis\n\n## Template Manager\nVariable substitution, versioning, reusable components, easy customization.\n\n## Token Counter\nPer-prompt estimation, cost calculation for different models, optimize before you pay.\n\n## 10 Ready-to-Use Templates\nCode review, content summarization, data extraction, Q&A, creative writing, technical docs, meeting notes, email drafting, research synthesis, brainstorming.\n\n## What's Included\n- Source code (Python 3.11+)\n- 190 automated tests\n- Quick-start guide\n- MIT License\n\n30-day money-back guarantee. Works with Claude, GPT-4, Gemini.\n\n\ud83d\udd17 **Live Demo**: https://ct-prompt-lab.streamlit.app"
+  },
+  {
+    "spec_name": "Prompt Engineering Toolkit \u2014 Pro",
+    "title": "Prompt Engineering Toolkit Pro \u2014 A/B Testing + Cost Optimizer + Safety",
+    "price": "$79 (fixed)",
+    "url_slug": "`prompt-toolkit-pro`",
+    "short_description": "Everything in Starter + A/B testing, cost optimizer, prompt versioning, safety checker, evaluation metrics + CLI tool. Optimize LLM costs at scale.",
+    "tags": "prompt-engineering, ab-testing, cost-optimization, prompt-versioning, evaluation-metrics, cli-tool, production-ready, python",
+    "description": "# Prompt Engineering Toolkit Pro \u2014 Optimize for Production\n\nEverything in Starter plus A/B testing, cost optimization, and prompt versioning.\n\n## Beyond Starter\n- All 8 patterns + template manager + token counter + 190 tests\n\n## Pro Features\n- **A/B Testing Framework**: Run experiments, statistical significance, winner selection\n- **Cost Calculator**: Per-model pricing (Claude/GPT/Gemini), budget projections, ROI analysis\n- **Prompt Versioning**: Git-like version control, rollback, diff tracking\n- **Safety Checker**: Injection attack detection, harmful content filtering, PII detection\n- **Evaluation Metrics**: Relevance, coherence, completeness, accuracy, conciseness\n- **CLI Tool (pel)**: Terminal-based testing, batch processing, CI/CD integration\n- **Priority Support**: 48hr response SLA\n\n30-day money-back guarantee. MIT License.\n\n\ud83d\udd17 **Live Demo**: https://ct-prompt-lab.streamlit.app"
+  },
+  {
+    "spec_name": "Prompt Engineering Toolkit \u2014 Enterprise",
+    "title": "Prompt Engineering Toolkit Enterprise \u2014 Benchmarks + Reports + Consulting",
+    "price": "$199 (fixed)",
+    "url_slug": "`prompt-toolkit-enterprise`",
+    "short_description": "Full Pro + benchmark runner, report generator, Docker deployment, CI/CD templates + 30-day priority support + 30-min consult. Commercial license.",
+    "tags": "prompt-engineering, enterprise, benchmark-runner, report-generator, commercial-license, consulting, docker, ci-cd, production-grade",
+    "description": "# Prompt Engineering Toolkit Enterprise \u2014 Production Prompt Engineering\n\nEverything in Pro plus benchmark runner, report generation, Docker deployment, and dedicated support.\n\n## Beyond Pro\n- All Pro features (8 patterns, A/B testing, cost optimizer, versioning, safety, CLI)\n\n## Enterprise Features\n- **Benchmark Runner**: Systematic evaluation, regression testing, quality gates\n- **Report Generator**: Markdown + PDF reports, customizable templates, charts\n- **Category Organization**: Tag-based search, bulk operations, team workflows\n- **Docker Deployment**: Dockerfile, docker-compose, multi-stage builds, health checks\n- **CI/CD Templates**: GitHub Actions + GitLab CI, automated testing on PR\n- **Commercial License**: Unlimited projects, no attribution, resale rights\n- **30-Day Priority Support**: 48hr SLA, direct maintainer access\n- **30-Min Architecture Consultation**: Prompt strategy review, cost optimization\n\n30-day money-back guarantee. Full commercial license.\n\n\ud83d\udd17 **Live Demo**: https://ct-prompt-lab.streamlit.app\n\ud83d\udce7 caymanroden@gmail.com"
+  },
+  {
+    "spec_name": "AI Integration Starter Kit \u2014 Starter",
+    "title": "AI Integration Starter Kit \u2014 Ship LLM Features in Hours",
+    "price": "$39 (pay what you want, minimum $39)",
+    "url_slug": "`llm-starter-kit`",
+    "short_description": "Ship your first LLM integration in hours. Claude, GPT, Gemini client + streaming + function calling + RAG + cost tracking. 220 tests included.",
+    "tags": "llm-integration, ai-starter-kit, claude-api, openai-python, function-calling, rag-pipeline, streaming, cost-tracking, python",
+    "description": "# AI Integration Starter Kit \u2014 Ship LLM Features in Hours, Not Weeks\n\nProduction-ready patterns for completion, streaming, function calling, and RAG \u2014 all with retry logic, cost tracking, and error handling baked in.\n\n## What You Get\n- **LLM Client**: Claude, GPT-4, Gemini \u2014 unified interface\n- **Streaming Parser**: Real-time tokens, backpressure, reconnection\n- **Function Calling**: Pydantic schemas, auto-validation, multi-turn\n- **Basic RAG Pipeline**: Chunking, embeddings, vector search, context injection\n- **Cost Tracker**: Per-query pricing, monthly projections, budget alerts\n- **Token Counter**: Pre-request estimation, model-specific tokenization\n- **15 Working Examples**: Chat, streaming, function calling, RAG, batch, caching, async, testing\n\n## What's Included\n- Source code (Python 3.11+)\n- 220 automated tests\n- Quick-start guide\n- MIT License\n\n30-day money-back guarantee.\n\n\ud83d\udd17 **Live Demo**: https://ct-llm-starter.streamlit.app"
+  },
+  {
+    "spec_name": "AI Integration Starter Kit \u2014 Pro",
+    "title": "AI Integration Starter Kit Pro \u2014 Production-Hardened LLM Integration",
+    "price": "$99 (fixed)",
+    "url_slug": "`llm-starter-kit-pro`",
+    "short_description": "Everything in Starter + retry with backoff, circuit breaker, response caching, batch processor, guardrails + latency tracking. Production-hardened.",
+    "tags": "llm-integration, production-ready, circuit-breaker, response-caching, batch-processing, guardrails, latency-tracker, fallback-chain, python",
+    "description": "# AI Integration Starter Kit Pro \u2014 Production-Hardened\n\nEverything in Starter plus production hardening: retry, circuit breaker, caching, batching, and observability.\n\n## Beyond Starter\n- Multi-provider client + streaming + function calling + RAG + 220 tests\n\n## Pro Features\n- **Retry with Exponential Backoff**: Configurable strategies, jitter, max limits\n- **Circuit Breaker**: Prevent cascading failures, half-open recovery\n- **Response Caching**: In-memory + Redis, TTL, invalidation strategies\n- **Batch Processor**: Rate limit compliance, progress tracking\n- **Guardrails**: Content filtering, rate limiting, PII detection, token limits\n- **Latency Tracker**: P50/P95/P99, per-provider comparison, SLA alerting\n- **Fallback Chain**: Primary \u2192 secondary failover, cost/quality-aware routing\n- **CLI Tool**: Terminal-based testing, CI/CD integration\n\n30-day money-back guarantee. MIT License.\n\n\ud83d\udd17 **Live Demo**: https://ct-llm-starter.streamlit.app"
+  },
+  {
+    "spec_name": "AI Integration Starter Kit \u2014 Enterprise",
+    "title": "AI Integration Starter Kit Enterprise \u2014 Multi-Provider Orchestration + K8s",
+    "price": "$249 (fixed)",
+    "url_slug": "`llm-starter-kit-enterprise`",
+    "short_description": "Full Pro + multi-provider orchestration, observability pipeline, mock LLM, Docker/K8s deployment + 30-day priority support + 30-min consult.",
+    "tags": "llm-integration, enterprise, orchestration, observability, kubernetes, docker, commercial-license, consulting, production-grade, mock-llm",
+    "description": "# AI Integration Starter Kit Enterprise \u2014 Production-Grade Infrastructure\n\nEverything in Pro plus orchestration, observability, Docker/K8s, and dedicated support.\n\n## Beyond Pro\n- All Pro features (retry, circuit breaker, caching, batching, guardrails, fallback)\n\n## Enterprise Features\n- **Multi-Provider Orchestration**: Cost/latency/quality-aware routing, load balancing\n- **Observability Pipeline**: Structured logs, Prometheus metrics, OpenTelemetry traces, Grafana dashboards\n- **Mock LLM**: Zero API calls in testing, configurable responses, error simulation\n- **Docker Deployment**: Multi-stage builds, health checks, env configs\n- **Kubernetes Manifests**: Deployment, Service, HPA, resource limits, probes\n- **CI/CD Templates**: GitHub Actions + GitLab CI\n- **Commercial License**: Unlimited projects, resale rights, no attribution\n- **30-Day Priority Support**: 48hr SLA\n- **30-Min Architecture Consultation**: Integration review, scaling guidance\n\n30-day money-back guarantee.\n\n\ud83d\udd17 **Live Demo**: https://ct-llm-starter.streamlit.app\n\ud83d\udce7 caymanroden@gmail.com"
+  },
+  {
+    "spec_name": "Dashboard Templates \u2014 Starter",
+    "title": "Streamlit Dashboard Templates \u2014 CSV to Insights in 30 Seconds",
+    "price": "$49 (pay what you want, minimum $49)",
+    "url_slug": "`insight-starter`",
+    "short_description": "Upload CSV/Excel, get dashboards, predictions, and PDF reports in 30 seconds. 640+ tests, 4 attribution models, SHAP explanations. MIT licensed.",
+    "tags": "data-dashboard, business-intelligence, streamlit, data-analysis, machine-learning, shap, predictive-analytics, anomaly-detection, python",
+    "description": "# Data Intelligence Dashboard \u2014 Upload to Insights in 30 Seconds\n\nUpload CSV or Excel, get interactive dashboards, ML predictions, and PDF reports automatically.\n\n## What You Get\n- **Auto-Profiler**: Statistical analysis, distributions, correlations\n- **Dashboard Generator**: Interactive Plotly charts, filterable views\n- **4 Attribution Models**: First-touch, last-touch, linear, time-decay\n- **Predictive Analytics**: Classification, regression, clustering\n- **SHAP Explanations**: Explainable AI for every prediction\n- **Anomaly Detection**: Z-score + IQR methods, configurable thresholds\n- **Time Series Forecasting**: Trend + seasonality decomposition\n- **Report Generator**: PDF/Markdown exports\n- **Data Cleaner**: Missing values, outliers, type inference\n\n## What's Included\n- Full source code (Python 3.11+)\n- 640+ automated tests\n- 3 demo datasets (e-commerce, marketing, HR)\n- Docker configuration\n- MIT License\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "Dashboard Templates \u2014 Pro",
+    "title": "Data Intelligence Pro \u2014 Advanced Analytics + Case Studies + Consult",
+    "price": "$199 (fixed)",
+    "url_slug": "`insight-pro`",
+    "short_description": "Everything in Starter + advanced analytics guide, 3 industry case studies, 5 PDF report templates, 30-min consult + database connectors.",
+    "tags": "data-dashboard, business-intelligence, case-studies, consulting, marketing-attribution, predictive-analytics, report-templates, python",
+    "description": "# Data Intelligence Pro \u2014 Advanced Analytics + Expert Guidance\n\nEverything in Starter plus advanced analytics, case studies, report templates, and expert consultation.\n\n## Beyond Starter\n- Auto-profiler, dashboards, 4 attribution models, SHAP, anomaly detection, forecasting, 640+ tests\n\n## Pro Features\n- **Advanced Analytics Guide**: Cohort analysis, RFM segmentation, LTV modeling, A/B testing, funnel analysis, market basket, seasonal decomposition\n- **3 Case Studies**: SaaS Metrics, E-commerce Analytics, Marketing Mix \u2014 with code\n- **5 PDF Report Templates**: Executive, Marketing, Financial, Operations, QBR\n- **Database Connectors**: PostgreSQL, MySQL, BigQuery, Snowflake\n- **Priority Support**: 48hr SLA\n- **30-Min Consultation**: Data strategy review\n\n30-day money-back guarantee. MIT License."
+  },
+  {
+    "spec_name": "Dashboard Templates \u2014 Enterprise",
+    "title": "Data Intelligence Enterprise \u2014 Custom Dashboards + Consulting + White-Label",
+    "price": "$999 (fixed)",
+    "url_slug": "`insight-enterprise`",
+    "short_description": "Full Pro + custom dashboards + 60-min deep-dive + 90-day Slack support (4hr SLA) + real-time streaming + white-label rights + team training.",
+    "tags": "data-dashboard, enterprise, white-label, consulting, slack-support, real-time, streaming, bigquery, team-training, production-grade",
+    "description": "# Data Intelligence Enterprise \u2014 Custom BI at Scale\n\nEverything in Pro plus custom dashboards, real-time streaming, and dedicated support.\n\n## Beyond Pro\n- All Pro features (analytics guide, case studies, report templates, DB connectors)\n\n## Enterprise Features\n- **2-3 Custom Dashboards**: Built for YOUR data, delivered in 2 weeks\n- **Real-Time Integration**: WebSocket streaming, auto-refresh, event-driven\n- **BigQuery/Snowflake Connector**: Cloud data warehouse integration, query optimization\n- **60-Min Architecture Deep-Dive**: Data strategy, pipeline design\n- **90-Day Slack Support**: 4hr SLA (business hours)\n- **Team Training**: 1-hour session for up to 10 people\n- **White-Label Rights**: Remove branding, resale, no royalties\n- **Premium Docs**: Custom styling guide, data connector development\n\nTotal value $5,000+ \u2192 You pay $999 (save 80%)\n\n30-day money-back guarantee.\n\ud83d\udce7 caymanroden@gmail.com"
+  },
+  {
+    "spec_name": "Revenue-Sprint Bundle",
+    "title": "AI Developer Starter Bundle \u2014 Prompts + LLM Integration + Dashboards",
+    "price": "$99 (fixed)",
+    "url_slug": "`revenue-sprint-bundle`",
+    "short_description": "Prompt Toolkit + AI Integration Starter Kit + Dashboard Templates. 930+ tests combined. Ship AI features this week. Save 16%.",
+    "tags": "bundle, prompt-engineering, llm-integration, streamlit-dashboard, python, starter-kit, ai-development, developer-tools",
+    "total": "**$117**",
+    "description": "# AI Developer Starter Bundle \u2014 Ship AI Features This Week (Save 16%)\n\nGet all three Revenue-Sprint Starter products in one bundle.\n\n## What's Included\n\n### 1. Prompt Engineering Toolkit ($29 value)\n8 prompt patterns, template manager, token counter, 190 tests\n\n### 2. AI Integration Starter Kit ($39 value)\nLLM client (Claude/GPT/Gemini), streaming, function calling, RAG, cost tracking, 220 tests\n\n### 3. Data Intelligence Dashboard ($49 value)\nAuto-profiler, dashboard generator, attribution models, SHAP, anomaly detection, 640+ tests\n\n## Savings\n| Product | Individual | Bundle |\n|---------|-----------|--------|\n| Prompt Toolkit | $29 | \u2705 |\n| LLM Starter Kit | $39 | \u2705 |\n| Dashboard Templates | $49 | \u2705 |\n| **Total** | **$117** | **$99** |\n\n**You save $18 (16%)**\n\n## Combined Stats\n- 930+ automated tests\n- All MIT licensed\n- All Python 3.11+\n- All production-ready\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "DocQA Engine \u2014 Starter",
+    "title": "DocQA Engine \u2014 Production RAG Pipeline with Hybrid Search",
+    "price": "$59 (pay what you want, minimum $59)",
+    "url_slug": "`docqa-starter`",
+    "short_description": "Build production-ready document Q&A with hybrid retrieval, 5 chunking strategies, citation scoring. 500+ tests, Docker ready. MIT licensed.",
+    "tags": "rag, retrieval-augmented-generation, document-qa, hybrid-search, semantic-search, citation, fastapi, streamlit, python",
+    "description": "# DocQA Engine \u2014 Production-Ready Document Q&A\n\nBuild document Q&A systems with hybrid BM25 + semantic retrieval, 5 chunking strategies, and citation scoring. Zero external API dependencies.\n\n## What You Get\n- **Hybrid Retrieval**: BM25 + TF-IDF fusion for best-of-both-worlds search\n- **5 Chunking Strategies**: Fixed, sentence, paragraph, semantic, recursive\n- **Citation Scoring**: Every answer traced back to source documents\n- **Query Expansion**: Automatic synonym and related term generation\n- **Conversation Memory**: Multi-turn Q&A with context persistence\n- **Evaluation Framework**: MRR, NDCG, Precision@K metrics\n- **FastAPI REST API**: Production-ready endpoints\n- **Streamlit UI**: Interactive document upload and Q&A interface\n\n## What's Included\n- Full source code, 500+ tests, Docker setup\n- Configuration profiles for different document types\n- MIT License\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "DocQA Engine \u2014 Pro",
+    "title": "DocQA Engine Pro \u2014 RAG Pipeline + Optimization Guide + Case Studies",
+    "price": "$249 (fixed)",
+    "url_slug": "`docqa-pro`",
+    "short_description": "Everything in Starter + 30-page RAG optimization guide, 3 production case studies, 30-min expert consultation + priority support.",
+    "tags": "rag, production-ready, case-studies, consulting, hybrid-search, citation, hipaa, legal-tech, healthcare-ai, python",
+    "description": "# DocQA Engine Pro \u2014 Optimized RAG for Production\n\nEverything in Starter plus RAG optimization guide, case studies, and expert consultation.\n\n## Beyond Starter\n- Hybrid retrieval, 5 chunking strategies, citation scoring, 500+ tests\n\n## Pro Features\n- **30-Page RAG Optimization Guide**: Chunking strategies, embedding tuning, re-ranking, hybrid search fusion, evaluation methodology\n- **3 Case Studies**: Legal (contract review), Healthcare (records retrieval), Financial (SEC filing Q&A) \u2014 with code\n- **CI/CD Templates**: GitHub Actions, Docker deployment\n- **Priority Support**: 48hr SLA\n- **30-Min Expert Consultation**: RAG architecture review\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "DocQA Engine \u2014 Enterprise",
+    "title": "DocQA Engine Enterprise \u2014 RAG Pipeline + Custom Tuning + White-Label",
+    "price": "$1,499 (fixed)",
+    "url_slug": "`docqa-enterprise`",
+    "short_description": "Full Pro + 60-min deep-dive + custom domain tuning + 90-day Slack support (4hr SLA) + white-label rights. Enterprise-grade RAG.",
+    "tags": "rag, enterprise, white-label, consulting, slack-support, hipaa, compliance, custom-development, production-grade, team-training",
+    "description": "# DocQA Engine Enterprise \u2014 Production RAG at Scale\n\nEverything in Pro plus custom domain tuning, dedicated support, and white-label rights.\n\n## Beyond Pro\n- RAG optimization guide, 3 case studies, CI/CD, priority support\n\n## Enterprise Features\n- **Custom Domain Tuning Report**: Optimized config + benchmarks for YOUR documents\n- **Vector DB Migration Guide**: Qdrant, Weaviate, Pinecone integration\n- **60-Min Architecture Deep-Dive**: RAG pipeline design for your use case\n- **90-Day Slack Support**: 4hr SLA (business hours)\n- **Team Training**: 1-hour session, up to 10 people\n- **White-Label Rights**: Full commercial license, resale, no attribution\n\nTotal value $5,000+ \u2192 You pay $1,499\n\n30-day money-back guarantee.\n\ud83d\udce7 caymanroden@gmail.com"
+  },
+  {
+    "spec_name": "Web Scraper \u2014 Starter",
+    "title": "Web Scraper & Price Monitor \u2014 YAML-Config Scraping Toolkit",
+    "price": "$49 (pay what you want, minimum $49)",
+    "url_slug": "`scraper-starter`",
+    "short_description": "YAML-configurable scrapers with price tracking, SEO scoring, change detection. 370+ tests, Docker ready, async scheduling. MIT licensed.",
+    "tags": "web-scraper, price-monitoring, seo-scoring, yaml-config, change-detection, async, data-pipeline, streamlit, python",
+    "description": "# Web Scraper & Price Monitor \u2014 Configure, Don't Code\n\nYAML-configurable scraping with price tracking, SEO scoring, and SHA-256 change detection. No code changes needed to add new sites.\n\n## What You Get\n- **YAML Configuration**: Define scrapers in config files, not code\n- **Price Monitoring**: Track prices across multiple sites, alerts on changes\n- **SEO Scoring**: Content analysis, keyword density, meta tag auditing\n- **SHA-256 Change Detection**: Cryptographic change verification with diff visualization\n- **Async Scheduling**: Cron-like scheduling with concurrent execution\n- **Data Validation**: Schema validation, type checking, deduplication\n- **Streamlit Dashboard**: Visual monitoring and management\n- **Excel-to-Web Converter**: Turn spreadsheet workflows into web apps\n\n## What's Included\n- Full source code, 370+ tests, Docker setup\n- Example configs (Amazon, e-commerce, SEO)\n- MIT License\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "Web Scraper \u2014 Pro",
+    "title": "Web Scraper Pro \u2014 Toolkit + 15 Templates + Anti-Detection + Consult",
+    "price": "$149 (fixed)",
+    "url_slug": "`scraper-pro`",
+    "short_description": "Everything in Starter + proxy rotation guide, 15 advanced scraper templates, anti-detection strategies, 30-min expert consult + priority support.",
+    "tags": "web-scraper, production-ready, proxy-rotation, anti-detection, templates, consulting, competitive-intelligence, python",
+    "description": "# Web Scraper Pro \u2014 Production Scraping at Scale\n\nEverything in Starter plus proxy rotation, 15 templates, and expert consultation.\n\n## Beyond Starter\n- YAML config, price monitoring, SEO scoring, change detection, 370+ tests\n\n## Pro Features\n- **Proxy Rotation Guide**: Provider comparison, round-robin/weighted strategies\n- **15 Advanced Templates**: Real estate, jobs, reviews, e-commerce, news, etc.\n- **Anti-Detection Strategies**: Browser fingerprinting, timing, headers\n- **Priority Support**: 48hr SLA\n- **30-Min Expert Consultation**: Scraping architecture review\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "Web Scraper \u2014 Enterprise",
+    "title": "Web Scraper Enterprise \u2014 Toolkit + Custom Configs + Consulting + White-Label",
+    "price": "$699 (fixed)",
+    "url_slug": "`scraper-enterprise`",
+    "short_description": "Full Pro + 3 custom scraper configs + 60-min deep-dive + 60-day Slack support (4hr SLA) + white-label rights + compliance guide.",
+    "tags": "web-scraper, enterprise, white-label, consulting, slack-support, compliance, custom-development, data-pipeline, production-grade",
+    "description": "# Web Scraper Enterprise \u2014 Custom Scraping Infrastructure\n\nEverything in Pro plus custom configs, dedicated support, and white-label rights.\n\n## Beyond Pro\n- Proxy rotation, 15 templates, anti-detection, priority support\n\n## Enterprise Features\n- **3 Custom Scraper Configs**: Built for YOUR target sites\n- **Data Pipeline Integration Guide**: PostgreSQL, BigQuery, S3, webhooks\n- **Compliance Guide**: CFAA, robots.txt, ToS, GDPR, CCPA\n- **60-Min Architecture Deep-Dive**: Pipeline design for your use case\n- **60-Day Slack Support**: 4hr SLA (business hours)\n- **White-Label Rights**: Full commercial license, resale, no attribution\n\n30-day money-back guarantee.\n\ud83d\udce7 caymanroden@gmail.com"
+  },
+  {
+    "spec_name": "Insight Engine \u2014 Starter",
+    "title": "Insight Engine \u2014 Data Analytics with ML Predictions + SHAP",
+    "price": "$49 (pay what you want, minimum $49)",
+    "url_slug": "`insight-engine-starter`",
+    "short_description": "Upload CSV/Excel, get auto-profiling, ML predictions, SHAP explanations, clustering, forecasting. 640+ tests. Self-hosted, MIT licensed.",
+    "tags": "data-analytics, machine-learning, shap, explainable-ai, clustering, forecasting, anomaly-detection, streamlit, python",
+    "description": "# Insight Engine \u2014 From Raw Data to ML Insights\n\nAuto-profiling, ML predictions with SHAP explanations, clustering, time series forecasting, and anomaly detection. Upload CSV and get results in seconds.\n\n## What You Get\n- **Auto-Profiler**: Distributions, correlations, missing data analysis\n- **ML Predictions**: Classification + regression with automatic model selection\n- **SHAP Explanations**: Understand WHY each prediction was made\n- **Customer Segmentation**: K-Means clustering with silhouette optimization\n- **Time Series Forecasting**: Trend + seasonality decomposition\n- **Anomaly Detection**: Z-score + IQR methods\n- **4 Attribution Models**: First-touch, last-touch, linear, time-decay\n- **Statistical Testing**: T-test, chi-square, ANOVA, Mann-Whitney, Kruskal-Wallis, Fisher exact\n- **Report Generation**: PDF/Markdown exports\n\n## What's Included\n- Full source code, 640+ tests, Docker setup\n- 3 demo datasets\n- MIT License\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "Insight Engine \u2014 Pro"
+  },
+  {
+    "spec_name": "Insight Engine \u2014 Enterprise"
+  },
+  {
+    "spec_name": "All Starters Bundle",
+    "title": "All 4 Starter Kits Bundle \u2014 AI Orchestration + RAG + Scraping + Analytics",
+    "price": "$149 (fixed)",
+    "url_slug": "`all-starters-bundle`",
+    "short_description": "AgentForge + DocQA + Web Scraper + Data Dashboard \u2014 all Starter tiers. 2,060+ tests total. Save 28%.",
+    "tags": "bundle, starter-bundle, llm-orchestrator, rag-pipeline, web-scraper, data-dashboard, production-ready, python",
+    "total": "**$206**",
+    "description": "# All 4 Starter Kits \u2014 Save 28%\n\nGet all four production-ready toolkits for the price of three.\n\n## What's Included\n\n| Product | Individual | Included |\n|---------|-----------|----------|\n| AgentForge Starter (550+ tests) | $49 | \u2705 |\n| DocQA Engine Starter (500+ tests) | $59 | \u2705 |\n| Web Scraper Starter (370+ tests) | $49 | \u2705 |\n| Data Intelligence Starter (640+ tests) | $49 | \u2705 |\n| **Total** | **$206** | **$149** |\n\n**You save $57 (28%)**\n\n## Combined: 2,060+ Tests\nAll MIT licensed. All Docker ready. All production-grade.\n\n30-day money-back guarantee."
+  },
+  {
+    "spec_name": "All Pro Bundle",
+    "title": "All 4 Pro Kits Bundle \u2014 Case Studies + Expert Consults + Priority Support",
+    "price": "$549 (fixed)",
+    "url_slug": "`all-pro-bundle`",
+    "short_description": "AgentForge + DocQA + Web Scraper + Data Dashboard \u2014 all Pro tiers + 12 case studies + 4 expert consults. Save 31%.",
+    "tags": "bundle, pro-bundle, case-studies, consulting, priority-support, llm-orchestrator, rag-pipeline, web-scraper, data-dashboard",
+    "total": "**$797**",
+    "description": "# All 4 Pro Kits \u2014 Save 31%\n\nAll four Pro packages with case studies, expert consultations, and priority support.\n\n## What's Included\n\n| Product | Individual | Included |\n|---------|-----------|----------|\n| AgentForge Pro | $199 | \u2705 |\n| DocQA Engine Pro | $249 | \u2705 |\n| Web Scraper Pro | $149 | \u2705 |\n| Data Intelligence Pro | $199 | \u2705 |\n| **Total** | **$797** | **$549** |\n\n**You save $248 (31%)**\n\n## What You Get Across All Products\n- 12 production case studies with proven ROI\n- 4 expert consultations (30 min each = 2 hours total)\n- Priority support on all products (48hr SLA)\n- Advanced guides, CI/CD templates, database connectors\n\n30-day money-back guarantee."
+  }
+]
