@@ -174,13 +174,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
         elif self.enable_bot_intelligence:
             logger.warning("Jorge Buyer Bot: Bot Intelligence requested but dependencies not available")
 
-        # Monitoring services (singletons — cheap to instantiate)
-        self.performance_tracker = PerformanceTracker()
-        self.metrics_collector = BotMetricsCollector()
-        self.alerting_service = AlertingService()
-        self.ab_testing = ABTestingService()
-        self._init_ab_experiments()
-
         # Phase 1.4: Buyer Persona Classification
         self.buyer_persona_service = BuyerPersonaService()
         # Phase 1.5: Sentiment Analysis
@@ -234,16 +227,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
         )
 
         self.workflow = self._build_graph()
-
-    def _init_ab_experiments(self) -> None:
-        """Create default A/B experiments if not already registered."""
-        try:
-            self.ab_testing.create_experiment(
-                ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                ["formal", "casual", "empathetic"],
-            )
-        except ValueError:
-            pass  # Already exists
 
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(BuyerBotState)
