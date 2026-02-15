@@ -82,6 +82,7 @@ from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCo
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
+from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 
 # Phase 3 Loop 3: Handoff context propagation
 try:
@@ -109,10 +110,12 @@ except ImportError as e:
     BOT_INTELLIGENCE_AVAILABLE = False
 
 
-class JorgeBuyerBot:
+class JorgeBuyerBot(BaseBotWorkflow):
     """
     Autonomous buyer bot using consultative qualification.
     Designed to identify 'Serious Buyers' and filter 'Window Shoppers'.
+
+    Inherits from BaseBotWorkflow to share common monitoring and service patterns.
 
     Buyer Qualification Workflow:
     1. Analyze buyer intent and readiness signals
@@ -138,16 +141,17 @@ class JorgeBuyerBot:
         budget_config: Optional[BuyerBudgetConfig] = None,
         industry_config: Optional["IndustryConfig"] = None,
     ):
-        # Industry-agnostic configuration layer (backward compatible)
-        from ghl_real_estate_ai.config.industry_config import IndustryConfig
+        # Initialize base workflow (handles industry_config, event_publisher, ml_analytics)
+        super().__init__(
+            tenant_id=tenant_id,
+            industry_config=industry_config,
+            enable_ml_analytics=bool(get_ml_analytics_engine),
+        )
 
-        self.industry_config: IndustryConfig = industry_config or IndustryConfig.default_real_estate()
-
+        # Core components (bot-specific)
         self.intent_decoder = BuyerIntentDecoder(industry_config=self.industry_config)
         self.claude = ClaudeAssistant()
-        self.event_publisher = get_event_publisher()
         self.property_matcher = PropertyMatcher()
-        self.ml_analytics = get_ml_analytics_engine(tenant_id) if get_ml_analytics_engine else None
         self.ghl_client = GHLClient()
         self.enable_handoff = enable_handoff
 
