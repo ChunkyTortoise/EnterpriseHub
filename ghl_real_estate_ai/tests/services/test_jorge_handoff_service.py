@@ -28,6 +28,8 @@ class TestJorgeHandoffService:
     @pytest.fixture
     def handoff_service(self, mock_analytics_service):
         """Create a handoff service with mock analytics."""
+        JorgeHandoffService._handoff_history.clear()
+        JorgeHandoffService._active_handoffs.clear()
         return JorgeHandoffService(analytics_service=mock_analytics_service)
 
     @pytest.mark.asyncio
