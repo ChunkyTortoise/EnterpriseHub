@@ -34,6 +34,18 @@ from ghl_real_estate_ai.services.service_types import (
 )
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
+# Import workflow tracing for cross-bot correlation
+try:
+    from ghl_real_estate_ai.observability.workflow_tracing import (
+        create_handoff_span,
+        get_trace_id,
+        propagate_trace_context,
+    )
+    WORKFLOW_TRACING_AVAILABLE = True
+except ImportError:
+    WORKFLOW_TRACING_AVAILABLE = False
+    logger.debug("Workflow tracing not available")
+
 # Phase 3 Loop 3: GHL client for storing handoff context
 try:
     from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -1094,8 +1106,27 @@ class JorgeHandoffService:
         start_time = time.time()
         route = f"{decision.source_bot}->{decision.target_bot}"
 
+        # Create distributed tracing span for cross-bot handoff
+        if WORKFLOW_TRACING_AVAILABLE:
+            handoff_span = create_handoff_span(
+                decision.source_bot,
+                decision.target_bot,
+                contact_id,
+                decision.confidence,
+                decision.reason,
+            )
+            # Get trace ID for correlation
+            trace_id = get_trace_id()
+            if trace_id:
+                logger.info(f"Handoff {route} trace_id={trace_id}")
+        else:
+            handoff_span = None
+            trace_id = ""
+
         # Conflict resolution: prevent concurrent handoffs for the same contact
         if not self._acquire_handoff_lock(contact_id):
+            if handoff_span:
+                handoff_span.__exit__(None, None, None)
             return [
                 {
                     "handoff_executed": False,

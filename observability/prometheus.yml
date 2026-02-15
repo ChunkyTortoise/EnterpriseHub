@@ -1,0 +1,26 @@
+# Prometheus configuration for EnterpriseHub Jorge bots
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'jorge-bots'
+    environment: 'development'
+
+# Scrape configs
+scrape_configs:
+  # Jaeger metrics
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaeger:14269']
+
+  # EnterpriseHub FastAPI app (if /metrics endpoint exists)
+  - job_name: 'enterprisehub'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
