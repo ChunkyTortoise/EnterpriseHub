@@ -24,7 +24,7 @@ from ghl_real_estate_ai.models.bot_context_types import (
     ConversationMessage,
 )
 from ghl_real_estate_ai.models.workflows import LeadFollowUpState
-from ghl_real_estate_ai.services.agent_state_sync import get_ghl_sync_service, sync_service
+from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.cache_service import CacheService
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
