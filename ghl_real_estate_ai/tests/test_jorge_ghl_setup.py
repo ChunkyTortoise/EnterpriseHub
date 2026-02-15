@@ -7,6 +7,7 @@ import pytest
 
 from ghl_real_estate_ai.ghl_utils.jorge_ghl_setup import (
     CUSTOM_FIELDS,
+    JORGE_FIELDS,
     WORKFLOW_IDS,
     CALENDAR_IDS,
     validate_ghl_config,
@@ -15,6 +16,23 @@ from ghl_real_estate_ai.ghl_utils.jorge_ghl_setup import (
 
 class TestValidateGhlConfig:
     """Tests for validate_ghl_config()."""
+
+    def _all_critical_vars(self):
+        """Build dict of all critical env vars with dummy values."""
+        critical_vars = {}
+        for env_var, _, _, critical in CUSTOM_FIELDS:
+            if critical:
+                critical_vars[env_var] = "field_abc123"
+        for env_var, _, _, _, critical in JORGE_FIELDS:
+            if critical:
+                critical_vars[env_var] = "field_jorge_123"
+        for env_var, _, critical in WORKFLOW_IDS:
+            if critical:
+                critical_vars[env_var] = "wf_abc123"
+        for env_var, _, critical in CALENDAR_IDS:
+            if critical:
+                critical_vars[env_var] = "cal_abc123"
+        return critical_vars
 
     def test_all_missing_returns_invalid(self):
         """With no env vars set, critical fields are missing and valid=False."""
@@ -27,16 +45,7 @@ class TestValidateGhlConfig:
 
     def test_all_critical_set_returns_valid(self):
         """When all critical env vars are set, valid=True."""
-        critical_vars = {}
-        for env_var, _, _, critical in CUSTOM_FIELDS:
-            if critical:
-                critical_vars[env_var] = "field_abc123"
-        for env_var, _, critical in WORKFLOW_IDS:
-            if critical:
-                critical_vars[env_var] = "wf_abc123"
-        for env_var, _, critical in CALENDAR_IDS:
-            if critical:
-                critical_vars[env_var] = "cal_abc123"
+        critical_vars = self._all_critical_vars()
 
         with patch.dict(os.environ, critical_vars, clear=True):
             result = validate_ghl_config()
@@ -125,6 +134,15 @@ class TestValidateGhlConfig:
         for env_var, bot, critical in WORKFLOW_IDS:
             assert bot in valid_bots, f"{env_var} has invalid bot: {bot}"
             assert isinstance(critical, bool)
+
+    def test_jorge_fields_included(self):
+        """Jorge-specific fields should be included in validation."""
+        with patch.dict(os.environ, {}, clear=True):
+            result = validate_ghl_config()
+
+        jorge_env_vars = {env_var for env_var, _, _, _, _ in JORGE_FIELDS}
+        result_env_vars = {f["env_var"] for f in result["fields"]}
+        assert jorge_env_vars.issubset(result_env_vars)
 
     def test_set_field_shows_as_set(self):
         """A single set field should appear with status 'set'."""
