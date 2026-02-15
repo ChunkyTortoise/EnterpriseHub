@@ -1,0 +1,226 @@
+# Buyer Bot Conversation Memory - Architecture Diagram
+
+## High-Level Flow
+
+┌──────────────────────────────────────────────────────────────────┐
+│                    JorgeBuyerBot Workflow                         │
+└──────────────────────────────────────────────────────────────────┘
+                                │
+                                │
+        ┌───────────────────────┴───────────────────────┐
+        │                                               │
+        ▼                                               ▼
+┌───────────────────┐                          ┌───────────────────┐
+│   Load State      │                          │   Save State      │
+│   (Session Start) │                          │   (Session End)   │
+└─────────┬─────────┘                          └─────────┬─────────┘
+          │                                              │
+          │ load_state(contact_id)                       │ save_state(contact_id, state)
+          ▼                                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│           BuyerConversationMemory Service                         │
+│  - load_state()   : Optional[Dict]                               │
+│  - save_state()   : bool                                         │
+│  - clear_state()  : bool                                         │
+│  - _prepare_state_for_storage()                                  │
+└──────────────────────────────────────────────────────────────────┘
+                                │
+                                │ Redis operations
+                                ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    CacheService (Redis)                           │
+│  - get(key)      : Optional[Any]                                 │
+│  - set(key, val, ttl) : bool                                     │
+│  - delete(key)   : bool                                          │
+└──────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                         Redis Storage                             │
+│                                                                   │
+│  Key: "buyer_conversation_memory:{contact_id}"                   │
+│  Value: {                                                         │
+│    "compressed": bool,                                           │
+│    "data": str  # JSON or hex-encoded gzip                      │
+│  }                                                               │
+│  TTL: 30 days (configurable)                                     │
+└──────────────────────────────────────────────────────────────────┘
+
+## State Lifecycle
+
+Session 1 (Day 1):
+┌────────────┐  message   ┌──────────────┐  create   ┌─────────────┐
+│   Buyer    │─────────>  │  BuyerBot    │────────>  │   State     │
+│ (new user) │            │              │           │ (in-memory) │
+└────────────┘            └──────────────┘           └──────┬──────┘
+                                                            │
+                                                            │ save_state()
+                                                            ▼
+                                                     ┌─────────────┐
+                                                     │   Redis     │
+                                                     │ TTL: 30d    │
+                                                     └─────────────┘
+
+Session 2 (Day 4 - Same buyer returns):
+┌────────────┐  message   ┌──────────────┐  load_state()  ┌─────────────┐
+│   Buyer    │─────────>  │  BuyerBot    │──────────────> │   Redis     │
+│ (returning)│            │              │                │             │
+└────────────┘            └──────┬───────┘                └─────────────┘
+                                 │                               │
+                                 │<──────────────────────────────┘
+                                 │ restored state
+                                 ▼
+                          ┌──────────────┐
+                          │  Bot resumes │
+                          │ with context │
+                          └──────────────┘
+
+## Data Flow - Save Operation
+
+┌────────────────┐
+│ Bot State (Raw)│  Full state after conversation
+└────────┬───────┘
+         │
+         │ _prepare_state_for_storage()
+         ▼
+┌────────────────┐
+│ Prepared State │  Essential fields only, history trimmed
+└────────┬───────┘
+         │
+         │ Add metadata (timestamp, version)
+         ▼
+┌────────────────┐
+│ JSON serialize │
+└────────┬───────┘
+         │
+         │ Check size > 5KB?
+         ▼
+    ┌────────┐
+    │ > 5KB? │
+    └───┬─┬──┘
+      Y │ │ N
+        │ │
+        ▼ │
+  ┌──────────┐ │
+  │  gzip    │ │
+  │ compress │ │
+  └────┬─────┘ │
+       │       │
+       ▼       ▼
+  ┌─────────────────┐
+  │ Storage Wrapper │  {"compressed": bool, "data": str}
+  └────────┬────────┘
+           │
+           │ cache.set(key, value, ttl)
+           ▼
+      ┌─────────┐
+      │  Redis  │
+      └─────────┘
+
+## Data Flow - Load Operation
+
+┌─────────┐
+│  Redis  │
+└────┬────┘
+     │
+     │ cache.get(key)
+     ▼
+┌────────────────┐
+│ Storage Wrapper│  {"compressed": bool, "data": str}
+└────────┬───────┘
+         │
+         │ Check compressed flag
+         ▼
+    ┌──────────┐
+    │Compressed│
+    └───┬─┬────┘
+      Y │ │ N
+        │ │
+        ▼ │
+  ┌──────────┐ │
+  │  gzip    │ │
+  │decompress│ │
+  └────┬─────┘ │
+       │       │
+       ▼       ▼
+  ┌─────────────────┐
+  │ JSON deserialize│
+  └────────┬────────┘
+           │
+           │ Validate version
+           ▼
+      ┌──────────┐
+      │  State   │  Ready for bot use
+      └──────────┘
+
+## Configuration Flow
+
+┌───────────────────┐
+│ jorge_bots.yaml   │
+│                   │
+│ conversation_     │
+│ memory:           │
+│   enabled: true   │
+│   ttl_days: 30    │
+│   compress: 5120  │
+│   max_msg: 50     │
+└─────────┬─────────┘
+          │
+          │ Loaded at startup
+          ▼
+┌───────────────────┐
+│ JorgeConfigLoader │
+│                   │
+│ get_config()      │
+└─────────┬─────────┘
+          │
+          │ Injected into service
+          ▼
+┌───────────────────┐
+│ BuyerConversation │
+│ Memory.__init__() │
+│                   │
+│ self.ttl_days     │
+│ self.enabled      │
+│ self.compress_... │
+└───────────────────┘
+
+## Error Handling Paths
+
+┌───────────────┐
+│ save_state()  │
+└───────┬───────┘
+        │
+        ▼
+   ┌─────────┐
+   │ enabled?│
+   └────┬────┘
+      N │ Y
+        │ │
+        ▼ │
+     Return │
+     False  │
+            ▼
+       ┌─────────┐
+       │contact  │
+       │ID valid?│
+       └────┬────┘
+          N │ Y
+            │ │
+            ▼ │
+         Return │
+         False  │
+                ▼
+           ┌──────────┐
+           │Try Redis │
+           │operation │
+           └─────┬────┘
+              OK │ Error
+                 │ │
+                 │ ▼
+                 │ Log error
+                 │ Return False
+                 ▼
+              Return True
+
+All paths are fail-safe - failures never crash the bot!

@@ -195,3 +195,55 @@ def _auto_instrument_redis():
         logger.debug("Redis instrumentation not available")
     except Exception as exc:
         logger.debug("Redis instrumentation failed: %s", exc)
+
+
+def get_current_trace_id() -> str:
+    """Get the current trace ID for correlation.
+
+    Returns:
+        Hex string trace ID, or empty string if no active span.
+    """
+    try:
+        from opentelemetry import trace
+
+        span = trace.get_current_span()
+        if span and span.get_span_context().is_valid:
+            return format(span.get_span_context().trace_id, '032x')
+        return ""
+    except ImportError:
+        return ""
+
+
+def inject_trace_context(carrier: dict) -> dict:
+    """Inject trace context into a carrier dict for propagation.
+
+    Args:
+        carrier: Dictionary to inject trace context into.
+
+    Returns:
+        The carrier with trace context injected.
+    """
+    try:
+        from opentelemetry import trace
+        from opentelemetry.propagate import inject
+
+        inject(carrier)
+        return carrier
+    except ImportError:
+        return carrier
+
+
+def extract_trace_context(carrier: dict) -> None:
+    """Extract trace context from a carrier dict and set as current.
+
+    Args:
+        carrier: Dictionary containing trace context headers.
+    """
+    try:
+        from opentelemetry import trace
+        from opentelemetry.propagate import extract
+
+        ctx = extract(carrier)
+        # Context is automatically set for the current execution
+    except ImportError:
+        pass

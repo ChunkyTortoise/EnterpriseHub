@@ -83,6 +83,7 @@ from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTra
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
+from ghl_real_estate_ai.services.jorge.buyer_conversation_memory import get_buyer_conversation_memory
 
 # Phase 3 Loop 3: Handoff context propagation
 try:
@@ -199,6 +200,10 @@ class JorgeBuyerBot(BaseBotWorkflow):
             "intelligence_enhancements": 0,
             "intelligence_cache_hits": 0,
         }
+
+        # Task #29: Conversation Memory Service
+        self.conversation_memory = get_buyer_conversation_memory()
+        logger.info(f"Buyer Bot: Conversation memory enabled={self.conversation_memory.enabled}")
 
         # Initialize decomposed service components
         self._financial_assessor = FinancialAssessor(budget_config=self.budget_config)
@@ -587,6 +592,24 @@ class JorgeBuyerBot(BaseBotWorkflow):
         try:
             _workflow_start = time.time()
 
+            # Task #29: Load conversation state from memory (if available)
+            saved_state = await self.conversation_memory.load_state(conversation_id)
+            if saved_state:
+                logger.info(
+                    f"Loaded saved conversation state for {conversation_id} "
+                    f"(history: {len(saved_state.get('conversation_history', []))} messages)"
+                )
+                # Merge saved conversation history with current message
+                if conversation_history is None:
+                    conversation_history = saved_state.get("conversation_history", [])
+                # Restore buyer context if not provided
+                if not buyer_name:
+                    buyer_name = saved_state.get("buyer_name")
+                if not buyer_phone:
+                    buyer_phone = saved_state.get("buyer_phone")
+                if not buyer_email:
+                    buyer_email = saved_state.get("buyer_email")
+
             # Get A/B test variant for response tone (before workflow)
             try:
                 _tone_variant = await self.ab_testing.get_variant(
@@ -607,6 +630,18 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 tone_variant=_tone_variant,
                 handoff_context=handoff_context
             )
+
+            # Task #29: Restore additional state from memory
+            if saved_state:
+                # Restore qualification context
+                initial_state.update({
+                    "budget_range": saved_state.get("budget_range") or initial_state.get("budget_range"),
+                    "property_preferences": saved_state.get("property_preferences") or initial_state.get("property_preferences"),
+                    "urgency_level": saved_state.get("urgency_level", "unknown"),
+                    "financing_status": saved_state.get("financing_status", "unknown"),
+                    "buyer_persona": saved_state.get("buyer_persona"),
+                    "objection_history": saved_state.get("objection_history", []),
+                })
 
             result = await self.workflow.ainvoke(initial_state)
 
@@ -720,6 +755,12 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 logger.info(f"Churn risk assessed for buyer {conversation_id}: {churn_assessment.risk_level}")
             except Exception as e:
                 logger.warning(f"Failed to assess churn risk for buyer: {e}")
+
+            # Task #29: Save conversation state to memory (non-blocking)
+            try:
+                await self.conversation_memory.save_state(conversation_id, result)
+            except Exception as e:
+                logger.warning(f"Failed to save conversation state for {conversation_id}: {e}")
 
             return result
 
