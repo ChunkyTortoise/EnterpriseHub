@@ -585,22 +585,56 @@ class JorgeSellerBot:
         if state.get("skip_qualification") and state.get("handoff_context_used"):
             logger.info(f"Skipping intent analysis for {state.get('lead_id')} - using handoff context")
             # Return high-quality default profile for handed-off contacts
-            from ghl_real_estate_ai.models.jorge_models import JorgeIntentProfile, FinancialReadinessScore, PsychologicalCommitmentScore
-            from ghl_real_estate_ai.models.jorge_models import TimelineScore, PriceScore, ConditionScore
-            from ghl_real_estate_ai.models.jorge_models import MotivationScore, DecisionScore, AvailabilityScore
+            from ghl_real_estate_ai.models.lead_scoring import (
+                LeadIntentProfile,
+                FinancialReadinessScore,
+                PsychologicalCommitmentScore,
+                MotivationSignals,
+                TimelineCommitment,
+                ConditionRealism,
+                PriceResponsiveness,
+            )
 
-            # Create high-confidence profile
+            # Create high-confidence profile for handed-off seller
             frs = FinancialReadinessScore(
-                timeline=TimelineScore(score=75, signals=["handoff_context"]),
-                price=PriceScore(score=70, signals=["handoff_context"]),
-                condition=ConditionScore(score=65, signals=["handoff_context"]),
+                total_score=70.0,  # High confidence from handoff
+                motivation=MotivationSignals(
+                    score=75,
+                    detected_markers=["handoff_context"],
+                    category="High Intent"
+                ),
+                timeline=TimelineCommitment(
+                    score=70,
+                    target_date=None,
+                    category="High Commitment"
+                ),
+                condition=ConditionRealism(
+                    score=65,
+                    acknowledged_defects=[],
+                    category="Realistic"
+                ),
+                price=PriceResponsiveness(
+                    score=70,
+                    zestimate_mentioned=False,
+                    category="Price-Aware"
+                ),
+                classification="Warm"
             )
             pcs = PsychologicalCommitmentScore(
-                motivation=MotivationScore(score=70, signals=["handoff_context"]),
-                decision=DecisionScore(score=65, signals=["handoff_context"]),
-                availability=AvailabilityScore(score=70, signals=["handoff_context"]),
+                total_score=68.0,
+                response_velocity_score=70,
+                message_length_score=65,
+                question_depth_score=70,
+                objection_handling_score=65,
+                call_acceptance_score=70
             )
-            profile = JorgeIntentProfile(frs=frs, pcs=pcs)
+            profile = LeadIntentProfile(
+                lead_id=state.get("lead_id", "unknown"),
+                frs=frs,
+                pcs=pcs,
+                lead_type="seller",
+                next_best_action="qualify_seller"
+            )
 
             return {
                 "intent_profile": profile,
