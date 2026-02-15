@@ -38,6 +38,7 @@ app = Celery(
         "ghl_real_estate_ai.services.celery_tasks.bot_tasks",
         "ghl_real_estate_ai.services.celery_tasks.analytics_tasks",
         "ghl_real_estate_ai.services.celery_tasks.notification_tasks",
+        "ghl_real_estate_ai.services.celery_tasks.freelance_tasks",
     ],
 )
 
@@ -118,6 +119,12 @@ app.conf.update(
             "task": "analytics.cleanup_old_data",
             "schedule": crontab(hour=1, minute=0, day_of_week=0),  # Sunday 1 AM
             "options": {"queue": "analytics_compute"},
+        },
+        # Upwork job monitor (every 15 minutes during business hours)
+        "upwork-job-monitor": {
+            "task": "freelance.monitor_upwork_jobs",
+            "schedule": crontab(minute="*/15", hour="7-23"),  # 7 AM - 11 PM
+            "options": {"queue": "notifications"},
         },
     },
 )
