@@ -82,7 +82,17 @@ class PsychologicalCommitmentScore(BaseModel):
 
 
 class LeadIntentProfile(BaseModel):
-    """Complete Lead Profile for Jorge's Dashboard"""
+    """Complete Lead Profile for Jorge's Dashboard and Cross-Bot Handoff Routing
+
+    This unified model serves two purposes:
+    1. Lead qualification (FRS/PCS scoring for temperature classification)
+    2. Cross-bot handoff routing (buyer/seller intent confidence signals)
+
+    Migration Note (2026-02-15):
+    - Added buyer_intent_confidence, seller_intent_confidence, detected_intent_phrases
+    - These fields replace separate IntentSignals dict from JorgeHandoffService
+    - Backward compatible: new fields have defaults, existing callers unaffected
+    """
 
     lead_id: str
     frs: FinancialReadinessScore
@@ -91,6 +101,24 @@ class LeadIntentProfile(BaseModel):
     market_context: Optional[str] = None
     next_best_action: str = Field(..., description="Recommended next step for Jorge or Bot")
     stall_breaker_suggested: Optional[str] = None
+
+    # Cross-bot handoff routing signals (added 2026-02-15)
+    buyer_intent_confidence: float = Field(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="Handoff routing confidence for buyer bot (0.0-1.0 scale, 0.7+ triggers handoff)"
+    )
+    seller_intent_confidence: float = Field(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="Handoff routing confidence for seller bot (0.0-1.0 scale, 0.7+ triggers handoff)"
+    )
+    detected_intent_phrases: List[str] = Field(
+        default_factory=list,
+        description="Phrases that triggered buyer/seller intent detection (e.g., 'want to buy', 'sell my house')"
+    )
 
 
 class SellerIntentProfile(BaseModel):

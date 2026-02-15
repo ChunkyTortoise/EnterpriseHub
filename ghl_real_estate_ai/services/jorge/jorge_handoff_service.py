@@ -24,6 +24,7 @@ from ghl_real_estate_ai.models.bot_context_types import (
     IntentSignals,
     LearnedAdjustments,
 )
+from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 from ghl_real_estate_ai.services.service_types import (
     BudgetRange,
     CMASummary,
@@ -872,6 +873,105 @@ class JorgeHandoffService:
         logger.info("Persisted %d handoff outcome records to database", persisted)
         return persisted
 
+    @trace_operation("jorge.handoff", "evaluate_handoff_from_profile")
+    async def evaluate_handoff_from_profile(
+        self,
+        current_bot: str,
+        contact_id: str,
+        conversation_history: list[ConversationMessage],
+        intent_profile: "LeadIntentProfile",
+    ) -> Optional[HandoffDecision]:
+        """Evaluate whether a handoff is needed based on unified LeadIntentProfile.
+
+        This is the new unified API that consumes LeadIntentProfile directly,
+        eliminating duplicate pattern matching. Use this method instead of
+        evaluate_handoff() for new integrations.
+
+        Args:
+            current_bot: Current bot handling the conversation ("lead", "buyer", "seller").
+            contact_id: GHL contact ID.
+            conversation_history: List of conversation messages.
+            intent_profile: Unified LeadIntentProfile with FRS, PCS, and handoff signals.
+
+        Returns:
+            HandoffDecision if handoff is needed and passes all safety checks, None otherwise.
+        """
+        # Extract handoff signals directly from profile (no duplicate pattern matching)
+        buyer_score = intent_profile.buyer_intent_confidence
+        seller_score = intent_profile.seller_intent_confidence
+        detected_phrases = intent_profile.detected_intent_phrases
+
+        # Determine candidate target and score
+        if current_bot in ("lead", "seller") and buyer_score > seller_score:
+            target = "buyer"
+            score = buyer_score
+        elif current_bot in ("lead", "buyer") and seller_score > buyer_score:
+            target = "seller"
+            score = seller_score
+        else:
+            return None
+
+        # No self-handoff
+        if target == current_bot:
+            return None
+
+        threshold = self._thresholds.get((current_bot, target), self.THRESHOLDS.get((current_bot, target)))
+        if threshold is None:
+            return None
+
+        # Apply learned adjustment from historical handoff outcomes
+        learned = self.get_learned_adjustments(current_bot, target)
+        adjusted_threshold = max(0.0, min(1.0, threshold + learned["adjustment"]))
+
+        if score < adjusted_threshold:
+            return None
+
+        # Check circular prevention before returning decision
+        self._cleanup_old_entries()
+        is_blocked, block_reason = self._check_circular_prevention(contact_id, current_bot, target)
+        if is_blocked:
+            logger.info(f"Handoff blocked by circular prevention: {block_reason}")
+            return None
+
+        reason = f"{target}_intent_detected"
+
+        # Build enriched handoff context from intent profile
+        from datetime import datetime, timezone
+        enriched = EnrichedHandoffContext(
+            source_qualification_score=intent_profile.frs.total_score,
+            source_temperature=intent_profile.frs.classification.lower(),
+            budget_range=None,  # Not in LeadIntentProfile (buyer-specific)
+            property_address=None,  # Not in LeadIntentProfile (seller-specific)
+            cma_summary=None,  # Not in LeadIntentProfile (seller-specific)
+            conversation_summary=f"{intent_profile.lead_type} lead with {intent_profile.frs.classification} temperature",
+            key_insights={
+                "frs_score": intent_profile.frs.total_score,
+                "pcs_score": intent_profile.pcs.total_score,
+                "lead_type": intent_profile.lead_type,
+                "next_best_action": intent_profile.next_best_action,
+            },
+            urgency_level="hot" if intent_profile.frs.classification == "Hot" else "browsing",
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+
+        return HandoffDecision(
+            source_bot=current_bot,
+            target_bot=target,
+            reason=reason,
+            confidence=score,
+            context={
+                "contact_id": contact_id,
+                "detected_phrases": detected_phrases,
+                "conversation_turns": len(conversation_history),
+                "learned_adjustment": learned["adjustment"],
+                "learned_success_rate": learned["success_rate"],
+                "learned_sample_size": learned["sample_size"],
+                "frs_score": intent_profile.frs.total_score,
+                "pcs_score": intent_profile.pcs.total_score,
+            },
+            enriched_context=enriched,
+        )
+
     @trace_operation("jorge.handoff", "evaluate_handoff")
     async def evaluate_handoff(
         self,
@@ -882,10 +982,28 @@ class JorgeHandoffService:
     ) -> Optional[HandoffDecision]:
         """Evaluate whether a handoff is needed based on intent signals.
 
+        **DEPRECATED (2026-02-15)**: Use `evaluate_handoff_from_profile()` instead.
+        This method performs duplicate pattern matching. The new unified API
+        consumes LeadIntentProfile directly, which already contains handoff signals.
+
+        Migration:
+            Replace:
+                intent_signals = handoff_service.extract_intent_signals(message)
+                decision = await handoff_service.evaluate_handoff(..., intent_signals)
+
+            With:
+                intent_profile = intent_decoder.analyze_lead(contact_id, history)
+                decision = await handoff_service.evaluate_handoff_from_profile(..., intent_profile)
+
         Incorporates learned threshold adjustments from historical handoff
         outcomes and intent signals extracted from conversation history.
         Performs circular handoff prevention checks before returning a decision.
         """
+        logger.warning(
+            "evaluate_handoff() is deprecated (2026-02-15). "
+            "Use evaluate_handoff_from_profile() with LeadIntentProfile instead. "
+            "This method will be removed in a future release."
+        )
         buyer_score = intent_signals.get("buyer_intent_score", 0.0)
         seller_score = intent_signals.get("seller_intent_score", 0.0)
         detected_phrases = intent_signals.get("detected_intent_phrases", [])
