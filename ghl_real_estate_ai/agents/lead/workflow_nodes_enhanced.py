@@ -195,6 +195,7 @@ class EnhancedWorkflowNodes:
             intelligence_context=intelligence_context,
             personalized_insights=personalized_insights,
             critical_scenario=state.get("critical_scenario"),
+            tone_variant=state.get("tone_variant", "empathetic"),
         )
 
         # Adapt message for personality
@@ -279,6 +280,7 @@ class EnhancedWorkflowNodes:
             intelligence_context=intelligence_context,
             preferred_channel=preferred_channel,
             content_adaptation_applied=content_adaptation_applied,
+            tone_variant=state.get("tone_variant", "empathetic"),
         )
 
         return {
@@ -336,6 +338,7 @@ class EnhancedWorkflowNodes:
             final_strategy=final_strategy,
             intelligence_score=intelligence_score,
             handoff_reasoning=handoff_reasoning,
+            tone_variant=state.get("tone_variant", "empathetic"),
         )
 
         return {

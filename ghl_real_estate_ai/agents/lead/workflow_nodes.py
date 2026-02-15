@@ -18,7 +18,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.integrations.retell import RetellClient
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
 from ghl_real_estate_ai.services.event_publisher import EventPublisher
-from ghl_real_estate_ai.services.ghost_followup_engine import GhostFollowupEngine, GhostState
+from ghl_real_estate_ai.services.ghost_followup_engine import GhostFollowUpEngine, GhostState
 from ghl_real_estate_ai.services.lead_sequence_scheduler import LeadSequenceScheduler
 from ghl_real_estate_ai.services.lead_sequence_state_service import (
     LeadSequenceState,
@@ -41,7 +41,7 @@ class WorkflowNodes:
         self,
         config,
         intent_decoder: LeadIntentDecoder,
-        ghost_engine: GhostFollowupEngine,
+        ghost_engine: GhostFollowUpEngine,
         sequence_service,
         scheduler: LeadSequenceScheduler,
         event_publisher: EventPublisher,
@@ -128,6 +128,76 @@ class WorkflowNodes:
         )
 
         return {"intent_profile": profile, "sequence_state": sequence_state.to_dict()}
+
+    async def check_handoff_signals(self, state: Dict) -> Dict:
+        """
+        Early handoff detection to short-circuit workflow when handoff is needed.
+
+        This node executes immediately after intent analysis to detect buyer/seller
+        intent patterns. If handoff confidence exceeds threshold (0.7), workflow
+        terminates early, skipping expensive response generation.
+
+        Returns:
+            Dict with:
+                - handoff_required: bool
+                - handoff_signals: Dict with buyer/seller intent scores
+                - handoff_target: str ("buyer-bot" or "seller-bot")
+        """
+        if not self.config.jorge_handoff_enabled:
+            return {"handoff_required": False, "handoff_signals": {}}
+
+        # Extract intent signals from latest message
+        last_msg = state["user_message"] if "user_message" in state else ""
+        if not last_msg:
+            return {"handoff_required": False, "handoff_signals": {}}
+
+        from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+        # Fast regex-based intent detection
+        signals = JorgeHandoffService.extract_intent_signals(last_msg)
+
+        buyer_score = signals.get("buyer_intent_score", 0.0)
+        seller_score = signals.get("seller_intent_score", 0.0)
+
+        # Check if handoff threshold exceeded
+        HANDOFF_THRESHOLD = 0.7
+        handoff_required = False
+        handoff_target = None
+
+        if buyer_score >= HANDOFF_THRESHOLD:
+            handoff_required = True
+            handoff_target = "buyer-bot"
+            logger.info(
+                f"Early handoff triggered for {state['lead_id']}: buyer intent {buyer_score:.2f} >= {HANDOFF_THRESHOLD}"
+            )
+        elif seller_score >= HANDOFF_THRESHOLD:
+            handoff_required = True
+            handoff_target = "seller-bot"
+            logger.info(
+                f"Early handoff triggered for {state['lead_id']}: seller intent {seller_score:.2f} >= {HANDOFF_THRESHOLD}"
+            )
+
+        if handoff_required:
+            # Emit handoff event
+            await self.event_publisher.publish_bot_status_update(
+                bot_type="lead-bot",
+                contact_id=state["lead_id"],
+                status="handoff_detected",
+                current_step="check_handoff_signals",
+            )
+
+            await sync_service.record_lead_event(
+                state["lead_id"],
+                "AI",
+                f"Handoff to {handoff_target} detected early (score={max(buyer_score, seller_score):.2f})",
+                "handoff",
+            )
+
+        return {
+            "handoff_required": handoff_required,
+            "handoff_signals": signals,
+            "handoff_target": handoff_target,
+        }
 
     async def determine_path(self, state: Dict) -> Dict:
         """Decide the next step based on engagement and timeline."""

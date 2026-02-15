@@ -13,13 +13,59 @@ class ResponseGenerator:
     """Generates and constructs lead bot responses"""
 
     @staticmethod
+    def _apply_tone_variant(message: str, tone: str = "empathetic") -> str:
+        """
+        Apply tone variant transformations to a message.
+
+        Args:
+            message: Base message text
+            tone: One of "formal", "casual", "empathetic"
+
+        Returns:
+            Message with tone-appropriate adjustments
+        """
+        if tone == "formal":
+            # More professional, structured language
+            message = message.replace("Hey", "Hello")
+            message = message.replace("Hi ", "Hello ")  # Add space to avoid partial matches
+            message = message.replace("hope you're doing well!", "I trust this finds you well.")
+            message = message.replace("hope you're doing well", "I trust this finds you well")
+            message = message.replace("Any questions", "Should you have any questions")
+            message = message.replace("want me to", "I would be happy to")
+            message = message.replace("Let me know", "Please let me know")
+            message = message.replace("Happy to", "I would be happy to")
+
+        elif tone == "casual":
+            # Relaxed, conversational language
+            message = message.replace("Hi ", "Hey ")  # Add space to avoid partial matches
+            message = message.replace("Hello", "Hey")
+            message = message.replace("I trust this finds you well", "Hope you're doing great")
+            message = message.replace("Should you have any questions", "Got any questions")
+            message = message.replace("Any questions", "Any questions")  # Keep casual
+            message = message.replace("I would be happy to", "happy to")
+
+        # "empathetic" is the default - no transformations needed
+
+        return message
+
+    @staticmethod
     def construct_intelligent_day3_message(
         lead_name: str,
         intelligence_context: Optional[Any] = None,
         personalized_insights: Optional[List[str]] = None,
         critical_scenario: Optional[Dict] = None,
+        tone_variant: str = "empathetic",
     ) -> str:
-        """Construct Day 3 message using intelligence insights."""
+        """
+        Construct Day 3 message using intelligence insights.
+
+        Args:
+            lead_name: Lead's name
+            intelligence_context: Optional intelligence context
+            personalized_insights: Optional list of insights
+            critical_scenario: Optional critical scenario dict
+            tone_variant: Message tone ("formal", "casual", "empathetic")
+        """
         # Base message logic
         if critical_scenario:
             base_msg = f"Hi {lead_name}, following up on your property search. I have some time-sensitive information that could be valuable."
@@ -42,7 +88,7 @@ class ResponseGenerator:
                 # Fallback to standard message
                 base_msg = f"Hi {lead_name}, checking in about your property search. Any questions about the market?"
 
-        return base_msg
+        return ResponseGenerator._apply_tone_variant(base_msg, tone_variant)
 
     @staticmethod
     def construct_adaptive_day14_message(
@@ -50,8 +96,18 @@ class ResponseGenerator:
         intelligence_context: Optional[Any] = None,
         preferred_channel: str = "Email",
         content_adaptation_applied: bool = False,
+        tone_variant: str = "empathetic",
     ) -> str:
-        """Construct adaptive Day 14 message using intelligence insights."""
+        """
+        Construct adaptive Day 14 message using intelligence insights.
+
+        Args:
+            lead_name: Lead's name
+            intelligence_context: Optional intelligence context
+            preferred_channel: Preferred communication channel
+            content_adaptation_applied: Whether content adaptation was applied
+            tone_variant: Message tone ("formal", "casual", "empathetic")
+        """
         if intelligence_context and content_adaptation_applied:
             property_matches = intelligence_context.property_intelligence.match_count
             objections = intelligence_context.conversation_intelligence.objections_detected
@@ -78,7 +134,7 @@ class ResponseGenerator:
             # Fallback standard message
             msg = f"Hey {lead_name}, checking in on your search. Spotted some good inventory lately—interested?"
 
-        return msg
+        return ResponseGenerator._apply_tone_variant(msg, tone_variant)
 
     @staticmethod
     def construct_intelligent_day30_message(
@@ -86,8 +142,18 @@ class ResponseGenerator:
         final_strategy: str,
         intelligence_score: float,
         handoff_reasoning: List[str],
+        tone_variant: str = "empathetic",
     ) -> str:
-        """Construct intelligent Day 30 message based on final strategy."""
+        """
+        Construct intelligent Day 30 message based on final strategy.
+
+        Args:
+            lead_name: Lead's name
+            final_strategy: Final engagement strategy
+            intelligence_score: Intelligence score
+            handoff_reasoning: List of handoff reasoning points
+            tone_variant: Message tone ("formal", "casual", "empathetic")
+        """
         if final_strategy == "jorge_qualification":
             msg = f"Hey {lead_name}, been 30 days—sounds like you're getting serious. Want me to connect you with Jorge for a deeper market breakdown?"
 
@@ -100,7 +166,7 @@ class ResponseGenerator:
         else:  # nurture
             msg = f"Hey {lead_name}, it's been a month. Anything change with your timeline? I'm here when you're ready."
 
-        return msg
+        return ResponseGenerator._apply_tone_variant(msg, tone_variant)
 
     @staticmethod
     def construct_cma_response(address: str, zillow_variance_abs: float, pdf_url: str, digital_twin_url: str) -> str:
