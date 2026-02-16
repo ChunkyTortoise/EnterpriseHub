@@ -35,6 +35,7 @@ from ghl_real_estate_ai.services.lead_sequence_state_service import (
     SequenceStatus,
     get_sequence_service,
 )
+from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
 
 # Enhanced Features (Track 3.1 Integration)
@@ -741,6 +742,35 @@ class LeadBotWorkflow:
             )
         except ValueError:
             pass  # Already exists
+
+    def _sanitize_sms_response(self, message: Optional[str]) -> str:
+        """Apply conservative SMS-safe normalization for outbound lead messages."""
+        sanitized = compliance_guard.sanitize_for_sms(message or "", max_length=self.SMS_MAX_LENGTH)
+        if sanitized:
+            return sanitized
+        return compliance_guard.get_safe_fallback_message(mode="lead", max_length=self.SMS_MAX_LENGTH)
+
+    async def _apply_outbound_compliance(self, message: str, lead_id: str) -> Tuple[str, Dict[str, Any]]:
+        """
+        Run compliance audit for lead outbound text and return safe fallback when blocked/flagged.
+        """
+        status, reason, violations = await compliance_guard.audit_message(
+            message, contact_context={"contact_id": lead_id, "mode": "lead"}
+        )
+        sanitized = self._sanitize_sms_response(message)
+        metadata = {
+            "compliance_status": status.value,
+            "compliance_reason": reason,
+            "compliance_violations": violations,
+        }
+
+        if status in {ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED}:
+            fallback = compliance_guard.get_safe_fallback_message(mode="lead", max_length=self.SMS_MAX_LENGTH)
+            metadata["compliance_fallback_applied"] = True
+            return fallback, metadata
+
+        metadata["compliance_fallback_applied"] = False
+        return sanitized, metadata
 
     def _build_unified_graph(self) -> StateGraph:
         """Build workflow graph based on enabled features"""
@@ -1518,7 +1548,7 @@ class LeadBotWorkflow:
                 "urgency": "critical",
                 "recommendation": "immediate_jorge_handoff",
                 "reason": f"High conversion probability ({journey_analysis.conversion_probability:.2f}) but high drop-off risk ({conversion_analysis.drop_off_risk:.2f})",
-                "suggested_action": "Deploy Jorge Seller Bot for confrontational re-engagement within 2 hours",
+                "suggested_action": "Deploy Jorge Seller Bot for consultative re-engagement within 2 hours",
             }
 
         # Scenario 2: Ready for qualification
@@ -1560,7 +1590,7 @@ class LeadBotWorkflow:
                     "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
                     "lead_temperature": state.get("temperature_prediction", {}).get("current_temperature", 0),
                     "sequence_completion": "day_30_reached",
-                    "recommendation": "Jorge confrontational qualification recommended",
+                    "recommendation": "Jorge consultative qualification recommended",
                 },
             },
         )
@@ -1803,9 +1833,12 @@ class LeadBotWorkflow:
         )
 
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
-        msg = action["content"]
+        msg = self._sanitize_sms_response(action.get("content", ""))
+        contact_phone = state.get("contact_phone") or state.get("lead_phone") or ""
 
-        logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg} (Logic: {action.get('logic')})")
+        logger.info(
+            f"Day 3 SMS to {contact_phone or 'unknown_phone'}: {msg} (Logic: {action.get('logic')})"
+        )
         await sync_service.record_lead_event(state["lead_id"], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
 
         # Emit lead bot sequence update - message sent
@@ -1840,6 +1873,7 @@ class LeadBotWorkflow:
     async def initiate_day_7_call(self, state: LeadFollowUpState) -> Dict:
         """Day 7: Initiate Retell AI Call with Stall-Breaker logic."""
         logger.info(f"Initiating Day 7 Call for {state['lead_name']}")
+        contact_phone = state.get("contact_phone") or state.get("lead_phone") or ""
 
         # Prepare context for the AI agent
         stall_breaker = self._select_stall_breaker(state)
@@ -1860,15 +1894,21 @@ class LeadBotWorkflow:
             except Exception as e:
                 logger.error(f"Background Retell call failed for {state['lead_name']}: {e}")
 
-        task = asyncio.create_task(
-            self.retell_client.create_call(
-                to_number=state["contact_phone"],
-                lead_name=state["lead_name"],
-                lead_context=context,
-                metadata={"contact_id": state["lead_id"]},
+        if contact_phone:
+            task = asyncio.create_task(
+                self.retell_client.create_call(
+                    to_number=contact_phone,
+                    lead_name=state["lead_name"],
+                    lead_context=context,
+                    metadata={"contact_id": state["lead_id"]},
+                )
             )
-        )
-        task.add_done_callback(_call_finished)
+            task.add_done_callback(_call_finished)
+        else:
+            logger.warning(
+                "Skipping Retell day-7 call due to missing contact phone",
+                extra={"lead_id": state.get("lead_id")},
+            )
 
         # Mark Day 7 as completed in sequence state
         await self.sequence_service.mark_action_completed(state["lead_id"], SequenceDay.DAY_7, "call_initiated")
@@ -1882,7 +1922,9 @@ class LeadBotWorkflow:
         return {
             "engagement_status": "ghosted",
             "current_step": "day_14_email",
-            "response_content": f"Initiating Day 7 Call with stall breaker: {stall_breaker}",
+            "response_content": self._sanitize_sms_response(
+                "I can call to walk through your options. What time works best for you?"
+            ),
         }
 
     async def send_day_14_email(self, state: LeadFollowUpState) -> Dict:
@@ -1892,7 +1934,8 @@ class LeadBotWorkflow:
         )
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
 
-        logger.info(f"Sending Day 14 Email to {state['contact_email']}: {action['content']}")
+        contact_email = state.get("contact_email") or state.get("lead_email") or ""
+        logger.info(f"Sending Day 14 Email to {contact_email or 'unknown_email'}: {action['content']}")
         await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 14 Email with value injection.", "email")
 
         # Mark Day 14 as completed in sequence state
@@ -1916,7 +1959,7 @@ class LeadBotWorkflow:
 
         # Generate CMA PDF and send rich email via SendGrid
         cma_attached = False
-        contact_email = state.get("contact_email")
+        contact_email = contact_email or state.get("contact_email")
         property_address = state.get("property_address")
         if contact_email and property_address and self.sendgrid_client:
             cma_attached = await self._send_cma_email_with_attachment(
@@ -1928,7 +1971,7 @@ class LeadBotWorkflow:
         return {
             "engagement_status": "ghosted",
             "current_step": "day_30_nudge",
-            "response_content": action["content"],
+            "response_content": self._sanitize_sms_response(action.get("content", "")),
             "cma_attached": cma_attached,
         }
 
@@ -2017,7 +2060,9 @@ class LeadBotWorkflow:
         )
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
 
-        logger.info(f"Sending Day 30 SMS to {state['contact_phone']}: {action['content']}")
+        msg_content = self._sanitize_sms_response(action.get("content", ""))
+        contact_phone = state.get("contact_phone") or state.get("lead_phone") or ""
+        logger.info(f"Sending Day 30 SMS to {contact_phone or 'unknown_phone'}: {msg_content}")
         await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 30 final nudge SMS.", "sms")
 
         # Mark Day 30 as completed in sequence state
@@ -2029,14 +2074,12 @@ class LeadBotWorkflow:
         # Send SMS via GHL API
         if self.ghl_client:
             try:
-                await self.ghl_client.send_message(
-                    contact_id=state["lead_id"], message=action["content"], channel=MessageType.SMS
-                )
+                await self.ghl_client.send_message(contact_id=state["lead_id"], message=msg_content, channel=MessageType.SMS)
                 logger.info(f"Day 30 SMS sent successfully to contact {state['lead_id']}")
             except Exception as e:
                 logger.error(f"Failed to send Day 30 SMS via GHL: {e}")
 
-        return {"engagement_status": "nurture", "current_step": "nurture", "response_content": action["content"]}
+        return {"engagement_status": "nurture", "current_step": "nurture", "response_content": msg_content}
 
     async def schedule_showing(self, state: LeadFollowUpState) -> Dict:
         """Handle showing coordination with market-aware scheduling."""
@@ -2098,7 +2141,7 @@ class LeadBotWorkflow:
         strategy = "We should look at recent comps to find the right number."
         if metrics:
             if metrics.price_appreciation_1y > 10:
-                strategy = "Given the 10%+ appreciation in this area, we might need to be aggressive with the terms."
+                strategy = "Given the 10%+ appreciation in this area, we should use a strong and well structured offer."
             else:
                 strategy = "Market is stable here, so we have some room to negotiate on repairs."
 
@@ -2533,7 +2576,9 @@ class LeadBotWorkflow:
         if not user_message or not str(user_message).strip():
             return {
                 "conversation_id": conversation_id,
-                "response_content": "I didn't catch that. Could you say more?",
+                "response_content": self._sanitize_sms_response(
+                    "I did not catch that. Could you share a bit more so I can help?"
+                ),
                 "current_step": "awaiting_input",
                 "engagement_status": "active",
                 "handoff_signals": {},
@@ -2625,6 +2670,15 @@ class LeadBotWorkflow:
                 "variant": _tone_variant,
             }
 
+            # WS-5: enforce consultative + compliance-safe outbound content at bot layer.
+            outbound_text = str(result.get("response_content", "") or "")
+            compliant_msg, compliance_meta = await self._apply_outbound_compliance(
+                message=outbound_text,
+                lead_id=conversation_id,
+            )
+            result["response_content"] = compliant_msg
+            result.update(compliance_meta)
+
             # Record performance metrics
             await self.performance_tracker.track_operation("lead_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("lead", duration_ms=_workflow_duration_ms, success=True)
@@ -2669,7 +2723,9 @@ class LeadBotWorkflow:
             return {
                 "conversation_id": conversation_id,
                 "error": str(e),
-                "response_content": "I apologize, but I encountered an issue processing your message. Please try again.",
+                "response_content": compliance_guard.get_safe_fallback_message(
+                    mode="lead", max_length=self.SMS_MAX_LENGTH
+                ),
                 "current_step": "error",
                 "engagement_status": "error",
                 "handoff_signals": {},
@@ -2691,6 +2747,9 @@ class LeadBotWorkflow:
             "sequence_day": sequence_day,
             "engagement_status": "responsive",
             "cma_generated": False,
+            # Contact fields may be absent in tests/integration callers.
+            "contact_phone": "",
+            "contact_email": "",
             # Enhanced fields
             "response_pattern": None,
             "personality_type": None,
@@ -2712,7 +2771,15 @@ class LeadBotWorkflow:
             "sequence_optimization_applied": False,
         }
 
-        return await self.workflow.ainvoke(initial_state)
+        result = await self.workflow.ainvoke(initial_state)
+        outbound_text = str(result.get("response_content", "") or "")
+        compliant_msg, compliance_meta = await self._apply_outbound_compliance(
+            message=outbound_text,
+            lead_id=lead_id,
+        )
+        result["response_content"] = compliant_msg
+        result.update(compliance_meta)
+        return result
 
     async def get_performance_metrics(self) -> Dict[str, Any]:
         """Get comprehensive performance metrics for all enabled features"""

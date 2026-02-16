@@ -2,8 +2,7 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
-@pytest.mark.unit
-
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def tone_engine():
@@ -40,9 +39,8 @@ def test_hot_seller_handoff_message(tone_engine):
     assert len(msg) <= 160
 
 
-def test_confrontational_followup(tone_engine):
+def test_consultative_followup_for_vague_reply(tone_engine):
     msg = tone_engine.generate_follow_up_message("idk", 1, "John")
-    # Should choose from specific templates
-    # The logic adds "That doesn't answer my question." for default/vague responses
-    assert "doesn't answer my question" in msg.lower() or "specific" in msg.lower()
+    assert "specific" in msg.lower() or "detail" in msg.lower()
+    assert "wasting time" not in msg.lower()
     assert "John" in msg

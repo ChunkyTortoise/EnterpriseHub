@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Jorge's Confrontational Tone Engine
+Jorge's Consultative Tone Engine
 
-This module implements Jorge's specific messaging requirements:
+This module implements Jorge's seller messaging requirements:
 - No emojis (professional only)
 - No hyphens (SMS compatibility)
 - <160 characters (SMS limit compliance)
-- Confrontational but professional tone
-- Direct question delivery
+- Consultative, friendly, and professional tone
+- Clear question delivery
 
 Author: Claude Code Assistant
 Created: 2026-01-19
@@ -70,19 +70,19 @@ class ToneProfile:
     max_length: int = 160  # SMS character limit
     allow_emojis: bool = False  # Jorge never uses emojis
     allow_hyphens: bool = False  # No hyphens for SMS compatibility
-    directness_level: float = 0.8  # High directness (0.0-1.0)
-    professionalism_level: float = 0.7  # Balanced professionalism
+    directness_level: float = 0.6  # Clear but supportive (0.0-1.0)
+    professionalism_level: float = 0.9  # High professionalism
 
 
 class JorgeToneEngine:
     """
-    Generates messages matching Jorge's confrontational yet professional tone.
+    Generates messages matching Jorge's consultative and friendly tone.
 
     Key Requirements:
-    1. Direct and to the point
-    2. No softening language ("maybe", "perhaps", "possibly")
-    3. Clear expectations and urgency
-    4. Professional but not overly friendly
+    1. Clear and concise
+    2. Friendly and respectful
+    3. Professional urgency without pressure
+    4. Helpful guidance and next step clarity
     5. SMS-compliant formatting
     """
 
@@ -94,15 +94,15 @@ class JorgeToneEngine:
         self, question_number: int, seller_name: Optional[str] = None, context: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Generate Jorge's confrontational qualification question.
+        Generate Jorge's consultative qualification question.
 
         Args:
-            question_number: Which of the 4 questions (1-4)
+            question_number: Which qualification question (1-12)
             seller_name: Optional seller name for personalization
             context: Additional context for message customization
 
         Returns:
-            SMS-compliant message with confrontational tone
+            SMS-compliant message with consultative tone
         """
         # Get base question from config
         base_question = self.config.SELLER_QUESTIONS.get(question_number, "")
@@ -110,8 +110,8 @@ class JorgeToneEngine:
         if not base_question:
             raise ValueError(f"Invalid question number: {question_number}")
 
-        # Apply confrontational tone modifications
-        message = self._apply_confrontational_tone(base_question, seller_name)
+        # Apply consultative tone modifications
+        message = self._apply_consultative_tone(base_question, seller_name)
 
         # Ensure SMS compliance
         message = self._ensure_sms_compliance(message)
@@ -130,7 +130,7 @@ class JorgeToneEngine:
             seller_name: Seller name for personalization
 
         Returns:
-            Confrontational follow-up message
+            Consultative follow-up message
         """
         if not last_response.strip():
             # No response - direct follow-up
@@ -155,7 +155,10 @@ class JorgeToneEngine:
         Returns:
             Direct handoff message
         """
-        base_message = f"Based on your responses, {agent_name} needs to speak with you today. What time works best for a quick call?"
+        base_message = (
+            f"Thanks for sharing that. {agent_name} can help you map out next steps today. "
+            "What time works best for a quick call?"
+        )
 
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"
@@ -166,7 +169,7 @@ class JorgeToneEngine:
         self, seller_name: Optional[str] = None, reason: Optional[str] = None, psychology_profile: Any = None
     ) -> str:
         """
-        Generate a "Take-Away Close" message for low-probability or vague leads.
+        Generate a gentle pause-or-continue message for low-confidence or vague leads.
 
         Args:
             seller_name: Seller name
@@ -174,16 +177,21 @@ class JorgeToneEngine:
             psychology_profile: Optional psychological profile for tone tuning
 
         Returns:
-            Confrontational take-away close message
+            Consultative pause message
         """
-        # If seller has high emotional attachment, use loss aversion
         if psychology_profile and getattr(psychology_profile, "emotional_attachment_score", 0) > 70:
-            base_message = "It seems you are too attached to the property to see the market reality. I'm going to close your file. Let me know if you decide to be a seller instead of a homeowner."
+            base_message = (
+                "Totally understandable. Selling can be emotional. We can pause for now and check back later, "
+                "or keep going if you want clearer numbers."
+            )
         elif reason == "low_probability":
-            base_message = "It doesn't seem like you are serious about selling right now. I'm going to close your file so we can focus on active sellers. Reach out if things change."
+            base_message = (
+                "No pressure at all. If now is not the right time, I can pause this and check back later. "
+                "Would that be better?"
+            )
         else:
             base_message = (
-                "It sounds like you aren't ready to sell right now. Should we close your file and stop the process?"
+                "If the timing is not right yet, that is completely okay. Would you like to pause for now or keep going?"
             )
 
         if seller_name:
@@ -201,7 +209,7 @@ class JorgeToneEngine:
         psychology_profile: Any = None,
     ) -> str:
         """
-        Generate a "Net Yield" justification message when seller is firm on price but repairs needed.
+        Generate a consultative net-yield guidance message when seller is firm on price but repairs are needed.
 
         Args:
             price_expectation: Seller's expected price
@@ -212,15 +220,25 @@ class JorgeToneEngine:
             psychology_profile: Optional psychological profile
 
         Returns:
-            SMS-compliant ROI justification message
+            SMS-compliant ROI guidance message
         """
-        # If distressed, be even more direct about the financial reality
         if psychology_profile and getattr(psychology_profile, "motivation_type", "") == "distressed":
-            base_message = f"Financial reality check: ${price_expectation:,.0f} is a pipe dream given the condition. Our max is ${ai_valuation:,.0f}. Are you ready to solve this problem or not?"
+            base_message = (
+                f"I want to be transparent: with current condition and costs, "
+                f"${price_expectation:,.0f} is above where buyers are likely to land. "
+                f"Our estimate is around ${ai_valuation:,.0f}. What feels workable for you?"
+            )
         elif repair_estimate > 0:
-            base_message = f"Your ${price_expectation:,.0f} is above our ${ai_valuation:,.0f} valuation. With the repairs needed, the net yield is too low. How did you come up with that number?"
+            base_message = (
+                f"Thanks for sharing your number. Based on repairs and comps, ${ai_valuation:,.0f} is closer to market. "
+                "What flexibility do you have so we can make this workable?"
+            )
         else:
-            base_message = f"At ${price_expectation:,.0f}, the net yield is only {net_yield:.1%}. Our valuation is closer to ${ai_valuation:,.0f}. What is your bottom dollar?"
+            base_message = (
+                f"At ${price_expectation:,.0f}, net yield is about {net_yield:.1%}. "
+                f"Our valuation is closer to ${ai_valuation:,.0f}. "
+                "Where would you like to be to move forward confidently?"
+            )
 
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"
@@ -239,12 +257,12 @@ class JorgeToneEngine:
             Direct objection handling message
         """
         objection_responses = {
-            "timeline_too_fast": "I understand. What timeline would work for you to sell?",
-            "price_too_low": "What price would make you comfortable selling today?",
-            "need_repairs": "How much work are we talking about? Basic cleaning or major renovations?",
-            "not_ready": "What would need to change for you to be ready to sell?",
-            "just_looking": "Fair enough. What would it take to move from looking to selling?",
-            "market_timing": "What market conditions are you waiting for specifically?",
+            "timeline_too_fast": "That makes sense. What timeline would feel realistic for you?",
+            "price_too_low": "Understood. What price range would feel right for you right now?",
+            "need_repairs": "Got it. Is it mostly cosmetic work or larger repairs?",
+            "not_ready": "No problem. What would need to change before you feel ready?",
+            "just_looking": "Totally fair. What information would help you evaluate your options?",
+            "market_timing": "Good question. What market signal are you waiting for specifically?",
         }
 
         message = objection_responses.get(objection_type, "I understand. Help me understand what's holding you back.")
@@ -265,12 +283,18 @@ class JorgeToneEngine:
             market_trend: Specific market trend to emphasize (e.g., 'rising inventory', 'interest rates')
 
         Returns:
-            Confrontational urgency message
+            Consultative urgency message
         """
         if "rate" in market_trend.lower():
-            base_message = "Yield spreads are tightening due to rate volatility. If you wait, your equity position will be diluted. Are you prepared to take that loss?"
+            base_message = (
+                "Rates are moving and that can affect what buyers can pay. "
+                "If helpful, I can show the tradeoffs of selling now versus waiting."
+            )
         else:
-            base_message = "Inventory velocity is slowing. Every week you wait increases your holding costs and lowers your net exit. Do you want to sell now or lose more?"
+            base_message = (
+                "Inventory is shifting, which can impact timing and net proceeds. "
+                "Would you like a quick breakdown of now versus waiting?"
+            )
 
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"
@@ -289,12 +313,18 @@ class JorgeToneEngine:
             market_area: Target market area
 
         Returns:
-            Technical, data-driven arbitrage message
+            Technical, data-driven consultative message
         """
         if yield_spread > 0:
-            base_message = f"Market data indicates a {yield_spread:.1f}% yield spread in {market_area}. We are currently exploiting this pricing arbitrage. Do you want in or not?"
+            base_message = (
+                f"Market data shows about a {yield_spread:.1f}% yield spread in {market_area}. "
+                "If useful, I can walk through what that means for your options."
+            )
         else:
-            base_message = f"We are tracking sub markets where yield spreads are outpacing city averages. This is an elite opportunity for capital deployment. What is your goal?"
+            base_message = (
+                "We are tracking sub markets where yield spreads are outperforming city averages. "
+                "What outcome are you aiming for so I can tailor the strategy?"
+            )
 
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"
@@ -380,67 +410,35 @@ class JorgeToneEngine:
         return drift
 
     def _apply_confrontational_tone(self, base_message: str, seller_name: Optional[str] = None) -> str:
-        """Apply Jorge's confrontational tone to base message."""
+        """Backward-compatible wrapper; now applies consultative tone."""
+        return self._apply_consultative_tone(base_message, seller_name)
 
-        # Remove softening language
-        message = self._remove_softening_language(base_message)
+    def _apply_consultative_tone(self, base_message: str, seller_name: Optional[str] = None) -> str:
+        """Apply consultative and friendly tone while keeping clarity."""
+        message = self._normalize_language(base_message)
+        message = self._increase_clarity(message)
 
-        # Make more direct
-        message = self._increase_directness(message)
-
-        # Add personalization if name provided
         if seller_name:
             message = f"{seller_name}, {message.lower()}"
 
         return message
 
-    def _remove_softening_language(self, message: str) -> str:
-        """Remove words that soften the confrontational tone."""
-
-        softening_words = [
-            "please",
-            "perhaps",
-            "maybe",
-            "possibly",
-            "might",
-            "could",
-            "would you mind",
-            "if you don't mind",
-            "sorry",
-            "excuse me",
-            "pardon",
-            "I hope",
-        ]
-
-        for word in softening_words:
-            # Remove softening words (case insensitive)
-            pattern = r"\b" + re.escape(word) + r"\b"
-            message = re.sub(pattern, "", message, flags=re.IGNORECASE)
-
-        # Clean up extra spaces
+    def _normalize_language(self, message: str) -> str:
+        """Normalize language while preserving warmth."""
         message = re.sub(r"\s+", " ", message).strip()
-
         return message
 
-    def _increase_directness(self, message: str) -> str:
-        """Make message more direct and confrontational."""
-
-        # Replace indirect constructions with direct ones
+    def _increase_clarity(self, message: str) -> str:
+        """Improve clarity without aggressive wording."""
         replacements = {
-            r"\bwould you\b": "do you",
-            r"\bcould you\b": "can you",
-            r"\bmight you\b": "will you",
-            r"\bwould it be possible\b": "will you",
             r"\bI was wondering if\b": "",
-            r"\bI would like to know\b": "tell me",
+            r"\bI would like to know\b": "Could you share",
         }
 
         for pattern, replacement in replacements.items():
             message = re.sub(pattern, replacement, message, flags=re.IGNORECASE)
 
-        # Clean up extra spaces
         message = re.sub(r"\s+", " ", message).strip()
-
         return message
 
     def _ensure_sms_compliance(self, message: str) -> str:
@@ -570,31 +568,33 @@ class JorgeToneEngine:
         """Generate follow-up for when seller doesn't respond."""
 
         followups = {
-            1: "I need to know what's motivating you to sell and where you're moving.",
-            2: "The timeline question is important. Would 30 to 45 days work or not?",
-            3: "I need to know the condition of your home. Move in ready or needs work?",
-            4: "What price would get you to sell? Give me a number.",
+            1: "When you have a second, could you share what is motivating the move and where you might go next?",
+            2: "When convenient, would a 30 to 45 day timeline work for you, or would you prefer longer?",
+            3: "Could you describe condition at a high level: move in ready, needs work, or major repairs?",
+            4: "What price range would make a sale feel right for you?",
         }
 
-        return followups.get(question_number, "I need an answer to move forward.")
+        return followups.get(question_number, "Whenever you are ready, share what feels right so I can guide next steps.")
 
     def _generate_inadequate_response_followup(self, question_number: int, response: str) -> str:
         """Generate follow-up for inadequate responses."""
 
         # Detect vague responses
-        vague_indicators = ["maybe", "not sure", "don't know", "thinking", "considering"]
+        vague_indicators = ["maybe", "not sure", "don't know", "idk", "thinking", "considering"]
 
         if any(indicator in response.lower() for indicator in vague_indicators):
             push_for_specifics = {
-                1: "I need specifics. What exactly is driving you to sell and where are you moving to?",
-                2: "Yes or no: would selling in 30 to 45 days work for your situation?",
-                3: "Be specific about your home condition. What exactly needs to be done?",
-                4: "I need a dollar amount. What price would make you sell today?",
+                1: "Can you share a bit more specific detail on what is driving the sale and where you may move next?",
+                2: "Could you share a specific timeline that works best for you, such as 30 to 45 days or longer?",
+                3: "Can you be more specific on condition so we can guide pricing accurately?",
+                4: "Could you share a specific target number or range that would make sense for you?",
             }
-            return push_for_specifics.get(question_number, "I need a specific answer, not maybe.")
+            return push_for_specifics.get(
+                question_number, "Could you share a bit more detail so I can give you accurate guidance?"
+            )
 
         # Default pushback for unclear responses
-        return f"That doesn't answer my question. {self._generate_no_response_followup(question_number)}"
+        return f"I may have missed your point. {self._generate_no_response_followup(question_number)}"
 
     def validate_message_compliance(self, message: str) -> Dict[str, Any]:
         """
@@ -620,11 +620,21 @@ class JorgeToneEngine:
         if "-" in message:
             violations.append("Contains hyphens")
 
-        # Check for softening language
-        softening_words = ["please", "perhaps", "maybe", "possibly", "sorry"]
-        found_softening = [word for word in softening_words if word.lower() in message.lower()]
-        if found_softening:
-            violations.append(f"Contains softening language: {', '.join(found_softening)}")
+        # Check for aggressive language
+        aggressive_phrases = [
+            "pipe dream",
+            "not serious",
+            "close your file",
+            "do you want in or not",
+            "lose more",
+            "last chance",
+            "stop wasting time",
+            "take it or leave it",
+            "now or never",
+        ]
+        found_aggressive = [phrase for phrase in aggressive_phrases if phrase in message.lower()]
+        if found_aggressive:
+            violations.append(f"Contains aggressive language: {', '.join(found_aggressive)}")
 
         return {
             "compliant": len(violations) == 0,
@@ -636,17 +646,17 @@ class JorgeToneEngine:
     def _calculate_directness_score(self, message: str) -> float:
         """Calculate directness score (0.0-1.0) for message."""
 
-        # Higher score = more direct/confrontational
+        # Higher score = clear and action-oriented
         score = 0.5  # Base score
 
         # Add points for direct constructions
-        direct_indicators = ["what", "when", "where", "how much", "yes or no", "tell me", "I need"]
+        direct_indicators = ["what", "when", "where", "how much", "could you", "share", "help me understand"]
         for indicator in direct_indicators:
             if indicator.lower() in message.lower():
                 score += 0.1
 
-        # Subtract points for indirect constructions
-        indirect_indicators = ["would you", "could you", "might you", "perhaps", "maybe"]
+        # Subtract points for ambiguity
+        indirect_indicators = ["perhaps", "maybe", "not sure", "whatever", "anything works"]
         for indicator in indirect_indicators:
             if indicator.lower() in message.lower():
                 score -= 0.15

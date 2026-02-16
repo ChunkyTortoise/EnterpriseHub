@@ -2,7 +2,7 @@
 Compliance Guard Service - The "Safety Moat"
 Automated Bias Detection and FHA/RESPA Compliance Enforcement.
 
-Ensures that "Confrontational" AI remains 100% compliant with real estate laws.
+Ensures outbound AI messaging remains compliant, consultative, and SMS-safe.
 """
 
 import re
@@ -53,9 +53,66 @@ class ComplianceGuard:
     # Max input length to prevent token abuse (10 KB — far exceeds any legitimate
     # SMS or chat message while blocking payload-stuffing attacks)
     MAX_INPUT_LENGTH = 10_000
+    SMS_MAX_LENGTH = 160
+
+    # Phrases that signal pressure/aggressive style drift.
+    AGGRESSIVE_TONE_PATTERNS = [
+        r"\bpipe dream\b",
+        r"\bnot serious\b",
+        r"\bclose your file\b",
+        r"\bdo you want in or not\b",
+        r"\blose more\b",
+        r"\blast chance\b",
+        r"\bstop wasting time\b",
+        r"\bserious about selling or\b",
+        r"\btake it or leave it\b",
+        r"\bnow or never\b",
+    ]
+
+    SAFE_FALLBACK_MESSAGES = {
+        "seller": "I am here to help with your property goals. What price range would feel right for you?",
+        "buyer": "I would love to help with your home search. What matters most to you in a property?",
+        "lead": "Thanks for reaching out. I would love to help. What are you looking for in your next home?",
+        "general": "Thanks for your message. I would love to help. Could you share a bit more about your goals?",
+    }
 
     def __init__(self):
         self.llm_client = LLMClient(provider="claude", model="claude-sonnet-4-5-20250514")
+
+    def sanitize_for_sms(self, message: str, max_length: int = SMS_MAX_LENGTH) -> str:
+        """Normalize outbound text to conservative SMS-safe formatting."""
+        if not message:
+            return ""
+
+        sanitized = str(message)
+
+        # Strip common emoji ranges.
+        sanitized = re.sub(
+            r"[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]",
+            "",
+            sanitized,
+        )
+
+        # Hyphen-free requirement for Jorge SMS style.
+        sanitized = sanitized.replace("-", " ")
+        sanitized = re.sub(r"\s+", " ", sanitized).strip()
+
+        if len(sanitized) > max_length:
+            candidate = sanitized[:max_length]
+            for sep in (". ", "! ", "? "):
+                idx = candidate.rfind(sep)
+                if idx > max_length // 2:
+                    candidate = candidate[: idx + 1]
+                    break
+            sanitized = candidate.rstrip()
+
+        return sanitized
+
+    def get_safe_fallback_message(self, mode: str = "general", max_length: int = SMS_MAX_LENGTH) -> str:
+        """Return a mode-aware consultative fallback response."""
+        normalized_mode = str(mode or "general").strip().lower()
+        template = self.SAFE_FALLBACK_MESSAGES.get(normalized_mode, self.SAFE_FALLBACK_MESSAGES["general"])
+        return self.sanitize_for_sms(template, max_length=max_length)
 
     async def audit_message(
         self, message: str, contact_context: Dict[str, Any] = None
@@ -64,6 +121,11 @@ class ComplianceGuard:
         Runs a multi-tier audit on an outbound message.
         Returns: (Status, Explanation, ViolationList)
         """
+        message = str(message or "")
+
+        if not message.strip():
+            return ComplianceStatus.PASSED, "Empty or whitespace-only message.", []
+
         # Tier 0: Input length guard — reject oversized messages before any processing
         if len(message) > self.MAX_INPUT_LENGTH:
             logger.warning(
@@ -78,12 +140,19 @@ class ComplianceGuard:
 
         # Tier 1: Pattern Matching (Instant)
         pattern_violations = self._check_patterns(message)
+        tone_violations = self._check_tone_patterns(message)
+        instant_violations = pattern_violations + tone_violations
 
         # Tier 2: LLM Cognitive Audit (Reasoning)
-        if not pattern_violations:
+        if not instant_violations:
             return await self._run_llm_audit(message, contact_context)
 
-        return ComplianceStatus.BLOCKED, "Pattern match detected protected class language.", pattern_violations
+        reason = "Pattern match detected protected class language."
+        if tone_violations and not pattern_violations:
+            reason = "Aggressive or pressuring tone detected."
+        elif tone_violations:
+            reason = "Pattern and tone violations detected."
+        return ComplianceStatus.BLOCKED, reason, instant_violations
 
     def _check_patterns(self, message: str) -> List[str]:
         violations = []
@@ -91,6 +160,14 @@ class ComplianceGuard:
         for pattern in self.PROTECTED_KEYWORDS:
             if re.search(pattern, msg_lower):
                 violations.append(f"Keyword match: {pattern}")
+        return violations
+
+    def _check_tone_patterns(self, message: str) -> List[str]:
+        violations: List[str] = []
+        msg_lower = message.lower()
+        for pattern in self.AGGRESSIVE_TONE_PATTERNS:
+            if re.search(pattern, msg_lower):
+                violations.append(f"Aggressive tone match: {pattern}")
         return violations
 
     async def _run_llm_audit(
@@ -108,7 +185,7 @@ class ComplianceGuard:
         1. STEERING: Is the AI encouraging/discouraging a lead based on neighborhood demographics?
         2. DISCRIMINATION: Is there any bias regarding race, religion, familial status, or disability?
         3. REDLINING: Is the AI refusing service based on geographic location in a discriminatory way?
-        4. TONE: Is the "confrontational" tone crossing into harassment?
+        4. TONE: Is the response consultative and respectful, avoiding pressure or harassment?
         
         Return a JSON object:
         {{
@@ -143,7 +220,12 @@ class ComplianceGuard:
             json_match = re.search(r"\{.*\}", response.content, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group(0))
-                return ComplianceStatus(result["status"]), result["reason"], result["violations"]
+                raw_status = str(result.get("status", "flagged")).strip().lower()
+                try:
+                    parsed_status = ComplianceStatus(raw_status)
+                except ValueError:
+                    parsed_status = ComplianceStatus.FLAGGED
+                return parsed_status, str(result.get("reason", "")).strip(), list(result.get("violations", []))
 
             logger.warning("Compliance LLM Audit: failed to parse JSON from response, flagging for review.")
             return (

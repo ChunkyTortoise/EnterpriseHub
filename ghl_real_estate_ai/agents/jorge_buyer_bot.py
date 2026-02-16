@@ -80,6 +80,7 @@ from ghl_real_estate_ai.models.bot_context_types import (
     BuyerBotResponse,
     ConversationMessage,
 )
+from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -270,6 +271,52 @@ class JorgeBuyerBot:
             )
         except ValueError:
             pass  # Already exists
+
+    def _sanitize_sms_response(self, message: Optional[str]) -> str:
+        """Normalize buyer outbound text to consultative, SMS-safe format."""
+        sanitized = compliance_guard.sanitize_for_sms(message or "", max_length=self.SMS_MAX_LENGTH)
+        if sanitized:
+            return sanitized
+        return compliance_guard.get_safe_fallback_message(mode="buyer", max_length=self.SMS_MAX_LENGTH)
+
+    def _extract_latest_user_message(self, conversation_history: List[ConversationMessage]) -> Optional[str]:
+        """Get the most recent non-empty user message from conversation history."""
+        for message in reversed(conversation_history):
+            if str(message.get("role", "")).lower() != "user":
+                continue
+            content = str(message.get("content", "") or message.get("message", "")).strip()
+            if content:
+                return content
+        return None
+
+    async def _await_if_needed(self, maybe_awaitable: Any) -> Any:
+        """Await coroutine values while allowing synchronous mocks in tests."""
+        if inspect.isawaitable(maybe_awaitable):
+            return await maybe_awaitable
+        return maybe_awaitable
+
+    async def _apply_outbound_compliance(self, message: str, buyer_id: str) -> Dict[str, Any]:
+        """
+        Apply compliance audit and return safe fallback when content is blocked/flagged.
+        """
+        status, reason, violations = await compliance_guard.audit_message(
+            message, contact_context={"contact_id": buyer_id, "mode": "buyer"}
+        )
+        payload = {
+            "response_content": self._sanitize_sms_response(message),
+            "compliance_status": status.value,
+            "compliance_reason": reason,
+            "compliance_violations": violations,
+            "compliance_fallback_applied": False,
+        }
+
+        if status in {ComplianceStatus.BLOCKED, ComplianceStatus.FLAGGED}:
+            payload["response_content"] = compliance_guard.get_safe_fallback_message(
+                mode="buyer", max_length=self.SMS_MAX_LENGTH
+            )
+            payload["compliance_fallback_applied"] = True
+
+        return payload
 
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(BuyerBotState)
@@ -677,9 +724,11 @@ class JorgeBuyerBot:
             if not tone_variant:
                 buyer_id = state.get("buyer_id", "unknown")
                 try:
-                    tone_variant = await self.ab_testing.get_variant(
-                        ABTestingService.RESPONSE_TONE_EXPERIMENT, buyer_id
+                    tone_variant = await self._await_if_needed(
+                        self.ab_testing.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, buyer_id)
                     )
+                    if not isinstance(tone_variant, str) or not tone_variant:
+                        tone_variant = "empathetic"
                 except (KeyError, ValueError):
                     tone_variant = "empathetic"
 
@@ -1196,13 +1245,15 @@ class JorgeBuyerBot:
 
     async def process_buyer_conversation(
         self,
-        conversation_id: str,
-        user_message: str,
+        conversation_id: Optional[str] = None,
+        user_message: Optional[str] = None,
         buyer_name: Optional[str] = None,
         conversation_history: Optional[List[ConversationMessage]] = None,
         buyer_phone: Optional[str] = None,
         buyer_email: Optional[str] = None,
         metadata: Optional[BotMetadata] = None,
+        buyer_id: Optional[str] = None,
+        **legacy_kwargs: Any,
     ) -> BuyerBotResponse:
         """
         Main entry point for processing buyer conversations.
@@ -1215,6 +1266,8 @@ class JorgeBuyerBot:
             buyer_phone: Optional phone number for SMS follow-ups
             buyer_email: Optional email for email follow-ups
             metadata: Optional additional metadata
+            buyer_id: Backward-compatible alias for conversation_id
+            legacy_kwargs: Reserved for backward-compatible call patterns
 
         Returns:
             Dict containing:
@@ -1227,16 +1280,42 @@ class JorgeBuyerBot:
         """
         MAX_MESSAGE_LENGTH = 10_000
 
+        # Backward compatibility:
+        # 1) Legacy positional call style:
+        #    process_buyer_conversation(buyer_id, buyer_name, conversation_history)
+        # 2) Legacy keyword call style:
+        #    process_buyer_conversation(buyer_id=..., buyer_name=..., conversation_history=...)
+        legacy_interface = buyer_id is not None
+        if conversation_history is None and isinstance(buyer_name, list):
+            conversation_history = buyer_name
+            buyer_name = user_message if isinstance(user_message, str) else None
+            user_message = None
+            legacy_interface = True
+
+        if not conversation_id:
+            conversation_id = buyer_id or legacy_kwargs.get("lead_id")
+
+        conversation_history = list(conversation_history or [])
+
+        if not user_message or not str(user_message).strip():
+            user_message = self._extract_latest_user_message(conversation_history)
+        if legacy_interface and (not user_message or not str(user_message).strip()):
+            # Keep legacy workflows moving even when only buyer_id/history were provided.
+            user_message = "Can you help me with next steps to buy a home?"
+
         # Input validation
         if not conversation_id or not str(conversation_id).strip():
             raise ValueError("conversation_id must be a non-empty string")
         if not user_message or not str(user_message).strip():
+            fallback = self._sanitize_sms_response("I did not catch that. Could you share a little more so I can help?")
             return {
                 "buyer_id": conversation_id,
                 "lead_id": conversation_id,
-                "response_content": "I didn't catch that. Could you say more?",
+                "response_content": fallback,
+                "message": fallback,
                 "current_step": "awaiting_input",
                 "engagement_status": "active",
+                "qualification_status": "in_progress",
                 "financial_readiness": 0.0,
                 "handoff_signals": {},
             }
@@ -1246,18 +1325,21 @@ class JorgeBuyerBot:
         msg_lower = user_message.lower().strip()
         if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
             logger.info(f"Opt-out detected for buyer {conversation_id}")
+            opt_out_message = (
+                "You've been unsubscribed from automated messages. "
+                "If you'd like to reconnect, just text us anytime."
+            )
             return {
                 "buyer_id": conversation_id,
                 "lead_id": conversation_id,
-                "response_content": (
-                    "You've been unsubscribed from automated messages. "
-                    "If you'd like to reconnect, just text us anytime."
-                ),
+                "response_content": opt_out_message,
+                "message": opt_out_message,
                 "opt_out_detected": True,
                 "actions": [{"type": "add_tag", "tag": "AI-Off"}],
                 "buyer_temperature": "unknown",
                 "current_step": "opt_out",
                 "engagement_status": "opted_out",
+                "qualification_status": "opted_out",
                 "financial_readiness": 0.0,
                 "handoff_signals": {},
             }
@@ -1267,12 +1349,10 @@ class JorgeBuyerBot:
 
             _workflow_start = _time.time()
 
-            if conversation_history is None:
-                conversation_history = []
-
-            conversation_history.append(
-                {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
-            )
+            if not conversation_history or str(conversation_history[-1].get("content", "")).strip() != user_message:
+                conversation_history.append(
+                    {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
+                )
 
             # Prune to prevent unbounded memory growth
             if len(conversation_history) > self.MAX_CONVERSATION_HISTORY:
@@ -1280,9 +1360,11 @@ class JorgeBuyerBot:
 
             # Get A/B test variant for response tone (before workflow)
             try:
-                _tone_variant = await self.ab_testing.get_variant(
-                    ABTestingService.RESPONSE_TONE_EXPERIMENT, conversation_id
+                _tone_variant = await self._await_if_needed(
+                    self.ab_testing.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, conversation_id)
                 )
+                if not isinstance(_tone_variant, str) or not _tone_variant:
+                    _tone_variant = "empathetic"
             except (KeyError, ValueError):
                 _tone_variant = "empathetic"
 
@@ -1333,6 +1415,7 @@ class JorgeBuyerBot:
             result["lead_id"] = conversation_id
             result["current_step"] = result.get("current_qualification_step", "unknown")
             result["engagement_status"] = "qualified" if is_qualified else "nurturing"
+            result["qualification_status"] = "qualified" if is_qualified else "needs_nurturing"
             result["financial_readiness"] = result.get("financial_readiness_score", 0.0)
 
             handoff_signals = {}
@@ -1349,6 +1432,14 @@ class JorgeBuyerBot:
                 result["response_content_full"] = response_text
                 result["response_content"] = response_text[: self.SMS_MAX_LENGTH]
 
+            # WS-5: enforce compliance-safe outbound text at bot layer.
+            compliance_payload = await self._apply_outbound_compliance(
+                message=str(result.get("response_content", "") or ""),
+                buyer_id=conversation_id,
+            )
+            result.update(compliance_payload)
+            result["message"] = result.get("response_content", "")
+
             # Record performance metrics
             await self.performance_tracker.track_operation("buyer_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("buyer", duration_ms=_workflow_duration_ms, success=True)
@@ -1361,11 +1452,13 @@ class JorgeBuyerBot:
 
             # Record A/B test outcome (reuse variant from pre-workflow assignment)
             try:
-                await self.ab_testing.record_outcome(
-                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                    conversation_id,
-                    _tone_variant,
-                    "response",
+                await self._await_if_needed(
+                    self.ab_testing.record_outcome(
+                        ABTestingService.RESPONSE_TONE_EXPERIMENT,
+                        conversation_id,
+                        _tone_variant,
+                        "response",
+                    )
                 )
             except (KeyError, ValueError):
                 pass
@@ -1376,18 +1469,23 @@ class JorgeBuyerBot:
                 "variant": _tone_variant,
             }
 
-            await self.event_publisher.publish_bot_status_update(
-                bot_type="jorge-buyer",
-                contact_id=conversation_id,
-                status="completed",
-                current_step=result.get("current_qualification_step", "unknown"),
+            await self._await_if_needed(
+                self.event_publisher.publish_bot_status_update(
+                    bot_type="jorge-buyer",
+                    contact_id=conversation_id,
+                    status="completed",
+                    current_step=result.get("current_qualification_step", "unknown"),
+                )
             )
 
-            await self.event_publisher.publish_buyer_qualification_complete(
-                contact_id=conversation_id,
-                qualification_status="qualified" if is_qualified else "needs_nurturing",
-                final_score=(result.get("financial_readiness_score", 0) + result.get("buying_motivation_score", 0)) / 2,
-                properties_matched=len(result.get("matched_properties", [])),
+            await self._await_if_needed(
+                self.event_publisher.publish_buyer_qualification_complete(
+                    contact_id=conversation_id,
+                    qualification_status="qualified" if is_qualified else "needs_nurturing",
+                    final_score=(result.get("financial_readiness_score", 0) + result.get("buying_motivation_score", 0))
+                    / 2,
+                    properties_matched=len(result.get("matched_properties", [])),
+                )
             )
 
             return result
@@ -1404,13 +1502,18 @@ class JorgeBuyerBot:
                 logger.debug(f"Secondary failure in error metrics recording: {str(ex)}")
 
             logger.error(f"Error processing buyer conversation for {conversation_id}: {str(e)}")
+            error_message = self._sanitize_sms_response(
+                "I'm having technical difficulties right now. Please try again, and I can keep helping with your home search."
+            )
             return {
                 "buyer_id": conversation_id,
                 "lead_id": conversation_id,
                 "error": str(e),
-                "response_content": "I'm having technical difficulties. Let me connect you with Jorge directly.",
+                "response_content": error_message,
+                "message": error_message,
                 "current_step": "error",
                 "engagement_status": "error",
+                "qualification_status": "error",
                 "financial_readiness": 0.0,
                 "handoff_signals": {},
             }
