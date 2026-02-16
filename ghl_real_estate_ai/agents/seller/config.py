@@ -50,6 +50,10 @@ class QualificationResult:
     tokens_used: int
     cost_incurred: float
 
+    # Bot response text for the conversation
+    response_content: str = ""
+    qualification_summary: str = ""
+
     # Enhancement metadata
     progressive_skills_applied: bool = False
     mesh_task_id: Optional[str] = None

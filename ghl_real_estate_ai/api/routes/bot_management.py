@@ -676,21 +676,32 @@ async def process_seller_message(
         qualification_score = getattr(result, "qualification_score", 0.0)
         next_actions = getattr(result, "next_actions", [])
         confidence = getattr(result, "confidence", 0.0)
+        # Use real bot response content (not synthetic template)
+        response_content = getattr(result, "response_content", "")
+        if not response_content:
+            response_content = getattr(result, "qualification_summary", "")
+        if not response_content:
+            # Fallback only if bot returned nothing
+            response_content = f"Thank you for reaching out about your property. I'd love to help you explore your options."
+
+        # qualification_score is 0-100 scale (not 0.0-1.0)
+        questions_answered = max(1, int(qualification_score / 20)) if qualification_score > 20 else 0
+        qualification_complete = qualification_score >= 80
 
         response = SellerChatResponse(
-            response_message=f"Based on our conversation, I can see you're {seller_temp} about selling. Let me ask you a few questions to better understand your situation.",
+            response_message=response_content,
             seller_temperature=_map_temperature(seller_temp),
-            questions_answered=1 if qualification_score > 0.2 else 0,
-            qualification_complete=qualification_score > 0.8,
+            questions_answered=questions_answered,
+            qualification_complete=qualification_complete,
             actions_taken=_transform_actions(
                 [{"type": "qualification", "description": f"Assessed as {seller_temp} lead"}]
             ),
             next_steps=" | ".join(next_actions) if next_actions else "Continue qualification process",
             analytics={
                 "seller_temperature": seller_temp,
-                "questions_answered": 1 if qualification_score > 0.2 else 0,
-                "qualification_progress": f"{min(int(qualification_score * 4), 4)}/4",
-                "qualification_complete": qualification_score > 0.8,
+                "questions_answered": questions_answered,
+                "qualification_progress": f"{min(int(qualification_score / 20), 5)}/5",
+                "qualification_complete": qualification_complete,
                 "qualification_score": qualification_score,
                 "confidence": confidence,
                 "frs_score": getattr(result, "frs_score", 0.0),
