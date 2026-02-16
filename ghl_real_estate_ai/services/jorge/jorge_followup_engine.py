@@ -3,8 +3,9 @@
 Jorge's Follow-up Automation Engine
 
 This module handles automated follow-up sequences for seller leads:
-- 2-3 day intervals for first 30 days
-- 14-day intervals ongoing after 30 days
+- HOT daily cadence
+- WARM weekly cadence
+- COLD monthly cadence
 - Temperature-based nurture content
 - Integration with GHL workflows
 
@@ -18,6 +19,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 
 logger = logging.getLogger(__name__)
@@ -26,6 +28,9 @@ logger = logging.getLogger(__name__)
 class FollowUpType(Enum):
     """Types of follow-up sequences"""
 
+    HOT_DAILY_NURTURE = "hot_daily_nurture"
+    WARM_WEEKLY_NURTURE = "warm_weekly_nurture"
+    COLD_MONTHLY_NURTURE = "cold_monthly_nurture"
     INITIAL_NURTURE = "initial_nurture"  # 2-3 days for 30 days
     LONG_TERM_NURTURE = "long_term_nurture"  # 14 days ongoing
     QUALIFICATION_RETRY = "qualification_retry"  # Retry incomplete qualification
@@ -37,10 +42,10 @@ class FollowUpType(Enum):
 class FollowUpSchedule:
     """Schedule configuration for follow-up sequences"""
 
-    # Initial 30-day sequence (2-3 day intervals)
+    # Legacy initial 30-day sequence retained for backwards compatibility
     INITIAL_SEQUENCE_DAYS = [2, 5, 8, 12, 16, 20, 25, 30]
 
-    # Long-term sequence (14-day intervals)
+    # Legacy long-term interval retained for backwards compatibility
     LONG_TERM_INTERVAL_DAYS = 14
 
     # Maximum follow-up duration (6 months)
@@ -65,8 +70,8 @@ class JorgeFollowUpEngine:
 
     Features:
     1. Temperature-based content (Hot/Warm/Cold)
-    2. Time-based scheduling (2-3 days → 14 days)
-    3. Jorge's confrontational tone consistency
+    2. Lifecycle cadence policy (HOT daily, WARM weekly, COLD monthly)
+    3. Jorge's consultative tone consistency
     4. GHL workflow integration
     """
 
@@ -76,6 +81,7 @@ class JorgeFollowUpEngine:
         self.ghl_client = ghl_client
         self.tone_engine = JorgeToneEngine()
         self.schedule = FollowUpSchedule()
+        self.lifecycle_policy = JorgeSellerConfig.get_followup_lifecycle_policy()
         self.logger = logging.getLogger(__name__)
 
     async def process_follow_up_trigger(
@@ -157,34 +163,112 @@ class JorgeFollowUpEngine:
     async def _determine_follow_up_type(self, seller_data: Dict[str, Any], trigger_type: str) -> Dict[str, Any]:
         """Determine the appropriate follow-up type and timing"""
 
-        temperature = seller_data.get("seller_temperature", "cold")
-        questions_answered = seller_data.get("questions_answered", 0)
+        temperature = self._normalize_temperature(seller_data.get("seller_temperature", "cold"))
+        questions_answered = self._coerce_int(seller_data.get("questions_answered", 0))
         last_contact_date = seller_data.get("last_contact_date")
         days_since_last_contact = self._calculate_days_since_contact(last_contact_date)
+        no_response_streak = self._coerce_int(
+            seller_data.get("followup_no_response_streak", seller_data.get("no_response_streak", 0))
+        )
 
-        # Determine follow-up sequence position
-        if days_since_last_contact <= 30:
-            # Initial 30-day sequence (2-3 day intervals)
-            sequence_type = FollowUpType.INITIAL_NURTURE
-            sequence_position = self._get_initial_sequence_position(days_since_last_contact)
-        else:
-            # Long-term sequence (14-day intervals)
-            sequence_type = FollowUpType.LONG_TERM_NURTURE
-            sequence_position = self._get_long_term_sequence_position(days_since_last_contact)
+        effective_temperature = self._resolve_followup_temperature(
+            temperature=temperature,
+            no_response_streak=no_response_streak,
+        )
+        stage_attempts = self._get_stage_attempts(seller_data, effective_temperature)
+        sequence_position = stage_attempts + 1
 
-        # Special cases override normal sequencing
-        if questions_answered < 4 and temperature != "hot":
-            sequence_type = FollowUpType.QUALIFICATION_RETRY
-        elif temperature == "warm" and days_since_last_contact >= 7:
+        sequence_type_map = {
+            "hot": FollowUpType.HOT_DAILY_NURTURE,
+            "warm": FollowUpType.WARM_WEEKLY_NURTURE,
+            "cold": FollowUpType.COLD_MONTHLY_NURTURE,
+        }
+        sequence_type = sequence_type_map.get(effective_temperature, FollowUpType.COLD_MONTHLY_NURTURE)
+
+        # Special cases
+        if trigger_type in {"behavioral_reactivation", "reactivation"}:
+            sequence_type = FollowUpType.BEHAVIORAL_REACTIVATION
+        elif trigger_type in {"temperature_change", "temperature_escalation"} and effective_temperature == "warm":
             sequence_type = FollowUpType.TEMPERATURE_ESCALATION
+        elif questions_answered < 4 and effective_temperature != "hot":
+            sequence_type = FollowUpType.QUALIFICATION_RETRY
+
+        cadence_days = self.lifecycle_policy["cadence_days"].get(effective_temperature, 7)
+        retry_ceiling = self.lifecycle_policy["retry_ceiling"].get(effective_temperature, 1)
+        escalation_required = self._should_escalate_to_manual_review(
+            seller_data=seller_data,
+            effective_temperature=effective_temperature,
+            stage_attempts=sequence_position,
+            no_response_streak=no_response_streak,
+        )
 
         return {
             "type": sequence_type,
             "position": sequence_position,
             "days_since_contact": days_since_last_contact,
-            "temperature": temperature,
+            "temperature": effective_temperature,
+            "original_temperature": temperature,
             "questions_answered": questions_answered,
+            "cadence_days": cadence_days,
+            "retry_ceiling": retry_ceiling,
+            "no_response_streak": no_response_streak,
+            "escalation_required": escalation_required,
+            "deescalated": effective_temperature != temperature,
         }
+
+    def _coerce_int(self, value: Any, default: int = 0) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _normalize_temperature(self, temperature: Any) -> str:
+        normalized = str(temperature or "cold").strip().lower()
+        if normalized not in {"hot", "warm", "cold"}:
+            return "cold"
+        return normalized
+
+    def _resolve_followup_temperature(self, temperature: str, no_response_streak: int) -> str:
+        deescalation_streak = self.lifecycle_policy.get("deescalation_streak", {})
+        if temperature == "hot" and no_response_streak >= self._coerce_int(deescalation_streak.get("hot", 3), 3):
+            return "warm"
+        if temperature == "warm" and no_response_streak >= self._coerce_int(deescalation_streak.get("warm", 4), 4):
+            return "cold"
+        return temperature
+
+    def _get_stage_attempts(self, seller_data: Dict[str, Any], stage_temperature: str) -> int:
+        by_stage = seller_data.get("followup_attempts_by_stage", {})
+        if isinstance(by_stage, dict):
+            stage_attempts = by_stage.get(stage_temperature, 0)
+            return max(0, self._coerce_int(stage_attempts, 0))
+
+        fallback_key = f"followup_attempts_{stage_temperature}"
+        return max(0, self._coerce_int(seller_data.get(fallback_key, 0), 0))
+
+    def _should_escalate_to_manual_review(
+        self,
+        seller_data: Dict[str, Any],
+        effective_temperature: str,
+        stage_attempts: int,
+        no_response_streak: int,
+    ) -> bool:
+        if seller_data.get("manual_review_required") is True:
+            return True
+
+        risk_level = str(seller_data.get("risk_level", "")).strip().lower()
+        if risk_level in {"high", "critical"}:
+            return True
+
+        escalation_attempts = self._coerce_int(self.lifecycle_policy.get("escalation_attempts", 3), 3)
+        if no_response_streak >= escalation_attempts:
+            return True
+
+        lead_value_tier = str(seller_data.get("lead_value_tier", "")).strip().upper()
+        high_value_threshold = self._coerce_int(self.lifecycle_policy.get("high_value_escalation_attempts", 2), 2)
+        if effective_temperature == "hot" and lead_value_tier in {"A", "B"} and stage_attempts >= high_value_threshold:
+            return True
+
+        return False
 
     async def _generate_follow_up_message(
         self,
@@ -203,7 +287,13 @@ class JorgeFollowUpEngine:
         seller_name = seller_data.get("contact_name")
 
         # Generate message based on follow-up type
-        if follow_up_type == FollowUpType.QUALIFICATION_RETRY:
+        if follow_up_type == FollowUpType.HOT_DAILY_NURTURE:
+            message_content = self._create_hot_daily_message(sequence_position, seller_name)
+        elif follow_up_type == FollowUpType.WARM_WEEKLY_NURTURE:
+            message_content = self._create_warm_weekly_message(sequence_position, seller_name)
+        elif follow_up_type == FollowUpType.COLD_MONTHLY_NURTURE:
+            message_content = self._create_cold_monthly_message(sequence_position, seller_name)
+        elif follow_up_type == FollowUpType.QUALIFICATION_RETRY:
             message_content = self._create_qualification_retry_message(seller_data, sequence_position, seller_name)
         elif follow_up_type == FollowUpType.BEHAVIORAL_REACTIVATION:
             message_content = self._create_behavioral_reactivation_message(seller_data, seller_name)
@@ -243,7 +333,7 @@ class JorgeFollowUpEngine:
             llm_client = LLMClient(provider="claude")
 
             variant_prompts = {
-                "Educational Hook": "Subtly add a small educational insight or market context before the close. Maintain Jorge's directness.",
+                "Educational Hook": "Subtly add a small educational insight or market context before the close. Maintain Jorge's helpful clarity.",
                 "Urgency Escalation": "Increase the sense of market urgency and speed. Emphasize why waiting costs money.",
             }
 
@@ -258,7 +348,7 @@ class JorgeFollowUpEngine:
             CONSTRAINTS:
             1. Keep it under 160 characters.
             2. NO EMOJIS. NO HYPHENS.
-            3. Maintain Jorge's professional and confrontational style.
+            3. Maintain Jorge's professional, consultative, and friendly style.
             
             Return ONLY the adjusted message text."""
 
@@ -285,11 +375,11 @@ class JorgeFollowUpEngine:
 
         # Escalating urgency based on sequence position
         if sequence_position == 1:
-            base_message = "Still interested in selling? I need a few more details to help you."
+            base_message = "Still interested in selling? I can help better with a few more details."
         elif sequence_position == 2:
-            base_message = "Market conditions are changing fast. Can we finish your qualifying questions?"
+            base_message = "Market conditions are changing. Would you like to finish your qualifying questions?"
         elif sequence_position >= 3:
-            base_message = "Final check: are you serious about selling or should I remove you from our list?"
+            base_message = "Final check in for now: would you like to continue, or should I pause follow ups?"
         else:
             base_message = "Do you still need help selling your home?"
 
@@ -309,9 +399,9 @@ class JorgeFollowUpEngine:
                 "Market update: home values in your area increased 8% this quarter. Ready to discuss selling?"
             )
         elif sequence_position == 2:
-            base_message = "Interest rates dropped. Now might be the perfect time to make your move. Thoughts?"
+            base_message = "Interest rates dropped recently. Would it help to review what that means for your options?"
         else:
-            base_message = "Last chance to get ahead of the spring market rush. Should we schedule a quick call?"
+            base_message = "If helpful, we can schedule a quick call before spring activity picks up. Would that work?"
 
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"
@@ -319,18 +409,54 @@ class JorgeFollowUpEngine:
         return self.tone_engine._ensure_sms_compliance(base_message)
 
     def _create_behavioral_reactivation_message(self, seller_data: Dict[str, Any], seller_name: Optional[str]) -> str:
-        """Create confrontational re-engagement message based on behavioral signals"""
+        """Create consultative re-engagement message based on behavioral signals"""
 
         # Trigger reason (default to valuation search)
         trigger = seller_data.get("last_behavioral_trigger", "checking home values")
 
         base_message = (
-            f"I saw you were {trigger} again. Are you ready to be serious about selling or should we stop wasting time?"
+            f"I saw you were {trigger} again. If you'd like, I can share an updated strategy and next steps."
         )
 
         if seller_name:
             base_message = f"{seller_name}, {base_message.lower()}"
 
+        return self.tone_engine._ensure_sms_compliance(base_message)
+
+    def _create_hot_daily_message(self, sequence_position: int, seller_name: Optional[str]) -> str:
+        """Daily consultative check-ins for hot sellers until booking or pause."""
+        messages = [
+            "Quick check in: would you like to lock a 30 minute consult today or tomorrow?",
+            "I can reserve a short consult so you get clear next steps. Want morning or afternoon?",
+            "Happy to keep this easy. If you want, I can hold the next available consult slot.",
+        ]
+        base_message = messages[(sequence_position - 1) % len(messages)]
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+        return self.tone_engine._ensure_sms_compliance(base_message)
+
+    def _create_warm_weekly_message(self, sequence_position: int, seller_name: Optional[str]) -> str:
+        """Weekly value-add touchpoints for warm sellers."""
+        messages = [
+            "Weekly market note: buyer demand is steady in your area. Want a quick strategy update?",
+            "I put together a simple pricing and timing snapshot. Want me to send it?",
+            "When you're ready, we can review options and build a no-pressure plan.",
+        ]
+        base_message = messages[(sequence_position - 1) % len(messages)]
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
+        return self.tone_engine._ensure_sms_compliance(base_message)
+
+    def _create_cold_monthly_message(self, sequence_position: int, seller_name: Optional[str]) -> str:
+        """Monthly soft re-engagement for cold sellers."""
+        messages = [
+            "Monthly update: your local market is still active. Want a quick value refresh?",
+            "Sharing a brief market check in. If timing changed, I can map next steps.",
+            "No rush at all. When it helps, I can send a simple plan for selling later this year.",
+        ]
+        base_message = messages[(sequence_position - 1) % len(messages)]
+        if seller_name:
+            base_message = f"{seller_name}, {base_message.lower()}"
         return self.tone_engine._ensure_sms_compliance(base_message)
 
     def _create_initial_nurture_message(
@@ -401,6 +527,8 @@ class JorgeFollowUpEngine:
         actions = []
         follow_up_type = follow_up_config["type"]
         sequence_position = follow_up_config["position"]
+        follow_up_temperature = self._normalize_temperature(follow_up_config.get("temperature"))
+        no_response_streak = self._coerce_int(follow_up_config.get("no_response_streak", 0), 0) + 1
 
         # Update follow-up sequence tag
         actions.append({"type": "add_tag", "tag": f"FollowUp-Seq-{sequence_position}"})
@@ -408,6 +536,18 @@ class JorgeFollowUpEngine:
         # Remove previous sequence tag
         if sequence_position > 1:
             actions.append({"type": "remove_tag", "tag": f"FollowUp-Seq-{sequence_position - 1}"})
+
+        # Keep cadence stage tags mutually exclusive
+        stage_tag_map = {
+            "hot": "FollowUp-Cadence-HOT",
+            "warm": "FollowUp-Cadence-WARM",
+            "cold": "FollowUp-Cadence-COLD",
+        }
+        for temp, tag in stage_tag_map.items():
+            if temp == follow_up_temperature:
+                actions.append({"type": "add_tag", "tag": tag})
+            else:
+                actions.append({"type": "remove_tag", "tag": tag})
 
         # Type-specific actions
         if follow_up_type == FollowUpType.QUALIFICATION_RETRY:
@@ -420,6 +560,10 @@ class JorgeFollowUpEngine:
         elif follow_up_type == FollowUpType.TEMPERATURE_ESCALATION:
             actions.append({"type": "add_tag", "tag": "Temperature-Escalation"})
 
+        if follow_up_config.get("escalation_required"):
+            actions.append({"type": "add_tag", "tag": "Manual-Review-Required"})
+            actions.append({"type": "add_tag", "tag": "FollowUp-Escalation"})
+
         # Update custom fields for tracking
         actions.append(
             {"type": "update_custom_field", "field": "last_followup_date", "value": datetime.now().strftime("%Y-%m-%d")}
@@ -427,6 +571,12 @@ class JorgeFollowUpEngine:
 
         actions.append(
             {"type": "update_custom_field", "field": "followup_sequence_position", "value": str(sequence_position)}
+        )
+        actions.append(
+            {"type": "update_custom_field", "field": "followup_cadence_stage", "value": follow_up_temperature}
+        )
+        actions.append(
+            {"type": "update_custom_field", "field": "followup_no_response_streak", "value": str(no_response_streak)}
         )
 
         return actions
@@ -438,42 +588,49 @@ class JorgeFollowUpEngine:
 
         follow_up_type = follow_up_config["type"]
         sequence_position = follow_up_config["position"]
-        days_since_contact = follow_up_config["days_since_contact"]
+        follow_up_temperature = self._normalize_temperature(follow_up_config.get("temperature"))
+        cadence_days = self._coerce_int(follow_up_config.get("cadence_days", 0), 0)
+        retry_ceiling = self._coerce_int(follow_up_config.get("retry_ceiling", 0), 0)
+        days_since_contact = self._coerce_int(follow_up_config.get("days_since_contact", 0), 0)
 
-        # Determine next follow-up date
-        next_follow_up_date = None
+        if seller_data.get("followup_paused") is True or seller_data.get("followup_suppressed") is True:
+            return None
 
-        if follow_up_type in [FollowUpType.INITIAL_NURTURE, FollowUpType.QUALIFICATION_RETRY]:
-            # Check if there's a next position in initial sequence
-            if sequence_position < len(self.schedule.INITIAL_SEQUENCE_DAYS):
-                days_to_add = self.schedule.INITIAL_SEQUENCE_DAYS[sequence_position] - days_since_contact
-                if days_to_add > 0:
-                    next_follow_up_date = datetime.now() + timedelta(days=days_to_add)
-                else:
-                    # Move to long-term sequence
-                    next_follow_up_date = datetime.now() + timedelta(days=self.schedule.LONG_TERM_INTERVAL_DAYS)
+        if seller_data.get("appointment_booked") is True:
+            return None
+
+        # Respect WS-4 retry ceilings by lifecycle stage
+        if retry_ceiling > 0 and sequence_position >= retry_ceiling:
+            return None
+
+        # Stop stale long-tail drips after max window for non-hot contacts
+        if follow_up_temperature != "hot" and days_since_contact > self.schedule.MAX_FOLLOW_UP_DAYS:
+            return None
+
+        # Determine interval days
+        if cadence_days <= 0:
+            if follow_up_type in {
+                FollowUpType.HOT_DAILY_NURTURE,
+                FollowUpType.WARM_WEEKLY_NURTURE,
+                FollowUpType.COLD_MONTHLY_NURTURE,
+                FollowUpType.QUALIFICATION_RETRY,
+                FollowUpType.TEMPERATURE_ESCALATION,
+                FollowUpType.BEHAVIORAL_REACTIVATION,
+            }:
+                cadence_days = self.lifecycle_policy["cadence_days"].get(follow_up_temperature, 7)
+            elif follow_up_type == FollowUpType.LONG_TERM_NURTURE:
+                cadence_days = self.schedule.LONG_TERM_INTERVAL_DAYS
             else:
-                # Transition to long-term sequence
-                next_follow_up_date = datetime.now() + timedelta(days=self.schedule.LONG_TERM_INTERVAL_DAYS)
+                cadence_days = self.schedule.LONG_TERM_INTERVAL_DAYS
 
-        elif follow_up_type == FollowUpType.LONG_TERM_NURTURE:
-            # Continue long-term sequence if under max duration
-            if days_since_contact < self.schedule.MAX_FOLLOW_UP_DAYS:
-                next_follow_up_date = datetime.now() + timedelta(days=self.schedule.LONG_TERM_INTERVAL_DAYS)
-
-        elif follow_up_type == FollowUpType.TEMPERATURE_ESCALATION:
-            # Limited escalation attempts (max 3)
-            if sequence_position < 3:
-                next_follow_up_date = datetime.now() + timedelta(days=7)  # Weekly for escalation
-
-        if next_follow_up_date:
-            return {
-                "scheduled_date": next_follow_up_date.isoformat(),
-                "type": follow_up_type.value,
-                "sequence_position": sequence_position + 1,
-            }
-
-        return None
+        next_follow_up_date = datetime.now() + timedelta(days=cadence_days)
+        return {
+            "scheduled_date": next_follow_up_date.isoformat(),
+            "type": follow_up_type.value,
+            "sequence_position": sequence_position + 1,
+            "cadence_days": cadence_days,
+            "temperature": follow_up_temperature,
+        }
 
     async def _update_follow_up_context(
         self,
@@ -506,6 +663,40 @@ class JorgeFollowUpEngine:
             context["follow_up_history"] = follow_up_history[-10:]  # Keep last 10
             context["last_follow_up_date"] = datetime.now().isoformat()
             context["next_follow_up"] = next_follow_up
+            context["followup_suppressed"] = bool(context.get("followup_suppressed", False))
+
+            stage_temperature = self._normalize_temperature(follow_up_message.temperature)
+            followup_attempts_total = self._coerce_int(context.get("followup_attempts_total", 0), 0) + 1
+            context["followup_attempts_total"] = followup_attempts_total
+
+            attempts_by_stage = context.get("followup_attempts_by_stage", {})
+            if not isinstance(attempts_by_stage, dict):
+                attempts_by_stage = {}
+            attempts_by_stage[stage_temperature] = (
+                self._coerce_int(attempts_by_stage.get(stage_temperature, 0), 0) + 1
+            )
+            context["followup_attempts_by_stage"] = attempts_by_stage
+
+            # Increment streak each outbound touch until a user reply resets it.
+            context["followup_no_response_streak"] = (
+                self._coerce_int(context.get("followup_no_response_streak", 0), 0) + 1
+            )
+
+            if next_follow_up is None and not context.get("followup_stop_reason"):
+                context["followup_stop_reason"] = "retry_ceiling_reached"
+
+            # Mirror lifecycle data into seller_preferences for compatibility with existing reads.
+            seller_preferences = context.get("seller_preferences", {})
+            if not isinstance(seller_preferences, dict):
+                seller_preferences = {}
+            seller_preferences["last_followup_date"] = context["last_follow_up_date"]
+            seller_preferences["followup_attempts_total"] = context["followup_attempts_total"]
+            seller_preferences["followup_attempts_by_stage"] = context["followup_attempts_by_stage"]
+            seller_preferences["followup_no_response_streak"] = context["followup_no_response_streak"]
+            seller_preferences["followup_suppressed"] = context["followup_suppressed"]
+            if next_follow_up is not None:
+                seller_preferences["next_follow_up"] = next_follow_up
+            context["seller_preferences"] = seller_preferences
 
             # Save updated context
             await self.conversation_manager.save_context(contact_id, context, location_id)
@@ -520,7 +711,11 @@ class JorgeFollowUpEngine:
 
         try:
             last_contact = datetime.fromisoformat(last_contact_date.replace("Z", "+00:00"))
-            return (datetime.now() - last_contact).days
+            if last_contact.tzinfo is not None:
+                now = datetime.now(last_contact.tzinfo)
+            else:
+                now = datetime.now()
+            return max(0, (now - last_contact).days)
         except (ValueError, TypeError) as e:
             logger.debug(f"Failed to parse last_contact_date '{last_contact_date}': {e}")
             return 0

@@ -4,7 +4,7 @@ Jorge's Follow-up Scheduler
 
 This module manages the scheduling and automation of follow-up sequences:
 - GHL workflow integration for automated triggers
-- Time-based scheduling (2-3 days → 14 days)
+- Lifecycle scheduling (HOT daily, WARM weekly, COLD monthly)
 - Batch processing for multiple contacts
 - Webhook endpoints for follow-up triggers
 
@@ -19,6 +19,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.jorge.jorge_followup_engine import FollowUpSchedule, FollowUpType, JorgeFollowUpEngine
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ class JorgeFollowUpScheduler:
         self.analytics_service = analytics_service
         self.followup_engine = JorgeFollowUpEngine(conversation_manager, ghl_client)
         self.schedule_config = FollowUpSchedule()
+        self.lifecycle_policy = JorgeSellerConfig.get_followup_lifecycle_policy()
 
         # Swarm Coordination: Cache & RAG Warming
         from ghl_real_estate_ai.core.rag_engine import RAGEngine
@@ -89,7 +91,7 @@ class JorgeFollowUpScheduler:
 
         # Create new test
         variants = [
-            {"name": "Standard Direct", "description": "Jorge's standard confrontational style"},
+            {"name": "Standard Direct", "description": "Jorge's standard consultative follow-up style"},
             {"name": "Educational Hook", "description": "Subtly more educational before the close"},
             {"name": "Urgency Escalation", "description": "Heavy emphasis on market speed"},
         ]
@@ -375,33 +377,72 @@ class JorgeFollowUpScheduler:
         workflows = []
 
         try:
-            # Workflow 1: Initial Follow-up Trigger (triggered when contact gets "Needs Qualifying" tag)
+            # Workflow 1: HOT lifecycle cadence (daily)
             initial_workflow = {
-                "name": "Jorge Seller - Initial Follow-up",
-                "trigger": {"type": "tag_added", "tag": "Needs Qualifying"},
+                "name": "Jorge Seller - HOT Daily Follow-up",
+                "trigger": {"type": "tag_added", "tag": "Hot-Seller"},
                 "actions": [
-                    {"type": "wait", "duration": "2 days"},
+                    {"type": "wait", "duration": "1 day"},
                     {
                         "type": "webhook",
                         "url": "/api/jorge-followup/webhook",
                         "method": "POST",
                         "data": {
-                            "trigger_type": "initial_follow_up",
+                            "trigger_type": "time_based",
                             "contact_id": "{{contact.id}}",
                             "location_id": location_id,
-                            "sequence_position": 1,
                         },
                     },
                 ],
             }
             workflows.append(initial_workflow)
 
-            # Workflow 2: Qualification Retry (triggered when qualification incomplete after 5 days)
+            # Workflow 2: WARM lifecycle cadence (weekly)
+            warm_workflow = {
+                "name": "Jorge Seller - WARM Weekly Follow-up",
+                "trigger": {"type": "tag_added", "tag": "Warm-Seller"},
+                "actions": [
+                    {"type": "wait", "duration": "7 days"},
+                    {
+                        "type": "webhook",
+                        "url": "/api/jorge-followup/webhook",
+                        "method": "POST",
+                        "data": {
+                            "trigger_type": "time_based",
+                            "contact_id": "{{contact.id}}",
+                            "location_id": location_id,
+                        },
+                    },
+                ],
+            }
+            workflows.append(warm_workflow)
+
+            # Workflow 3: COLD lifecycle cadence (monthly)
+            cold_workflow = {
+                "name": "Jorge Seller - COLD Monthly Follow-up",
+                "trigger": {"type": "tag_added", "tag": "Cold-Seller"},
+                "actions": [
+                    {"type": "wait", "duration": "30 days"},
+                    {
+                        "type": "webhook",
+                        "url": "/api/jorge-followup/webhook",
+                        "method": "POST",
+                        "data": {
+                            "trigger_type": "time_based",
+                            "contact_id": "{{contact.id}}",
+                            "location_id": location_id,
+                        },
+                    },
+                ],
+            }
+            workflows.append(cold_workflow)
+
+            # Workflow 4: Qualification retry safety path
             qualification_retry_workflow = {
                 "name": "Jorge Seller - Qualification Retry",
                 "trigger": {"type": "tag_added", "tag": "Qualification-Incomplete"},
                 "actions": [
-                    {"type": "wait", "duration": "3 days"},
+                    {"type": "wait", "duration": "7 days"},
                     {
                         "type": "webhook",
                         "url": "/api/jorge-followup/webhook",
@@ -415,46 +456,6 @@ class JorgeFollowUpScheduler:
                 ],
             }
             workflows.append(qualification_retry_workflow)
-
-            # Workflow 3: Temperature Escalation (warm sellers)
-            temperature_escalation_workflow = {
-                "name": "Jorge Seller - Temperature Escalation",
-                "trigger": {"type": "tag_added", "tag": "Warm-Seller"},
-                "actions": [
-                    {"type": "wait", "duration": "7 days"},
-                    {
-                        "type": "webhook",
-                        "url": "/api/jorge-followup/webhook",
-                        "method": "POST",
-                        "data": {
-                            "trigger_type": "temperature_escalation",
-                            "contact_id": "{{contact.id}}",
-                            "location_id": location_id,
-                        },
-                    },
-                ],
-            }
-            workflows.append(temperature_escalation_workflow)
-
-            # Workflow 4: Long-term Nurture (14-day intervals)
-            long_term_nurture_workflow = {
-                "name": "Jorge Seller - Long-term Nurture",
-                "trigger": {"type": "tag_added", "tag": "Long-term-Nurture"},
-                "actions": [
-                    {"type": "wait", "duration": "14 days"},
-                    {
-                        "type": "webhook",
-                        "url": "/api/jorge-followup/webhook",
-                        "method": "POST",
-                        "data": {
-                            "trigger_type": "long_term_nurture",
-                            "contact_id": "{{contact.id}}",
-                            "location_id": location_id,
-                        },
-                    },
-                ],
-            }
-            workflows.append(long_term_nurture_workflow)
 
             # Create workflows via GHL API (if GHL client available)
             created_workflows = []
@@ -490,9 +491,9 @@ class JorgeFollowUpScheduler:
         """Get manual setup instructions for GHL workflows"""
         return [
             "1. In GHL, navigate to Automation → Workflows",
-            "2. Create new workflow 'Jorge Seller - Initial Follow-up'",
-            "3. Set trigger: Tag Added → 'Needs Qualifying'",
-            "4. Add Wait action: 2 days",
+            "2. Create workflow templates for HOT daily, WARM weekly, and COLD monthly follow-up",
+            "3. Set triggers: Tag Added → Hot-Seller / Warm-Seller / Cold-Seller",
+            "4. Add Wait actions: 1 day (hot), 7 days (warm), 30 days (cold)",
             "5. Add Webhook action: POST to /api/jorge-followup/webhook",
             "6. Repeat for other workflow templates",
             "7. Ensure webhook URLs point to your server",
@@ -507,13 +508,15 @@ class JorgeFollowUpScheduler:
         # Get existing conversation context
         if self.conversation_manager:
             context = await self.conversation_manager.get_context(contact_id, location_id)
-            seller_data = context.get("seller_preferences", {})
+            seller_data = dict(context.get("seller_preferences", {}) or {})
+            seller_data = self._merge_followup_context(context=context, seller_data=seller_data)
         else:
             seller_data = {}
 
         # Merge with webhook data
         webhook_seller_data = webhook_data.get("seller_data", {})
-        seller_data.update(webhook_seller_data)
+        if isinstance(webhook_seller_data, dict):
+            seller_data.update(webhook_seller_data)
 
         # Extract from contact data if available
         contact_data = webhook_data.get("contact", {})
@@ -521,8 +524,16 @@ class JorgeFollowUpScheduler:
             seller_data["contact_name"] = contact_data.get("firstName", "")
             seller_data["contact_id"] = contact_data.get("id", contact_id)
 
+        incoming_tags = webhook_data.get("tags")
+        if isinstance(incoming_tags, list):
+            seller_data["tags"] = incoming_tags
+
         # Add timestamp data
-        seller_data["last_contact_date"] = webhook_data.get("timestamp", datetime.now().isoformat())
+        webhook_timestamp = webhook_data.get("timestamp")
+        if webhook_timestamp:
+            seller_data["last_contact_date"] = webhook_timestamp
+        elif "last_contact_date" not in seller_data:
+            seller_data["last_contact_date"] = datetime.now().isoformat()
 
         return seller_data
 
@@ -533,40 +544,125 @@ class JorgeFollowUpScheduler:
         if not self._is_business_hours():
             return False
 
-        # Don't follow up with hot sellers (they should be handled by agents)
-        if seller_data.get("seller_temperature") == "hot":
+        if self._has_followup_suppression_signal(seller_data):
             return False
 
-        # Don't follow up if contact opted out
-        if seller_data.get("opted_out", False):
+        cadence_stage = self._resolve_followup_stage(seller_data)
+        retry_ceiling = self._coerce_int(self.lifecycle_policy["retry_ceiling"].get(cadence_stage, 1), 1)
+        attempts_by_stage = seller_data.get("followup_attempts_by_stage", {})
+        if isinstance(attempts_by_stage, dict):
+            current_attempts = self._coerce_int(attempts_by_stage.get(cadence_stage, 0), 0)
+        else:
+            current_attempts = 0
+
+        if current_attempts >= retry_ceiling:
             return False
 
-        # Check if enough time has passed since last follow-up
+        # Check if enough time has passed since last follow-up based on lifecycle cadence
+        cadence_days = self._coerce_int(self.lifecycle_policy["cadence_days"].get(cadence_stage, 1), 1)
+        min_hours_between = cadence_days * 24
         last_followup_date = seller_data.get("last_followup_date")
         if last_followup_date:
             try:
-                last_followup = datetime.fromisoformat(last_followup_date)
-                hours_since_followup = (datetime.now() - last_followup).total_seconds() / 3600
-                # Minimum 24 hours between follow-ups
-                if hours_since_followup < 24:
+                parsed_last_followup = str(last_followup_date).replace("Z", "+00:00")
+                last_followup = datetime.fromisoformat(parsed_last_followup)
+                now = datetime.now(last_followup.tzinfo) if last_followup.tzinfo else datetime.now()
+                hours_since_followup = (now - last_followup).total_seconds() / 3600
+                if hours_since_followup < min_hours_between:
                     return False
             except (ValueError, TypeError) as e:
                 logger.debug(f"Failed to parse last_followup_date '{last_followup_date}': {e}")
-                pass
+                return False
 
         # Check if we've exceeded max follow-up duration
         first_contact_date = seller_data.get("first_contact_date")
         if first_contact_date:
             try:
-                first_contact = datetime.fromisoformat(first_contact_date)
-                days_since_first_contact = (datetime.now() - first_contact).days
+                parsed_first_contact = str(first_contact_date).replace("Z", "+00:00")
+                first_contact = datetime.fromisoformat(parsed_first_contact)
+                now = datetime.now(first_contact.tzinfo) if first_contact.tzinfo else datetime.now()
+                days_since_first_contact = (now - first_contact).days
                 if days_since_first_contact > self.schedule_config.MAX_FOLLOW_UP_DAYS:
                     return False
             except (ValueError, TypeError) as e:
                 logger.debug(f"Failed to parse first_contact_date '{first_contact_date}': {e}")
-                pass
+                return False
 
         return True
+
+    def _coerce_int(self, value: Any, default: int = 0) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _normalize_temperature(self, value: Any) -> str:
+        normalized = str(value or "cold").strip().lower()
+        if normalized not in {"hot", "warm", "cold"}:
+            return "cold"
+        return normalized
+
+    def _resolve_followup_stage(self, seller_data: Dict[str, Any]) -> str:
+        temperature = self._normalize_temperature(seller_data.get("seller_temperature"))
+        no_response_streak = self._coerce_int(
+            seller_data.get("followup_no_response_streak", seller_data.get("no_response_streak", 0)),
+            0,
+        )
+        deescalation = self.lifecycle_policy.get("deescalation_streak", {})
+        hot_threshold = self._coerce_int(deescalation.get("hot", 3), 3)
+        warm_threshold = self._coerce_int(deescalation.get("warm", 4), 4)
+
+        if temperature == "hot" and no_response_streak >= hot_threshold:
+            return "warm"
+        if temperature == "warm" and no_response_streak >= warm_threshold:
+            return "cold"
+        return temperature
+
+    def _has_followup_suppression_signal(self, seller_data: Dict[str, Any]) -> bool:
+        if seller_data.get("opted_out", False):
+            return True
+        if seller_data.get("do_not_contact", False):
+            return True
+        if seller_data.get("followup_suppressed", False) or seller_data.get("followup_paused", False):
+            return True
+
+        stop_reason = str(seller_data.get("followup_stop_reason", "")).strip().lower()
+        if stop_reason in {"opt_out", "manual_stop", "appointment_booked", "qualified"}:
+            return True
+
+        tags = seller_data.get("tags", [])
+        if isinstance(tags, str):
+            tags = [part.strip() for part in tags.split(",") if part.strip()]
+        if not isinstance(tags, list):
+            tags = []
+        normalized_tags = {str(tag).strip().lower() for tag in tags}
+        suppression_tags = {
+            str(tag).strip().lower() for tag in self.lifecycle_policy.get("suppression_tags", [])
+        } | {"ai-off", "do-not-contact"}
+        return len(normalized_tags.intersection(suppression_tags)) > 0
+
+    def _merge_followup_context(self, context: Dict[str, Any], seller_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Merge top-level follow-up lifecycle flags into seller preferences payload."""
+        lifecycle_keys = [
+            "followup_suppressed",
+            "followup_paused",
+            "followup_stop_reason",
+            "followup_no_response_streak",
+            "followup_attempts_by_stage",
+            "followup_attempts_total",
+            "last_follow_up_date",
+            "next_follow_up",
+        ]
+
+        merged = dict(seller_data or {})
+        for key in lifecycle_keys:
+            if key in context and key not in merged:
+                merged[key] = context.get(key)
+
+        # Normalize naming variants used by scheduler + engine
+        if "last_follow_up_date" in merged and "last_followup_date" not in merged:
+            merged["last_followup_date"] = merged["last_follow_up_date"]
+        return merged
 
     def _is_business_hours(self) -> bool:
         """
@@ -614,7 +710,8 @@ class JorgeFollowUpScheduler:
 
         if self.conversation_manager:
             context = await self.conversation_manager.get_context(contact_id, location_id)
-            return context.get("seller_preferences", {})
+            seller_data = dict(context.get("seller_preferences", {}) or {})
+            return self._merge_followup_context(context=context, seller_data=seller_data)
 
         return {}
 
@@ -694,6 +791,22 @@ class JorgeFollowUpScheduler:
 
             if self.analytics_service:
                 await self.analytics_service.track_event(event_type="jorge_followup_sent", data=analytics_data)
+                has_manual_escalation = any(
+                    action.get("type") == "add_tag" and action.get("tag") == "Manual-Review-Required"
+                    for action in follow_up_result.get("actions", [])
+                    if isinstance(action, dict)
+                )
+                if has_manual_escalation:
+                    await self.analytics_service.track_event(
+                        event_type="manual_escalation_triggered",
+                        data={
+                            "contact_id": contact_id,
+                            "timestamp": datetime.now().isoformat(),
+                            "trigger_type": trigger_type,
+                            "follow_up_type": follow_up_result.get("follow_up_type"),
+                            "sequence_number": follow_up_result.get("sequence_number"),
+                        },
+                    )
 
             self.logger.info(f"Follow-up analytics tracked for contact {contact_id}")
 
@@ -712,10 +825,11 @@ class JorgeFollowUpScheduler:
             stats = {
                 "total_follow_ups_sent": 0,
                 "follow_ups_by_type": {
-                    "initial_nurture": 0,
+                    "hot_daily_nurture": 0,
+                    "warm_weekly_nurture": 0,
+                    "cold_monthly_nurture": 0,
                     "qualification_retry": 0,
                     "temperature_escalation": 0,
-                    "long_term_nurture": 0,
                 },
                 "response_rates": {"overall": 0.0, "by_temperature": {"hot": 0.0, "warm": 0.0, "cold": 0.0}},
                 "conversion_rates": {"cold_to_warm": 0.0, "warm_to_hot": 0.0},

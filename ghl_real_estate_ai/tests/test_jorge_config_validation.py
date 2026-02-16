@@ -278,3 +278,134 @@ class TestJorgeConfigEdgeCases:
         sanitized = JorgeSellerConfig.sanitize_message(long_message)
 
         assert len(sanitized) <= JorgeSellerConfig.MAX_SMS_LENGTH
+
+
+class TestCanonicalSellerContract:
+    """Validation coverage for Epic B/C canonical seller contract utilities."""
+
+    @pytest.fixture(autouse=True)
+    def setup_test_environment(self):
+        self.original_env = os.environ.copy()
+        yield
+        os.environ.clear()
+        os.environ.update(self.original_env)
+
+    def test_validate_custom_field_mapping_reports_missing_fields(self):
+        """Canonical mapping validator should surface missing IDs deterministically."""
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        with patch.dict(os.environ, {"CUSTOM_FIELD_ASKING_PRICE": "", "CUSTOM_FIELD_TIMELINE_DAYS": ""}, clear=False):
+            result = JorgeSellerConfig.validate_custom_field_mapping(["asking_price", "timeline_days"])
+
+        assert result["is_valid"] is False
+        assert "asking_price" in result["missing_fields"]
+        assert "timeline_days" in result["missing_fields"]
+
+    def test_validate_custom_field_mapping_reports_resolved_fields(self):
+        """Canonical mapping validator should include resolved field IDs."""
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        with patch.dict(
+            os.environ,
+            {
+                "CUSTOM_FIELD_ASKING_PRICE": "cf_asking_123",
+                "CUSTOM_FIELD_TIMELINE_DAYS": "cf_timeline_456",
+            },
+            clear=False,
+        ):
+            result = JorgeSellerConfig.validate_custom_field_mapping(["asking_price", "timeline_days"])
+
+        assert result["is_valid"] is True
+        assert result["resolved_fields"]["asking_price"] == "cf_asking_123"
+        assert result["resolved_fields"]["timeline_days"] == "cf_timeline_456"
+
+    def test_intake_complete_gate_requires_required_runtime_fields(self):
+        """Runtime intake completion gate should enforce deterministic required fields."""
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        incomplete = {
+            "motivation": "Relocating",
+            "property_condition": "move-in ready",
+            "timeline_days": 30,
+        }
+        complete = {**incomplete, "asking_price": 650000}
+
+        assert JorgeSellerConfig.is_intake_complete(incomplete) is False
+        assert JorgeSellerConfig.is_intake_complete(complete) is True
+
+    def test_qualified_record_gate_requires_canonical_required_fields(self):
+        """Qualified gate should require all canonical required fields."""
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        partial = {
+            "seller_temperature": "HOT",
+            "seller_motivation": "Relocation",
+            "property_condition": "move-in ready",
+            "timeline_days": 21,
+            "asking_price": 700000,
+            "ai_valuation_price": 690000,
+        }
+        ready_for_qualification = {**partial, "lead_value_tier": "A"}
+        qualified = {**ready_for_qualification, "qualification_complete": True}
+
+        assert JorgeSellerConfig.is_qualified_seller_record(partial) is False
+        assert JorgeSellerConfig.has_required_canonical_fields(ready_for_qualification) is True
+        assert JorgeSellerConfig.is_qualified_seller_record(ready_for_qualification) is False
+        assert JorgeSellerConfig.is_qualified_seller_record(qualified) is True
+
+    def test_fail_on_missing_canonical_mapping_flag(self):
+        """Fail-open/fail-closed mapping gate should follow environment flag."""
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        with patch.dict(os.environ, {"FAIL_ON_MISSING_CANONICAL_MAPPING": "true"}, clear=False):
+            assert JorgeSellerConfig.should_fail_on_missing_canonical_mapping() is True
+
+        with patch.dict(os.environ, {"FAIL_ON_MISSING_CANONICAL_MAPPING": "false"}, clear=False):
+            assert JorgeSellerConfig.should_fail_on_missing_canonical_mapping() is False
+
+
+class TestFollowUpLifecyclePolicy:
+    """WS-4 lifecycle policy defaults and override behavior."""
+
+    @pytest.fixture(autouse=True)
+    def setup_test_environment(self):
+        self.original_env = os.environ.copy()
+        yield
+        os.environ.clear()
+        os.environ.update(self.original_env)
+
+    def test_followup_lifecycle_policy_defaults(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        policy = JorgeSellerConfig.get_followup_lifecycle_policy()
+
+        assert policy["cadence_days"]["hot"] == 1
+        assert policy["cadence_days"]["warm"] == 7
+        assert policy["cadence_days"]["cold"] == 30
+        assert policy["retry_ceiling"]["hot"] >= 1
+        assert policy["retry_ceiling"]["warm"] >= 1
+        assert policy["retry_ceiling"]["cold"] >= 1
+
+    def test_followup_lifecycle_policy_env_overrides(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        with patch.dict(
+            os.environ,
+            {
+                "FOLLOWUP_CADENCE_HOT_DAYS": "2",
+                "FOLLOWUP_CADENCE_WARM_DAYS": "9",
+                "FOLLOWUP_CADENCE_COLD_DAYS": "31",
+                "FOLLOWUP_RETRY_HOT_CEILING": "10",
+                "FOLLOWUP_DEESCALATE_HOT_STREAK": "4",
+                "FOLLOWUP_SUPPRESSION_TAGS": "AI-Off,Do-Not-Contact,Stop-Bot,Custom-Suppress",
+            },
+            clear=False,
+        ):
+            policy = JorgeSellerConfig.get_followup_lifecycle_policy()
+
+        assert policy["cadence_days"]["hot"] == 2
+        assert policy["cadence_days"]["warm"] == 9
+        assert policy["cadence_days"]["cold"] == 31
+        assert policy["retry_ceiling"]["hot"] == 10
+        assert policy["deescalation_streak"]["hot"] == 4
+        assert "Custom-Suppress" in policy["suppression_tags"]

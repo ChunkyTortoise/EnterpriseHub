@@ -12,7 +12,7 @@ Created: 2026-01-19
 import logging
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,51 @@ class JorgeSellerConfig:
     WARM_QUESTIONS_REQUIRED = 3  # Must answer at least 3 questions
     WARM_QUALITY_THRESHOLD = 0.5  # Minimum response quality for warm
 
+    # ========== EXPANDED SELLER INTAKE (EPIC B) ==========
+    # Legacy 4-question fields kept for backwards compatibility and temperature logic.
+    CORE_QUESTION_FIELDS = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+
+    # Full seller intake progression (expanded qualification contract).
+    SELLER_INTAKE_FIELD_SEQUENCE = [
+        "property_address",
+        "property_type",
+        "property_condition",
+        "timeline_days",
+        "motivation",
+        "asking_price",
+        "mortgage_balance",
+        "repair_estimate",
+        "prior_listing_history",
+        "decision_maker_confirmed",
+        "best_contact_method",
+        "availability_windows",
+    ]
+
+    # Minimum canonical fields required for a seller to be marked as qualified in GHL.
+    CANONICAL_REQUIRED_FIELDS = [
+        "seller_temperature",
+        "seller_motivation",
+        "property_condition",
+        "timeline_days",
+        "asking_price",
+        "ai_valuation_price",
+        "lead_value_tier",
+        "qualification_complete",
+    ]
+
+    # Recommended but non-blocking fields.
+    CANONICAL_PREFERRED_FIELDS = [
+        "mortgage_balance",
+        "repair_estimate",
+        "decision_maker_confirmed",
+        "best_contact_method",
+        "availability_windows",
+        "prior_listing_history",
+    ]
+
+    # Runtime intake completion gate used before final qualification.
+    INTAKE_COMPLETION_REQUIRED_FIELDS = ["property_condition", "timeline_days", "motivation", "asking_price"]
+
     # ========== FOLLOW-UP SETTINGS ==========
     # Active follow-up phase (first 30 days)
     ACTIVE_FOLLOWUP_DAYS = 30
@@ -70,6 +115,31 @@ class JorgeSellerConfig:
     LONGTERM_FOLLOWUP_INTERVAL = 14  # Every 14 days
     MAX_FOLLOWUP_ATTEMPTS = 10  # Stop after 10 long-term attempts
 
+    # WS-4 lifecycle cadence policy
+    FOLLOWUP_CADENCE_DAYS = {
+        "hot": 1,   # Daily
+        "warm": 7,  # Weekly
+        "cold": 30,  # Monthly
+    }
+
+    # Retry ceilings by lifecycle stage
+    FOLLOWUP_RETRY_CEILING = {
+        "hot": 14,
+        "warm": 12,
+        "cold": 6,
+    }
+
+    # De-escalation after repeated non-response
+    FOLLOWUP_DEESCALATION_STREAK = {
+        "hot": 3,   # HOT -> WARM
+        "warm": 4,  # WARM -> COLD
+    }
+
+    # Escalation windows
+    FOLLOWUP_ESCALATION_ATTEMPTS = 3
+    FOLLOWUP_HIGH_VALUE_ESCALATION_ATTEMPTS = 2
+    FOLLOWUP_SUPPRESSION_TAGS = ["AI-Off", "Do-Not-Contact", "Stop-Bot"]
+
     # ========== GHL INTEGRATION ==========
     # Workflow IDs for different seller temperatures
     HOT_SELLER_WORKFLOW_ID = ""  # Set via HOT_SELLER_WORKFLOW_ID env var
@@ -80,10 +150,23 @@ class JorgeSellerConfig:
     CUSTOM_FIELDS = {
         "seller_temperature": "",
         "seller_motivation": "",
+        "property_address": "",
+        "property_type": "",
         "relocation_destination": "",
         "timeline_urgency": "",
+        "timeline_days": "",
         "property_condition": "",
         "price_expectation": "",
+        "asking_price": "",
+        "mortgage_balance": "",
+        "repair_estimate": "",
+        "last_bot_interaction": "",
+        "qualification_complete": "",
+        "decision_maker_confirmed": "",
+        "best_contact_method": "",
+        "availability_windows": "",
+        "prior_listing_history": "",
+        "field_provenance": "",
         "questions_answered": "",
         "qualification_score": "",
         "expected_roi": "",
@@ -106,13 +189,21 @@ class JorgeSellerConfig:
     RESPONSE_TIME_TARGET_SECONDS = 2  # Webhook processing under 2 seconds
     MESSAGE_DELIVERY_TARGET = 0.99  # 99% delivery success rate
 
-    # ========== JORGE'S 4 QUESTIONS ==========
-    # Exact questions in Jorge's preferred order
+    # ========== JORGE SELLER QUESTIONS ==========
+    # Expanded qualification flow, with first four preserved in original order.
     SELLER_QUESTIONS = {
         1: "What's got you considering wanting to sell, where would you move to?",
         2: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
         3: "How would you describe your home, would you say it's move-in ready or would it need some work?",
         4: "What price would incentivize you to sell?",
+        5: "What is the property address?",
+        6: "What type of property is it: single family, condo, townhome, or multi family?",
+        7: "Do you have an estimated mortgage balance or any liens to account for?",
+        8: "Do you have a rough repair estimate or expected renovation budget?",
+        9: "Has the property been listed before, and if so what happened?",
+        10: "Are all decision makers aligned on selling?",
+        11: "What is your best contact method: SMS, call, or email?",
+        12: "What days and times are best for a short consultation?",
     }
 
     # Question field mapping for data extraction
@@ -121,6 +212,14 @@ class JorgeSellerConfig:
         2: {"field": "timeline_acceptable", "secondary": "timeline_urgency"},
         3: {"field": "property_condition", "secondary": "repair_estimate"},
         4: {"field": "price_expectation", "secondary": "price_flexibility"},
+        5: {"field": "property_address", "secondary": None},
+        6: {"field": "property_type", "secondary": None},
+        7: {"field": "mortgage_balance", "secondary": "lien_status"},
+        8: {"field": "repair_estimate", "secondary": None},
+        9: {"field": "prior_listing_history", "secondary": None},
+        10: {"field": "decision_maker_confirmed", "secondary": None},
+        11: {"field": "best_contact_method", "secondary": None},
+        12: {"field": "availability_windows", "secondary": None},
     }
 
     # ========== FRIENDLY CONSULTATION TEMPLATES ==========
@@ -198,6 +297,34 @@ class JorgeSellerConfig:
             "hot_quality_threshold": float(os.getenv("HOT_QUALITY_THRESHOLD", str(cls.HOT_QUALITY_THRESHOLD))),
             "warm_questions_required": int(os.getenv("WARM_QUESTIONS_REQUIRED", str(cls.WARM_QUESTIONS_REQUIRED))),
             "warm_quality_threshold": float(os.getenv("WARM_QUALITY_THRESHOLD", str(cls.WARM_QUALITY_THRESHOLD))),
+            "fail_on_missing_canonical_mapping": cls.should_fail_on_missing_canonical_mapping(),
+            "followup_cadence_hot_days": int(
+                os.getenv("FOLLOWUP_CADENCE_HOT_DAYS", str(cls.FOLLOWUP_CADENCE_DAYS["hot"]))
+            ),
+            "followup_cadence_warm_days": int(
+                os.getenv("FOLLOWUP_CADENCE_WARM_DAYS", str(cls.FOLLOWUP_CADENCE_DAYS["warm"]))
+            ),
+            "followup_cadence_cold_days": int(
+                os.getenv("FOLLOWUP_CADENCE_COLD_DAYS", str(cls.FOLLOWUP_CADENCE_DAYS["cold"]))
+            ),
+            "followup_retry_hot_ceiling": int(
+                os.getenv("FOLLOWUP_RETRY_HOT_CEILING", str(cls.FOLLOWUP_RETRY_CEILING["hot"]))
+            ),
+            "followup_retry_warm_ceiling": int(
+                os.getenv("FOLLOWUP_RETRY_WARM_CEILING", str(cls.FOLLOWUP_RETRY_CEILING["warm"]))
+            ),
+            "followup_retry_cold_ceiling": int(
+                os.getenv("FOLLOWUP_RETRY_COLD_CEILING", str(cls.FOLLOWUP_RETRY_CEILING["cold"]))
+            ),
+            "followup_escalation_attempts": int(
+                os.getenv("FOLLOWUP_ESCALATION_ATTEMPTS", str(cls.FOLLOWUP_ESCALATION_ATTEMPTS))
+            ),
+            "followup_high_value_escalation_attempts": int(
+                os.getenv(
+                    "FOLLOWUP_HIGH_VALUE_ESCALATION_ATTEMPTS",
+                    str(cls.FOLLOWUP_HIGH_VALUE_ESCALATION_ATTEMPTS),
+                )
+            ),
         }
 
     # ========== VALIDATION RULES ==========
@@ -288,6 +415,53 @@ class JorgeSellerConfig:
         else:
             return "cold"
 
+    @staticmethod
+    def _is_empty_value(value: Any) -> bool:
+        """Return True for values that should not overwrite persisted seller state."""
+        if value is None:
+            return True
+        if isinstance(value, str):
+            return value.strip().lower() in {"", "unknown", "null", "n/a", "na"}
+        if isinstance(value, (list, tuple, dict, set)):
+            return len(value) == 0
+        return False
+
+    @classmethod
+    def get_canonical_data_contract(cls) -> Dict[str, List[str]]:
+        """Canonical seller schema buckets used by runtime and validation tooling."""
+        return {
+            "required": list(cls.CANONICAL_REQUIRED_FIELDS),
+            "preferred": list(cls.CANONICAL_PREFERRED_FIELDS),
+        }
+
+    @classmethod
+    def should_fail_on_missing_canonical_mapping(cls) -> bool:
+        """Whether missing required canonical->GHL mappings should hard-stop seller processing."""
+        return os.getenv("FAIL_ON_MISSING_CANONICAL_MAPPING", "false").strip().lower() == "true"
+
+    @classmethod
+    def get_required_qualification_inputs(cls) -> List[str]:
+        """Canonical fields required before qualification state can be computed."""
+        return [field for field in cls.CANONICAL_REQUIRED_FIELDS if field != "qualification_complete"]
+
+    @classmethod
+    def is_intake_complete(cls, seller_data: Dict[str, Any]) -> bool:
+        """Runtime gate for expanded qualification progression completion."""
+        return all(not cls._is_empty_value(seller_data.get(field)) for field in cls.INTAKE_COMPLETION_REQUIRED_FIELDS)
+
+    @classmethod
+    def has_required_canonical_fields(cls, seller_data: Dict[str, Any]) -> bool:
+        """True when required canonical inputs (excluding qualification flag) are all populated."""
+        return all(
+            not cls._is_empty_value(seller_data.get(field))
+            for field in cls.get_required_qualification_inputs()
+        )
+
+    @classmethod
+    def is_qualified_seller_record(cls, seller_data: Dict[str, Any]) -> bool:
+        """Final qualification gate for canonical GHL record completeness."""
+        return cls.has_required_canonical_fields(seller_data) and seller_data.get("qualification_complete") is True
+
     # ========== FOLLOW-UP SCHEDULING ==========
     @classmethod
     def get_next_followup_day(cls, days_since_start: int) -> Optional[int]:
@@ -302,12 +476,82 @@ class JorgeSellerConfig:
             # Long-term phase - every 14 days
             return days_since_start + cls.LONGTERM_FOLLOWUP_INTERVAL
 
+    @classmethod
+    def get_followup_lifecycle_policy(cls) -> Dict[str, Any]:
+        """Return WS-4 lifecycle follow-up policy with env overrides."""
+
+        def _safe_int(env_key: str, default: int) -> int:
+            raw = os.getenv(env_key, str(default)).strip()
+            try:
+                value = int(raw)
+                return max(1, value)
+            except ValueError:
+                logger.warning("Invalid %s=%s, falling back to %s", env_key, raw, default)
+                return default
+
+        cadence_days = {
+            "hot": _safe_int("FOLLOWUP_CADENCE_HOT_DAYS", cls.FOLLOWUP_CADENCE_DAYS["hot"]),
+            "warm": _safe_int("FOLLOWUP_CADENCE_WARM_DAYS", cls.FOLLOWUP_CADENCE_DAYS["warm"]),
+            "cold": _safe_int("FOLLOWUP_CADENCE_COLD_DAYS", cls.FOLLOWUP_CADENCE_DAYS["cold"]),
+        }
+        retry_ceiling = {
+            "hot": _safe_int("FOLLOWUP_RETRY_HOT_CEILING", cls.FOLLOWUP_RETRY_CEILING["hot"]),
+            "warm": _safe_int("FOLLOWUP_RETRY_WARM_CEILING", cls.FOLLOWUP_RETRY_CEILING["warm"]),
+            "cold": _safe_int("FOLLOWUP_RETRY_COLD_CEILING", cls.FOLLOWUP_RETRY_CEILING["cold"]),
+        }
+        deescalation_streak = {
+            "hot": _safe_int("FOLLOWUP_DEESCALATE_HOT_STREAK", cls.FOLLOWUP_DEESCALATION_STREAK["hot"]),
+            "warm": _safe_int("FOLLOWUP_DEESCALATE_WARM_STREAK", cls.FOLLOWUP_DEESCALATION_STREAK["warm"]),
+        }
+        suppression_tags_env = os.getenv("FOLLOWUP_SUPPRESSION_TAGS", "").strip()
+        suppression_tags = (
+            [tag.strip() for tag in suppression_tags_env.split(",") if tag.strip()]
+            if suppression_tags_env
+            else list(cls.FOLLOWUP_SUPPRESSION_TAGS)
+        )
+
+        return {
+            "cadence_days": cadence_days,
+            "retry_ceiling": retry_ceiling,
+            "deescalation_streak": deescalation_streak,
+            "escalation_attempts": _safe_int("FOLLOWUP_ESCALATION_ATTEMPTS", cls.FOLLOWUP_ESCALATION_ATTEMPTS),
+            "high_value_escalation_attempts": _safe_int(
+                "FOLLOWUP_HIGH_VALUE_ESCALATION_ATTEMPTS",
+                cls.FOLLOWUP_HIGH_VALUE_ESCALATION_ATTEMPTS,
+            ),
+            "suppression_tags": suppression_tags,
+        }
+
     # ========== GHL INTEGRATION HELPERS ==========
     @classmethod
     def get_ghl_custom_field_id(cls, field_name: str) -> Optional[str]:
         """Get GHL custom field ID for seller data field"""
         env_var = f"CUSTOM_FIELD_{field_name.upper()}"
         return os.getenv(env_var) or cls.CUSTOM_FIELDS.get(field_name)
+
+    @classmethod
+    def validate_custom_field_mapping(cls, field_names: Optional[List[str]] = None) -> Dict[str, Any]:
+        """
+        Validate that canonical fields map to concrete GHL custom field IDs.
+
+        Returns a payload with missing + resolved mappings for operational checks.
+        """
+        fields_to_check = field_names or list(cls.CANONICAL_REQUIRED_FIELDS + cls.CANONICAL_PREFERRED_FIELDS)
+        missing_fields: List[str] = []
+        resolved_fields: Dict[str, str] = {}
+
+        for field_name in fields_to_check:
+            mapped_id = cls.get_ghl_custom_field_id(field_name)
+            if cls._is_empty_value(mapped_id):
+                missing_fields.append(field_name)
+            else:
+                resolved_fields[field_name] = str(mapped_id)
+
+        return {
+            "is_valid": len(missing_fields) == 0,
+            "missing_fields": missing_fields,
+            "resolved_fields": resolved_fields,
+        }
 
     @classmethod
     def get_workflow_id(cls, temperature: str) -> Optional[str]:
@@ -374,6 +618,24 @@ class JorgeEnvironmentSettings:
         # Follow-up settings
         self.active_followup_days = int(os.getenv("ACTIVE_FOLLOWUP_DAYS", "30"))
         self.longterm_followup_interval = int(os.getenv("LONGTERM_FOLLOWUP_INTERVAL", "14"))
+        self.followup_cadence_hot_days = int(
+            os.getenv("FOLLOWUP_CADENCE_HOT_DAYS", str(JorgeSellerConfig.FOLLOWUP_CADENCE_DAYS["hot"]))
+        )
+        self.followup_cadence_warm_days = int(
+            os.getenv("FOLLOWUP_CADENCE_WARM_DAYS", str(JorgeSellerConfig.FOLLOWUP_CADENCE_DAYS["warm"]))
+        )
+        self.followup_cadence_cold_days = int(
+            os.getenv("FOLLOWUP_CADENCE_COLD_DAYS", str(JorgeSellerConfig.FOLLOWUP_CADENCE_DAYS["cold"]))
+        )
+        self.followup_retry_hot_ceiling = int(
+            os.getenv("FOLLOWUP_RETRY_HOT_CEILING", str(JorgeSellerConfig.FOLLOWUP_RETRY_CEILING["hot"]))
+        )
+        self.followup_retry_warm_ceiling = int(
+            os.getenv("FOLLOWUP_RETRY_WARM_CEILING", str(JorgeSellerConfig.FOLLOWUP_RETRY_CEILING["warm"]))
+        )
+        self.followup_retry_cold_ceiling = int(
+            os.getenv("FOLLOWUP_RETRY_COLD_CEILING", str(JorgeSellerConfig.FOLLOWUP_RETRY_CEILING["cold"]))
+        )
 
         # GHL integration
         self.hot_seller_workflow_id = os.getenv("HOT_SELLER_WORKFLOW_ID")
@@ -387,6 +649,9 @@ class JorgeEnvironmentSettings:
         # Lead bot mode
         self.jorge_lead_mode = os.getenv("JORGE_LEAD_MODE", "true").lower() == "true"
         self.lead_activation_tag = os.getenv("LEAD_ACTIVATION_TAG", "Needs Qualifying")
+        self.fail_on_missing_canonical_mapping = (
+            os.getenv("FAIL_ON_MISSING_CANONICAL_MAPPING", "false").strip().lower() == "true"
+        )
 
     def _parse_list_env(self, env_var: str, default: List[str]) -> List[str]:
         """Parse environment variable as list"""
@@ -434,6 +699,11 @@ class JorgeEnvironmentSettings:
     def LEAD_ACTIVATION_TAG(self) -> str:
         """Tag that activates lead mode routing"""
         return self.lead_activation_tag
+
+    @property
+    def FAIL_ON_MISSING_CANONICAL_MAPPING(self) -> bool:
+        """Compatibility property for mapping gate behavior."""
+        return self.fail_on_missing_canonical_mapping
 
     def validate_ghl_integration(self) -> List[str]:
         """Return warnings for missing GHL configuration."""
