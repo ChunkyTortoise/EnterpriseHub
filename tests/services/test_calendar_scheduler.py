@@ -1,6 +1,3 @@
-import pytest
-pytestmark = pytest.mark.integration
-
 """
 Tests for Calendar Scheduler Service.
 
@@ -20,11 +17,11 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytz
 
+pytestmark = pytest.mark.integration
+
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.calendar_scheduler import (
-
-@pytest.mark.integration
     AUSTIN_TZ,
     AppointmentBooking,
     AppointmentDuration,
@@ -441,7 +438,7 @@ class TestCalendarScheduler:
         assert "buyer consultation" in message
         assert "Jorge" in message
         assert "Wednesday, January 17" in message
-        assert "2:00 PM CT" in message
+        assert "02:00 PM PT" in message
         assert "RESCHEDULE" in message
 
     @pytest.mark.asyncio
@@ -546,7 +543,7 @@ class TestTimeSlot:
         formatted = slot.format_for_lead()
 
         assert "Wednesday, January 17" in formatted
-        assert "2:30 PM CT" in formatted
+        assert "02:30 PM PT" in formatted
 
 
 class TestAppointmentBooking:

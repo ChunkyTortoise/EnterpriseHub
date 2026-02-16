@@ -18,6 +18,7 @@ os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_fake_for_testing")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 
 from contextlib import contextmanager
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -153,20 +154,29 @@ def _all_mode_patches(
                 }
             )
 
-        # --- Lead (ConversationManager) ---
-        mock_ai_response = MagicMock()
-        mock_ai_response.message = "Thanks for reaching out! Tell me more about what you need."
-        mock_ai_response.lead_score = 3
-        mock_ai_response.extracted_data = {}
-
+        # --- Lead (ConversationManager + Lead Bot Workflow) ---
         mock_conv_mgr = MagicMock()
-        if lead_raises:
-            mock_conv_mgr.generate_response = AsyncMock(side_effect=RuntimeError("Lead processing error"))
-        else:
-            mock_conv_mgr.generate_response = AsyncMock(return_value=mock_ai_response)
+        mock_conv_mgr.generate_response = AsyncMock()
         mock_conv_mgr.get_context = AsyncMock(return_value={})
         mock_conv_mgr.update_context = AsyncMock()
         mock_conv_mgr.get_conversation_history = AsyncMock(return_value=[])
+        mock_conv_mgr.memory_service = MagicMock()
+        mock_conv_mgr.memory_service.save_context = AsyncMock()
+
+        mock_lead_bot_instance = MagicMock()
+        if lead_raises:
+            mock_lead_bot_instance.process_enhanced_lead_sequence = AsyncMock(
+                side_effect=RuntimeError("Lead processing error")
+            )
+        else:
+            mock_lead_bot_instance.process_enhanced_lead_sequence = AsyncMock(
+                return_value={
+                    "response_content": "Thanks for reaching out! Tell me more about what you need.",
+                    "intent_profile": SimpleNamespace(frs=SimpleNamespace(classification="Warm Lead")),
+                    "engagement_status": "nurture",
+                    "jorge_handoff_recommended": False,
+                }
+            )
 
         # --- Compliance ---
         mock_compliance = MagicMock()
@@ -230,16 +240,17 @@ def _all_mode_patches(
                 return_value=mock_seller_engine_instance,
             ),
             patch("ghl_real_estate_ai.agents.jorge_buyer_bot.JorgeBuyerBot", return_value=mock_buyer_bot_instance),
+            patch("ghl_real_estate_ai.agents.lead_bot.LeadBotWorkflow", return_value=mock_lead_bot_instance),
         ):
             yield {
                 "jorge_settings": mock_jorge_settings,
                 "config_settings": mock_config_settings,
                 "seller_engine": mock_seller_engine_instance,
                 "buyer_bot": mock_buyer_bot_instance,
+                "lead_bot": mock_lead_bot_instance,
                 "conversation_manager": mock_conv_mgr,
                 "compliance": mock_compliance,
                 "ghl_client": mock_ghl_client,
-                "ai_response": mock_ai_response,
                 "lead_scorer": mock_lead_scorer,
             }
 
@@ -295,7 +306,7 @@ class TestWebhookRoutingComprehensive:
         with _all_mode_patches(jorge_seller_mode=False) as mocks:
             lead_resp = await handle_ghl_webhook.__wrapped__(MagicMock(), lead_event, MagicMock())
         assert lead_resp.success is True
-        mocks["conversation_manager"].generate_response.assert_awaited_once()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_priority_seller_over_lead(self):
@@ -312,7 +323,61 @@ class TestWebhookRoutingComprehensive:
 
         assert response.success is True
         mocks["seller_engine"].process_seller_response.assert_awaited_once()
-        mocks["conversation_manager"].generate_response.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_seller_mapping_gate_fail_closed_blocks_seller_engine(self):
+        """Missing canonical mapping + fail-closed should block seller route before engine invocation."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to sell my house",
+            tags=["Needs Qualifying"],
+        )
+
+        with (
+            _all_mode_patches(jorge_seller_mode=True, jorge_buyer_mode=False, jorge_lead_mode=False) as mocks,
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.JorgeSellerConfig.validate_custom_field_mapping",
+                return_value={"is_valid": False, "missing_fields": ["asking_price"], "resolved_fields": {}},
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.JorgeSellerConfig.should_fail_on_missing_canonical_mapping",
+                return_value=True,
+            ),
+        ):
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        assert "follow up directly" in response.message.lower()
+        assert "Canonical-Mapping-Missing" in _action_tags(response)
+        mocks["seller_engine"].process_seller_response.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_seller_mapping_gate_fail_open_allows_seller_engine(self):
+        """Missing canonical mapping + fail-open should continue normal seller processing."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to sell my house",
+            tags=["Needs Qualifying"],
+        )
+
+        with (
+            _all_mode_patches(jorge_seller_mode=True, jorge_buyer_mode=False, jorge_lead_mode=False) as mocks,
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.JorgeSellerConfig.validate_custom_field_mapping",
+                return_value={"is_valid": False, "missing_fields": ["asking_price"], "resolved_fields": {}},
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook.JorgeSellerConfig.should_fail_on_missing_canonical_mapping",
+                return_value=False,
+            ),
+        ):
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
+
+        assert response.success is True
+        mocks["seller_engine"].process_seller_response.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_priority_buyer_over_lead(self):
@@ -329,7 +394,7 @@ class TestWebhookRoutingComprehensive:
 
         assert response.success is True
         mocks["buyer_bot"].process_buyer_conversation.assert_awaited_once()
-        mocks["conversation_manager"].generate_response.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_priority_seller_over_buyer(self):
@@ -369,7 +434,7 @@ class TestWebhookRoutingComprehensive:
             assert "deactivated" in response.message.lower()
             mocks["seller_engine"].process_seller_response.assert_not_awaited()
             mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
-            mocks["conversation_manager"].generate_response.assert_not_awaited()
+            mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_opt_out_from_any_mode(self):
@@ -389,10 +454,16 @@ class TestWebhookRoutingComprehensive:
 
             assert response.success is True
             assert "AI-Off" in _action_tags(response)
+            assert "Do-Not-Contact" in _action_tags(response)
+            removed_tags = _remove_tags(response)
+            if "Needs Qualifying" in tag_set:
+                assert "Needs Qualifying" in removed_tags
+            if "Buyer-Lead" in tag_set:
+                assert "Buyer-Lead" in removed_tags
             # No bot should have processed
             mocks["seller_engine"].process_seller_response.assert_not_awaited()
             mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
-            mocks["conversation_manager"].generate_response.assert_not_awaited()
+            mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_mode_flags_disable_correctly(self):
@@ -416,11 +487,11 @@ class TestWebhookRoutingComprehensive:
         assert "reaching out" in response.message.lower() or "help" in response.message.lower()
         mocks["seller_engine"].process_seller_response.assert_not_awaited()
         mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
-        mocks["conversation_manager"].generate_response.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_error_in_seller_falls_to_buyer(self):
-        """Seller error + buyer tag present = buyer bot processes instead."""
+    async def test_error_in_seller_returns_fallback_without_fallthrough(self):
+        """Seller error should return seller fallback and not fall through to buyer mode."""
         from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
 
         event = _make_webhook_event(
@@ -436,12 +507,13 @@ class TestWebhookRoutingComprehensive:
             response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
 
         assert response.success is True
-        # Seller raised, should fall through to buyer
-        mocks["buyer_bot"].process_buyer_conversation.assert_awaited_once()
+        assert "specialist" in response.message.lower() or "help" in response.message.lower()
+        assert "Bot-Fallback-Active" in _action_tags(response)
+        mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_error_in_all_bots_returns_fallback(self):
-        """All bots error results in safe fallback response (via error handler)."""
+    async def test_error_in_seller_path_returns_fallback_response(self):
+        """Seller-mode exception should return immediate safe fallback response."""
         from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
 
         event = _make_webhook_event(
@@ -449,27 +521,19 @@ class TestWebhookRoutingComprehensive:
             tags=["Needs Qualifying"],
         )
 
-        mock_bg_tasks = MagicMock()
-
         with _all_mode_patches(
             jorge_seller_mode=True,
-            jorge_buyer_mode=False,
+            jorge_buyer_mode=True,
             jorge_lead_mode=True,
             seller_raises=True,
             lead_raises=True,
         ) as mocks:
-            try:
-                await handle_ghl_webhook.__wrapped__(MagicMock(), event, mock_bg_tasks)
-            except Exception:
-                # HTTPException from error handler is expected
-                pass
+            response = await handle_ghl_webhook.__wrapped__(MagicMock(), event, MagicMock())
 
-            # Fallback message should have been queued via background_tasks.add_task
-            add_task_calls = mock_bg_tasks.add_task.call_args_list
-            send_message_queued = any(
-                args and args[0] is mocks["ghl_client"].send_message for args, kwargs in [c for c in add_task_calls]
-            )
-            assert send_message_queued, "Expected fallback send_message to be queued in background_tasks"
+        assert response.success is True
+        assert "Bot-Fallback-Active" in _action_tags(response)
+        mocks["buyer_bot"].process_buyer_conversation.assert_not_awaited()
+        mocks["lead_bot"].process_enhanced_lead_sequence.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_compliance_enforced_all_modes(self):
