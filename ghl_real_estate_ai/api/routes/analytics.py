@@ -21,6 +21,7 @@ Security Features:
 
 import asyncio
 import json
+import os
 import time
 import uuid
 from datetime import datetime
@@ -29,7 +30,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBearer
 
-from ghl_real_estate_ai.api.middleware import get_current_user
+from ghl_real_estate_ai.api.middleware import JWTAuth, get_current_user
 
 # from ghl_real_estate_ai.api.middleware.enhanced_auth import verify_analytics_permission  # TODO: Fix this import
 from ghl_real_estate_ai.api.schemas.analytics import (
@@ -47,12 +48,14 @@ from ghl_real_estate_ai.api.schemas.analytics import (
     SHAPAnalyticsRequest,
     SHAPWaterfallResponse,
 )
+from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.market_intelligence_engine import get_market_intelligence_engine
 
 # Service Imports
+from ghl_real_estate_ai.services.jorge.ws6_reporting import build_ws6_observability_payload
 from ghl_real_estate_ai.services.shap_analytics_enhanced import get_shap_analytics_enhanced
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
 
@@ -527,6 +530,31 @@ async def get_analytics_performance(current_user: Dict = Depends(get_current_use
         )
 
 
+@router.get(
+    "/jorge/ws6",
+    summary="Get Jorge WS-6 Observability Payload",
+    description="Expose WS-6 dashboard KPIs, event schemas, and experiment guardrail states for analytics consumers.",
+)
+async def get_jorge_ws6_observability(
+    window: str = Query("1h", pattern="^(1h|24h|7d)$", description="Rolling window for KPI delta calculations"),
+    include_recent_events: bool = Query(False, description="Include recent WS-6 event samples"),
+    current_user: Dict = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Return a unified WS-6 payload for analytics dashboard integrations."""
+    try:
+        return await build_ws6_observability_payload(
+            window=window,
+            include_recent_events=include_recent_events,
+            event_limit=20,
+        )
+    except Exception as e:
+        logger.error(f"Failed to build WS-6 observability payload: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve Jorge WS-6 observability payload",
+        )
+
+
 @router.post("/cache/clear")
 async def clear_analytics_cache(
     pattern: Optional[str] = Query(None, description="Cache key pattern to clear"),
@@ -682,15 +710,45 @@ async def _authenticate_websocket(token: Optional[str]) -> Optional[Dict]:
     if not token:
         return None
 
+    normalized_token = token.strip()
+    if not normalized_token:
+        return None
+
+    # Explicit, opt-in insecure mode for local demos only.
+    allow_insecure_dev_ws = (
+        settings.environment != "production"
+        and os.getenv("ALLOW_INSECURE_WEBSOCKET_AUTH", "").lower() in {"1", "true", "yes"}
+        and normalized_token.startswith("dev_ws_")
+    )
+    if allow_insecure_dev_ws:
+        return {
+            "user_id": normalized_token.replace("dev_ws_", "", 1) or "dev_user",
+            "role": "analytics_dev",
+            "permissions": ["analytics_read", "analytics_websocket"],
+        }
+
     try:
-        # In production, this would verify JWT token and extract user context
-        # For now, return mock user context
-        # TODO: Implement proper JWT token validation
+        payload = JWTAuth.verify_token(normalized_token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+
+        raw_permissions = payload.get("permissions")
+        if isinstance(raw_permissions, str):
+            permissions = [raw_permissions]
+        elif isinstance(raw_permissions, list):
+            permissions = [str(permission) for permission in raw_permissions]
+        else:
+            permissions = []
+
+        for required_permission in ("analytics_read", "analytics_websocket"):
+            if required_permission not in permissions:
+                permissions.append(required_permission)
 
         return {
-            "user_id": "user_123",
-            "role": "analytics_user",
-            "permissions": ["analytics_read", "analytics_websocket"],
+            "user_id": str(user_id),
+            "role": str(payload.get("role", "analytics_user")),
+            "permissions": permissions,
         }
 
     except Exception as e:

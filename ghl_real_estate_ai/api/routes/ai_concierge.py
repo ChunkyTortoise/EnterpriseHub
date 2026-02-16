@@ -27,6 +27,7 @@ Security Features:
 
 import asyncio
 import json
+import os
 import time
 import uuid
 from datetime import datetime
@@ -34,10 +35,11 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from ghl_real_estate_ai.api.middleware.auth import get_current_user
+from ghl_real_estate_ai.api.middleware import JWTAuth, get_current_user
 from ghl_real_estate_ai.api.middleware.rate_limiting import rate_limit
+from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 # Import AI Concierge models and services
@@ -50,6 +52,7 @@ from ghl_real_estate_ai.models.ai_concierge_models import (
     ProactiveInsight,
 )
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.services.jorge.ws6_reporting import build_ws6_observability_payload
 from ghl_real_estate_ai.services.proactive_conversation_intelligence import get_proactive_conversation_intelligence
 from ghl_real_estate_ai.services.websocket_server import get_websocket_manager
 
@@ -692,6 +695,8 @@ async def get_concierge_performance(current_user: Dict = Depends(get_current_use
         # Calculate endpoint performance metrics
         endpoint_performance = {}
         for endpoint, metrics in _endpoint_metrics.items():
+            if "requests" not in metrics:
+                continue
             if metrics["requests"] > 0:
                 avg_response_time = metrics["total_time_ms"] / metrics["requests"]
                 error_rate = metrics["errors"] / metrics["requests"]
@@ -703,6 +708,17 @@ async def get_concierge_performance(current_user: Dict = Depends(get_current_use
                     "errors": metrics["errors"],
                 }
 
+        ws6_payload: Dict[str, Any]
+        try:
+            ws6_payload = await build_ws6_observability_payload(window="1h", include_recent_events=False)
+        except Exception as ws6_error:
+            logger.debug(f"WS-6 payload unavailable in concierge performance endpoint: {ws6_error}")
+            ws6_payload = {
+                "available": False,
+                "version": "ws6.v1",
+                "error": "ws6_payload_unavailable",
+            }
+
         return {
             "service_metrics": service_metrics,
             "endpoint_performance": endpoint_performance,
@@ -711,6 +727,7 @@ async def get_concierge_performance(current_user: Dict = Depends(get_current_use
                 "total_messages_sent": _endpoint_metrics["websocket_streams"]["messages_sent"],
                 "websocket_errors": _endpoint_metrics["websocket_streams"]["errors"],
             },
+            "jorge_ws6": ws6_payload,
             "overall_health": "good" if service_metrics.get("performance_status") == "good" else "needs_attention",
             "retrieved_at": datetime.utcnow().isoformat(),
         }
@@ -988,13 +1005,44 @@ async def _authenticate_websocket_connection(token: Optional[str]) -> Optional[D
     if not token:
         return None
 
-    try:
-        # TODO: Implement proper JWT token validation
-        # For now, return mock user context
+    normalized_token = token.strip()
+    if not normalized_token:
+        return None
+
+    allow_insecure_dev_ws = (
+        settings.environment != "production"
+        and os.getenv("ALLOW_INSECURE_WEBSOCKET_AUTH", "").lower() in {"1", "true", "yes"}
+        and normalized_token.startswith("dev_ws_")
+    )
+    if allow_insecure_dev_ws:
         return {
-            "user_id": "user_123",
-            "role": "concierge_user",
+            "user_id": normalized_token.replace("dev_ws_", "", 1) or "dev_user",
+            "role": "concierge_dev",
             "permissions": ["concierge_read", "concierge_websocket"],
+        }
+
+    try:
+        payload = JWTAuth.verify_token(normalized_token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+
+        raw_permissions = payload.get("permissions")
+        if isinstance(raw_permissions, str):
+            permissions = [raw_permissions]
+        elif isinstance(raw_permissions, list):
+            permissions = [str(permission) for permission in raw_permissions]
+        else:
+            permissions = []
+
+        for required_permission in ("concierge_read", "concierge_websocket"):
+            if required_permission not in permissions:
+                permissions.append(required_permission)
+
+        return {
+            "user_id": str(user_id),
+            "role": str(payload.get("role", "concierge_user")),
+            "permissions": permissions,
         }
 
     except Exception as e:

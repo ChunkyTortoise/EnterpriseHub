@@ -227,6 +227,21 @@ def load_mock_data():
     return {}
 
 
+def get_runtime_transparency_status() -> dict:
+    """Expose runtime mode details for buyer-facing transparency badges."""
+    mock_data_path = _GHL_ROOT / "data" / "mock_analytics.json"
+    uses_mock_services = DEMO_MODE or not SERVICES_LOADED
+
+    return {
+        "demo_mode": DEMO_MODE,
+        "services_loaded": SERVICES_LOADED,
+        "uses_mock_services": uses_mock_services,
+        "mock_data_available": mock_data_path.exists(),
+        "mock_data_path": str(mock_data_path),
+        "generated_at": datetime.datetime.now().isoformat(),
+    }
+
+
 # ============================================================================
 # PERFORMANCE OPTIMIZATION: Cache Warming & Service Initialization
 # ============================================================================
@@ -356,6 +371,18 @@ def preload_dashboard_components():
             "active_leads": {"value": 847, "change": 0.08, "format": "number"},
             "avg_deal_size": {"value": 425000, "change": -0.02, "format": "currency"},
         }
+
+        # WS-6: pre-load Jorge KPI panel definitions and snapshot for dashboard surfaces.
+        try:
+            from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+
+            ws6_collector = BotMetricsCollector()
+            components_data["jorge_ws6"] = {
+                "definitions": ws6_collector.get_dashboard_definitions(),
+                "snapshot": ws6_collector.get_dashboard_kpi_snapshot(),
+            }
+        except Exception as ws6_error:
+            components_data["jorge_ws6"] = {"available": False, "error": str(ws6_error)}
 
         # Pre-load navigation state
         components_data["navigation"] = {
