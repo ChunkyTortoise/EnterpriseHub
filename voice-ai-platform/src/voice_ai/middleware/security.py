@@ -1,7 +1,7 @@
 """API key authentication middleware.
 
 Validates X-API-Key header against comma-separated keys in API_KEYS env var.
-Excludes /health, /docs, /openapi.json, and /redoc from authentication.
+Excludes /health, /ready, /docs, /openapi.json, and /redoc from authentication.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # Paths excluded from API key authentication
 EXCLUDED_PATHS = frozenset({
     "/health",
+    "/ready",
     "/docs",
     "/openapi.json",
     "/redoc",
