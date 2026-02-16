@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
@@ -12,11 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from voice_ai.config import get_settings
+from voice_ai.logging_config import RequestLoggingMiddleware, get_logger, setup_logging
 from voice_ai.middleware.errors import register_error_handlers
 from voice_ai.middleware.rate_limit import limiter, rate_limit_exceeded_handler
 from voice_ai.middleware.security import APIKeyMiddleware
+from voice_ai.middleware.security_headers import SecurityHeadersMiddleware
 
-logger = logging.getLogger(__name__)
+setup_logging()
+logger = get_logger(__name__)
 
 
 def _parse_allowed_origins() -> list[str]:
@@ -83,6 +85,12 @@ def create_app() -> FastAPI:
     # API key authentication
     app.add_middleware(APIKeyMiddleware)
 
+    # Security headers
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # Request logging (structured)
+    app.add_middleware(RequestLoggingMiddleware)
+
     # Standardized error handlers
     register_error_handlers(app)
 
@@ -102,6 +110,54 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check() -> dict[str, str]:
         return {"status": "healthy", "service": "voice-ai-platform"}
+
+    @app.get("/ready")
+    async def readiness_check():
+        checks: dict[str, str] = {}
+
+        # Database check
+        try:
+            if app.state.db_session:
+                from sqlalchemy import text
+
+                async with app.state.db_session() as session:
+                    await session.execute(text("SELECT 1"))
+                checks["database"] = "ok"
+            else:
+                checks["database"] = "not_configured"
+        except Exception:
+            checks["database"] = "error"
+
+        # Redis check
+        try:
+            if app.state.redis:
+                await app.state.redis.ping()
+                checks["redis"] = "ok"
+            else:
+                checks["redis"] = "not_configured"
+        except Exception:
+            checks["redis"] = "error"
+
+        # Twilio check
+        try:
+            if app.state.twilio_handler:
+                checks["twilio"] = "ok"
+            else:
+                checks["twilio"] = "not_configured"
+        except Exception:
+            checks["twilio"] = "error"
+
+        all_ok = all(v in ("ok", "not_configured") for v in checks.values())
+        status_code = 200 if all_ok else 503
+        from fastapi.responses import JSONResponse
+
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "status": "ready" if all_ok else "not_ready",
+                "checks": checks,
+            },
+        )
 
     return app
 
