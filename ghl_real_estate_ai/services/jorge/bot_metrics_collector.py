@@ -28,6 +28,7 @@ import asyncio
 import logging
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -36,6 +37,35 @@ from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 logger = logging.getLogger(__name__)
 
 VALID_BOT_TYPES = frozenset({"lead", "buyer", "seller"})
+EVENT_SCHEMA_VERSION = "ws6.v1"
+EVENT_SOURCE = "bot_metrics_collector"
+
+DASHBOARD_DEFINITIONS = {
+    "funnel": {
+        "title": "Qualification Funnel",
+        "description": "Qualified interaction rate across active bot conversations.",
+        "metric_key": "funnel",
+        "unit": "ratio",
+    },
+    "efficiency": {
+        "title": "Response Efficiency",
+        "description": "Average bot response duration (ms). Lower is better.",
+        "metric_key": "efficiency",
+        "unit": "ms",
+    },
+    "completeness": {
+        "title": "Data Completeness",
+        "description": "Share of records that meet canonical contract completeness checks.",
+        "metric_key": "completeness",
+        "unit": "ratio",
+    },
+    "opt_out": {
+        "title": "Opt-Out Rate",
+        "description": "Share of conversations that trigger opt-out or suppression.",
+        "metric_key": "opt_out",
+        "unit": "ratio",
+    },
+}
 
 
 @dataclass
@@ -83,6 +113,7 @@ class BotMetricsCollector:
             return
         self._interactions: List[_BotInteraction] = []
         self._handoffs: List[_HandoffRecord] = []
+        self._events: deque = deque(maxlen=5000)
         self._data_lock = threading.Lock()
         self._repository: Any = None  # Optional MetricsRepository for DB persistence
         self._initialized = True
@@ -208,6 +239,15 @@ class BotMetricsCollector:
 
         with self._data_lock:
             self._interactions.append(interaction)
+        self._emit_event(
+            "bot_interaction_recorded",
+            {
+                "bot_type": bot_type,
+                "duration_ms": duration_ms,
+                "success": success,
+                "cache_hit": cache_hit,
+            },
+        )
 
         # Write-through to DB (fire-and-forget on error)
         if self._repository is not None:
@@ -257,6 +297,15 @@ class BotMetricsCollector:
 
         with self._data_lock:
             self._handoffs.append(record)
+        self._emit_event(
+            "handoff_recorded",
+            {
+                "source": source,
+                "target": target,
+                "success": success,
+                "duration_ms": duration_ms,
+            },
+        )
 
         # Write-through to DB (fire-and-forget on error)
         if self._repository is not None:
@@ -389,6 +438,82 @@ class BotMetricsCollector:
 
         logger.info("Fed %d metrics to AlertingService", 7)
 
+    # ── WS-6 Event/Reporting API ─────────────────────────────────────
+
+    def get_required_event_schema(self) -> Dict[str, Any]:
+        """Return the stable WS-6 event schema definition."""
+        return {
+            "event_version": EVENT_SCHEMA_VERSION,
+            "required_event_keys": ["event_name", "event_version", "source", "occurred_at", "payload"],
+            "payload_schema": {
+                "bot_interaction_recorded": ["bot_type", "duration_ms", "success", "cache_hit"],
+                "handoff_recorded": ["source", "target", "success", "duration_ms"],
+            },
+        }
+
+    def get_recent_events(self, event_name: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        """Return recent metric events using a stable schema."""
+        with self._data_lock:
+            events = list(self._events)
+        if event_name:
+            events = [event for event in events if event["event_name"] == event_name]
+        if limit <= 0:
+            return []
+        return events[-limit:]
+
+    @trace_operation("jorge.metrics", "get_dashboard_definitions")
+    def get_dashboard_definitions(self) -> Dict[str, Any]:
+        """Return WS-6 dashboard panel definitions."""
+        return {
+            "version": "ws6.v1",
+            "panels": {key: value.copy() for key, value in DASHBOARD_DEFINITIONS.items()},
+        }
+
+    @trace_operation("jorge.metrics", "get_dashboard_kpi_snapshot")
+    def get_dashboard_kpi_snapshot(
+        self,
+        baseline: Optional[Dict[str, float]] = None,
+        window_minutes: int = 60,
+        completeness_rate: float = 0.0,
+        opt_out_rate: float = 0.0,
+    ) -> Dict[str, Any]:
+        """
+        Build dashboard KPI values and deltas vs baseline.
+
+        Baseline keys:
+            - funnel
+            - efficiency
+            - completeness
+            - opt_out
+        """
+        baseline = baseline or {}
+        system = self.get_system_summary(window_minutes=window_minutes)
+        overall = system["overall"]
+
+        metrics = {
+            "funnel": round(overall.get("success_rate", 0.0), 4),
+            "efficiency": round(overall.get("avg_duration_ms", 0.0), 2),
+            "completeness": round(max(0.0, min(1.0, completeness_rate)), 4),
+            "opt_out": round(max(0.0, min(1.0, opt_out_rate)), 4),
+        }
+
+        kpis: Dict[str, Dict[str, Any]] = {}
+        for key, current in metrics.items():
+            baseline_value = baseline.get(key)
+            delta = round(current - baseline_value, 4) if baseline_value is not None else None
+            kpis[key] = {
+                "current": current,
+                "baseline": baseline_value,
+                "delta": delta,
+                "unit": DASHBOARD_DEFINITIONS[key]["unit"],
+            }
+
+        return {
+            "version": "ws6.v1",
+            "window_minutes": window_minutes,
+            "kpis": kpis,
+        }
+
     # ── DB Write-Through Helpers ─────────────────────────────────────
 
     async def _persist_interaction(self, interaction: _BotInteraction) -> None:
@@ -456,6 +581,18 @@ class BotMetricsCollector:
             "cache_hit_rate": round(cache_hits / total, 4),
         }
 
+    def _emit_event(self, event_name: str, payload: Dict[str, Any]) -> None:
+        """Append a stable, versioned event payload for WS-6 observability."""
+        event = {
+            "event_name": event_name,
+            "event_version": EVENT_SCHEMA_VERSION,
+            "source": EVENT_SOURCE,
+            "occurred_at": time.time(),
+            "payload": payload,
+        }
+        with self._data_lock:
+            self._events.append(event)
+
     @staticmethod
     def _percentile(values: List[float], pct: int) -> float:
         """Compute the pct-th percentile of a list of values.
@@ -495,6 +632,7 @@ class BotMetricsCollector:
             if cls._instance is not None:
                 cls._instance._interactions.clear()
                 cls._instance._handoffs.clear()
+                cls._instance._events.clear()
                 cls._instance._repository = None
                 cls._instance._initialized = False
             cls._instance = None

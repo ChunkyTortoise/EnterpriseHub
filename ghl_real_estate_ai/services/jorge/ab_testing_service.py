@@ -58,8 +58,16 @@ VALID_OUTCOMES = frozenset(
         "conversion",
         "handoff_success",
         "appointment_booked",
+        "opt_out",
+        "compliance_violation",
     }
 )
+
+DEFAULT_GUARDRAILS = {
+    "opt_out_rate_threshold": 0.05,
+    "compliance_violation_rate_threshold": 0.02,
+    "min_samples": 20,
+}
 
 
 @dataclass
@@ -103,6 +111,10 @@ class _Experiment:
     assignments: Dict[str, List[str]] = field(default_factory=dict)
     # variant -> list of outcome dicts
     outcomes: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
+    # Guardrail thresholds + status
+    guardrails: Dict[str, float] = field(default_factory=lambda: dict(DEFAULT_GUARDRAILS))
+    disabled_variants: set[str] = field(default_factory=set)
+    guardrail_events: List[Dict[str, Any]] = field(default_factory=list)
 
 
 class ABTestingService:
@@ -199,6 +211,9 @@ class ABTestingService:
                         created_at=time.time(),
                         assignments={v: [] for v in variants},
                         outcomes={v: [] for v in variants},
+                        guardrails=dict(DEFAULT_GUARDRAILS),
+                        disabled_variants=set(),
+                        guardrail_events=[],
                     )
                 loaded += 1
                 logger.debug("Loaded experiment '%s' from DB", exp_name)
@@ -288,6 +303,9 @@ class ABTestingService:
                 created_at=time.time(),
                 assignments={v: [] for v in variants},
                 outcomes={v: [] for v in variants},
+                guardrails=dict(DEFAULT_GUARDRAILS),
+                disabled_variants=set(),
+                guardrail_events=[],
             )
             self._experiments[experiment_id] = experiment
 
@@ -339,12 +357,53 @@ class ABTestingService:
                             "experiment_id": exp.experiment_id,
                             "variants": exp.variants,
                             "traffic_split": exp.traffic_split,
+                            "disabled_variants": sorted(exp.disabled_variants),
+                            "guardrails": dict(exp.guardrails),
                             "status": exp.status.value,
                             "total_assignments": total_assigned,
                             "created_at": exp.created_at,
                         }
                     )
             return results
+
+    def set_guardrails(
+        self,
+        experiment_id: str,
+        *,
+        opt_out_rate_threshold: Optional[float] = None,
+        compliance_violation_rate_threshold: Optional[float] = None,
+        min_samples: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Configure safety guardrails for variant auto-disable behavior."""
+        with self._data_lock:
+            experiment = self._get_experiment(experiment_id)
+            if opt_out_rate_threshold is not None:
+                experiment.guardrails["opt_out_rate_threshold"] = float(opt_out_rate_threshold)
+            if compliance_violation_rate_threshold is not None:
+                experiment.guardrails["compliance_violation_rate_threshold"] = float(
+                    compliance_violation_rate_threshold
+                )
+            if min_samples is not None:
+                experiment.guardrails["min_samples"] = max(1, int(min_samples))
+
+            guardrails = dict(experiment.guardrails)
+
+        return {
+            "experiment_id": experiment_id,
+            "guardrails": guardrails,
+        }
+
+    def get_guardrail_status(self, experiment_id: str) -> Dict[str, Any]:
+        """Return current guardrail thresholds, disabled variants, and events."""
+        with self._data_lock:
+            experiment = self._get_experiment(experiment_id)
+            return {
+                "experiment_id": experiment_id,
+                "status": experiment.status.value,
+                "guardrails": dict(experiment.guardrails),
+                "disabled_variants": sorted(experiment.disabled_variants),
+                "events": list(experiment.guardrail_events),
+            }
 
     # ── Variant Assignment ────────────────────────────────────────────
 
@@ -371,11 +430,26 @@ class ABTestingService:
             if experiment.status != ExperimentStatus.ACTIVE:
                 raise ValueError(f"Experiment '{experiment_id}' is not active (status={experiment.status.value})")
 
+            active_variants = [v for v in experiment.variants if v not in experiment.disabled_variants]
+            if not active_variants:
+                experiment.status = ExperimentStatus.PAUSED
+                raise ValueError(f"Experiment '{experiment_id}' has no active variants (guardrail paused)")
+
+            active_split_total = sum(experiment.traffic_split.get(v, 0.0) for v in active_variants)
+            if active_split_total > 0:
+                active_split = {
+                    variant_name: experiment.traffic_split.get(variant_name, 0.0) / active_split_total
+                    for variant_name in active_variants
+                }
+            else:
+                equal_share = 1.0 / len(active_variants)
+                active_split = {variant_name: equal_share for variant_name in active_variants}
+
             variant = self._hash_assign(
                 contact_id,
                 experiment_id,
-                experiment.variants,
-                experiment.traffic_split,
+                active_variants,
+                active_split,
             )
 
             # Track assignment (deduplicate)
@@ -453,6 +527,7 @@ class ABTestingService:
                     "timestamp": time.time(),
                 }
             )
+            guardrail_event = self._evaluate_guardrails(experiment, variant)
 
         logger.debug(
             f"Recorded outcome '{outcome}' (value={value}) for variant '{variant}' in experiment '{experiment_id}'"
@@ -476,13 +551,20 @@ class ABTestingService:
                     exc,
                 )
 
-        return {
+        response: ABTestOutcome = {
             "experiment_id": experiment_id,
             "contact_id": contact_id,
             "variant": variant,
             "outcome": outcome,
             "value": value,
         }
+        if guardrail_event:
+            response["guardrail_triggered"] = True
+            response["guardrail_reason"] = ",".join(guardrail_event["reasons"])
+            response["variant_disabled"] = guardrail_event["variant"]
+        else:
+            response["guardrail_triggered"] = False
+        return response
 
     # ── Statistical Analysis ──────────────────────────────────────────
 
@@ -603,6 +685,59 @@ class ABTestingService:
         return p_value < alpha
 
     # ── Internal Helpers ──────────────────────────────────────────────
+
+    def _evaluate_guardrails(self, experiment: _Experiment, variant: str) -> Optional[Dict[str, Any]]:
+        """
+        Evaluate guardrails for a variant and disable it on breach.
+
+        Expected to run while self._data_lock is held.
+        """
+        if variant in experiment.disabled_variants:
+            return None
+
+        impressions = len(experiment.assignments.get(variant, []))
+        min_samples = int(experiment.guardrails.get("min_samples", DEFAULT_GUARDRAILS["min_samples"]))
+        if impressions < max(min_samples, 1):
+            return None
+
+        outcomes = experiment.outcomes.get(variant, [])
+        opt_out_count = sum(1 for item in outcomes if item.get("outcome") == "opt_out")
+        compliance_count = sum(1 for item in outcomes if item.get("outcome") == "compliance_violation")
+
+        opt_out_rate = opt_out_count / impressions if impressions else 0.0
+        compliance_rate = compliance_count / impressions if impressions else 0.0
+
+        reasons = []
+        if opt_out_rate >= float(experiment.guardrails.get("opt_out_rate_threshold", 1.0)):
+            reasons.append("opt_out_rate_threshold")
+        if compliance_rate >= float(experiment.guardrails.get("compliance_violation_rate_threshold", 1.0)):
+            reasons.append("compliance_violation_rate_threshold")
+
+        if not reasons:
+            return None
+
+        experiment.disabled_variants.add(variant)
+        active_variants = [candidate for candidate in experiment.variants if candidate not in experiment.disabled_variants]
+        if not active_variants:
+            experiment.status = ExperimentStatus.PAUSED
+
+        event = {
+            "timestamp": time.time(),
+            "variant": variant,
+            "reasons": reasons,
+            "impressions": impressions,
+            "opt_out_rate": round(opt_out_rate, 4),
+            "compliance_violation_rate": round(compliance_rate, 4),
+            "status": experiment.status.value,
+        }
+        experiment.guardrail_events.append(event)
+        logger.warning(
+            "Guardrail disabled variant '%s' for experiment '%s': %s",
+            variant,
+            experiment.experiment_id,
+            ",".join(reasons),
+        )
+        return event
 
     def _get_experiment(self, experiment_id: str) -> _Experiment:
         """Retrieve an experiment or raise KeyError. Caller must hold lock."""

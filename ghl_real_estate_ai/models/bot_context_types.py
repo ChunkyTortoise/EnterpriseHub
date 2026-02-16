@@ -182,8 +182,11 @@ class ABTestOutcome(TypedDict, total=False):
     experiment_id: str
     contact_id: str
     variant: str
-    outcome: str  # "response", "engagement", "conversion", "handoff_success", "appointment_booked"
+    outcome: str  # includes response, engagement, conversion, handoff_success, appointment_booked, opt_out, compliance_violation
     value: float
+    guardrail_triggered: NotRequired[bool]
+    guardrail_reason: NotRequired[str]
+    variant_disabled: NotRequired[str]
 
 
 class ABTestVariantStats(TypedDict, total=False):

@@ -46,6 +46,8 @@ from ghl_real_estate_ai.models.bot_context_types import (
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 logger = logging.getLogger(__name__)
+EVENT_SCHEMA_VERSION = "ws6.v1"
+EVENT_SOURCE = "performance_tracker"
 
 
 # ── SLA Configuration (from Phase 4 Audit Spec) ─────────────────────────
@@ -133,6 +135,7 @@ class PerformanceTracker:
 
         # Rolling windows: bot -> operation -> window -> deque of entries
         self._operations: Dict[str, Dict[str, Dict[str, deque]]] = {}
+        self._events: deque = deque(maxlen=5000)
         self._sla_targets: Dict[str, Dict[str, _SLATarget]] = {}
         self._data_lock = threading.Lock()
         self._repository: Any = None  # Optional MetricsRepository for DB persistence
@@ -242,6 +245,17 @@ class PerformanceTracker:
             # Add to all rolling windows
             for window_name in WINDOWS:
                 self._operations[bot_name][window_name].append(entry)
+        self._emit_event(
+            "operation_tracked",
+            {
+                "bot_name": bot_name,
+                "operation": operation,
+                "duration_ms": duration_ms,
+                "success": success,
+                "cache_hit": cache_hit,
+                "metadata": metadata or {},
+            },
+        )
 
         # Write-through to DB (fire-and-forget on error)
         if self._repository is not None:
@@ -469,7 +483,76 @@ class PerformanceTracker:
 
         return compliance_list
 
+    # ── WS-6 Event/Reporting API ─────────────────────────────────────
+
+    def get_required_event_schema(self) -> Dict[str, Any]:
+        """Return the stable WS-6 event schema definition."""
+        return {
+            "event_version": EVENT_SCHEMA_VERSION,
+            "required_event_keys": ["event_name", "event_version", "source", "occurred_at", "payload"],
+            "payload_schema": {
+                "operation_tracked": ["bot_name", "operation", "duration_ms", "success", "cache_hit", "metadata"],
+            },
+        }
+
+    def get_recent_events(self, event_name: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        """Return recent performance events using a stable schema."""
+        with self._data_lock:
+            events = list(self._events)
+        if event_name:
+            events = [event for event in events if event["event_name"] == event_name]
+        if limit <= 0:
+            return []
+        return events[-limit:]
+
+    async def get_kpi_deltas_vs_baseline(
+        self,
+        baseline: Optional[Dict[str, Dict[str, float]]] = None,
+        window: str = "1h",
+    ) -> Dict[str, Dict[str, Any]]:
+        """Return per-bot P95 and success-rate deltas vs baseline metrics."""
+        baseline = baseline or {}
+        current = await self.get_all_stats(window=window)
+        deltas: Dict[str, Dict[str, Any]] = {}
+
+        for bot_name, stats in current.items():
+            baseline_stats = baseline.get(bot_name, {})
+            p95_baseline = baseline_stats.get("p95")
+            success_baseline = baseline_stats.get("success_rate")
+            deltas[bot_name] = {
+                "p95_current": stats.get("p95", 0.0),
+                "p95_baseline": p95_baseline,
+                "p95_delta": (
+                    round(stats.get("p95", 0.0) - p95_baseline, 2) if p95_baseline is not None else None
+                ),
+                "success_current": stats.get("success_rate", 0.0),
+                "success_baseline": success_baseline,
+                "success_delta": (
+                    round(stats.get("success_rate", 0.0) - success_baseline, 4)
+                    if success_baseline is not None
+                    else None
+                ),
+            }
+
+        return {
+            "version": "ws6.v1",
+            "window": window,
+            "bots": deltas,
+        }
+
     # ── Internal Helpers ──────────────────────────────────────────────
+
+    def _emit_event(self, event_name: str, payload: Dict[str, Any]) -> None:
+        """Append a stable, versioned event payload for WS-6 observability."""
+        event = {
+            "event_name": event_name,
+            "event_version": EVENT_SCHEMA_VERSION,
+            "source": EVENT_SOURCE,
+            "occurred_at": time.time(),
+            "payload": payload,
+        }
+        with self._data_lock:
+            self._events.append(event)
 
     def _get_entries_in_window(
         self,
@@ -547,6 +630,7 @@ class PerformanceTracker:
             if cls._instance is not None:
                 cls._instance._operations.clear()
                 cls._instance._sla_targets.clear()
+                cls._instance._events.clear()
                 cls._instance._repository = None
                 cls._instance._initialized = False
             cls._instance = None
