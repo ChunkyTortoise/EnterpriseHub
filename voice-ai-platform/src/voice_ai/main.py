@@ -3,16 +3,28 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from voice_ai.config import get_settings
+from voice_ai.middleware.errors import register_error_handlers
+from voice_ai.middleware.rate_limit import limiter, rate_limit_exceeded_handler
+from voice_ai.middleware.security import APIKeyMiddleware
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_allowed_origins() -> list[str]:
+    """Parse ALLOWED_ORIGINS from env var (comma-separated) or default to localhost."""
+    raw = os.environ.get("ALLOWED_ORIGINS", "")
+    if raw:
+        return [o.strip() for o in raw.split(",") if o.strip()]
+    return ["http://localhost:3000"]
 
 
 @asynccontextmanager
@@ -55,14 +67,24 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS
+    # Rate limiter
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+    # CORS — locked to ALLOWED_ORIGINS env var
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=_parse_allowed_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # API key authentication
+    app.add_middleware(APIKeyMiddleware)
+
+    # Standardized error handlers
+    register_error_handlers(app)
 
     # Register routers
     from voice_ai.api.calls import router as calls_router
@@ -80,14 +102,6 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check() -> dict[str, str]:
         return {"status": "healthy", "service": "voice-ai-platform"}
-
-    @app.exception_handler(Exception)
-    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-        logger.exception("Unhandled exception: %s", exc)
-        return JSONResponse(
-            status_code=500,
-            content={"error": "internal_server_error", "message": "An unexpected error occurred"},
-        )
 
     return app
 

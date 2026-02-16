@@ -21,6 +21,7 @@ dependencies = [
     "redis>=5.2",
     "stripe>=11",
     "httpx>=0.28",
+    "slowapi>=0.1.9",
     "python-multipart>=0.0.9",
     # shared-schemas installed separately: pip install -e packages/shared-schemas/
 ]
@@ -33,6 +34,7 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "httpx>=0.28",
+    "locust>=2.29",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -41,6 +43,7 @@ packages = ["src/rag_service"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["src"]
 
 [tool.ruff]
 target-version = "py311"

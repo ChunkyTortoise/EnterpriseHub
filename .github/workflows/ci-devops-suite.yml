@@ -1,0 +1,79 @@
+name: CI — AI DevOps Suite
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "ai-devops-suite/**"
+      - "packages/shared-schemas/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ai-devops-suite/**"
+      - "packages/shared-schemas/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-devops-suite-${{ hashFiles('ai-devops-suite/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-devops-suite-
+
+      - name: Install shared-schemas
+        run: pip install -e packages/shared-schemas
+
+      - name: Install dependencies
+        run: |
+          cd ai-devops-suite
+          pip install -e ".[dev]"
+
+      - name: Ruff check
+        run: cd ai-devops-suite && ruff check src/
+
+      - name: Ruff format check
+        run: cd ai-devops-suite && ruff format --check src/
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-devops-suite-${{ hashFiles('ai-devops-suite/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-devops-suite-
+
+      - name: Install shared-schemas
+        run: pip install -e packages/shared-schemas
+
+      - name: Install dependencies
+        run: |
+          cd ai-devops-suite
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          cd ai-devops-suite
+          python -m pytest tests/ -x -q --tb=short

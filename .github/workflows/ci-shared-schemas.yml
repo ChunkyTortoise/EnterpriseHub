@@ -1,0 +1,71 @@
+name: CI — Shared Schemas
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "packages/shared-schemas/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/shared-schemas/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-shared-schemas-${{ hashFiles('packages/shared-schemas/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-shared-schemas-
+
+      - name: Install dependencies
+        run: |
+          cd packages/shared-schemas
+          pip install -e ".[dev]"
+
+      - name: Ruff check
+        run: cd packages/shared-schemas && ruff check .
+
+      - name: Ruff format check
+        run: cd packages/shared-schemas && ruff format --check .
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-shared-schemas-${{ hashFiles('packages/shared-schemas/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-shared-schemas-
+
+      - name: Install dependencies
+        run: |
+          cd packages/shared-schemas
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          cd packages/shared-schemas
+          python -m pytest tests/ -x -q --tb=short

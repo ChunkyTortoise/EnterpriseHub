@@ -18,9 +18,12 @@ dependencies = [
     "redis>=5.2.0",
     "stripe>=11.0.0",
     "httpx>=0.28.0",
+    "slowapi>=0.1.9",
+    "structlog>=24.0.0",
     "twilio>=9.0.0",
     "deepgram-sdk>=3.0.0",
     "elevenlabs>=1.0.0",
+    "audioop-lts>=0.2.1; python_version>='3.13'",
     # shared-schemas installed separately: pip install -e packages/shared-schemas/
 ]
 
@@ -38,6 +41,7 @@ packages = ["src/voice_ai"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 asyncio_mode = "auto"
 filterwarnings = [
     "ignore::DeprecationWarning",

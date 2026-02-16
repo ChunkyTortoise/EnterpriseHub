@@ -1,0 +1,79 @@
+name: CI — MCP Server Toolkit
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "mcp-server-toolkit/**"
+      - "packages/shared-schemas/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "mcp-server-toolkit/**"
+      - "packages/shared-schemas/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-mcp-toolkit-${{ hashFiles('mcp-server-toolkit/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-mcp-toolkit-
+
+      - name: Install shared-schemas
+        run: pip install -e packages/shared-schemas
+
+      - name: Install dependencies
+        run: |
+          cd mcp-server-toolkit
+          pip install -e ".[all,dev]"
+
+      - name: Ruff check
+        run: cd mcp-server-toolkit && ruff check .
+
+      - name: Ruff format check
+        run: cd mcp-server-toolkit && ruff format --check .
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-mcp-toolkit-${{ hashFiles('mcp-server-toolkit/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-mcp-toolkit-
+
+      - name: Install shared-schemas
+        run: pip install -e packages/shared-schemas
+
+      - name: Install dependencies
+        run: |
+          cd mcp-server-toolkit
+          pip install -e ".[all,dev]"
+
+      - name: Run tests
+        run: |
+          cd mcp-server-toolkit
+          python -m pytest tests/ -x -q --tb=short
