@@ -50,6 +50,7 @@ class AppointmentType(str, Enum):
 
     BUYER_CONSULTATION = "buyer_consultation"
     LISTING_APPOINTMENT = "listing_appointment"
+    SELLER_CONSULTATION = "seller_consultation"
     INVESTOR_MEETING = "investor_meeting"
     PROPERTY_SHOWING = "property_showing"
     FOLLOW_UP_CALL = "follow_up_call"
@@ -60,6 +61,7 @@ class AppointmentDuration(int, Enum):
 
     BUYER_CONSULTATION = 60  # 1 hour buyer consultation
     LISTING_APPOINTMENT = 90  # 1.5 hours listing presentation
+    SELLER_CONSULTATION = 30  # 30 min seller consultation (WS-3 HOT flow)
     INVESTOR_MEETING = 45  # 45 min investor meeting
     PROPERTY_SHOWING = 30  # 30 min property showing
     FOLLOW_UP_CALL = 15  # 15 min follow-up call
@@ -140,6 +142,8 @@ class CalendarScheduler:
     - SMS confirmations
     - Fallback to manual scheduling
     """
+    HOT_SELLER_APPOINTMENT_TYPE = AppointmentType.SELLER_CONSULTATION
+    HOT_SELLER_REQUIRED_SLOT_COUNT = 3
 
     def __init__(self, ghl_client: Optional[GHLClient] = None):
         """
@@ -437,16 +441,18 @@ class CalendarScheduler:
                     if slot_time.tzinfo != AUSTIN_TZ:
                         slot_time = slot_time.astimezone(AUSTIN_TZ)
 
-                    # Check if slot is during business hours
-                    if not self._is_during_business_hours(slot_time):
+                    # Check if slot window is during business hours, including booking buffer.
+                    if not self._is_valid_slot_window(
+                        slot_time, duration_minutes=duration + self.buffer_minutes
+                    ):
                         continue
 
                     # Filter by preferred times if specified
                     if preferred_times and not self._matches_preferred_time(slot_time, preferred_times):
                         continue
 
-                    # Create time slot with buffer
-                    end_time = slot_time + timedelta(minutes=duration + self.buffer_minutes)
+                    # End time should represent the customer-facing appointment duration only.
+                    end_time = slot_time + timedelta(minutes=duration)
 
                     time_slot = TimeSlot(
                         start_time=slot_time,
@@ -497,6 +503,63 @@ class CalendarScheduler:
             )
             return []
 
+    async def get_hot_seller_consultation_slots(
+        self, days_ahead: int = 7, preferred_times: Optional[List[str]] = None
+    ) -> List[TimeSlot]:
+        """
+        Return exactly 3 slot options for HOT seller 30-minute consultations.
+
+        Returns an empty list unless 3 valid options are available.
+        """
+        available_slots = await self.get_available_slots(
+            appointment_type=self.HOT_SELLER_APPOINTMENT_TYPE,
+            days_ahead=days_ahead,
+            preferred_times=preferred_times,
+        )
+        if len(available_slots) < self.HOT_SELLER_REQUIRED_SLOT_COUNT:
+            logger.info(
+                "Insufficient HOT seller consultation slots for strict offer",
+                extra={
+                    "required_slots": self.HOT_SELLER_REQUIRED_SLOT_COUNT,
+                    "available_slots": len(available_slots),
+                    "appointment_type": self.HOT_SELLER_APPOINTMENT_TYPE.value,
+                },
+            )
+            return []
+        return available_slots[: self.HOT_SELLER_REQUIRED_SLOT_COUNT]
+
+    def build_manual_scheduling_actions(self, high_priority: bool = True) -> List[GHLAction]:
+        """Build deterministic actions to queue manual scheduling fallback."""
+        actions = [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")]
+        if high_priority:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead"))
+
+        manual_workflow_id = getattr(settings, "manual_scheduling_workflow_id", None)
+        if manual_workflow_id:
+            actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=manual_workflow_id))
+
+        return actions
+
+    def get_manual_scheduling_message(self, booking_failed: bool = False) -> str:
+        """Consultative, SMS-safe fallback message for manual scheduler handoff."""
+        if booking_failed:
+            return (
+                "I had trouble locking that time in, but I have Jorge's team on it now. "
+                "We'll follow up shortly with the best options."
+            )
+        return (
+            "I'd love to get this scheduled for you. I have Jorge's team checking the calendar now "
+            "and we'll follow up with the best options shortly."
+        )
+
+    def is_hot_seller_consultation_slot(self, time_slot: TimeSlot) -> bool:
+        """Strict guard for WS-3 HOT seller booking contract."""
+        duration_minutes = int((time_slot.end_time - time_slot.start_time).total_seconds() / 60)
+        return (
+            time_slot.appointment_type == self.HOT_SELLER_APPOINTMENT_TYPE
+            and duration_minutes == AppointmentDuration.SELLER_CONSULTATION.value
+        )
+
     def _is_during_business_hours(self, slot_time: datetime) -> bool:
         """
         Check if slot is during Jorge's business hours.
@@ -534,6 +597,18 @@ class CalendarScheduler:
                 extra={"weekday": weekday, "start_time": start_time_str, "end_time": end_time_str, "error": str(e)},
             )
             return False
+
+    def _is_valid_slot_window(self, slot_start: datetime, duration_minutes: int) -> bool:
+        """Validate start/end boundaries stay within business hours in local timezone."""
+        if not self._is_during_business_hours(slot_start):
+            return False
+
+        slot_end = slot_start + timedelta(minutes=duration_minutes)
+        if slot_end.date() != slot_start.date():
+            return False
+
+        # End is exclusive at close boundary, so validate final in-window minute.
+        return self._is_during_business_hours(slot_end - timedelta(minutes=1))
 
     def _matches_preferred_time(self, slot_time: datetime, preferred_times: List[str]) -> bool:
         """
@@ -685,6 +760,7 @@ class CalendarScheduler:
         type_titles = {
             AppointmentType.BUYER_CONSULTATION: "Buyer Consultation",
             AppointmentType.LISTING_APPOINTMENT: "Listing Appointment",
+            AppointmentType.SELLER_CONSULTATION: "Seller Consultation (30 min)",
             AppointmentType.INVESTOR_MEETING: "Investor Meeting",
             AppointmentType.PROPERTY_SHOWING: "Property Showing",
             AppointmentType.FOLLOW_UP_CALL: "Follow-up Call",
@@ -731,6 +807,15 @@ class CalendarScheduler:
 
         # Send SMS confirmation
         actions.append(GHLAction(type=ActionType.SEND_MESSAGE, message=confirmation_message, channel=MessageType.SMS))
+
+        if contact_info.get("email"):
+            actions.append(
+                GHLAction(
+                    type=ActionType.SEND_MESSAGE,
+                    message=self._generate_email_confirmation_message(booking, contact_info),
+                    channel=MessageType.EMAIL,
+                )
+            )
 
         # Add appointment-related tags
         actions.append(GHLAction(type=ActionType.ADD_TAG, tag=f"Appointment-{booking.appointment_type.value.title()}"))
@@ -781,6 +866,7 @@ class CalendarScheduler:
         type_messages = {
             AppointmentType.BUYER_CONSULTATION: "buyer consultation",
             AppointmentType.LISTING_APPOINTMENT: "listing appointment",
+            AppointmentType.SELLER_CONSULTATION: "30 minute seller consultation",
             AppointmentType.INVESTOR_MEETING: "investment discussion",
             AppointmentType.PROPERTY_SHOWING: "property showing",
             AppointmentType.FOLLOW_UP_CALL: "follow-up call",
@@ -805,6 +891,26 @@ Looking forward to helping you with your real estate needs!
 📱 Reply RESCHEDULE if you need to change the time"""
 
         return message
+
+    def _generate_email_confirmation_message(self, booking: AppointmentBooking, contact_info: Dict[str, Any]) -> str:
+        """Generate email confirmation copy for the booked appointment."""
+        name = contact_info.get("first_name", "there")
+        appointment_time = booking.time_slot.format_for_lead()
+
+        type_messages = {
+            AppointmentType.BUYER_CONSULTATION: "buyer consultation",
+            AppointmentType.LISTING_APPOINTMENT: "listing appointment",
+            AppointmentType.SELLER_CONSULTATION: "30 minute seller consultation",
+            AppointmentType.INVESTOR_MEETING: "investment discussion",
+            AppointmentType.PROPERTY_SHOWING: "property showing",
+            AppointmentType.FOLLOW_UP_CALL: "follow-up call",
+        }
+
+        appointment_description = type_messages[booking.appointment_type]
+        return (
+            f"Hi {name}, your {appointment_description} with Jorge is confirmed for {appointment_time}. "
+            "Reply RESCHEDULE if you need a different time."
+        )
 
     def _should_fallback_to_manual(self, error: Exception) -> bool:
         """
@@ -930,21 +1036,8 @@ Looking forward to helping you with your real estate needs!
 
             if not available_slots:
                 # No availability - fallback to manual scheduling
-                fallback_message = (
-                    "I'd love to schedule a time to talk! Let me check Jorge's calendar "
-                    "and get back to you with some available times that work best for your needs."
-                )
-
-                fallback_actions = [
-                    GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling"),
-                    GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead"),
-                ]
-
-                if settings.manual_scheduling_workflow_id:
-                    fallback_actions.append(
-                        GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=settings.manual_scheduling_workflow_id)
-                    )
-
+                fallback_message = self.get_manual_scheduling_message(booking_failed=False)
+                fallback_actions = self.build_manual_scheduling_actions(high_priority=True)
                 return True, fallback_message, fallback_actions
 
             # Auto-book the first available slot
@@ -962,25 +1055,24 @@ Looking forward to helping you with your real estate needs!
                 name = contact_info.get("first_name", "there")
                 appointment_time = first_slot.format_for_lead()
 
+                confirmation_channel_text = (
+                    "You'll receive a confirmation text and email shortly!"
+                    if contact_info.get("email")
+                    else "You'll receive a confirmation text shortly!"
+                )
                 response_message = (
                     f"Perfect! I've scheduled a time for Jorge to call you on {appointment_time}. "
                     f"He'll reach out to discuss your property goals and answer any questions you have. "
-                    f"You'll receive a confirmation text shortly with all the details!"
+                    f"{confirmation_channel_text}"
                 )
 
                 return True, response_message, booking_result.confirmation_actions
 
             elif booking_result.fallback_to_manual:
                 # Booking failed but should try manual scheduling
-                response_message = (
-                    "I'd love to get you connected with Jorge! Let me manually check his calendar "
-                    "and get back to you with the best available times for your schedule."
-                )
-
-                fallback_actions = [
-                    GHLAction(type=ActionType.ADD_TAG, tag="Booking-Failed-Manual-Needed"),
-                    GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead"),
-                ]
+                response_message = self.get_manual_scheduling_message(booking_failed=True)
+                fallback_actions = self.build_manual_scheduling_actions(high_priority=True)
+                fallback_actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Booking-Failed-Manual-Needed"))
 
                 return True, response_message, fallback_actions
 
@@ -995,19 +1087,10 @@ Looking forward to helping you with your real estate needs!
                     },
                 )
 
-                response_message = (
-                    "I'd love to schedule a time for Jorge to call you! Let me check his "
-                    "availability and get back to you with some options that work for your schedule."
-                )
-
-                return (
-                    True,
-                    response_message,
-                    [
-                        GHLAction(type=ActionType.ADD_TAG, tag="Booking-System-Error"),
-                        GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling"),
-                    ],
-                )
+                response_message = self.get_manual_scheduling_message(booking_failed=True)
+                fallback_actions = self.build_manual_scheduling_actions(high_priority=True)
+                fallback_actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Booking-System-Error"))
+                return True, response_message, fallback_actions
 
         except Exception as e:
             logger.error(

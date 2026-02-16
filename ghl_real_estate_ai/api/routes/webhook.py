@@ -17,6 +17,7 @@ Flow:
 import random
 import re
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from pydantic import BaseModel
@@ -33,7 +34,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig, settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -103,9 +104,128 @@ async def safe_apply_actions(ghl_client, contact_id: str, actions: list):
             logger.error(f"Failed to add Delivery-Failed tag for {contact_id}: {tag_error}")
 
 
+OPT_OUT_ADD_TAGS = ["AI-Off", "Do-Not-Contact"]
+OPT_OUT_AUTOMATION_TAGS = [
+    "Needs Qualifying",
+    "Buyer-Lead",
+    "AI-Qualified",
+    "AI-Engaged",
+    "Ready-For-Agent",
+    "Lead-Qualified",
+    "Seller-Qualified",
+    "Buyer-Qualified",
+    "Hot-Seller",
+    "Warm-Seller",
+    "Cold-Seller",
+    "Hot-Buyer",
+    "Warm-Buyer",
+    "Cold-Buyer",
+    "Hot-Lead",
+    "Warm-Lead",
+    "Cold-Lead",
+    "Needs-Manual-Scheduling",
+    "High-Priority-Lead",
+]
+
+
+def _normalize_action_payload(action_data: dict[str, Any], source: str) -> GHLAction | None:
+    """Convert dict actions from any bot into a deterministic GHLAction schema."""
+    action_type = str(action_data.get("type", "")).strip().lower()
+    if not action_type:
+        logger.warning("Skipping bot action with missing type", extra={"source": source, "action_data": action_data})
+        return None
+
+    if action_type == ActionType.ADD_TAG.value:
+        tag = action_data.get("tag")
+        if not tag:
+            logger.warning(
+                "Skipping add_tag action with missing tag",
+                extra={"source": source, "action_data": action_data},
+            )
+            return None
+        return GHLAction(type=ActionType.ADD_TAG, tag=str(tag))
+
+    if action_type == ActionType.REMOVE_TAG.value:
+        tag = action_data.get("tag")
+        if not tag:
+            logger.warning(
+                "Skipping remove_tag action with missing tag",
+                extra={"source": source, "action_data": action_data},
+            )
+            return None
+        return GHLAction(type=ActionType.REMOVE_TAG, tag=str(tag))
+
+    if action_type == ActionType.TRIGGER_WORKFLOW.value:
+        workflow_id = action_data.get("workflow_id")
+        if not workflow_id:
+            logger.warning(
+                "Skipping trigger_workflow action with missing workflow_id",
+                extra={"source": source, "action_data": action_data},
+            )
+            return None
+        return GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=str(workflow_id))
+
+    if action_type == ActionType.UPDATE_CUSTOM_FIELD.value:
+        field = action_data.get("field") or action_data.get("field_id")
+        if not field:
+            logger.warning(
+                "Skipping update_custom_field action with missing field",
+                extra={"source": source, "action_data": action_data},
+            )
+            return None
+        return GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=str(field), value=action_data.get("value"))
+
+    logger.warning("Skipping unknown bot action type", extra={"source": source, "action_data": action_data})
+    return None
+
+
+def _normalize_action_payloads(action_payloads: list[dict[str, Any]] | None, source: str) -> list[GHLAction]:
+    normalized_actions: list[GHLAction] = []
+    for action_data in action_payloads or []:
+        action = _normalize_action_payload(action_data, source=source)
+        if action is not None:
+            normalized_actions.append(action)
+    return normalized_actions
+
+
+def _determine_opt_out_mode(tags: list[str]) -> str:
+    if "Needs Qualifying" in tags and jorge_settings.JORGE_SELLER_MODE:
+        return "seller"
+    if jorge_settings.BUYER_ACTIVATION_TAG in tags and jorge_settings.JORGE_BUYER_MODE:
+        return "buyer"
+    if jorge_settings.LEAD_ACTIVATION_TAG in tags and jorge_settings.JORGE_LEAD_MODE:
+        return "lead"
+    return "unknown"
+
+
+def _build_opt_out_actions(tags: list[str]) -> list[GHLAction]:
+    tags_to_remove = set(OPT_OUT_AUTOMATION_TAGS)
+    tags_to_remove.update(settings.activation_tags or [])
+    if jorge_settings.BUYER_ACTIVATION_TAG:
+        tags_to_remove.add(jorge_settings.BUYER_ACTIVATION_TAG)
+    if jorge_settings.LEAD_ACTIVATION_TAG:
+        tags_to_remove.add(jorge_settings.LEAD_ACTIVATION_TAG)
+    tags_to_remove.difference_update(OPT_OUT_ADD_TAGS)
+
+    actions = [GHLAction(type=ActionType.ADD_TAG, tag=tag) for tag in OPT_OUT_ADD_TAGS]
+    for tag in sorted(tags_to_remove):
+        if tag in tags:
+            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=tag))
+    return actions
+
+
 def _format_slot_options(options: list[dict]) -> str:
     lines = [f"{opt['label']}) {opt['display']}" for opt in options]
     return "Reply with 1, 2, or 3.\n" + "\n".join(lines)
+
+
+def _build_manual_scheduling_actions(include_high_priority: bool = False) -> list[GHLAction]:
+    actions = [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")]
+    if include_high_priority:
+        actions.append(GHLAction(type=ActionType.ADD_TAG, tag="High-Priority-Lead"))
+    if getattr(settings, "manual_scheduling_workflow_id", None):
+        actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=settings.manual_scheduling_workflow_id))
+    return actions
 
 
 def _select_slot_from_message(message: str, options: list[dict]) -> dict | None:
@@ -290,6 +410,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             actions=[],
         )
 
+    context = await conversation_manager.get_context(contact_id, location_id)
+
     # Opt-out detection (Jorge spec: "end automation immediately")
     OPT_OUT_PHRASES = [
         "stop",
@@ -307,44 +429,108 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     msg_lower = user_message.lower().strip()
     if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):
         logger.info(f"Opt-out detected for contact {contact_id}")
+        current_ghl_client = await _get_tenant_ghl_client(location_id)
+        opt_out_actions = _build_opt_out_actions(tags)
+        opt_out_mode = _determine_opt_out_mode(tags)
         opt_out_msg = "No problem at all, reach out whenever you're ready"
+
+        context["pending_appointment"] = None
+        context["followup_suppressed"] = True
+        context["followup_suppressed_at"] = datetime.utcnow().isoformat()
+        context["followup_stop_reason"] = "opt_out"
+        await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+
         background_tasks.add_task(
-            ghl_client_default.send_message,
-            contact_id=contact_id,
-            message=opt_out_msg,
-            channel=event.message.type,
+            safe_send_message,
+            current_ghl_client,
+            contact_id,
+            opt_out_msg,
+            event.message.type,
         )
-        background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
+        background_tasks.add_task(
+            safe_apply_actions,
+            current_ghl_client,
+            contact_id,
+            opt_out_actions,
+        )
+        background_tasks.add_task(
+            analytics_service.track_event,
+            event_type="opt_out_detected",
+            location_id=location_id,
+            contact_id=contact_id,
+            data={
+                "bot_mode": opt_out_mode,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "suppression_tags_added": OPT_OUT_ADD_TAGS,
+            },
+        )
         return GHLWebhookResponse(
             success=True,
             message=opt_out_msg,
-            actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
+            actions=opt_out_actions,
         )
 
     # Pending appointment selection flow (slot offer -> confirmation)
-    context = await conversation_manager.get_context(contact_id, location_id)
     pending_appointment = context.get("pending_appointment")
     if pending_appointment and pending_appointment.get("status") == "awaiting_selection":
         try:
-            from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, TimeSlot, get_smart_scheduler
+            from ghl_real_estate_ai.services.calendar_scheduler import (
+                AppointmentDuration,
+                AppointmentType,
+                TimeSlot,
+                get_smart_scheduler,
+            )
 
             # Initialize GHL client with tenant config if available
             current_ghl_client = await _get_tenant_ghl_client(location_id)
+            scheduler = get_smart_scheduler(current_ghl_client)
+            is_hot_seller_slot_flow = pending_appointment.get("flow") == "hot_seller_consultation_30min"
+            manual_actions = _build_manual_scheduling_actions(include_high_priority=is_hot_seller_slot_flow)
 
             selected = _select_slot_from_message(user_message, pending_appointment.get("options", []))
             if selected:
                 start_time = datetime.fromisoformat(selected["start_time"])
                 end_time = datetime.fromisoformat(selected["end_time"])
                 appointment_type = AppointmentType(selected["appointment_type"])
+                duration_minutes = int((end_time - start_time).total_seconds() / 60)
+
+                if is_hot_seller_slot_flow and (
+                    appointment_type != scheduler.HOT_SELLER_APPOINTMENT_TYPE
+                    or duration_minutes != AppointmentDuration.SELLER_CONSULTATION.value
+                ):
+                    fallback_message = scheduler.get_manual_scheduling_message(booking_failed=True)
+                    background_tasks.add_task(
+                        safe_send_message,
+                        current_ghl_client,
+                        contact_id,
+                        fallback_message,
+                        event.message.type,
+                    )
+                    background_tasks.add_task(
+                        safe_apply_actions,
+                        current_ghl_client,
+                        contact_id,
+                        manual_actions,
+                    )
+
+                    context["pending_appointment"] = None
+                    await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
+                    background_tasks.add_task(
+                        analytics_service.track_event,
+                        event_type="appointment_slot_escalated_manual",
+                        location_id=location_id,
+                        contact_id=contact_id,
+                        data={"reason": "strict_type_guard_failed"},
+                    )
+                    return GHLWebhookResponse(success=True, message=fallback_message, actions=manual_actions)
 
                 time_slot = TimeSlot(
                     start_time=start_time,
                     end_time=end_time,
-                    duration_minutes=int((end_time - start_time).total_seconds() / 60),
+                    duration_minutes=duration_minutes,
                     appointment_type=appointment_type,
                 )
 
-                scheduler = get_smart_scheduler(current_ghl_client)
                 extracted_data = context.get("seller_preferences", {})
                 contact_info = {
                     "contact_id": contact_id,
@@ -363,8 +549,13 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 )
 
                 if booking_result.success:
+                    confirmation_channel_text = (
+                        "You'll get a confirmation text and email shortly."
+                        if event.contact and event.contact.email
+                        else "You'll get a confirmation text shortly."
+                    )
                     response_message = (
-                        f"Perfect, I have you down for {selected['display']}. You'll get a confirmation text shortly."
+                        f"Perfect, I have you down for {selected['display']}. {confirmation_channel_text}"
                     )
 
                     background_tasks.add_task(
@@ -401,10 +592,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     )
 
                 # Booking failed -> manual fallback
-                fallback_message = (
-                    "I had trouble booking that time. I'll manually check Jorge's calendar "
-                    "and get back to you with options."
-                )
+                fallback_message = scheduler.get_manual_scheduling_message(booking_failed=True)
                 background_tasks.add_task(
                     safe_send_message,
                     current_ghl_client,
@@ -416,7 +604,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     safe_apply_actions,
                     current_ghl_client,
                     contact_id,
-                    [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                    manual_actions,
                 )
 
                 context["pending_appointment"] = None
@@ -433,7 +621,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 return GHLWebhookResponse(
                     success=True,
                     message=fallback_message,
-                    actions=[GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                    actions=manual_actions,
                 )
 
             # No selection parsed: re-offer or escalate
@@ -454,7 +642,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 )
                 return GHLWebhookResponse(success=True, message=response_message, actions=[])
 
-            fallback_message = "No worries, I'll manually check Jorge's calendar and follow up with options."
+            fallback_message = scheduler.get_manual_scheduling_message(booking_failed=False)
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -466,7 +654,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 safe_apply_actions,
                 current_ghl_client,
                 contact_id,
-                [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                manual_actions,
             )
             context["pending_appointment"] = None
             await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
@@ -482,7 +670,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             return GHLWebhookResponse(
                 success=True,
                 message=fallback_message,
-                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                actions=manual_actions,
             )
         except Exception as e:
             logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
@@ -504,6 +692,53 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             if tenant_config and tenant_config.get("ghl_api_key"):
                 current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
+            required_mapping_fields = JorgeSellerConfig.get_required_qualification_inputs() + [
+                "qualification_complete"
+            ]
+            mapping_validation = JorgeSellerConfig.validate_custom_field_mapping(required_mapping_fields)
+            if not mapping_validation["is_valid"]:
+                mapping_fail_closed = JorgeSellerConfig.should_fail_on_missing_canonical_mapping()
+                log_fn = logger.error if mapping_fail_closed else logger.warning
+                log_fn(
+                    "Canonical seller mapping validation failed before seller processing",
+                    extra={
+                        "contact_id": contact_id,
+                        "location_id": location_id,
+                        "missing_fields": mapping_validation["missing_fields"],
+                        "fail_closed": mapping_fail_closed,
+                    },
+                )
+                background_tasks.add_task(
+                    analytics_service.track_event,
+                    event_type="canonical_mapping_validation_failed",
+                    location_id=location_id,
+                    contact_id=contact_id,
+                    data={
+                        "missing_fields": mapping_validation["missing_fields"],
+                        "fail_closed": mapping_fail_closed,
+                    },
+                )
+                if mapping_fail_closed:
+                    blocked_actions = [GHLAction(type=ActionType.ADD_TAG, tag="Canonical-Mapping-Missing")]
+                    background_tasks.add_task(
+                        safe_send_message,
+                        current_ghl_client,
+                        contact_id,
+                        "Thanks for your message. I need to have Jorge's team follow up directly in just a bit.",
+                        event.message.type,
+                    )
+                    background_tasks.add_task(
+                        safe_apply_actions,
+                        current_ghl_client,
+                        contact_id,
+                        blocked_actions,
+                    )
+                    return GHLWebhookResponse(
+                        success=True,
+                        message="Thanks for your message. I need to have Jorge's team follow up directly in just a bit.",
+                        actions=blocked_actions,
+                    )
+
             # Initialize Jorge's seller engine
             jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client, mls_client=mls_client)
 
@@ -512,26 +747,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 contact_id=contact_id, user_message=user_message, location_id=location_id, tenant_config=tenant_config
             )
 
-            # Apply Jorge's seller actions (tags, workflows)
-            actions = []
-            if seller_result.get("actions"):
-                for action_data in seller_result["actions"]:
-                    if action_data["type"] == "add_tag":
-                        actions.append(GHLAction(type=ActionType.ADD_TAG, tag=action_data["tag"]))
-                    elif action_data["type"] == "remove_tag":
-                        actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=action_data["tag"]))
-                    elif action_data["type"] == "trigger_workflow":
-                        actions.append(
-                            GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=action_data["workflow_id"])
-                        )
-                    elif action_data["type"] == "update_custom_field":
-                        actions.append(
-                            GHLAction(
-                                type=ActionType.UPDATE_CUSTOM_FIELD,
-                                field_id=action_data["field"],
-                                value=action_data["value"],
-                            )
-                        )
+            # Apply Jorge's seller actions in normalized schema
+            actions = _normalize_action_payloads(seller_result.get("actions", []), source="seller")
 
             # Track Jorge seller analytics
             background_tasks.add_task(
@@ -580,11 +797,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     handoff_actions = await handoff_service.execute_handoff(
                         handoff, contact_id, location_id=location_id
                     )
-                    for ha in handoff_actions:
-                        if ha["type"] == "add_tag":
-                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
-                        elif ha["type"] == "remove_tag":
-                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+                    actions.extend(_normalize_action_payloads(handoff_actions, source="seller_handoff"))
 
             logger.info(
                 f"Jorge seller processing completed for {contact_id}",
@@ -664,9 +877,12 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
             # Initialize and run buyer bot
             buyer_bot = JorgeBuyerBot()
             buyer_result = await buyer_bot.process_buyer_conversation(
-                buyer_id=contact_id,
+                conversation_id=contact_id,
+                user_message=user_message,
                 buyer_name=event.contact.first_name or "there",
                 conversation_history=conversation_history,
+                buyer_phone=event.contact.phone,
+                buyer_email=event.contact.email,
             )
 
             # Apply buyer bot actions (tags based on temperature)
@@ -731,11 +947,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     handoff_actions = await handoff_service.execute_handoff(
                         handoff, contact_id, location_id=location_id
                     )
-                    for ha in handoff_actions:
-                        if ha["type"] == "add_tag":
-                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
-                        elif ha["type"] == "remove_tag":
-                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+                    actions.extend(_normalize_action_payloads(handoff_actions, source="buyer_handoff"))
 
             logger.info(
                 f"Jorge buyer processing completed for {contact_id}",
@@ -891,11 +1103,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     handoff_actions = await handoff_service.execute_handoff(
                         handoff, contact_id, location_id=location_id
                     )
-                    for ha in handoff_actions:
-                        if ha["type"] == "add_tag":
-                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
-                        elif ha["type"] == "remove_tag":
-                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+                    actions.extend(_normalize_action_payloads(handoff_actions, source="lead_handoff"))
                     handoff_triggered = True
 
             logger.info(
