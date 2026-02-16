@@ -1633,6 +1633,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             confidence=qualification_analysis.get("confidence", 0),
             tokens_used=tokens_used,
             cost_incurred=cost_incurred,
+            response_content=qualification_analysis.get("response_content", ""),
+            qualification_summary=qualification_analysis.get("qualification_summary", ""),
             # Enhancement metadata
             progressive_skills_applied=self.config.enable_progressive_skills
             and qualification_analysis.get("qualification_method") == "progressive_skills",

@@ -226,13 +226,16 @@ class WorkflowNodes:
         sequence_day_val = state.get("sequence_day")
 
         if sequence_day_val is not None:
-            # Map numeric day to SequenceDay enum
-            day_enum = SequenceDay.DAY_3
-            if sequence_day_val == 7:
+            # Map numeric day to SequenceDay enum using range-based logic
+            if sequence_day_val < 3:
+                day_enum = SequenceDay.INITIAL
+            elif sequence_day_val < 7:
+                day_enum = SequenceDay.DAY_3
+            elif sequence_day_val < 14:
                 day_enum = SequenceDay.DAY_7
-            elif sequence_day_val == 14:
+            elif sequence_day_val < 30:
                 day_enum = SequenceDay.DAY_14
-            elif sequence_day_val == 30:
+            else:
                 day_enum = SequenceDay.DAY_30
 
             sequence_state = LeadSequenceState(
@@ -252,16 +255,13 @@ class WorkflowNodes:
         # Determine routing based on sequence day
         current_day = sequence_state.current_day
         if sequence_day_val is not None:
-            if sequence_day_val == 3:
-                current_day = SequenceDay.DAY_3
-            elif sequence_day_val == 7:
-                current_day = SequenceDay.DAY_7
-            elif sequence_day_val == 14:
-                current_day = SequenceDay.DAY_14
-            elif sequence_day_val == 30:
-                current_day = SequenceDay.DAY_30
+            current_day = day_enum  # Use the already-mapped enum from above
 
-        if current_day == SequenceDay.DAY_3:
+        if current_day == SequenceDay.INITIAL:
+            await sync_service.record_lead_event(state["lead_id"], "AI", "Executing Day 0 initial contact.", "sequence")
+            return {"current_step": "initial_contact", "engagement_status": sequence_state.engagement_status}
+
+        elif current_day == SequenceDay.DAY_3:
             await sync_service.record_lead_event(state["lead_id"], "AI", "Executing Day 3 SMS sequence.", "sequence")
             return {"current_step": "day_3", "engagement_status": sequence_state.engagement_status}
 
