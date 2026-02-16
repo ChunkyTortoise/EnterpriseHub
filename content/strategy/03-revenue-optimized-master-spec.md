@@ -1,8 +1,9 @@
 # Revenue-Optimized Master Spec — Portfolio Enhancement
 
-**Date**: 2026-02-16 | **Status**: Active
-**Source**: Critical analysis of 711-hr spec + web research market validation
+**Date**: 2026-02-16 | **Status**: Active | **Updated**: with Perplexity Deep Research results
+**Source**: Critical analysis of 711-hr spec + web research + Perplexity Deep Research (59 sources)
 **Goal**: Maximize revenue per development hour, interleave building with selling
+**Perplexity Report**: See `04-perplexity-market-research-results.md` for full 59-source analysis
 
 ---
 
@@ -14,20 +15,53 @@
 
 ---
 
-## Market Intelligence (Feb 2026)
+## Market Intelligence (Feb 2026) — Perplexity-Validated
 
-### MCP Servers — HOT MARKET
-- MCP = breakout protocol of 2026. Forrester: 30% enterprise vendors launching MCP servers
-- MCP Server Store (themcpserverstore.com) = first marketplace, growing fast
-- LobeHub, MCP Market, mcpservers.org — multiple directories emerging
-- Monetization: Usage-based ($0.01/call), hybrid (base + overages), enterprise tiers
-- **Competitive gap**: Very few production-ready, well-tested MCP servers for sale
-- **Your advantage**: Already have `mcp-server-toolkit` on PyPI + 5 MCP servers in EnterpriseHub
+### MCP Servers — HOT MARKET (Competition: 35/100)
+- 20,000+ GitHub implementations, 17,000+ servers on marketplaces (CData, Astrix reports)
+- MCP Server Store, LobeHub, MCP Market — multiple directories emerging
+- Security gap: 88% require credentials, 53% use insecure static API keys, only 8.5% OAuth
+- Free ecosystem is vast but enterprise-readiness is lacking (Reddit confirmed)
+- **Monetization**: Free core on PyPI → $49-$149 one-time Gumroad → $299-$799/mo enterprise subscription → $5K-$15K custom dev
+- **Your advantage**: `mcp-server-toolkit` on PyPI + 5 MCP servers in EnterpriseHub
+
+### Voice AI — HIGH CEILING, CROWDED GENERIC (Competition: 45/100 vertical, 70/100 generic)
+- Market standardized on per-minute pricing: Vapi $0.30-$0.33/min all-in, Bland.ai $0.11-$0.17/min, Retell $0.13-$0.31/min
+- RE-specific: $300-$600/mo subscription, ROI 1,000%-30,000% for agents
+- **Revised pricing**: $299/mo + $0.18/min (Starter) → $799/mo + $0.15/min (Pro) → $2,499/mo + $0.12/min (Agency)
+- White-label for agencies = billion-dollar opportunity: $2K-$5K setup + $500-$1,500/mo recurring
+- Pipecat still best framework. Consider Cartesia as alt TTS (ultra-low latency)
 
 ### RAG Evaluation — GROWING DEMAND
 - Top 5 platforms: Maxim AI (freemium+enterprise), LangSmith ($249+/mo), Arize (OSS+cloud), RAGAS (free OSS), DeepEval (OSS+cloud)
 - Enterprise buyers want full-stack: eval + observability + CI integration
 - RAGAS metrics = de facto standard, but standalone RAGAS lacks production features
+
+### RAG-as-a-Service — VERTICAL DIFFERENTIATION (Competition: 55/100)
+- Vectara: $100K-$500K/yr (enterprise only). Pinecone: ~$64/mo. Weaviate: ~$85/mo
+- Typical RAG-as-a-Service: $120-$200/mo moderate usage (Reddit)
+- RAG commoditizing at infra layer, differentiating at vertical/application layer
+- Enterprise premiums: 25-35% for RBAC, audit logs, PII masking, compliance
+- **Revised pricing**: $49/mo (dev) → $199/mo (pro) → $499/mo (business) → $999-$2,999/mo (enterprise)
+- Schema-per-tenant PostgreSQL confirmed for <100 tenants
+
+### Compliance Toolkit — DEFER (Competition: 75/100)
+- Arthur AI ($57M Series B), Lakera (free 10K calls), CalypsoAI (enterprise custom)
+- EU AI Act full enforcement Aug 2026, but Digital Omnibus may delay to Dec 2027
+- Gap exists between Langfuse ($0-$199) and enterprise ($$$), but well-funded players dominate
+- **Decision**: Extract PII/audit into other products. Defer standalone to Q3 2026
+
+### Cohort Course — VALIDATED (Competition: 30/100)
+- Maven AI courses: $2,500/seat. CXL: $499-$599. Reforge: $1,995-$3,495/yr
+- Maven takes 10%: 30 students × $1,497 = $44,910 gross → $40,419 net
+- Solo instructor sweet spot: 20-30 students
+- **Launch AFTER** 2-3 products live (credibility matters)
+
+### Micro-SaaS — RAISE FLOORS
+- $19/mo unsustainable. Minimum viable: $49/mo
+- Opt-in trials convert 18% vs freemium 3-4%
+- Prompt Registry: weakest product, Langfuse offers it free. **Merge into Agent Monitor**
+- Agent Monitor: $49/$149/$299. Data Pipeline: $49/$149/$299
 - **Competitive gap**: No good standalone eval toolkit with benchmarks + CI + dashboards at <$500
 - **Your advantage**: DocQA already has eval infrastructure, just needs packaging
 
@@ -198,28 +232,37 @@
 
 ---
 
-## Revenue Projections
+## Revenue Projections (Perplexity-Validated)
 
-### Conservative (Phases 0-2 only, ~250 hrs)
+### 90-Day Per-Product (After Launch)
+| Product | Conservative | Realistic | Optimistic |
+|---------|-------------|-----------|-----------|
+| Voice AI Platform | $1,500/mo | $4,000/mo | $8,000/mo |
+| MCP Toolkit (product + services) | $1,000/mo | $3,000/mo | $6,000/mo |
+| Cohort Course (amortized) | $3,000/mo | $8,000/mo | $15,000/mo |
+| RAG-as-a-Service | $800/mo | $2,500/mo | $5,000/mo |
+| Agent Monitor Dashboard | $400/mo | $1,200/mo | $3,000/mo |
+| Data Pipeline API | $300/mo | $800/mo | $2,000/mo |
+| **Total** | **$7,000/mo** | **$19,500/mo** | **$39,000/mo** |
 
-| Source | Month 1 | Month 2 | Month 3 |
-|--------|---------|---------|---------|
-| Gumroad product sales | $500 | $1,500 | $3,000 |
-| Fiverr gigs | $300 | $800 | $1,500 |
-| Upwork projects | $0 | $2,000 | $5,000 |
-| LinkedIn → consulting leads | $0 | $0 | $3,000 |
-| **Monthly Total** | **$800** | **$4,300** | **$12,500** |
+### 12-Month Projections
+| Scenario | Monthly Run Rate (Month 12) | Cumulative Year 1 |
+|----------|-----------------------------|--------------------|
+| Conservative | $12,000/mo | $85,000 |
+| Realistic | $30,000/mo | $210,000 |
+| Optimistic | $65,000/mo | $450,000 |
 
-### Optimistic (All phases, ~350 hrs)
+Assumes: 2 cohorts/year, white-label/services by month 4, 20-50 paying customers.
 
-| Source | Month 1 | Month 2 | Month 3 |
-|--------|---------|---------|---------|
-| Gumroad product sales | $1,000 | $3,000 | $6,000 |
-| Fiverr gigs | $500 | $1,500 | $3,000 |
-| Upwork projects | $0 | $5,000 | $10,000 |
-| Consulting leads | $0 | $2,000 | $5,000 |
-| SaaS subscriptions (Phase 3) | $0 | $0 | $2,000 |
-| **Monthly Total** | **$1,500** | **$11,500** | **$26,000** |
+### Revenue Multipliers (Not in base projections)
+| Stream | Revenue | Model |
+|--------|---------|-------|
+| White-label Voice AI | $2K-$5K setup + $500-$1.5K/mo | Per agency client |
+| Implementation services | $150-$250/hr, $5K-$15K/project | Voice AI, RAG, MCP |
+| MCP consulting retainer | $3K-$5K/mo | Ongoing custom dev |
+| Self-paced course (post-cohort) | $497 one-time | Teachable/Thinkific |
+| Affiliate revenue | Variable | Deepgram, ElevenLabs, Twilio |
+| Annual plan uplift | +27% LTV, -30% churn | 15-20% discount ("2 months free") |
 
 ---
 
