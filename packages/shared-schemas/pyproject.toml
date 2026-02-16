@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.24.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shared-schemas"
+version = "0.1.0"
+description = "Multi-tenant schemas and infrastructure for AI portfolio products"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Cayman Roden", email = "cayman.roden@gmail.com" }]
+keywords = ["multi-tenant", "schemas", "billing", "auth", "pydantic"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0.0,<3.0",
+]
+
+[project.optional-dependencies]
+stripe = ["stripe>=8.0.0"]
+fastapi = ["fastapi>=0.100.0", "python-jose[cryptography]>=3.3.0"]
+redis = ["redis>=5.0.0"]
+all = ["shared-schemas[stripe,fastapi,redis]"]
+dev = ["pytest>=7.0", "pytest-asyncio>=0.21", "coverage>=7.0", "ruff>=0.1.0"]
+
+[project.urls]
+Repository = "https://github.com/ChunkyTortoise/EnterpriseHub"
+
+[tool.hatch.build]
+include = ["shared_schemas/**", "shared_infra/**"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
