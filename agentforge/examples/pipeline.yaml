@@ -1,0 +1,121 @@
+# AgentForge Pipeline Configuration Example
+# 
+# This example demonstrates a research workflow with two agents:
+# 1. A researcher agent that searches for information
+# 2. A writer agent that produces a report based on research
+#
+# Usage:
+#   from agentforge.config import PipelineConfig, PipelineBuilder
+#   config = PipelineConfig.from_yaml("pipeline.yaml")
+#   builder = PipelineBuilder(config)
+#   dag = builder.build()
+
+version: "1.0"
+name: "research-workflow"
+
+# Tool definitions
+# These define the tools available to agents in the DAG
+tools:
+  search:
+    type: "function"
+    description: "Search for information on the web"
+    parameters:
+      query:
+        type: string
+        description: "Search query"
+      limit:
+        type: integer
+        description: "Maximum number of results"
+        default: 10
+
+  web_browse:
+    type: "function"
+    description: "Browse a specific URL and extract content"
+    parameters:
+      url:
+        type: string
+        description: "URL to browse"
+
+# Environment variables
+# These can be referenced in agent configurations
+env:
+  DEFAULT_MODEL: "openai/gpt-4o"
+  MAX_TOKENS: "4096"
+
+# DAG configuration
+dag:
+  name: "research-dag"
+  entrypoint: "researcher"
+  max_retries: 3
+  timeout: 300
+  fail_fast: false
+  
+  # Agent definitions
+  # Each agent has its own configuration
+  agents:
+    researcher:
+      name: "Research Agent"
+      instructions: |
+        You are a research agent. Your job is to thoroughly research
+        the given topic using available tools. Be comprehensive and
+        cite your sources when possible.
+        
+        Focus on:
+        - Finding accurate and up-to-date information
+        - Cross-referencing multiple sources
+        - Identifying key facts and insights
+      llm: "openai/gpt-4o"
+      tools: ["search", "web_browse"]
+      temperature: 0.7
+      max_tokens: 2048
+      metadata:
+        role: "research"
+        priority: "high"
+    
+    writer:
+      name: "Writer Agent"
+      instructions: |
+        You are a writer agent. Your job is to take research findings
+        and produce a well-structured, engaging report.
+        
+        Focus on:
+        - Clear and concise writing
+        - Logical organization of information
+        - Highlighting key insights
+        - Proper formatting and structure
+      llm: "anthropic/claude-3.5-sonnet"
+      tools: []
+      temperature: 0.5
+      max_tokens: 4096
+      metadata:
+        role: "writing"
+        priority: "medium"
+    
+    reviewer:
+      name: "Reviewer Agent"
+      instructions: |
+        You are a reviewer agent. Your job is to review the written
+        report for accuracy, clarity, and completeness.
+        
+        Focus on:
+        - Fact-checking claims
+        - Identifying gaps in coverage
+        - Suggesting improvements
+      llm: "openai/gpt-4o"
+      tools: ["search"]
+      temperature: 0.3
+      max_tokens: 1024
+      metadata:
+        role: "quality_assurance"
+        priority: "low"
+  
+  # Edge definitions
+  # Define the flow of information between agents
+  edges:
+    # Researcher passes findings to writer
+    - source: "researcher"
+      target: "writer"
+    
+    # Writer passes draft to reviewer
+    - source: "writer"
+      target: "reviewer"
