@@ -1,0 +1,100 @@
+{
+  "store": {
+    "name": "ChunkyTortoise Dev",
+    "url": "chunkytortoise.lemonsqueezy.com",
+    "account": "caymanroden@gmail.com",
+    "mode": "test"
+  },
+  "products": [
+    {
+      "name": "AgentForge - Starter",
+      "one_time_price_cents": 4900,
+      "subscription_price_cents": 900,
+      "description": "Get Started with Production-Ready Multi-LLM Orchestration\n\nStop wrestling with different API signatures, rate limits, and response formats. AgentForge gives you a single, elegant Python interface for Claude, GPT-4, Gemini, and Perplexity.\n\nWhat You Get:\n- 550+ tests, 80%+ coverage — Production-grade code you can trust\n- 4 LLM providers — Claude, GPT-4, Gemini, Perplexity unified under one API\n- Mock provider — Test without API keys or costs\n- Docker setup — Dockerfile + docker-compose.yml included\n- CLI tool — Quick testing from command line\n- Streamlit demo app — Interactive provider comparison\n- MIT License — Use in unlimited commercial projects\n\nCore Features:\n- Unified async interface — Same API for all providers\n- Token-aware rate limiting — Automatic throttling\n- Exponential backoff — Intelligent retry on failures\n- Function calling — Tool use across all providers\n- Structured JSON output — Pydantic validation built-in\n- Cost tracking — Per-request and cumulative monitoring\n- Streaming support — Real-time responses\n- 15KB core — 3x smaller than LangChain\n\nDocumentation Included:\n- README.md, API_REFERENCE.md, CUSTOMIZATION.md, ARCHITECTURE.md\n- 4 code examples (chat, function calling, cost tracking, streaming)\n\nPerfect For: Developers building first AI app, hobbyists exploring LLM APIs, students learning AI development, side project builders.\n\n30-day money-back guarantee. MIT License.",
+      "zip_file": "agentforge-starter-v1.0-20260214.zip",
+      "license": "Personal use, 1 project",
+      "support": "Email support",
+      "updates": "6 months"
+    },
+    {
+      "name": "AgentForge - Pro",
+      "one_time_price_cents": 19900,
+      "subscription_price_cents": 2900,
+      "description": "AgentForge Pro — Production Deployment Made Easy\n\nGet everything you need to ship LLM features with confidence.\n\nEverything in Starter PLUS:\n\n3 Real-World Case Studies (Worth $299):\n- LegalTech Startup: 70% cost reduction ($18.5K to $6.2K/month, $147K annual savings). Full implementation code, cost breakdown, provider selection matrix, caching strategy templates.\n- Healthcare Platform: HIPAA-compliant routing with 99.99% uptime across 3M requests, zero PHI leaks. HIPAA-compliant routing code, compliance checklist, audit logging.\n- Fintech Fraud Detection: 5-agent consensus system, 98.7% accuracy, sub-100ms response. Multi-agent orchestration code, consensus algorithm, performance optimization guide.\n\n30-Minute Expert Architecture Consultation ($150 value):\n- Provider selection, cost optimization, architecture review, best practices, Q&A\n- Booking via included Calendly link\n\n9 Advanced Code Examples:\n- Legal contract review, healthcare HIPAA routing, fintech fraud detection, e-commerce product descriptions, multi-agent consensus, structured output with complex schemas, custom provider plugins, advanced retry strategies, cost-aware dynamic routing\n\nCI/CD Templates:\n- GitHub Actions workflow, Docker deployment guide, environment configuration, monitoring setup\n\nPriority Email Support (48-hour SLA)\nLifetime Updates\n\nTotal Value: $548 — Your Price: $199 (save 64%)\n\nPerfect For: Small teams (2-5 devs), consultants, startups with AI roadmaps.\n\n30-day money-back guarantee. MIT License.",
+      "zip_file": "agentforge-pro-v1.0-20260214.zip",
+      "license": "Commercial use, unlimited projects",
+      "support": "Priority email + Slack",
+      "updates": "Lifetime"
+    },
+    {
+      "name": "AgentForge - Enterprise",
+      "one_time_price_cents": 99900,
+      "subscription_price_cents": 14900,
+      "description": "AgentForge Enterprise — Ship with Expert Support\n\nEverything in Pro + hands-on support for production deployment at scale.\n\nEverything in Pro ($199 value) PLUS:\n\n60-Minute Architecture Deep-Dive ($500 value):\n- Screen share code walkthrough of YOUR actual code\n- Custom architecture design tailored to your use case\n- Cost modeling, security & compliance review (HIPAA, SOC2, GDPR)\n- Performance optimization, team Q&A (up to 10 people)\n- Recorded for future reference\n\nCustom Code Examples ($800 value):\n- 2-3 custom examples tailored to YOUR domain\n- Delivered in 2 weeks, fully tested with unit tests\n- Production-ready, matches your coding conventions\n\nPrivate Slack Channel — 90 Days ($1,200 value):\n- 4-hour response SLA (business hours, PST)\n- Implementation troubleshooting, performance optimization\n- Production incident \"war room\" support\n- Code reviews, prioritized feature requests\n\nWhite-Label & Resale Rights ($2,000 value):\n- Remove all branding, use in unlimited client projects\n- Sell as part of your product, no attribution or royalties\n\nTeam Training Session ($400 value):\n- 1-hour live onboarding for up to 10 people\n- Recorded for future reference\n\nPremium Documentation:\n- Security hardening, compliance docs (HIPAA, SOC2, GDPR)\n- Multi-tenant architecture, HA deployment, disaster recovery\n- Monitoring, observability, load testing & capacity planning\n\nQuarterly Updates with early access to new features\n\nTotal Value: $5,099+ — Your Price: $999 (save 80%)\n\nPerfect For: Companies with 10+ developers, agencies, white-label platforms, enterprise deployments.\n\n30-day money-back guarantee. Full commercial license with white-label rights.",
+      "zip_file": "agentforge-enterprise-v1.0-20260214.zip",
+      "license": "Commercial + redistribution (White-label)",
+      "support": "Priority + 2hrs consultation",
+      "updates": "Lifetime + feature requests"
+    },
+    {
+      "name": "DocQA Engine - Starter",
+      "one_time_price_cents": 5900,
+      "subscription_price_cents": 1200,
+      "description": "DocQA Engine — Production RAG in Hours, Not Weeks\n\nStop paying $300-$1,200 for custom RAG builds. Get a complete, tested, production-grade Retrieval-Augmented Generation pipeline you own forever.\n\nWhat You Get:\n- Hybrid Retrieval System — BM25 keyword search + dense vector similarity for best of both worlds\n- 5 Chunking Strategies — Fixed-size, sentence-based, paragraph, recursive, semantic\n- Citation Scoring — Every answer includes source citations with confidence scores\n- Production REST API — FastAPI with JWT auth, rate limiting (100 req/min), usage metering\n- Streamlit Demo UI — Test documents and queries immediately\n- Built-in Evaluation — Precision, recall, F1 metrics for continuous quality assessment\n- 500+ tests, 80%+ coverage\n- Docker ready, MIT License\n\nTech Stack: Python 3.11+, FastAPI, Streamlit, ChromaDB, scikit-learn, PyPDF2\n\nDocumentation: README, CUSTOMIZATION.md, API_REFERENCE.md, DEPLOYMENT.md, ARCHITECTURE.md\n\nPerfect For: Startups building AI documentation search, enterprises migrating off legacy search, developers creating domain-specific Q&A bots, teams needing cited answers from document corpora.\n\nZero external API costs — fully self-hosted.\n\n30-day money-back guarantee. MIT License.",
+      "zip_file": "docqa-starter-v1.0-20260214.zip",
+      "license": "Personal use, 1 project",
+      "support": "Email support",
+      "updates": "6 months"
+    },
+    {
+      "name": "DocQA Engine - Pro",
+      "one_time_price_cents": 24900,
+      "subscription_price_cents": 3900,
+      "description": "DocQA Engine Pro — Ship Production RAG with Confidence\n\nGet the complete RAG pipeline PLUS the knowledge and support to deploy it right the first time.\n\nEverything in Starter PLUS:\n\n30-Page RAG Optimization Guide ($199 value):\n- Chunking strategy selection matrix with benchmarks\n- Embedding model comparison (12 models, performance vs cost vs quality)\n- Retrieval quality benchmarking methodology\n- Production scaling patterns (100 to 100K documents)\n- Vector database migration guide (ChromaDB to Qdrant/Weaviate/Pinecone)\n- Cost optimization: reduce embedding costs 60-80% with caching and batching\n\n3 Real-World Case Studies ($299 value):\n- Legal Document Review: Contract clause extraction with 94% recall, 500-page agreements, reduced review from 4 hours to 20 minutes\n- Healthcare Knowledge Base: HIPAA-compliant patient FAQ, 200ms P95 across 50K docs, 73% reduction in support tickets\n- Financial Reports Analysis: SEC filing analysis with cross-reference citations, analyst productivity increased 3.5x\n\n30-Minute Expert RAG Consultation ($150 value):\n- Review your document corpus, recommend chunking strategy, tune retrieval parameters, identify quality improvements\n\nPriority Email Support (48-hour SLA)\nCI/CD Templates (GitHub Actions, Docker, monitoring)\n\nTotal Value: $757+ — Your Price: $249 (save $508)\n\nPerfect For: Teams deploying RAG to production, consultants building document Q&A for clients, companies with compliance requirements.\n\n30-day money-back guarantee. MIT License.",
+      "zip_file": "docqa-pro-v1.0-20260214.zip",
+      "license": "Commercial use, unlimited projects",
+      "support": "Priority email (48hr SLA)",
+      "updates": "Lifetime"
+    },
+    {
+      "name": "DocQA Engine - Enterprise",
+      "one_time_price_cents": 149900,
+      "subscription_price_cents": 19900,
+      "description": "DocQA Engine Enterprise — RAG at Scale with Expert Support\n\nEverything in Pro + hands-on support for production deployment at enterprise scale.\n\nEverything in Pro ($249 value) PLUS:\n\n60-Minute Architecture Deep-Dive ($500 value):\n- Screen share code review of your actual pipeline\n- Custom architecture design for your document types and scale\n- Live retrieval quality tuning (chunking + embedding config)\n- Scaling strategy for 10K to 10M documents\n- Security & compliance review (HIPAA, SOC2, data residency)\n- Team Q&A (up to 10 people)\n\nCustom Domain Tuning ($1,000 value):\n- Analyze 2-3 of your document types\n- Configure optimal chunking strategy\n- Tune embedding and retrieval parameters\n- Benchmark before/after quality metrics\n- Delivered within 2 weeks as tuned config + report\n\nPrivate Slack Channel — 90 Days ($1,500 value):\n- 4-hour response SLA (business hours, PST)\n- Implementation troubleshooting, performance optimization\n- \"War room\" support for critical issues\n\nWhite-Label & Resale Rights ($2,500 value):\n- Remove all DocQA branding, embed in your product\n- Unlimited client projects, no attribution or royalties\n\nTeam Training Session ($400 value):\n- 1-hour onboarding for up to 10 people, recorded\n\nVector Database Migration Guide ($200 value):\n- Step-by-step guides for Qdrant, Weaviate, Pinecone with benchmarks\n\nQuarterly Updates with early access\n\nTotal Value: $6,349+ — Your Price: $1,499 (save $4,850)\n\nPerfect For: Companies with 10+ devs building document AI, agencies, white-label platforms, teams with HIPAA/SOC2 requirements, organizations processing 100K+ documents.\n\n30-day money-back guarantee. Full commercial license.",
+      "zip_file": "docqa-enterprise-v1.0-20260214.zip",
+      "license": "Commercial + redistribution (White-label)",
+      "support": "Priority + Slack (4hr SLA, 90 days)",
+      "updates": "Lifetime + quarterly early access"
+    },
+    {
+      "name": "Prompt Engineering Toolkit - Starter",
+      "one_time_price_cents": 2900,
+      "subscription_price_cents": 500,
+      "description": "Prompt Engineering Toolkit — Starter\n\nStop guessing with your prompts. This toolkit gives you 8 battle-tested prompt patterns, a template management system, and a token counter — everything you need to write effective prompts for Claude, GPT, and other LLMs.\n\nWhat You Get:\n- 8 production-ready prompt patterns (Chain-of-Thought, Few-Shot, Role-Playing, Socratic, Tree-of-Thought, Constraint-Based, Iterative Refinement, Multi-Perspective)\n- Template manager with variable substitution\n- Token counter for cost estimation\n- 10 example templates ready to use\n- Quick-start guide\n- 190 automated tests (proof it works)\n- Source code (Python 3.11+)\n\nIdeal For: Developers integrating LLMs into apps, content creators using AI tools daily, teams standardizing prompt workflows.\n\n30-day money-back guarantee.",
+      "zip_file": "prompt-toolkit-starter-v1.0-20260214.zip",
+      "license": "Personal use",
+      "support": "Email support",
+      "updates": "6 months"
+    },
+    {
+      "name": "Prompt Engineering Toolkit - Pro",
+      "one_time_price_cents": 7900,
+      "subscription_price_cents": 1200,
+      "description": "Prompt Engineering Toolkit — Pro\n\nEverything in Starter, plus A/B testing, cost optimization, and prompt versioning. Run experiments to find your best-performing prompts, track costs per query, and manage prompt versions across your team.\n\nEverything in Starter PLUS:\n- A/B testing framework for prompt comparison\n- Cost calculator with per-model pricing (Claude, GPT-4, GPT-3.5, Gemini)\n- Prompt versioning system with rollback\n- Prompt safety checker (injection detection)\n- Evaluation metrics (relevance, coherence, completeness)\n- CLI tool (pel) for terminal workflows\n- Extended documentation with advanced patterns\n- 190 automated tests\n\nIdeal For: Teams optimizing LLM costs, products with user-facing AI features, engineers running prompt experiments.\n\n30-day money-back guarantee.",
+      "zip_file": "prompt-toolkit-pro-v1.0-20260214.zip",
+      "license": "Commercial use, unlimited projects",
+      "support": "Priority email",
+      "updates": "Lifetime"
+    },
+    {
+      "name": "Prompt Engineering Toolkit - Enterprise",
+      "one_time_price_cents": 19900,
+      "subscription_price_cents": 2900,
+      "description": "Prompt Engineering Toolkit — Enterprise\n\nFull toolkit with commercial license, priority support, and enterprise features. Everything in Pro plus benchmark runner, report generation, and dedicated support.\n\nEverything in Pro PLUS:\n- Benchmark runner for systematic prompt evaluation\n- Report generator (Markdown/PDF) for stakeholder presentations\n- Category-based prompt organization\n- Docker deployment files\n- CI/CD workflow templates\n- Commercial license (unlimited team members)\n- 30-day priority email support\n- Architecture consultation (30-min call)\n- 190 automated tests\n\nIdeal For: Enterprise teams with compliance requirements, agencies building AI products for clients, startups shipping LLM-powered features.\n\n30-day money-back guarantee. Full commercial license.",
+      "zip_file": "prompt-toolkit-enterprise-v1.0-20260214.zip",
+      "license": "Commercial use, unlimited team members",
+      "support": "Priority email + 30-min consultation",
+      "updates": "Lifetime"
+    }
+  ]
+}
