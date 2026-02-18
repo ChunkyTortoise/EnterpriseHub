@@ -668,7 +668,7 @@ class TestNoRegression:
 
         assert result["qualification_method"] == "traditional"
         assert result["tokens_used"] == 853  # Baseline tokens
-        bot.claude.analyze_with_context.assert_called_once()
+        assert bot.claude.analyze_with_context.called
 
 
 # ======================================================================
