@@ -1,0 +1,60 @@
+sdr:
+  prospecting:
+    sources: [ghl_pipeline, stale_lead]  # Phase 2 adds: expired_mls, fsbo
+    stale_lead_inactive_days: 14
+    max_prospects_per_cycle: 200
+    ghl_pipeline_stage_ids: []   # Override per location via SDR_PIPELINE_STAGE_IDS env var
+
+  sequence:
+    default_variant: "consultative"
+    steps:
+      sms_1:
+        channel: sms
+        min_wait_hours: 0
+        max_wait_hours: 2
+      email_1:
+        channel: email
+        min_wait_hours: 20
+        max_wait_hours: 28
+      sms_2:
+        channel: sms
+        min_wait_hours: 60
+        max_wait_hours: 80
+      voicemail_1:
+        channel: voicemail
+        min_wait_hours: 110
+        max_wait_hours: 130
+      email_2:
+        channel: email
+        min_wait_hours: 160
+        max_wait_hours: 180
+      sms_3:
+        channel: sms
+        min_wait_hours: 230
+        max_wait_hours: 260
+      voicemail_2:
+        channel: voicemail
+        min_wait_hours: 325
+        max_wait_hours: 340
+      nurture_pause:
+        channel: email
+        min_wait_hours: 480
+        max_wait_hours: 520
+
+  qualification:
+    frs_threshold: 60.0
+    intent_confidence_threshold: 0.70
+    hot_lead_frs_threshold: 80.0
+
+  rate_limits:
+    max_enrollments_per_hour: 50
+    max_touches_per_contact_per_day: 1
+    daily_sms_cap: 500   # per location
+    redis_key_prefix: "sdr:sms:daily"
+
+  performance:
+    sla_touch_dispatch_ms: 5000   # P95 target for dispatching a touch
+    cron_batch_size: 50
+    cron_interval_minutes: 15
+    circuit_breaker_failure_threshold: 3
+    circuit_breaker_retry_delay_minutes: 30

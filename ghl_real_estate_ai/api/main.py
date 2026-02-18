@@ -86,6 +86,7 @@ from ghl_real_estate_ai.api.routes import (
     heygen_video,
     jorge_advanced,
     jorge_followup,
+    sdr,  # SDR Agent — autonomous outbound prospecting + sequences
     # Week 5-8 ROI Enhancement Routes
     langgraph_orchestration,
     lead_bot_management,  # NEW: Lead Bot Management API for sequence control
@@ -684,6 +685,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(attribution_reports.router, prefix="/api")
     app.include_router(jorge_advanced.router, prefix="/api")
     app.include_router(jorge_followup.router, prefix="/api")
+    app.include_router(sdr.router, prefix="/api")
     app.include_router(jorge_alerting_router, prefix="/api")
     app.include_router(reports.router, prefix="/api")
     app.include_router(retell_webhook.router, prefix="/api")
