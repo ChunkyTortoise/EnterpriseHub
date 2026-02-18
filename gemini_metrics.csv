@@ -813,3 +813,7 @@ timestamp,model,provider,task_type,input_tokens,output_tokens,cache_creation_inp
 2026-02-18T10:10:34.717866,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
 2026-02-18T10:13:08.582873,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
 2026-02-18T10:13:08.583919,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-18T10:24:39.208597,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-18T10:24:39.208794,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-18T10:24:39.328288,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
+2026-02-18T10:24:39.328371,mock-model,mock,general,10,20,0,0,30,9e-06,N/A,system,False
