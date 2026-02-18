@@ -291,6 +291,133 @@ RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, str]] = {
             "to buyers who specifically value them."
         ),
     },
+    # ── New multi-category types (Phase 3) ──────────────────────────────────
+    ObjectionType.PRICING_GENERAL: {
+        ResponseGraduation.VALIDATE: (
+            "I completely understand your concern about costs. Selling a home is a significant "
+            "financial decision, and you want to make sure every dollar counts."
+        ),
+        ResponseGraduation.DATA: (
+            "Let me break down the numbers. In Rancho Cucamonga, homes listed with full-service "
+            "agents sell for an average of {price_premium}% more than discount listings, which "
+            "typically covers the commission difference and then some."
+        ),
+        ResponseGraduation.SOCIAL_PROOF: (
+            "A recent seller on {nearby_street} was considering a discount broker to save on "
+            "commission. We ran the numbers, and my full marketing package got them "
+            "${additional_proceeds} more than they would have netted with the discount option."
+        ),
+        ResponseGraduation.MARKET_TEST: (
+            "Here's what I propose: let me prepare a no-obligation market analysis showing you "
+            "the projected net proceeds with different pricing and commission structures. "
+            "You'll see exactly what you'd walk away with under each scenario."
+        ),
+    },
+    ObjectionType.TIMING_NOT_READY: {
+        ResponseGraduation.VALIDATE: (
+            "I appreciate you being honest about where you are in the process. "
+            "There's never a rush when it comes to something this important."
+        ),
+        ResponseGraduation.DATA: (
+            "Let me share some timing context. Right now we're in {market_season} in Rancho "
+            "Cucamonga, which historically sees {seasonal_activity}. "
+            "The next {upcoming_season} typically brings {upcoming_trend}."
+        ),
+        ResponseGraduation.SOCIAL_PROOF: (
+            "I had a seller last year in {nearby_area} who wanted to wait for spring. We did "
+            "the math on carrying costs versus potential price increase, and they decided to "
+            "list in February. Sold in {days_to_sale} days for ${sale_price}."
+        ),
+        ResponseGraduation.MARKET_TEST: (
+            "Here's an option: let's prepare your home for market now, so when you're ready, "
+            "we can go live within 48 hours. I'll do the staging consultation and photography "
+            "prep — no commitment until you give me the green light."
+        ),
+    },
+    ObjectionType.COMPETITION_SHOPPING: {
+        ResponseGraduation.VALIDATE: (
+            "Absolutely, you should interview other agents! This is an important decision, "
+            "and you deserve to find the right fit. I'm confident you'll find that I bring "
+            "a unique approach to selling homes in this market."
+        ),
+        ResponseGraduation.DATA: (
+            "Here's what I'd suggest you ask other agents: What's your average days on market? "
+            "How many homes in this price range have you sold in the past 12 months? "
+            "What's your list-to-sale price ratio? Mine are {dom}, {homes_sold}, and {list_sale_ratio}."
+        ),
+        ResponseGraduation.SOCIAL_PROOF: (
+            "I compete for business every day, and I welcome the comparison. Here's what sets "
+            "me apart: {unique_value_prop}. My last {recent_count} sellers all had multiple "
+            "offers within {offer_timeline}."
+        ),
+        ResponseGraduation.MARKET_TEST: (
+            "Here's what I'll do: give me 15 minutes to show you my marketing plan and recent "
+            "sales results. If you're not impressed, no hard feelings. But I think you'll see "
+            "why my clients choose to work exclusively with me."
+        ),
+    },
+    ObjectionType.TRUST_CREDIBILITY: {
+        ResponseGraduation.VALIDATE: (
+            "That's a very fair concern. You're about to trust someone with one of your biggest "
+            "assets — you should absolutely know who you're working with and what they've accomplished."
+        ),
+        ResponseGraduation.DATA: (
+            "I've been selling real estate in Rancho Cucamonga for {years_experience} years. "
+            "In that time, I've closed {total_sales} transactions worth ${total_volume} in "
+            "sales volume. My average seller rating is {avg_rating}/5."
+        ),
+        ResponseGraduation.SOCIAL_PROOF: (
+            "I'd love to share some client testimonials. Here's what {client_name} from "
+            "{nearby_area} said: '{testimonial}'. I can also provide references from recent "
+            "sellers who are happy to speak with you."
+        ),
+        ResponseGraduation.MARKET_TEST: (
+            "Here's what I suggest: let's start with a no-obligation market analysis. "
+            "I'll show you how I'd position and market your home, and you can judge for "
+            "yourself whether I know this market."
+        ),
+    },
+    ObjectionType.AUTHORITY_DECISION_MAKER: {
+        ResponseGraduation.VALIDATE: (
+            "Absolutely, this is a decision you should make together. I'd be happy to include "
+            "your {partner_relation} in our next conversation so everyone's on the same page."
+        ),
+        ResponseGraduation.DATA: (
+            "When we meet with your {partner_relation}, I'll bring a complete market analysis, "
+            "pricing strategy, and projected net proceeds. That way everyone has the same "
+            "information to make an informed decision."
+        ),
+        ResponseGraduation.SOCIAL_PROOF: (
+            "I work with couples and families all the time. What I've found is that when "
+            "everyone's involved from the start, the selling process goes much more smoothly. "
+            "I make sure all decision-makers feel heard and informed."
+        ),
+        ResponseGraduation.MARKET_TEST: (
+            "Let's schedule a consultation that works for everyone. I'll present the full "
+            "strategy, answer any questions, and we can make sure all decision-makers are "
+            "comfortable before moving forward."
+        ),
+    },
+    ObjectionType.VALUE_PROPOSITION: {
+        ResponseGraduation.VALIDATE: (
+            "Great question. You should absolutely know what you're getting for your investment. "
+            "Let me walk you through exactly what I provide and how it translates to results."
+        ),
+        ResponseGraduation.DATA: (
+            "Here's what's included: {service_list}. My marketing budget per listing averages "
+            "${marketing_budget}, and I invest in professional photography, 3D virtual tours, "
+            "targeted online advertising, and open house events."
+        ),
+        ResponseGraduation.SOCIAL_PROOF: (
+            "My clients consistently tell me that what sets me apart is {client_feedback}. "
+            "Here's a recent testimonial: '{testimonial_quote}'"
+        ),
+        ResponseGraduation.MARKET_TEST: (
+            "Let me show you exactly what I'll do for your home. I'll prepare a custom "
+            "marketing plan with sample ads, staging recommendations, and a pricing strategy. "
+            "You'll see the full scope of what you're getting."
+        ),
+    },
 }
 
 

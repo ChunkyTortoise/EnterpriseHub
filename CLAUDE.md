@@ -78,14 +78,19 @@ All agents are **domain-agnostic** -- they adapt to this project's domain via CL
 | portfolio-coordinator | Cross-repository strategy and convention consistency |
 | quality-gate | CI/CD validation and release readiness checks |
 
-### MCP Servers (5)
-| Server | Package | Purpose |
-|--------|---------|---------|
-| memory | `@modelcontextprotocol/server-memory` | Knowledge graph persistence |
-| postgres | `@modelcontextprotocol/server-postgres` | Direct DB queries via `${DATABASE_URL}` |
-| redis | `@gongrzhe/server-redis-mcp` | Cache inspection via `${REDIS_URL}` |
-| stripe | `@stripe/mcp` | Billing management via `${STRIPE_SECRET_KEY}` |
-| playwright | `@playwright/mcp` | E2E browser testing |
+### MCP Servers
+| Server | Source | Purpose |
+|--------|--------|---------|
+| memory | `.mcp.json` | Knowledge graph persistence |
+| ghl | `.mcp.json` | GoHighLevel CRM via `${GHL_API_KEY}` |
+| gumroad | `.mcp.json` | Gumroad product/sale data (read-only) |
+| upwork | `.mcp.json` | Upwork job/proposal data |
+| notebooklm | `.mcp.json` (Python) | NotebookLM integration |
+| obsidian | `.mcp.json` (Python) | Obsidian vault integration |
+| postgres | plugin | Direct DB queries via `${DATABASE_URL}` |
+| redis | plugin | Cache inspection via `${REDIS_URL}` |
+| stripe | plugin | Billing management via `${STRIPE_SECRET_KEY}` |
+| playwright | plugin | E2E browser testing |
 
 ## Critical Services
 | Service | File | Key Behavior |
@@ -149,184 +154,15 @@ Cross-bot handoff via [`JorgeHandoffService.evaluate_handoff()`](ghl_real_estate
 ### Deployment
 See [`agents/DEPLOYMENT_CHECKLIST.md`](ghl_real_estate_ai/agents/DEPLOYMENT_CHECKLIST.md) for full deployment guide, env var reference, smoke tests, and monitoring setup.
 
-## API Migration Guide: Unified Intent Analysis (Feb 2026)
+## API Migration: Unified Intent Analysis
 
-**Breaking Change**: Intent analysis APIs consolidated to eliminate duplicate pattern matching.
+**⚠️ Old API removed 2026-03-15.** Use `evaluate_handoff_from_profile()` + `analyze_lead()`.
+Full details: [`.claude/reference/api-migration-intent.md`](.claude/reference/api-migration-intent.md)
 
-### What Changed
+## FRS/PCS Weight Calibration
 
-**Before** (deprecated as of 2026-02-15):
-```python
-# Separate systems with duplicate work
-intent_signals = handoff_service.extract_intent_signals(message)
-decision = await handoff_service.evaluate_handoff(
-    current_bot="lead",
-    contact_id=contact_id,
-    conversation_history=history,
-    intent_signals=intent_signals  # dict with buyer_intent_score, seller_intent_score
-)
-```
-
-**After** (unified approach):
-```python
-# Single intent analysis, no duplication
-intent_profile = intent_decoder.analyze_lead(contact_id, history)
-# intent_profile contains:
-#   - frs: FinancialReadinessScore (0-100)
-#   - pcs: PsychologicalCommitmentScore (0-100)
-#   - buyer_intent_confidence: float (0.0-1.0)
-#   - seller_intent_confidence: float (0.0-1.0)
-#   - detected_intent_phrases: List[str]
-
-decision = await handoff_service.evaluate_handoff_from_profile(
-    current_bot="lead",
-    contact_id=contact_id,
-    conversation_history=history,
-    intent_profile=intent_profile
-)
-```
-
-### Backward Compatibility
-
-**All existing code continues to work** — deprecated methods log warnings but remain functional.
-
-**Deprecation Timeline**:
-- **2026-02-15**: New unified API available, old API deprecated with warnings
-- **2026-03-15**: Old API removed (1 month grace period)
-
-### Migration Checklist
-
-- [ ] Replace `extract_intent_signals()` calls with `analyze_lead()`
-- [ ] Replace `evaluate_handoff()` with `evaluate_handoff_from_profile()`
-- [ ] Update tests to use `LeadIntentProfile` instead of `IntentSignals` dict
-- [ ] Verify handoff routing still works (confidence thresholds unchanged)
-
-### Benefits of Migration
-
-- **No duplicate pattern matching**: 50% faster intent analysis
-- **Unified model**: FRS/PCS + handoff signals in one object
-- **Richer context**: Handoffs now include qualification scores
-- **Easier testing**: Single model to mock instead of separate dicts
-
----
-
-## FRS/PCS Weight Calibration (Task #24 - Feb 2026)
-
-**Status**: Config-driven weights now available via `jorge_bots.yaml`
-
-### How It Works
-
-All scoring weights (FRS and PCS) are now configurable and can be hot-reloaded without restart:
-
-```python
-from ghl_real_estate_ai.config.jorge_config_loader import get_config
-
-config = get_config()
-
-# FRS intent weights (motivation, timeline, condition, price)
-frs_weights = config.lead_bot.scoring.intent_weights
-
-# PCS weights (velocity, length, questions, objections, calls)
-pcs_weights = config.lead_bot.scoring.pcs_weights
-```
-
-### Configuration Location
-
-**File**: `/ghl_real_estate_ai/config/jorge_bots.yaml`
-
-```yaml
-lead_bot:
-  scoring:
-    intent_weights:
-      motivation: 0.35  # 35% of FRS
-      timeline: 0.30    # 30% of FRS
-      condition: 0.20   # 20% of FRS
-      price: 0.15       # 15% of FRS
-
-    pcs_weights:
-      response_velocity: 0.20
-      message_length: 0.15
-      question_depth: 0.20
-      objection_handling: 0.25
-      call_acceptance: 0.20
-
-# Environment-specific calibration
-environments:
-  production:
-    lead_bot:
-      scoring:
-        intent_weights:
-          # Tuned from conversion data
-          motivation: 0.38  # +3%
-          timeline: 0.32    # +2%
-          condition: 0.18   # -2%
-          price: 0.12       # -3%
-```
-
-### Hot Reload (Zero Downtime)
-
-```bash
-# 1. Update weights in jorge_bots.yaml
-vim ghl_real_estate_ai/config/jorge_bots.yaml
-
-# 2. Reload config (no restart needed)
-python -c "from ghl_real_estate_ai.config.jorge_config_loader import reload_config; reload_config()"
-
-# 3. Verify new weights loaded
-python -c "from ghl_real_estate_ai.config.jorge_config_loader import get_config; print(get_config().lead_bot.scoring.intent_weights)"
-```
-
-### Conversion Tracking
-
-```python
-from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
-
-decoder = LeadIntentDecoder()
-
-# After lead converts or outcome is known
-decoder.record_conversion_outcome(
-    contact_id="abc123",
-    frs_score=85.5,
-    pcs_score=72.3,
-    lead_type="buyer",
-    outcome="converted",  # or "nurturing", "lost", "qualified"
-    channel="sms",
-    segment="hot"
-)
-```
-
-### Calibration Process
-
-**When to Calibrate**: After collecting 100+ conversion outcomes (configurable via `min_samples_for_calibration`)
-
-**Steps**:
-1. Query conversion outcomes from logs/database
-2. Run logistic regression to find optimal weights
-3. Update production environment weights in `jorge_bots.yaml`
-4. Hot reload config
-5. Monitor conversion rate improvement
-
-**Weight Constraints**:
-- All weights must sum to 1.0 (± 0.01 tolerance)
-- Config loader validates on startup
-- Invalid weights trigger error
-
-### A/B Testing Weights
-
-```yaml
-# Test different weights in staging
-environments:
-  staging:
-    lead_bot:
-      scoring:
-        intent_weights:
-          motivation: 0.40  # Test higher motivation weight
-          timeline: 0.28
-          condition: 0.18
-          price: 0.14
-```
-
-Monitor conversion rates in staging vs production, then promote winning weights.
+Weights configurable in `ghl_real_estate_ai/config/jorge_bots.yaml`, hot-reloadable without restart.
+Full details: [`.claude/reference/frs-pcs-config.md`](.claude/reference/frs-pcs-config.md)
 
 ---
 
@@ -351,4 +187,4 @@ Monitor conversion rates in staging vs production, then promote winning weights.
 ## Task Tracking
 Uses **Beads** (`bd`) for task tracking. `bd ready` for available work, `bd close` when done, `bd sync` + `git push` before ending sessions. See `bd prime` for full command reference.
 
-**Version**: 8.3 | **Last Updated**: February 14, 2026
+**Version**: 8.4 | **Last Updated**: February 18, 2026

@@ -868,4 +868,4 @@ Count questions_answered based on how many of the 4 main categories have data.
             Lead score (0-100)
         """
         context = await self.get_context(contact_id, location_id=location_id)
-        return self.lead_scorer.calculate(context)
+        return await self.lead_scorer.calculate(context)
