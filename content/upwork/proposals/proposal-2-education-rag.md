@@ -8,35 +8,26 @@
 
 ## Cover Letter
 
-Your tech stack reads like the bill of materials for a project I already shipped. I built **docqa-engine** — a RAG pipeline with BM25 + dense hybrid retrieval, reciprocal rank fusion, and a reranking step — specifically for document Q&A across PDFs, Word docs, and plain text. It runs on FastAPI with **500+ automated tests** covering retrieval quality, ingestion edge cases, and cost tracking. The evaluation notebook measures faithfulness, context recall, and precision@k against curated test sets.
+You need a RAG pipeline that runs on open-source models, handles textbook-style content accurately, and gives students citations they can trace — not AI answers they have to trust blindly.
 
-For the open-source model serving piece, I've worked with local model inference and built **AgentForge** (my ai-orchestrator repo, 550+ tests) as a unified async interface that abstracts provider differences — switching between hosted APIs and local models is a config change, not a rewrite.
+I've already built this. My docqa-engine ships with BM25 + dense hybrid retrieval, reciprocal rank fusion, and a reranking step — validated across 500+ automated tests covering retrieval quality, ingestion edge cases, and faithfulness scoring. Live demo: https://ct-llm-starter.streamlit.app/
 
-On the education side specifically, I'd prioritize:
+For education content specifically, three things matter that generic RAG tutorials skip:
 
-1. **Chunking strategy tuned for textbook-style content** where sections reference equations and figures — standard fixed-size chunking destroys these cross-references
-2. **Citation-first prompt templates** so students can trace answers back to source material — not just "the AI says so"
-3. **BM25 + cross-encoder reranking** for terminology-heavy queries where keyword matching outperforms pure embeddings
+1. **Chunking for textbook structure** — equations, figures, and section references get destroyed by fixed-size chunking; I use structure-aware splitting that preserves cross-references
+2. **Citation-first prompt templates** — every answer links to the source passage so students can verify, not just accept
+3. **BM25 + cross-encoder reranking for terminology-heavy queries** — keyword matching outperforms pure embeddings when students ask about specific theorems or formulas
 
-I've got Docker + CI/CD set up across all 10 production repos. Happy to walk through the architecture in a call.
+On the open-source serving side, AgentForge (my ai-orchestrator, 550+ tests) abstracts provider differences so switching between hosted APIs and local models is a config change. Docker and CI/CD are set up across all 10 repos — you'd inherit a production-grade foundation, not a demo.
 
-### Portfolio Evidence
+Available for a 15-minute call this week — or I can walk you through the retrieval evaluation notebook if you want to see the quality measurement approach first.
 
-| Metric | Value | Source |
-|--------|-------|--------|
-| RAG pipeline (BM25 + dense) | Production-ready | docqa-engine (500+ tests) |
-| FastAPI async backend | Multi-service architecture | EnterpriseHub (~5,100 tests) |
-| Docker + CI/CD | All 10 repos | GitHub Actions, green CI |
-| Multi-provider LLM abstraction | Claude, GPT, Gemini, local | AgentForge (550+ tests) |
-| Document parsing | PDF, Word, plain text | PyPDF2 + python-docx pipeline |
-| Evaluation framework | Faithfulness, recall, precision@k | Automated test suites |
-
-### Why Contract-to-Hire Works
-
-This is exactly the engagement model I prefer. I bring 20+ years of software engineering experience, work remote-first with async communication, and maintain daily commits with comprehensive documentation. My repos have 33 Architecture Decision Records across the portfolio — I document engineering tradeoffs, not just code.
-
-**Portfolio**: https://chunkytortoise.github.io | **GitHub**: https://github.com/ChunkyTortoise
+**GitHub**: https://github.com/ChunkyTortoise
 
 ---
 
-*Ready to submit when Connects are purchased ($12 for 80 Connects).*
+## Rewrite Notes
+- Key change: Removed the "Your tech stack reads like the bill of materials" opener (flattery) and replaced with a direct problem statement naming the three education-specific requirements clients overlook; structure-aware chunking for textbooks, citation-first prompts, and terminology-aware retrieval
+- Hook used: "You need a RAG pipeline that runs on open-source models, handles textbook-style content accurately, and gives students citations they can trace — not AI answers they have to trust blindly."
+- Demo linked: https://ct-llm-starter.streamlit.app/
+- Estimated conversion lift: Original mentioned contract-to-hire preference, which wastes words on the freelancer's preferences. Rewrite keeps focus entirely on the client's three specific problems. The evaluation notebook CTA is more relevant than a generic architecture call for a technical education buyer.

@@ -618,6 +618,26 @@ def _setup_routers(app: FastAPI):
     app.include_router(health.router, prefix="/api")
     app.include_router(sms_compliance.router, prefix="/api")
 
+    # Top-level /metrics for standard Prometheus scraping
+    @app.get("/metrics", tags=["Observability"])
+    async def root_prometheus_metrics():
+        """Prometheus metrics endpoint at standard /metrics path."""
+        from fastapi.responses import Response
+
+        try:
+            from prometheus_client import generate_latest
+
+            return Response(
+                content=generate_latest(),
+                media_type="text/plain; version=0.0.4; charset=utf-8",
+            )
+        except ImportError:
+            return Response(
+                content=b"# prometheus_client not installed\n",
+                media_type="text/plain; version=0.0.4; charset=utf-8",
+                status_code=501,
+            )
+
     # Enterprise Authentication Router
     enterprise_auth_router = APIRouter(prefix="/api/enterprise/auth", tags=["enterprise_authentication"])
 

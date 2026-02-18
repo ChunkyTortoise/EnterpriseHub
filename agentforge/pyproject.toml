@@ -44,14 +44,22 @@ observe = [
     "opentelemetry-exporter-otlp>=1.20.0",
 ]
 
-# A2A protocol
-a2a = [
-    "aiohttp>=3.9.0",
+# A2A protocol (zero-dependency - uses urllib.request with asyncio.to_thread)
+# Optional: official A2A SDK when available
+# a2a = ["a2a-python>=0.3"]
+
+# Vector store backends
+qdrant = [
+    "qdrant-client>=1.6.0",
 ]
 
-# All optional dependencies
+chroma = [
+    "chromadb>=0.4.0",
+]
+
+# All optional dependencies (a2a is zero-dependency, included in base)
 all = [
-    "agentforge[llm,mcp,observe,a2a]",
+    "agentforge[llm,mcp,observe,qdrant,chroma]",
 ]
 
 # Development dependencies
@@ -112,3 +120,12 @@ disallow_untyped_defs = false
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "--cov=agentforge --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["agentforge"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

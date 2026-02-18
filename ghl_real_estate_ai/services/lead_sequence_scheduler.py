@@ -99,7 +99,7 @@ class LeadSequenceScheduler:
             self.scheduler.shutdown()
             logger.info("Lead sequence scheduler stopped")
 
-    async def schedule_sequence_start(self, lead_id: str, delay_minutes: int = 0) -> bool:
+    async def schedule_sequence_start(self, lead_id: str, sequence_day: SequenceDay = SequenceDay.DAY_3, delay_minutes: int = 0) -> bool:
         """Schedule the start of a new lead sequence."""
         if not self.enabled:
             logger.warning("Cannot schedule - scheduler not enabled")
@@ -111,20 +111,20 @@ class LeadSequenceScheduler:
             if not sequence_state:
                 sequence_state = await self.sequence_service.create_sequence(lead_id)
 
-            # Schedule Day 3 action
+            # Schedule the first action (default Day 3, but can be INITIAL/Day 0)
             run_time = datetime.now() + timedelta(minutes=delay_minutes)
-            job_id = f"lead_{lead_id}_day3_sms"
+            job_id = f"lead_{lead_id}_{sequence_day.value}_sms"
 
             self.scheduler.add_job(
                 func=self._execute_sequence_action,
                 trigger="date",
                 run_date=run_time,
-                args=[lead_id, SequenceDay.DAY_3, "sms"],
+                args=[lead_id, sequence_day, "sms"],
                 id=job_id,
                 replace_existing=True,
             )
 
-            logger.info(f"Scheduled Day 3 SMS for lead {lead_id} at {run_time}")
+            logger.info(f"Scheduled {sequence_day.value} SMS for lead {lead_id} at {run_time}")
             return True
 
         except Exception as e:
@@ -187,7 +187,12 @@ class LeadSequenceScheduler:
                 return
 
             # Verify the action is still needed
-            if sequence_day == SequenceDay.DAY_3 and sequence_state.day_3_completed:
+            if sequence_day == SequenceDay.INITIAL:
+                # Initial always proceeds unless already qualified
+                if sequence_state.engagement_status == "qualified":
+                    logger.info(f"Lead {lead_id} already qualified, skipping initial outreach")
+                    return
+            elif sequence_day == SequenceDay.DAY_3 and sequence_state.day_3_completed:
                 logger.info(f"Day 3 already completed for lead {lead_id}, skipping")
                 return
             elif sequence_day == SequenceDay.DAY_7 and sequence_state.day_7_completed:

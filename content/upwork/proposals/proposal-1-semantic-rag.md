@@ -8,30 +8,26 @@
 
 ## Cover Letter
 
-The distinction you draw between "RAG for chatbots" and "RAG for meaning-critical systems" is exactly right, and it's the same distinction I've been building around in production.
+You need a retrieval pipeline that returns the *correct* meaning of a phrase, not just the most semantically adjacent chunk — and standard cosine similarity can't do that for word-sense disambiguation.
 
-I built **docqa-engine** — a hybrid retrieval pipeline (BM25 + dense embeddings with reciprocal rank fusion) specifically because pure semantic search returns chunks that are *similar* but not *correct*. For your word-sense disambiguation problem, that precision gap is the whole ballgame. I've tested retrieval quality across **94 automated scenarios** measuring precision@k, recall@k, and MRR at each pipeline stage.
+My docqa-engine solves this: BM25 + dense embeddings with reciprocal rank fusion, validated across 94 automated retrieval scenarios measuring precision@k, recall@k, and MRR at every pipeline stage. That hybrid approach is what separates "returns similar text" from "returns correct meaning." Live demo: https://ct-prompt-lab.streamlit.app/
 
-On the constrained LLM orchestration side, my production platform (**EnterpriseHub**, ~5,100 tests) runs a multi-strategy parser with JSON-only outputs, confidence scoring, and explicit fallback chains. The system decides rules-vs-LLM per request based on input characteristics — not a blanket "send everything to GPT." I've also built deterministic variant assignment and enum-based decision routing in my bot orchestration layer.
+For your ASR-to-gesture disambiguation pipeline, my approach would be:
 
-For your ASR-to-gesture pipeline, I'd focus on:
+1. **Embedding strategy for short, ambiguous phrases** — standard 512-token chunking destroys context for 3-5 word ASR outputs; I'd use sliding-window embeddings tuned to short-phrase semantics
+2. **Confidence-gated LLM calls** — my EnterpriseHub system routes rules-vs-LLM per request using a 0.7 confidence threshold; noisy ASR input never reaches expensive model calls unless it clears that gate
+3. **Sub-50ms FAISS lookup** — I benchmark P50/P95/P99 latency across every retrieval pipeline; you'll have measured latency targets from day one
 
-1. **Embedding strategy tuned for short, ambiguous phrases** rather than document chunks — standard 512-token chunking destroys context for 3-5 word ASR outputs
-2. **Confidence-gated LLM calls** so noisy ASR input doesn't produce hallucinated gestures — my system uses a 0.7 confidence threshold before escalating to more expensive models
-3. **Fast FAISS index for sub-50ms nearest-meaning lookup** — I've benchmarked P50/P95/P99 latency across all my retrieval pipelines
+My EnterpriseHub platform (~5,100 tests) runs JSON-only LLM outputs with multi-strategy parsing and explicit fallback chains — the same deterministic control your gesture system needs.
 
-### Portfolio Evidence
+Available for a 15-minute call this week — or I can send a working prototype of the confidence-gated retrieval layer if that's more useful.
 
-| Metric | Value | Source |
-|--------|-------|--------|
-| Hybrid retrieval pipeline | BM25 + dense + RRF | docqa-engine (500+ tests) |
-| JSON-only LLM orchestration | Multi-strategy parser | EnterpriseHub (~5,100 tests) |
-| Cache-driven cost reduction | 89% fewer LLM calls | 3-tier Redis (88% hit rate) |
-| Retrieval quality testing | 94 automated scenarios | precision@k, recall@k, MRR |
-| Production latency | P99 < 0.1ms orchestration | Benchmarked with P50/P95/P99 |
-
-**Portfolio**: https://chunkytortoise.github.io | **GitHub**: https://github.com/ChunkyTortoise
+**GitHub**: https://github.com/ChunkyTortoise
 
 ---
 
-*Ready to submit when Connects are purchased ($12 for 80 Connects).*
+## Rewrite Notes
+- Key change: Replaced third-person portfolio table with direct address to the client's specific technical problem (WSD + ASR pipeline); proposal now opens by naming their exact need rather than describing my background
+- Hook used: "You need a retrieval pipeline that returns the *correct* meaning of a phrase, not just the most semantically adjacent chunk — and standard cosine similarity can't do that for word-sense disambiguation."
+- Demo linked: https://ct-prompt-lab.streamlit.app/
+- Estimated conversion lift: Original opened with "The distinction you draw..." which is a compliment; rewrite opens by diagnosing the problem. Specific mention of ASR short-phrase embedding failure mode shows the proposal was read carefully. The prototype CTA is lower-friction than a call for technical buyers.

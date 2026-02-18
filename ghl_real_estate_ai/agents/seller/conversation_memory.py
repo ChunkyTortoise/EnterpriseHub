@@ -69,6 +69,34 @@ class AdaptiveQuestionEngine:
             self.jorge_core_questions = self._get_hardcoded_questions(simple_mode)
 
         self.simple_mode = simple_mode
+
+        # Friendly questions for high-intent leads (config-first, hardcoded fallback)
+        if questions_config and hasattr(questions_config, 'accelerators') and questions_config.accelerators:
+            self.high_intent_accelerators = questions_config.accelerators
+        else:
+            self.high_intent_accelerators = [
+                "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
+                "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
+                "I'm excited to help you with this! What timeline would work best for your situation?",
+                "You seem ready to take the next step - that's wonderful! When would be a good time to meet and go over your options?",
+                "I can see this is important to you. Let's find a time to sit down and create a plan that works for your situation?",
+            ]
+
+        self.supportive_clarifiers = {
+            "zestimate": [
+                "Online estimates are a great starting point! I'd love to show you what similar homes in your area have actually sold for recently.",
+                "Those online tools don't see the unique features of your home. Would you like a more personalized market analysis?",
+            ],
+            "thinking": [
+                "I completely understand you need time to consider this. What specific questions can I help answer for you?",
+                "Taking time to think it through is smart! What aspects would be most helpful for us to discuss?",
+            ],
+            "agent": [
+                "That's great that you're working with someone! I'm happy to share some additional market insights that might be helpful.",
+                "Wonderful! If you'd like, I can provide some complementary information that might be useful for your decision.",
+            ],
+        }
+
         logger.info(f"AdaptiveQuestionEngine initialized: {'simple' if simple_mode else 'full'} mode ({len(self.jorge_core_questions)} questions)")
 
     def _get_hardcoded_questions(self, simple_mode: bool) -> list[str]:
@@ -100,33 +128,6 @@ class AdaptiveQuestionEngine:
                 "Are you the primary decision-maker, or would anyone else need to be involved?",
                 "What's the best way to reach you - call, text, or email?",
             ]
-
-        # Friendly questions for high-intent leads (config-first, hardcoded fallback)
-        if questions_config and hasattr(questions_config, 'accelerators') and questions_config.accelerators:
-            self.high_intent_accelerators = questions_config.accelerators
-        else:
-            self.high_intent_accelerators = [
-                "It sounds like you're ready to move forward! I'd love to see your property. Would tomorrow afternoon or this week work better for a visit?",
-                "Based on what you've shared, it sounds like we have a great opportunity here. Would you like to schedule a time to discuss your options in detail?",
-                "I'm excited to help you with this! What timeline would work best for your situation?",
-                "You seem ready to take the next step - that's wonderful! When would be a good time to meet and go over your options?",
-                "I can see this is important to you. Let's find a time to sit down and create a plan that works for your situation?",
-            ]
-
-        self.supportive_clarifiers = {
-            "zestimate": [
-                "Online estimates are a great starting point! I'd love to show you what similar homes in your area have actually sold for recently.",
-                "Those online tools don't see the unique features of your home. Would you like a more personalized market analysis?",
-            ],
-            "thinking": [
-                "I completely understand you need time to consider this. What specific questions can I help answer for you?",
-                "Taking time to think it through is smart! What aspects would be most helpful for us to discuss?",
-            ],
-            "agent": [
-                "That's great that you're working with someone! I'm happy to share some additional market insights that might be helpful.",
-                "Wonderful! If you'd like, I can provide some complementary information that might be useful for your decision.",
-            ],
-        }
 
     async def select_next_question(self, state: JorgeSellerState, context: Dict) -> str:
         """Select the optimal next question based on real-time analysis"""

@@ -1,0 +1,265 @@
+{
+  "dashboard": {
+    "uid": "jorge-bots-v1",
+    "title": "Jorge Bots — Real Estate AI",
+    "description": "Operational dashboard for Jorge lead, buyer, and seller bots. Tracks cache efficiency, handoff funnel, latency, error rates, and qualification score distributions.",
+    "tags": ["jorge", "bots", "real-estate", "observability"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Cache Hit Rate (L1 / L2 / L3)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "green", "value": 0.8}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "jorge_cache_hit_rate{layer=\"l1\"}",
+            "legendFormat": "L1 (in-process)",
+            "refId": "A"
+          },
+          {
+            "expr": "jorge_cache_hit_rate{layer=\"l2\"}",
+            "legendFormat": "L2 (Redis)",
+            "refId": "B"
+          },
+          {
+            "expr": "jorge_cache_hit_rate{layer=\"l3\"}",
+            "legendFormat": "L3 (DB)",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Handoff Funnel (by route)",
+        "type": "barchart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum by (source_bot, target_bot) (increase(jorge_handoff_total[1h]))",
+            "legendFormat": "{{source_bot}} → {{target_bot}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Response Latency P95 (by bot)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 150},
+                {"color": "red", "value": 300}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "jorge_response_latency_p95{bot_type=\"lead\"}",
+            "legendFormat": "Lead Bot P95",
+            "refId": "A"
+          },
+          {
+            "expr": "jorge_response_latency_p95{bot_type=\"buyer\"}",
+            "legendFormat": "Buyer Bot P95",
+            "refId": "B"
+          },
+          {
+            "expr": "jorge_response_latency_p95{bot_type=\"seller\"}",
+            "legendFormat": "Seller Bot P95",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate (by bot)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.05},
+                {"color": "red", "value": 0.1}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "jorge_error_rate{bot_type=\"lead\"}",
+            "legendFormat": "Lead Bot",
+            "refId": "A"
+          },
+          {
+            "expr": "jorge_error_rate{bot_type=\"buyer\"}",
+            "legendFormat": "Buyer Bot",
+            "refId": "B"
+          },
+          {
+            "expr": "jorge_error_rate{bot_type=\"seller\"}",
+            "legendFormat": "Seller Bot",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "FRS Score Distribution",
+        "type": "histogram",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(increase(jorge_frs_score_bucket[1h])) by (le)",
+            "legendFormat": "FRS ≤ {{le}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "PCS Score Distribution",
+        "type": "histogram",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(increase(jorge_pcs_score_bucket[1h])) by (le)",
+            "legendFormat": "PCS ≤ {{le}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Lead Temperature Tags Published",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 24},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum by (temperature) (increase(jorge_lead_temperature[24h]))",
+            "legendFormat": "{{temperature}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Security Events",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 24},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum by (event_type) (increase(security_events_total[1h]))",
+            "legendFormat": "{{event_type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "increase(auth_failures_total[1h])",
+            "legendFormat": "Auth Failures",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Handoff Total (cumulative)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 24},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "blue", "value": null},
+                {"color": "green", "value": 10}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "expr": "sum(jorge_handoff_total)",
+            "legendFormat": "Total Handoffs",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "iconColor": "rgba(0, 211, 255, 1)"
+        }
+      ]
+    }
+  }
+}

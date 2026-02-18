@@ -15,34 +15,36 @@ async def check_status():
         
         try:
             print("Navigating to login...")
-            await page.goto("https://app.lemonsqueezy.com/login", wait_until="networkidle")
+            await page.goto("https://app.lemonsqueezy.com/login", timeout=60000)
             
             print("Typing credentials...")
+            await page.wait_for_selector("input[name='email']", timeout=10000)
             await page.fill("input[name='email']", email)
             await page.fill("input[name='password']", password)
             await page.click("button[type='submit']")
             
-            await page.wait_for_timeout(5000)
+            print("Waiting for dashboard...")
+            await page.wait_for_url("**/dashboard", timeout=30000)
             
-            # Check if we are on dashboard or if there is a 2FA/Verification block
-            url = page.url
-            print(f"Current URL: {url}")
-            
+            # Check for activation status
+            print("Checking activation status...")
             content = await page.content()
-            if "verify" in content.lower() or "code" in content.lower():
-                print("Verification/2FA requested.")
-                await page.screenshot(path="lemonsqueezy_verify.png")
-            elif "dashboard" in url:
-                print("Logged in successfully.")
-                await page.screenshot(path="lemonsqueezy_dashboard.png")
-                # Check for activation status
-                if "activate" in content.lower():
-                    print("Store still needs activation.")
-                else:
-                    print("Store appears activated.")
+            inner_text = await page.inner_text('body')
+            
+            if "Activate your store" in inner_text or "Fill out your business details" in inner_text:
+                print("Store still needs activation/business details.")
             else:
-                print("Unknown state.")
-                await page.screenshot(path="lemonsqueezy_unknown.png")
+                print("Store appears to be moving towards activation or is activated.")
+            
+            # Check for identity verification status specifically if possible
+            await page.goto("https://app.lemonsqueezy.com/settings/general", timeout=60000)
+            settings_text = await page.inner_text('body')
+            if "Identity verification" in settings_text:
+                print("Identity verification section found.")
+                # We could click it but let's just see what's on the main settings page
+            
+            await page.screenshot(path="lemonsqueezy_current_status.png")
+            print("Screenshot saved: lemonsqueezy_current_status.png")
                 
         except Exception as e:
             print(f"Error: {e}")

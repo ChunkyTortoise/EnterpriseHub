@@ -283,14 +283,19 @@ def _map_ghl_status(ghl_type: str, tags: List[str] = None) -> str:
 
     # Priority 1: Check for explicit elite status tags
     if "status-hot" in tags or "hot lead" in tags:
-        return "hot"
+        return "Hot"
     if "status-warm" in tags or "warm lead" in tags:
-        return "warm"
+        return "Qualified"  # Map warm to Qualified for FE consistency
     if "status-cold" in tags or "cold lead" in tags:
-        return "cold"
+        return "Contacted"
     if "appointment set" in tags:
-        return "appointment_set"
+        return "Proposal"  # Map appointment to Proposal stage
 
     # Priority 2: Standard mapping
-    mapping = {"lead": "new", "customer": "qualified", "lost": "disqualified"}
-    return mapping.get(ghl_type.lower(), "new")
+    mapping = {
+        "lead": "New",
+        "customer": "Qualified",
+        "lost": "Closed",
+        "abandoned": "Lost"
+    }
+    return mapping.get(ghl_type.lower(), "New")

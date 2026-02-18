@@ -1,6 +1,6 @@
 """Memory system for AgentForge.
 
-This package provides a four-tier memory architecture:
+This package provides a comprehensive memory architecture:
 
 1. **Working Memory** (`WorkingMemory`): In-execution scratchpad for temporary
    data during agent workflows. Fast, ephemeral, dict-based storage.
@@ -8,15 +8,24 @@ This package provides a four-tier memory architecture:
 2. **Session Memory** (`SessionMemory`): Conversation-level storage with
    message history management and sliding window support.
 
-3. **Persistent Memory** (`FileMemory`, `InMemoryVectorStore`): Long-term
-   storage that persists across executions using file or database backends.
+3. **Persistent Memory** (`FileMemory`): Long-term storage that persists
+   across executions using file-based backends.
 
-4. **Checkpoints** (`Checkpoint`, `CheckpointStore`): State snapshots for
+4. **Long-term Memory** (`LongTermMemory`): Semantic memory backed by vector
+   stores for similarity-based retrieval.
+
+5. **Vector Stores** (`VectorStore`): Pluggable vector database backends for
+   semantic search (in-memory, Qdrant, ChromaDB).
+
+6. **Checkpoints** (`Checkpoint`, `CheckpointStore`): State snapshots for
    pause/resume functionality and workflow recovery.
 
 Example:
     ```python
-    from agentforge.memory import WorkingMemory, SessionMemory, FileMemory
+    from agentforge.memory import (
+        WorkingMemory, SessionMemory, FileMemory,
+        LongTermMemory, InMemoryVectorStore
+    )
 
     # Working memory for temporary data
     working = WorkingMemory()
@@ -29,6 +38,16 @@ Example:
     # Persistent memory for long-term storage
     persistent = FileMemory(FileMemoryConfig(path="data/memory.json"))
     await persistent.store("user_prefs", {"theme": "dark"})
+
+    # Long-term memory with semantic search
+    async def embed(text: str) -> list[float]:
+        # Your embedding function
+        ...
+
+    store = InMemoryVectorStore(dimension=1536)
+    ltm = LongTermMemory(vector_store=store, embedder=embed)
+    await ltm.store("fact1", "User prefers dark mode")
+    results = await ltm.search("user preferences")
     ```
 """
 
@@ -47,7 +66,7 @@ from agentforge.memory.checkpoint import (
 from agentforge.memory.persistent import (
     FileMemory,
     FileMemoryConfig,
-    InMemoryVectorStore,
+    InMemoryVectorStore as LegacyInMemoryVectorStore,
 )
 
 # Session memory
@@ -55,6 +74,19 @@ from agentforge.memory.session import SessionMemory, SessionMemoryConfig
 
 # Working memory
 from agentforge.memory.working import WorkingMemory
+
+# Vector store base types
+from agentforge.memory.vector_base import (
+    VectorEntry,
+    VectorSearchResult,
+    VectorStore,
+)
+
+# In-memory vector store (new implementation)
+from agentforge.memory.vector_memory import InMemoryVectorStore
+
+# Long-term memory
+from agentforge.memory.longterm import LongTermMemory
 
 __all__ = [
     # Base
@@ -69,10 +101,19 @@ __all__ = [
     # Persistent memory
     "FileMemory",
     "FileMemoryConfig",
+    # Vector store base
+    "VectorStore",
+    "VectorEntry",
+    "VectorSearchResult",
+    # Vector store implementations
     "InMemoryVectorStore",
+    # Long-term memory
+    "LongTermMemory",
     # Checkpoints
     "Checkpoint",
     "CheckpointStore",
     "InMemoryCheckpointStore",
     "SQLiteCheckpointStore",
+    # Legacy (backward compatibility)
+    "LegacyInMemoryVectorStore",
 ]

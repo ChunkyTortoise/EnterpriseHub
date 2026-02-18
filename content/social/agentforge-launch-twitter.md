@@ -72,6 +72,8 @@ If you're juggling multiple LLM APIs, give it a look.
 
 Star the repo if useful. DMs open for questions.
 
+Discussion on HN: [ADD HN LINK HERE once post is live]
+
 What's your current multi-provider setup?
 
 #AIEngineering #Python #LLMOps #BuildInPublic

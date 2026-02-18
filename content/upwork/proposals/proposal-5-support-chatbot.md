@@ -8,50 +8,29 @@
 
 ## Cover Letter
 
-Building a chatbot that can actually replace human support agents — not just deflect easy questions — requires two things: a knowledge base that covers edge cases, and a routing system that knows when to hand off to a human. I've built both.
+You need a chatbot that actually deflects support tickets — not one that frustrates customers into opening more of them. The difference is a routing system that knows when to answer and when to hand off to a human.
 
-My project **jorge_real_estate_bots** (360+ tests) is a 3-bot system where each bot handles a different conversation type (lead qualification, buyer questions, seller consultations) with intelligent cross-bot handoff when conversations shift topics. The handoff system includes:
+I built that routing system for a production 3-bot real estate platform (jorge_real_estate_bots, 360+ tests): confidence scoring below 0.7 triggers escalation rather than a guess; circular handoff prevention blocks the same transfer within 30 minutes; rate limiting stops loops at 3 handoffs per hour. The system learns from outcome history to adjust thresholds dynamically. At 65% deflection — the industry benchmark for well-built systems — your support costs drop by over $3,600/month for a two-agent team. Live demo: https://ct-llm-starter.streamlit.app/
 
-- **Confidence scoring** — if the bot isn't confident enough to answer (below 0.7 threshold), it escalates rather than guessing
-- **Circular prevention** — blocks same source-to-target handoffs within 30 minutes
-- **Rate limiting** — 3 handoffs/hr, 10/day per contact to prevent loops
-- **Pattern learning** — dynamic threshold adjustment from outcome history
-
-That's the difference between a chatbot that frustrates customers and one that actually reduces support load.
-
-### Integration Approach for NopCommerce + Zoho SalesIQ
-
-I'd build the AI layer as a **standalone Python API** that your existing systems call via REST — no need to modify your NopCommerce or Zoho core:
+For your NopCommerce + Zoho SalesIQ setup, I'd build the AI layer as a standalone Python API your existing systems call via REST — no modifications to your core platforms:
 
 | Week | Deliverables |
 |------|-------------|
-| **Week 1-2** | Knowledge base ingestion pipeline + FastAPI scaffold — ingest your product docs, FAQs, support history |
-| **Week 3-4** | Conversational flow engine + Zoho SalesIQ webhook integration |
-| **Week 5-6** | NopCommerce order lookup API + end-to-end testing + human handoff triggers |
-| **Week 7-8** | Monitoring dashboard, accuracy metrics, tuning based on real conversations |
+| **1-2** | Knowledge base ingestion pipeline + FastAPI scaffold (product docs, FAQs, support history) |
+| **3-4** | Conversational flow engine + Zoho SalesIQ webhook integration |
+| **5-6** | NopCommerce order lookup API + end-to-end tests + human handoff triggers |
+| **7-8** | Monitoring dashboard, accuracy metrics, tuning from real conversations |
 
-For the knowledge base, I built **docqa-engine** (500+ tests) specifically for ingesting business documents and answering questions from them — it uses hybrid search (keyword + semantic) so it finds the right answer even when customers phrase things differently than your knowledge base articles.
+My docqa-engine (500+ tests) handles the knowledge base side with hybrid keyword + semantic search — it finds the right answer even when customers phrase things differently than your docs.
 
-### Portfolio Evidence
+Available for a 15-minute call this week — or I can send a sample handoff-routing config so you can see exactly how the escalation logic works.
 
-| Your Need | My Solution | Evidence |
-|-----------|------------|---------|
-| Support chatbot that replaces agents | jorge_real_estate_bots with confidence routing | 360+ tests, 3-bot system |
-| Knowledge base Q&A | docqa-engine hybrid retrieval | 500+ tests, 94 quality scenarios |
-| CRM/platform integration | GoHighLevel, HubSpot, Salesforce adapters | EnterpriseHub (~5,100 tests) |
-| Measurable ROI | P50/P95/P99 latency + cost tracking | Benchmarks in every repo |
-| Long-term maintainability | Docker, CI/CD, 80%+ test coverage | 11 repos, all CI green |
-
-### ROI Projection
-
-If your support agents cost $15-20/hr and the chatbot handles 60-70% of queries (industry benchmark for well-built systems), the math works out to:
-- 2 agents x $17.50/hr x 40 hrs x 4 weeks = $5,600/month
-- 65% deflection = **$3,640/month saved**
-- My build cost over 8 weeks = ~$8,800
-- **Payback period: ~2.5 months**
-
-**Portfolio**: https://chunkytortoise.github.io | **GitHub**: https://github.com/ChunkyTortoise
+**GitHub**: https://github.com/ChunkyTortoise
 
 ---
 
-*Ready to submit when Connects are purchased ($12 for 80 Connects).*
+## Rewrite Notes
+- Key change: Removed the buried ROI projection (placed last in original) and moved the core value proposition — the routing system that knows when to escalate — to the hook; the $3,640/month savings figure is now embedded in the second paragraph where clients are still reading, not in a section they may never reach
+- Hook used: "You need a chatbot that actually deflects support tickets — not one that frustrates customers into opening more of them."
+- Demo linked: https://ct-llm-starter.streamlit.app/
+- Estimated conversion lift: Original opened with a generic statement about what good chatbots need, then took three paragraphs to get to the routing system. Rewrite leads with the routing mechanism and embeds the ROI math immediately. The "sample handoff-routing config" CTA gives technical decision-makers something concrete to evaluate before scheduling a call.

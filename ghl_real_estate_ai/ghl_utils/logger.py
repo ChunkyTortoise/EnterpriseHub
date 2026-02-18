@@ -2,11 +2,15 @@
 
 import logging
 import sys
+import threading
 import uuid
 from contextvars import ContextVar
 from typing import Optional
 
 from ghl_real_estate_ai.ghl_utils.config import settings
+
+# Global lock for thread-safe logger configuration
+_logger_lock = threading.Lock()
 
 # Context variable to store correlation ID for the current task/request
 correlation_id: ContextVar[str] = ContextVar("correlation_id", default="system")
@@ -26,26 +30,28 @@ def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:
     """
     logger = logging.getLogger(name)
 
-    if not logger.handlers:
-        # Set level from settings
-        log_level = level or settings.log_level
-        logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+    # Thread-safe initialization
+    with _logger_lock:
+        if not logger.handlers:
+            # Set level from settings
+            log_level = level or settings.log_level
+            logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
-        # Console handler
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setLevel(logger.level)
+            # Console handler
+            handler = logging.StreamHandler(sys.stdout)
+            handler.setLevel(logger.level)
 
-        # Structured Format including Correlation ID
-        formatter = logging.Formatter(
-            "%(asctime)s | %(levelname)-8s | [%(correlation_id)s] | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        handler.setFormatter(formatter)
+            # Structured Format including Correlation ID
+            formatter = logging.Formatter(
+                "%(asctime)s | %(levelname)-8s | [%(correlation_id)s] | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+            )
+            handler.setFormatter(formatter)
 
-        # Add Filter
-        handler.addFilter(CorrelationFilter())
+            # Add Filter
+            handler.addFilter(CorrelationFilter())
 
-        logger.addHandler(handler)
-        logger.propagate = False
+            logger.addHandler(handler)
+            logger.propagate = False
 
     return logger
 

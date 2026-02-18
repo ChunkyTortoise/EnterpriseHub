@@ -44,7 +44,16 @@ try:
     WORKFLOW_TRACING_AVAILABLE = True
 except ImportError:
     WORKFLOW_TRACING_AVAILABLE = False
-    logger.debug("Workflow tracing not available")
+    # logger not yet defined at module level; logged below after init
+
+# Import Prometheus exporter for handoff/score metrics
+try:
+    from ghl_real_estate_ai.observability.prometheus_exporter import (
+        get_prometheus_exporter,
+    )
+    _PROM_EXPORTER_AVAILABLE = True
+except ImportError:
+    _PROM_EXPORTER_AVAILABLE = False
 
 # Phase 3 Loop 3: GHL client for storing handoff context
 try:

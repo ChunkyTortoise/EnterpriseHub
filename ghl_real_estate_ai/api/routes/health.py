@@ -15,7 +15,7 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
@@ -743,3 +743,32 @@ def _generate_circuit_breaker_recommendations(stats: Dict[str, Any]) -> List[Dic
         )
 
     return recommendations
+
+
+# ── Prometheus metrics endpoint (unauthenticated, for scraping) ──────
+
+
+@router.get("/prometheus")
+async def prometheus_metrics():
+    """
+    Prometheus-compatible metrics endpoint.
+
+    Returns metrics in Prometheus text exposition format for scraping by
+    Prometheus, Grafana Agent, or any compatible collector.
+
+    No authentication required -- designed for infrastructure scraping.
+    """
+    try:
+        from prometheus_client import generate_latest
+
+        content = generate_latest()
+        return Response(
+            content=content,
+            media_type="text/plain; version=0.0.4; charset=utf-8",
+        )
+    except ImportError:
+        return Response(
+            content=b"# prometheus_client not installed\n",
+            media_type="text/plain; version=0.0.4; charset=utf-8",
+            status_code=501,
+        )
