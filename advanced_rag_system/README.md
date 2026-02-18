@@ -2,6 +2,10 @@
 
 **Enterprise-Grade Retrieval-Augmented Generation for Principal AI Engineer Portfolio**
 
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](#testing)
+[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](#testing)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
+
 ---
 
 ## 🎯 Overview
