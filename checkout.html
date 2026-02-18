@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Developer Tools — Production-Ready Toolkits</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .tier-starter  { --accent: #6366f1; }
+    .tier-pro      { --accent: #8b5cf6; }
+    .tier-enterprise { --accent: #f59e0b; }
+    .tier-bundle   { --accent: #10b981; }
+    .badge { background: var(--accent); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 text-center">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">AI Developer Toolkits</h1>
+      <p class="mt-2 text-lg text-gray-500">Production-ready frameworks with thousands of tests. Ship faster.</p>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <nav class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+      <!-- Family filter -->
+      <div class="flex flex-wrap gap-2 justify-center mb-2" id="family-filters">
+        <button data-family="all" class="filter-btn active px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-600 text-white transition">All</button>
+      </div>
+      <!-- Tier filter -->
+      <div class="flex flex-wrap gap-2 justify-center" id="tier-filters">
+        <button data-tier="all"        class="tier-btn active px-3 py-1.5 rounded-full text-sm font-medium bg-gray-900 text-white transition">All Tiers</button>
+        <button data-tier="starter"    class="tier-btn px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Starter</button>
+        <button data-tier="pro"        class="tier-btn px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Pro</button>
+        <button data-tier="enterprise" class="tier-btn px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Enterprise</button>
+        <button data-tier="bundle"     class="tier-btn px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Bundles</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Product Grid -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <p id="no-results" class="hidden text-center text-gray-400 py-12 text-lg">No products match the current filters.</p>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-center text-sm text-gray-400">
+      <p>All purchases include a <strong>30-day money-back guarantee</strong>. Secure checkout powered by Stripe.</p>
+      <p class="mt-2">Questions? <a href="mailto:caymanroden@gmail.com" class="text-indigo-500 hover:underline">caymanroden@gmail.com</a></p>
+    </div>
+  </footer>
+
+  <script>
+    // ================================================================
+    // Product Data (generated from scripts/parsed_products.json)
+    // ================================================================
+    const PRODUCTS = [
+      {
+        slug: "agentforge-starter",
+        name: "AgentForge Starter",
+        title: "Multi-LLM Orchestration Framework",
+        desc: "Production-ready Python framework for Claude, GPT-4, Gemini orchestration. 550+ tests, Docker ready, MIT licensed.",
+        price: 49,
+        tier: "starter",
+        family: "AgentForge",
+        badge: "550+ tests"
+      },
+      {
+        slug: "agentforge-pro",
+        name: "AgentForge Pro",
+        title: "Framework + Case Studies + Expert Consult",
+        desc: "Everything in Starter + 3 production case studies ($147K savings proven) + 30-min expert consult + priority support.",
+        price: 199,
+        tier: "pro",
+        family: "AgentForge",
+        badge: "Best value"
+      },
+      {
+        slug: "agentforge-enterprise",
+        name: "AgentForge Enterprise",
+        title: "Framework + Consulting + White-Label Rights",
+        desc: "Full Pro + 60-min deep-dive + custom code examples + 90-day Slack support (4hr SLA) + white-label rights.",
+        price: 999,
+        tier: "enterprise",
+        family: "AgentForge",
+        badge: "White-label"
+      },
+      {
+        slug: "prompt-toolkit-starter",
+        name: "Prompt Toolkit Starter",
+        title: "8 Production Patterns + Template Manager",
+        desc: "8 battle-tested prompt patterns, template manager, token counter. 190 tests. Works with Claude, GPT, Gemini.",
+        price: 29,
+        tier: "starter",
+        family: "Prompt Toolkit",
+        badge: "190 tests"
+      },
+      {
+        slug: "prompt-toolkit-pro",
+        name: "Prompt Toolkit Pro",
+        title: "A/B Testing + Cost Optimizer + Safety",
+        desc: "Everything in Starter + A/B testing, cost optimizer, prompt versioning, safety checker, evaluation metrics + CLI tool.",
+        price: 79,
+        tier: "pro",
+        family: "Prompt Toolkit",
+        badge: "A/B testing"
+      },
+      {
+        slug: "prompt-toolkit-enterprise",
+        name: "Prompt Toolkit Enterprise",
+        title: "Benchmarks + Reports + Consulting",
+        desc: "Full Pro + benchmark runner, report generator, Docker deployment, CI/CD templates + 30-day priority support + 30-min consult.",
+        price: 199,
+        tier: "enterprise",
+        family: "Prompt Toolkit",
+        badge: "Commercial license"
+      },
+      {
+        slug: "llm-starter-kit",
+        name: "AI Starter Kit",
+        title: "Ship LLM Features in Hours",
+        desc: "Ship your first LLM integration in hours. Claude, GPT, Gemini client + streaming + function calling + RAG + cost tracking. 220 tests.",
+        price: 39,
+        tier: "starter",
+        family: "AI Starter Kit",
+        badge: "220 tests"
+      },
+      {
+        slug: "llm-starter-kit-pro",
+        name: "AI Starter Kit Pro",
+        title: "Production-Hardened LLM Integration",
+        desc: "Everything in Starter + retry with backoff, circuit breaker, response caching, batch processor, guardrails + latency tracking.",
+        price: 99,
+        tier: "pro",
+        family: "AI Starter Kit",
+        badge: "Circuit breaker"
+      },
+      {
+        slug: "llm-starter-kit-enterprise",
+        name: "AI Starter Kit Enterprise",
+        title: "Multi-Provider Orchestration + K8s",
+        desc: "Full Pro + multi-provider orchestration, observability pipeline, mock LLM, Docker/K8s deployment + 30-day priority support.",
+        price: 249,
+        tier: "enterprise",
+        family: "AI Starter Kit",
+        badge: "K8s ready"
+      },
+      {
+        slug: "insight-starter",
+        name: "Dashboard Templates",
+        title: "CSV to Insights in 30 Seconds",
+        desc: "Upload CSV/Excel, get dashboards, predictions, and PDF reports in 30 seconds. 640+ tests, 4 attribution models, SHAP explanations.",
+        price: 49,
+        tier: "starter",
+        family: "Dashboard Templates",
+        badge: "640+ tests"
+      },
+      {
+        slug: "insight-pro",
+        name: "Dashboard Pro",
+        title: "Advanced Analytics + Case Studies + Consult",
+        desc: "Everything in Starter + advanced analytics guide, 3 industry case studies, 5 PDF report templates, 30-min consult + database connectors.",
+        price: 199,
+        tier: "pro",
+        family: "Dashboard Templates",
+        badge: "3 case studies"
+      },
+      {
+        slug: "insight-enterprise",
+        name: "Dashboard Enterprise",
+        title: "Custom Dashboards + Consulting + White-Label",
+        desc: "Full Pro + custom dashboards + 60-min deep-dive + 90-day Slack support (4hr SLA) + real-time streaming + white-label rights.",
+        price: 999,
+        tier: "enterprise",
+        family: "Dashboard Templates",
+        badge: "White-label"
+      },
+      {
+        slug: "docqa-starter",
+        name: "DocQA Engine",
+        title: "Production RAG Pipeline with Hybrid Search",
+        desc: "Build production-ready document Q&A with hybrid retrieval, 5 chunking strategies, citation scoring. 500+ tests, Docker ready.",
+        price: 59,
+        tier: "starter",
+        family: "DocQA Engine",
+        badge: "500+ tests"
+      },
+      {
+        slug: "docqa-pro",
+        name: "DocQA Pro",
+        title: "RAG Pipeline + Optimization Guide + Case Studies",
+        desc: "Everything in Starter + 30-page RAG optimization guide, 3 production case studies, 30-min expert consultation + priority support.",
+        price: 249,
+        tier: "pro",
+        family: "DocQA Engine",
+        badge: "30-page guide"
+      },
+      {
+        slug: "docqa-enterprise",
+        name: "DocQA Enterprise",
+        title: "RAG Pipeline + Custom Tuning + White-Label",
+        desc: "Full Pro + 60-min deep-dive + custom domain tuning + 90-day Slack support (4hr SLA) + white-label rights. Enterprise-grade RAG.",
+        price: 1499,
+        tier: "enterprise",
+        family: "DocQA Engine",
+        badge: "Custom tuning"
+      },
+      {
+        slug: "scraper-starter",
+        name: "Web Scraper",
+        title: "YAML-Config Scraping Toolkit",
+        desc: "YAML-configurable scrapers with price tracking, SEO scoring, change detection. 370+ tests, Docker ready, async scheduling.",
+        price: 49,
+        tier: "starter",
+        family: "Web Scraper",
+        badge: "370+ tests"
+      },
+      {
+        slug: "scraper-pro",
+        name: "Web Scraper Pro",
+        title: "15 Templates + Anti-Detection + Consult",
+        desc: "Everything in Starter + proxy rotation guide, 15 advanced scraper templates, anti-detection strategies, 30-min expert consult.",
+        price: 149,
+        tier: "pro",
+        family: "Web Scraper",
+        badge: "15 templates"
+      },
+      {
+        slug: "scraper-enterprise",
+        name: "Web Scraper Enterprise",
+        title: "Custom Configs + Consulting + White-Label",
+        desc: "Full Pro + 3 custom scraper configs + 60-min deep-dive + 60-day Slack support (4hr SLA) + white-label rights + compliance guide.",
+        price: 699,
+        tier: "enterprise",
+        family: "Web Scraper",
+        badge: "Compliance guide"
+      },
+      {
+        slug: "insight-engine-starter",
+        name: "Insight Engine",
+        title: "Data Analytics with ML Predictions + SHAP",
+        desc: "Upload CSV/Excel, get auto-profiling, ML predictions, SHAP explanations, clustering, forecasting. 640+ tests. Self-hosted.",
+        price: 49,
+        tier: "starter",
+        family: "Insight Engine",
+        badge: "640+ tests"
+      },
+      {
+        slug: "revenue-sprint-bundle",
+        name: "AI Developer Starter Bundle",
+        title: "Prompts + LLM Integration + Dashboards",
+        desc: "Prompt Toolkit + AI Integration Starter Kit + Dashboard Templates. 930+ tests combined. Save 16%.",
+        price: 99,
+        tier: "bundle",
+        family: "Bundles",
+        badge: "Save 16%"
+      },
+      {
+        slug: "all-starters-bundle",
+        name: "All 4 Starter Kits",
+        title: "AI Orchestration + RAG + Scraping + Analytics",
+        desc: "AgentForge + DocQA + Web Scraper + Data Dashboard — all Starter tiers. 2,060+ tests total. Save 28%.",
+        price: 149,
+        tier: "bundle",
+        family: "Bundles",
+        badge: "Save 28%"
+      },
+      {
+        slug: "all-pro-bundle",
+        name: "All 4 Pro Kits",
+        title: "Case Studies + Expert Consults + Priority Support",
+        desc: "AgentForge + DocQA + Web Scraper + Data Dashboard — all Pro tiers + 12 case studies + 4 expert consults. Save 31%.",
+        price: 549,
+        tier: "bundle",
+        family: "Bundles",
+        badge: "Save 31%"
+      }
+    ];
+
+    // ================================================================
+    // Config
+    // ================================================================
+    const API_BASE = window.location.origin;
+
+    // ================================================================
+    // Tier colors
+    // ================================================================
+    const TIER_COLORS = {
+      starter:    { bg: "bg-indigo-50",  text: "text-indigo-700",  badge: "bg-indigo-600" },
+      pro:        { bg: "bg-violet-50",  text: "text-violet-700",  badge: "bg-violet-600" },
+      enterprise: { bg: "bg-amber-50",   text: "text-amber-700",   badge: "bg-amber-600"  },
+      bundle:     { bg: "bg-emerald-50", text: "text-emerald-700", badge: "bg-emerald-600" }
+    };
+
+    // ================================================================
+    // State
+    // ================================================================
+    let activeFamily = "all";
+    let activeTier = "all";
+
+    // ================================================================
+    // Render
+    // ================================================================
+    function renderProducts() {
+      const grid = document.getElementById("product-grid");
+      const noResults = document.getElementById("no-results");
+
+      const filtered = PRODUCTS.filter(p => {
+        if (activeFamily !== "all" && p.family !== activeFamily) return false;
+        if (activeTier !== "all" && p.tier !== activeTier) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        noResults.classList.remove("hidden");
+        return;
+      }
+      noResults.classList.add("hidden");
+
+      grid.innerHTML = filtered.map(p => {
+        const colors = TIER_COLORS[p.tier] || TIER_COLORS.starter;
+        return `
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="p-6 flex-1">
+              <div class="flex items-center justify-between mb-3">
+                <span class="${colors.badge} text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">${p.tier.charAt(0).toUpperCase() + p.tier.slice(1)}</span>
+                <span class="text-xs font-medium ${colors.text} ${colors.bg} px-2 py-0.5 rounded-full">${p.badge}</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-1">${p.name}</h3>
+              <p class="text-sm text-gray-500 mb-3">${p.title}</p>
+              <p class="text-sm text-gray-600 leading-relaxed">${p.desc}</p>
+            </div>
+            <div class="border-t border-gray-100 px-6 py-4 flex items-center justify-between">
+              <span class="text-2xl font-extrabold text-gray-900">$${p.price.toLocaleString()}</span>
+              <button onclick="handleBuy('${p.slug}')" class="px-5 py-2.5 ${colors.badge} text-white font-semibold rounded-lg hover:opacity-90 transition text-sm">
+                Buy Now
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // ================================================================
+    // Build family filter buttons
+    // ================================================================
+    function buildFamilyFilters() {
+      const families = [...new Set(PRODUCTS.map(p => p.family))];
+      const container = document.getElementById("family-filters");
+      families.forEach(f => {
+        const btn = document.createElement("button");
+        btn.dataset.family = f;
+        btn.className = "filter-btn px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition";
+        btn.textContent = f;
+        container.appendChild(btn);
+      });
+    }
+
+    // ================================================================
+    // Filter handlers
+    // ================================================================
+    document.getElementById("family-filters").addEventListener("click", e => {
+      const btn = e.target.closest("[data-family]");
+      if (!btn) return;
+      activeFamily = btn.dataset.family;
+      document.querySelectorAll(".filter-btn").forEach(b => {
+        b.classList.remove("active", "bg-indigo-600", "text-white");
+        b.classList.add("bg-gray-100", "text-gray-700");
+      });
+      btn.classList.add("active", "bg-indigo-600", "text-white");
+      btn.classList.remove("bg-gray-100", "text-gray-700");
+      renderProducts();
+    });
+
+    document.getElementById("tier-filters").addEventListener("click", e => {
+      const btn = e.target.closest("[data-tier]");
+      if (!btn) return;
+      activeTier = btn.dataset.tier;
+      document.querySelectorAll(".tier-btn").forEach(b => {
+        b.classList.remove("active", "bg-gray-900", "text-white");
+        b.classList.add("bg-gray-100", "text-gray-700");
+      });
+      btn.classList.add("active", "bg-gray-900", "text-white");
+      btn.classList.remove("bg-gray-100", "text-gray-700");
+      renderProducts();
+    });
+
+    // ================================================================
+    // Buy handler
+    // ================================================================
+    async function handleBuy(slug) {
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = "Loading...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/checkout/create-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_slug: slug })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Failed to start checkout");
+        }
+
+        const { checkout_url } = await res.json();
+        window.location.href = checkout_url;
+      } catch (err) {
+        alert(err.message);
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // ================================================================
+    // Init
+    // ================================================================
+    buildFamilyFilters();
+    renderProducts();
+  </script>
+</body>
+</html>

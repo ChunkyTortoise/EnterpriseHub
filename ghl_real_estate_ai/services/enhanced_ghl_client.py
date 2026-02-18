@@ -984,6 +984,137 @@ class EnhancedGHLClient(GHLClient):
             logger.warning(f"Failed to parse date '{date_string}': {str(e)}")
             return None
 
+    # ============================================================================
+    # SDR Support Methods
+    # ============================================================================
+
+    def _build_ghl_contact(self, contact_data: Dict[str, Any]) -> "GHLContact":
+        """Build a GHLContact from a raw API response dict."""
+        return GHLContact(
+            id=contact_data["id"],
+            first_name=contact_data.get("firstName"),
+            last_name=contact_data.get("lastName"),
+            name=contact_data.get("name"),
+            email=contact_data.get("email"),
+            phone=contact_data.get("phone"),
+            tags=contact_data.get("tags", []),
+            custom_fields=contact_data.get("customFields", {}),
+            source=contact_data.get("source"),
+            created_at=self._parse_datetime(contact_data.get("dateAdded")),
+            updated_at=self._parse_datetime(contact_data.get("dateUpdated")),
+            last_activity_at=self._parse_datetime(contact_data.get("lastActivityAt")),
+        )
+
+    async def get_contacts_by_pipeline_stage(
+        self,
+        location_id: str,
+        stage_id: str,
+        limit: int = 50,
+    ) -> List["GHLContact"]:
+        """Return contacts currently in a specific GHL pipeline stage."""
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] get_contacts_by_pipeline_stage stage={stage_id}",
+                extra={"stage_id": stage_id, "test_mode": True},
+            )
+            return []
+
+        params = {
+            "locationId": location_id,
+            "pipelineStageId": stage_id,
+            "limit": limit,
+        }
+        try:
+            response = await self._make_request("GET", "/contacts/search", params=params)
+            return [
+                self._build_ghl_contact(c) for c in response.get("contacts", [])
+            ]
+        except Exception as exc:
+            logger.error(f"get_contacts_by_pipeline_stage stage={stage_id}: {exc}")
+            return []
+
+    async def get_contacts_inactive_since(
+        self,
+        location_id: str,
+        since: datetime,
+        limit: int = 50,
+    ) -> List["GHLContact"]:
+        """Return contacts with no activity since *since* (stale leads)."""
+        if settings.test_mode:
+            logger.info(
+                "[TEST MODE] get_contacts_inactive_since",
+                extra={"since": since.isoformat(), "test_mode": True},
+            )
+            return []
+
+        params = {
+            "locationId": location_id,
+            "lastActivityBefore": since.isoformat(),
+            "limit": limit,
+        }
+        try:
+            response = await self._make_request("GET", "/contacts/search", params=params)
+            return [
+                self._build_ghl_contact(c) for c in response.get("contacts", [])
+            ]
+        except Exception as exc:
+            logger.error(f"get_contacts_inactive_since: {exc}")
+            return []
+
+    async def send_sms(
+        self,
+        contact_id: str,
+        message: str,
+        location_id: Optional[str] = None,
+    ) -> bool:
+        """Send an SMS to a contact. Returns True on success."""
+        try:
+            await self.send_sms_with_tracking(contact_id=contact_id, message=message)
+            return True
+        except Exception as exc:
+            logger.error(f"send_sms contact={contact_id}: {exc}")
+            return False
+
+    async def trigger_workflow(  # type: ignore[override]
+        self,
+        contact_id: str,
+        workflow_id: str,
+        location_id: Optional[str] = None,
+        event_data: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Trigger a GHL workflow for a contact, optionally passing event_data.
+
+        Overrides base GHLClient.trigger_workflow to accept SDR-specific
+        location_id and event_data parameters (both optional for backward compat).
+        """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] trigger_workflow workflow={workflow_id} contact={contact_id}",
+                extra={"contact_id": contact_id, "workflow_id": workflow_id, "test_mode": True},
+            )
+            return {"status": "mocked", "workflow_id": workflow_id}
+
+        payload: Dict[str, Any] = {"contactId": contact_id}
+        if event_data:
+            payload.update(event_data)
+
+        try:
+            response = await self._make_request(
+                "POST",
+                f"/workflows/{workflow_id}/trigger",
+                data=payload,
+            )
+            logger.info(
+                f"[GHL] Workflow triggered workflow={workflow_id} contact={contact_id}"
+            )
+            return response or {}
+        except Exception as exc:
+            logger.error(
+                f"trigger_workflow workflow={workflow_id} contact={contact_id}: {exc}"
+            )
+            raise
+
 
 # ============================================================================
 # Example Usage
