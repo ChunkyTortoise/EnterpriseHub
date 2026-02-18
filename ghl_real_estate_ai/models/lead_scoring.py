@@ -1,23 +1,7 @@
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, conint
-
-
-class SellerInsightDetail(TypedDict, total=False):
-    """TypedDict for seller insight detail."""
-    insight_type: str
-    description: str
-    confidence: float
-    detected_at: str
-
-
-class BuyerInsightDetail(TypedDict, total=False):
-    """TypedDict for buyer insight detail."""
-    insight_type: str
-    description: str
-    confidence: float
-    detected_at: str
 
 
 class MotivationSignals(BaseModel):
@@ -140,8 +124,8 @@ class SellerIntentProfile(BaseModel):
 
     # Analysis Context
     conversation_turns: int = Field(0, description="Number of conversation turns analyzed")
-    key_insights: Dict[str, SellerInsightDetail] = Field(
-        default_factory=dict, description="Key seller insights"
+    key_insights: Dict[str, Any] = Field(
+        default_factory=dict, description="Key seller insights (boolean flags)"
     )
     next_qualification_step: str = Field("motivation", description="Next step in qualification process")
 
@@ -170,7 +154,7 @@ class BuyerIntentProfile(BaseModel):
 
     # Analysis Context
     conversation_turns: int = Field(..., description="Number of conversation turns analyzed")
-    key_insights: Dict[str, BuyerInsightDetail] = Field(
-        default_factory=dict, description="Key buyer insights"
+    key_insights: Dict[str, Any] = Field(
+        default_factory=dict, description="Key buyer insights (boolean flags)"
     )
     next_qualification_step: str = Field(..., description="Next step in qualification process")

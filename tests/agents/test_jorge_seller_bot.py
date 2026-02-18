@@ -290,34 +290,34 @@ class TestFeatureConfigWiring:
 
 
 class TestTemperatureClassification:
-    """Verify _classify_temperature maps combined scores correctly."""
+    """Verify stall_detector.classify_temperature maps combined scores correctly."""
 
     def test_hot_seller_temperature(self, mock_dependencies, disabled_config):
         bot = JorgeSellerBot(config=disabled_config)
         profile = _make_profile(frs_total=50, pcs_total=50)  # combined = 100
-        assert bot._classify_temperature(profile) == "hot"
+        assert bot.stall_detector.classify_temperature(profile) == "hot"
 
     def test_warm_seller_temperature(self, mock_dependencies, disabled_config):
         bot = JorgeSellerBot(config=disabled_config)
         profile = _make_profile(frs_total=30, pcs_total=25)  # combined = 55
-        assert bot._classify_temperature(profile) == "warm"
+        assert bot.stall_detector.classify_temperature(profile) == "warm"
 
     def test_cold_seller_temperature(self, mock_dependencies, disabled_config):
         bot = JorgeSellerBot(config=disabled_config)
         profile = _make_profile(frs_total=15, pcs_total=15)  # combined = 30
-        assert bot._classify_temperature(profile) == "cold"
+        assert bot.stall_detector.classify_temperature(profile) == "cold"
 
     def test_boundary_hot_threshold(self, mock_dependencies, disabled_config):
         """Score of exactly 75 should classify as hot."""
         bot = JorgeSellerBot(config=disabled_config)
         profile = _make_profile(frs_total=40, pcs_total=35)  # combined = 75
-        assert bot._classify_temperature(profile) == "hot"
+        assert bot.stall_detector.classify_temperature(profile) == "hot"
 
     def test_boundary_warm_threshold(self, mock_dependencies, disabled_config):
         """Score of exactly 50 should classify as warm."""
         bot = JorgeSellerBot(config=disabled_config)
         profile = _make_profile(frs_total=25, pcs_total=25)  # combined = 50
-        assert bot._classify_temperature(profile) == "warm"
+        assert bot.stall_detector.classify_temperature(profile) == "warm"
 
 
 # =========================================================================

@@ -1363,13 +1363,13 @@ Return ONLY a JSON object with this exact format:
             import json
 
             result = json.loads(response.content)
-            quality_score = float(result.get("quality_score", 0.5))
+            quality_score = int(result.get("quality_score", 50))
 
             # Clamp to valid range
-            quality_score = max(0.0, min(1.0, quality_score))
+            quality_score = max(0, min(100, quality_score))
 
             self.logger.debug(
-                f"Semantic quality assessment: {quality_score:.2f}",
+                f"Semantic quality assessment: {quality_score}/100",
                 extra={"message": user_message, "quality": quality_score, "reasoning": result.get("reasoning", "")},
             )
 
@@ -1380,10 +1380,11 @@ Return ONLY a JSON object with this exact format:
             # Fallback to improved heuristic (better than original length-based)
             return self._assess_response_quality_heuristic(user_message)
 
-    def _assess_response_quality_heuristic(self, user_message: str) -> float:
+    def _assess_response_quality_heuristic(self, user_message: str) -> int:
         """
         Fallback heuristic-based quality assessment (improved version).
         Used when Claude API is unavailable.
+        Returns a score from 0-100.
         """
         message = user_message.strip().lower()
         import re
@@ -1412,11 +1413,11 @@ Return ONLY a JSON object with this exact format:
 
         # Multiple vague indicators = very low quality (rambling)
         if vague_count >= 2:
-            return 0.25
+            return 25
 
         # Single vague indicator
         if vague_count == 1:
-            return 0.3
+            return 30
 
         # Definitive short answers (yes, no, specific numbers/dates)
         definitive_indicators = [
@@ -1432,11 +1433,11 @@ Return ONLY a JSON object with this exact format:
             r"\d+\s*months?\b",
         ]
         if any(re.search(pattern, message) for pattern in definitive_indicators):
-            return 0.85
+            return 85
 
         # Very short without definitive content
         if len(message) < 10:
-            return 0.4
+            return 40
 
         # Specific condition/property indicators
         specific_indicators = [

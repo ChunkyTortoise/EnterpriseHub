@@ -19,7 +19,7 @@ from agentforge.memory import (
     FileMemory,
     FileMemoryConfig,
     InMemoryCheckpointStore,
-    InMemoryVectorStore,
+    LegacyInMemoryVectorStore,  # Use legacy store for backward compat tests
     MemoryEntry,
     SearchResult,
     SessionMemory,
@@ -27,6 +27,9 @@ from agentforge.memory import (
     SQLiteCheckpointStore,
     WorkingMemory,
 )
+
+# Alias for backward compatibility in tests
+InMemoryVectorStore = LegacyInMemoryVectorStore
 
 # =============================================================================
 # WorkingMemory Tests

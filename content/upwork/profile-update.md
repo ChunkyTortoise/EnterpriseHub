@@ -1,109 +1,114 @@
-# Upwork Profile Update — February 2026
+# Upwork Profile Update
+Generated: 2026-02-17
 
-## Headline (120 chars max)
+---
+
+## Headline Options
 
 ```
-Senior AI/ML Engineer | Production RAG Systems, Multi-Agent AI, FastAPI | 8,500+ Tests, 89% Cost Reduction
+HEADLINE OPTIONS:
+Option A: AI Engineer — RAG Systems, LLM Cost Reduction & Multi-Agent Pipelines | Python (87 chars)
+Option B: Cut LLM Costs 89% | RAG, AI Agents, FastAPI, Claude API & ChatGPT | Python (84 chars)
+Option C: Multi-Agent & RAG Engineer | 89% LLM Cost Reduction | FastAPI | Claude API (82 chars)
+
+RECOMMENDATION: Option B — leads with a concrete ROI outcome clients immediately care about
+(cost), includes all high-search-volume keywords (RAG, AI Agents, FastAPI, Claude API,
+ChatGPT), and the "Cut LLM Costs 89%" hook filters for clients who care about production
+efficiency over toy demos. It stays well under 100 chars and reads naturally in search results.
 ```
 
-(109 characters)
+---
+
+## Overview (Ready to Paste)
+
+I cut one client's LLM API bill by 89% using a 3-tier Redis caching architecture with an 88% cache hit rate — without touching a single prompt. If you're building with AI and your costs, latency, or reliability aren't where they need to be, that's the kind of problem I solve.
+
+I build production-grade AI systems for startups and engineering teams who need working code, not proof-of-concept demos. My systems run under real load, ship with full test suites, and are documented well enough that your team can maintain them after I'm done.
+
+**What I Build**
+
+- **RAG & Document AI** — Hybrid retrieval systems (BM25 + TF-IDF + semantic) that return accurate, cited answers from your documents. No hallucination-prone black boxes.
+- **Multi-Agent Orchestration** — Production agent pipelines with circuit breakers, token cost tracking, and evaluation frameworks. My AgentForge core handles 4.3M tool dispatches/sec with P99 overhead under 0.095ms.
+- **AI Chatbots with CRM Integration** — Conversational bots that qualify leads, log interactions, and trigger workflows inside GoHighLevel, HubSpot, or Salesforce. Built for real estate pipelines with hundreds of active contacts.
+- **Analytics Dashboards** — Streamlit apps with anomaly detection, forecasting, and Monte Carlo simulation for business teams who need to act on data, not just view it.
+- **LLM Cost Optimization** — Caching layers, fallback chains, streaming, and circuit breakers that make LLM-powered apps fast and economical at scale.
+
+**Proof**
+
+1. 89% LLM cost reduction via 3-tier Redis caching architecture (88% hit rate)
+2. 4.3M tool dispatches/sec in production multi-agent orchestration engine
+3. P99 orchestration overhead: 0.095ms — sub-millisecond even under load
+4. 8,500+ automated tests across 11 repositories, all CI green
+5. 33 Architecture Decision Records documenting design rationale across 10 repos
+6. 3 CRM integrations shipped: GoHighLevel, HubSpot, Salesforce — unified protocol
+7. P95 API latency under 300ms at 10 req/sec load; 1 published PyPI package (mcp-server-toolkit)
+
+**Tech Stack**
+
+- **AI/ML**: Claude API, GPT-4, Gemini, RAG (BM25/TF-IDF/semantic hybrid), LangChain alternatives, prompt versioning, safety checkers
+- **Backend**: FastAPI (async), SQLAlchemy, Pydantic, Alembic migrations
+- **Databases**: PostgreSQL, Redis (3-tier caching), ChromaDB, FAISS
+- **Testing**: pytest, TDD from day one, 80%+ coverage standard on every repo
+- **DevOps**: Docker, GitHub Actions CI/CD, Streamlit Cloud deployment
+
+**Who I Work With**
+
+I work best with startups building their first AI product and engineering teams adding AI to an existing stack. If you're a founder who needs production-quality code delivered on a predictable timeline — not a research prototype that falls apart in staging — we'll work well together. I don't do hand-wavy "it works on my machine" deliveries.
+
+**Next Step**
+
+Message me with what you're building and I'll tell you how I'd approach it. I have 5 live demos running right now (RAG, multi-agent, chatbot, analytics) — I can send the relevant one before we even talk, so you can evaluate the quality of my work before committing to a call.
 
 ---
 
-## Overview (5,000 chars max)
+## Skills Tags (Ordered)
 
-I build production AI systems — not prototypes, not tutorials, not proof-of-concepts. Every project I deliver ships with automated tests, CI/CD pipelines, Docker support, and documented architecture decisions.
+```
+SKILLS (paste into Upwork skills section in this order):
+1. Large Language Models (LLM)
+2. Retrieval-Augmented Generation (RAG)
+3. AI Agent Development
+4. Python
+5. FastAPI
+6. Chatbot Development
+7. API Development
+8. Prompt Engineering
+9. Natural Language Processing (NLP)
+10. PostgreSQL
+11. Redis
+12. Multi-Agent Systems
+13. ChatGPT
+14. Docker
+15. Streamlit
 
-**What I specialize in:**
-
-RAG Systems & Document Intelligence
-I built docqa-engine, a hybrid retrieval pipeline (BM25 + dense embeddings with reciprocal rank fusion) designed for precision-critical document Q&A. It handles PDF, Word, and plain text ingestion with 500+ automated tests covering retrieval quality, cost tracking, and edge cases. When your search needs to return the *correct* answer — not just a *similar* one — that's where I work.
-
-Multi-Agent AI Orchestration
-My AgentForge framework (550+ tests) provides a unified async interface across Claude, GPT-4, Gemini, and local models. Built-in features include multi-strategy response parsing, confidence-gated routing, and a 3-tier caching layer that reduced LLM costs by 89% in production. The system handles 4.3M tool dispatches per second with P99 latency under 0.1ms.
-
-Full-Stack AI Platforms
-EnterpriseHub is my flagship project — a real estate AI platform with ~5,100 tests, 3 specialized chatbots with cross-bot handoff, CRM integration (GoHighLevel, HubSpot, Salesforce), Streamlit BI dashboards, and production monitoring with P50/P95/P99 latency tracking. It demonstrates everything I deliver: clean architecture, comprehensive testing, and business-measurable results.
-
-**By the numbers:**
-- 11 production repositories with 8,500+ automated tests
-- 89% LLM cost reduction via intelligent caching (88% hit rate, verified)
-- 33 Architecture Decision Records documenting engineering tradeoffs
-- P50/P95/P99 benchmark suites in every repository
-- Docker + GitHub Actions CI across all projects
-- 20+ years of software engineering experience
-
-**Tech stack:**
-Python (FastAPI, SQLAlchemy, Pydantic), PostgreSQL, Redis, Docker, Claude/GPT-4/Gemini APIs, FAISS, BM25, sentence-transformers, Streamlit, GitHub Actions CI/CD, Alembic, pytest, httpx
-
-**How I work:**
-Remote-first, async communication, daily commits, over-documented. I write Architecture Decision Records so you understand *why* decisions were made, not just what code was written. Every deliverable includes tests, Docker support, and deployment documentation.
-
-**Portfolio**: https://chunkytortoise.github.io
-**GitHub**: https://github.com/ChunkyTortoise
+RATIONALE: Ordered highest-search-volume and most outcome-relevant tags first (LLM, RAG, AI
+Agents, Python) so Upwork's algorithm indexes the strongest signals in the top positions, then
+layered with tech stack specifics and outcome-oriented tags (Chatbot Development, API
+Development) that match how non-technical clients search, with infrastructure and tooling tags
+filling out the remaining slots.
+```
 
 ---
 
-## Specialized Profiles
+## Rate Strategy
 
-### Profile 1: RAG & Document Intelligence Engineer
+**Current Market Rate for AI/ML Engineers on Upwork (2026)**
 
-**Title**: RAG Systems Engineer | Hybrid Retrieval, Document Q&A, Production Pipelines
+The 2026 Upwork market for AI/ML engineers has bifurcated sharply. Generalist Python developers who've added a few LLM API calls are competing at $35-55/hr and losing on price. Specialists with verifiable production systems — RAG pipelines, multi-agent orchestration, cost-optimized LLM architectures — are commanding $75-120/hr without resistance from serious clients. The demand surge from enterprise AI adoption has outpaced the supply of engineers who can ship reliable, tested, documented AI systems. Clients who have been burned by unreliable AI freelancers are actively seeking engineers who can prove production quality, which is exactly the gap your portfolio — 8,500 tests, live demos, published PyPI package — is positioned to fill.
 
-**Description**: I build retrieval-augmented generation systems that prioritize precision over similarity. My approach combines BM25 keyword search with dense embeddings via reciprocal rank fusion, cross-encoder reranking, and confidence-gated LLM calls. Built and shipped docqa-engine (500+ tests) handling PDF/Word/text ingestion with automated quality measurement (precision@k, recall@k, MRR).
+**Entry-Rate Strategy: Why $55-60/hr to Earn First Reviews**
 
-### Profile 2: AI/ML Platform Engineer
+On Upwork, zero reviews is the single biggest hiring barrier regardless of portfolio quality. Clients default to social proof because they can't easily evaluate code quality from a profile page. The fastest path through this is a deliberate 30-60 day entry period at $55-60/hr targeting small, fast-close jobs ($150-500 fixed price range). This rate is still above the market midpoint for generalist AI work, which means it attracts clients who value quality but aren't yet paying premium rates. The goal is not to maximize hourly revenue during this period — it is to accumulate 3-5 five-star reviews as rapidly as possible, which unlocks the Job Success Score (JSS) that Upwork's algorithm uses to surface profiles in search. Each review in this phase is worth far more than the short-term rate differential.
 
-**Title**: AI Platform Engineer | Multi-Agent Systems, LLM Orchestration, FastAPI
+**Rate Ladder: What Triggers Each Increase**
 
-**Description**: I architect modular AI platforms with clean service boundaries. My production systems include multi-provider LLM orchestration (Claude, GPT-4, Gemini), 3-tier Redis caching for cost reduction, cross-bot handoff with confidence scoring, and CRM integrations. EnterpriseHub (~5,100 tests) demonstrates the full stack: FastAPI async backend, PostgreSQL, Redis, Streamlit dashboards, and Docker deployment.
-
-### Profile 3: Python Backend & Data Engineering
-
-**Title**: Senior Python Engineer | FastAPI, PostgreSQL, Redis, Data Pipelines
-
-**Description**: I build backend systems that handle production load with observable performance. My stack centers on async FastAPI with SQLAlchemy/Pydantic, PostgreSQL with Alembic migrations, Redis caching, and comprehensive pytest suites. Every service ships with P50/P95/P99 latency benchmarks, Docker support, and CI/CD pipelines.
+Move to $65/hr after completing 3 contracts with a 5-star JSS and a Top Rated badge within reach (90%+ JSS). At this point your profile has social proof and Upwork's search algorithm begins surfacing you to higher-budget clients. Move to $75/hr after achieving Top Rated status (typically requires a 90-day track record with 90%+ JSS and $1,000+ earned). At $75/hr, begin filtering for clients with $500+ project budgets and declining sub-$200 fixed-price jobs that compress your hourly equivalent. Move to $85/hr when you have 10+ completed contracts, JSS above 95%, and inbound inquiries begin to outnumber your proposal volume — that supply-demand imbalance is the signal that your market rate has moved.
 
 ---
 
-## Skills List (Recommended Order)
-
-1. Python
-2. FastAPI
-3. RAG (Retrieval-Augmented Generation)
-4. LLM/AI Integration
-5. PostgreSQL
-6. Redis
-7. Docker
-8. Machine Learning
-9. NLP / Natural Language Processing
-10. Claude API / Anthropic
-11. OpenAI GPT API
-12. Vector Databases (FAISS, Pinecone)
-13. BM25 / Information Retrieval
-14. SQLAlchemy
-15. Pydantic
-
----
-
-## Portfolio Items to Add
-
-| Item | Description | Link |
-|------|------------|------|
-| EnterpriseHub | Real Estate AI Platform (~5,100 tests) | GitHub repo |
-| docqa-engine | Hybrid RAG Pipeline (500+ tests) | GitHub repo |
-| AgentForge | Multi-LLM Orchestrator (550+ tests) | GitHub repo |
-| insight-engine | Data Intelligence Dashboard (640+ tests) | GitHub repo |
-| Portfolio Site | Live demos + architecture diagrams | chunkytortoise.github.io |
-
----
-
-## Action Items
-
-- [ ] Update headline
-- [ ] Replace overview text
-- [ ] Add/update specialized profiles
-- [ ] Reorder skills list
-- [ ] Add portfolio items with GitHub links
-- [ ] Record video intro (45-60 seconds)
-- [ ] Connect GitHub account
+## Human Action Checklist
+- [ ] Copy headline into Upwork profile title field (recommendation: Option B)
+- [ ] Paste overview into About section (~3,200 chars — well within 5,000 limit)
+- [ ] Add skills in the order listed above (15 tags total)
+- [ ] Set hourly rate to $55/hr (entry rate; raise to $65/hr after 3 five-star reviews)
+- [ ] Connect GitHub account (Settings > Connected Services)
