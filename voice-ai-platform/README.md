@@ -1,5 +1,9 @@
 # Voice AI Platform
 
+[![Tests](https://img.shields.io/badge/tests-20%2B-brightgreen)](#testing)
+[![Coverage](https://img.shields.io/badge/coverage-60%25%2B-brightgreen)](#testing)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
+
 Real-time voice AI agent platform for real estate, built on Pipecat, Deepgram, ElevenLabs, and Claude.
 
 ## Features
