@@ -24,6 +24,9 @@ def mock_analytics():
 
 @pytest.fixture
 def handoff_service(mock_analytics):
+    # Reset PerformanceTracker singleton so buyer-bot test state doesn't contaminate
+    from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+    PerformanceTracker.reset()
     return JorgeHandoffService(analytics_service=mock_analytics)
 
 

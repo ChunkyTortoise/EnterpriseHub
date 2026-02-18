@@ -299,7 +299,7 @@ class GoldenLeadDetector:
             self.detection_metrics["cache_misses"] += 1
 
             # Get base Jorge score (0-7 questions answered)
-            base_score = self.lead_scorer.calculate(lead_data)
+            base_score = await self.lead_scorer.calculate(lead_data)
 
             # Analyze behavioral signals
             behavioral_signals = await self._analyze_behavioral_signals(lead_data)
