@@ -72,6 +72,7 @@ from ghl_real_estate_ai.api.routes import (
     bulk_operations,
     business_intelligence,  # NEW: BI Dashboard API routes
     channel_routing,
+    checkout,  # Stripe Checkout for one-time product purchases
     claude_chat,
     claude_concierge_integration,  # NEW: Claude Concierge integration API
     commission_forecast,
@@ -706,6 +707,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
     app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
+    app.include_router(checkout.router, prefix="/api")  # No auth — public checkout
 
     # GHL Unified Webhook Integration (Phase 1: Lead/Seller/Buyer bot handlers)
     app.include_router(ghl_router, prefix="/ghl")
