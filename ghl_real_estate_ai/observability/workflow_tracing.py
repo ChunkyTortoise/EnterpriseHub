@@ -285,7 +285,7 @@ def create_handoff_span(
         return _NOOP_SPAN
 
     span_name = f"handoff.{source_bot}_to_{target_bot}"
-    span = _tracer.start_as_current_span(span_name)
+    span = _tracer.start_span(span_name)
     span.set_attribute("handoff.source_bot", source_bot)
     span.set_attribute("handoff.target_bot", target_bot)
     span.set_attribute("handoff.contact_id", contact_id)
