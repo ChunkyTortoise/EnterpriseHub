@@ -7,7 +7,6 @@ Tests health status calculation, demo mode data generation, summary
 generation, and edge cases.
 """
 
-from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
@@ -15,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.health_dashboard import (
 
-@pytest.mark.integration
     EndpointHealth,
     HealthDashboard,
     _generate_demo_endpoints,

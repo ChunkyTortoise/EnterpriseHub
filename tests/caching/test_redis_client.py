@@ -18,6 +18,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+import pytest_asyncio
 
 # Skip all tests if redis is not available
 try:
@@ -29,7 +30,6 @@ except ImportError:
 
 from src.caching.redis_client import (
 
-@pytest.mark.integration
     ConnectionStats,
     RedisClient,
     RedisConfig,
@@ -112,7 +112,7 @@ class TestRedisConfig:
 class TestRedisClient:
     """Test cases for RedisClient class."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def mock_redis_client(self):
         """Create a RedisClient with mocked Redis connection."""
         with patch("src.caching.redis_client.ConnectionPool") as mock_pool:

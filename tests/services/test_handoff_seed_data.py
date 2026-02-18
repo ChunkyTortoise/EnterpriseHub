@@ -14,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
 
-@pytest.mark.integration
     JorgeHandoffService,
 )
 
@@ -127,13 +126,11 @@ def test_set_repository_none(service, mock_repo):
 # ── load_from_database ────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_load_from_database_no_repo(service):
     result = await service.load_from_database()
     assert result == 0
 
 
-@pytest.mark.asyncio
 async def test_load_from_database_loads_records(service, mock_repo):
     mock_repo.load_handoff_outcomes.return_value = [
         {
@@ -160,7 +157,6 @@ async def test_load_from_database_loads_records(service, mock_repo):
     assert "seller->buyer" in JorgeHandoffService._handoff_outcomes
 
 
-@pytest.mark.asyncio
 async def test_load_from_database_deduplicates(service, mock_repo):
     ts = time.time()
     # Pre-populate an outcome
@@ -182,7 +178,6 @@ async def test_load_from_database_deduplicates(service, mock_repo):
     assert loaded == 0  # Already exists, should not duplicate
 
 
-@pytest.mark.asyncio
 async def test_load_from_database_handles_errors(service, mock_repo):
     mock_repo.load_handoff_outcomes.side_effect = Exception("db error")
     service.set_repository(mock_repo)
@@ -193,14 +188,12 @@ async def test_load_from_database_handles_errors(service, mock_repo):
 # ── persist_seed_data ─────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_persist_seed_data_no_repo(service):
     JorgeHandoffService.seed_historical_data(num_samples=10, seed=42)
     result = await service.persist_seed_data()
     assert result == 0
 
 
-@pytest.mark.asyncio
 async def test_persist_seed_data_writes_all_records(service, mock_repo):
     JorgeHandoffService.seed_historical_data(num_samples=10, seed=42)
     service.set_repository(mock_repo)
@@ -209,7 +202,6 @@ async def test_persist_seed_data_writes_all_records(service, mock_repo):
     assert mock_repo.save_handoff_outcome.await_count == 40
 
 
-@pytest.mark.asyncio
 async def test_persist_seed_data_handles_partial_failures(service, mock_repo):
     JorgeHandoffService.seed_historical_data(num_samples=10, seed=42)
     # Fail every other call

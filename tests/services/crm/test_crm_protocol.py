@@ -1,6 +1,5 @@
 """Tests for CRMContact model and CRMProtocol ABC."""
 
-from __future__ import annotations
 
 from typing import Any
 
@@ -8,7 +7,6 @@ import pytest
 
 from ghl_real_estate_ai.services.crm import CRMContact, CRMProtocol
 
-@pytest.mark.unit
 
 # ---------------------------------------------------------------------------
 # CRMContact model tests

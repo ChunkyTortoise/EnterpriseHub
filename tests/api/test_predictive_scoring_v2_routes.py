@@ -23,7 +23,6 @@ from fastapi.testclient import TestClient
 from ghl_real_estate_ai.api.routes.predictive_scoring_v2 import router
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import InferenceResult, MarketSegment
 
-@pytest.mark.integration
 
 
 @pytest.fixture

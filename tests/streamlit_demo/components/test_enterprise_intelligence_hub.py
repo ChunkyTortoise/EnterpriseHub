@@ -15,7 +15,6 @@ import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub import (
 
-@pytest.mark.integration
     CompetitiveIntelligence,
     EnterpriseIntelligenceHub,
     ExecutiveKPI,
@@ -222,7 +221,6 @@ def test_executive_value_demonstration(intelligence_hub):
     assert total_competitor_revenue > 500000000  # Substantial market
 
 
-@pytest.mark.asyncio
 async def test_intelligence_hub_initialization_async(intelligence_hub):
     """Test asynchronous initialization."""
     await intelligence_hub.initialize()

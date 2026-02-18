@@ -28,6 +28,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
+import pytest_asyncio
 import websockets
 from fastapi.testclient import TestClient
 
@@ -37,7 +38,6 @@ from ghl_real_estate_ai.services.bi_cache_service import get_bi_cache_service
 from ghl_real_estate_ai.services.bi_stream_processor import get_bi_stream_processor
 from ghl_real_estate_ai.services.bi_websocket_server import get_bi_websocket_manager
 
-@pytest.mark.integration
 
 
 class TestBIIntegration:
@@ -48,7 +48,7 @@ class TestBIIntegration:
         """FastAPI test client."""
         return TestClient(app)
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def bi_services(self):
         """Initialize BI services for testing."""
         # Get service instances

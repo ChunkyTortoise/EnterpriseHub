@@ -29,7 +29,6 @@ import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
 
 # Import the webhook handlers (assuming they exist)
 try:

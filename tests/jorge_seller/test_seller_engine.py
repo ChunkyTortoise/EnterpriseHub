@@ -6,7 +6,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine, SellerQuestions
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -27,7 +26,6 @@ def seller_engine(mock_conversation_manager, mock_ghl_client):
     return JorgeSellerEngine(mock_conversation_manager, mock_ghl_client)
 
 
-@pytest.mark.asyncio
 async def test_process_seller_response_initial(seller_engine, mock_conversation_manager):
     # Setup
     contact_id = "test_contact"
@@ -51,7 +49,6 @@ async def test_process_seller_response_initial(seller_engine, mock_conversation_
     assert SellerQuestions.TIMELINE in result["message"] or "30 to 45 days" in result["message"]
 
 
-@pytest.mark.asyncio
 async def test_hot_seller_qualification(seller_engine, mock_conversation_manager):
     # Setup
     contact_id = "hot_lead"
@@ -113,7 +110,6 @@ async def test_hot_seller_qualification(seller_engine, mock_conversation_manager
         assert "Warm-Seller" in tags
 
 
-@pytest.mark.asyncio
 async def test_confrontational_response_poor_quality(seller_engine, mock_conversation_manager):
     # Setup
     contact_id = "vague_lead"
@@ -137,7 +133,6 @@ async def test_confrontational_response_poor_quality(seller_engine, mock_convers
     pass  # The engine logic handles this, relying on tone engine tests for specific content
 
 
-@pytest.mark.asyncio
 async def test_vapi_retry_on_failure(seller_engine, mock_conversation_manager):
     """Test that Vapi outbound calls retry with exponential backoff on failure"""
     # Setup
@@ -189,7 +184,6 @@ async def test_vapi_retry_on_failure(seller_engine, mock_conversation_manager):
             assert "Voice-Handoff-Failed" not in tags
 
 
-@pytest.mark.asyncio
 async def test_vapi_retry_all_attempts_fail(seller_engine, mock_conversation_manager):
     """Test that Vapi logs failure and adds tag when all retry attempts fail"""
     # Setup
@@ -243,7 +237,6 @@ async def test_vapi_retry_all_attempts_fail(seller_engine, mock_conversation_man
             assert "Voice-Handoff-Failed" in tags
 
 
-@pytest.mark.asyncio
 async def test_configurable_thresholds_custom_hot():
     """Test MEDIUM-002 Fix: Hot seller temperature calculation with custom thresholds"""
     from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
@@ -283,7 +276,6 @@ async def test_configurable_thresholds_custom_hot():
     assert analytics["thresholds_used"]["hot_quality"] == 0.6
 
 
-@pytest.mark.asyncio
 async def test_configurable_thresholds_custom_warm():
     """Test MEDIUM-002 Fix: Warm seller temperature calculation with custom thresholds"""
     from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
@@ -323,7 +315,6 @@ async def test_configurable_thresholds_custom_warm():
     assert analytics["thresholds_used"]["warm_quality"] == 0.4
 
 
-@pytest.mark.asyncio
 async def test_default_thresholds_backward_compatibility(mock_conversation_manager, mock_ghl_client):
     """Test MEDIUM-002 Fix: Default thresholds maintain backward compatibility"""
     # Initialize engine without config (should use defaults)

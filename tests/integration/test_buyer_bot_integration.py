@@ -396,7 +396,6 @@ class TestRealTimeEventIntegration:
             assert result["next_action"] == "respond"
 
 
-@pytest.mark.integration
 class TestEndToEndBuyerBotFlow:
     """End-to-end integration tests for complete buyer bot workflows."""
 

@@ -24,7 +24,6 @@ from utils.agent_handlers import (
 )
 from utils.exceptions import APIError, DataProcessingError
 
-@pytest.mark.unit
 
 # ============================================================================
 # Helper Tests

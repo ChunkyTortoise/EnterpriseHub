@@ -16,7 +16,6 @@ from unittest.mock import patch
 import pytest
 
 
-@pytest.mark.integration
 
 
 def _otel_sdk_available() -> bool:

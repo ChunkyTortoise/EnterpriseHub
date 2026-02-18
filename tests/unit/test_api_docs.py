@@ -7,7 +7,6 @@ Tests OpenAPI spec generation, tag presence, response schema validation,
 and that demo routes use the new response models.
 """
 
-from __future__ import annotations
 
 import pytest
 
@@ -17,7 +16,6 @@ from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.schemas.api_docs import (
 
-@pytest.mark.integration
     OPENAPI_TAGS,
     BotStatusItem,
     BotStatusResponse,

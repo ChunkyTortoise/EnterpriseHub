@@ -84,7 +84,6 @@ class TestGHLAPIClientInit:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestContextManager:
     async def test_aenter_returns_self(self, client):
         result = await client.__aenter__()
@@ -106,7 +105,6 @@ class TestContextManager:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestMakeRequest:
     async def test_success_returns_data(self, client, mock_httpx):
         mock_httpx.request = AsyncMock(return_value=_ok_response({"contacts": []}))
@@ -152,7 +150,6 @@ class TestMakeRequest:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestContacts:
     async def test_get_contacts_default_params(self, client, mock_httpx):
         mock_httpx.request = AsyncMock(return_value=_ok_response({"contacts": []}))
@@ -202,7 +199,6 @@ class TestContacts:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestOpportunities:
     async def test_get_opportunities_no_filter(self, client, mock_httpx):
         mock_httpx.request = AsyncMock(return_value=_ok_response({"opportunities": []}))
@@ -237,7 +233,6 @@ class TestOpportunities:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestPipelinesConversationsFields:
     async def test_get_pipelines(self, client, mock_httpx):
         mock_httpx.request = AsyncMock(return_value=_ok_response({"pipelines": []}))
@@ -275,7 +270,6 @@ class TestPipelinesConversationsFields:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestHelperMethods:
     async def test_get_hot_leads_filters_by_date(self, client, mock_httpx):
         # Source uses naive datetime.now() as cutoff, so test data must also be naive
@@ -326,7 +320,6 @@ class TestHelperMethods:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestHealthCheck:
     async def test_healthy(self, client, mock_httpx):
         mock_httpx.request = AsyncMock(return_value=_ok_response({"contacts": []}))

@@ -32,7 +32,6 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 )
 from ghl_real_estate_ai.services.ai_negotiation_partner import AINegotiationPartner
 
-@pytest.mark.integration
 
 
 @pytest.fixture

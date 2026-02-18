@@ -158,7 +158,6 @@ class TestService6EndToEndWorkflows:
 ### Performance Test Examples
 
 ```python
-@pytest.mark.asyncio
 async def test_analysis_latency_benchmark(ai_integration_service):
     """Benchmark analysis latency."""
     latencies = []
@@ -223,7 +222,6 @@ The `validate_service6_tests.py` script provides:
 ### Example Error Recovery Test
 
 ```python
-@pytest.mark.asyncio
 async def test_ai_integration_error_handling(ai_integration_service):
     """Test graceful error handling when AI service fails."""
     # Mock AI client failure

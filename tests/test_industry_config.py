@@ -17,7 +17,6 @@ Covers:
 - Bot constructors accept industry_config parameter
 """
 
-from __future__ import annotations
 
 import re
 import tempfile
@@ -28,7 +27,6 @@ import pytest
 
 from ghl_real_estate_ai.config.industry_config import (
 
-@pytest.mark.integration
     BotPersonality,
     HandoffConfig,
     IndustryConfig,

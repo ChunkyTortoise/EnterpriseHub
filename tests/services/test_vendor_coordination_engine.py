@@ -15,7 +15,6 @@ import pytest
 
 from ghl_real_estate_ai.services.vendor_coordination_engine import (
 
-@pytest.mark.integration
     AppointmentStatus,
     ServiceRequest,
     ServiceType,

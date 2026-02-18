@@ -18,7 +18,6 @@ def scheduler(monkeypatch):
     return scheduler
 
 
-@pytest.mark.asyncio
 async def test_hot_daily_trigger_allows_after_24_hours(scheduler):
     seller_data = {
         "seller_temperature": "hot",
@@ -30,7 +29,6 @@ async def test_hot_daily_trigger_allows_after_24_hours(scheduler):
     assert should_trigger is True
 
 
-@pytest.mark.asyncio
 async def test_hot_daily_trigger_blocks_before_24_hours(scheduler):
     seller_data = {
         "seller_temperature": "hot",
@@ -42,7 +40,6 @@ async def test_hot_daily_trigger_blocks_before_24_hours(scheduler):
     assert should_trigger is False
 
 
-@pytest.mark.asyncio
 async def test_suppressed_contact_never_triggers_followup(scheduler):
     seller_data = {
         "seller_temperature": "warm",
@@ -55,7 +52,6 @@ async def test_suppressed_contact_never_triggers_followup(scheduler):
     assert should_trigger is False
 
 
-@pytest.mark.asyncio
 async def test_suppression_tags_block_followup(scheduler):
     seller_data = {
         "seller_temperature": "cold",
@@ -68,7 +64,6 @@ async def test_suppression_tags_block_followup(scheduler):
     assert should_trigger is False
 
 
-@pytest.mark.asyncio
 async def test_hot_deescalation_requires_weekly_gap(scheduler):
     seller_data = {
         "seller_temperature": "hot",
@@ -81,7 +76,6 @@ async def test_hot_deescalation_requires_weekly_gap(scheduler):
     assert should_trigger is False
 
 
-@pytest.mark.asyncio
 async def test_retry_ceiling_blocks_additional_followups(scheduler):
     seller_data = {
         "seller_temperature": "warm",

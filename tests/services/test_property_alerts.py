@@ -502,7 +502,6 @@ class TestPropertyAlertSystem:
         assert matches is False
 
 
-@pytest.mark.integration
 class TestPropertyAlertsIntegration:
     """Integration tests for Property Alert System."""
 

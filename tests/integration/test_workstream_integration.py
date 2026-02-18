@@ -31,8 +31,6 @@ except (ImportError, TypeError, AttributeError, Exception):
     pytest.skip("required imports unavailable", allow_module_level=True)
 
 
-@pytest.mark.integration
-@pytest.mark.asyncio
 class TestWorkstreamIntegration:
     """Test integration between all parallel workstreams."""
 
@@ -214,8 +212,6 @@ class TestWorkstreamIntegration:
             mock_invalidate.assert_called_once_with("leads:*")
 
 
-@pytest.mark.integration
-@pytest.mark.database
 class TestDatabaseWorkstreamIntegration:
     """Test database integration workstream specifically."""
 

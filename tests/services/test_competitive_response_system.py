@@ -26,7 +26,6 @@ from ghl_real_estate_ai.prompts.competitive_responses import (
 )
 from ghl_real_estate_ai.services.competitor_intelligence import CompetitorMention, RiskLevel
 
-@pytest.mark.integration
 
 
 class TestCompetitiveResponseSystem:

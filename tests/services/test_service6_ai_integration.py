@@ -27,7 +27,6 @@ import pytest_asyncio
 # Import the service under test
 from ghl_real_estate_ai.services.service6_ai_integration import (
 
-@pytest.mark.integration
     Service6AIConfig,
     Service6AIOrchestrator,
     Service6AIResponse,

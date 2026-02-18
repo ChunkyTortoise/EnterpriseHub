@@ -27,7 +27,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-@pytest.mark.integration
 
 # Import Phase 7 intelligence services
 try:

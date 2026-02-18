@@ -57,6 +57,9 @@ def pytest_configure(config):
 
     # Set required env vars before module collection to prevent import-time errors
     _test_env_defaults = {
+        "ANTHROPIC_API_KEY": "sk-ant-test-key-for-pytest",
+        "GHL_API_KEY": "test-ghl-api-key-for-pytest",
+        "GHL_LOCATION_ID": "test-ghl-location-id",
         "JWT_SECRET_KEY": "test-jwt-secret-key-for-testing-only",
         "STRIPE_SECRET_KEY": "sk_test_fake_key_for_testing",
         "STRIPE_WEBHOOK_SECRET": "whsec_test_fake_secret",

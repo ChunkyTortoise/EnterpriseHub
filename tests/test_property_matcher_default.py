@@ -3,7 +3,6 @@ pytestmark = pytest.mark.integration
 
 import pytest
 
-@pytest.mark.unit
 from ghl_real_estate_ai.services import property_matcher as pm
 
 

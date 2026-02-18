@@ -11,7 +11,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-@pytest.mark.unit
 
 # ── setup_observability ───────────────────────────────────────────────
 
@@ -73,7 +72,6 @@ def test_trace_operation_sync():
     assert result == 5
 
 
-@pytest.mark.asyncio
 async def test_trace_operation_async():
     from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 

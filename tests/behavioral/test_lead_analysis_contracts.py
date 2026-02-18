@@ -32,7 +32,6 @@ from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadI
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from tests.mocks.external_services import MockClaudeClient, MockRedisClient, create_test_lead_data
 
-@pytest.mark.integration
 
 
 class LeadIntentLevel(Enum):

@@ -19,6 +19,7 @@ Endpoints tested:
 """
 
 from datetime import datetime, timedelta
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -60,19 +61,24 @@ def _make_billing_client(billing_service=None, subscription_manager=None):
     mock_billing = billing_service or MagicMock()
     mock_sub_mgr = subscription_manager or MagicMock()
 
-    with (
-        patch("ghl_real_estate_ai.api.routes.billing.billing_service", mock_billing),
-        patch("ghl_real_estate_ai.api.routes.billing.subscription_manager", mock_sub_mgr),
-        patch("ghl_real_estate_ai.api.routes.billing.monitoring_service", MagicMock()),
-    ):
-        from ghl_real_estate_ai.api.routes.billing import router
+    from ghl_real_estate_ai.api.routes import billing as billing_module
 
-        test_app = FastAPI()
-        test_app.include_router(router)
-        return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
+    # Bind mocks directly on the module so handlers use them at request time.
+    billing_module.billing_service = mock_billing
+    billing_module.subscription_manager = mock_sub_mgr
+    billing_module.monitoring_service = MagicMock()
+
+    test_app = FastAPI()
+    test_app.include_router(billing_module.router)
+    return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
 
 
-def _subscription_response_dict(sub_id: int = 1, tier: str = "professional"):
+def _subscription_response_dict(
+    sub_id: int = 1,
+    tier: str = "professional",
+    stripe_subscription_id: str = "sub_live_001",
+    stripe_customer_id: str = "cus_live_001",
+):
     """Build a mock SubscriptionResponse-like dict."""
     from ghl_real_estate_ai.api.schemas.billing import (
         SubscriptionResponse,
@@ -83,8 +89,8 @@ def _subscription_response_dict(sub_id: int = 1, tier: str = "professional"):
     return SubscriptionResponse(
         id=sub_id,
         location_id="loc-123",
-        stripe_subscription_id="sub_test123",
-        stripe_customer_id="cus_test123",
+        stripe_subscription_id=stripe_subscription_id,
+        stripe_customer_id=stripe_customer_id,
         tier=SubscriptionTier(tier),
         status=SubscriptionStatus.ACTIVE,
         current_period_start=datetime.now(),
@@ -97,6 +103,30 @@ def _subscription_response_dict(sub_id: int = 1, tier: str = "professional"):
         next_invoice_date=datetime.now() + timedelta(days=30),
         created_at=datetime.now(),
     )
+
+
+def _subscription_row_dict(subscription_id: int = 1) -> Dict[str, Any]:
+    """Build a mock DB subscription row."""
+    now = datetime.now()
+    return {
+        "id": subscription_id,
+        "location_id": "loc-123",
+        "stripe_subscription_id": f"sub_live_{subscription_id:04d}",
+        "stripe_customer_id": f"cus_live_{subscription_id:04d}",
+        "tier": "professional",
+        "status": "active",
+        "currency": "usd",
+        "current_period_start": now,
+        "current_period_end": now + timedelta(days=30),
+        "usage_allowance": 150,
+        "usage_current": 50,
+        "overage_rate": 1.5,
+        "base_price": 249.0,
+        "trial_end": None,
+        "cancel_at_period_end": False,
+        "created_at": now,
+        "updated_at": now,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -178,12 +208,100 @@ class TestGetSubscription:
 
     def test_get_subscription_returns_data(self):
         """Returns subscription data for valid ID."""
-        client, _, _ = _make_billing_client()
-        resp = client.get("/billing/subscriptions/1")
+        subscription_id = 42
+        row = _subscription_row_dict(subscription_id=subscription_id)
+        response_model = _subscription_response_dict(
+            sub_id=subscription_id,
+            stripe_subscription_id=row["stripe_subscription_id"],
+            stripe_customer_id=row["stripe_customer_id"],
+        )
+
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._fetch_subscription_row",
+                new=AsyncMock(return_value=row),
+            ) as mock_fetch,
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._build_subscription_response",
+                return_value=response_model,
+            ) as mock_build,
+        ):
+            client, _, _ = _make_billing_client()
+            resp = client.get(f"/billing/subscriptions/{subscription_id}")
+
+        mock_fetch.assert_awaited_once_with(subscription_id)
+        mock_build.assert_called_once_with(row)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["id"] == subscription_id
+        assert data["stripe_subscription_id"] == row["stripe_subscription_id"]
+        assert data["stripe_customer_id"] == row["stripe_customer_id"]
+        assert "test" not in data["stripe_subscription_id"].lower()
+        assert "test" not in data["stripe_customer_id"].lower()
+
+
+# ---------------------------------------------------------------------------
+# PUT /billing/subscriptions/{subscription_id}
+# ---------------------------------------------------------------------------
+
+@skip_if_no_billing
+class TestUpdateSubscription:
+    """Tests for subscription update endpoint."""
+
+    def test_update_subscription_uses_mocked_db_and_stripe(self):
+        """Updates subscription without hitting real Stripe/DB."""
+        subscription_id = 31
+        existing_row = _subscription_row_dict(subscription_id=subscription_id)
+        refreshed_row = {**existing_row, "currency": "usd", "cancel_at_period_end": True}
+        response_model = _subscription_response_dict(
+            sub_id=subscription_id,
+            stripe_subscription_id=existing_row["stripe_subscription_id"],
+            stripe_customer_id=existing_row["stripe_customer_id"],
+        )
+        stripe_response = {
+            "status": "active",
+            "current_period_start": int(datetime.now().timestamp()),
+            "current_period_end": int((datetime.now() + timedelta(days=30)).timestamp()),
+            "cancel_at_period_end": True,
+        }
+
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._fetch_subscription_row",
+                new=AsyncMock(side_effect=[existing_row, refreshed_row]),
+            ) as mock_fetch,
+            patch(
+                "ghl_real_estate_ai.api.routes.billing.retry_with_exponential_backoff",
+                new=AsyncMock(return_value=stripe_response),
+            ) as mock_retry,
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._update_subscription_db_state",
+                new=AsyncMock(),
+            ) as mock_update_db,
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._build_subscription_response",
+                return_value=response_model,
+            ),
+        ):
+            client, _, _ = _make_billing_client()
+            resp = client.put(
+                f"/billing/subscriptions/{subscription_id}",
+                json={"currency": "usd", "cancel_at_period_end": True},
+            )
 
         assert resp.status_code == 200
         data = resp.json()
-        assert data["id"] == 1
+        assert data["id"] == subscription_id
+        assert "test" not in data["stripe_subscription_id"].lower()
+
+        # First call loads existing row, second call loads refreshed row.
+        assert mock_fetch.await_count == 2
+        mock_retry.assert_awaited_once()
+        assert (
+            mock_retry.await_args.kwargs["subscription_id"]
+            == existing_row["stripe_subscription_id"]
+        )
+        mock_update_db.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------
@@ -196,22 +314,83 @@ class TestCancelSubscription:
 
     def test_cancel_at_period_end(self):
         """Cancels subscription at period end."""
-        client, _, _ = _make_billing_client()
-        resp = client.delete("/billing/subscriptions/1")
+        subscription_id = 77
+        existing_row = _subscription_row_dict(subscription_id=subscription_id)
+        stripe_response = {
+            "status": "active",
+            "current_period_end": int((datetime.now() + timedelta(days=14)).timestamp()),
+            "canceled_at": None,
+            "cancel_at_period_end": True,
+        }
+
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._fetch_subscription_row",
+                new=AsyncMock(return_value=existing_row),
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.billing.retry_with_exponential_backoff",
+                new=AsyncMock(return_value=stripe_response),
+            ) as mock_retry,
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._update_subscription_db_state",
+                new=AsyncMock(),
+            ) as mock_update_db,
+        ):
+            client, _, _ = _make_billing_client()
+            resp = client.delete(f"/billing/subscriptions/{subscription_id}")
 
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
         assert data["immediate"] is False
+        assert data["stripe_subscription_id"] == existing_row["stripe_subscription_id"]
+        assert "test" not in data["stripe_subscription_id"].lower()
+        assert (
+            mock_retry.await_args.kwargs["subscription_id"]
+            == existing_row["stripe_subscription_id"]
+        )
+        mock_update_db.assert_awaited_once()
 
     def test_cancel_immediately(self):
         """Cancels subscription immediately."""
-        client, _, _ = _make_billing_client()
-        resp = client.delete("/billing/subscriptions/1?immediate=true")
+        subscription_id = 78
+        existing_row = _subscription_row_dict(subscription_id=subscription_id)
+        stripe_response = {
+            "status": "canceled",
+            "current_period_end": int((datetime.now() + timedelta(days=30)).timestamp()),
+            "canceled_at": int(datetime.now().timestamp()),
+            "cancel_at_period_end": False,
+        }
+
+        with (
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._fetch_subscription_row",
+                new=AsyncMock(return_value=existing_row),
+            ),
+            patch(
+                "ghl_real_estate_ai.api.routes.billing.retry_with_exponential_backoff",
+                new=AsyncMock(return_value=stripe_response),
+            ) as mock_retry,
+            patch(
+                "ghl_real_estate_ai.api.routes.billing._update_subscription_db_state",
+                new=AsyncMock(),
+            ) as mock_update_db,
+        ):
+            client, _, _ = _make_billing_client()
+            resp = client.delete(f"/billing/subscriptions/{subscription_id}?immediate=true")
 
         assert resp.status_code == 200
         data = resp.json()
         assert data["immediate"] is True
+        assert data["stripe_subscription_id"] == existing_row["stripe_subscription_id"]
+        assert data["status"] == "canceled"
+        assert "test" not in data["stripe_subscription_id"].lower()
+        assert (
+            mock_retry.await_args.kwargs["subscription_id"]
+            == existing_row["stripe_subscription_id"]
+        )
+        mock_update_db.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------

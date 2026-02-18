@@ -575,7 +575,6 @@ class TestErrorHandling:
         await service.stop()
 
 
-@pytest.mark.performance
 class TestPerformanceCharacteristics:
     """Test performance characteristics and benchmarks."""
 

@@ -44,7 +44,6 @@ except (ImportError, TypeError, AttributeError):
 # Import test utilities
 from tests.mocks.external_services import MockTwilioClient, MockWebhookPayloads
 
-@pytest.mark.integration
 
 
 class TestTwilioConfig:
@@ -1048,7 +1047,6 @@ class TestErrorHandlingAndEdgeCases:
             await client.send_sms(to="+15557890123", message="This will timeout")
 
 
-@pytest.mark.performance
 class TestPerformanceCharacteristics:
     """Test Twilio client performance characteristics"""
 

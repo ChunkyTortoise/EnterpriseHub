@@ -36,7 +36,6 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 )
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 
-@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -221,7 +220,6 @@ def _assert_p99(times: list[float], target_seconds: float, label: str):
 # ===========================================================================
 
 
-@pytest.mark.performance
 class TestJorgePlatformLoadTesting:
     """Phase 5: Load tests for all three bot modes under concurrent webhook load."""
 

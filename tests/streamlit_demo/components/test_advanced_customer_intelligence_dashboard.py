@@ -11,7 +11,6 @@ import pandas as pd
 import pytest
 import streamlit as st
 
-@pytest.mark.integration
 
 # Import the component under test
 try:

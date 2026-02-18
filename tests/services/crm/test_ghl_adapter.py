@@ -1,6 +1,5 @@
 """Tests for GHLAdapter -- GoHighLevel CRM adapter."""
 
-from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -10,7 +9,6 @@ import pytest
 from ghl_real_estate_ai.services.crm import CRMContact, GHLAdapter
 from ghl_real_estate_ai.services.crm.ghl_adapter import GHLError
 
-@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -138,7 +136,6 @@ class TestGHLError:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestGHLCreateContact:
     async def test_create_contact_success(self, adapter: GHLAdapter):
         resp = _mock_response(
@@ -157,7 +154,6 @@ class TestGHLCreateContact:
         assert result.first_name == "Jane"
 
 
-@pytest.mark.asyncio
 class TestGHLGetContact:
     async def test_get_contact_success(self, adapter: GHLAdapter):
         resp = _mock_response(
@@ -185,7 +181,6 @@ class TestGHLGetContact:
         assert exc_info.value.status_code == 500
 
 
-@pytest.mark.asyncio
 class TestGHLUpdateContact:
     async def test_update_contact_maps_keys(self, adapter: GHLAdapter):
         resp = _mock_response(
@@ -206,7 +201,6 @@ class TestGHLUpdateContact:
         assert result.id == "c-3"
 
 
-@pytest.mark.asyncio
 class TestGHLSearchContacts:
     async def test_search_returns_list(self, adapter: GHLAdapter):
         resp = _mock_response(
@@ -237,7 +231,6 @@ class TestGHLSearchContacts:
         assert results == []
 
 
-@pytest.mark.asyncio
 class TestGHLSyncLead:
     async def test_sync_lead_updates_tags_and_score(self, adapter: GHLAdapter):
         resp = _mock_response(200, {"contact": {"id": "sl-1"}})

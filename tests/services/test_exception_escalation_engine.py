@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.exception_escalation_engine import (

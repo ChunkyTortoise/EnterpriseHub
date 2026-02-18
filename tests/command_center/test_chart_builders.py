@@ -17,7 +17,10 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-pytest.importorskip("command_center", reason="command_center package not available")
+pytest.importorskip(
+    "command_center.utils.chart_builders",
+    reason="command_center chart builders not available",
+)
 from command_center.utils.chart_builders import (
     ChartBuilderBase,
     ChartFactory,
@@ -483,7 +486,6 @@ class TestErrorHandling:
             pass
 
 
-@pytest.mark.integration
 class TestIntegrationScenarios:
     """Test realistic integration scenarios."""
 

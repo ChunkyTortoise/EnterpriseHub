@@ -15,7 +15,6 @@ from fastapi.testclient import TestClient
 from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.voice_claude_service import VoiceClaudeService, VoiceInteractionType
 
-@pytest.mark.integration
 
 client = TestClient(app)
 

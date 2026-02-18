@@ -28,7 +28,6 @@ def test_ws5_fallback_messages_are_consultative_and_sms_safe(guard):
         assert "-" not in message
 
 
-@pytest.mark.asyncio
 async def test_ws5_aggressive_tone_is_blocked_without_llm(guard):
     status, reason, violations = await guard.audit_message("Last chance. Take it or leave it.")
 
@@ -47,7 +46,6 @@ def test_ws5_sanitize_for_sms_removes_emoji_hyphen_and_truncates(guard):
     assert "-" not in cleaned
 
 
-@pytest.mark.asyncio
 async def test_ws5_empty_message_passes(guard):
     status, reason, violations = await guard.audit_message("   ")
 

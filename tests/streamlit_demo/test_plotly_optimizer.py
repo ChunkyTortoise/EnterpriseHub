@@ -8,7 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.streamlit_demo.plotly_optimizer import PlotlyOptimizer
 
-@pytest.mark.unit
 
 
 def test_decimate_data():

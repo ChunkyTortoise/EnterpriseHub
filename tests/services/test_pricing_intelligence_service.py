@@ -27,7 +27,6 @@ from ghl_real_estate_ai.services.dynamic_valuation_engine import (
 )
 from ghl_real_estate_ai.services.pricing_intelligence_service import (
 
-@pytest.mark.unit
     InvestmentGrade,
     InvestmentMetrics,
     InvestmentOpportunity,
@@ -610,7 +609,6 @@ class TestPricingIntelligenceService:
             assert abs(metrics.cash_on_cash_return - expected_coc) < 0.1
 
 
-@pytest.mark.performance
 class TestPricingIntelligencePerformance:
     """Performance tests for pricing intelligence service"""
 

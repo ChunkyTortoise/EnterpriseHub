@@ -424,7 +424,6 @@ class TestMarketConditions:
         assert MarketCondition.TRANSITIONING.value == "transitioning"
 
 
-@pytest.mark.integration
 class TestAustinMarketServiceIntegration:
     """Integration tests for Austin Market Service."""
 
@@ -506,7 +505,6 @@ class TestAustinMarketServiceIntegration:
 
 
 # Performance Tests
-@pytest.mark.performance
 class TestAustinMarketServicePerformance:
     """Performance tests for Austin Market Service."""
 

@@ -566,7 +566,6 @@ class TestDataValidationAndEdgeCases:
         assert roi_analysis["commission_premium_generated"] == 0
 
 
-@pytest.mark.integration
 class TestIntegrationWithExistingSystems:
     """Integration tests with existing systems"""
 
@@ -590,7 +589,6 @@ class TestIntegrationWithExistingSystems:
         assert service_tracker.claude.generate_claude_response.called
 
 
-@pytest.mark.performance
 class TestPerformance:
     """Performance tests for service delivery tracking"""
 

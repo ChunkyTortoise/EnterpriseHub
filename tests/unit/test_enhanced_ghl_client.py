@@ -118,7 +118,6 @@ def _session_with_response(status=200, json_body=None):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestLifecycle:
     async def test_aenter_creates_session(self, client):
         with patch("aiohttp.ClientSession") as mock_cls:
@@ -152,7 +151,6 @@ class TestLifecycle:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestHandleResponse:
     async def test_200_returns_json(self, client):
         from ghl_real_estate_ai.services.enhanced_ghl_client import GHLAPIException
@@ -215,7 +213,6 @@ class TestHandleResponse:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestRetryLogic:
     async def test_retries_on_client_error(self, client):
         from ghl_real_estate_ai.services.enhanced_ghl_client import GHLAPIException
@@ -268,7 +265,6 @@ class TestRetryLogic:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestMakeRequest:
     async def test_test_mode_returns_mock(self, client, mock_settings):
         mock_settings.test_mode = True
@@ -292,7 +288,6 @@ class TestMakeRequest:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestWebhookProcessing:
     async def test_contact_create_webhook(self, client):
         payload = {
@@ -345,7 +340,6 @@ class TestWebhookProcessing:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestContactManagement:
     async def test_update_contact_success(self, client, mock_cache):
         client._make_request = AsyncMock(return_value={})
@@ -381,7 +375,6 @@ class TestContactManagement:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestOpportunityManagement:
     async def test_create_opportunity_success(self, client):
         client._make_request = AsyncMock(return_value={"opportunity": {"id": "opp1"}})
@@ -490,7 +483,6 @@ class TestUtilityMethods:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestHealthCheck:
     async def test_health_check_test_mode(self, client, mock_settings):
         mock_settings.test_mode = True

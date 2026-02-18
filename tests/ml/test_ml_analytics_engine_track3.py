@@ -29,11 +29,13 @@ import pytest
 # Test framework imports
 import pytest_asyncio
 
-# Import Track 3.1 components (skip if bots package unavailable)
-pytest.importorskip("bots", reason="bots package not available in EnterpriseHub standalone")
+# Import Track 3.1 components (skip if bots shared engine unavailable)
+pytest.importorskip(
+    "bots.shared.ml_analytics_engine",
+    reason="bots.shared.ml_analytics_engine not available in EnterpriseHub standalone",
+)
 from bots.shared.ml_analytics_engine import (
 
-@pytest.mark.integration
     ConfidenceLevel,
     ConversionProbabilityAnalysis,
     LeadJourneyPrediction,

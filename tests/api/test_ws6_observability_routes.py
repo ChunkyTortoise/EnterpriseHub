@@ -24,7 +24,6 @@ def reset_singletons():
     ABTestingService.reset()
 
 
-@pytest.mark.asyncio
 async def test_analytics_ws6_route_returns_observability_payload():
     payload = await get_jorge_ws6_observability(
         window="1h",
@@ -38,7 +37,6 @@ async def test_analytics_ws6_route_returns_observability_payload():
     assert "event_schemas" in payload
 
 
-@pytest.mark.asyncio
 async def test_concierge_performance_includes_ws6_payload():
     with patch(
         "ghl_real_estate_ai.api.routes.ai_concierge.proactive_intelligence.get_performance_metrics",

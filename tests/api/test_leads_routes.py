@@ -41,7 +41,9 @@ def _get_dep_functions():
         get_memory_service,
         get_property_matcher,
     )
-    return get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher
+    from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+
+    return get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher, get_current_user
 
 
 def _mock_ghl_api_client(contacts=None):
@@ -130,12 +132,13 @@ def _mock_websocket_manager():
 def _set_overrides(ghl=None, mem=None, scorer=None, matcher=None):
     """Set FastAPI dependency overrides for leads routes."""
     app = _get_app()
-    get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher = _get_dep_functions()
+    get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher, get_current_user = _get_dep_functions()
 
     app.dependency_overrides[get_ghl_client] = lambda: (ghl or _mock_ghl_api_client())
     app.dependency_overrides[get_memory_service] = lambda: (mem or _mock_memory_service())
     app.dependency_overrides[get_lead_scorer] = lambda: (scorer or _mock_lead_scorer())
     app.dependency_overrides[get_property_matcher] = lambda: (matcher or _mock_property_matcher())
+    app.dependency_overrides[get_current_user] = lambda: {"user_id": "test-user", "role": "admin"}
 
 
 @pytest.fixture(autouse=True)

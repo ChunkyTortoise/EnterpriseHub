@@ -42,7 +42,6 @@ from ghl_real_estate_ai.streamlit_demo.components.multi_market_analytics_view im
 )
 from ghl_real_estate_ai.streamlit_demo.components.roi_calculator_component import (
 
-@pytest.mark.integration
     ChannelInvestment,
     InvestmentScenario,
     ROICalculation,

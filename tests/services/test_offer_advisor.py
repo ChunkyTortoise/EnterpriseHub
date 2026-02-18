@@ -11,7 +11,6 @@ import pytest
 
 from ghl_real_estate_ai.services.offer_advisor import OfferAdvisor, OfferStrategy
 
-@pytest.mark.unit
 
 
 @pytest.fixture
@@ -35,7 +34,6 @@ def base_buyer():
     }
 
 
-@pytest.mark.asyncio
 async def test_sellers_market_suggests_above_list(advisor, base_buyer):
     """Seller's market should suggest a price above list price."""
     property_data = {"price": 500_000, "days_on_market": 5}
@@ -50,7 +48,6 @@ async def test_sellers_market_suggests_above_list(advisor, base_buyer):
     assert "above list" in result.price_rationale.lower()
 
 
-@pytest.mark.asyncio
 async def test_buyers_market_suggests_below_list(advisor, base_buyer):
     """Buyer's market should suggest a price below list price."""
     property_data = {"price": 500_000, "days_on_market": 50}
@@ -64,7 +61,6 @@ async def test_buyers_market_suggests_below_list(advisor, base_buyer):
     assert "below list" in result.price_rationale.lower()
 
 
-@pytest.mark.asyncio
 async def test_high_dom_more_aggressive(advisor, base_buyer):
     """Properties with >60 DOM should get a bigger discount than DOM 30."""
     market = {"market_type": "buyers"}
@@ -83,7 +79,6 @@ async def test_high_dom_more_aggressive(advisor, base_buyer):
     assert result_70.suggested_price < result_30.suggested_price
 
 
-@pytest.mark.asyncio
 async def test_earnest_money_percentage(advisor, base_property, base_buyer):
     """Earnest money: sellers=3%, buyers=1%, balanced=2%."""
     for market_type, expected_pct in [
@@ -100,7 +95,6 @@ async def test_earnest_money_percentage(advisor, base_property, base_buyer):
         )
 
 
-@pytest.mark.asyncio
 async def test_contingency_recommendations(advisor, base_property, base_buyer):
     """Seller's market should have fewer contingencies than buyer's market."""
     sellers_result = await advisor.analyze_offer_position(
@@ -116,7 +110,6 @@ async def test_contingency_recommendations(advisor, base_property, base_buyer):
     assert "appraisal" in buyers_result.contingencies
 
 
-@pytest.mark.asyncio
 async def test_escalation_clause_generation(advisor, base_property):
     """Seller's market with budget headroom should generate an escalation clause."""
     buyer_with_headroom = {
@@ -141,7 +134,6 @@ async def test_escalation_clause_generation(advisor, base_property):
     assert result_tight.escalation_clause is None
 
 
-@pytest.mark.asyncio
 async def test_competitive_assessment(advisor, base_buyer):
     """Strong/moderate/weak classification based on offer components."""
     # Seller's market with cash buyer (strong offer: high price + few contingencies + high earnest)
@@ -165,7 +157,6 @@ async def test_competitive_assessment(advisor, base_buyer):
     assert result_weak.competitive_assessment == "weak"
 
 
-@pytest.mark.asyncio
 async def test_closing_timeline_reasonable(advisor, base_property):
     """Cash=14d, sellers market=21d, standard=30d."""
     cash_buyer = {"financing_status": "cash", "budget_max": 600_000}

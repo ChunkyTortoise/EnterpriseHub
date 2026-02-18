@@ -1092,7 +1092,6 @@ class TestStreamARequiredCoverage:
         assert result["compliance_ticket_id"] is not None
 
 
-@pytest.mark.integration
 class TestBuyerBotIntegration:
     """Integration tests for buyer bot with real dependencies."""
 

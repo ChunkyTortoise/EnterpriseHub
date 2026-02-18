@@ -21,7 +21,6 @@ import pytest
 
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
 
-@pytest.mark.integration
     InferenceMode,
     InferenceRequest,
     InferenceResult,

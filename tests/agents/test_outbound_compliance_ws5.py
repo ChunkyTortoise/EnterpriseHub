@@ -7,7 +7,6 @@ from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 
 
-@pytest.mark.asyncio
 async def test_ws5_lead_compliance_fallback_applied_on_blocked(monkeypatch):
     bot = LeadBotWorkflow.__new__(LeadBotWorkflow)
 
@@ -24,7 +23,6 @@ async def test_ws5_lead_compliance_fallback_applied_on_blocked(monkeypatch):
     assert len(final_msg) <= bot.SMS_MAX_LENGTH
 
 
-@pytest.mark.asyncio
 async def test_ws5_lead_compliance_keeps_consultative_message_when_passed(monkeypatch):
     bot = LeadBotWorkflow.__new__(LeadBotWorkflow)
 
@@ -39,7 +37,6 @@ async def test_ws5_lead_compliance_keeps_consultative_message_when_passed(monkey
     assert final_msg.startswith("Happy to help")
 
 
-@pytest.mark.asyncio
 async def test_ws5_buyer_compliance_fallback_applied_on_flagged(monkeypatch):
     bot = JorgeBuyerBot.__new__(JorgeBuyerBot)
 

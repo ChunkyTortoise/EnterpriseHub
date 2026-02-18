@@ -1,5 +1,5 @@
 import pytest
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 """
 Tests for Domain Resolver Middleware
@@ -31,18 +31,17 @@ from ghl_real_estate_ai.api.middleware.domain_resolver_middleware import (
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 
-@pytest.mark.integration
 
 
 @pytest.fixture
-async def mock_db_pool():
+def mock_db_pool():
     """Mock database pool."""
     pool = AsyncMock(spec=asyncpg.Pool)
     return pool
 
 
 @pytest.fixture
-async def mock_cache_service():
+def mock_cache_service():
     """Mock cache service."""
     cache = AsyncMock(spec=CacheService)
     cache.get.return_value = None  # Default to cache miss
@@ -66,7 +65,6 @@ def sample_tenant_context():
     return context
 
 
-@pytest.fixture
 def app_with_middleware(mock_db_pool, mock_cache_service):
     """Create FastAPI app with domain resolver middleware."""
     app = FastAPI()

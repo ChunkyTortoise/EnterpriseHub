@@ -12,7 +12,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 
 def create_mock_buyer_intent_profile():
@@ -46,7 +45,6 @@ def create_mock_event_publisher():
     return publisher
 
 
-@pytest.mark.asyncio
 async def test_buyer_bot_workflow():
     """Test buyer bot end-to-end with mock state simulating a real buyer inquiry."""
 

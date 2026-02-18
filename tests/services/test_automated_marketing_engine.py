@@ -55,7 +55,6 @@ def sample_market_data():
     }
 
 
-@pytest.mark.asyncio
 class TestAutomatedMarketingEngine:
     """Test cases for Automated Marketing Engine"""
 
@@ -377,7 +376,6 @@ class TestAutomatedMarketingEngine:
         assert engine1 is engine2
 
 
-@pytest.mark.asyncio
 class TestCampaignBrief:
     """Test CampaignBrief dataclass"""
 
@@ -421,7 +419,6 @@ class TestCampaignBrief:
         assert brief.priority == CampaignPriority.HIGH
 
 
-@pytest.mark.asyncio
 class TestGeneratedContent:
     """Test GeneratedContent dataclass"""
 
@@ -464,7 +461,6 @@ class TestGeneratedContent:
 
 
 # Integration tests
-@pytest.mark.integration
 class TestMarketingEngineIntegration:
     """Integration tests for Marketing Engine"""
 

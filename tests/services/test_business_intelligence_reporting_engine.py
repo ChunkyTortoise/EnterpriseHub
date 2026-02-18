@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_asyncio
 
-@pytest.mark.integration
 
 # Import the service under test
 try:
@@ -384,7 +383,6 @@ class TestBusinessIntelligenceReportingEngine:
 
 
 # Integration test
-@pytest.mark.asyncio
 async def test_full_bi_pipeline():
     """Test complete BI reporting pipeline integration"""
     try:

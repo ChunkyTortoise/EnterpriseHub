@@ -20,7 +20,6 @@ import pytest
 
 from ghl_real_estate_ai.services.corporate_relocation_service import (
 
-@pytest.mark.integration
     CorporateContract,
     CorporatePartnerTier,
     CorporateRelocationService,
@@ -628,7 +627,6 @@ class TestCorporateRelocationService:
         assert not_found is None
 
 
-@pytest.mark.asyncio
 async def test_data_persistence():
     """Test data persistence and loading"""
     with (

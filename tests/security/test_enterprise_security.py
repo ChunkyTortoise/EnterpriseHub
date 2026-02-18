@@ -526,7 +526,6 @@ class TestCryptographicSecurity:
 
 
 # Integration security tests
-@pytest.mark.integration
 class TestEndToEndSecurity:
     """End-to-end security tests."""
 

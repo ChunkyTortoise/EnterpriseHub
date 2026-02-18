@@ -15,7 +15,6 @@ import pytest
 
 from utils.validators import (
 
-@pytest.mark.integration
     ConfidenceScorer,
     Conflict,
     ContradictionDetector,

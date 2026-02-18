@@ -18,7 +18,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.conversation_repair import (
 
-@pytest.mark.unit
     ConversationRepairProcessor,
     _word_overlap_ratio,
 )

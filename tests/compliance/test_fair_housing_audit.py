@@ -28,7 +28,6 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import (
 
-@pytest.mark.integration
     ComplianceGuard,
     ComplianceStatus,
 )
@@ -94,8 +93,6 @@ LEAD_FALLBACK = "Thanks for reaching out! I'd love to help. What are you looking
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestSteeringDetection:
     """Detect messages that subtly steer buyers toward/away from areas based on demographics."""
 
@@ -149,7 +146,6 @@ class TestSteeringDetection:
 # =========================================================================
 
 
-@pytest.mark.compliance
 class TestProtectedClassReferences:
     """Messages referencing race, religion, familial status, disability, national origin."""
 
@@ -221,8 +217,6 @@ class TestProtectedClassReferences:
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestRedliningPatterns:
     """Geographic discrimination -- refusing or discouraging service by area."""
 
@@ -274,8 +268,6 @@ class TestRedliningPatterns:
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestSafeMessages:
     """Legitimate real estate messages must PASS without false positives."""
 
@@ -347,8 +339,6 @@ class TestSafeMessages:
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestFallbackMessageValidation:
     """When a message is BLOCKED, the fallback must be mode-appropriate and itself compliant."""
 
@@ -406,8 +396,6 @@ class TestFallbackMessageValidation:
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestCCPADataHandling:
     """Verify PII protection in compliance audit outputs."""
 
@@ -486,7 +474,6 @@ class TestCCPADataHandling:
 # =========================================================================
 
 
-@pytest.mark.compliance
 class TestCANSPAMCompliance:
     """Verify opt-out phrases are recognized and handled correctly."""
 
@@ -588,8 +575,6 @@ class TestCANSPAMCompliance:
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestInputLengthGuard:
     """Test Tier 0: input length guard prevents oversized messages."""
 
@@ -636,8 +621,6 @@ class TestInputLengthGuard:
 # =========================================================================
 
 
-@pytest.mark.compliance
-@pytest.mark.asyncio
 class TestMultiTierIntegration:
     """Verify the Tier 1 -> Tier 2 escalation logic."""
 

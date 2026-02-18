@@ -19,7 +19,6 @@ from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import LeadPricingResult
 from ghl_real_estate_ai.services.roi_calculator_service import ClientROIReport
 
-@pytest.mark.integration
 
 
 class TestPricingOptimizationRoutes:

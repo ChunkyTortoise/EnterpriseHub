@@ -19,7 +19,6 @@ pytestmark = pytest.mark.timeout(60)
 
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
 
-@pytest.mark.integration
     AutonomousWorkflowResult,
     BusinessImpactLevel,
     ConsultingTier,
@@ -105,7 +104,6 @@ def sample_historical_data():
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_generate_strategic_recommendations(strategic_consultant, sample_business_context):
     """Test generation of strategic recommendations."""
     recommendations = await strategic_consultant.generate_strategic_recommendations(
@@ -129,7 +127,6 @@ async def test_generate_strategic_recommendations(strategic_consultant, sample_b
         assert rec.confidence_level > 0.5
 
 
-@pytest.mark.asyncio
 async def test_revenue_optimization_recommendation(strategic_consultant, sample_business_context):
     """Test revenue optimization recommendation generation."""
     rec = await strategic_consultant._create_revenue_optimization_rec(
@@ -147,7 +144,6 @@ async def test_revenue_optimization_recommendation(strategic_consultant, sample_
     assert len(rec.mitigation_strategies) >= 2
 
 
-@pytest.mark.asyncio
 async def test_business_state_analysis(strategic_consultant, sample_business_context):
     """Test comprehensive business state analysis."""
     state = await strategic_consultant._analyze_business_state(sample_business_context)
@@ -173,7 +169,6 @@ async def test_business_state_analysis(strategic_consultant, sample_business_con
     assert 0 <= operational["efficiency_score"] <= 100
 
 
-@pytest.mark.asyncio
 async def test_consulting_tier_recommendations(strategic_consultant, sample_business_context):
     """Test that different consulting tiers generate appropriate recommendations."""
 
@@ -201,7 +196,6 @@ async def test_consulting_tier_recommendations(strategic_consultant, sample_busi
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_predictive_model_initialization(strategic_consultant):
     """Test predictive models are properly initialized."""
     await strategic_consultant._initialize_predictive_models()
@@ -212,7 +206,6 @@ async def test_predictive_model_initialization(strategic_consultant):
     assert "ltv" in strategic_consultant.ensemble_models
 
 
-@pytest.mark.asyncio
 async def test_generate_predictive_insights(strategic_consultant, sample_historical_data):
     """Test generation of predictive insights."""
     insights = await strategic_consultant.generate_predictive_insights(
@@ -230,7 +223,6 @@ async def test_generate_predictive_insights(strategic_consultant, sample_histori
         assert isinstance(insight.feature_importance, dict)
 
 
-@pytest.mark.asyncio
 async def test_revenue_prediction(strategic_consultant, sample_historical_data):
     """Test revenue prediction functionality."""
     insight = await strategic_consultant._predict_revenue(sample_historical_data["revenue"], 90)
@@ -245,7 +237,6 @@ async def test_revenue_prediction(strategic_consultant, sample_historical_data):
     assert "trend" in insight.feature_importance
 
 
-@pytest.mark.asyncio
 async def test_time_series_feature_extraction(strategic_consultant):
     """Test time series feature extraction."""
     data = [100, 105, 110, 115, 120, 125, 130]
@@ -265,7 +256,6 @@ async def test_time_series_feature_extraction(strategic_consultant):
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_execute_autonomous_workflow(strategic_consultant):
     """Test autonomous workflow execution."""
     config = {"batch_size": 100, "priority_threshold": 0.8}
@@ -280,7 +270,6 @@ async def test_execute_autonomous_workflow(strategic_consultant):
     assert result.manual_steps_automated >= 0
 
 
-@pytest.mark.asyncio
 async def test_lead_intelligence_workflow(strategic_consultant):
     """Test lead intelligence automation workflow."""
     config = {"batch_size": 50}
@@ -304,7 +293,6 @@ async def test_lead_intelligence_workflow(strategic_consultant):
     assert len(result["decisions_made"]) >= 1
 
 
-@pytest.mark.asyncio
 async def test_workflow_tracking(strategic_consultant):
     """Test workflow execution tracking."""
     config = {"test": "config"}
@@ -322,7 +310,6 @@ async def test_workflow_tracking(strategic_consultant):
     assert stored_result.workflow_name == "lead_intelligence_automation"
 
 
-@pytest.mark.asyncio
 async def test_workflow_error_handling(strategic_consultant):
     """Test workflow error handling."""
     config = {"invalid": "config"}
@@ -339,7 +326,6 @@ async def test_workflow_error_handling(strategic_consultant):
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_roi_attribution_calculation(strategic_consultant):
     """Test ROI attribution calculation."""
     intervention_date = datetime.utcnow() - timedelta(days=180)
@@ -368,7 +354,6 @@ async def test_roi_attribution_calculation(strategic_consultant):
     assert overall["roi_percentage"] > 0
 
 
-@pytest.mark.asyncio
 async def test_baseline_trend_calculation(strategic_consultant):
     """Test baseline trend calculation."""
     data = [100, 105, 110, 115, 120]
@@ -408,7 +393,6 @@ def test_efficiency_score_calculation(strategic_consultant):
     assert score == 70  # (60 + 80) / 2
 
 
-@pytest.mark.asyncio
 async def test_bottleneck_identification(strategic_consultant):
     """Test operational bottleneck identification."""
     # High manual processes should be flagged
@@ -520,7 +504,6 @@ def test_autonomous_workflow_result_model():
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_service_factory():
     """Test service factory functionality."""
     with (
@@ -540,7 +523,6 @@ async def test_service_factory():
         assert consultant1 is not consultant3
 
 
-@pytest.mark.asyncio
 async def test_end_to_end_consulting_workflow(strategic_consultant, sample_business_context, sample_historical_data):
     """Test complete end-to-end consulting workflow."""
 
@@ -581,7 +563,6 @@ async def test_end_to_end_consulting_workflow(strategic_consultant, sample_busin
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_recommendation_generation_performance(strategic_consultant, sample_business_context):
     """Test that recommendation generation is fast enough for executive demos."""
     import time
@@ -597,7 +578,6 @@ async def test_recommendation_generation_performance(strategic_consultant, sampl
     assert len(recommendations) > 0
 
 
-@pytest.mark.asyncio
 async def test_predictive_analytics_performance(strategic_consultant, sample_historical_data):
     """Test predictive analytics performance."""
     import time
@@ -616,7 +596,6 @@ async def test_predictive_analytics_performance(strategic_consultant, sample_his
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_invalid_business_context_handling(strategic_consultant):
     """Test handling of invalid business context."""
     invalid_context = {"incomplete": "data"}
@@ -630,7 +609,6 @@ async def test_invalid_business_context_handling(strategic_consultant):
     assert isinstance(recommendations, list)
 
 
-@pytest.mark.asyncio
 async def test_insufficient_historical_data(strategic_consultant):
     """Test handling of insufficient historical data."""
     insufficient_data = {"revenue": [100000, 110000]}  # Too little data
@@ -641,7 +619,6 @@ async def test_insufficient_historical_data(strategic_consultant):
     assert isinstance(insights, list)
 
 
-@pytest.mark.asyncio
 async def test_model_initialization_failure(strategic_consultant):
     """Test handling of model initialization failure."""
     with patch(

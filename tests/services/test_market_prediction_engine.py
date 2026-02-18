@@ -80,7 +80,6 @@ def sample_prediction_result():
     )
 
 
-@pytest.mark.asyncio
 class TestMarketPredictionEngine:
     """Test cases for Market Prediction Engine"""
 
@@ -415,7 +414,6 @@ class TestMarketPredictionEngine:
         assert engine1 is engine2
 
 
-@pytest.mark.asyncio
 class TestMarketDataPoint:
     """Test MarketDataPoint dataclass"""
 
@@ -448,7 +446,6 @@ class TestMarketDataPoint:
         assert data_point.is_spring_market is False
 
 
-@pytest.mark.asyncio
 class TestPredictionResult:
     """Test PredictionResult dataclass"""
 
@@ -505,7 +502,6 @@ class TestPredictionResult:
         assert isinstance(result.prediction_date, datetime)
 
 
-@pytest.mark.asyncio
 class TestMarketOpportunity:
     """Test MarketOpportunity dataclass"""
 
@@ -534,7 +530,6 @@ class TestMarketOpportunity:
 
 
 # Integration tests
-@pytest.mark.integration
 class TestMarketPredictionIntegration:
     """Integration tests for Market Prediction Engine"""
 

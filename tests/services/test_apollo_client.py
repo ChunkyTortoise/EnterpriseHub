@@ -44,7 +44,6 @@ except (ImportError, TypeError, AttributeError):
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockApolloClient
 
-@pytest.mark.integration
 
 
 class TestApolloConfig:
@@ -980,7 +979,6 @@ class TestErrorHandlingAndEdgeCases:
         assert mock_session.request.call_count == 10
 
 
-@pytest.mark.performance
 class TestPerformanceCharacteristics:
     """Test Apollo client performance characteristics"""
 

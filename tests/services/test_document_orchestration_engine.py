@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.services.document_orchestration_engine import (
 
-@pytest.mark.integration
     DeliveryChannel,
     DocumentOrchestrationEngine,
     DocumentRequest,

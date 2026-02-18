@@ -17,7 +17,6 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
-@pytest.mark.integration
 
 
 # Test fixtures and utilities

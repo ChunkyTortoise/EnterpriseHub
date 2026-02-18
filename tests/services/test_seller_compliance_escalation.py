@@ -9,14 +9,12 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_escalation import (
 
-@pytest.mark.integration
     ComplianceEscalationService,
     ViolationSeverity,
     ViolationType,
 )
 
 
-@pytest.mark.asyncio
 async def test_fair_housing_violation_pauses_bot():
     """FAIR_HOUSING -> severity=CRITICAL, 'bot_paused' in actions."""
     service = ComplianceEscalationService()
@@ -33,7 +31,6 @@ async def test_fair_housing_violation_pauses_bot():
     assert "bot_paused" in violation.actions_taken
 
 
-@pytest.mark.asyncio
 async def test_privacy_violation_logs_audit_trail():
     """PRIVACY -> logged, evidence preserved in violation object."""
     service = ComplianceEscalationService()
@@ -51,7 +48,6 @@ async def test_privacy_violation_logs_audit_trail():
     assert violation.description == "PII exposed in seller communication"
 
 
-@pytest.mark.asyncio
 async def test_critical_severity_notifies_compliance_officer():
     """CRITICAL severity -> 'compliance_officer_notified' in actions."""
     service = ComplianceEscalationService()
@@ -68,7 +64,6 @@ async def test_critical_severity_notifies_compliance_officer():
     assert "compliance_officer_notified" in violation.actions_taken
 
 
-@pytest.mark.asyncio
 async def test_crm_flagging_adds_tag():
     """Mock ghl_client, verify add_tags called with 'Compliance-Flagged'."""
     mock_ghl = AsyncMock()
@@ -88,7 +83,6 @@ async def test_crm_flagging_adds_tag():
     assert "crm_flagged" in violation.actions_taken
 
 
-@pytest.mark.asyncio
 async def test_violation_evidence_preserved():
     """Evidence string stored in violation object unchanged."""
     service = ComplianceEscalationService()

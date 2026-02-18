@@ -33,7 +33,6 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 from ghl_real_estate_ai.core.conversation_manager import AIResponse
 from ghl_real_estate_ai.services.calendar_scheduler import AUSTIN_TZ, AppointmentType
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -512,7 +511,6 @@ class TestSmartAppointmentSchedulingIntegration:
         assert "Wednesday, January 17" in formatted
 
 
-@pytest.mark.asyncio
 async def test_performance_40_percent_faster_target():
     """
     Test that validates the 40% faster lead→appointment conversion target.

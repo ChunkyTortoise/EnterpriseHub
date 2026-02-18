@@ -33,7 +33,6 @@ def _ws3_event(message_body: str = "1") -> GHLWebhookEvent:
     )
 
 
-@pytest.mark.asyncio
 async def test_ws3_pending_hot_seller_strict_type_guard_falls_back_manual():
     from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
     from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType
@@ -94,7 +93,6 @@ async def test_ws3_pending_hot_seller_strict_type_guard_falls_back_manual():
     mock_scheduler.book_appointment.assert_not_awaited()
 
 
-@pytest.mark.asyncio
 async def test_ws3_pending_hot_seller_valid_slot_books_with_consult_type():
     from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
     from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType

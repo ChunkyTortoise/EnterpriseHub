@@ -22,7 +22,6 @@ from pydantic import ConfigDict
 import ghl_real_estate_ai.services.enterprise_tenant_service as ets_module
 from ghl_real_estate_ai.services.enterprise_tenant_service import (
 
-@pytest.mark.integration
     BrandingConfig,
     EnterpriseTenantService,
     FeatureFlags,
@@ -350,7 +349,6 @@ def sample_branding_config():
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_create_tenant(enterprise_service, sample_tenant_config):
     """Test creating enterprise tenant with full configuration."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config, created_by="test-system")
@@ -366,7 +364,6 @@ async def test_create_tenant(enterprise_service, sample_tenant_config):
     assert retrieved.consulting_package_value == 65000.00
 
 
-@pytest.mark.asyncio
 async def test_create_tenant_with_custom_branding(enterprise_service, sample_branding_config):
     """Test creating tenant with custom branding configuration."""
     config = FixedTenantConfig(
@@ -389,7 +386,6 @@ async def test_create_tenant_with_custom_branding(enterprise_service, sample_bra
     assert retrieved.branding.support_phone == "+1-555-0123"
 
 
-@pytest.mark.asyncio
 async def test_tenant_tier_feature_mapping(enterprise_service):
     """Test that tenant tiers correctly map to feature flags."""
     # Test STARTER tier ($25K-$35K)
@@ -433,7 +429,6 @@ async def test_tenant_tier_feature_mapping(enterprise_service):
     assert enterprise_retrieved.feature_flags.success_measurement is True
 
 
-@pytest.mark.asyncio
 async def test_get_tenant_by_slug(enterprise_service, sample_tenant_config):
     """Test retrieving tenant by slug instead of ID."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -447,7 +442,6 @@ async def test_get_tenant_by_slug(enterprise_service, sample_tenant_config):
     assert retrieved_by_slug.name == retrieved_by_id.name
 
 
-@pytest.mark.asyncio
 async def test_update_tenant(enterprise_service, sample_tenant_config):
     """Test updating tenant configuration."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -469,7 +463,6 @@ async def test_update_tenant(enterprise_service, sample_tenant_config):
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_create_tenant_user(enterprise_service, sample_tenant_config):
     """Test creating tenant user with role-based permissions."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -495,7 +488,6 @@ async def test_create_tenant_user(enterprise_service, sample_tenant_config):
     assert has_tenant_admin is False  # Sales manager should NOT have this
 
 
-@pytest.mark.asyncio
 async def test_role_permission_mapping(enterprise_service, sample_tenant_config):
     """Test that roles map to correct permission sets."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -530,7 +522,6 @@ async def test_role_permission_mapping(enterprise_service, sample_tenant_config)
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_track_usage(enterprise_service, sample_tenant_config):
     """Test usage tracking for billing and analytics."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -558,7 +549,6 @@ async def test_track_usage(enterprise_service, sample_tenant_config):
     assert analytics["summary"]["total_leads_converted"] == 12
 
 
-@pytest.mark.asyncio
 async def test_cumulative_usage_tracking(enterprise_service, sample_tenant_config):
     """Test that usage accumulates correctly over multiple tracking calls."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -574,7 +564,6 @@ async def test_cumulative_usage_tracking(enterprise_service, sample_tenant_confi
     assert analytics["summary"]["total_leads_processed"] == 35  # 20 + 15
 
 
-@pytest.mark.asyncio
 async def test_analytics_date_filtering(enterprise_service, sample_tenant_config):
     """Test analytics date filtering functionality."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -597,7 +586,6 @@ async def test_analytics_date_filtering(enterprise_service, sample_tenant_config
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_legacy_compatibility(enterprise_service, sample_tenant_config):
     """Test compatibility with existing tenant_service.py interface."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)
@@ -672,7 +660,6 @@ def test_branding_config_dataclass():
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_api_key_encryption(enterprise_service):
     """Test that API keys are properly encrypted in storage."""
     config = FixedTenantConfig(
@@ -697,7 +684,6 @@ async def test_api_key_encryption(enterprise_service):
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_bulk_tenant_operations(enterprise_service):
     """Test performance with multiple tenants."""
     # Create multiple tenants
@@ -727,7 +713,6 @@ async def test_bulk_tenant_operations(enterprise_service):
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_nonexistent_tenant_retrieval(enterprise_service):
     """Test retrieving non-existent tenant."""
     fake_id = str(uuid4())
@@ -739,7 +724,6 @@ async def test_nonexistent_tenant_retrieval(enterprise_service):
     assert tenant_by_slug is None
 
 
-@pytest.mark.asyncio
 async def test_permission_check_nonexistent_user(enterprise_service, sample_tenant_config):
     """Test permission check for non-existent user."""
     tenant_id = await enterprise_service.create_tenant(sample_tenant_config)

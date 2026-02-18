@@ -28,7 +28,6 @@ import psutil
 import pytest
 import pytest_asyncio
 
-@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Performance Baseline Utility
@@ -349,8 +348,6 @@ def _make_ml_analytics_mock():
 # ===========================================================================
 
 
-@pytest.mark.asyncio
-@pytest.mark.performance
 class TestLeadBotPerformance:
     """Performance benchmarks for the Jorge Seller Bot workflow nodes."""
 
@@ -478,8 +475,6 @@ class TestLeadBotPerformance:
 # ===========================================================================
 
 
-@pytest.mark.asyncio
-@pytest.mark.performance
 class TestBuyerBotPerformance:
     """Performance benchmarks for the Jorge Buyer Bot workflow nodes."""
 
@@ -608,8 +603,6 @@ class TestBuyerBotPerformance:
 # ===========================================================================
 
 
-@pytest.mark.asyncio
-@pytest.mark.performance
 class TestAPIOverhead:
     """Measure FastAPI request/response overhead using httpx AsyncClient."""
 
@@ -737,8 +730,6 @@ class TestAPIOverhead:
 # ===========================================================================
 
 
-@pytest.mark.asyncio
-@pytest.mark.performance
 class TestCachePerformance:
     """
     Validate cache layer latency and hit-rate characteristics.

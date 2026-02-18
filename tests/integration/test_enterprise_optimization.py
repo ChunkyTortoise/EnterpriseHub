@@ -15,7 +15,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.advanced_cache_service import EnterpriseRedisCache

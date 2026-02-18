@@ -17,7 +17,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.api.schemas.ghl import MessageType

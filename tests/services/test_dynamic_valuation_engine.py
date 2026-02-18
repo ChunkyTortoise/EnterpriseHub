@@ -21,7 +21,6 @@ import pytest
 from ghl_real_estate_ai.services.austin_market_service import MarketCondition, PropertyType
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
 
-@pytest.mark.integration
     DynamicValuationEngine,
     MarketComparable,
     ValuationComponents,
@@ -490,7 +489,6 @@ class TestDynamicValuationEngine:
         assert 0.9 <= seller_adjustment <= 1.3
 
 
-@pytest.mark.performance
 class TestValuationPerformance:
     """Performance tests for valuation engine"""
 

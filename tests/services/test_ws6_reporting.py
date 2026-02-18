@@ -21,7 +21,6 @@ def reset_singletons():
     ABTestingService.reset()
 
 
-@pytest.mark.asyncio
 async def test_build_ws6_observability_payload_includes_expected_sections():
     collector = BotMetricsCollector()
     tracker = PerformanceTracker()
@@ -43,7 +42,6 @@ async def test_build_ws6_observability_payload_includes_expected_sections():
     assert len(payload["recent_events"]["performance"]) >= 1
 
 
-@pytest.mark.asyncio
 async def test_build_ws6_observability_payload_returns_guardrail_state():
     ab_service = ABTestingService()
     ab_service.create_experiment("ws6_guardrails", ["a", "b"])

@@ -8,6 +8,7 @@ Comprehensive tests for SSO authentication, multi-tenant access control,
 and corporate user provisioning for Fortune 500 partnerships.
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -637,7 +638,6 @@ class TestFastAPIDependencies:
         assert dependency_func is not None
 
 
-@pytest.mark.integration
 class TestEnterpriseAuthIntegration:
     """Integration tests for enterprise authentication."""
 

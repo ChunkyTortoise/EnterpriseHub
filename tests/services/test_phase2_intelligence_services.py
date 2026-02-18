@@ -29,7 +29,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-@pytest.mark.integration
 
 # Import Phase 2 Intelligence Layer services
 try:

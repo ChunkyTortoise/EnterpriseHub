@@ -16,6 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
+import pytest_asyncio
 
 from src.caching.semantic_cache import (
     CacheEntry,
@@ -218,7 +219,7 @@ class TestCacheKeyGenerator:
 class TestSemanticCache:
     """Test cases for SemanticCache class."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def cache(self):
         """Create a semantic cache for testing."""
         embedding_service = MockEmbeddingService(dimensions=384)

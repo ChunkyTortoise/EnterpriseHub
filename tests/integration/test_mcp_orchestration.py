@@ -10,10 +10,8 @@ from ghl_real_estate_ai.core.llm_client import LLMProvider, LLMResponse
 from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeRequest, ClaudeTaskType
 from ghl_real_estate_ai.services.skill_registry import SkillCategory
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_mcp_tool_discovery():
     """Test that the orchestrator can discover and format tools from MCP servers."""
     orchestrator = ClaudeOrchestrator()
@@ -50,7 +48,6 @@ async def test_mcp_tool_discovery():
     assert analyze_tool["parameters"]["type"] == "object"
 
 
-@pytest.mark.asyncio
 async def test_mcp_tool_execution():
     """Test that the orchestrator can execute a tool call."""
     orchestrator = ClaudeOrchestrator()
@@ -73,7 +70,6 @@ async def test_mcp_tool_execution():
     assert parsed["score"] == 7
 
 
-@pytest.mark.asyncio
 async def test_multi_turn_orchestration():
     """Test the full multi-turn tool orchestration loop."""
     # Mock LLM Client
@@ -122,7 +118,6 @@ async def test_multi_turn_orchestration():
     assert len(response.metadata["tool_executions"]) >= 3
 
 
-@pytest.mark.asyncio
 async def test_ghl_sync_on_action():
     """Test that GHL background sync is triggered when an ACTION category tool is used."""
     mock_llm = MagicMock()

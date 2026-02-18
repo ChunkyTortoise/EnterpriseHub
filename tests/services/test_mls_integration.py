@@ -16,7 +16,6 @@ import pytest
 from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
 from ghl_real_estate_ai.services.mls_client import MLSClient
 
-@pytest.mark.integration
 
 
 def _mock_swarm_module():

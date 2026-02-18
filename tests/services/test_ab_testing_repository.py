@@ -14,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_repository import (
 
-@pytest.mark.integration
     ABTestingRepository,
 )
 

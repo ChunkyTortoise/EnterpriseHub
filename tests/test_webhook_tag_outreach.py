@@ -8,10 +8,8 @@ import pytest
 from ghl_real_estate_ai.api.routes import webhook as webhook_module
 from ghl_real_estate_ai.api.schemas.ghl import GHLContact, GHLTagWebhookEvent
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_tag_webhook_sends_initial_outreach():
     event = GHLTagWebhookEvent(
         type="ContactTagAdded",
@@ -55,7 +53,6 @@ async def test_tag_webhook_sends_initial_outreach():
         mock_cm.memory_service.save_context.assert_called()
 
 
-@pytest.mark.asyncio
 async def test_tag_webhook_no_outreach_if_history_exists():
     event = GHLTagWebhookEvent(
         type="ContactTagAdded",

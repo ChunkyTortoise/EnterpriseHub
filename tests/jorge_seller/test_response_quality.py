@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -31,7 +30,6 @@ def seller_engine(mock_conversation_manager, mock_ghl_client):
     return JorgeSellerEngine(mock_conversation_manager, mock_ghl_client)
 
 
-@pytest.mark.asyncio
 async def test_good_short_answer_high_quality(seller_engine):
     """Test that a good short answer (e.g., 'yes') gets high quality score"""
     # Short but definitive answer
@@ -41,7 +39,6 @@ async def test_good_short_answer_high_quality(seller_engine):
     assert quality > 0.7, f"Expected quality > 0.7 for definitive 'yes', got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_bad_long_answer_low_quality(seller_engine):
     """Test that a long but vague answer gets low quality score"""
     # Long but evasive/vague answer
@@ -57,7 +54,6 @@ async def test_bad_long_answer_low_quality(seller_engine):
     assert quality < 0.5, f"Expected quality < 0.5 for vague long answer, got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_specific_answer_high_quality(seller_engine):
     """Test that specific, informative answers get high quality"""
     specific_message = "$450,000"
@@ -68,7 +64,6 @@ async def test_specific_answer_high_quality(seller_engine):
     assert quality > 0.8, f"Expected quality > 0.8 for specific price, got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_vague_short_answer_low_quality(seller_engine):
     """Test that vague short answers get low quality"""
     vague_message = "idk maybe"
@@ -79,7 +74,6 @@ async def test_vague_short_answer_low_quality(seller_engine):
     assert quality < 0.5, f"Expected quality < 0.5 for 'idk maybe', got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_informative_answer_high_quality(seller_engine):
     """Test that informative answers get high quality regardless of length"""
     informative_message = "I'm relocating to Austin for work in 6 weeks"
@@ -90,7 +84,6 @@ async def test_informative_answer_high_quality(seller_engine):
     assert quality > 0.7, f"Expected quality > 0.7 for informative answer, got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_unclear_rambling_low_quality(seller_engine):
     """Test that unclear rambling gets low quality"""
     rambling_message = "well you know things are kind of complicated right now and stuff"
@@ -101,7 +94,6 @@ async def test_unclear_rambling_low_quality(seller_engine):
     assert quality < 0.6, f"Expected quality < 0.6 for rambling, got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_timeline_specific_high_quality(seller_engine):
     """Test that timeline-specific answers get high quality"""
     timeline_message = "30 days works fine"
@@ -112,7 +104,6 @@ async def test_timeline_specific_high_quality(seller_engine):
     assert quality > 0.8, f"Expected quality > 0.8 for timeline answer, got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_condition_specific_high_quality(seller_engine):
     """Test that condition-specific answers get high quality"""
     condition_message = "move-in ready, just painted"
@@ -123,7 +114,6 @@ async def test_condition_specific_high_quality(seller_engine):
     assert quality > 0.7, f"Expected quality > 0.7 for condition answer, got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_integration_with_extraction(seller_engine, mock_conversation_manager):
     """Test that semantic quality assessment integrates with extraction"""
     contact_id = "test_contact"
@@ -148,7 +138,6 @@ async def test_integration_with_extraction(seller_engine, mock_conversation_mana
     assert quality > 0.7, f"Expected quality > 0.7 for 'yes', got {quality}"
 
 
-@pytest.mark.asyncio
 async def test_fallback_on_api_failure(seller_engine, mock_conversation_manager):
     """Test that if Claude API fails, we fall back to heuristic assessment"""
     # This will be tested by mocking the LLM client to raise an exception

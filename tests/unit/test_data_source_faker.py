@@ -3,7 +3,6 @@ pytestmark = pytest.mark.unit
 
 import pytest
 
-@pytest.mark.unit
 """Unit tests for the data_source_faker utility."""
 
 from datetime import datetime, timedelta

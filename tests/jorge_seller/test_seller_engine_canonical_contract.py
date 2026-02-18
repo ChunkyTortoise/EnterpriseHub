@@ -44,7 +44,6 @@ def test_normalize_contract_preserves_existing_non_null_values(seller_engine):
     assert normalized["timeline_days"] == 30
 
 
-@pytest.mark.asyncio
 async def test_temperature_uses_timeline_days_and_motivation(seller_engine):
     seller_data = {
         "questions_answered": 4,
@@ -56,7 +55,6 @@ async def test_temperature_uses_timeline_days_and_motivation(seller_engine):
     assert result["temperature"] == "hot"
 
 
-@pytest.mark.asyncio
 async def test_create_seller_actions_includes_canonical_fields(seller_engine):
     pricing_result = SimpleNamespace(expected_roi=17.2, tier="A", final_price=680000)
     seller_data = {
@@ -89,7 +87,6 @@ async def test_create_seller_actions_includes_canonical_fields(seller_engine):
     assert "field_provenance" in updated_fields
 
 
-@pytest.mark.asyncio
 async def test_create_seller_actions_only_writes_changed_canonical_fields(seller_engine):
     previous_seller_data = {
         "seller_motivation": "Relocation",
@@ -134,7 +131,6 @@ async def test_create_seller_actions_only_writes_changed_canonical_fields(seller
     assert "seller_motivation" not in updated_fields
 
 
-@pytest.mark.asyncio
 async def test_create_seller_actions_fail_closed_blocks_canonical_writes(seller_engine):
     seller_data = {
         "seller_motivation": "Relocation",
@@ -167,7 +163,6 @@ async def test_create_seller_actions_fail_closed_blocks_canonical_writes(seller_
     assert not any(a for a in actions if a["type"] == "update_custom_field")
 
 
-@pytest.mark.asyncio
 async def test_ws3_hot_seller_offer_uses_strict_30_min_consult_type(seller_engine):
     tz = pytz.timezone("America/Los_Angeles")
     base_time = tz.localize(datetime(2026, 2, 17, 10, 0))
@@ -200,7 +195,6 @@ async def test_ws3_hot_seller_offer_uses_strict_30_min_consult_type(seller_engin
     assert tracking["appointment_slot_offer_sent"] is True
 
 
-@pytest.mark.asyncio
 async def test_ws3_hot_seller_offer_falls_back_when_fewer_than_three_slots(seller_engine):
     tz = pytz.timezone("America/Los_Angeles")
     base_time = tz.localize(datetime(2026, 2, 17, 10, 0))

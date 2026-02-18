@@ -12,10 +12,8 @@ import pytest
 
 from ghl_real_estate_ai.agent_system.compliance_loop import run_guarded_generation
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_compliance_healing_fha_violation():
     """
     Test that a non-compliant prompt (asking for demographic info)

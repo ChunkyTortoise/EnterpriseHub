@@ -10,7 +10,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 try:
     from fastapi import status

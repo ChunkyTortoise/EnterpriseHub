@@ -17,7 +17,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
 
-@pytest.mark.integration
     SLA_CONFIG,
     PerformanceTracker,
 )

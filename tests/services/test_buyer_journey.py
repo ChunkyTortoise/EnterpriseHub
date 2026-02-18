@@ -7,7 +7,6 @@ Covers stage determination from buyer state, progression tracking,
 GHL tag management, and recommended actions per stage.
 """
 
-from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
@@ -15,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.services.buyer_journey import (
 
-@pytest.mark.integration
     STAGE_ACTIONS,
     STAGE_TAGS,
     BuyerJourneyTracker,

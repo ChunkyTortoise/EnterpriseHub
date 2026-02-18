@@ -63,7 +63,6 @@ from ghl_real_estate_ai.services.service6_ai_integration import Service6AIRespon
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "mocks"))
 from external_services import MockEnhancedDatabaseService, create_mock_service6_response, create_test_lead_data
 
-@pytest.mark.integration
 
 
 class TestDatabaseServiceModels:
@@ -146,7 +145,6 @@ class TestDatabaseServiceModels:
         assert campaign.trigger_conditions["lead_status"] == "new"
 
 
-@pytest.mark.asyncio
 class TestDatabaseService:
     """Test the main DatabaseService class"""
 
@@ -326,7 +324,6 @@ class TestDatabaseService:
         assert isinstance(analytics["conversion_rate"], (int, float))
 
 
-@pytest.mark.asyncio
 class TestDatabaseServicePerformance:
     """Test database service performance and optimization"""
 
@@ -448,7 +445,6 @@ class TestDatabaseServicePerformance:
         assert total_time < 8.0, f"Connection pool operations took {total_time:.2f}s, too slow"
 
 
-@pytest.mark.asyncio
 class TestDatabaseServiceIntegration:
     """Test database service integration with other Service 6 components"""
 
@@ -539,7 +535,6 @@ class TestDatabaseServiceIntegration:
         assert final_lead["lead_id"] == lead_id
 
 
-@pytest.mark.asyncio
 class TestDatabaseServiceSecurity:
     """Test database service security and data protection"""
 
@@ -632,7 +627,6 @@ class TestDatabaseServiceSecurity:
             # In production, these would be encrypted or have restricted access
 
 
-@pytest.mark.asyncio
 class TestDatabaseServiceFactoryFunctions:
     """Test database service factory functions and utilities"""
 
@@ -697,7 +691,6 @@ class TestDatabaseServiceFactoryFunctions:
             pass
 
 
-@pytest.mark.asyncio
 class TestDatabaseServiceErrorHandling:
     """Test database service error handling and recovery"""
 

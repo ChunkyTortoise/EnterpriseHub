@@ -63,7 +63,6 @@ def test_ws6_dashboard_snapshot_exposes_deltas_vs_baseline():
     assert snapshot["kpis"]["opt_out"]["delta"] == pytest.approx(-0.03)
 
 
-@pytest.mark.asyncio
 async def test_ws6_performance_events_and_kpi_deltas():
     tracker = PerformanceTracker()
     await tracker.track_operation("lead_bot", "process", 100.0, success=True)
@@ -86,7 +85,6 @@ async def test_ws6_performance_events_and_kpi_deltas():
     assert deltas["bots"]["lead_bot"]["success_delta"] == pytest.approx(0.5)
 
 
-@pytest.mark.asyncio
 async def test_ws6_guardrail_disables_variant_on_opt_out_breach():
     service = ABTestingService()
     service.create_experiment(
@@ -117,7 +115,6 @@ async def test_ws6_guardrail_disables_variant_on_opt_out_breach():
     assert reassigned == "safe"
 
 
-@pytest.mark.asyncio
 async def test_ws6_guardrail_pauses_when_all_variants_disabled():
     service = ABTestingService()
     service.create_experiment(

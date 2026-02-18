@@ -25,7 +25,6 @@ from ghl_real_estate_ai.models.matching_models import (
 )
 from ghl_real_estate_ai.services.personalized_narrative_engine import (
 
-@pytest.mark.integration
     NarrativeComponent,
     NarrativeLength,
     NarrativeStyle,

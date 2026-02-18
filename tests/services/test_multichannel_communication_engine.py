@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_asyncio
 
-@pytest.mark.integration
 
 # Import the service under test
 try:
@@ -402,7 +401,6 @@ class TestMultichannelCommunicationEngine:
 
 
 # Integration test
-@pytest.mark.asyncio
 async def test_full_communication_pipeline():
     """Test complete communication pipeline integration"""
     try:

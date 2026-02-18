@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
 
 from src.caching.query_cache import (
     CacheWarmingStrategy,
@@ -367,7 +368,7 @@ class TestWarmingTask:
 class TestQueryCache:
     """Test cases for QueryCache class."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def cache(self):
         """Create a query cache for testing."""
         return QueryCache(

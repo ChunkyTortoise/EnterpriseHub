@@ -540,7 +540,6 @@ class TestDataValidation:
         assert irr == 0.0  # Should handle gracefully
 
 
-@pytest.mark.integration
 class TestIntegrationWithExistingSystems:
     """Integration tests with existing systems"""
 
@@ -563,7 +562,6 @@ class TestIntegrationWithExistingSystems:
         assert isinstance(opportunities, list)
 
 
-@pytest.mark.performance
 class TestPerformance:
     """Performance tests for portfolio management"""
 

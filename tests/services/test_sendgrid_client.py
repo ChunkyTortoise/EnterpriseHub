@@ -46,7 +46,6 @@ except (ImportError, TypeError, AttributeError):
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockSendGridClient
 
-@pytest.mark.integration
 
 
 class TestSendGridConfig:
@@ -962,7 +961,6 @@ class TestErrorHandlingAndEdgeCases:
             await client._make_request("GET", "/test")
 
 
-@pytest.mark.performance
 class TestPerformanceCharacteristics:
     """Test SendGrid client performance characteristics"""
 

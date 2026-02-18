@@ -17,7 +17,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
 
 # Import Phase 2 API components
 try:

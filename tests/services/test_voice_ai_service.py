@@ -20,7 +20,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.voice_ai_service import (
 
-@pytest.mark.integration
     VoiceAIService,
     VoiceAnalytics,
     VoiceInteraction,
@@ -61,7 +60,6 @@ def sample_interaction_context():
     }
 
 
-@pytest.mark.asyncio
 class TestVoiceAIService:
     """Test cases for VoiceAIService functionality."""
 

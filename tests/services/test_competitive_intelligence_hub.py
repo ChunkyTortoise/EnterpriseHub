@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.services.competitive_intelligence_hub import (
 
-@pytest.mark.integration
     AlertPriority,
     CompetitiveAlert,
     CompetitiveIntelligenceHub,

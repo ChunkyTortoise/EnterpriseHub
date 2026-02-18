@@ -12,7 +12,6 @@ import plotly.graph_objects as go
 import pytest
 import streamlit as st
 
-@pytest.mark.integration
 
 # Import the dashboard component
 try:

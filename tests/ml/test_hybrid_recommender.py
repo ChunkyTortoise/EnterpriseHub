@@ -8,7 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.ml.hybrid_recommender import (
 
-@pytest.mark.integration
     BuyerPreference,
     HybridPropertyRecommender,
     PropertyFeatures,

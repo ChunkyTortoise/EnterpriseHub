@@ -621,7 +621,6 @@ class TestOWASPTop10Compliance:
         pass  # Requires URL handling implementation
 
 
-@pytest.mark.integration
 class TestSecurityIntegration:
     """Integration tests for complete security flow."""
 

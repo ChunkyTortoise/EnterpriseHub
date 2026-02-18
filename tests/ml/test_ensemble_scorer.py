@@ -21,7 +21,6 @@ from ghl_real_estate_ai.ml.ensemble_scorer import (
 )
 from ghl_real_estate_ai.ml.training_pipeline import TrainingPipeline, TrainingResult
 
-@pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------

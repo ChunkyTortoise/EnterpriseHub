@@ -32,7 +32,6 @@ from ghl_real_estate_ai.services.brand_asset_service import (
 )
 from ghl_real_estate_ai.services.cache_service import CacheService
 
-@pytest.mark.integration
 
 
 def _enum_json_dumps(obj, **kwargs):

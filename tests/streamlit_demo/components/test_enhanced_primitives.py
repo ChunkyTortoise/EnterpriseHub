@@ -511,7 +511,6 @@ class TestPerformanceBenchmarks:
 import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.components.performance_optimizations import PerformanceOptimizer
 
-@pytest.mark.integration
 
 # Create optimizer and simulate cache operations
 perf = PerformanceOptimizer()

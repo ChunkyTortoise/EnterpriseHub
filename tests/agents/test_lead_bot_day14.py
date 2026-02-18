@@ -20,7 +20,6 @@ import pytest
 from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
 from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
 
-@pytest.mark.integration
 
 # ================================
 # FIXTURES

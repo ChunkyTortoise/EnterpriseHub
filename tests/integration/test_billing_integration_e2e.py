@@ -27,7 +27,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-@pytest.mark.integration
 
 # Import the billing components
 try:

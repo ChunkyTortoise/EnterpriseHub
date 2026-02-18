@@ -1,6 +1,5 @@
 """Tests for HubSpotAdapter -- HubSpot CRM adapter."""
 
-from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
@@ -10,7 +9,6 @@ import pytest
 from ghl_real_estate_ai.services.crm import CRMContact, HubSpotAdapter
 from ghl_real_estate_ai.services.crm.hubspot_adapter import HubSpotError
 
-@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -130,7 +128,6 @@ class TestHubSpotError:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestHubSpotCreateContact:
     async def test_create_contact_success(self, adapter: HubSpotAdapter):
         resp = _mock_response(
@@ -160,7 +157,6 @@ class TestHubSpotCreateContact:
         assert result.metadata == {"k": "v"}
 
 
-@pytest.mark.asyncio
 class TestHubSpotGetContact:
     async def test_get_contact_success(self, adapter: HubSpotAdapter):
         resp = _mock_response(
@@ -192,7 +188,6 @@ class TestHubSpotGetContact:
         assert exc_info.value.status_code == 500
 
 
-@pytest.mark.asyncio
 class TestHubSpotUpdateContact:
     async def test_update_contact_maps_keys(self, adapter: HubSpotAdapter):
         resp = _mock_response(
@@ -225,7 +220,6 @@ class TestHubSpotUpdateContact:
         assert payload["properties"]["hs_lead_status"] == "referral"
 
 
-@pytest.mark.asyncio
 class TestHubSpotSearchContacts:
     async def test_search_returns_list(self, adapter: HubSpotAdapter):
         resp = _mock_response(
@@ -257,7 +251,6 @@ class TestHubSpotSearchContacts:
         assert results == []
 
 
-@pytest.mark.asyncio
 class TestHubSpotSyncLead:
     async def test_sync_lead_updates_status_and_score(self, adapter: HubSpotAdapter):
         resp = _mock_response(200, {"id": "sl-1", "properties": {}})
@@ -297,7 +290,6 @@ class TestHubSpotSyncLead:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestHubSpotDeleteContact:
     async def test_delete_returns_true_on_success(self, adapter: HubSpotAdapter):
         resp = _mock_response(204)
@@ -321,7 +313,6 @@ class TestHubSpotDeleteContact:
             await adapter.delete_contact("del-x")
 
 
-@pytest.mark.asyncio
 class TestHubSpotListContacts:
     async def test_list_contacts_with_pagination(self, adapter: HubSpotAdapter):
         resp = _mock_response(

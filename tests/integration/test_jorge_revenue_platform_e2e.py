@@ -23,8 +23,9 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 # Import core application components
 from ghl_real_estate_ai.api.main import app
@@ -65,10 +66,12 @@ class TestJorgeRevenuePlatformE2E:
         """FastAPI test client for API endpoint testing."""
         return TestClient(app)
 
-    @pytest.fixture
-    def async_client(self):
+    @pytest_asyncio.fixture
+    async def async_client(self):
         """Async HTTP client for concurrent request testing."""
-        return AsyncClient(app=app, base_url="http://test")
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
 
     @pytest.fixture
     def jorge_location_id(self):
@@ -175,7 +178,7 @@ class TestJorgeRevenuePlatformE2E:
         with patch.object(
             golden_detector.predictive_scorer,
             "predict_conversion_probability",
-            return_value=asyncio.coroutine(lambda: 0.92)(),
+            new=AsyncMock(return_value=0.92),
         ):
             # STEP 1: Process webhook and extract lead intelligence
             conversation_context = {
@@ -673,12 +676,12 @@ class TestJorgeRevenuePlatformE2E:
             patch.object(
                 lead_scorer,
                 "calculate",
-                return_value=asyncio.coroutine(lambda *args: {"questions_answered": 4, "engagement_score": 0.75})(),
+                new=AsyncMock(return_value={"questions_answered": 4, "engagement_score": 0.75}),
             ),
             patch.object(
                 golden_detector.predictive_scorer,
                 "predict_conversion_probability",
-                return_value=asyncio.coroutine(lambda: 0.82)(),
+                new=AsyncMock(return_value=0.82),
             ),
         ):
             # STEP 1: Lead scoring

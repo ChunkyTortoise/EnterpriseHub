@@ -572,7 +572,6 @@ class TestErrorHandling:
 # ================== INTEGRATION TESTS ==================
 
 
-@pytest.mark.integration
 class TestJorgeAdvancedIntegration:
     """Integration tests for Jorge's advanced features."""
 

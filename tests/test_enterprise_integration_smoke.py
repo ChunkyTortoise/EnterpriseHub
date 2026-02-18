@@ -39,7 +39,6 @@ def mocker(monkeypatch):
     return SimpleMocker()
 
 
-@pytest.mark.integration
 def test_agent_status_endpoint_available():
     if not BASE_URL:
         pytest.skip("ENTERPRISE_API_BASE_URL or BACKEND_URL not set")
@@ -54,7 +53,6 @@ def test_agent_status_endpoint_available():
         assert "last_run_ts" in data[0]
 
 
-@pytest.mark.integration
 def test_jorge_seller_test_endpoint():
     if not BASE_URL:
         pytest.skip("ENTERPRISE_API_BASE_URL or BACKEND_URL not set")
@@ -65,7 +63,6 @@ def test_jorge_seller_test_endpoint():
     assert payload.get("test_result") == "PASS"
 
 
-@pytest.mark.integration
 def test_lead_bot_health_endpoint():
     if not BASE_URL:
         pytest.skip("ENTERPRISE_API_BASE_URL or BACKEND_URL not set")
@@ -76,7 +73,6 @@ def test_lead_bot_health_endpoint():
     assert payload.get("status") == "healthy"
 
 
-@pytest.mark.integration
 def test_concierge_health_endpoint():
     if not BASE_URL:
         pytest.skip("ENTERPRISE_API_BASE_URL or BACKEND_URL not set")

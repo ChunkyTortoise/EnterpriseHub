@@ -20,7 +20,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.competitive_alert_system import (

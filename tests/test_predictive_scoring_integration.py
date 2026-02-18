@@ -16,10 +16,8 @@ os.environ["JORGE_SELLER_MODE"] = "false"
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_predictive_integration():
     print("🚀 Testing Predictive Lead Scoring Integration...")
 

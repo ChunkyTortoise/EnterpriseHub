@@ -35,7 +35,6 @@ def _slot(start: datetime, minutes: int = 30, appointment_type: AppointmentType 
     )
 
 
-@pytest.mark.asyncio
 async def test_ws3_get_hot_seller_slots_returns_exactly_three(ws3_scheduler):
     scheduler, _ = ws3_scheduler
     tz = pytz.timezone("America/Los_Angeles")
@@ -49,7 +48,6 @@ async def test_ws3_get_hot_seller_slots_returns_exactly_three(ws3_scheduler):
     assert all(slot.appointment_type == AppointmentType.SELLER_CONSULTATION for slot in result)
 
 
-@pytest.mark.asyncio
 async def test_ws3_get_hot_seller_slots_requires_three(ws3_scheduler):
     scheduler, _ = ws3_scheduler
     tz = pytz.timezone("America/Los_Angeles")
@@ -76,7 +74,6 @@ def test_ws3_manual_scheduling_actions_include_workflow(ws3_scheduler):
     assert workflows == ["wf_manual_ws3"]
 
 
-@pytest.mark.asyncio
 async def test_ws3_confirmation_actions_include_sms_and_email(ws3_scheduler):
     scheduler, _ = ws3_scheduler
     tz = pytz.timezone("America/Los_Angeles")

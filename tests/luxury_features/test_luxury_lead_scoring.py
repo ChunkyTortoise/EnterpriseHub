@@ -497,7 +497,6 @@ class TestDataValidation:
         assert abs(total_weight - 1.0) < 0.001  # Allow for floating point precision
 
 
-@pytest.mark.integration
 class TestIntegrationWithExistingSystems:
     """Integration tests with existing codebase systems"""
 
@@ -523,7 +522,6 @@ class TestIntegrationWithExistingSystems:
         assert luxury_scoring_engine.claude.generate_claude_response.called
 
 
-@pytest.mark.performance
 class TestPerformance:
     """Performance tests for luxury lead scoring"""
 

@@ -15,7 +15,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 try:
     from fastapi.testclient import TestClient

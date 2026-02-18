@@ -556,7 +556,6 @@ class TestErrorHandling:
         ]
 
 
-@pytest.mark.integration
 class TestMarketIntelligenceIntegration:
     """Integration tests for Market Intelligence API."""
 
@@ -651,7 +650,6 @@ class TestMarketIntelligenceIntegration:
         assert timing_response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.performance
 class TestMarketIntelligencePerformance:
     """Performance tests for Market Intelligence API."""
 

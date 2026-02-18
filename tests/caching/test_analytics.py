@@ -16,10 +16,10 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
 
 from src.caching.analytics import (
 
-@pytest.mark.integration
     CacheAnalytics,
     CacheMetrics,
     CostAnalysis,
@@ -241,7 +241,7 @@ class TestPerformanceReport:
 class TestCacheAnalytics:
     """Test cases for CacheAnalytics class."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def analytics(self):
         """Create analytics instance for testing."""
         return CacheAnalytics(

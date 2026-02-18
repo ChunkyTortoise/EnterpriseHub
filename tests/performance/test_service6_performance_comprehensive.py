@@ -56,7 +56,6 @@ from ghl_real_estate_ai.services.service6_ai_integration import (
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "mocks"))
 from external_services import (
 
-@pytest.mark.integration
     MockEnhancedDatabaseService,
     MockMLScoringEngine,
     MockPredictiveAnalytics,
@@ -156,7 +155,6 @@ class PerformanceProfiler:
         )
 
 
-@pytest.mark.asyncio
 class TestService6AIPerformance:
     """Performance tests for Service 6 AI components"""
 
@@ -364,7 +362,6 @@ class TestService6AIPerformance:
         assert scaling_factor > 3.0, f"Throughput scaling factor {scaling_factor:.1f}x insufficient"
 
 
-@pytest.mark.asyncio
 class TestBehavioralNetworkPerformance:
     """Performance tests for behavioral network components"""
 
@@ -508,7 +505,6 @@ class TestBehavioralNetworkPerformance:
             print(f"⚡ {method_name}: {metrics.avg_latency_ms:.1f}ms avg, {metrics.success_rate:.1%} success")
 
 
-@pytest.mark.asyncio
 class TestDatabasePerformance:
     """Performance tests for database operations"""
 
@@ -626,7 +622,6 @@ class TestDatabasePerformance:
         print(f"   Bulk Read: {read_metrics.avg_latency_ms:.1f}ms")
 
 
-@pytest.mark.asyncio
 class TestCachePerformance:
     """Performance tests for caching layer"""
 
@@ -722,7 +717,6 @@ class TestCachePerformance:
         print(f"📈 Cache Hit Ratio: {hit_rate:.1%}")
 
 
-@pytest.mark.asyncio
 class TestMemoryEfficiency:
     """Memory efficiency and resource usage tests"""
 

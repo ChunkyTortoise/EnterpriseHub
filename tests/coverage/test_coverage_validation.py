@@ -20,7 +20,6 @@ from typing import Dict, List, Tuple
 
 import pytest
 
-@pytest.mark.integration
 
 
 class CoverageValidator:

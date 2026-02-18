@@ -156,7 +156,13 @@ def _all_mode_patches(
 
         # --- Lead (ConversationManager + Lead Bot Workflow) ---
         mock_conv_mgr = MagicMock()
-        mock_conv_mgr.generate_response = AsyncMock()
+        mock_conv_mgr.generate_response = AsyncMock(
+            return_value=SimpleNamespace(
+                message="Thanks for reaching out! I can help with your real estate goals.",
+                lead_score=42,
+                extracted_data={},
+            )
+        )
         mock_conv_mgr.get_context = AsyncMock(return_value={})
         mock_conv_mgr.update_context = AsyncMock()
         mock_conv_mgr.get_conversation_history = AsyncMock(return_value=[])
@@ -205,9 +211,14 @@ def _all_mode_patches(
 
         mock_lead_source_tracker = MagicMock()
         mock_lead_source_tracker.analyze_lead_source = AsyncMock(side_effect=Exception("test skip"))
+        mock_analytics_service = MagicMock(track_event=AsyncMock())
+        mock_webhook_cache = MagicMock()
+        mock_webhook_cache.exists = AsyncMock(return_value=False)
+        mock_webhook_cache.get = AsyncMock(return_value=None)
+        mock_webhook_cache.set = AsyncMock()
 
         with (
-            patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", MagicMock(track_event=AsyncMock())),
+            patch("ghl_real_estate_ai.api.routes.webhook.analytics_service", mock_analytics_service),
             patch("ghl_real_estate_ai.api.routes.webhook.ghl_client_default", mock_ghl_client),
             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_jorge_settings),
             patch("ghl_real_estate_ai.api.routes.webhook.settings", mock_config_settings),
@@ -216,6 +227,7 @@ def _all_mode_patches(
             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv_mgr),
             patch("ghl_real_estate_ai.api.routes.webhook._get_lead_scorer", return_value=mock_lead_scorer),
             patch("ghl_real_estate_ai.api.routes.webhook.lead_source_tracker", mock_lead_source_tracker),
+            patch("ghl_real_estate_ai.api.routes.webhook.webhook_cache", mock_webhook_cache),
             patch(
                 "ghl_real_estate_ai.api.routes.webhook.attribution_analytics",
                 MagicMock(track_daily_metrics=AsyncMock()),
@@ -252,6 +264,8 @@ def _all_mode_patches(
                 "compliance": mock_compliance,
                 "ghl_client": mock_ghl_client,
                 "lead_scorer": mock_lead_scorer,
+                "analytics_service": mock_analytics_service,
+                "webhook_cache": mock_webhook_cache,
             }
 
     return _patches()
@@ -262,7 +276,6 @@ def _all_mode_patches(
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestWebhookRoutingComprehensive:
     """Phase 5: All three bot modes in a single suite with shared fixtures."""
 
@@ -307,6 +320,77 @@ class TestWebhookRoutingComprehensive:
             lead_resp = await handle_ghl_webhook.__wrapped__(MagicMock(), lead_event, MagicMock())
         assert lead_resp.success is True
         mocks["lead_bot"].process_enhanced_lead_sequence.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_webhook_deduplicates_delivery_id_and_skips_double_processing(self):
+        """Second webhook retry with same deliveryId returns DUPLICATE_EVENT without reprocessing."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to sell my house",
+            contact_id="dup_contact_001",
+            tags=["Needs Qualifying"],
+        )
+
+        dedup_cache = MagicMock()
+        dedup_cache.exists = AsyncMock(side_effect=[False, True])
+        dedup_cache.set = AsyncMock()
+
+        request = SimpleNamespace(headers={"deliveryId": "delivery-dup-001"})
+        background_tasks = MagicMock()
+
+        with (
+            _all_mode_patches(jorge_seller_mode=True, jorge_buyer_mode=False, jorge_lead_mode=False) as mocks,
+            patch("ghl_real_estate_ai.api.routes.webhook.webhook_cache", dedup_cache),
+        ):
+            first = await handle_ghl_webhook.__wrapped__(request, event, background_tasks)
+            second = await handle_ghl_webhook.__wrapped__(request, event, background_tasks)
+
+        assert first.success is True
+        assert first.message != "DUPLICATE_EVENT"
+        assert second.success is True
+        assert second.message == "DUPLICATE_EVENT"
+        assert second.actions == []
+        dedup_cache.set.assert_awaited_once()
+        assert dedup_cache.exists.await_count == 2
+        mocks["seller_engine"].process_seller_response.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_webhook_deduplicates_with_payload_fingerprint_when_header_missing(self):
+        """Missing delivery header falls back to payload fingerprint dedup with short TTL."""
+        from ghl_real_estate_ai.api.routes.webhook import handle_ghl_webhook
+
+        event = _make_webhook_event(
+            "I want to sell my house",
+            contact_id="dup_contact_no_header_001",
+            tags=["Needs Qualifying"],
+        )
+
+        dedup_cache = MagicMock()
+        dedup_cache.exists = None
+        dedup_cache.get = AsyncMock(side_effect=[None, {"processed_at": "2026-02-16T00:00:00Z"}])
+        dedup_cache.set = AsyncMock()
+
+        request = SimpleNamespace(headers={})
+        background_tasks = MagicMock()
+
+        with (
+            _all_mode_patches(jorge_seller_mode=True, jorge_buyer_mode=False, jorge_lead_mode=False) as mocks,
+            patch("ghl_real_estate_ai.api.routes.webhook.webhook_cache", dedup_cache),
+        ):
+            first = await handle_ghl_webhook.__wrapped__(request, event, background_tasks)
+            second = await handle_ghl_webhook.__wrapped__(request, event, background_tasks)
+
+        assert first.success is True
+        assert first.message != "DUPLICATE_EVENT"
+        assert second.success is True
+        assert second.message == "DUPLICATE_EVENT"
+        assert second.actions == []
+        dedup_cache.set.assert_awaited_once()
+        assert dedup_cache.get.await_count == 2
+        dedup_key = dedup_cache.set.await_args.args[0]
+        assert dedup_key.startswith("ghl:webhook:fingerprint:")
+        mocks["seller_engine"].process_seller_response.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_priority_seller_over_lead(self):

@@ -16,7 +16,6 @@ import pytest
 
 from ghl_real_estate_ai.repositories.jorge_metrics_repository import (
 
-@pytest.mark.integration
     JorgeMetricsRepository,
 )
 
@@ -39,7 +38,6 @@ def repo(mock_pool):
 # ── save_interaction ──────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_save_interaction_calls_execute(repo, mock_pool):
     await repo.save_interaction("lead", 450.0, True, True, 1000.0)
     mock_pool.execute.assert_awaited_once()
@@ -52,7 +50,6 @@ async def test_save_interaction_calls_execute(repo, mock_pool):
     assert args[0][5] == 1000.0
 
 
-@pytest.mark.asyncio
 async def test_save_interaction_with_metadata(repo, mock_pool):
     meta = {"source": "test"}
     await repo.save_interaction("buyer", 200.0, False, False, 1000.0, metadata=meta)
@@ -60,7 +57,6 @@ async def test_save_interaction_with_metadata(repo, mock_pool):
     assert json.loads(args[0][6]) == meta
 
 
-@pytest.mark.asyncio
 async def test_save_interaction_db_failure_logs_warning(repo, mock_pool, caplog):
     mock_pool.execute.side_effect = Exception("connection lost")
     await repo.save_interaction("lead", 100.0, True, False, 1000.0)
@@ -70,7 +66,6 @@ async def test_save_interaction_db_failure_logs_warning(repo, mock_pool, caplog)
 # ── load_interactions ─────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_load_interactions_returns_dicts(repo, mock_pool):
     mock_pool.fetch.return_value = [
         {
@@ -88,7 +83,6 @@ async def test_load_interactions_returns_dicts(repo, mock_pool):
     assert result[0]["duration_ms"] == 300.0
 
 
-@pytest.mark.asyncio
 async def test_load_interactions_db_failure_returns_empty(repo, mock_pool):
     mock_pool.fetch.side_effect = Exception("timeout")
     result = await repo.load_interactions(0.0)
@@ -98,7 +92,6 @@ async def test_load_interactions_db_failure_returns_empty(repo, mock_pool):
 # ── save_handoff ──────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_save_handoff_calls_execute(repo, mock_pool):
     await repo.save_handoff("lead", "buyer", True, 120.0, 1000.0)
     mock_pool.execute.assert_awaited_once()
@@ -111,7 +104,6 @@ async def test_save_handoff_calls_execute(repo, mock_pool):
 # ── load_handoffs ─────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_load_handoffs_returns_dicts(repo, mock_pool):
     mock_pool.fetch.return_value = [
         {
@@ -131,7 +123,6 @@ async def test_load_handoffs_returns_dicts(repo, mock_pool):
 # ── save_alert ────────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_save_alert_calls_execute(repo, mock_pool):
     await repo.save_alert(
         rule_name="high_error_rate",
@@ -149,7 +140,6 @@ async def test_save_alert_calls_execute(repo, mock_pool):
 # ── load_alerts ───────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_load_alerts_returns_dicts(repo, mock_pool):
     mock_pool.fetch.return_value = [
         {
@@ -173,7 +163,6 @@ async def test_load_alerts_returns_dicts(repo, mock_pool):
 # ── acknowledge_alert_db ──────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_acknowledge_alert_db_success(repo, mock_pool):
     mock_pool.fetchrow.return_value = {
         "id": 42,
@@ -186,7 +175,6 @@ async def test_acknowledge_alert_db_success(repo, mock_pool):
     assert result["acknowledged"] is True
 
 
-@pytest.mark.asyncio
 async def test_acknowledge_alert_db_not_found(repo, mock_pool):
     mock_pool.fetchrow.return_value = None
     result = await repo.acknowledge_alert_db(999, "admin")
@@ -196,7 +184,6 @@ async def test_acknowledge_alert_db_not_found(repo, mock_pool):
 # ── save_handoff_outcome ──────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_save_handoff_outcome_calls_execute(repo, mock_pool):
     await repo.save_handoff_outcome(
         contact_id="c001",
@@ -213,7 +200,6 @@ async def test_save_handoff_outcome_calls_execute(repo, mock_pool):
     assert args[0][4] == "successful"
 
 
-@pytest.mark.asyncio
 async def test_save_handoff_outcome_db_failure(repo, mock_pool, caplog):
     mock_pool.execute.side_effect = Exception("disk full")
     await repo.save_handoff_outcome("c001", "lead", "buyer", "failed", 1000.0)
@@ -223,7 +209,6 @@ async def test_save_handoff_outcome_db_failure(repo, mock_pool, caplog):
 # ── load_handoff_outcomes ─────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_load_handoff_outcomes_no_filters(repo, mock_pool):
     mock_pool.fetch.return_value = [
         {
@@ -240,7 +225,6 @@ async def test_load_handoff_outcomes_no_filters(repo, mock_pool):
     assert result[0]["contact_id"] == "c001"
 
 
-@pytest.mark.asyncio
 async def test_load_handoff_outcomes_with_filters(repo, mock_pool):
     mock_pool.fetch.return_value = []
     result = await repo.load_handoff_outcomes(900.0, source_bot="lead", target_bot="buyer")
@@ -251,7 +235,6 @@ async def test_load_handoff_outcomes_with_filters(repo, mock_pool):
     assert "target_bot" in sql
 
 
-@pytest.mark.asyncio
 async def test_load_handoff_outcomes_db_failure(repo, mock_pool):
     mock_pool.fetch.side_effect = Exception("timeout")
     result = await repo.load_handoff_outcomes(0.0)
@@ -261,7 +244,6 @@ async def test_load_handoff_outcomes_db_failure(repo, mock_pool):
 # ── Pool creation ─────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_get_pool_lazy_creation():
     repo = JorgeMetricsRepository(dsn="postgresql://test:test@localhost/test")
     assert repo._pool is None
@@ -276,7 +258,6 @@ async def test_get_pool_lazy_creation():
 # ── close ─────────────────────────────────────────────────────────────
 
 
-@pytest.mark.asyncio
 async def test_close_pool(repo, mock_pool):
     await repo.close()
     mock_pool.close.assert_awaited_once()

@@ -35,7 +35,6 @@ from ghl_real_estate_ai.services.realtime_behavioral_network import (
 # Import services for integration testing
 from ghl_real_estate_ai.services.service6_ai_integration import (
 
-@pytest.mark.integration
     Service6AIConfig,
     Service6AIOrchestrator,
     create_service6_ai_orchestrator,

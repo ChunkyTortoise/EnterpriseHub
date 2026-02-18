@@ -322,7 +322,6 @@ def _seller_bot_patches():
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestLeadQualificationFlow:
     """Lead -> Qualification -> Action: end-to-end qualification pipeline."""
 
@@ -568,7 +567,6 @@ class TestLeadQualificationFlow:
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestBuyerQualificationFlow:
     """Buyer discovery -> Financial assessment -> Property matching -> Response."""
 
@@ -859,7 +857,6 @@ class TestBuyerQualificationFlow:
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestSellerAnalysisFlow:
     """Seller inquiry -> Qualification -> CMA / Strategy selection."""
 
@@ -1120,7 +1117,6 @@ class TestSellerAnalysisFlow:
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestConversationPersistence:
     """State management: persistence across turns and qualification progress."""
 
@@ -1359,7 +1355,6 @@ class TestConversationPersistence:
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestCrossBotCommunication:
     """Bot handoff: lead qualification -> specialized bot routing."""
 
@@ -1625,7 +1620,6 @@ class TestCrossBotCommunication:
 # ===========================================================================
 
 
-@pytest.mark.integration
 class TestCrossBotHandoffService:
     """End-to-end: handoff service evaluates intent and generates tag swap actions."""
 

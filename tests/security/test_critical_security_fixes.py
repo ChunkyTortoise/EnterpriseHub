@@ -20,7 +20,6 @@ from ghl_real_estate_ai.api.middleware.jwt_auth import JWTAuth
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLAction, MessageType
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
-@pytest.mark.integration
 
 
 class TestCriticalSecurityFixes:

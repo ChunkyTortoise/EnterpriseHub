@@ -11,7 +11,22 @@ import pytest
 from utils.data_loader import calculate_indicators, get_stock_data
 from utils.exceptions import DataFetchError, DataProcessingError, InvalidTickerError
 
-@pytest.mark.integration
+
+
+@pytest.fixture
+def sample_stock_data():
+    """Representative OHLCV sample for loader and indicator tests."""
+    dates = pd.date_range("2023-01-01", periods=30, freq="D")
+    return pd.DataFrame(
+        {
+            "Open": [100.0 + i for i in range(30)],
+            "High": [105.0 + i for i in range(30)],
+            "Low": [95.0 + i for i in range(30)],
+            "Close": [102.0 + i for i in range(30)],
+            "Volume": [1_000_000 + (i * 1000) for i in range(30)],
+        },
+        index=dates,
+    )
 
 
 class TestGetStockData:

@@ -20,7 +20,6 @@ import pytest
 
 from ghl_real_estate_ai.services.national_market_intelligence import (
 
-@pytest.mark.unit
     CompetitiveAnalysis,
     MarketMetrics,
     MarketTrend,
@@ -595,7 +594,6 @@ class TestNationalMarketIntelligence:
             assert service1 is service2
 
 
-@pytest.mark.asyncio
 async def test_data_persistence():
     """Test data persistence and loading"""
     import json

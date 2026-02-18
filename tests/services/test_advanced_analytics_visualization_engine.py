@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_asyncio
 
-@pytest.mark.integration
 
 # Import the service under test
 try:
@@ -313,7 +312,6 @@ class TestAdvancedAnalyticsVisualizationEngine:
 
 
 # Integration test
-@pytest.mark.asyncio
 async def test_full_analytics_pipeline():
     """Test complete analytics pipeline integration"""
     try:

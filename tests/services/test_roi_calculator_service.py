@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-@pytest.mark.integration
 
 try:
     from ghl_real_estate_ai.services.roi_calculator_service import (

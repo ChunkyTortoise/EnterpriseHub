@@ -47,7 +47,6 @@ except (ImportError, TypeError, AttributeError):
 from tests.fixtures.sample_data import LeadProfiles
 from tests.mocks.external_services import MockDatabaseService
 
-@pytest.mark.integration
 
 
 def _make_transaction_context_manager(mock_conn):
@@ -968,7 +967,6 @@ class TestEdgeCasesAndErrorHandling:
         assert all(result is True for result in results if not isinstance(result, Exception))
 
 
-@pytest.mark.performance
 class TestPerformanceCharacteristics:
     """Test database performance characteristics"""
 

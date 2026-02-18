@@ -12,10 +12,8 @@ import pytest
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.core.llm_client import LLMProvider, LLMResponse
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_parallel_pipeline_latency():
     """Verify that parallelized generate_response is faster than sequential."""
     cm = ConversationManager()

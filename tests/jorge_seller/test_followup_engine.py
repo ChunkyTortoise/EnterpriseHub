@@ -12,7 +12,6 @@ def followup_engine():
     return JorgeFollowUpEngine(AsyncMock(), AsyncMock())
 
 
-@pytest.mark.asyncio
 async def test_initial_sequence_determination(followup_engine):
     seller_data = {
         "seller_temperature": "cold",
@@ -32,7 +31,6 @@ async def test_initial_sequence_determination(followup_engine):
     assert result["position"] == 1
 
 
-@pytest.mark.asyncio
 async def test_cold_monthly_sequence_determination(followup_engine):
     seller_data = {
         "seller_temperature": "cold",
@@ -47,7 +45,6 @@ async def test_cold_monthly_sequence_determination(followup_engine):
     assert result["days_since_contact"] >= 45
 
 
-@pytest.mark.asyncio
 async def test_generate_followup_message(followup_engine):
     seller_data = {"contact_name": "John"}
     config = {"type": FollowUpType.HOT_DAILY_NURTURE, "temperature": "hot", "position": 1, "days_since_contact": 2}
@@ -59,7 +56,6 @@ async def test_generate_followup_message(followup_engine):
     assert "John" in message.content
 
 
-@pytest.mark.asyncio
 async def test_schedule_next_followup(followup_engine):
     seller_data = {}
     config = {
@@ -79,7 +75,6 @@ async def test_schedule_next_followup(followup_engine):
     assert (scheduled_date - datetime.now()).total_seconds() >= 6 * 24 * 3600
 
 
-@pytest.mark.asyncio
 async def test_hot_deescalates_to_warm_after_non_response_streak(followup_engine):
     seller_data = {
         "seller_temperature": "hot",
@@ -94,7 +89,6 @@ async def test_hot_deescalates_to_warm_after_non_response_streak(followup_engine
     assert result["deescalated"] is True
 
 
-@pytest.mark.asyncio
 async def test_schedule_stops_when_retry_ceiling_reached(followup_engine):
     seller_data = {}
     config = {
@@ -111,7 +105,6 @@ async def test_schedule_stops_when_retry_ceiling_reached(followup_engine):
     assert next_sched is None
 
 
-@pytest.mark.asyncio
 async def test_followup_actions_include_manual_escalation_tags(followup_engine):
     config = {
         "type": FollowUpType.WARM_WEEKLY_NURTURE,

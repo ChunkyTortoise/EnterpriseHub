@@ -102,6 +102,7 @@ def _mock_event_publisher():
     ep = MagicMock()
     ep.publish_intent_analysis_complete = AsyncMock()
     ep.publish_lead_bot_sequence_update = AsyncMock()
+    ep.publish_seller_bot_message_processed = AsyncMock()
     return patch(
         "ghl_real_estate_ai.api.routes.bot_management.get_event_publisher",
         return_value=ep,
@@ -373,6 +374,80 @@ class TestIntentDecoderScore:
         assert "temperature" in data
         assert "classification" in data
         assert "breakdown" in data
+
+
+# ---------------------------------------------------------------------------
+# POST /api/jorge-seller/process
+# ---------------------------------------------------------------------------
+
+
+class TestJorgeSellerProcess:
+    """Tests for seller message processing endpoint."""
+
+    def test_process_returns_real_bot_output_and_normalized_scores(self):
+        """Uses real bot result fields and computes normalized completion analytics."""
+        jorge_bot = MagicMock()
+        jorge_bot.process_seller_message = AsyncMock(
+            return_value={
+                "response_content": "Given your timeline, we should prep photos this week and list next Monday.",
+                "frs_score": 86.0,
+                "pcs_score": 72.0,
+                "current_step": "pricing_review",
+                "handoff_signals": {"agent_call_recommended": True},
+            }
+        )
+
+        session_manager = MagicMock()
+        session_manager.get_lead_conversations = AsyncMock(return_value=["conv-jorge-001"])
+        session_manager.get_history = AsyncMock(return_value=[{"role": "user", "content": "Previous context"}])
+        session_manager.create_session = AsyncMock(return_value="conv-jorge-001")
+        session_manager.add_message = AsyncMock()
+
+        performance_monitor = MagicMock()
+        performance_monitor.track_jorge_performance = AsyncMock()
+
+        with (
+            patch("ghl_real_estate_ai.api.routes.bot_management.get_jorge_bot", return_value=jorge_bot),
+            patch("ghl_real_estate_ai.api.routes.bot_management.get_session_manager", return_value=session_manager),
+            patch("ghl_real_estate_ai.api.routes.bot_management.get_performance_monitor", return_value=performance_monitor),
+            _mock_event_publisher(),
+            patch("ghl_real_estate_ai.api.routes.bot_management._track_conversation_metrics", new=AsyncMock()),
+        ):
+            client = _make_client()
+            resp = client.post(
+                "/api/jorge-seller/process",
+                json={
+                    "contact_id": "lead-jorge-001",
+                    "location_id": "loc-001",
+                    "message": "I need to sell in the next 60 days",
+                    "contact_info": {
+                        "name": "Maria Seller",
+                        "phone": "+19095551234",
+                        "email": "maria@example.com",
+                    },
+                },
+                headers=_ADMIN_HEADER,
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert (
+            data["response_message"]
+            == "Given your timeline, we should prep photos this week and list next Monday."
+        )
+        assert data["next_steps"] == "Current workflow step: pricing_review"
+        assert data["seller_temperature"] == "hot"
+        assert data["questions_answered"] == 4
+        assert data["qualification_complete"] is True
+        assert data["analytics"]["frs_score"] == 86.0
+        assert data["analytics"]["pcs_score"] == 72.0
+        assert data["analytics"]["qualification_score"] == 79.0
+        assert data["analytics"]["qualification_complete"] is True
+        assert data["analytics"]["confidence"] == 0.79
+        assert any(a.get("type") == "add_tag" and a.get("tag") == "Seller-Hot" for a in data["actions_taken"])
+        assert any(a.get("type") == "add_tag" and a.get("tag") == "Seller-Qualified" for a in data["actions_taken"])
+
+        jorge_bot.process_seller_message.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,6 @@ same algorithm:
 
 import pytest
 
-@pytest.mark.unit
 
 SMS_MAX_CHARS = 320
 

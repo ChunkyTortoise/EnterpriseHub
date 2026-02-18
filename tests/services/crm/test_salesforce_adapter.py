@@ -1,6 +1,5 @@
 """Tests for SalesforceAdapter -- Salesforce CRM adapter."""
 
-from __future__ import annotations
 
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,7 +10,6 @@ import pytest
 from ghl_real_estate_ai.services.crm import CRMContact
 from ghl_real_estate_ai.services.crm.salesforce_adapter import (
 
-@pytest.mark.integration
     SalesforceAdapter,
     SalesforceError,
 )
@@ -98,7 +96,6 @@ class TestSalesforceAdapterInit:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestSalesforceAuth:
     async def test_authenticate_fetches_new_token(self):
         adapter = SalesforceAdapter(
@@ -240,7 +237,6 @@ class TestSalesforceError:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestSalesforceRequest:
     async def test_request_clears_token_on_401(self, adapter: SalesforceAdapter):
         """401 response should clear cached token for re-auth on next call."""
@@ -279,7 +275,6 @@ class TestSalesforceRequest:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestSalesforceCreateContact:
     async def test_create_contact_success(self, adapter: SalesforceAdapter):
         resp = _mock_response(201, {"id": "sf-c1", "success": True})
@@ -303,7 +298,6 @@ class TestSalesforceCreateContact:
         assert result.metadata == {"k": "v"}
 
 
-@pytest.mark.asyncio
 class TestSalesforceGetContact:
     async def test_get_contact_success(self, adapter: SalesforceAdapter):
         resp = _mock_response(200, {
@@ -335,7 +329,6 @@ class TestSalesforceGetContact:
         assert exc_info.value.status_code == 500
 
 
-@pytest.mark.asyncio
 class TestSalesforceUpdateContact:
     async def test_update_contact_maps_keys(self, adapter: SalesforceAdapter):
         # PATCH returns 204 (no content), then GET returns updated record
@@ -373,7 +366,6 @@ class TestSalesforceUpdateContact:
         assert payload["LeadSource"] == "referral"
 
 
-@pytest.mark.asyncio
 class TestSalesforceSearchContacts:
     async def test_search_returns_list(self, adapter: SalesforceAdapter):
         resp = _mock_response(200, {
@@ -401,7 +393,6 @@ class TestSalesforceSearchContacts:
         assert results == []
 
 
-@pytest.mark.asyncio
 class TestSalesforceSyncLead:
     async def test_sync_lead_updates_source_and_score(self, adapter: SalesforceAdapter):
         patch_resp = _mock_response(204)

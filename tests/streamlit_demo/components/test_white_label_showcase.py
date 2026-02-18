@@ -20,7 +20,6 @@ from ghl_real_estate_ai.services.white_label_service import (
 )
 from ghl_real_estate_ai.streamlit_demo.components.white_label_showcase import (
 
-@pytest.mark.integration
     WhiteLabelShowcase,
     get_white_label_showcase,
 )

@@ -17,7 +17,6 @@ import pytest
 
 from ghl_real_estate_ai.ml.behavioral_signal_processor import (
 
-@pytest.mark.unit
     BehavioralSignal,
     BehavioralSignalProcessor,
     EngagementPattern,

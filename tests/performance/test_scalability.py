@@ -14,7 +14,6 @@ from typing import Any, Dict, List
 import aiohttp
 import pytest
 
-@pytest.mark.integration
 
 logger = logging.getLogger(__name__)
 
@@ -293,8 +292,6 @@ class PerformanceTestSuite:
 
 
 # pytest test functions
-@pytest.mark.asyncio
-@pytest.mark.performance
 async def test_baseline_performance():
     """Test baseline single-user performance"""
     async with PerformanceTestSuite() as suite:
@@ -309,8 +306,6 @@ async def test_baseline_performance():
         assert targets["overall_pass"], f"Performance targets failed: {targets}"
 
 
-@pytest.mark.asyncio
-@pytest.mark.performance
 async def test_target_load_performance():
     """Test performance under target load (100 leads/hour)"""
     async with PerformanceTestSuite() as suite:
@@ -331,8 +326,6 @@ async def test_target_load_performance():
         assert targets["throughput_target"], f"Throughput {result.throughput_rps:.3f} RPS below target"
 
 
-@pytest.mark.asyncio
-@pytest.mark.stress
 async def test_stress_performance():
     """Stress test to find breaking point"""
     async with PerformanceTestSuite() as suite:
@@ -349,9 +342,6 @@ async def test_stress_performance():
         assert any("20_users" in level for level in passing_levels), "System should handle at least 20 concurrent users"
 
 
-@pytest.mark.asyncio
-@pytest.mark.endurance
-@pytest.mark.slow
 async def test_endurance_performance():
     """1-hour endurance test (use @pytest.mark.slow to skip in quick runs)"""
     async with PerformanceTestSuite() as suite:

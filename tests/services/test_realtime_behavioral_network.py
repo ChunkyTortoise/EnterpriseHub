@@ -27,7 +27,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.realtime_behavioral_network import (
 
-@pytest.mark.integration
     BehavioralAnalysisAgentType,
     BehavioralInsight,
     BehavioralPattern,

@@ -18,7 +18,6 @@ import pytest
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import (
 
-@pytest.mark.integration
     EnhancedLeadIntelligence,
     get_enhanced_lead_intelligence,
 )

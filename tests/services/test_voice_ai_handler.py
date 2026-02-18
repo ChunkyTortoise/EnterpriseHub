@@ -34,7 +34,6 @@ def sample_call_context():
     return VoiceCallContext(call_id="test-call-123", phone_number="+19095551234", caller_name="John Smith")
 
 
-@pytest.mark.asyncio
 class TestVoiceAIHandler:
     """Test cases for Voice AI Handler"""
 
@@ -334,7 +333,6 @@ class TestVoiceAIHandler:
         assert "inland empire" in prompt.lower()
 
 
-@pytest.mark.asyncio
 class TestVoiceCallContext:
     """Test VoiceCallContext dataclass"""
 
@@ -366,7 +364,6 @@ class TestVoiceCallContext:
         assert context.employer == "Amazon"
 
 
-@pytest.mark.asyncio
 class TestVoiceResponse:
     """Test VoiceResponse dataclass"""
 
@@ -391,7 +388,6 @@ class TestVoiceResponse:
 
 
 # Integration tests
-@pytest.mark.integration
 class TestVoiceAIIntegration:
     """Integration tests for Voice AI system"""
 

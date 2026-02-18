@@ -21,7 +21,6 @@ import pytest
 
 from ghl_real_estate_ai.services.competitor_intelligence import (
 
-@pytest.mark.integration
     CompetitiveAnalysis,
     CompetitorIntelligenceService,
     CompetitorMention,

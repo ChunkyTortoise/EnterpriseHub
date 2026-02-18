@@ -14,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.services.sms_compliance_service import (
 
-@pytest.mark.integration
     OptOutReason,
     SMSComplianceService,
     SMSValidationResult,

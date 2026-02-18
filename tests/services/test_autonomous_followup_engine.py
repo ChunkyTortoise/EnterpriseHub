@@ -37,7 +37,6 @@ from ghl_real_estate_ai.services.autonomous_followup_engine import (
 )
 from ghl_real_estate_ai.services.behavioral_trigger_engine import IntentLevel
 
-@pytest.mark.integration
 
 
 class TestAutonomousFollowUpEngine:

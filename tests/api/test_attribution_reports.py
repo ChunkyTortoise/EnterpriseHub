@@ -18,7 +18,20 @@ from ghl_real_estate_ai.api.main import app
 from ghl_real_estate_ai.services.attribution_analytics import AlertType, AttributionReport, PerformanceAlert
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourcePerformance, SourceQuality
 
-@pytest.mark.integration
+
+
+def _error_message(payload):
+    """Return an error message from either legacy or structured error responses."""
+    if isinstance(payload, dict):
+        if "detail" in payload:
+            return str(payload["detail"])
+        debug = payload.get("debug")
+        if isinstance(debug, dict) and "original_detail" in debug:
+            return str(debug["original_detail"])
+        error = payload.get("error")
+        if isinstance(error, dict):
+            return str(error.get("message", ""))
+    return ""
 
 
 class TestAttributionReportsAPI:
@@ -70,9 +83,7 @@ class TestAttributionReportsAPI:
         ]
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performances)()
-            )
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=mock_performances)
 
             response = self.client.get(f"{self.base_url}/performance")
 
@@ -96,9 +107,7 @@ class TestAttributionReportsAPI:
         )
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performance)()
-            )
+            mock_tracker.get_source_performance = AsyncMock(return_value=mock_performance)
 
             # Test single source filter
             response = self.client.get(
@@ -123,7 +132,7 @@ class TestAttributionReportsAPI:
         response = self.client.get(f"{self.base_url}/performance", params={"source": "invalid_source"})
 
         assert response.status_code == 400
-        assert "Invalid source" in response.json()["detail"]
+        assert "Invalid source" in _error_message(response.json())
 
     def test_generate_attribution_report_success(self):
         """Test successful attribution report generation."""
@@ -173,9 +182,7 @@ class TestAttributionReportsAPI:
         )
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.generate_attribution_report.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_report)()
-            )
+            mock_analytics.generate_attribution_report = AsyncMock(return_value=mock_report)
 
             response = self.client.get(f"{self.base_url}/report")
 
@@ -200,9 +207,7 @@ class TestAttributionReportsAPI:
         )
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.generate_attribution_report.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_report)()
-            )
+            mock_analytics.generate_attribution_report = AsyncMock(return_value=mock_report)
 
             response = self.client.get(
                 f"{self.base_url}/report",
@@ -239,9 +244,7 @@ class TestAttributionReportsAPI:
         }
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.get_weekly_summary.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_summary)()
-            )
+            mock_analytics.get_weekly_summary = AsyncMock(return_value=mock_summary)
 
             response = self.client.get(f"{self.base_url}/weekly-summary")
 
@@ -264,9 +267,7 @@ class TestAttributionReportsAPI:
         }
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.get_weekly_summary.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_summary)()
-            )
+            mock_analytics.get_weekly_summary = AsyncMock(return_value=mock_summary)
 
             response = self.client.get(f"{self.base_url}/weekly-summary", params={"location_id": "test_location_123"})
 
@@ -288,9 +289,7 @@ class TestAttributionReportsAPI:
         }
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.get_monthly_trends.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_trends)()
-            )
+            mock_analytics.get_monthly_trends = AsyncMock(return_value=mock_trends)
 
             response = self.client.get(f"{self.base_url}/trends")
 
@@ -338,10 +337,8 @@ class TestAttributionReportsAPI:
             patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
             patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
         ):
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
-            mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_alerts)()
-            )
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=[])
+            mock_analytics._generate_performance_alerts = AsyncMock(return_value=mock_alerts)
 
             response = self.client.get(f"{self.base_url}/alerts")
 
@@ -375,10 +372,8 @@ class TestAttributionReportsAPI:
             patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
             patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
         ):
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
-            mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_alerts)()
-            )
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=[])
+            mock_analytics._generate_performance_alerts = AsyncMock(return_value=mock_alerts)
 
             # Test severity filter
             response = self.client.get(f"{self.base_url}/alerts", params={"severity": "high", "limit": 5})
@@ -419,9 +414,7 @@ class TestAttributionReportsAPI:
         }
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_source_recommendations.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_recommendations)()
-            )
+            mock_tracker.get_source_recommendations = AsyncMock(return_value=mock_recommendations)
 
             response = self.client.get(f"{self.base_url}/recommendations")
 
@@ -457,7 +450,7 @@ class TestAttributionReportsAPI:
     def test_track_attribution_event_success(self):
         """Test manual event tracking endpoint."""
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.track_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: None)())
+            mock_tracker.track_source_performance = AsyncMock(return_value=None)
 
             response = self.client.post(
                 f"{self.base_url}/track-event",
@@ -478,7 +471,7 @@ class TestAttributionReportsAPI:
         )
 
         assert response.status_code == 400
-        assert "Invalid source" in response.json()["detail"]
+        assert "Invalid source" in _error_message(response.json())
 
     def test_export_performance_csv_success(self):
         """Test CSV export functionality."""
@@ -503,9 +496,7 @@ class TestAttributionReportsAPI:
         ]
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performances)()
-            )
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=mock_performances)
 
             response = self.client.get(f"{self.base_url}/export/csv")
 
@@ -540,9 +531,7 @@ class TestAttributionReportsAPI:
         ]
 
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performances)()
-            )
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=mock_performances)
 
             response = self.client.get(
                 f"{self.base_url}/export/csv",
@@ -564,7 +553,7 @@ class TestAttributionReportsAPI:
             response = self.client.get(f"{self.base_url}/report")
 
             assert response.status_code == 500
-            assert "Failed to generate report" in response.json()["detail"]
+            assert "Failed to generate report" in _error_message(response.json())
 
         # Test performance data failure
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
@@ -573,12 +562,12 @@ class TestAttributionReportsAPI:
             response = self.client.get(f"{self.base_url}/performance")
 
             assert response.status_code == 500
-            assert "Failed to retrieve performance data" in response.json()["detail"]
+            assert "Failed to retrieve performance data" in _error_message(response.json())
 
     def test_date_parsing_edge_cases(self):
         """Test date parsing with various formats."""
         with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=[])
 
             # Test valid ISO date format
             response = self.client.get(
@@ -634,10 +623,8 @@ class TestAttributionReportsAPI:
             patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
             patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
         ):
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
-            mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: many_alerts)()
-            )
+            mock_tracker.get_all_source_performance = AsyncMock(return_value=[])
+            mock_analytics._generate_performance_alerts = AsyncMock(return_value=many_alerts)
 
             # Test default limit
             response = self.client.get(f"{self.base_url}/alerts")

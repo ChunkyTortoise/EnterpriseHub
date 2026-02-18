@@ -17,7 +17,6 @@ import pytest
 
 from ghl_real_estate_ai.services.behavioral_trigger_engine import (
 
-@pytest.mark.integration
     BehavioralPattern,
     BehavioralSignal,
     BehavioralTriggerEngine,

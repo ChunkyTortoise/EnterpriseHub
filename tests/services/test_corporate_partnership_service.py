@@ -535,7 +535,6 @@ class TestPartnershipTierConfiguration:
         assert platinum_config["setup_fee"] == Decimal("25000.00")
 
 
-@pytest.mark.asyncio
 async def test_service_initialization():
     """Test proper service initialization."""
     service = CorporatePartnershipService()

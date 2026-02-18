@@ -20,17 +20,16 @@ Dependencies:
 """
 
 import pytest
+pytest.importorskip("axe_playwright", reason="axe-playwright dependency not installed")
 from axe_playwright import run_axe
 from playwright.sync_api import Page
 
-@pytest.mark.unit
 
 # ============================================================================
 # WCAG 2.1 AA Compliance Tests
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_property_card_accessibility(streamlit_app: Page):
     """
     Test property card for WCAG 2.1 AA compliance.
@@ -70,7 +69,6 @@ async def test_property_card_accessibility(streamlit_app: Page):
         pytest.fail(error_msg)
 
 
-@pytest.mark.asyncio
 async def test_lead_intelligence_hub_accessibility(streamlit_app: Page):
     """
     Test lead intelligence hub for WCAG 2.1 AA compliance.
@@ -93,7 +91,6 @@ async def test_lead_intelligence_hub_accessibility(streamlit_app: Page):
     )
 
 
-@pytest.mark.asyncio
 async def test_executive_dashboard_accessibility(streamlit_app: Page):
     """
     Test executive dashboard for WCAG 2.1 AA compliance.
@@ -118,7 +115,6 @@ async def test_executive_dashboard_accessibility(streamlit_app: Page):
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_color_contrast(streamlit_app: Page):
     """
     Test color contrast meets WCAG AA standards (4.5:1 minimum).
@@ -154,7 +150,6 @@ async def test_color_contrast(streamlit_app: Page):
         pytest.fail(error_msg)
 
 
-@pytest.mark.asyncio
 async def test_aria_labels(streamlit_app: Page):
     """
     Test for proper ARIA labels on interactive elements.
@@ -192,7 +187,6 @@ async def test_aria_labels(streamlit_app: Page):
     )
 
 
-@pytest.mark.asyncio
 async def test_keyboard_navigation(streamlit_app: Page):
     """
     Test keyboard navigation through interactive elements.
@@ -237,7 +231,6 @@ async def test_keyboard_navigation(streamlit_app: Page):
     assert len(keyboard_violations) == 0, f"Keyboard navigation violations: {keyboard_violations}"
 
 
-@pytest.mark.asyncio
 async def test_heading_structure(streamlit_app: Page):
     """
     Test proper heading hierarchy (h1 -> h2 -> h3, etc.).
@@ -261,7 +254,6 @@ async def test_heading_structure(streamlit_app: Page):
     assert len(heading_violations) == 0, f"Heading structure violations: {heading_violations}"
 
 
-@pytest.mark.asyncio
 async def test_form_labels(streamlit_app: Page):
     """
     Test all form inputs have associated labels.
@@ -305,7 +297,6 @@ CRITICAL_COMPONENTS = [
 ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("component_id", CRITICAL_COMPONENTS)
 async def test_critical_components_accessibility(streamlit_app: Page, component_id: str):
     """
@@ -347,7 +338,6 @@ async def test_critical_components_accessibility(streamlit_app: Page, component_
 # ============================================================================
 
 
-@pytest.mark.asyncio
 async def test_mobile_accessibility(browser):
     """
     Test accessibility on mobile viewport.

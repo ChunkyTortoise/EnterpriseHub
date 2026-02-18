@@ -67,7 +67,6 @@ def sample_client_profile():
     )
 
 
-@pytest.mark.asyncio
 class TestClientRetentionEngine:
     """Test cases for Client Retention Engine"""
 
@@ -404,7 +403,6 @@ class TestClientRetentionEngine:
         assert engine1 is engine2
 
 
-@pytest.mark.asyncio
 class TestClientProfile:
     """Test ClientProfile dataclass"""
 
@@ -454,7 +452,6 @@ class TestClientProfile:
         assert profile.reviews_given == 2
 
 
-@pytest.mark.asyncio
 class TestEngagementPlan:
     """Test EngagementPlan dataclass"""
 
@@ -497,7 +494,6 @@ class TestEngagementPlan:
         assert plan.sent_at is not None
 
 
-@pytest.mark.asyncio
 class TestReferralOpportunity:
     """Test ReferralOpportunity dataclass"""
 
@@ -537,7 +533,6 @@ class TestReferralOpportunity:
 
 
 # Integration tests
-@pytest.mark.integration
 class TestClientRetentionIntegration:
     """Integration tests for Client Retention Engine"""
 

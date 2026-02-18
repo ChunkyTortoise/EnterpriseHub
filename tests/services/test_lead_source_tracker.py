@@ -15,7 +15,6 @@ import pytest
 
 from ghl_real_estate_ai.services.lead_source_tracker import (
 
-@pytest.mark.integration
     LeadSource,
     LeadSourceTracker,
     SourceAttribution,

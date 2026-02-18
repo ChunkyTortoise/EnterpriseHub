@@ -15,7 +15,6 @@ import pytest
 
 from ghl_real_estate_ai.api.main import _build_alert_stats, _validate_jorge_services_config
 
-@pytest.mark.integration
 
 
 @pytest.fixture(autouse=True)

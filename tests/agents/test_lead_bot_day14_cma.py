@@ -39,7 +39,6 @@ from ghl_real_estate_ai.utils.pdf_renderer import (
 )
 from tests.mocks.external_services import MockSendGridClient
 
-@pytest.mark.integration
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -197,7 +196,6 @@ class TestPDFRenderer:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 class TestDay14EmailWithAttachment:
     """Integration tests for the Day 14 CMA email attachment flow."""
 

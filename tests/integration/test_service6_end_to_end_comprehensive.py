@@ -58,7 +58,6 @@ from ghl_real_estate_ai.services.service6_ai_integration import (
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "mocks"))
 from external_services import (
 
-@pytest.mark.integration
     MockClaudeClient,
     MockEnhancedDatabaseService,
     MockMLScoringEngine,
@@ -713,7 +712,6 @@ class TestService6EndToEndWorkflows:
         print("✅ Security validation: Malicious input handled safely across pipeline")
 
 
-@pytest.mark.asyncio
 class TestService6PerformanceBenchmarks:
     """Performance benchmarking for complete Service 6 ecosystem"""
 

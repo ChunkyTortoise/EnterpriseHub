@@ -9,7 +9,6 @@ import pytest
 
 from ghl_real_estate_ai.services.unified_channel_router import (
 
-@pytest.mark.unit
     ChannelType,
     DeliveryResult,
     DeliveryStatus,

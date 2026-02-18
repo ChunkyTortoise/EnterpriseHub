@@ -58,7 +58,6 @@ except (ImportError, TypeError, AttributeError, Exception):
 from tests.fixtures.sample_data import AnalyticsData, LeadProfiles
 from tests.mocks.external_services import (
 
-@pytest.mark.integration
     MockApolloClient,
     MockClaudeClient,
     MockDatabaseService,
