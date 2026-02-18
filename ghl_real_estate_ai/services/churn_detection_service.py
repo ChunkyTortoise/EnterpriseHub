@@ -8,7 +8,7 @@ and automated recovery strategies to re-engage dormant leads before they are los
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -168,8 +168,13 @@ class ChurnDetectionService:
                 except Exception as e:
                     logger.warning(f"Failed to parse cached churn risk: {e}")
         
-        # Calculate days inactive
-        days_inactive = (datetime.utcnow() - last_activity).days
+        # Calculate days inactive while preserving timezone awareness
+        if last_activity.tzinfo is not None and last_activity.utcoffset() is not None:
+            assessment_time = datetime.now(timezone.utc)
+            days_inactive = (assessment_time - last_activity.astimezone(timezone.utc)).days
+        else:
+            assessment_time = datetime.utcnow()
+            days_inactive = (assessment_time - last_activity).days
         
         # Analyze all 5 churn detection signals
         signals = await self._analyze_signals(
@@ -195,7 +200,7 @@ class ChurnDetectionService:
             last_activity=last_activity,
             days_inactive=days_inactive,
             recommended_action=recommended_action,
-            assessed_at=datetime.utcnow(),
+            assessed_at=assessment_time,
         )
         
         # Cache the result
