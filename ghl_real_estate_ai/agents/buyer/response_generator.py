@@ -121,7 +121,7 @@ class ResponseGenerator:
                         ""
                     )
                     if last_user_msg:
-                        sentiment_result = await self.sentiment_service.analyze_message(last_user_msg)
+                        sentiment_result = await self.sentiment_service.analyze_sentiment(last_user_msg)
                         tone_adjustment = self.sentiment_service.get_response_tone_adjustment(sentiment_result.sentiment)
                         
                         sentiment_context = f"""

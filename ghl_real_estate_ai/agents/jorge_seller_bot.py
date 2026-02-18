@@ -782,7 +782,7 @@ class JorgeSellerBot(BaseBotWorkflow):
         # Basic budget extraction (simple keyword matching)
         budget_keywords = {
             "under 400": {"budget_max": 400000},
-            "under 500": {"budget_max": 700000},
+            "under 500": {"budget_max": 500000},
             "under 600": {"budget_max": 600000},
             "under 700": {"budget_max": 700000},
             "under 800": {"budget_max": 800000},
@@ -1020,6 +1020,30 @@ class JorgeSellerBot(BaseBotWorkflow):
         self.workflow_stats["progressive_skills_usage"] += 1
         self.workflow_stats["token_savings"] += 853 - total_tokens  # vs baseline
 
+        response_content = skill_result.get("response_content", "")
+        if not response_content:
+            # Fallback to Jorge's response generator if skill didn't produce a message
+            state = {
+                "lead_id": lead_data.get("lead_id", "unknown"),
+                "lead_name": lead_data.get("lead_name", "Unknown Lead"),
+                "conversation_history": lead_data.get("conversation_history", []),
+                "property_address": lead_data.get("property_address"),
+                "current_tone": "consultative",
+                "tone_variant": "empathetic",
+                "stall_detected": False,
+                "next_action": "respond",
+                "response_content": "",
+                "psychological_commitment": confidence * 100,
+                "is_qualified": confidence > 0.7,
+                "current_journey_stage": "qualification",
+                "follow_up_count": 0,
+                "adaptive_mode": "standard",
+                "adaptation_applied": False,
+                "memory_updated": False,
+            }
+            jorge_response = await self.response_generator.generate_jorge_response(state)
+            response_content = jorge_response.get("response_content", "")
+
         return {
             "qualification_method": "progressive_skills",
             "skill_used": skill_name,
@@ -1027,7 +1051,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             "tokens_used": total_tokens,
             "baseline_tokens": 853,
             "token_reduction": ((853 - total_tokens) / 853) * 100,
-            "qualification_summary": skill_result.get("response_content", ""),
+            "qualification_summary": skill_result.get("summary", response_content),
+            "response_content": response_content,
             "is_qualified": confidence > 0.7,
             "seller_temperature": self._confidence_to_temperature(confidence),
             "execution_time": execution_time,
@@ -1095,11 +1120,36 @@ class JorgeSellerBot(BaseBotWorkflow):
         """
 
         response = await self.claude.analyze_with_context(qualification_prompt, context=lead_data)
+        summary = response.get("content", "")
+
+        # Generate actual conversational response using Jorge's persona
+        # This replaces the "synthetic" summary previously returned to the user
+        state = {
+            "lead_id": lead_data.get("lead_id", "unknown"),
+            "lead_name": lead_data.get("lead_name", "Unknown Lead"),
+            "conversation_history": lead_data.get("conversation_history", []),
+            "property_address": lead_data.get("property_address"),
+            "current_tone": "consultative",
+            "tone_variant": "empathetic",
+            "stall_detected": False,
+            "next_action": "respond",
+            "response_content": "",
+            "psychological_commitment": 0.0,
+            "is_qualified": True,
+            "current_journey_stage": "qualification",
+            "follow_up_count": 0,
+            "adaptive_mode": "standard",
+            "adaptation_applied": False,
+            "memory_updated": False,
+        }
+        
+        jorge_response = await self.response_generator.generate_jorge_response(state)
 
         return {
             "qualification_method": "traditional",
             "tokens_used": 853,  # Estimated baseline
-            "qualification_summary": response.get("content", ""),
+            "qualification_summary": summary,
+            "response_content": jorge_response.get("response_content", ""),
             "is_qualified": True,  # Simplified
             "seller_temperature": "lukewarm",
         }
@@ -1395,7 +1445,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 scores = {"frs": frs_score, "pcs": pcs_score, "composite": 0.0}
                 persona_str = seller_persona.get("persona_type") if seller_persona else None
 
-                await self.workflow_service.apply_tag_rules(
+                await self.workflow_service.apply_auto_tags(
                     contact_id=conversation_id,
                     scores=scores,
                     persona=persona_str,

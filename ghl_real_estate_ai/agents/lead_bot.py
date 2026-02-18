@@ -336,6 +336,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         # Enhanced nodes
         workflow.add_node("analyze_intent", self.analyze_intent)
+        workflow.add_node("check_handoff_signals", self.check_handoff_signals)
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_lead_intelligence", self.gather_lead_intelligence)
         if self.config.enable_behavioral_optimization or self.config.enable_predictive_analytics:
@@ -362,27 +363,40 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         # Enhanced flow
         workflow.set_entry_point("analyze_intent")
+        workflow.add_edge("analyze_intent", "check_handoff_signals")
 
         # Build flow based on enabled features
-        current_node = "analyze_intent"
+        optional_nodes: List[str] = []
 
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
-            workflow.add_edge(current_node, "gather_lead_intelligence")
-            current_node = "gather_lead_intelligence"
+            optional_nodes.append("gather_lead_intelligence")
 
         if self.config.enable_behavioral_optimization or self.config.enable_predictive_analytics:
-            workflow.add_edge(current_node, "behavioral_analysis")
-            current_node = "behavioral_analysis"
+            optional_nodes.append("behavioral_analysis")
 
         if self.config.enable_behavioral_optimization:
-            workflow.add_edge(current_node, "predict_optimization")
-            current_node = "predict_optimization"
+            optional_nodes.append("predict_optimization")
 
         if self.config.enable_track3_intelligence:
-            workflow.add_edge(current_node, "track3_market_intelligence")
-            current_node = "track3_market_intelligence"
+            optional_nodes.append("track3_market_intelligence")
 
-        workflow.add_edge(current_node, "determine_path")
+        first_processing_node = optional_nodes[0] if optional_nodes else "determine_path"
+
+        # Short-circuit enhanced workflow immediately when handoff is required
+        def route_after_handoff_check(state):
+            if state.get("handoff_required"):
+                return END
+            return first_processing_node
+
+        workflow.add_conditional_edges("check_handoff_signals", route_after_handoff_check)
+
+        current_node = first_processing_node
+        for node in optional_nodes[1:]:
+            workflow.add_edge(current_node, node)
+            current_node = node
+
+        if current_node != "determine_path":
+            workflow.add_edge(current_node, "determine_path")
 
         # Enhanced conditional routing
         workflow.add_conditional_edges(
@@ -454,8 +468,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
                     lead_id=state["lead_id"],
                     location_id="national",  # Default for lead bot
                     bot_type="lead-bot",
-                    conversation_history=state["conversation_history"],
-                    current_context={
+                    conversation_context=state["conversation_history"],
+                    preferences={
                         "sequence_day": state.get("sequence_day"),
                         "engagement_status": state.get("engagement_status"),
                         "nurture_focus": True,
@@ -1144,7 +1158,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
                 current_step="check_handoff_signals",
             )
 
-            sync_service = get_ghl_sync_service()
             await sync_service.record_lead_event(
                 state["lead_id"],
                 "AI",
@@ -1492,7 +1505,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
         msg = action["content"]
 
-        logger.info(f"Day 3 SMS to {state['contact_phone']}: {msg} (Logic: {action.get('logic')})")
+        contact_phone = state.get("contact_phone") or state.get("lead_phone")
+        logger.info(f"Day 3 SMS to {contact_phone or 'unknown'}: {msg} (Logic: {action.get('logic')})")
         await sync_service.record_lead_event(state["lead_id"], "AI", f"Sent Day 3 SMS: {msg[:50]}...", "sms")
 
         # Emit lead bot sequence update - message sent
@@ -1539,6 +1553,10 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         await sync_service.record_lead_event(state["lead_id"], "AI", "Initiating Day 7 Retell AI Call.", "action")
 
+        contact_phone = state.get("contact_phone") or state.get("lead_phone")
+        if not contact_phone:
+            logger.warning(f"Skipping Day 7 Retell call for {state['lead_id']} - no contact phone provided")
+
         # Trigger Retell Call (Fire-and-forget for Dashboard UI performance)
         def _call_finished(fut):
             try:
@@ -1547,18 +1565,19 @@ class LeadBotWorkflow(BaseBotWorkflow):
             except Exception as e:
                 logger.error(f"Background Retell call failed for {state['lead_name']}: {e}")
 
-        task = asyncio.create_task(
-            _safe_background_task(
-                self.retell_client.create_call(
-                    to_number=state["contact_phone"],
-                    lead_name=state["lead_name"],
-                    lead_context=context,
-                    metadata={"contact_id": state["lead_id"]},
-                ),
-                task_name=f"retell_voice_call:{state['lead_id']}",
+        if contact_phone:
+            task = asyncio.create_task(
+                _safe_background_task(
+                    self.retell_client.create_call(
+                        to_number=contact_phone,
+                        lead_name=state["lead_name"],
+                        lead_context=context,
+                        metadata={"contact_id": state["lead_id"]},
+                    ),
+                    task_name=f"retell_voice_call:{state['lead_id']}",
+                )
             )
-        )
-        task.add_done_callback(_call_finished)
+            task.add_done_callback(_call_finished)
 
         # Mark Day 7 as completed in sequence state
         await self.sequence_service.mark_action_completed(state["lead_id"], SequenceDay.DAY_7, "call_initiated")
@@ -1582,7 +1601,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
         )
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
 
-        logger.info(f"Sending Day 14 Email to {state['contact_email']}: {action['content']}")
+        contact_email = state.get("contact_email") or state.get("lead_email")
+        logger.info(f"Sending Day 14 Email to {contact_email or 'unknown'}: {action['content']}")
         await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 14 Email with value injection.", "email")
 
         # Mark Day 14 as completed in sequence state
@@ -1606,7 +1626,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         # Generate CMA PDF and send rich email via SendGrid
         cma_attached = False
-        contact_email = state.get("contact_email")
+        contact_email = state.get("contact_email") or state.get("lead_email")
         property_address = state.get("property_address")
         if contact_email and property_address and self.sendgrid_client:
             cma_attached = await self._send_cma_email_with_attachment(
@@ -1707,7 +1727,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
         )
         action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
 
-        logger.info(f"Sending Day 30 SMS to {state['contact_phone']}: {action['content']}")
+        contact_phone = state.get("contact_phone") or state.get("lead_phone")
+        logger.info(f"Sending Day 30 SMS to {contact_phone or 'unknown'}: {action['content']}")
         await sync_service.record_lead_event(state["lead_id"], "AI", "Sent Day 30 final nudge SMS.", "sms")
 
         # Mark Day 30 as completed in sequence state
@@ -2288,8 +2309,10 @@ class LeadBotWorkflow(BaseBotWorkflow):
             # Add optional metadata
             if lead_phone:
                 initial_state["lead_phone"] = lead_phone
+                initial_state["contact_phone"] = lead_phone
             if lead_email:
                 initial_state["lead_email"] = lead_email
+                initial_state["contact_email"] = lead_email
             if metadata:
                 initial_state["metadata"] = metadata
 

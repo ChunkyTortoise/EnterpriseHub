@@ -148,6 +148,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
             industry_config=industry_config,
             enable_ml_analytics=bool(get_ml_analytics_engine),
         )
+        # Rebind via module-local factory so test patches and runtime overrides are respected.
+        self.event_publisher = get_event_publisher()
 
         # Core components (bot-specific)
         self.intent_decoder = BuyerIntentDecoder(industry_config=self.industry_config)
@@ -376,15 +378,21 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
             if self.intelligence_middleware:
                 start_time = time.time()
+                buyer_id = state.get("buyer_id", "unknown")
+                preferences: Dict[str, Any] = {}
+                if state.get("property_preferences"):
+                    preferences["property_preferences"] = state.get("property_preferences")
+                if state.get("budget_range"):
+                    preferences["budget_range"] = state.get("budget_range")
+                if state.get("urgency_level"):
+                    preferences["urgency_level"] = state.get("urgency_level")
 
-                intelligence_context = await self.intelligence_middleware.gather_intelligence(
-                    conversation_history=state.get("conversation_history", []),
-                    contact_id=state.get("buyer_id"),
-                    intelligence_types=[
-                        "conversation_intelligence",
-                        "preference_intelligence",
-                        "property_intelligence",
-                    ],
+                intelligence_context = await self.intelligence_middleware.enhance_bot_context(
+                    bot_type="jorge-buyer",
+                    lead_id=buyer_id,
+                    location_id=state.get("location_id", "rancho_cucamonga"),
+                    conversation_context=state.get("conversation_history", []),
+                    preferences=preferences or None,
                 )
 
                 performance_ms = (time.time() - start_time) * 1000
@@ -707,7 +715,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     sentiment_val = result["sentiment_result"].sentiment.value
 
                 # Apply tag rules
-                await self.workflow_service.apply_tag_rules(
+                await self.workflow_service.apply_auto_tags(
                     contact_id=conversation_id,
                     scores=scores,
                     persona=result.get("buyer_persona"),

@@ -5,6 +5,7 @@ Analyzes buyer conversation patterns to classify buyer personas and provide
 personalized communication recommendations.
 """
 
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
