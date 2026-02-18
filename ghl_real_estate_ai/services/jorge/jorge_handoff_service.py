@@ -136,6 +136,24 @@ class JorgeHandoffService:
     # Minimum data points required before learned adjustments apply
     MIN_LEARNING_SAMPLES = 10
 
+    # Class-level defaults so classmethods (_cleanup_old_entries, get_learned_adjustments,
+    # _check_circular_prevention, _record_analytics, etc.) can access these before
+    # reset_for_testing() is called or any instance is created.
+    _handoff_outcomes: Dict[str, List] = {}
+    _handoff_history: Dict[str, List] = {}
+    _active_handoffs: Dict[str, float] = {}
+    _analytics: Dict[str, Any] = {
+        "total_handoffs": 0,
+        "successful_handoffs": 0,
+        "failed_handoffs": 0,
+        "processing_times_ms": [],
+        "handoffs_by_route": {},
+        "handoffs_by_hour": {h: 0 for h in range(24)},
+        "blocked_by_rate_limit": 0,
+        "blocked_by_circular": 0,
+        "blocked_by_performance": 0,
+    }
+
     # Intent phrase patterns for signal boosting
     BUYER_INTENT_PATTERNS = [
         r"\bi\s+want\s+to\s+buy\b",

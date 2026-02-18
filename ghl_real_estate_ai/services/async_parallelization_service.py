@@ -30,6 +30,15 @@ logger = get_logger(__name__)
 T = TypeVar("T")
 
 
+async def _noop_none() -> None:
+    """No-op coroutine returning None (replaces asyncio.coroutine removed in Py 3.14)."""
+
+
+async def _noop_list() -> list:
+    """No-op coroutine returning [] (replaces asyncio.coroutine removed in Py 3.14)."""
+    return []
+
+
 @dataclass
 class ParallelizationMetrics:
     """Metrics for parallel operation performance."""
@@ -106,7 +115,7 @@ class AsyncParallelizationService:
                     tasks.append(get_signal_summary(result.behavioral_signals))
                     task_names.append("signal_summary")
                 else:
-                    tasks.append(asyncio.create_task(asyncio.coroutine(lambda: None)()))
+                    tasks.append(asyncio.create_task(_noop_none()))
                     task_names.append("signal_summary")
 
                 # Task 2: Routing recommendation
@@ -114,7 +123,7 @@ class AsyncParallelizationService:
                     tasks.append(recommend_routing(result, lead))
                     task_names.append("routing")
                 else:
-                    tasks.append(asyncio.create_task(asyncio.coroutine(lambda: None)()))
+                    tasks.append(asyncio.create_task(_noop_none()))
                     task_names.append("routing")
 
                 # Task 3: Action recommendations
@@ -124,7 +133,7 @@ class AsyncParallelizationService:
                     )
                     task_names.append("actions")
                 else:
-                    tasks.append(asyncio.create_task(asyncio.coroutine(lambda: [])()))
+                    tasks.append(asyncio.create_task(_noop_list()))
                     task_names.append("actions")
 
                 # Task 4: Risk factors
@@ -132,7 +141,7 @@ class AsyncParallelizationService:
                     tasks.append(identify_risks(result, result.behavioral_signals if result.behavioral_signals else {}))
                     task_names.append("risks")
                 else:
-                    tasks.append(asyncio.create_task(asyncio.coroutine(lambda: [])()))
+                    tasks.append(asyncio.create_task(_noop_list()))
                     task_names.append("risks")
 
                 # Task 5: Positive signals
@@ -142,7 +151,7 @@ class AsyncParallelizationService:
                     )
                     task_names.append("positive_signals")
                 else:
-                    tasks.append(asyncio.create_task(asyncio.coroutine(lambda: [])()))
+                    tasks.append(asyncio.create_task(_noop_list()))
                     task_names.append("positive_signals")
 
                 # Execute all tasks in parallel with timeout
@@ -373,7 +382,7 @@ class AsyncParallelizationService:
                 tasks[operation_name] = task
             except Exception as e:
                 logger.error(f"Failed to create task for {operation_name}: {e}")
-                tasks[operation_name] = asyncio.create_task(asyncio.coroutine(lambda: None)())
+                tasks[operation_name] = asyncio.create_task(_noop_none())
 
         # Execute all tasks in parallel with timeout
         try:
