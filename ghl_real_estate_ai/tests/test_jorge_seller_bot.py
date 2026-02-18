@@ -24,6 +24,7 @@ def mock_jorge_deps():
         patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant") as MockClaude,
         patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher", return_value=mock_event_pub),
         patch("ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine", return_value=mock_ml),
+        patch("ghl_real_estate_ai.agents.jorge_seller_bot.GHLWorkflowService") as MockWorkflowService,
     ):
         seller_intent_instance = MockSellerIntent.return_value
         seller_intent_instance.analyze_seller = MagicMock(return_value=MagicMock())
@@ -33,14 +34,31 @@ def mock_jorge_deps():
         mock_profile.frs = MagicMock(spec=FinancialReadinessScore)
         mock_profile.frs.classification = "Warm Lead"
         mock_profile.frs.total_score = 40
-        mock_profile.pcs = MagicMock(spec=PsychologicalCommitmentScore)
+        mock_profile.pcs = MagicMock()
         mock_profile.pcs.total_score = 50
+        mock_profile.pcs.response_velocity_score = 70
+        mock_profile.pcs.message_length_score = 70
+        mock_profile.pcs.question_depth_score = 70
+        mock_profile.pcs.objection_handling_score = 70
+        mock_profile.pcs.call_acceptance_score = 70
+        mock_profile.lead_id = "lead_123"
+        mock_profile.lead_type = "seller"
+        mock_profile.market_context = "rancho_cucamonga"
+        mock_profile.next_best_action = "continue_qualification"
         intent_instance.analyze_lead = MagicMock(return_value=mock_profile)
 
         claude_instance = MockClaude.return_value
         claude_instance.analyze_with_context = AsyncMock(return_value={"content": "Mocked Jorge Response"})
 
-        yield {"intent": intent_instance, "claude": claude_instance, "profile": mock_profile}
+        workflow_instance = MockWorkflowService.return_value
+        workflow_instance.apply_auto_tags = AsyncMock(return_value={"success": True})
+
+        yield {
+            "intent": intent_instance,
+            "claude": claude_instance,
+            "profile": mock_profile,
+            "workflow": workflow_instance,
+        }
 
 
 @pytest.mark.asyncio
@@ -63,6 +81,7 @@ async def test_jorge_seller_bot_stall_breaking(mock_jorge_deps):
     assert "response_content" in result
     assert isinstance(result["frs_score"], (int, float))
     assert isinstance(result["handoff_signals"], dict)
+    mock_jorge_deps["workflow"].apply_auto_tags.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -85,3 +104,13 @@ async def test_jorge_seller_bot_educational_mode(mock_jorge_deps):
     assert "response_content" in result
     assert isinstance(result["frs_score"], (int, float))
     assert isinstance(result["handoff_signals"], dict)
+
+
+def test_budget_keyword_under_500_maps_to_500k(mock_jorge_deps):
+    """Regression: 'under 500' should map to budget_max=500000, not 700000."""
+    bot = JorgeSellerBot()
+    preferences = bot._extract_preferences_from_conversation(
+        [{"role": "user", "content": "I'm looking for something under 500 in this area"}]
+    )
+
+    assert preferences["budget_max"] == 500000

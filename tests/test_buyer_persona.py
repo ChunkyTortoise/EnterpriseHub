@@ -6,6 +6,8 @@ and providing personalized communication recommendations.
 """
 
 import pytest
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
 
 from ghl_real_estate_ai.models.buyer_persona import (
     BuyerPersonaClassification,
@@ -361,3 +363,34 @@ class TestEdgeCases:
         # Both should detect investor persona
         assert result_lower.persona_type == BuyerPersonaType.INVESTOR
         assert result_upper.persona_type == BuyerPersonaType.INVESTOR
+
+
+class TestBuyerPersonaLlmJsonRegression:
+    """Regression tests for JSON parsing and serialization in LLM persona path."""
+
+    @pytest.mark.asyncio
+    async def test_llm_persona_json_round_trip(self):
+        """Regression: LLM JSON prompt/parse path should classify persona without NameError."""
+        llm_client = MagicMock()
+        llm_client.agenerate = AsyncMock(
+            return_value=SimpleNamespace(
+                content=(
+                    '```json\n'
+                    '{\"persona\":\"investor\",\"confidence\":0.86,'
+                    '\"signals\":[\"rental\",\"roi\"],'
+                    '\"behavioral_insights\":{\"urgency\":0.4,\"data_focus\":0.9,\"emotional_engagement\":0.2},'
+                    '\"reasoning\":\"User repeatedly focuses on ROI and rental yield.\"}'
+                    '\n```'
+                )
+            )
+        )
+
+        service = BuyerPersonaService(llm_client=llm_client)
+        result = await service._classify_persona_llm(
+            conversation_history=[{"role": "user", "content": "I'm focused on rental ROI."}],
+            lead_data={"budget": 700000},
+        )
+
+        assert result is not None
+        assert result.persona_type == BuyerPersonaType.INVESTOR
+        assert result.confidence == 0.86
