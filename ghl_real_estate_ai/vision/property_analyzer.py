@@ -28,6 +28,11 @@ from ..services.claude_assistant import ClaudeAssistant
 logger = logging.getLogger(__name__)
 
 
+async def _noop_dict() -> dict:
+    """No-op coroutine returning {} (replaces asyncio.coroutine removed in Py 3.14)."""
+    return {}
+
+
 @dataclass
 class PropertyFeatures:
     """Extracted property features from vision analysis"""
@@ -172,7 +177,7 @@ class PropertyVisionAnalyzer:
                 self._perform_vision_analysis(base64_image, location, property_address, additional_context),
                 self._get_market_context(location, property_address)
                 if location or property_address
-                else asyncio.coroutine(lambda: {})(),
+                else _noop_dict(),
             )
 
             # Process and structure the analysis
