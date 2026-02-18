@@ -220,3 +220,4 @@ multi_market_*.json
 # Obsidian vault (local knowledge base)
 .obsidian-vault/
 scripts/chrome_copy/
+.playwright_gumroad_session/

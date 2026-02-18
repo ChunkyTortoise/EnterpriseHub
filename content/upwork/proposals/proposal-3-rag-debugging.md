@@ -8,34 +8,26 @@
 
 ## Cover Letter
 
-Debugging a RAG system that's "functional but not performant" is a different skill than building one from scratch — you need someone who can read the existing pipeline, find the bottleneck, and fix it without breaking what works. That's what I do.
+Your RAG system returns answers, but not the right ones — and you need someone who can instrument the pipeline, find where it breaks, and fix the root cause without rebuilding from scratch.
 
-I've built and optimized two production RAG systems:
+That's a different skill than building RAG. I've debugged two production systems: in docqa-engine I diagnosed a retrieval precision failure caused by poor chunk boundaries and fixed it with overlapping windows and BM25 + dense hybrid — retrieval quality is now measured across 94 automated scenarios. In EnterpriseHub I added a 3-tier Redis caching layer that reduced LLM calls by 89% (88% hit rate, verified via automated benchmarks, not estimates). Live demo: https://ct-prompt-lab.streamlit.app/
 
-- **EnterpriseHub** (~5,100 tests): I implemented a 3-tier caching layer (L1 in-memory, L2 Redis, L3 persistent) that **reduced redundant LLM calls by 89%** and added P50/P95/P99 latency tracking to identify exactly where time was being spent. The 88% cache hit rate is verified via automated benchmarks, not estimates.
+My debugging approach for your system:
 
-- **docqa-engine** (500+ tests): I diagnosed a retrieval precision problem caused by poor chunk boundaries and fixed it with overlapping windows and a BM25 + dense hybrid approach. Retrieval quality is measured across 94 automated test scenarios.
+1. **Instrument first** — add P50/P95/P99 latency and quality measurements at ingestion, embedding, retrieval, and generation; you can't fix what you can't measure
+2. **Use real query logs** — synthetic benchmarks miss the failure modes that actual user queries expose
+3. **Fix the root cause** — chunking strategy, embedding model selection, prompt template issues, or missing caching; not symptom patches
 
-For your debugging sprint, my approach would be:
+I don't need ramp-up time on RAG architecture. My 8,500+ tests across 11 repos mean I read production codebases fast. I can review your system, identify the bottleneck, and ship a fix in the first session.
 
-1. **Instrument your pipeline** to measure latency and quality at each stage (ingestion, embedding, retrieval, generation) — you can't fix what you can't measure
-2. **Identify the weakest link** using actual query logs rather than synthetic benchmarks — real user queries expose different failure modes than test sets
-3. **Fix the root cause** — whether that's chunking strategy, embedding model choice, prompt template issues, or missing caching layers
+Available for a 15-minute call this week — or send me a sample of your worst-performing queries and I'll give you a preliminary diagnosis before we start.
 
-### What I Bring to a Short Sprint
-
-| Capability | Evidence |
-|-----------|---------|
-| RAG pipeline profiling | P50/P95/P99 benchmarks in every repo |
-| Cost optimization | 89% LLM cost reduction (verified) |
-| Fast diagnosis | Multi-strategy parser identifies failure modes |
-| Production hardening | 8,500+ tests across 11 repos |
-| Immediate availability | 30+ hrs/week, can start same day |
-
-I don't need ramp-up time on RAG architecture. I can review your codebase, identify issues, and start shipping fixes in the first session.
-
-**Portfolio**: https://chunkytortoise.github.io | **GitHub**: https://github.com/ChunkyTortoise
+**GitHub**: https://github.com/ChunkyTortoise
 
 ---
 
-*Ready to submit when Connects are purchased ($12 for 80 Connects).*
+## Rewrite Notes
+- Key change: Removed the passive "Debugging a RAG system is a different skill" opener and replaced with a direct second-person accusation of the client's exact problem state; the preliminary diagnosis CTA is a concrete value-add before any commitment
+- Hook used: "Your RAG system returns answers, but not the right ones — and you need someone who can instrument the pipeline, find where it breaks, and fix the root cause without rebuilding from scratch."
+- Demo linked: https://ct-prompt-lab.streamlit.app/
+- Estimated conversion lift: Original listed an "Immediate availability" metric in the capabilities table, which is filler. Rewrite replaces it with a pre-engagement diagnosis offer — a concrete reason to reply immediately that competitors cannot easily match.

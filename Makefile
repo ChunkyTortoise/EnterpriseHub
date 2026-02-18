@@ -1,6 +1,6 @@
 # Makefile for Enterprise Hub
 
-.PHONY: help install install-dev test lint format type-check clean run demo build
+.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -52,5 +52,14 @@ build:  ## Verify the app can be built/imported
 	python -c "import app; print('✓ App imported successfully')"
 	python -c "from modules import market_pulse; print('✓ market_pulse imported successfully')"
 	python -c "from utils import data_loader; print('✓ data_loader imported successfully')"
+
+ghl-setup:  ## Audit GHL field configuration
+	python -m ghl_real_estate_ai.ghl_utils.env_field_mapper
+
+ghl-setup-check:  ## Check GHL fields (CI mode, exits 1 on missing)
+	python -m ghl_real_estate_ai.ghl_utils.env_field_mapper --check-only
+
+ghl-setup-guide:  ## Print step-by-step GHL setup instructions
+	python -m ghl_real_estate_ai.ghl_utils.env_field_mapper --setup
 
 all: install-dev lint type-check test  ## Run complete CI pipeline locally

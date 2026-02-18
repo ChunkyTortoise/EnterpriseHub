@@ -17,6 +17,7 @@ import pytest
 
 from agentforge.comms import (
     A2AProtocolSupport,
+    AgentCapability,
     AgentCard,
     DelegationPattern,
     MessageBus,
@@ -557,36 +558,44 @@ class TestAgentCard:
 
     def test_create_agent_card(self) -> None:
         """Test creating an agent card."""
+        caps = [
+            AgentCapability(name="search", description="Search capability"),
+            AgentCapability(name="analyze", description="Analyze capability"),
+        ]
         card = AgentCard(
+            id="test-agent-001",
             name="TestAgent",
             description="A test agent",
             version="2.0.0",
-            capabilities=["search", "analyze"],
+            capabilities=caps,
             endpoints={"api": "https://api.example.com"},
         )
 
+        assert card.id == "test-agent-001"
         assert card.name == "TestAgent"
         assert card.description == "A test agent"
         assert card.version == "2.0.0"
-        assert card.capabilities == ["search", "analyze"]
+        assert len(card.capabilities) == 2
+        assert card.capabilities[0].name == "search"
         assert card.endpoints == {"api": "https://api.example.com"}
 
     def test_agent_card_defaults(self) -> None:
         """Test agent card default values."""
-        card = AgentCard(name="TestAgent")
+        card = AgentCard(id="test-agent-defaults", name="TestAgent")
 
         assert card.description == ""
         assert card.version == "1.0.0"
         assert card.capabilities == []
         assert card.endpoints == {}
-        assert card.metadata is None
+        assert card.metadata == {}
 
     def test_agent_card_to_json(self) -> None:
         """Test exporting agent card to JSON."""
         card = AgentCard(
+            id="test-json-001",
             name="TestAgent",
             description="A test agent",
-            capabilities=["search"],
+            capabilities=[AgentCapability(name="search", description="Search")],
             metadata={"author": "test"},
         )
 
@@ -594,7 +603,7 @@ class TestAgentCard:
 
         assert json_data["name"] == "TestAgent"
         assert json_data["description"] == "A test agent"
-        assert json_data["capabilities"] == ["search"]
+        assert len(json_data["capabilities"]) == 1
         assert json_data["metadata"] == {"author": "test"}
 
 
@@ -604,8 +613,9 @@ class TestA2AProtocolSupport:
     def test_create_a2a_protocol_support(self) -> None:
         """Test creating A2A protocol support."""
         card = AgentCard(
+            id="a2a-test-001",
             name="TestAgent",
-            capabilities=["search"],
+            capabilities=[AgentCapability(name="search", description="Search")],
         )
         a2a = A2AProtocolSupport(agent_card=card)
 
@@ -614,6 +624,7 @@ class TestA2AProtocolSupport:
     def test_get_agent_card(self) -> None:
         """Test getting agent card."""
         card = AgentCard(
+            id="a2a-test-002",
             name="TestAgent",
             description="Test description",
         )
@@ -627,7 +638,7 @@ class TestA2AProtocolSupport:
     @pytest.mark.asyncio
     async def test_handle_task(self) -> None:
         """Test handling an A2A task."""
-        card = AgentCard(name="TestAgent")
+        card = AgentCard(id="a2a-test-003", name="TestAgent")
         a2a = A2AProtocolSupport(agent_card=card)
 
         result = await a2a.handle_task({"action": "test"})

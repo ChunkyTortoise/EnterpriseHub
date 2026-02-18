@@ -730,6 +730,27 @@ async def handle_ghl_webhook(
                     actions,
                 )
 
+            # Track billing and pricing (Jorge's revenue foundation)
+            background_tasks.add_task(
+                _calculate_lead_pricing,
+                contact_id,
+                location_id,
+                context,
+                pricing_optimizer,
+                analytics_service,
+            )
+            background_tasks.add_task(
+                _handle_billing_usage,
+                contact_id,
+                location_id,
+                seller_result.get("questions_answered", 0),
+                seller_result.get("seller_data", {}),
+                seller_result["temperature"],
+                subscription_manager,
+                pricing_optimizer,
+                analytics_service,
+            )
+
             return GHLWebhookResponse(
                 success=True,
                 message=final_seller_msg,
@@ -874,6 +895,27 @@ async def handle_ghl_webhook(
                     contact_id,
                     actions,
                 )
+
+            # Track billing and pricing (Jorge's revenue foundation)
+            background_tasks.add_task(
+                _calculate_lead_pricing,
+                contact_id,
+                location_id,
+                context,
+                pricing_optimizer,
+                analytics_service,
+            )
+            background_tasks.add_task(
+                _handle_billing_usage,
+                contact_id,
+                location_id,
+                int(buyer_result.get("financial_readiness_score", 0) / 14), # Estimate question count
+                buyer_result.get("extracted_preferences", {}),
+                buyer_temp,
+                subscription_manager,
+                pricing_optimizer,
+                analytics_service,
+            )
 
             return GHLWebhookResponse(
                 success=True,
@@ -1031,6 +1073,27 @@ async def handle_ghl_webhook(
                     contact_id,
                     actions,
                 )
+
+            # Track billing and pricing (Jorge's revenue foundation)
+            background_tasks.add_task(
+                _calculate_lead_pricing,
+                contact_id,
+                location_id,
+                context,
+                pricing_optimizer,
+                analytics_service,
+            )
+            background_tasks.add_task(
+                _handle_billing_usage,
+                contact_id,
+                location_id,
+                lead_score,
+                lead_result.get("extracted_data", {}),
+                lead_temp,
+                subscription_manager,
+                pricing_optimizer,
+                analytics_service,
+            )
 
             return GHLWebhookResponse(
                 success=True,

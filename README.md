@@ -11,6 +11,22 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
 
+## Key Metrics
+
+| System | Metric | Value |
+|--------|--------|-------|
+| AI Cost Optimization | Cache efficiency | **89% cost reduction** |
+| Test Suite | Across all modules | **8,500+ tests** |
+| API Performance | P95 latency | **< 2 seconds** |
+| Agent Dispatching | AgentForge throughput | **4.3M dispatches/sec** |
+| Lead Qualification | Jorge Bots | **157 tests, 3-bot orchestration** |
+
+[![Tests](https://img.shields.io/badge/tests-8500%2B-brightgreen)](#testing)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+---
+
 ## Business Impact
 
 | Metric | Value | Impact |

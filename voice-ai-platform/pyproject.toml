@@ -5,26 +5,66 @@ build-backend = "hatchling.build"
 [project]
 name = "voice-ai-platform"
 version = "0.1.0"
-description = "Real-time Voice AI Agent Platform for real estate"
+description = "Voice AI Agent Platform for Real Estate - Pipecat + Twilio + Deepgram + ElevenLabs"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.11"
+authors = [
+    { name = "EnterpriseHub", email = "dev@enterprisehub.ai" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: FastAPI",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
 dependencies = [
+    # Core Framework
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.6.0",
-    "sqlalchemy[asyncio]>=2.0.0",
+    "sqlmodel>=0.0.22",
+    
+    # Database
     "asyncpg>=0.30.0",
     "alembic>=1.14.0",
+    "greenlet>=3.1.0",
+    
+    # Cache
     "redis>=5.2.0",
-    "stripe>=11.0.0",
+    
+    # Voice AI Pipeline
+    "pipecat-ai>=0.0.50",
+    "deepgram-sdk>=3.8.0",
+    "elevenlabs>=1.15.0",
+    
+    # Telephony
+    "twilio>=9.4.0",
+    
+    # AI/LLM
+    "anthropic>=0.40.0",
+    "openai>=1.57.0",
+    
+    # WebSocket
+    "websockets>=14.0",
+    
+    # HTTP Client
     "httpx>=0.28.0",
-    "slowapi>=0.1.9",
-    "structlog>=24.0.0",
-    "twilio>=9.0.0",
-    "deepgram-sdk>=3.0.0",
-    "elevenlabs>=1.0.0",
-    "audioop-lts>=0.2.1; python_version>='3.13'",
-    # shared-schemas installed separately: pip install -e packages/shared-schemas/
+    "aiohttp>=3.11.0",
+    
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "structlog>=24.4.0",
+    "tenacity>=9.0.0",
+    
+    # Billing
+    "stripe>=11.0.0",
 ]
 
 [project.optional-dependencies]
@@ -32,21 +72,87 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
     "httpx>=0.28.0",
     "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "types-redis>=4.6.0",
+    "pre-commit>=4.0.0",
 ]
+
+[project.scripts]
+voice-platform = "voice_platform.main:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/voice_ai"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
-asyncio_mode = "auto"
-filterwarnings = [
-    "ignore::DeprecationWarning",
-]
+packages = ["voice_platform"]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise without from inside except
+    "ARG001", # unused function argument
+]
+
+[tool.ruff.isort]
+known-first-party = ["voice_platform", "shared"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "pipecat.*",
+    "deepgram.*",
+    "elevenlabs.*",
+    "twilio.*",
+    "stripe.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests requiring external services",
+]
+
+[tool.coverage.run]
+source = ["voice_platform"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

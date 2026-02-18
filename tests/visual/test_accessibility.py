@@ -20,6 +20,10 @@ Dependencies:
 """
 
 import pytest
+
+# Skip all tests in this module if axe_playwright is not installed
+pytest.importorskip("axe_playwright")
+
 from axe_playwright import run_axe
 from playwright.sync_api import Page
 

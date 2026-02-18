@@ -18,6 +18,27 @@ import redis.asyncio as redis
 
 from ghl_real_estate_ai.utils.datetime_utils import parse_iso8601
 
+# ── Optional Prometheus counters for security event tracking ────────────
+try:
+    from prometheus_client import Counter as _PromCounter
+
+    _security_events_total = _PromCounter(
+        "security_events_total",
+        "Total security audit events by event type",
+        ["event_type"],
+    )
+    _pii_access_total = _PromCounter(
+        "pii_access_total",
+        "Total PII / sensitive data access events",
+    )
+    _auth_failures_total = _PromCounter(
+        "auth_failures_total",
+        "Total authentication failure events",
+    )
+    _PROM_AVAILABLE = True
+except ImportError:
+    _PROM_AVAILABLE = False
+
 
 class AuditEventType(str, Enum):
     """Types of audit events"""
@@ -274,6 +295,25 @@ class AuditLogger:
 
             self._event_counts[event_type_val] = self._event_counts.get(event_type_val, 0) + 1
             self._severity_counts[severity_val] = self._severity_counts.get(severity_val, 0) + 1
+
+            # Increment Prometheus counters (if available)
+            if _PROM_AVAILABLE:
+                _security_events_total.labels(event_type=event_type_val).inc()
+                # Track PII access
+                if event_type in (
+                    AuditEventType.SENSITIVE_DATA_ACCESS,
+                    AuditEventType.DATA_EXPORTED,
+                ):
+                    _pii_access_total.inc()
+                # Track auth failures
+                if event_type in (
+                    AuditEventType.LOGIN_FAILURE,
+                    AuditEventType.AUTHENTICATION_FAILED,
+                    AuditEventType.AUTHORIZATION_FAILED,
+                    AuditEventType.FAILED_LOGIN_ATTEMPT,
+                    AuditEventType.MFA_VERIFICATION_FAILED,
+                ):
+                    _auth_failures_total.inc()
 
             # Immediate flush for critical events
             if severity == AuditSeverity.CRITICAL:

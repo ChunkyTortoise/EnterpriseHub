@@ -16,7 +16,7 @@ pytest.importorskip("PyPDF2")
 
 from PyPDF2 import PdfReader
 
-from ghl_real_estate_ai.services.handoff_card_generator import (
+from ghl_real_estate_ai.services.jorge.handoff_card_generator import (
     HandoffCardGenerator,
     generate_card,
 )
@@ -83,8 +83,7 @@ class TestHandoffCardGenerator:
 
     def test_generate_card_returns_pdf_bytes(self, sample_handoff_data):
         """Test that generate_card returns valid PDF bytes."""
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(sample_handoff_data)
+        pdf_bytes = generate_card(sample_handoff_data)
 
         assert isinstance(pdf_bytes, bytes)
         assert len(pdf_bytes) > 0
@@ -92,10 +91,9 @@ class TestHandoffCardGenerator:
 
     def test_generate_card_performance_under_2s(self, sample_handoff_data):
         """Test that card generation completes in <2 seconds."""
-        generator = HandoffCardGenerator()
 
         start = time.time()
-        pdf_bytes = generator.generate_card(sample_handoff_data)
+        pdf_bytes = generate_card(sample_handoff_data)
         elapsed = time.time() - start
 
         assert elapsed < 2.0, f"Card generation took {elapsed:.2f}s (target: <2s)"
@@ -103,7 +101,6 @@ class TestHandoffCardGenerator:
 
     def test_generate_card_with_enriched_context_dataclass(self, sample_enriched_context):
         """Test card generation with EnrichedHandoffContext dataclass."""
-        generator = HandoffCardGenerator()
 
         handoff_data = {
             "contact_id": "test_123",
@@ -116,15 +113,14 @@ class TestHandoffCardGenerator:
             "enriched_context": sample_enriched_context,
         }
 
-        pdf_bytes = generator.generate_card(handoff_data)
+        pdf_bytes = generate_card(handoff_data)
 
         assert isinstance(pdf_bytes, bytes)
         assert len(pdf_bytes) > 0
 
     def test_generate_card_content_validation(self, sample_handoff_data):
         """Test that generated PDF contains expected content."""
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(sample_handoff_data)
+        pdf_bytes = generate_card(sample_handoff_data)
 
         # Parse PDF and extract text
         pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
@@ -157,8 +153,7 @@ class TestHandoffCardGenerator:
             },
         }
 
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(minimal_data)
+        pdf_bytes = generate_card(minimal_data)
 
         assert isinstance(pdf_bytes, bytes)
         assert len(pdf_bytes) > 0
@@ -193,8 +188,7 @@ class TestHandoffCardGenerator:
             },
         }
 
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(seller_data)
+        pdf_bytes = generate_card(seller_data)
 
         pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
         page_text = pdf_reader.pages[0].extract_text()
@@ -230,16 +224,14 @@ class TestPDFStructure:
 
     def test_pdf_has_single_page(self, sample_handoff_data):
         """Test that generated PDF has exactly one page."""
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(sample_handoff_data)
+        pdf_bytes = generate_card(sample_handoff_data)
 
         pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
         assert len(pdf_reader.pages) == 1
 
     def test_pdf_has_metadata(self, sample_handoff_data):
         """Test that PDF includes proper metadata."""
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(sample_handoff_data)
+        pdf_bytes = generate_card(sample_handoff_data)
 
         pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
         metadata = pdf_reader.metadata
@@ -280,8 +272,7 @@ class TestIntegrationWithHandoffService:
             "enriched_context": context,
         }
 
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(handoff_data)
+        pdf_bytes = generate_card(handoff_data)
 
         assert isinstance(pdf_bytes, bytes)
         assert len(pdf_bytes) > 0
@@ -315,8 +306,7 @@ class TestEdgeCases:
             },
         }
 
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(data)
+        pdf_bytes = generate_card(data)
 
         # Should still generate PDF with placeholder or contact_id
         assert isinstance(pdf_bytes, bytes)
@@ -342,10 +332,9 @@ class TestEdgeCases:
             },
         }
 
-        generator = HandoffCardGenerator()
 
         start = time.time()
-        pdf_bytes = generator.generate_card(data)
+        pdf_bytes = generate_card(data)
         elapsed = time.time() - start
 
         # Should still complete in <2s even with long text
@@ -372,8 +361,7 @@ class TestEdgeCases:
             },
         }
 
-        generator = HandoffCardGenerator()
-        pdf_bytes = generator.generate_card(data)
+        pdf_bytes = generate_card(data)
 
         assert isinstance(pdf_bytes, bytes)
         assert len(pdf_bytes) > 0
