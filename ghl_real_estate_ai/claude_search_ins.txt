@@ -1,0 +1,6 @@
+5372:        "🤖 AI-Claude Integration",
+5394:        # Import and render our new seller-Claude integration demo
+5396:            from pages.seller_claude_demo import render_seller_claude_integration_demo
+5397:            render_seller_claude_integration_demo()
+5399:            st.error("Seller-Claude Integration demo temporarily unavailable")
+5433:        Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready

@@ -1089,6 +1089,17 @@ def create_claude_analyzer(
     return ClaudeSemanticAnalyzer(api_key=api_key, model=model)
 
 
+# Global instance - initialized on first access
+claude_semantic_analyzer = None
+
+def get_semantic_analyzer() -> ClaudeSemanticAnalyzer:
+    """Get or create the global semantic analyzer instance."""
+    global claude_semantic_analyzer
+    if claude_semantic_analyzer is None:
+        claude_semantic_analyzer = create_claude_analyzer()
+    return claude_semantic_analyzer
+
+
 # Usage example:
 """
 # Initialize analyzer

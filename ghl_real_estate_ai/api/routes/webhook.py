@@ -50,6 +50,17 @@ from ghl_real_estate_ai.services.batched_webhook_processor import (
     BatchedWebhookProcessor
 )
 
+# Claude Lead Intelligence Integration (Phase 4 Enhancement)
+from ghl_real_estate_ai.services.claude_lead_qualification_engine import (
+    get_qualification_engine,
+    qualify_lead_data,
+    LeadSourceType
+)
+from ghl_real_estate_ai.services.claude_lead_enrichment_engine import (
+    get_enrichment_engine,
+    analyze_lead_enrichment
+)
+
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])
 
@@ -82,6 +93,10 @@ from ghl_real_estate_ai.services.claude_conversation_analyzer import (
 # Global coaching engine instance
 coaching_engine = None
 
+# Global Claude Intelligence engines (Phase 4)
+qualification_engine = None
+enrichment_engine = None
+
 
 async def initialize_business_metrics_service():
     """Initialize the business metrics service for webhook tracking."""
@@ -108,6 +123,27 @@ async def initialize_coaching_engine_for_webhook():
         except Exception as e:
             logger.error(f"Failed to initialize coaching engine: {e}")
             coaching_engine = None
+
+
+async def initialize_claude_intelligence_engines():
+    """Initialize Claude Lead Intelligence engines for webhook processing (Phase 4)."""
+    global qualification_engine, enrichment_engine
+
+    if not qualification_engine:
+        try:
+            qualification_engine = get_qualification_engine()
+            logger.info("Claude Lead Qualification Engine initialized for webhook processing")
+        except Exception as e:
+            logger.error(f"Failed to initialize qualification engine: {e}")
+            qualification_engine = None
+
+    if not enrichment_engine:
+        try:
+            enrichment_engine = get_enrichment_engine()
+            logger.info("Claude Lead Enrichment Engine initialized for webhook processing")
+        except Exception as e:
+            logger.error(f"Failed to initialize enrichment engine: {e}")
+            enrichment_engine = None
 
 
 def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
@@ -263,6 +299,10 @@ async def handle_ghl_webhook(
     if not coaching_engine:
         await initialize_coaching_engine_for_webhook()
 
+    # Initialize Claude Intelligence Engines if not already done (Phase 4)
+    if not qualification_engine or not enrichment_engine:
+        await initialize_claude_intelligence_engines()
+
     # Start business metrics tracking for this webhook
     webhook_tracking_id = None
     if business_metrics_service:
@@ -409,7 +449,90 @@ async def handle_ghl_webhook(
         except Exception as e:
             logger.warning(f"Qualification orchestration failed: {e}")
 
-        # Step 2: Enhanced AI Response Generation (with Claude insights)
+        # Step 1.7: Comprehensive Lead Intelligence Processing (Phase 4 Enhancement)
+        lead_qualification_result = None
+        lead_enrichment_analysis = None
+        intelligence_processing_time = 0
+
+        if qualification_engine or enrichment_engine:
+            intelligence_start_time = datetime.now()
+
+            try:
+                # Prepare lead data for intelligence processing
+                lead_data = {
+                    "lead_id": contact_id,
+                    "full_name": f"{event.contact.first_name or ''} {event.contact.last_name or ''}".strip(),
+                    "phone": event.contact.phone,
+                    "email": event.contact.email,
+                    "message": user_message,
+                    "tags": tags,
+                    "source": "ghl_webhook",
+                    "campaign_source": tags[0] if tags else "unknown",
+                    "timestamp": datetime.now().isoformat(),
+                    "conversation_history": conversation_messages,
+                    "claude_semantics": claude_semantics,
+                    "qualification_progress": qualification_progress
+                }
+
+                # Execute lead intelligence processing in parallel
+                intelligence_tasks = []
+
+                # 1. Comprehensive Lead Qualification
+                if qualification_engine:
+                    intelligence_tasks.append(
+                        qualification_engine.qualify_lead(
+                            lead_data=lead_data,
+                            source_type=LeadSourceType.GHL_WEBHOOK,
+                            agent_id=location_id,  # Use location as agent ID
+                            tenant_id=location_id
+                        )
+                    )
+
+                # 2. Lead Data Enrichment Analysis
+                if enrichment_engine:
+                    intelligence_tasks.append(
+                        enrichment_engine.analyze_lead_enrichment_needs(
+                            lead_data=lead_data,
+                            lead_context={
+                                "source": "ghl_webhook",
+                                "existing_conversation": bool(context and context.get("messages")),
+                                "tag_context": tags,
+                                "semantic_analysis": claude_semantics
+                            },
+                            include_validation=True
+                        )
+                    )
+
+                # Execute intelligence processing in parallel
+                if intelligence_tasks:
+                    intelligence_results = await asyncio.gather(
+                        *intelligence_tasks, return_exceptions=True
+                    )
+
+                    # Process qualification results
+                    if len(intelligence_results) > 0 and not isinstance(intelligence_results[0], Exception):
+                        lead_qualification_result = intelligence_results[0]
+                        logger.info(
+                            f"Lead qualification completed for contact {contact_id}: "
+                            f"priority={lead_qualification_result.priority_level.value}, "
+                            f"score={lead_qualification_result.qualification_metrics.overall_score:.1f}"
+                        )
+
+                    # Process enrichment results
+                    if len(intelligence_results) > 1 and not isinstance(intelligence_results[1], Exception):
+                        lead_enrichment_analysis = intelligence_results[1]
+                        logger.info(
+                            f"Lead enrichment analysis completed for contact {contact_id}: "
+                            f"gaps={len(lead_enrichment_analysis.identified_gaps)}, "
+                            f"completeness={lead_enrichment_analysis.completeness_score:.1f}%"
+                        )
+
+            except Exception as e:
+                logger.error(f"Comprehensive lead intelligence processing failed for contact {contact_id}: {e}")
+
+            intelligence_processing_time = (datetime.now() - intelligence_start_time).total_seconds() * 1000
+
+        # Step 2: Enhanced AI Response Generation (with comprehensive Claude insights)
         enhanced_contact_info = {
             "first_name": event.contact.first_name,
             "last_name": event.contact.last_name,
@@ -419,7 +542,33 @@ async def handle_ghl_webhook(
             "claude_intent": claude_semantics.get("intent_analysis", {}),
             "semantic_preferences": claude_semantics.get("semantic_preferences", {}),
             "urgency_score": claude_semantics.get("urgency_score", 50),
-            "qualification_progress": qualification_progress.get("completion_percentage", 0)
+            "qualification_progress": qualification_progress.get("completion_percentage", 0),
+
+            # Add comprehensive intelligence insights (Phase 4)
+            "lead_qualification": {
+                "priority_level": lead_qualification_result.priority_level.value if lead_qualification_result else "medium",
+                "qualification_status": lead_qualification_result.qualification_status.value if lead_qualification_result else "unknown",
+                "overall_score": lead_qualification_result.qualification_metrics.overall_score if lead_qualification_result else 50,
+                "intent_score": lead_qualification_result.qualification_metrics.intent_score if lead_qualification_result else 50,
+                "urgency_score": lead_qualification_result.qualification_metrics.urgency_score if lead_qualification_result else 50,
+                "confidence": lead_qualification_result.confidence_score if lead_qualification_result else 0.5,
+                "contact_type": lead_qualification_result.contact_type.value if lead_qualification_result else "unknown"
+            },
+            "lead_enrichment": {
+                "data_completeness": lead_enrichment_analysis.completeness_score if lead_enrichment_analysis else 50,
+                "data_quality": lead_enrichment_analysis.data_quality_score if lead_enrichment_analysis else 50,
+                "gap_count": len(lead_enrichment_analysis.identified_gaps) if lead_enrichment_analysis else 0,
+                "enrichment_opportunities": len(lead_enrichment_analysis.enrichment_opportunities) if lead_enrichment_analysis else 0,
+                "immediate_actions": lead_enrichment_analysis.immediate_actions[:3] if lead_enrichment_analysis else [],
+                "agent_questions": lead_enrichment_analysis.agent_questions[:3] if lead_enrichment_analysis else []
+            },
+            "intelligence_insights": {
+                "behavioral_indicators": lead_qualification_result.smart_insights.behavioral_indicators[:3] if lead_qualification_result else [],
+                "opportunity_signals": lead_qualification_result.smart_insights.opportunity_signals[:3] if lead_qualification_result else [],
+                "risk_factors": lead_qualification_result.smart_insights.risk_factors[:2] if lead_qualification_result else [],
+                "conversation_strategies": lead_qualification_result.action_recommendations.conversation_starters[:2] if lead_qualification_result else [],
+                "processing_time_ms": intelligence_processing_time
+            }
         }
 
         ai_response = await conversation_manager.generate_response(
@@ -516,13 +665,15 @@ async def handle_ghl_webhook(
             location_id=location_id,
         )
 
-        # Step 4: Enhanced GHL Actions with Claude Intelligence (Phase 3 Enhancement)
-        actions = await prepare_enhanced_ghl_actions(
+        # Step 4: Enhanced GHL Actions with Comprehensive Intelligence (Phase 4 Enhancement)
+        actions = await prepare_comprehensive_ghl_actions(
             extracted_data=ai_response.extracted_data,
             lead_score=ai_response.lead_score,
             event=event,
             claude_semantics=claude_semantics,
             qualification_progress=qualification_progress,
+            lead_qualification_result=lead_qualification_result,
+            lead_enrichment_analysis=lead_enrichment_analysis,
         )
 
         # Step 5: Send response and apply actions in background
@@ -873,6 +1024,224 @@ async def prepare_enhanced_ghl_actions(
             "qualification_completion": completion_percentage,
             "claude_confidence": overall_confidence,
         },
+    )
+
+    return actions
+
+
+async def prepare_comprehensive_ghl_actions(
+    extracted_data: dict,
+    lead_score: int,
+    event: GHLWebhookEvent,
+    claude_semantics: dict,
+    qualification_progress: dict,
+    lead_qualification_result,
+    lead_enrichment_analysis
+) -> list[GHLAction]:
+    """
+    Comprehensive GHL actions preparation with full Claude intelligence integration (Phase 4).
+
+    Args:
+        extracted_data: Extracted preferences from conversation
+        lead_score: Calculated lead score (0-100)
+        event: Original webhook event
+        claude_semantics: Claude semantic analysis results
+        qualification_progress: Qualification orchestrator progress
+        lead_qualification_result: Comprehensive lead qualification result
+        lead_enrichment_analysis: Lead enrichment analysis result
+
+    Returns:
+        List of GHLAction objects with comprehensive intelligence-driven actions
+    """
+    actions = []
+
+    # Start with enhanced actions from previous implementation
+    enhanced_actions = await prepare_enhanced_ghl_actions(
+        extracted_data, lead_score, event, claude_semantics, qualification_progress
+    )
+    actions.extend(enhanced_actions)
+
+    # Comprehensive Intelligence-Driven Actions (Phase 4)
+
+    # 1. Priority-Based Intelligent Tagging
+    if lead_qualification_result:
+        priority_level = lead_qualification_result.priority_level.value
+        qualification_status = lead_qualification_result.qualification_status.value
+        contact_type = lead_qualification_result.contact_type.value
+        overall_score = lead_qualification_result.qualification_metrics.overall_score
+
+        # Priority-based actions
+        if priority_level == "critical":
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Critical-Lead"))
+            # Immediate agent notification for critical leads
+            if settings.notify_agent_workflow_id:
+                actions.append(GHLAction(
+                    type=ActionType.TRIGGER_WORKFLOW,
+                    workflow_id=settings.notify_agent_workflow_id
+                ))
+        elif priority_level == "high":
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-High-Priority"))
+        elif priority_level == "medium":
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Medium-Priority"))
+
+        # Qualification status tagging
+        if qualification_status == "fully_qualified":
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Fully-Qualified"))
+        elif qualification_status == "partially_qualified":
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Partially-Qualified"))
+
+        # Contact type specific tagging
+        if contact_type != "unknown":
+            actions.append(GHLAction(
+                type=ActionType.ADD_TAG,
+                tag=f"Intelligence-Contact-{contact_type.title()}"
+            ))
+
+        # Update comprehensive intelligence score custom field
+        if settings.custom_field_lead_score:
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_lead_score,
+                value=int(overall_score)
+            ))
+
+    # 2. Data Quality and Enrichment-Based Actions
+    if lead_enrichment_analysis:
+        completeness_score = lead_enrichment_analysis.completeness_score
+        gap_count = len(lead_enrichment_analysis.identified_gaps)
+        data_quality_score = lead_enrichment_analysis.data_quality_score
+
+        # Data completeness tagging
+        if completeness_score >= 80:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Complete-Profile"))
+        elif completeness_score >= 60:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Good-Data"))
+        elif completeness_score < 40:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Data-Gaps"))
+
+        # High gap count requires data collection
+        if gap_count >= 5:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Needs-Info"))
+
+        # Data quality issues
+        if lead_enrichment_analysis.suspicious_data_count > 0:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Verify-Data"))
+
+    # 3. Behavioral Intelligence-Based Actions
+    if lead_qualification_result and lead_qualification_result.smart_insights:
+        insights = lead_qualification_result.smart_insights
+
+        # High opportunity signals
+        if len(insights.opportunity_signals) >= 3:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-High-Opportunity"))
+
+        # Risk factors present
+        if len(insights.risk_factors) >= 2:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Risk-Factors"))
+
+        # Competitive considerations
+        if insights.competitive_considerations:
+            actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Intelligence-Competitive-Situation"))
+
+    # 4. Action-Based Workflow Triggers
+    if lead_qualification_result and lead_qualification_result.action_recommendations:
+        recommendations = lead_qualification_result.action_recommendations
+
+        # Immediate actions trigger specific workflows
+        for action in recommendations.immediate_actions:
+            if action.get("action") == "schedule_consultation":
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Ready-For-Consultation"))
+            elif action.get("action") == "send_property_info":
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Send-Property-Info"))
+            elif action.get("action") == "financial_qualification":
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Needs-Financial-Qualification"))
+
+    # 5. Intelligence Confidence-Based Custom Fields
+    if lead_qualification_result:
+        confidence_score = int(lead_qualification_result.confidence_score * 100)
+
+        # Add confidence score as custom field
+        if hasattr(settings, 'custom_field_confidence_score'):
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_confidence_score,
+                value=confidence_score
+            ))
+
+        # Processing metadata
+        if hasattr(settings, 'custom_field_processing_time'):
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_processing_time,
+                value=f"{lead_qualification_result.processing_time_ms:.0f}ms"
+            ))
+
+    # 6. Enrichment Opportunities as Custom Fields
+    if lead_enrichment_analysis and hasattr(settings, 'custom_field_enrichment_opportunities'):
+        opportunities = len(lead_enrichment_analysis.enrichment_opportunities)
+        actions.append(GHLAction(
+            type=ActionType.UPDATE_CUSTOM_FIELD,
+            field=settings.custom_field_enrichment_opportunities,
+            value=f"{opportunities} enrichment opportunities available"
+        ))
+
+    # 7. Next Best Action as Custom Field
+    if lead_qualification_result and hasattr(settings, 'custom_field_next_action'):
+        immediate_actions = lead_qualification_result.action_recommendations.immediate_actions
+        if immediate_actions:
+            next_action = immediate_actions[0].get("action", "Follow up")
+            actions.append(GHLAction(
+                type=ActionType.UPDATE_CUSTOM_FIELD,
+                field=settings.custom_field_next_action,
+                value=next_action
+            ))
+
+    # 8. Intelligence Summary as Notes (if configured)
+    if hasattr(settings, 'add_intelligence_notes') and settings.add_intelligence_notes:
+        if lead_qualification_result:
+            summary_parts = []
+
+            # Priority and score
+            summary_parts.append(
+                f"Priority: {lead_qualification_result.priority_level.value.title()}"
+            )
+            summary_parts.append(
+                f"Score: {lead_qualification_result.qualification_metrics.overall_score:.0f}/100"
+            )
+
+            # Top insights
+            if lead_qualification_result.smart_insights.primary_insights:
+                top_insight = lead_qualification_result.smart_insights.primary_insights[0]
+                summary_parts.append(f"Key Insight: {top_insight}")
+
+            # Data completeness
+            if lead_enrichment_analysis:
+                summary_parts.append(
+                    f"Data Completeness: {lead_enrichment_analysis.completeness_score:.0f}%"
+                )
+
+            intelligence_summary = " | ".join(summary_parts)
+
+            # Add as note/activity (would need GHL API support for notes)
+            # For now, use a custom field if available
+            if hasattr(settings, 'custom_field_intelligence_summary'):
+                actions.append(GHLAction(
+                    type=ActionType.UPDATE_CUSTOM_FIELD,
+                    field=settings.custom_field_intelligence_summary,
+                    value=intelligence_summary
+                ))
+
+    logger.info(
+        f"Comprehensive GHL actions prepared for contact {event.contact_id}",
+        extra={
+            "contact_id": event.contact_id,
+            "base_enhanced_actions": len(enhanced_actions),
+            "intelligence_actions": len(actions) - len(enhanced_actions),
+            "total_actions": len(actions),
+            "qualification_priority": lead_qualification_result.priority_level.value if lead_qualification_result else "unknown",
+            "qualification_score": lead_qualification_result.qualification_metrics.overall_score if lead_qualification_result else 0,
+            "data_completeness": lead_enrichment_analysis.completeness_score if lead_enrichment_analysis else 0,
+        }
     )
 
     return actions

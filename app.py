@@ -102,7 +102,7 @@ except ImportError:
     ExecutiveDashboardService = MockService
 
 try:
-    from services.quality_assurance import QualityAssuranceService
+    from services.quality_assurance import QualityAssuranceEngine as QualityAssuranceService
 except ImportError:
     st.warning("QA Service unavailable, using mock.")
     QualityAssuranceService = MockService
@@ -114,7 +114,7 @@ except ImportError:
     RevenueAttributionService = MockService
 
 try:
-    from services.competitive_benchmarking import CompetitiveBenchmarkingService
+    from services.competitive_benchmarking import BenchmarkingEngine as CompetitiveBenchmarkingService
 except ImportError:
     st.warning("Benchmarking unavailable, using mock.")
     CompetitiveBenchmarkingService = MockService
@@ -159,7 +159,7 @@ except ImportError:
     EnhancedPerformanceMonitoringService = MockService
 
 try:
-    from services.workflow_marketplace import WorkflowMarketplace
+    from services.workflow_marketplace import WorkflowMarketplaceService as WorkflowMarketplace
 except ImportError:
     st.warning("Workflow Marketplace unavailable, using mock.")
     WorkflowMarketplace = MockService
@@ -202,7 +202,7 @@ except ImportError:
     ADVANCED_DASHBOARD_AVAILABLE = False
 
 try:
-    from services.auto_followup_sequences import AutoFollowupSequences
+    from services.auto_followup_sequences import AutoFollowUpSequences as AutoFollowupSequences
 except ImportError:
     st.warning("Auto Followup unavailable, using mock.")
     AutoFollowupSequences = MockService
@@ -260,8 +260,11 @@ def get_services():
     if ENHANCED_SERVICES_AVAILABLE:
         try:
             # Core support services for enhanced engine
+            # Get location_id from environment or use default for demo
+            location_id = os.getenv("GHL_LOCATION_ID", "jorge_salas_demo")
+
             memory = MemoryService()
-            lifecycle = LeadLifecycleTracker()
+            lifecycle = LeadLifecycleTracker(location_id=location_id)
             behavioral = BehavioralTriggerEngine()
             
             base_services.update({
@@ -283,6 +286,116 @@ def get_services():
 
 services = get_services()
 mock_data = load_mock_data()
+
+# ===== SIMPLE CLAUDE IMPLEMENTATION =====
+
+def render_simple_claude_greeting():
+    """Simple Claude greeting that always shows."""
+
+    # Always show greeting option
+    if st.button("👋 Show Claude Greeting", key="show_claude_greeting"):
+        st.balloons()
+        st.success("""
+        🤖 **Hello! I'm Claude, your AI assistant for the GHL Real Estate platform.**
+
+        I'm here to help you with:
+        • Lead intelligence and qualification
+        • Conversation coaching and strategies
+        • Market insights and analysis
+        • Process optimization recommendations
+
+        Navigate to **Lead Intelligence Hub** to start working with me!
+        """)
+
+def render_simple_claude_chat():
+    """Simple chat interface for Lead Intelligence Hub."""
+
+    st.subheader("💬 Chat with Claude")
+
+    # Initialize chat
+    if "simple_claude_chat" not in st.session_state:
+        st.session_state.simple_claude_chat = [
+            {
+                "role": "claude",
+                "content": "Hi! I'm Claude, ready to help with lead analysis and insights. What would you like to explore?",
+                "timestamp": "startup"
+            }
+        ]
+
+    # Display chat
+    for msg in st.session_state.simple_claude_chat[-5:]:  # Last 5 messages
+        if msg["role"] == "claude":
+            st.info(f"🤖 **Claude:** {msg['content']}")
+        else:
+            st.success(f"👤 **You:** {msg['content']}")
+
+    # Quick buttons
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("🎯 Analyze Leads", key="simple_analyze"):
+            st.session_state.simple_claude_chat.append({
+                "role": "user",
+                "content": "Analyze my current leads",
+                "timestamp": "now"
+            })
+            st.session_state.simple_claude_chat.append({
+                "role": "claude",
+                "content": "I can see your lead pipeline. Sarah Johnson shows high engagement with 6 property views and immediate timeline - she's your top priority! Mike Chen needs follow-up after 3 days of no contact. Would you like detailed analysis on any specific lead?",
+                "timestamp": "now"
+            })
+            st.rerun()
+
+    with col2:
+        if st.button("💬 Get Coaching", key="simple_coaching"):
+            st.session_state.simple_claude_chat.append({
+                "role": "user",
+                "content": "Give me conversation tips",
+                "timestamp": "now"
+            })
+            st.session_state.simple_claude_chat.append({
+                "role": "claude",
+                "content": "For high-engagement leads like Sarah, focus on urgency: 'I noticed you've been actively searching - the market is moving fast. Let's schedule a viewing this week to secure the best options.' For follow-ups like Mike, add value: 'I found 3 new listings that match your criteria perfectly.'",
+                "timestamp": "now"
+            })
+            st.rerun()
+
+    with col3:
+        if st.button("🧹 Clear Chat", key="simple_clear"):
+            st.session_state.simple_claude_chat = [
+                {
+                    "role": "claude",
+                    "content": "Chat cleared! Ready to help with lead intelligence.",
+                    "timestamp": "now"
+                }
+            ]
+            st.rerun()
+
+    # Text input
+    user_input = st.text_area(
+        "Ask Claude anything about leads or strategies:",
+        placeholder="e.g., 'What should I do with leads that haven't responded?' or 'Help me prioritize my follow-ups'",
+        key="simple_claude_input"
+    )
+
+    if st.button("Send Message", key="simple_send", type="primary"):
+        if user_input.strip():
+            st.session_state.simple_claude_chat.append({
+                "role": "user",
+                "content": user_input,
+                "timestamp": "now"
+            })
+
+            # Simple response logic
+            response = f"Great question about '{user_input}'. Based on best practices in real estate sales, I recommend focusing on value-driven follow-ups, understanding timeline urgency, and maintaining consistent communication. Would you like me to draft specific messages or provide more detailed strategies for your situation?"
+
+            st.session_state.simple_claude_chat.append({
+                "role": "claude",
+                "content": response,
+                "timestamp": "now"
+            })
+
+            st.rerun()
 
 # Initialize Global AI State (Zustand equivalent)
 if "ai_config" not in st.session_state:
@@ -335,6 +448,49 @@ with col3:
     st.warning("🏢 Multi-Tenant Ready")
 
 st.divider()
+
+# ===== CLAUDE AI GREETING & CONTEXT AWARENESS =====
+# Initialize Claude session state
+if 'claude_greeted' not in st.session_state:
+    st.session_state.claude_greeted = False
+if 'claude_context' not in st.session_state:
+    st.session_state.claude_context = {"current_section": "startup", "lead_data": None}
+
+# Claude AI Greeting
+if not st.session_state.claude_greeted:
+    st.session_state.claude_greeted = True
+
+    # Show Claude greeting with animation
+    claude_container = st.container()
+    with claude_container:
+        st.markdown("""
+        <div style='
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #4f46e5;
+            margin-bottom: 1rem;
+            animation: fadeIn 1s ease-in;
+        '>
+            <div style='color: white; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;'>
+                👋 Hello! I'm Claude, your AI assistant
+            </div>
+            <div style='color: #e2e8f0; font-size: 0.95rem; line-height: 1.5;'>
+                I'm here to help you with lead intelligence, qualification, and insights throughout your GHL platform.
+                I have full context awareness and can assist with lead analysis, conversation coaching, and strategic recommendations.
+            </div>
+            <div style='margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.1); border-radius: 8px; border-left: 3px solid #10b981;'>
+                <div style='color: #a7f3d0; font-size: 0.9rem; font-weight: 500;'>🎯 Ready to supercharge your lead intelligence!</div>
+                <div style='color: #d1fae5; font-size: 0.85rem; margin-top: 0.25rem;'>Navigate to "Lead Intelligence Hub" to start working with leads</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Auto-dismiss after 5 seconds (optional)
+        import time
+        if st.button("Got it, Claude! 👍", key="dismiss_claude_greeting"):
+            st.session_state.claude_greeted = True
+            st.rerun()
 
 # Initialize session state for hub navigation
 if 'current_hub' not in st.session_state:
@@ -392,7 +548,73 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    
+
+    # ===== CLAUDE AI STATUS & CONTEXT =====
+    with st.expander("🤖 Claude AI Assistant", expanded=True):
+        # Context-aware status
+        current_section = st.session_state.claude_context.get("current_section", "startup")
+
+        if current_section == "lead_intelligence":
+            st.markdown("🧠 **Active in:** Lead Intelligence")
+            st.success("🎯 Ready to analyze leads and provide insights")
+            st.caption("I can help with qualification, scoring, and strategic recommendations")
+        elif current_section == "startup":
+            st.markdown("👋 **Standing by:** Application startup")
+            st.info("🚀 Ready to assist across all hubs")
+            st.caption("Navigate to Lead Intelligence for specialized help")
+        else:
+            st.markdown(f"📊 **Active in:** {current_section.replace('_', ' ').title()}")
+            st.info("💡 Available for contextual assistance")
+            st.caption("Switch to Lead Intelligence for specialized features")
+
+        # Quick context switch
+        if st.button("💬 Jump to Lead Intelligence", use_container_width=True):
+            st.session_state.current_hub = "Lead Intelligence Hub"
+            st.session_state.claude_context["current_section"] = "lead_intelligence"
+            st.rerun()
+
+    st.markdown("---")
+
+    # === CLAUDE DEBUG SECTION ===
+    with st.expander("🔧 Claude Debug", expanded=False):
+        st.markdown("### Debug Information")
+
+        # Check if Claude greeting state exists
+        claude_greeted = st.session_state.get('claude_greeted', 'Not set')
+        st.write(f"**Claude Greeted:** {claude_greeted}")
+
+        # Check Claude context
+        claude_context = st.session_state.get('claude_context', 'Not set')
+        st.write(f"**Claude Context:** {claude_context}")
+
+        # Force show greeting button
+        if st.button("🔄 Reset Claude Greeting", use_container_width=True):
+            st.session_state.claude_greeted = False
+            st.rerun()
+
+        # Test Claude components
+        st.write("**Component Tests:**")
+
+        try:
+            from streamlit_components.claude_conversational_interface import ClaudeConversationalInterface
+            st.success("✅ Claude Interface Import")
+        except Exception as e:
+            st.error(f"❌ Claude Interface: {e}")
+
+        try:
+            from streamlit_components.claude_proactive_panel import render_proactive_suggestions
+            st.success("✅ Proactive Panel Import")
+        except Exception as e:
+            st.error(f"❌ Proactive Panel: {e}")
+
+        # Simple Claude test button
+        if st.button("🧪 Test Simple Claude", use_container_width=True):
+            st.balloons()
+            st.success("👋 Hello! I'm Claude, ready to help with lead intelligence!")
+            st.info("✅ Simple Claude greeting working!")
+
+    st.markdown("---")
+
     # Global AI Configuration (Synced State)
     with st.expander("AI Configuration", expanded=True):
         new_market = st.selectbox(
@@ -442,17 +664,30 @@ with st.sidebar:
         render_onboarding_trigger()
 
     st.markdown("---")
-    st.markdown("### Live Feed")
-    st.markdown("""
-    <div style="font-size: 0.8rem; color: #666;">
-    Creating contract for <b>John Doe</b><br>
-    <span style="color: green">● Just now</span><br><br>
-    New lead: <b>Sarah Smith</b> (Downtown)<br>
-    <span style="color: gray">● 2 mins ago</span><br><br>
-    AI handled objection: <b>Mike Ross</b><br>
-    <span style="color: gray">● 15 mins ago</span>
-    </div>
-    """, unsafe_allow_html=True)
+
+    # ===== CLAUDE PROACTIVE SUGGESTIONS (SIDEBAR) =====
+    try:
+        from streamlit_components.claude_proactive_panel import render_proactive_suggestions
+
+        st.markdown("### 🧠 Claude Insights")
+        render_proactive_suggestions(
+            context=st.session_state.claude_context,
+            compact=True,
+            max_suggestions=2
+        )
+
+    except ImportError:
+        st.markdown("### Live Feed")
+        st.markdown("""
+        <div style="font-size: 0.8rem; color: #666;">
+        Creating contract for <b>John Doe</b><br>
+        <span style="color: green">● Just now</span><br><br>
+        New lead: <b>Sarah Smith</b> (Downtown)<br>
+        <span style="color: gray">● 2 mins ago</span><br><br>
+        AI handled objection: <b>Mike Ross</b><br>
+        <span style="color: gray">● 15 mins ago</span>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Initialize Smart Navigation
 if SMART_NAVIGATION_AVAILABLE:
@@ -467,7 +702,14 @@ if USER_ONBOARDING_AVAILABLE:
     handle_onboarding_flow()
 
 # Main content area with enhanced navigation
+
+# Add the simple Claude greeting to main app
+render_simple_claude_greeting()
+
 if selected_hub == "Executive Command Center":
+    # Update Claude context
+    st.session_state.claude_context["current_section"] = "executive_dashboard"
+
     # Update navigation context
     if SMART_NAVIGATION_AVAILABLE:
         update_nav_context("executive", hub="Executive Command Center", section="dashboard")
@@ -931,6 +1173,53 @@ elif selected_hub == "Lead Intelligence Hub":
     st.header("Lead Intelligence Hub")
     st.markdown("*Deep dive into individual leads with AI-powered insights*")
 
+    # Update Claude context
+    st.session_state.claude_context["current_section"] = "lead_intelligence"
+
+    # ===== CLAUDE CONVERSATIONAL INTERFACE =====
+    try:
+        from streamlit_components.claude_conversational_interface import render_claude_interface
+
+        # Get current lead data for context
+        current_lead_data = None
+        if 'selected_lead_name' in locals():
+            current_lead_data = lead_options.get(selected_lead_name, {})
+
+        # Render real Claude interface with lead context
+        render_claude_interface(
+            context=st.session_state.claude_context,
+            lead_data=current_lead_data,
+            expanded=True,
+            show_quick_actions=True,
+            key_suffix="lead_intel"
+        )
+
+    except ImportError:
+        st.warning("⚠️ Claude Intelligence services not fully initialized. Using simple interface.")
+        # Use our simple Claude chat as fallback
+        render_simple_claude_chat()
+
+    st.markdown("---")
+
+    # ===== CLAUDE PROACTIVE SUGGESTIONS (FULL PANEL) =====
+    try:
+        from streamlit_components.claude_proactive_panel import render_proactive_suggestions
+
+        st.subheader("🧠 Claude's Intelligent Insights")
+        st.caption("Proactive suggestions and opportunities identified by Claude AI")
+
+        render_proactive_suggestions(
+            context=st.session_state.claude_context,
+            compact=False,
+            max_suggestions=6,
+            show_metrics=True
+        )
+
+    except ImportError:
+        st.info("💡 **Enhanced Claude Intelligence Available:** Configure full integration for proactive suggestions and intelligent insights.")
+
+    st.markdown("---")
+
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Lead Scoring",
         "Churn Risk",
@@ -1261,6 +1550,9 @@ elif selected_hub == "Lead Intelligence Hub":
             st.markdown(f"- {rec}")
 
 elif selected_hub == "Automation Studio":
+    # Update Claude context
+    st.session_state.claude_context["current_section"] = "automation_studio"
+
     # Update navigation context
     if SMART_NAVIGATION_AVAILABLE:
         update_nav_context("automation", hub="Automation Studio", section="automations")
@@ -1417,6 +1709,9 @@ elif selected_hub == "Automation Studio":
 
 
 elif selected_hub == "Sales Copilot":
+    # Update Claude context
+    st.session_state.claude_context["current_section"] = "sales_copilot"
+
     # Update navigation context
     if SMART_NAVIGATION_AVAILABLE:
         update_nav_context("sales", hub="Sales Copilot", section="deal_closer")
@@ -1621,6 +1916,9 @@ elif selected_hub == "Sales Copilot":
             st.caption("These features increase the statistical probability of closing this deal.")
 
 elif selected_hub == "Ops & Optimization":
+    # Update Claude context
+    st.session_state.claude_context["current_section"] = "ops_optimization"
+
     # Update navigation context
     if SMART_NAVIGATION_AVAILABLE:
         update_nav_context("operations", hub="Ops & Optimization", section="quality")

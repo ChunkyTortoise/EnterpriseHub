@@ -226,8 +226,12 @@ class LeadScorer:
             if prefs.get("bathrooms"):
                 prop_details.append(f"{prefs.get('bathrooms')} bath")
             if prefs.get("must_haves"):
-                prop_details.append(prefs.get("must_haves"))
-            questions_answered.append(f"Property: {', '.join(prop_details)}")
+                must_haves = prefs.get("must_haves")
+                if isinstance(must_haves, list):
+                    prop_details.extend([str(item) for item in must_haves])
+                else:
+                    prop_details.append(str(must_haves))
+            questions_answered.append(f"Property: {', '.join(str(d) for d in prop_details)}")
         if prefs.get("financing"):
             questions_answered.append(f"Financing: {prefs.get('financing')}")
         if prefs.get("motivation"):

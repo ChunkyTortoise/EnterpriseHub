@@ -28,22 +28,40 @@ Total Platform Impact: $265K-440K annual value
 import streamlit as st
 
 # === ENTERPRISE BASE IMPORTS ===
-from .enhanced_enterprise_base import (
-    EnhancedEnterpriseComponent,
-    EnterpriseDashboardComponent,
-    EnterpriseDataComponent,
-    ComponentMetrics,
-    ComponentState
-)
-from .enterprise_theme_system import (
-    EnterpriseThemeManager,
-    ThemeVariant,
-    ComponentType,
-    inject_enterprise_theme,
-    create_enterprise_card,
-    create_enterprise_metric,
-    create_enterprise_alert
-)
+try:
+    from ghl_real_estate_ai.streamlit_components.enhanced_enterprise_base import (
+        EnhancedEnterpriseComponent,
+        EnterpriseDashboardComponent,
+        EnterpriseDataComponent,
+        ComponentMetrics,
+        ComponentState
+    )
+    from ghl_real_estate_ai.streamlit_components.enterprise_theme_system import (
+        EnterpriseThemeManager,
+        ThemeVariant,
+        ComponentType,
+        inject_enterprise_theme,
+        create_enterprise_card,
+        create_enterprise_metric,
+        create_enterprise_alert
+    )
+    ENTERPRISE_BASE_AVAILABLE = True
+except ImportError:
+    st.warning("Enterprise base components unavailable, using standard Streamlit components.")
+    ENTERPRISE_BASE_AVAILABLE = False
+    # Fallback to ensure the app doesn't crash
+    class EnhancedEnterpriseComponent: pass
+    class EnterpriseDashboardComponent: pass
+    class EnterpriseDataComponent: pass
+    class ComponentMetrics: pass
+    class ComponentState: pass
+    class EnterpriseThemeManager: pass
+    class ThemeVariant: pass
+    class ComponentType: pass
+    def inject_enterprise_theme(): pass
+    def create_enterprise_card(*args, **kwargs): return st.container()
+    def create_enterprise_metric(*args, **kwargs): st.metric(*args)
+    def create_enterprise_alert(*args, **kwargs): st.info(args[0] if args else "")
 
 
 # === UNIFIED DESIGN SYSTEM ===
@@ -78,8 +96,19 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from scripts.calculate_business_impact import BusinessImpactCalculator
-from config.database import get_database_url
+try:
+    from scripts.calculate_business_impact import BusinessImpactCalculator
+except ImportError as e:
+    st.error(f"Business Impact Calculator unavailable: {e}")
+    BusinessImpactCalculator = None
+
+try:
+    from config.database import get_database_url
+except ImportError:
+    # Fallback if config.database doesn't exist
+    def get_database_url():
+        import os
+        return os.getenv("DATABASE_URL", "postgresql://localhost/ghl_real_estate")
 
 # Page configuration
 st.set_page_config(
@@ -674,6 +703,10 @@ class Phase3ROIDashboard(EnterpriseDashboardComponent):
             if st.button("💾 Export Raw Data"):
                 st.info("Data exported to CSV successfully!")
 
+    def render(self, **kwargs) -> None:
+        """Required abstract method implementation - renders the dashboard."""
+        asyncio.run(self.render_dashboard())
+
     async def render_dashboard(self):
         """Render the complete dashboard."""
         try:
@@ -723,8 +756,8 @@ def main():
     """Main dashboard application."""
     dashboard = Phase3ROIDashboard()
 
-    # Run the async dashboard
-    asyncio.run(dashboard.render_dashboard())
+    # Render the dashboard (async execution handled internally)
+    dashboard.render()
 
 
 if __name__ == "__main__":

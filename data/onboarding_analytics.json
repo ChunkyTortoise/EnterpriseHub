@@ -1,0 +1,11 @@
+{
+  "step_completions": [
+    {
+      "user_id": "demo_user",
+      "step_id": "welcome",
+      "completion_time": 3,
+      "engagement_score": 1.0,
+      "timestamp": "2026-01-11T03:57:12.968672"
+    }
+  ]
+}

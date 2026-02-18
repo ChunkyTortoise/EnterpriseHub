@@ -43,8 +43,24 @@ def render_realtime_intelligence_dashboard():
         # Import NEW real-time dashboard component
         from components.realtime_dashboard import render_realtime_dashboard
 
-        # Import existing components
-        from services.realtime_data_service import get_realtime_service
+        # Import existing components with graceful fallback
+        try:
+            from services.realtime_data_service import get_realtime_service
+            REALTIME_SERVICE_AVAILABLE = True
+        except ImportError:
+            print("⚠️ realtime_data_service not available, using fallback mode")
+            REALTIME_SERVICE_AVAILABLE =False
+            # Create mock service
+            class MockRealtimeService:
+                def get_recent_events(self, limit=50, event_type=None):
+                    return []
+                def get_metrics(self):
+                    return {'events_processed': 0, 'events_sent': 0, 'uptime_seconds': 0}
+                def start(self):
+                    return True
+            def get_realtime_service():
+                return MockRealtimeService()
+        
         from services.dashboard_state_manager import get_dashboard_state_manager, dashboard_sidebar_controls
         from components.mobile_responsive_layout import get_layout_manager
         from components.live_lead_scoreboard import render_live_lead_scoreboard

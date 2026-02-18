@@ -1,0 +1,257 @@
+### Page state
+- Page URL: http://localhost:8501/
+- Page Title: GHL Real Estate AI - Jorge Salas
+- Page Snapshot:
+```yaml
+- generic [active]:
+  - generic [ref=e2]:
+    - generic [ref=e7]:
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - link "app" [ref=e13] [cursor=pointer]:
+            - /url: http://localhost:8501/
+            - generic [ref=e14]: app
+        - listitem [ref=e15]:
+          - link "portal" [ref=e17] [cursor=pointer]:
+            - /url: http://localhost:8501/portal
+            - generic [ref=e18]: portal
+      - generic [ref=e22]:
+        - heading "Navigation" [level=3] [ref=e27]
+        - radiogroup "Select Hub:" [ref=e30] [cursor=pointer]:
+          - generic [ref=e31]:
+            - radio "Executive Command Center" [checked]
+            - paragraph [ref=e36]: Executive Command Center
+          - generic [ref=e37]:
+            - radio "Lead Intelligence Hub"
+            - paragraph [ref=e42]: Lead Intelligence Hub
+          - generic [ref=e43]:
+            - radio "Automation Studio"
+            - paragraph [ref=e48]: Automation Studio
+          - generic [ref=e49]:
+            - radio "Sales Copilot"
+            - paragraph [ref=e54]: Sales Copilot
+          - generic [ref=e55]:
+            - radio "Ops & Optimization"
+            - paragraph [ref=e60]: Ops & Optimization
+        - separator [ref=e65]
+        - heading "Quick Actions" [level=3] [ref=e70]
+        - button "Refresh Data" [ref=e73] [cursor=pointer]:
+          - paragraph [ref=e77]: Refresh Data
+        - button "Export Report" [ref=e80] [cursor=pointer]:
+          - paragraph [ref=e84]: Export Report
+        - separator [ref=e89]
+        - group [ref=e92]:
+          - generic "keyboard_arrow_down AI Configuration" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]:
+              - generic [ref=e96]: keyboard_arrow_down
+              - paragraph [ref=e99]: AI Configuration
+          - generic [ref=e101]:
+            - generic [ref=e103]:
+              - paragraph [ref=e106]: Target Market
+              - generic [ref=e108]:
+                - generic [ref=e109]:
+                  - generic [ref=e110]: Austin, TX
+                  - combobox "Selected Austin, TX. Target Market" [ref=e112]
+                - img "open" [ref=e114]
+            - generic [ref=e118]:
+              - generic [ref=e119]:
+                - paragraph [ref=e121]: Voice Tone
+                - img [ref=e125]
+              - generic [ref=e128]:
+                - slider "Voice Tone" [ref=e132]:
+                  - generic: "0.50"
+                - generic:
+                  - generic: "0.00"
+                  - generic: "1.00"
+        - separator [ref=e138]
+        - heading "System Health" [level=3] [ref=e143]
+        - generic [ref=e145]:
+          - generic [ref=e150]:
+            - paragraph [ref=e154]: Active Leads
+            - generic [ref=e156]: "47"
+            - generic [ref=e157]:
+              - img [ref=e158]
+              - generic [ref=e161]: "+12"
+          - generic [ref=e169]:
+            - img
+            - img
+            - img
+        - generic [ref=e174]:
+          - generic [ref=e179]:
+            - paragraph [ref=e183]: AI Convos
+            - generic [ref=e185]: "156"
+            - generic [ref=e186]:
+              - img [ref=e187]
+              - generic [ref=e190]: "+23"
+          - generic [ref=e198]:
+            - img
+            - img
+            - img
+        - separator [ref=e206]
+        - heading "🚀 Get Started" [level=3] [ref=e211]
+        - button "📺 5-Minute Platform Tour" [ref=e214] [cursor=pointer]:
+          - paragraph [ref=e218]: 📺 5-Minute Platform Tour
+        - button "❌ Not now" [ref=e221] [cursor=pointer]:
+          - paragraph [ref=e225]: ❌ Not now
+        - separator [ref=e230]
+        - heading "Live Feed" [level=3] [ref=e235]
+        - generic [ref=e240]:
+          - text: Creating contract for John Doe
+          - text: ● Just now
+          - text: "New lead: Sarah Smith (Downtown)"
+          - text: ● 2 mins ago
+          - text: "AI handled objection: Mike Ross"
+          - text: ● 15 mins ago
+        - separator [ref=e245]
+        - heading "Quick Actions" [level=4] [ref=e250]
+        - generic [ref=e252]:
+          - button "📊 Export Report" [ref=e260] [cursor=pointer]:
+            - paragraph [ref=e264]: 📊 Export Report
+          - button "📅 Schedule Review" [ref=e272] [cursor=pointer]:
+            - paragraph [ref=e276]: 📅 Schedule Review
+          - button "🔄 Refresh Data" [ref=e284] [cursor=pointer]:
+            - paragraph [ref=e288]: 🔄 Refresh Data
+        - separator [ref=e293]
+        - heading "🔍 Contextual Help" [level=3] [ref=e298]
+        - alert [ref=e301]:
+          - paragraph [ref=e306]:
+            - text: 💡
+            - strong [ref=e307]: Quick Tip
+            - text: ": Use the revenue waterfall chart to identify which deals contributed most to your growth this month."
+        - button "📚 Full Tutorial" [ref=e310] [cursor=pointer]:
+          - paragraph [ref=e314]: 📚 Full Tutorial
+    - generic [ref=e3]:
+      - banner [ref=e317]:
+        - button "Deploy" [ref=e322] [cursor=pointer]:
+          - generic [ref=e324]: Deploy
+      - generic [ref=e325]:
+        - heading "🏠 GHL Real Estate AI" [level=1] [ref=e330]: 🏠 GHL Real Estate AI
+        - paragraph [ref=e336]:
+          - strong [ref=e337]: ENTERPRISE COMMAND CENTER
+        - paragraph [ref=e342]:
+          - text: Professional AI-powered lead qualification and automation system for
+          - strong [ref=e343]: Jorge Salas
+        - generic [ref=e345]:
+          - alert [ref=e350]:
+            - paragraph [ref=e355]: 🤖 AI Mode Active
+          - alert [ref=e360]:
+            - paragraph [ref=e365]: 🔗 GHL Integration Live
+          - alert [ref=e370]:
+            - paragraph [ref=e375]: 🏢 Multi-Tenant Ready
+        - separator [ref=e380]
+        - generic [ref=e387]:
+          - code [ref=e390]: "<span style='color: #93c5fd; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; transition: background-color 0.2s;' onmouseover='this.style.backgroundColor=\"rgba(59, 130, 246, 0.1)\"' onmouseout='this.style.backgroundColor=\"transparent\"' onclick='navigateTo(\"root\")'> 🏠 GHL Real Estate AI </span> <span style='color: #64748b; margin: 0 0.25rem;'>›</span> <span style='color: #f8fafc; font-weight: 600; display: flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(59, 130, 246, 0.15);'> 📊 Executive Command Center </span> </div>"
+          - generic:
+            - button "Copy to clipboard":
+              - img
+        - heading "Executive Command Center" [level=2] [ref=e395]: Executive Command Center
+        - paragraph [ref=e401]:
+          - emphasis [ref=e402]: High-level KPIs, revenue tracking, and system health
+        - generic [ref=e404]:
+          - tablist [ref=e406]:
+            - tab "Dashboard" [selected] [ref=e407] [cursor=pointer]:
+              - paragraph [ref=e409]: Dashboard
+            - tab "Advanced Analytics" [ref=e410] [cursor=pointer]:
+              - paragraph [ref=e412]: Advanced Analytics
+            - tab "AI Insights" [ref=e413] [cursor=pointer]:
+              - paragraph [ref=e415]: AI Insights
+            - tab "Reports" [ref=e416] [cursor=pointer]:
+              - paragraph [ref=e418]: Reports
+            - tab "Performance Monitoring" [ref=e419] [cursor=pointer]:
+              - paragraph [ref=e421]: Performance Monitoring
+          - tabpanel "Dashboard" [ref=e424]:
+            - generic [ref=e425]:
+              - heading "Executive Command Center" [level=3] [ref=e430]: Executive Command Center
+              - generic [ref=e433]:
+                - generic [ref=e438]:
+                  - generic [ref=e439]:
+                    - paragraph [ref=e442]: Total Pipeline
+                    - img [ref=e446]
+                  - generic [ref=e450]: $2.4M
+                  - generic [ref=e451]:
+                    - img [ref=e452]
+                    - generic [ref=e455]: +15%
+                - generic [ref=e460]:
+                  - generic [ref=e461]:
+                    - paragraph [ref=e464]: Hot Leads
+                    - img [ref=e468]
+                  - generic [ref=e472]: "23"
+                  - generic [ref=e473]:
+                    - img [ref=e474]
+                    - generic [ref=e477]: "+8"
+                - generic [ref=e482]:
+                  - generic [ref=e483]:
+                    - paragraph [ref=e486]: Conversion Rate
+                    - img [ref=e490]
+                  - generic [ref=e494]: 34%
+                  - generic [ref=e495]:
+                    - img [ref=e496]
+                    - generic [ref=e499]: +2%
+              - generic [ref=e509]:
+                - img:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Jul 2025
+                        - generic:
+                          - generic: Aug 2025
+                        - generic:
+                          - generic: Sep 2025
+                        - generic:
+                          - generic: Oct 2025
+                        - generic:
+                          - generic: Nov 2025
+                        - generic:
+                          - generic: Dec 2025
+                      - generic:
+                        - generic:
+                          - generic: "0"
+                        - generic:
+                          - generic: 50k
+                        - generic:
+                          - generic: 100k
+                        - generic:
+                          - generic: 150k
+                        - generic:
+                          - generic: 200k
+                        - generic:
+                          - generic: 250k
+                        - generic:
+                          - generic: 300k
+                - img:
+                  - generic:
+                    - generic [ref=e526]:
+                      - generic [ref=e528]: Actual Revenue
+                      - generic [ref=e537]: Target Revenue
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Revenue Performance vs Target
+                - toolbar [ref=e543]:
+                  - button "Download plot as a PNG" [ref=e545] [cursor=pointer]:
+                    - img [ref=e546]
+                  - generic [ref=e548]:
+                    - button "Zoom" [ref=e549] [cursor=pointer]:
+                      - img [ref=e550]
+                    - button "Pan" [ref=e552] [cursor=pointer]:
+                      - img [ref=e553]
+                  - generic [ref=e555]:
+                    - button "Zoom in" [ref=e556] [cursor=pointer]:
+                      - img [ref=e557]
+                    - button "Zoom out" [ref=e559] [cursor=pointer]:
+                      - img [ref=e560]
+                    - button "Autoscale" [ref=e562] [cursor=pointer]:
+                      - img [ref=e563]
+                    - button "Reset axes" [ref=e565] [cursor=pointer]:
+                      - img [ref=e566]
+                  - button "Fullscreen" [ref=e569] [cursor=pointer]:
+                    - img [ref=e570]
+                - img
+        - separator [ref=e576]
+        - generic [ref=e581]:
+          - generic [ref=e582]: 🚀 Production-Ready Multi-Tenant AI System
+          - generic [ref=e583]: Built for Jorge Salas | Claude Sonnet 4.5 | GHL Integration Ready
+          - generic [ref=e584]: Consolidated Hub Architecture | Path B Backend | 522+ Tests Passing
+  - img [ref=e585]
+```

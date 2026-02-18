@@ -613,7 +613,11 @@ class EnhancedLeadScorer:
             'email_opens': max(1, len(messages) // 2),  # Approximate
             'emails_sent': max(1, len(messages) // 3),  # Approximate
             'property_matches': 0,  # Would need actual data
-            'communication_quality': min(len(' '.join(msg.get('content', '') for msg in messages)) / 200.0, 1.0)
+            'communication_quality': min(len(' '.join(
+                str(msg.get('content', '')) if not isinstance(msg.get('content', ''), list) 
+                else ' '.join(str(x) for x in msg.get('content', []))
+                for msg in messages
+            )) / 200.0, 1.0)
         }
 
         return lead_data

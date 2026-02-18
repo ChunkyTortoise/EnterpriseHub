@@ -228,6 +228,20 @@ def render_claude_agent_interface():
                 query = f"Based on {lead_id}'s profile, what properties should I focus on? Give me a property presentation strategy."
                 handle_quick_query(agent_id, query)
 
+        st.markdown("---")
+        st.markdown("### ⚙️ Configuration")
+        
+        # API Key management
+        api_key = st.text_input("Anthropic API Key", type="password", help="Enter key to enable real AI features")
+        if api_key:
+            if claude_agent_service:
+                claude_agent_service.set_api_key(api_key)
+                st.success("✅ API Key active")
+            else:
+                st.warning("⚠️ Service not initialized")
+        else:
+            st.info("ℹ️ Using Demo Mode (No API Key)")
+
 
 def handle_user_query(agent_id: str, query: str, lead_id: Optional[str] = None):
     """Handle a user query and get Claude's response"""

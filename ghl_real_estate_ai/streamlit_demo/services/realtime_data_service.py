@@ -404,7 +404,7 @@ def init_realtime_dashboard():
 
     return st.session_state.realtime_service
 
-@st.cache_data(ttl=1)  # Cache for 1 second to prevent excessive API calls
+@st.cache_data(ttl=30)  # Cache for 30 seconds - demo data doesn't need sub-second refresh
 def get_cached_events(event_type: Optional[str] = None, limit: int = 50):
     """Get cached events with Streamlit caching"""
     service = get_realtime_service()

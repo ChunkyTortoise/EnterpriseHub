@@ -1,0 +1,114 @@
+{
+  "nodes": {
+    "Sarah Jones": {
+      "id": "Sarah Jones",
+      "type": "Lead",
+      "attributes": {
+        "phone": "555-0199"
+      },
+      "created_at": "2026-01-13T02:10:56.847022",
+      "updated_at": "2026-01-13T02:10:56.847030"
+    },
+    "$450k": {
+      "id": "$450k",
+      "type": "Criterion",
+      "attributes": {},
+      "created_at": "2026-01-13T02:10:56.847120",
+      "updated_at": "2026-01-13T02:10:56.847122"
+    },
+    "HOA": {
+      "id": "HOA",
+      "type": "Criterion",
+      "attributes": {},
+      "created_at": "2026-01-13T02:10:56.847196",
+      "updated_at": "2026-01-13T02:10:56.847197"
+    },
+    "June/Baby": {
+      "id": "June/Baby",
+      "type": "Criterion",
+      "attributes": {},
+      "created_at": "2026-01-13T02:10:56.847261",
+      "updated_at": "2026-01-13T02:10:56.847262"
+    },
+    "123 Maple St": {
+      "id": "123 Maple St",
+      "type": "Property",
+      "attributes": {
+        "price": "$430k"
+      },
+      "created_at": "2026-01-13T02:10:56.847329",
+      "updated_at": "2026-01-13T02:10:56.847330"
+    },
+    "Round Rock": {
+      "id": "Round Rock",
+      "type": "Location",
+      "attributes": {},
+      "created_at": "2026-01-13T02:10:56.847402",
+      "updated_at": "2026-01-13T02:10:56.847403"
+    },
+    "High Growth": {
+      "id": "High Growth",
+      "type": "Insight",
+      "attributes": {},
+      "created_at": "2026-01-13T02:10:56.847954",
+      "updated_at": "2026-01-13T02:10:56.847955"
+    },
+    "$500k": {
+      "id": "$500k",
+      "type": "Criterion",
+      "attributes": {},
+      "created_at": "2026-01-13T02:10:56.848185",
+      "updated_at": "2026-01-13T02:10:56.848186"
+    }
+  },
+  "edges": [
+    {
+      "source": "Sarah Jones",
+      "target": "HOA",
+      "relation": "DISLIKES",
+      "attributes": {},
+      "timestamp": "2026-01-13T02:10:56.847579",
+      "confidence": 1.0
+    },
+    {
+      "source": "Sarah Jones",
+      "target": "June/Baby",
+      "relation": "HAS_TIMELINE",
+      "attributes": {},
+      "timestamp": "2026-01-13T02:10:56.847672",
+      "confidence": 1.0
+    },
+    {
+      "source": "Sarah Jones",
+      "target": "123 Maple St",
+      "relation": "OFFERING_ON",
+      "attributes": {},
+      "timestamp": "2026-01-13T02:10:56.847760",
+      "confidence": 1.0
+    },
+    {
+      "source": "123 Maple St",
+      "target": "Round Rock",
+      "relation": "LOCATED_IN",
+      "attributes": {},
+      "timestamp": "2026-01-13T02:10:56.847855",
+      "confidence": 1.0
+    },
+    {
+      "source": "Round Rock",
+      "target": "High Growth",
+      "relation": "LOCATED_IN",
+      "attributes": {},
+      "timestamp": "2026-01-13T02:10:56.848053",
+      "confidence": 1.0
+    },
+    {
+      "source": "Sarah Jones",
+      "target": "$500k",
+      "relation": "HAS_BUDGET",
+      "attributes": {},
+      "timestamp": "2026-01-13T02:10:56.848296",
+      "confidence": 1.0
+    }
+  ]
+}

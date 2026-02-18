@@ -37,92 +37,87 @@ if __name__ == "__main__":
         initial_sidebar_state="expanded"
     )
 
-# Custom CSS for enhanced styling
-st.markdown("""
-<style>
+    # Custom CSS for enhanced styling
+    st.markdown("""<style>
+    .stMetric {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        margin-bottom: 20px;
+    }
+
     .metric-container {
-        background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         color: white;
-        padding: 1rem;
-        border-radius: 10px;
+        padding: 1.25rem;
+        border-radius: 12px;
         margin: 0.5rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     .risk-critical {
-        background: linear-gradient(135deg, #ff4757, #ff3742);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #c23616;
+        background: rgba(255, 71, 87, 0.1);
+        color: #ff4757;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 71, 87, 0.2);
+        margin-bottom: 10px;
     }
 
     .risk-high {
-        background: linear-gradient(135deg, #ffa726, #ff9800);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #e65100;
+        background: rgba(255, 167, 38, 0.1);
+        color: #ffa726;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 167, 38, 0.2);
+        margin-bottom: 10px;
     }
 
     .risk-medium {
-        background: linear-gradient(135deg, #66bb6a, #4caf50);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #2e7d32;
+        background: rgba(102, 187, 106, 0.1);
+        color: #66bb6a;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(102, 187, 106, 0.2);
+        margin-bottom: 10px;
     }
 
     .risk-low {
-        background: linear-gradient(135deg, #42a5f5, #2196f3);
-        color: white;
-        padding: 0.8rem;
-        border-radius: 8px;
-        border-left: 4px solid #0d47a1;
+        background: rgba(66, 165, 245, 0.1);
+        color: #42a5f5;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(66, 165, 245, 0.2);
+        margin-bottom: 10px;
     }
 
     .alert-banner {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        background: linear-gradient(90deg, #ff4757 0%, #ff6b6b 100%);
         color: white;
-        padding: 1rem;
-        border-radius: 10px;
+        padding: 1.25rem;
+        border-radius: 12px;
         margin: 1rem 0;
         text-align: center;
-        font-weight: bold;
-        animation: pulse 2s infinite;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 20px rgba(255, 71, 87, 0.3);
+        animation: pulse-glow 2s infinite;
     }
 
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.7; }
-        100% { opacity: 1; }
-    }
-
-    .intervention-success {
-        background: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 0.2rem 0;
-    }
-
-    .intervention-pending {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 0.2rem 0;
-    }
-
-    .intervention-failed {
-        background: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 0.2rem 0;
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 4px 20px rgba(255, 71, 87, 0.3); }
+        50% { box-shadow: 0 4px 30px rgba(255, 71, 87, 0.6); }
+        100% { box-shadow: 0 4px 20px rgba(255, 71, 87, 0.3); }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -130,19 +125,33 @@ st.markdown("""
 class ChurnEarlyWarningDashboard:
     """Main dashboard class for churn risk monitoring"""
 
-    def __init__(self):
-        self.refresh_interval = 300  # 5 minutes
+    def __init__(self, claude_assistant=None):
         self.risk_thresholds = {
             'critical': 80.0,
             'high': 60.0,
             'medium': 30.0,
             'low': 0.0
         }
+        self.plotly_template = "plotly_dark"
+        self.colors = {
+            'background': 'rgba(0,0,0,0)',
+            'paper': 'rgba(0,0,0,0)',
+            'text': '#f8fafc',
+            'critical': '#ff4757',
+            'high': '#ffa726',
+            'medium': '#66bb6a',
+            'low': '#42a5f5',
+            'accent': '#006AFF'
+        }
 
     def render_dashboard(self):
         """Render the complete early warning dashboard"""
-        st.title("🚨 Churn Early Warning Dashboard")
-        st.markdown("*Real-time monitoring of lead churn risk and intervention effectiveness*")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #ff4757 0%, #ee5a52 100%); padding: 1.5rem; border-radius: 15px; color: white; margin-bottom: 1.5rem; box-shadow: 0 10px 20px rgba(255, 71, 87, 0.2);'>
+            <h2 style='margin: 0; color: white;'>🚨 Churn Early Warning System</h2>
+            <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>Real-time monitoring and autonomous lead retention</p>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Auto-refresh mechanism
         if st.button("🔄 Refresh Data", key="refresh_dashboard"):
@@ -319,18 +328,26 @@ class ChurnEarlyWarningDashboard:
             values=risk_counts.values,
             names=risk_counts.index,
             title="Lead Distribution by Risk Tier",
+            hole=0.4,
             color_discrete_map={
-                'critical': '#ff4757',
-                'high': '#ffa726',
-                'medium': '#66bb6a',
-                'low': '#42a5f5'
-            }
+                'critical': self.colors['critical'],
+                'high': self.colors['high'],
+                'medium': self.colors['medium'],
+                'low': self.colors['low']
+            },
+            template=self.plotly_template
         )
 
-        fig.update_traces(textposition='inside', textinfo='percent+label')
-        fig.update_layout(showlegend=True, height=400)
+        fig.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#1e293b', width=2)))
+        fig.update_layout(
+            showlegend=True, 
+            height=400,
+            paper_bgcolor=self.colors['paper'],
+            plot_bgcolor=self.colors['background'],
+            margin=dict(l=20, r=20, t=50, b=20)
+        )
 
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
         # Risk score histogram
         fig2 = px.histogram(
@@ -338,21 +355,25 @@ class ChurnEarlyWarningDashboard:
             x='risk_score_14d',
             nbins=20,
             title="Risk Score Distribution",
-            color_discrete_sequence=['#3498db']
+            color_discrete_sequence=[self.colors['accent']],
+            template=self.plotly_template
         )
 
         # Add risk threshold lines
-        fig2.add_vline(x=80, line_dash="dash", line_color="red", annotation_text="Critical (80%)")
-        fig2.add_vline(x=60, line_dash="dash", line_color="orange", annotation_text="High (60%)")
-        fig2.add_vline(x=30, line_dash="dash", line_color="green", annotation_text="Medium (30%)")
+        fig2.add_vline(x=80, line_dash="dash", line_color=self.colors['critical'], annotation_text="Critical")
+        fig2.add_vline(x=60, line_dash="dash", line_color=self.colors['high'], annotation_text="High")
+        fig2.add_vline(x=30, line_dash="dash", line_color=self.colors['medium'], annotation_text="Medium")
 
         fig2.update_layout(
             xaxis_title="14-Day Risk Score (%)",
             yaxis_title="Number of Leads",
-            height=350
+            height=350,
+            paper_bgcolor=self.colors['paper'],
+            plot_bgcolor=self.colors['background'],
+            bargap=0.1
         )
 
-        st.plotly_chart(fig2, width='stretch')
+        st.plotly_chart(fig2, use_container_width=True)
 
     def _render_risk_trend_analysis(self, data: Dict[str, Any]):
         """Render risk trend analysis"""
@@ -378,29 +399,36 @@ class ChurnEarlyWarningDashboard:
         fig.add_trace(go.Scatter(
             x=trend_df['date'],
             y=trend_df['critical_risk'],
-            mode='lines+markers',
+            mode='lines',
             name='Critical Risk',
-            line=dict(color='#ff4757', width=3),
-            fill='tonexty'
+            line=dict(color=self.colors['critical'], width=3, shape='spline'),
+            fill='tozeroy',
+            fillcolor='rgba(255, 71, 87, 0.1)'
         ))
 
         fig.add_trace(go.Scatter(
             x=trend_df['date'],
             y=trend_df['high_risk'],
-            mode='lines+markers',
+            mode='lines',
             name='High Risk',
-            line=dict(color='#ffa726', width=2)
+            line=dict(color=self.colors['high'], width=2, shape='spline'),
+            fill='tozeroy',
+            fillcolor='rgba(255, 167, 38, 0.05)'
         ))
 
         fig.update_layout(
             title="30-Day Risk Trend",
             xaxis_title="Date",
-            yaxis_title="Number of High-Risk Leads",
+            yaxis_title="Risk Volume",
             height=350,
-            hovermode='x unified'
+            hovermode='x unified',
+            template=self.plotly_template,
+            paper_bgcolor=self.colors['paper'],
+            plot_bgcolor=self.colors['background'],
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
     def _render_intervention_effectiveness(self, data: Dict[str, Any]):
         """Render intervention effectiveness metrics"""

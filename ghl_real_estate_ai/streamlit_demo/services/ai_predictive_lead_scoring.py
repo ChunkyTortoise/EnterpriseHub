@@ -326,6 +326,32 @@ class PredictiveLeadScorer:
             recommendations.append("Improve response quality - ask more qualifying questions")
         
         return recommendations[:5]  # Return top 5
+
+    def predict_next_action(self, lead_data: Dict) -> str:
+        """
+        Predict the next best action for a lead based on their data.
+        This provides the intelligence required by the Lead Intelligence Hub.
+        """
+        score_result = self.score_lead(lead_data.get("id", "unknown"), lead_data)
+        tier = score_result.tier
+        
+        # Extract features for more granular guidance
+        features = self.extract_features(lead_data)
+        
+        if tier == "hot":
+            if features.budget_match > 0.8:
+                return "Send Pre-Approval Request & Schedule Showing"
+            return "Call Immediately: High Intent Detected"
+        
+        elif tier == "warm":
+            if features.property_matches > 5:
+                return "Share Curated Property Portfolio"
+            return "Send Market Comparison Report"
+            
+        else: # Cold
+            if features.engagement_score > 0.3:
+                return "Enroll in Re-engagement Drip"
+            return "Add to Long-term Nurture Loop"
     
     def _calculate_engagement(self, lead_data: Dict) -> float:
         """Calculate engagement score from interactions"""

@@ -32,9 +32,22 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from config.database import get_database_url
-from services.ghl.client import GHLClient
-from services.analytics.performance_tracker import PerformanceTracker
+try:
+    from config.database import get_database_url
+except ImportError:
+    # Fallback if config.database doesn't exist
+    def get_database_url():
+        return os.getenv("DATABASE_URL", "postgresql://localhost/ghl_real_estate")
+
+try:
+    from services.ghl.client import GHLClient
+except ImportError:
+    GHLClient = None
+
+try:
+    from services.analytics.performance_tracker import PerformanceTracker
+except ImportError:
+    PerformanceTracker = None
 
 # Configure logging
 logging.basicConfig(
@@ -84,8 +97,8 @@ class BusinessImpactCalculator:
 
     def __init__(self, database_url: str):
         self.database_url = database_url
-        self.ghl_client = GHLClient()
-        self.performance_tracker = PerformanceTracker()
+        self.ghl_client = GHLClient() if GHLClient is not None else None
+        self.performance_tracker = PerformanceTracker() if PerformanceTracker is not None else None
 
         # Business impact calculation constants from deployment plan
         self.FEATURE_TARGETS = {

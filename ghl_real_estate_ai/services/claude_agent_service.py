@@ -104,6 +104,10 @@ class ClaudeAgentService:
         self.conversation_history: Dict[str, List[Dict]] = {}
         self.agent_context: Dict[str, Dict] = {}
 
+    def set_api_key(self, api_key: str):
+        """Update the API key for the client at runtime"""
+        self.client = AsyncAnthropic(api_key=api_key)
+
     async def chat_with_agent(
         self,
         agent_id: str,

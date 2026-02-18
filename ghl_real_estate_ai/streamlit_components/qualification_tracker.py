@@ -920,7 +920,7 @@ class QualificationTracker(EnterpriseDashboardComponent):
         card_style = "achieved" if achieved else "pending"
 
         if achieved:
-            bg_color = "#10B98115"
+            bg_color = "rgba(16, 185, 129, 0.08)"
             border_color = "#10B981"
             text_color = "#10B981"
         else:

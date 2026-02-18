@@ -12,26 +12,51 @@ import plotly.express as px
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 import asyncio
+import sys
+import os
 
 # Import existing components
-from .claude_agent_chat import render_claude_agent_interface
-from .claude_conversation_templates import render_claude_conversation_templates
-from .agent_onboarding_dashboard import render_agent_onboarding_dashboard
-from .communication_automation_dashboard import render_communication_automation_dashboard
-from .goal_achievement_dashboard import render_goal_achievement_dashboard
-from .market_intelligence_dashboard import render_market_intelligence_dashboard
-from .interactive_lead_map import render_interactive_lead_map, generate_sample_lead_data
-from .lead_dashboard import render_lead_dashboard
+try:
+    from .claude_agent_chat import render_claude_agent_interface
+    from .claude_conversation_templates import render_claude_conversation_templates
+    from .agent_onboarding_dashboard import render_agent_onboarding_dashboard
+    from .communication_automation_dashboard import render_communication_automation_dashboard
+    from .goal_achievement_dashboard import render_goal_achievement_dashboard
+    from .market_intelligence_dashboard import render_market_intelligence_dashboard
+    from .interactive_lead_map import render_interactive_lead_map, generate_sample_lead_data
+    from .lead_dashboard import render_lead_dashboard
+except ImportError:
+    # Fallback for direct execution
+    pass
 
 # Import services
 try:
-    from ...services.claude_agent_service import get_claude_lead_insights, get_claude_follow_up_actions
-    from ...services.lead_intelligence_integration import get_intelligence_status, get_lead_analytics
-    from ...services.lead_scorer import LeadScorer
+    # Try absolute import first (standard in app context)
+    from services.claude_agent_service import ClaudeAgentService
+    from services.lead_intelligence_integration import get_intelligence_status, get_lead_analytics
+    from services.lead_scorer import LeadScorer
+    SERVICES_AVAILABLE = True
 except ImportError:
-    # Fallback for demo mode
-    pass
+    # Fallback to relative imports or mock
+    try:
+        from ...services.claude_agent_service import ClaudeAgentService
+        from ...services.lead_intelligence_integration import get_intelligence_status, get_lead_analytics
+        from ...services.lead_scorer import LeadScorer
+        SERVICES_AVAILABLE = True
+    except ImportError:
+        SERVICES_AVAILABLE = False
+        print("⚠️ Services not available, using demo mode")
 
+@st.cache_resource
+def get_claude_service():
+    """Get cached instance of ClaudeAgentService"""
+    if SERVICES_AVAILABLE:
+        try:
+            return ClaudeAgentService()
+        except Exception as e:
+            print(f"Error initializing ClaudeAgentService: {e}")
+            return None
+    return None
 
 def render_comprehensive_lead_intelligence_hub():
     """
@@ -58,6 +83,7 @@ def render_comprehensive_lead_intelligence_hub():
         "⚡ Quick Actions"
     ])
 
+
     with tab1:
         render_intelligence_hub_main()
 
@@ -65,13 +91,19 @@ def render_comprehensive_lead_intelligence_hub():
         render_claude_agent_interface()
 
     with tab3:
-        render_claude_conversation_templates()
+        # Personalization Tab (Replaces AI Templates)
+        from .lead_intelligence_personalization import render_personalization_tab
+        render_personalization_tab()
 
     with tab4:
-        render_agent_onboarding_dashboard()
+         # Prediction Tab (Replaces Agent Training / Predictive Scoring)
+        from .lead_intelligence_predictions import render_predictions_tab
+        render_predictions_tab()
 
     with tab5:
-        render_communication_automation_dashboard()
+        # Simulation Tab (Replaces Communication)
+        from .lead_intelligence_simulation import render_simulation_tab
+        render_simulation_tab()
 
     with tab6:
         render_goal_achievement_dashboard()
@@ -107,6 +139,7 @@ def render_page_header():
 
     with col_status:
         try:
+            from services.lead_intelligence_integration import get_intelligence_status
             status = get_intelligence_status()
             st.success(f"✅ Intelligence System: {status.get('version', 'Active')}")
         except:
@@ -131,6 +164,12 @@ def render_intelligence_hub_main():
 
     st.markdown("---")
 
+    # AI Predictive Scoring Section - NOW MOVED TO TAB 4 but kept summary here if needed
+    # For now, let's keep a simplified version or a pointer
+    st.info("👉 Check the 'Predictions' tab for detailed AI scoring models.")
+
+    st.markdown("---")
+
     # Lead intelligence table with Claude insights
     render_enhanced_lead_table()
 
@@ -139,26 +178,95 @@ def render_intelligence_hub_main():
     # Performance metrics
     render_performance_metrics()
 
+# Removed inline render_predictive_scoring_section as it is now in tab 4 dedicated component
+
+
+def render_performance_metrics():
+    """Render system performance metrics"""
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Avg Response Time", "1.2s", "-0.3s")
+    with col2:
+        st.metric("Prediction Accuracy", "94%", "+2%")
+    with col3:
+        st.metric("System Uptime", "99.9%", "stable")
+
+
+
+@st.cache_data(ttl=60)
+def _get_scored_leads(market_key: str = "Austin"):
+    """Get sample leads and score them with the real ML model"""
+    # Use the passed market key to generate relevant data
+    leads = generate_sample_lead_data(market_key)
+    
+    if SERVICES_AVAILABLE:
+        try:
+            # Check if we imported PredictiveLeadScorer or just LeadScorer. 
+            # The try block imported LeadScorer. Let's make sure we use the right one.
+            # Ideally we want the predictive one.
+            try:
+                from services.ai_predictive_lead_scoring import PredictiveLeadScorer
+                scorer = PredictiveLeadScorer()
+            except ImportError:
+                # Fallback to standard scorer if predictive not available
+                scorer = LeadScorer()
+            
+            for lead in leads:
+                try:
+                    # Enrich lead data if missing keys
+                    if 'page_views' not in lead: lead['page_views'] = 5
+                    if 'source' not in lead: lead['source'] = 'organic'
+                    if 'messages' not in lead: lead['messages'] = []
+                    
+                    # Score using the available scorer (handle different interfaces if needed)
+                    if hasattr(scorer, 'score_lead'):
+                        score_res = scorer.score_lead(lead.get('id', 'unknown'), lead)
+                        lead['lead_score'] = score_res.score
+                        # meaningful status based on tier
+                        lead['status'] = score_res.tier.upper()
+                    elif hasattr(scorer, 'calculate'):
+                        # Fallback for standard LeadScorer which uses calculate(context)
+                        # We need to adapt the lead dict to context format
+                        context = {"extracted_preferences": lead}
+                        score = scorer.calculate(context)
+                        lead['lead_score'] = min(score * 20, 100) # Rough conversion from count to %
+                        lead['status'] = scorer.classify(score).upper()
+
+                except Exception as e:
+                    print(f"Scoring error for lead {lead.get('name')}: {e}")
+        except Exception as e:
+            # Fallback if service initialization failed
+            print(f"Service initialization error: {e}")
+            pass
+            
+    return leads
+
+def _get_current_market_key():
+    """Helper to get current market key from session state"""
+    selected_market = st.session_state.get('selected_market', "Austin, TX")
+    return "Rancho" if "Rancho" in selected_market else "Austin"
 
 def render_lead_summary_cards():
     """Render lead summary cards with AI insights"""
 
-    # Get sample lead data
-    leads_data = generate_sample_lead_data()
+    # Get scored lead data for current market
+    market_key = _get_current_market_key()
+    leads_data = _get_scored_leads(market_key)
 
     col1, col2, col3, col4 = st.columns(4)
+
 
     # Hot leads
     hot_leads = [lead for lead in leads_data if lead.get('lead_score', 0) >= 80]
     with col1:
         st.markdown("""
-        <div style='background: #fef2f2; padding: 1.5rem; border-radius: 12px; border: 2px solid #fecaca;'>
+        <div style='background: #fef2f2; padding: 1rem; border-radius: 12px; border: 2px solid #fecaca;'>
             <div style='display: flex; align-items: center; justify-content: space-between;'>
                 <div>
                     <h3 style='margin: 0; color: #dc2626; font-size: 2rem;'>{}</h3>
                     <p style='margin: 0; color: #7f1d1d; font-weight: 600;'>🔥 Hot Leads</p>
                 </div>
-                <div style='font-size: 2.5rem;'>📈</div>
+                <div style='font-size: 2rem;'>📈</div>
             </div>
         </div>
         """.format(len(hot_leads)), unsafe_allow_html=True)
@@ -167,13 +275,13 @@ def render_lead_summary_cards():
     warm_leads = [lead for lead in leads_data if 50 <= lead.get('lead_score', 0) < 80]
     with col2:
         st.markdown("""
-        <div style='background: #fefbf2; padding: 1.5rem; border-radius: 12px; border: 2px solid #fed7aa;'>
+        <div style='background: #fefbf2; padding: 1rem; border-radius: 12px; border: 2px solid #fed7aa;'>
             <div style='display: flex; align-items: center; justify-content: space-between;'>
                 <div>
                     <h3 style='margin: 0; color: #ea580c; font-size: 2rem;'>{}</h3>
                     <p style='margin: 0; color: #9a3412; font-weight: 600;'>🔸 Warm Leads</p>
                 </div>
-                <div style='font-size: 2.5rem;'>🎯</div>
+                <div style='font-size: 2rem;'>🎯</div>
             </div>
         </div>
         """.format(len(warm_leads)), unsafe_allow_html=True)
@@ -182,13 +290,13 @@ def render_lead_summary_cards():
     cold_leads = [lead for lead in leads_data if lead.get('lead_score', 0) < 50]
     with col3:
         st.markdown("""
-        <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 12px; border: 2px solid #bfdbfe;'>
+        <div style='background: #f0f9ff; padding: 1rem; border-radius: 12px; border: 2px solid #bfdbfe;'>
             <div style='display: flex; align-items: center; justify-content: space-between;'>
                 <div>
                     <h3 style='margin: 0; color: #2563eb; font-size: 2rem;'>{}</h3>
                     <p style='margin: 0; color: #1e40af; font-weight: 600;'>❄️ Cold Leads</p>
                 </div>
-                <div style='font-size: 2.5rem;'>🌱</div>
+                <div style='font-size: 2rem;'>🌱</div>
             </div>
         </div>
         """.format(len(cold_leads)), unsafe_allow_html=True)
@@ -197,13 +305,13 @@ def render_lead_summary_cards():
     total_budget = sum(lead.get('budget', 0) for lead in leads_data)
     with col4:
         st.markdown("""
-        <div style='background: #f0fdf4; padding: 1.5rem; border-radius: 12px; border: 2px solid #bbf7d0;'>
+        <div style='background: #f0fdf4; padding: 1rem; border-radius: 12px; border: 2px solid #bbf7d0;'>
             <div style='display: flex; align-items: center; justify-content: space-between;'>
                 <div>
                     <h3 style='margin: 0; color: #16a34a; font-size: 1.5rem;'>${:,}</h3>
-                    <p style='margin: 0; color: #15803d; font-weight: 600;'>💰 Total Pipeline</p>
+                    <p style='margin: 0; color: #15803d; font-weight: 600;'>💰 Pipeline</p>
                 </div>
-                <div style='font-size: 2.5rem;'>💎</div>
+                <div style='font-size: 2rem;'>💎</div>
             </div>
         </div>
         """.format(total_budget), unsafe_allow_html=True)
@@ -214,8 +322,10 @@ def render_enhanced_lead_table():
 
     st.markdown("#### 📋 Lead Intelligence Table")
 
-    # Get sample lead data
-    leads_data = generate_sample_lead_data()
+    # Get scored lead data for current market
+    market_key = _get_current_market_key()
+    leads_data = _get_scored_leads(market_key)
+
 
     # Create DataFrame for display
     df_data = []
@@ -251,21 +361,24 @@ def render_enhanced_lead_table():
     )
 
     # Quick actions for selected leads
-    selected_lead = st.selectbox(
+    selected_lead_str = st.selectbox(
         "Select lead for AI insights",
         options=[f"{lead['Name']} ({lead['Score']})" for lead in df_data],
         index=0
     )
+    
+    # Extract name from string "Name (Score)"
+    selected_lead_name = selected_lead_str.split(" (")[0] if selected_lead_str else "Unknown"
 
     col_insights, col_actions = st.columns([1, 1])
 
     with col_insights:
         if st.button("🧠 Get AI Insights", type="primary"):
-            render_claude_lead_insights(selected_lead)
+            render_claude_lead_insights(selected_lead_name)
 
     with col_actions:
         if st.button("⚡ Suggest Actions"):
-            render_claude_action_suggestions(selected_lead)
+            render_claude_action_suggestions(selected_lead_name)
 
 
 def render_enhanced_lead_map():
@@ -277,9 +390,17 @@ def render_enhanced_lead_map():
     col_market, col_overlay = st.columns([1, 1])
 
     with col_market:
+        # Determine default index from global selection
+        current_market_key = _get_current_market_key()
+        market_options = ["Austin", "Rancho"]
+        default_index = 0
+        if current_market_key in market_options:
+            default_index = market_options.index(current_market_key)
+            
         market = st.selectbox(
             "Select Market",
-            ["Austin", "Rancho"],
+            market_options,
+            index=default_index,
             help="Choose the geographic market to focus on"
         )
 
@@ -494,74 +615,265 @@ def render_predictive_insights():
 
 
 def render_quick_actions_dashboard():
-    """Quick actions dashboard for agents"""
-
+    """Quick actions dashboard for agents with premium UI"""
     st.markdown("### ⚡ Quick Actions Center")
+    
+    st.markdown("""
+    <style>
+    .action-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(226,232,240,0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        border-color: rgba(59,130,246,0.5);
+    }
+    .action-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .action-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    .action-desc {
+        font-size: 0.85rem;
+        color: #64748b;
+        line-height: 1.4;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     # Action categories
     col1, col2, col3 = st.columns(3)
 
     with col1:
         st.markdown("#### 📞 Contact Actions")
-        if st.button("🔥 Call Hot Leads", key="call_hot"):
+        
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">🔥</span>
+            <div class="action-title">Call Hot Leads</div>
+            <div class="action-desc">Connect with high-priority leads showing strong buying signals</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="call_hot", use_container_width=True):
             st.success("Preparing hot lead contact list...")
 
-        if st.button("📱 Send SMS Campaign", key="sms_campaign"):
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">📱</span>
+            <div class="action-title">Send SMS Campaign</div>
+            <div class="action-desc">Launch targeted SMS sequences with AI-optimized timing</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="sms_campaign", use_container_width=True):
             st.success("SMS campaign builder opened...")
 
-        if st.button("📧 Email Follow-up", key="email_followup"):
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">📧</span>
+            <div class="action-title">Email Follow-up</div>
+            <div class="action-desc">Send personalized property matches and market updates</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="email_followup", use_container_width=True):
             st.success("Email templates loaded...")
 
     with col2:
         st.markdown("#### 🏠 Property Actions")
-        if st.button("🔍 Find Matches", key="find_matches"):
+        
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">🔍</span>
+            <div class="action-title">AI Property Matching</div>
+            <div class="action-desc">Run ML-powered property matcher for active leads</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="find_matches", use_container_width=True):
             st.success("AI property matching in progress...")
 
-        if st.button("📋 Create CMA", key="create_cma"):
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">📋</span>
+            <div class="action-title">Generate CMA</div>
+            <div class="action-desc">Create comparative market analysis with AI insights</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="create_cma", use_container_width=True):
             st.success("Comparative market analysis generator opened...")
 
-        if st.button("📅 Schedule Tours", key="schedule_tours"):
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">📅</span>
+            <div class="action-title">Schedule Tours</div>
+            <div class="action-desc">Auto-schedule property showings with calendar sync</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="schedule_tours", use_container_width=True):
             st.success("Tour scheduling interface loaded...")
 
     with col3:
         st.markdown("#### 📊 Analytics Actions")
-        if st.button("📈 Generate Report", key="generate_report"):
+        
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">📈</span>
+            <div class="action-title">Performance Report</div>
+            <div class="action-desc">Generate comprehensive performance analytics</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="generate_report", use_container_width=True):
             st.success("Performance report being generated...")
 
-        if st.button("🎯 Update Scores", key="update_scores"):
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">🎯</span>
+            <div class="action-title">Update Lead Scores</div>
+            <div class="action-desc">Recalculate all lead scores with latest AI models</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="update_scores", use_container_width=True):
             st.success("Lead scores being recalculated...")
 
-        if st.button("🔄 Sync GHL", key="sync_ghl"):
+        st.markdown("""
+        <div class="action-card">
+            <span class="action-icon">🔄</span>
+            <div class="action-title">GHL Sync</div>
+            <div class="action-desc">Force synchronization with GoHighLevel CRM</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Execute", key="sync_ghl", use_container_width=True):
             st.success("GoHighLevel sync initiated...")
 
 
 def render_claude_lead_insights(selected_lead: str):
     """Show Claude insights for selected lead"""
     with st.spinner("Getting AI insights..."):
-        # Demo insights
-        st.success("🧠 Claude Analysis Complete")
-        st.markdown(f"""
-        **Lead: {selected_lead}**
+        
+        # Try to use real service if available
+        claude_service = get_claude_service()
+        
+        if claude_service:
+            try:
+                # Use async wrapper for Streamlit
+                async def fetch_insights():
+                    # For demo purposes, we pass a dummy lead ID if it's a name
+                    # In real usage, selected_lead would be an ID
+                    lead_id = selected_lead.lower().replace(" ", "_")
+                    agent_id = "agent_demo_01"
+                    return await claude_service.get_lead_insights(lead_id, agent_id)
+                
+                insights_data = asyncio.run(fetch_insights())
+                
+                st.success("🧠 Claude Analysis Complete")
+                st.markdown(f"""
+                **Lead: {selected_lead}**
 
-        **Key Insights:**
-        - High engagement with luxury property listings
-        - Responds best to morning communications
-        - Shows price sensitivity around $800K+
-        - Timeline indicates urgency (ASAP category)
+                **Key Insights:**
+                {''.join([f'- {insight} ' for insight in insights_data.get('insights', [])])}
 
-        **Behavioral Patterns:**
-        - Views listings multiple times before inquiring
-        - Prefers text communication over calls
-        - Most active on weekday mornings
-
-        **Conversion Probability:** 87% (Very High)
-        """)
+                **Recommendations:**
+                {''.join([f'- {rec} ' for rec in insights_data.get('recommendations', [])])}
+                """)
+            except Exception as e:
+                st.error(f"Error fetching insights: {e}")
+                
+        # Demo insights when no real service connection or for manual toggle
+        if not claude_service:
+            st.success("🧠 Claude Analysis Complete")
+            
+            # Dynamic insights based on lead name
+            if "Sarah Chen" in selected_lead and "Apple" in selected_lead:
+                st.markdown(f"""
+                **Lead: {selected_lead}**
+    
+                **🤖 Claude's Behavioral Insight:**
+                
+                High-velocity lead. Apple engineers are data-driven; she responded to the 'Market Trend' link within 12 seconds. 
+                She's prioritizing commute efficiency over sqft. Focus on: **Teravista connectivity** and Apple campus proximity.
+    
+                **Key Insights:**
+                - Extremely high technical literacy - values smart home features
+                - Timeline urgency (45 days) linked to Apple expansion announcement
+                - Pre-approved financing indicates serious intent
+                - Home office requirement is non-negotiable for hybrid work
+                - Price point ($550K) suggests mid-senior engineer compensation
+    
+                **Behavioral Patterns:**
+                - Lightning-fast response times (12-second click, 2-minute SMS replies)
+                - Prefers data-driven communication (charts, metrics, ROI analysis)
+                - Most active during lunch breaks (12-1pm) and evenings (7-9pm)
+                - High engagement with property tech specs and neighborhood analytics
+    
+                **Conversion Probability:** 97% (Extremely High)
+                
+                **Recommended Approach:**
+                - Lead with Round Rock/Cedar Park properties near Apple campus
+                - Emphasize fiber internet speeds and smart home readiness
+                - Provide commute time analysis (Apple campus to properties)
+                - Share school district data (future family planning indicator)
+                """)
+            else:
+                st.markdown(f"""
+                **Lead: {selected_lead}**
+    
+                **Key Insights:**
+                - High engagement with luxury property listings
+                - Responds best to morning communications
+                - Shows price sensitivity around $800K+
+                - Timeline indicates urgency (ASAP category)
+    
+                **Behavioral Patterns:**
+                - Views listings multiple times before inquiring
+                - Prefers text communication over calls
+                - Most active on weekday mornings
+    
+                **Conversion Probability:** 87% (Very High)
+                """)
 
 
 def render_claude_action_suggestions(selected_lead: str):
     """Show Claude action suggestions for selected lead"""
     with st.spinner("Generating action plan..."):
-        # Demo suggestions
+        
+        # Try to use real service if available
+        claude_service = get_claude_service()
+        
+        if claude_service:
+            try:
+                async def fetch_actions():
+                    lead_id = selected_lead.lower().replace(" ", "_")
+                    agent_id = "agent_demo_01"
+                    return await claude_service.suggest_follow_up_actions(lead_id, agent_id)
+                
+                actions = asyncio.run(fetch_actions())
+                
+                st.success("⚡ Action Plan Generated")
+                st.markdown(f"**Recommended Actions for {selected_lead}:**")
+                
+                for action in actions:
+                    priority_icon = "🔴" if action.get('priority') == 'high' else "🟡"
+                    st.markdown(f"**{priority_icon} {action.get('action')}**")
+                    st.caption(f"Timing: {action.get('suggested_timing')}")
+                
+                return
+            except Exception as e:
+                print(f"Error calling Claude Service: {e}")
+                # Fallback to demo logic
+        
+        # DEMO FALLBACK
         st.success("⚡ Action Plan Generated")
         st.markdown(f"""
         **Recommended Actions for {selected_lead}:**

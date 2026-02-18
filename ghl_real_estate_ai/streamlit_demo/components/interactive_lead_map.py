@@ -403,6 +403,21 @@ def render_lead_analysis(lead: Dict[str, Any]):
         engagement = lead.get('engagement_score', 0)
         st.metric("Engagement", f"{engagement}%")
     
+    # Extended Details (if available)
+    if lead.get('occupation') or lead.get('must_haves'):
+        st.markdown("##### 👤 Profile Details")
+        dp_col1, dp_col2 = st.columns(2)
+        with dp_col1:
+            if lead.get('occupation'):
+                st.markdown(f"**Occupation:** {lead.get('occupation')}")
+            if lead.get('property_type'):
+                st.markdown(f"**Property Type:** {lead.get('property_type')}")
+        with dp_col2:
+            if lead.get('must_haves'):
+                st.markdown(f"**Must Haves:** {lead.get('must_haves')}")
+            if lead.get('financing'):
+                st.markdown(f"**Financing:** {lead.get('financing')}")
+    
     st.markdown("---")
     
     # AI Analysis
@@ -504,6 +519,29 @@ def generate_sample_lead_data(market: str = "Austin") -> List[Dict[str, Any]]:
         return [
             {
                 "id": "lead_001",
+                "name": "Sarah Chen (Apple Engineer)",
+                "occupation": "Apple Engineer",
+                "lat": 30.5089,  # Round Rock / North Austin (Apple campus area)
+                "lon": -97.6789,
+                "lead_score": 100,
+                "engagement_score": 95,
+                "budget": 550000,
+                "location": "North Austin / Round Rock",
+                "timeline": "URGENT - 45 days",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "must_haves": "Home office, High-speed internet",
+                "property_type": "Modern / Move-in Ready",
+                "motivation": "Relocating for Apple expansion",
+                "financing": "Pre-approved",
+                "activities": [
+                    {"time": "12 seconds ago", "action": "Clicked 'Market Trend' link", "icon": "👀"},
+                    {"time": "2 days ago", "action": "Responded to SMS within 2 minutes", "icon": "💬"},
+                    {"time": "3 days ago", "action": "Submitted qualification form", "icon": "📝"}
+                ]
+            },
+            {
+                "id": "lead_002",
                 "name": "Sarah Johnson",
                 "lat": 30.2672,
                 "lon": -97.7431,
@@ -514,7 +552,7 @@ def generate_sample_lead_data(market: str = "Austin") -> List[Dict[str, Any]]:
                 "timeline": "ASAP"
             },
             {
-                "id": "lead_002",
+                "id": "lead_003",
                 "name": "Mike Chen",
                 "lat": 30.2700,
                 "lon": -97.7500,
@@ -525,7 +563,7 @@ def generate_sample_lead_data(market: str = "Austin") -> List[Dict[str, Any]]:
                 "timeline": "6 months"
             },
             {
-                "id": "lead_003",
+                "id": "lead_004",
                 "name": "Emily Davis",
                 "lat": 30.2500,
                 "lon": -97.7300,

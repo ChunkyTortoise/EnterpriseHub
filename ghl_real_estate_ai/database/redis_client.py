@@ -121,6 +121,8 @@ class EnhancedRedisClient:
 
     def _mask_url(self, url: str) -> str:
         """Mask sensitive parts of Redis URL for logging."""
+        if url is None:
+            return "None"
         if '@' in url:
             parts = url.split('@')
             return f"{parts[0].split('://')[0]}://***@{parts[1]}"
