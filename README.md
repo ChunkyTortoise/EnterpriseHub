@@ -40,20 +40,32 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 - **Disconnected tools** -- Qualification results, CRM updates, and analytics live in one platform instead of spreadsheets + separate dashboards
 - **No visibility into pipeline health** -- Streamlit BI dashboard surfaces lead flow, conversion rates, commission tracking, and bot performance metrics
 
-## Service Mapping
+## Service Mapping (Canonical IDs)
 
-- **Service 4:** Multi-Agent Workflows (Agentic AI Systems)
-- **Service 6:** AI-Powered Personal and Business Automation
-- **Service 8:** Interactive Business Intelligence Dashboards
-- **Service 10:** Predictive Analytics and Lead Scoring
+- `S03` AI Knowledge Assistant (Custom RAG System)
+- `S04` AI SDR Team in a Box (Multi-Agent Workflows)
+- `S06` AI-Powered Personal and Business Automation
+- `S08` Real-Time KPI Dashboard (Interactive BI)
+- `S10` AI Lead Scorer (Predictive Analytics)
+- `S18` MLOps Model Deployment
+- `S23` AI Governance, Risk, and Compliance
+- `S26` Custom API Development and Integration
 
-## Certification Mapping
+## Certification Mapping (Canonical IDs)
 
-- IBM Generative AI Engineering with PyTorch, LangChain & Hugging Face
-- IBM RAG and Agentic AI Professional Certificate
-- Duke University LLMOps Specialization
-- Google Data Analytics Certificate
-- IBM Business Intelligence Analyst Professional Certificate
+- `C02` IBM Generative AI Engineering Professional Certificate
+- `C06` Duke LLMOps Building Real-World Applications
+- `C08` Google Data Analytics Professional Certificate
+- `C11` IBM Business Intelligence Analyst Professional Certificate
+- `C05` Vanderbilt Generative AI for Strategic Leaders
+
+## Business Impact (Outcome Proof)
+
+- `CS01` documents quantified results: **87% manual review reduction**, **$240k annualized savings**, and **89% LLM cost reduction**.
+- Technical evidence and artifacts live in:
+  - `assets/demo.png`
+  - `assets/diagrams/arete_architecture.svg`
+  - `README.md` key metrics and benchmark sections
 
 <details>
 <summary>Screenshots</summary>

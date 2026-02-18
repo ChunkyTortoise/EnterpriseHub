@@ -195,6 +195,26 @@ try:
             description="Total alerts triggered",
             unit="1",
         ),
+        "jorge.webhook.dedup.total": _meter.create_counter(
+            "jorge.webhook.dedup.total",
+            description="Total webhook dedup decisions",
+            unit="1",
+        ),
+        "jorge.webhook.dedup.duplicate": _meter.create_counter(
+            "jorge.webhook.dedup.duplicate",
+            description="Duplicate webhook events ignored",
+            unit="1",
+        ),
+        "jorge.webhook.dedup.cache_error": _meter.create_counter(
+            "jorge.webhook.dedup.cache_error",
+            description="Webhook dedup cache backend failures",
+            unit="1",
+        ),
+        "jorge.webhook.dedup.fallback": _meter.create_counter(
+            "jorge.webhook.dedup.fallback",
+            description="Webhook dedup fallback usage without delivery header",
+            unit="1",
+        ),
     }
     logger.info("OTel metric counters created for jorge services")
 except ImportError:

@@ -19,7 +19,7 @@ from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/mobile/ar", tags=["AR/VR Integration"])
+router = APIRouter(prefix="/ar", tags=["AR/VR Integration"])
 
 # AR/VR Data Models
 
@@ -93,11 +93,11 @@ class ARSpatialAnchor(BaseModel):
 class PropertyVisualizationRequest(BaseModel):
     """Request for property AR/VR visualization setup."""
 
-    property_id: str = Field(..., description="Property to visualize")
+    property_id: str = Field(..., min_length=1, description="Property to visualize")
     user_location: Optional[Dict[str, float]] = Field(None, description="User's current GPS location")
-    device_capabilities: Dict[str, Any] = Field(..., description="Device AR/VR capabilities")
-    visualization_type: str = Field(..., description="Type: ar_overlay, vr_tour, mixed_reality")
-    quality_preference: str = Field(default="balanced", description="Quality: low, balanced, high, ultra")
+    device_capabilities: Dict[str, Any] = Field(..., min_length=1, description="Device AR/VR capabilities")
+    visualization_type: str = Field(..., pattern="^(ar_overlay|vr_tour|mixed_reality)$")
+    quality_preference: str = Field(default="balanced", pattern="^(low|balanced|high|ultra)$")
     include_ai_insights: bool = Field(default=True, description="Include AI-generated insights")
 
 
@@ -527,7 +527,7 @@ async def setup_property_visualization(
 @router.get("/property/{property_id}/model", response_model=Property3DModel)
 async def get_property_3d_model(
     property_id: str,
-    quality: str = Query(default="medium", pattern="^(Union[low, medium]|Union[high, ultra])$"),
+    quality: str = Query(default="medium", pattern="^(low|medium|high|ultra)$"),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """
@@ -616,6 +616,20 @@ async def create_spatial_anchor(
 
         if not property_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Property ID is required")
+
+        world_position = anchor_request.get("world_position") or {}
+        latitude = world_position.get("x")
+        longitude = world_position.get("z")
+        if latitude is None or longitude is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="world_position.x and world_position.z are required",
+            )
+        if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="world_position coordinates are out of valid GPS bounds",
+            )
 
         anchor = await ar_visualization_service.create_spatial_anchor(property_id, anchor_request, user_id)
 

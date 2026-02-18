@@ -18,6 +18,7 @@ from urllib.parse import unquote
 
 import bleach
 from fastapi import HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -361,7 +362,9 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                         "event_id": "VAL_005",
                     },
                 )
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON in request body")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid JSON in request body"
+                )
 
             # Validate JSON data
             if isinstance(json_data, dict):
@@ -441,9 +444,9 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except HTTPException:
-            # Re-raise HTTP exceptions
-            raise
+        except HTTPException as exc:
+            # Return a response directly to avoid BaseHTTPMiddleware exception-group bubbling.
+            return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
         except Exception as e:
             logger.error(
                 f"Unexpected error in input validation: {str(e)}",

@@ -21,6 +21,7 @@ from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 from ghl_real_estate_ai.core.recovery_engine import RecoveryEngine
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.ghl_webhook_types import ConversationContext
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
@@ -117,6 +118,31 @@ class ConversationManager:
 
         logger.info("Conversation manager initialized")
 
+    @staticmethod
+    def _is_empty_update(value: Any) -> bool:
+        """Return True when an extracted value should not overwrite known context."""
+        if value is None:
+            return True
+        if isinstance(value, str):
+            return value.strip().lower() in {"", "unknown", "null", "n/a", "na"}
+        if isinstance(value, (list, tuple, dict, set)):
+            return len(value) == 0
+        return False
+
+    @classmethod
+    def _filter_non_empty_updates(cls, updates: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if not updates:
+            return {}
+        return {k: v for k, v in updates.items() if not cls._is_empty_update(v)}
+
+    @classmethod
+    def _merge_without_erasing(cls, current: Dict[str, Any], updates: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        merged = dict(current or {})
+        for key, value in (updates or {}).items():
+            if not cls._is_empty_update(value):
+                merged[key] = value
+        return merged
+
     async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> ConversationContext:
         """
         Retrieve conversation context for a contact.
@@ -154,6 +180,7 @@ class ConversationManager:
         extracted_data: Optional[Dict[str, Any]] = None,
         location_id: Optional[str] = None,
         seller_temperature: Optional[str] = None,
+        **extra_context: Any,
     ) -> None:
         """
         Update conversation context with new messages and data.
@@ -181,22 +208,38 @@ class ConversationManager:
 
         # Merge extracted data (new data overrides old)
         if extracted_data:
+            non_empty_updates = self._filter_non_empty_updates(extracted_data)
             # Check if this is seller data (Jorge's seller bot)
             if seller_temperature or any(
-                key in extracted_data
+                key in non_empty_updates
                 for key in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
             ):
                 # Handle seller data
                 if "seller_preferences" not in context:
                     context["seller_preferences"] = {}
-                context["seller_preferences"].update(extracted_data)
+                previous_seller_preferences = dict(context.get("seller_preferences", {}))
+                context["seller_preferences"] = self._merge_without_erasing(previous_seller_preferences, non_empty_updates)
+                changed_seller_fields = [
+                    field
+                    for field, value in context["seller_preferences"].items()
+                    if previous_seller_preferences.get(field) != value
+                ]
+                context["seller_fields_updated_last_turn"] = changed_seller_fields
 
                 # Set seller temperature if provided
                 if seller_temperature:
                     context["seller_temperature"] = seller_temperature
             else:
                 # Handle buyer data (existing logic)
-                context["extracted_preferences"].update(extracted_data)
+                context["extracted_preferences"] = self._merge_without_erasing(
+                    context.get("extracted_preferences", {}), non_empty_updates
+                )
+
+        if extra_context:
+            for key, value in extra_context.items():
+                if value is None:
+                    continue
+                context[key] = value
 
         # Update last lead score for analytics tracking
         current_score = await self.lead_scorer.calculate(context)
@@ -378,11 +421,8 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
         """
         Extract seller-specific data from user message using Claude.
 
-        Designed for Jorge's 4-question seller qualification process:
-        1. Motivation & Relocation destination
-        2. Timeline acceptance (30-45 days)
-        3. Property condition
-        4. Price expectations
+        Supports the expanded seller intake contract while preserving the
+        legacy 4-question tracking fields used by current runtime logic.
 
         Args:
             user_message: User's latest message
@@ -397,30 +437,38 @@ Return ONLY valid JSON with extracted fields. If a field is not mentioned, omit 
 
 Current seller data: {json.dumps(current_seller_data, indent=2)}
 
-Extract the following fields (only if clearly mentioned):
+Extract the following fields only when explicitly or strongly implied:
 
-MOTIVATION & RELOCATION:
-- motivation: Why they want to sell (relocation, downsizing, financial, divorce, inherited, other)
-- relocation_destination: Where they plan to move (city, state, or general area)
+CORE QUALIFICATION (legacy compatibility):
+- motivation
+- timeline_acceptable (true/false/null)
+- property_condition
+- price_expectation (numeric if possible)
 
-TIMELINE:
-- timeline_acceptable: Boolean - would 30-45 days be okay? (true/false/null)
-- timeline_urgency: "urgent" (30-45 days), "flexible", "long-term", or "unknown"
+EXPANDED SELLER INTAKE:
+- property_address
+- property_type (single_family, condo, townhome, multifamily, other)
+- timeline_days (integer)
+- asking_price (numeric)
+- mortgage_balance (numeric if mentioned)
+- repair_estimate (numeric if mentioned)
+- prior_listing_history (short text)
+- decision_maker_confirmed (true/false)
+- best_contact_method (SMS/Call/Email)
+- availability_windows (short text or compact JSON)
+- relocation_destination
 
-PROPERTY CONDITION:
-- property_condition: "move-in ready", "needs work", "major repairs", or "unknown"
-- repair_estimate: Any mentioned or VISUALLY ESTIMATED (from images) repair needs or costs
+DERIVED/QUALITY FIELDS:
+- timeline_urgency (urgent/flexible/long_term/unknown)
+- price_flexibility (firm/negotiable/unknown)
+- response_quality (0.0 to 1.0)
+- responsiveness (0.0 to 1.0)
 
-PRICE EXPECTATIONS:
-- price_expectation: Numeric price they mentioned (dollars)
-- price_flexibility: "firm", "negotiable", or "unknown"
-
-RESPONSE QUALITY METRICS:
-- response_quality: 0.0-1.0 based on completeness and specificity
-- responsiveness: 0.0-1.0 based on engagement level
-
-Return ONLY JSON with extracted fields. If no new info, return existing data.
-Count questions_answered based on how many of the 4 main categories have data.
+Rules:
+- Return ONLY valid JSON.
+- Do not fabricate values.
+- Omit fields that are unknown.
+- Use numeric values for money/timeline when possible.
 """
 
         try:
@@ -453,22 +501,58 @@ Count questions_answered based on how many of the 4 main categories have data.
             )
 
             extracted_data = json.loads(response.content)
+            extracted_data = self._normalize_extracted_seller_data(extracted_data, user_message)
 
-            # Merge with existing seller data
-            merged_data = {**current_seller_data, **extracted_data}
+            # Merge with existing seller data while preserving known non-null values.
+            merged_data = self._merge_without_erasing(current_seller_data, extracted_data)
 
-            # Ensure questions_answered count is accurate
-            question_fields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
-            questions_answered = sum(1 for field in question_fields if merged_data.get(field) is not None)
-            merged_data["questions_answered"] = questions_answered
+            # Keep canonical aliases aligned.
+            if self._is_empty_update(merged_data.get("seller_motivation")) and not self._is_empty_update(
+                merged_data.get("motivation")
+            ):
+                merged_data["seller_motivation"] = merged_data["motivation"]
+            if self._is_empty_update(merged_data.get("price_expectation")) and not self._is_empty_update(
+                merged_data.get("asking_price")
+            ):
+                merged_data["price_expectation"] = merged_data["asking_price"]
+            if self._is_empty_update(merged_data.get("asking_price")) and not self._is_empty_update(
+                merged_data.get("price_expectation")
+            ):
+                merged_data["asking_price"] = merged_data["price_expectation"]
+
+            # Legacy 4-question progress for existing temperature logic.
+            core_questions_answered = 0
+            for field in JorgeSellerConfig.CORE_QUESTION_FIELDS:
+                value = merged_data.get(field)
+                if field == "price_expectation" and self._is_empty_update(value):
+                    value = merged_data.get("asking_price")
+                if not self._is_empty_update(value):
+                    core_questions_answered += 1
+            merged_data["questions_answered"] = core_questions_answered
+
+            # Expanded intake progress for new qualification lifecycle.
+            expanded_questions_answered = 0
+            for field in JorgeSellerConfig.SELLER_INTAKE_FIELD_SEQUENCE:
+                value = merged_data.get(field)
+                if field == "asking_price" and self._is_empty_update(value):
+                    value = merged_data.get("price_expectation")
+                if not self._is_empty_update(value):
+                    expanded_questions_answered += 1
+            merged_data["expanded_questions_answered"] = expanded_questions_answered
+            merged_data["qualification_complete"] = JorgeSellerConfig.is_intake_complete(merged_data)
+            merged_data["last_bot_interaction"] = datetime.utcnow().isoformat()
 
             # Auto-assess response quality if not provided by Claude
-            if "response_quality" not in extracted_data:
+            if "response_quality" not in merged_data:
                 merged_data["response_quality"] = self._assess_seller_response_quality(user_message)
 
             logger.info(
                 "Extracted seller data from message",
-                extra={"extracted": merged_data, "questions_answered": questions_answered},
+                extra={
+                    "extracted": merged_data,
+                    "questions_answered": core_questions_answered,
+                    "expanded_questions_answered": expanded_questions_answered,
+                },
             )
 
             return merged_data
@@ -478,6 +562,97 @@ Count questions_answered based on how many of the 4 main categories have data.
                 f"Failed to extract seller data: {str(e)}", extra={"error": str(e), "user_message": user_message}
             )
             return current_seller_data
+
+    def _normalize_extracted_seller_data(self, extracted_data: Dict[str, Any], user_message: str) -> Dict[str, Any]:
+        """Normalize extracted seller fields into the canonical runtime contract."""
+        import re
+
+        normalized = dict(extracted_data or {})
+
+        def parse_currency(value: Any) -> Optional[int]:
+            if value is None:
+                return None
+            if isinstance(value, (int, float)):
+                numeric_value = int(value)
+                return numeric_value if numeric_value >= 10000 else None
+            raw_text = str(value).strip().lower()
+            text = raw_text.replace(",", "")
+            if not text:
+                return None
+            multiplier = 1000 if text.endswith("k") else 1
+            text = text[:-1] if text.endswith("k") else text
+            match = re.search(r"(\d+(?:\.\d+)?)", text)
+            if not match:
+                return None
+            parsed_value = int(float(match.group(1)) * multiplier)
+            if "$" in raw_text or "k" in raw_text or parsed_value >= 10000:
+                return parsed_value
+            return None
+
+        def parse_timeline_days(value: Any) -> Optional[int]:
+            if value is None:
+                return None
+            if isinstance(value, (int, float)):
+                return int(value)
+            text = str(value).lower()
+            day_match = re.search(r"(\d+)\s*day", text)
+            if day_match:
+                return int(day_match.group(1))
+            week_match = re.search(r"(\d+)\s*week", text)
+            if week_match:
+                return int(week_match.group(1)) * 7
+            month_match = re.search(r"(\d+)\s*month", text)
+            if month_match:
+                return int(month_match.group(1)) * 30
+            return None
+
+        # Normalize pricing aliases.
+        asking_price = parse_currency(normalized.get("asking_price"))
+        if asking_price is None:
+            asking_price = parse_currency(normalized.get("price_expectation"))
+        if asking_price is None:
+            asking_price = parse_currency(user_message)
+        if asking_price is not None:
+            normalized["asking_price"] = asking_price
+            normalized["price_expectation"] = asking_price
+
+        # Normalize timeline days from either explicit numeric value or legacy flags.
+        timeline_days = parse_timeline_days(normalized.get("timeline_days"))
+        if timeline_days is None:
+            timeline_days = parse_timeline_days(normalized.get("timeline_urgency"))
+        if timeline_days is None:
+            if normalized.get("timeline_acceptable") is True:
+                timeline_days = 30
+            elif normalized.get("timeline_acceptable") is False:
+                timeline_days = 90
+        if timeline_days is None:
+            timeline_days = parse_timeline_days(user_message)
+        if timeline_days is not None:
+            normalized["timeline_days"] = timeline_days
+            normalized["timeline_urgency"] = "urgent" if timeline_days <= 45 else "flexible" if timeline_days <= 90 else "long-term"
+
+        # Keep motivation aliases in sync.
+        if self._is_empty_update(normalized.get("seller_motivation")) and not self._is_empty_update(
+            normalized.get("motivation")
+        ):
+            normalized["seller_motivation"] = normalized["motivation"]
+        if self._is_empty_update(normalized.get("motivation")) and not self._is_empty_update(
+            normalized.get("seller_motivation")
+        ):
+            normalized["motivation"] = normalized["seller_motivation"]
+
+        # Normalize condition labels to a small canonical set.
+        condition = normalized.get("property_condition")
+        if isinstance(condition, str):
+            condition_lower = condition.strip().lower()
+            if "move" in condition_lower and "ready" in condition_lower:
+                normalized["property_condition"] = "move-in ready"
+            elif any(token in condition_lower for token in ("major", "extensive")):
+                normalized["property_condition"] = "major repairs"
+            elif any(token in condition_lower for token in ("repair", "work", "fixer")):
+                normalized["property_condition"] = "needs work"
+
+        return normalized
 
     def _assess_seller_response_quality(self, user_message: str) -> float:
         """

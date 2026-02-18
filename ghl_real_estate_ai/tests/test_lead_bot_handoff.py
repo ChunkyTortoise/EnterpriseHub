@@ -12,7 +12,6 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
 
-@pytest.mark.integration
     HandoffDecision,
     JorgeHandoffService,
 )
@@ -86,7 +85,6 @@ def sample_conversation_history():
     ]
 
 
-@pytest.mark.asyncio
 async def test_lead_to_buyer_handoff_high_confidence(handoff_service, sample_conversation_history):
     """Test lead-to-buyer handoff with high buying intent signals."""
     contact_id = "contact_123"
@@ -134,7 +132,6 @@ async def test_lead_to_buyer_handoff_high_confidence(handoff_service, sample_con
     assert handoff_service.analytics_service.counters["lead_to_buyer"] == 1
 
 
-@pytest.mark.asyncio
 async def test_lead_to_seller_handoff_listing_signals(handoff_service, sample_conversation_history):
     """Test lead-to-seller handoff with seller intent signals."""
     contact_id = "contact_789"
@@ -180,7 +177,6 @@ async def test_lead_to_seller_handoff_listing_signals(handoff_service, sample_co
     assert handoff_service.analytics_service.counters["lead_to_seller"] == 1
 
 
-@pytest.mark.asyncio
 async def test_lead_handoff_confidence_thresholds(handoff_service, sample_conversation_history):
     """Test confidence threshold behavior for handoff decisions."""
     contact_id = "contact_threshold_test"
@@ -237,7 +233,6 @@ async def test_lead_handoff_confidence_thresholds(handoff_service, sample_conver
     assert decision_high.confidence == 0.95
 
 
-@pytest.mark.asyncio
 async def test_lead_handoff_tag_swapping(handoff_service, sample_conversation_history):
     """Test that lead tags are removed and new bot-specific tags are added."""
     contact_id = "contact_tag_swap"
@@ -287,7 +282,6 @@ async def test_lead_handoff_tag_swapping(handoff_service, sample_conversation_hi
     assert tracking_tag_found, "Handoff-Lead-to-Buyer tracking tag should be added"
 
 
-@pytest.mark.asyncio
 async def test_lead_handoff_tracking_and_analytics(handoff_service, sample_conversation_history):
     """Test that analytics are properly recorded for handoff events."""
     contact_id = "contact_analytics"
@@ -357,7 +351,6 @@ async def test_lead_handoff_tracking_and_analytics(handoff_service, sample_conve
     assert seller_event["data"]["target_bot"] == "seller"
 
 
-@pytest.mark.asyncio
 async def test_lead_handoff_with_conversation_context(handoff_service):
     """Test handoff decision uses full conversation history and context."""
     contact_id = "contact_context"

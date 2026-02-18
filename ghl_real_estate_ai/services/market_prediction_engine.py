@@ -63,6 +63,10 @@ class TimeHorizon(Enum):
     SHORT_TERM = "short_term"  # 1-3 months
     MEDIUM_TERM = "medium_term"  # 3-12 months
     LONG_TERM = "long_term"  # 1-3 years
+    THREE_MONTHS = "3_months"
+    SIX_MONTHS = "6_months"
+    ONE_YEAR = "1_year"
+    TWO_YEARS = "2_years"
 
 
 @dataclass
@@ -98,22 +102,22 @@ class MarketDataPoint:
 class PredictionResult:
     """Market prediction result"""
 
-    prediction_id: str
-    prediction_type: PredictionType
-    target: str  # neighborhood, property, market segment
-    time_horizon: TimeHorizon
+    prediction_id: str = ""
+    prediction_type: PredictionType = PredictionType.PRICE_APPRECIATION
+    target: str = ""  # neighborhood, property, market segment
+    time_horizon: TimeHorizon = TimeHorizon.MEDIUM_TERM
 
     # Prediction details
-    predicted_value: float
-    current_value: float
-    change_percentage: float
-    confidence_level: MarketConfidence
-    confidence_score: float  # 0-1
+    predicted_value: float = 0.0
+    current_value: float = 0.0
+    change_percentage: float = 0.0
+    confidence_level: Any = MarketConfidence.MEDIUM
+    confidence_score: float = 0.0  # 0-1
 
     # Supporting data
-    key_factors: List[str]
-    risk_factors: List[str]
-    opportunities: List[str]
+    key_factors: List[str] = None
+    risk_factors: List[str] = None
+    opportunities: List[str] = None
 
     # Timing and model information (fields with defaults must come last)
     target_date: datetime = None
@@ -123,7 +127,28 @@ class PredictionResult:
     last_training_date: datetime = None
     prediction_date: datetime = None
 
+    # Backward-compatible aliases used by older API/tests.
+    neighborhood: Optional[str] = None
+    predicted_appreciation: Optional[float] = None
+    supporting_factors: Optional[List[str]] = None
+
     def __post_init__(self):
+        if not self.prediction_id:
+            self.prediction_id = f"pred_{uuid.uuid4().hex}"
+        if self.neighborhood and not self.target:
+            self.target = self.neighborhood
+        if self.predicted_appreciation is not None and self.predicted_value == 0.0:
+            self.predicted_value = self.predicted_appreciation
+        if self.supporting_factors and not self.key_factors:
+            self.key_factors = list(self.supporting_factors)
+        if self.key_factors is None:
+            self.key_factors = []
+        if self.risk_factors is None:
+            self.risk_factors = []
+        if self.opportunities is None:
+            self.opportunities = []
+        if self.change_percentage == 0.0 and self.current_value and self.predicted_value:
+            self.change_percentage = ((self.predicted_value - self.current_value) / self.current_value) * 100
         if self.prediction_date is None:
             self.prediction_date = datetime.now()
 

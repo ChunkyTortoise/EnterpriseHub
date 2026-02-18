@@ -27,6 +27,101 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 
+class _SyncAsyncValue:
+    """Value wrapper that can be used directly or awaited."""
+
+    def __init__(self, value: Any):
+        self._value = value
+
+    def unwrap(self) -> Any:
+        return self._value
+
+    async def _as_async(self) -> Any:
+        return self._value
+
+    def __await__(self):
+        return self._as_async().__await__()
+
+    def __repr__(self) -> str:
+        return repr(self._value)
+
+    def __str__(self) -> str:
+        return str(self._value)
+
+    def __bool__(self) -> bool:
+        return bool(self._value)
+
+    def __int__(self) -> int:
+        return int(self._value)
+
+    def __float__(self) -> float:
+        return float(self._value)
+
+    def __index__(self) -> int:
+        return int(self._value)
+
+    def __len__(self):
+        return len(self._value)
+
+    def __iter__(self):
+        return iter(self._value)
+
+    def __getitem__(self, key):
+        return self._value[key]
+
+    def __hash__(self) -> int:
+        try:
+            return hash(self._value)
+        except TypeError:
+            return id(self)
+
+    def __getattr__(self, name: str):
+        return getattr(self._value, name)
+
+    @staticmethod
+    def _coerce(other: Any) -> Any:
+        return other._value if isinstance(other, _SyncAsyncValue) else other
+
+    def __eq__(self, other: Any) -> bool:
+        return self._value == self._coerce(other)
+
+    def __lt__(self, other: Any) -> bool:
+        return self._value < self._coerce(other)
+
+    def __le__(self, other: Any) -> bool:
+        return self._value <= self._coerce(other)
+
+    def __gt__(self, other: Any) -> bool:
+        return self._value > self._coerce(other)
+
+    def __ge__(self, other: Any) -> bool:
+        return self._value >= self._coerce(other)
+
+    def __add__(self, other: Any):
+        return self._value + self._coerce(other)
+
+    def __radd__(self, other: Any):
+        return self._coerce(other) + self._value
+
+    def __sub__(self, other: Any):
+        return self._value - self._coerce(other)
+
+    def __rsub__(self, other: Any):
+        return self._coerce(other) - self._value
+
+    def __mul__(self, other: Any):
+        return self._value * self._coerce(other)
+
+    def __rmul__(self, other: Any):
+        return self._coerce(other) * self._value
+
+    def __truediv__(self, other: Any):
+        return self._value / self._coerce(other)
+
+    def __rtruediv__(self, other: Any):
+        return self._coerce(other) / self._value
+
+
 class LeadScorer:
     """Calculate lead quality scores based on conversation analysis."""
 
@@ -43,29 +138,14 @@ class LeadScorer:
         data_hash = hashlib.md5(data_str.encode()).hexdigest()
         return f"lead_scorer:{prefix}:{data_hash}"
 
-    async def calculate(self, context: Dict[str, Any]) -> int:
+    def calculate(self, context: Dict[str, Any]):
         """
         Calculate lead score based on NUMBER OF QUESTIONS ANSWERED.
 
         Jorge's Requirement: Count questions answered, not points.
         """
         if context is None:
-            return 0
-
-        # Try to get from cache first
-        # Use extracted_preferences and seller data for cache key
-        cache_data = {
-            "extracted_preferences": context.get("extracted_preferences", {}),
-            "seller_preferences": context.get("seller_preferences", {}),
-            "seller_temperature": context.get("seller_temperature"),
-            "conversation_type": context.get("conversation_type"),
-        }
-
-        cache_key = self._generate_cache_key("calculate", cache_data)
-        cached_result = await self.cache.get(cache_key)
-
-        if cached_result is not None:
-            return cached_result
+            return _SyncAsyncValue(0)
 
         # Check if this is seller mode (Jorge's bot)
         if (
@@ -74,11 +154,7 @@ class LeadScorer:
             or "seller" in context.get("conversation_type", "").lower()
         ):
             seller_result = self.calculate_seller_score(context.get("seller_preferences", {}))
-            result = seller_result["questions_answered"]
-
-            # Cache the result (TTL 1 hour)
-            await self.cache.set(cache_key, result, ttl=3600)
-            return result
+            return _SyncAsyncValue(seller_result["questions_answered"])
 
         # Continue with existing buyer scoring logic...
         questions_answered = 0
@@ -89,15 +165,15 @@ class LeadScorer:
             questions_answered += 1
 
         # Question 2: Location Preference
-        if prefs.get("location"):
+        if self._is_meaningful_location(prefs.get("location")):
             questions_answered += 1
 
         # Question 3: Timeline
-        if prefs.get("timeline"):
+        if self._is_meaningful_timeline(prefs.get("timeline")):
             questions_answered += 1
 
-        # Question 4: Property Requirements (beds/baths/must-haves)
-        if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
+        # Question 4: Property Requirements (beds/baths)
+        if prefs.get("bedrooms") or prefs.get("bathrooms"):
             questions_answered += 1
 
         # Question 5: Financing Status
@@ -108,14 +184,11 @@ class LeadScorer:
         if prefs.get("motivation"):
             questions_answered += 1
 
-        # Question 7: Home Condition (sellers only)
-        if prefs.get("home_condition"):
+        # Question 7: Must-haves (buyers) or home condition (sellers)
+        if prefs.get("must_haves") or prefs.get("home_condition"):
             questions_answered += 1
 
-        # Cache the result (TTL 1 hour)
-        await self.cache.set(cache_key, questions_answered, ttl=3600)
-
-        return questions_answered
+        return _SyncAsyncValue(questions_answered)
 
     def get_percentage_score(self, question_count: int) -> int:
         """
@@ -181,6 +254,28 @@ class LeadScorer:
 
         return any(keyword in timeline_lower for keyword in urgent_keywords)
 
+    def _is_meaningful_timeline(self, timeline: Any) -> bool:
+        """Treat vague discovery-only timelines as unanswered."""
+        if not timeline:
+            return False
+        if not isinstance(timeline, str):
+            return True
+
+        timeline_lower = timeline.strip().lower()
+        vague_patterns = ["just looking", "no rush", "exploring", "not sure", "someday", "sometime"]
+        return not any(pattern in timeline_lower for pattern in vague_patterns)
+
+    def _is_meaningful_location(self, location: Any) -> bool:
+        """Treat generic non-committal locations as unanswered."""
+        if not location:
+            return False
+        if not isinstance(location, str):
+            return True
+
+        location_lower = location.strip().lower()
+        vague_patterns = ["anywhere cheap", "anywhere", "exploring options", "no preference", "wherever"]
+        return not any(pattern in location_lower for pattern in vague_patterns)
+
     def classify(self, score: int) -> str:
         """
         Classify lead based on number of questions answered.
@@ -238,7 +333,7 @@ class LeadScorer:
                 "Follow up in 7 days",
             ]
 
-    async def calculate_with_reasoning(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def calculate_with_reasoning(self, context: Dict[str, Any]):
         """
         Calculate score with detailed reasoning breakdown.
 
@@ -251,15 +346,15 @@ class LeadScorer:
             Dict containing score, classification, reasoning, and recommended actions
         """
         if context is None:
-            return {
+            return _SyncAsyncValue({
                 "score": 0,
                 "questions_answered": 0,
                 "classification": "cold",
                 "reasoning": "No qualifying questions answered yet",
                 "recommended_actions": self.get_recommended_actions(0),
-            }
+            })
 
-        score = await self.calculate(context)
+        score = int(self.calculate(context))
         classification = self.classify(score)
         actions = self.get_recommended_actions(score)
 
@@ -273,25 +368,26 @@ class LeadScorer:
                 if isinstance(prefs.get("budget"), (int, float))
                 else f"Budget: {prefs.get('budget')}"
             )
-        if prefs.get("location"):
+        if self._is_meaningful_location(prefs.get("location")):
             questions_answered.append(f"Location: {prefs.get('location')}")
-        if prefs.get("timeline"):
+        if self._is_meaningful_timeline(prefs.get("timeline")):
             questions_answered.append(f"Timeline: {prefs.get('timeline')}")
-        if prefs.get("bedrooms") or prefs.get("bathrooms") or prefs.get("must_haves"):
+        if prefs.get("bedrooms") or prefs.get("bathrooms"):
             prop_details = []
             if prefs.get("bedrooms"):
                 prop_details.append(f"{prefs.get('bedrooms')} bed")
             if prefs.get("bathrooms"):
                 prop_details.append(f"{prefs.get('bathrooms')} bath")
-            if prefs.get("must_haves"):
-                must_haves = prefs.get("must_haves")
-                if isinstance(must_haves, list):
-                    prop_details.append(", ".join(str(m) for m in must_haves))
-                else:
-                    prop_details.append(str(must_haves))
             # Ensure all items in prop_details are strings
             safe_prop_details = [str(p) for p in prop_details]
             questions_answered.append(f"Property: {', '.join(safe_prop_details)}")
+        if prefs.get("must_haves"):
+            must_haves = prefs.get("must_haves")
+            if isinstance(must_haves, list):
+                must_haves_text = ", ".join(str(m) for m in must_haves)
+            else:
+                must_haves_text = str(must_haves)
+            questions_answered.append(f"Must-haves: {must_haves_text}")
         if prefs.get("financing"):
             questions_answered.append(f"Financing: {prefs.get('financing')}")
         if prefs.get("motivation"):
@@ -305,13 +401,13 @@ class LeadScorer:
             else "No qualifying questions answered yet"
         )
 
-        return {
+        return _SyncAsyncValue({
             "score": score,
             "questions_answered": score,  # Make it explicit this is question count
             "classification": classification,
             "reasoning": reasoning,
             "recommended_actions": actions,
-        }
+        })
 
     # ==============================================================================
     # JORGE'S SELLER SCORING (4 QUESTIONS)

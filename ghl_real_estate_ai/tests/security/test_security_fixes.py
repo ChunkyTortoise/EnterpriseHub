@@ -37,7 +37,6 @@ def test_cors_configuration(mock_env_cors, monkeypatch):
     # but we verified the logic manually.
 
 # 2. Open Redirect Test
-@pytest.mark.asyncio
 async def test_open_redirect_validation(mock_env_redirect, monkeypatch):
     # Set the environment variable BEFORE importing
     monkeypatch.setenv("ALLOWED_REDIRECT_DOMAINS", "trusted.com,enterprisehub.com")
@@ -83,7 +82,6 @@ def test_password_length_validation():
     assert "not exceed 72 characters" in excinfo.value.detail
 
 # 4. SQL Logging Test
-@pytest.mark.asyncio
 async def test_sql_logging_sanitization():
     from ghl_real_estate_ai.database.connection_manager import DatabaseConnectionManager
     

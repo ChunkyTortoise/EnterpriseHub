@@ -31,10 +31,8 @@ from ghl_real_estate_ai.prompts.reengagement_templates import REENGAGEMENT_TEMPL
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.reengagement_engine import ReengagementEngine, ReengagementTrigger
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_trigger_detection_24h():
     """Test that engine detects silent leads after 24 hours."""
     print("🧪 Testing 24h trigger detection...")
@@ -62,7 +60,6 @@ async def test_trigger_detection_24h():
     print("✅ 24h trigger detected correctly")
 
 
-@pytest.mark.asyncio
 async def test_trigger_detection_48h():
     """Test that engine detects silent leads after 48 hours."""
     print("🧪 Testing 48h trigger detection...")
@@ -90,7 +87,6 @@ async def test_trigger_detection_48h():
     print("✅ 48h trigger detected correctly")
 
 
-@pytest.mark.asyncio
 async def test_trigger_detection_72h():
     """Test that engine detects silent leads after 72 hours."""
     print("🧪 Testing 72h trigger detection...")
@@ -118,7 +114,6 @@ async def test_trigger_detection_72h():
     print("✅ 72h trigger detected correctly")
 
 
-@pytest.mark.asyncio
 async def test_no_trigger_for_recent_interactions():
     """Test that engine does NOT trigger for recent interactions."""
     print("🧪 Testing no trigger for recent interactions...")
@@ -144,7 +139,6 @@ async def test_no_trigger_for_recent_interactions():
     print("✅ No trigger for recent interactions")
 
 
-@pytest.mark.asyncio
 async def test_message_template_selection():
     """Test that correct template is selected for each trigger."""
     print("🧪 Testing message template selection...")
@@ -173,7 +167,6 @@ async def test_message_template_selection():
     print("✅ Template selection working correctly")
 
 
-@pytest.mark.asyncio
 async def test_sms_character_limit_compliance():
     """Test that ALL templates are under 160 characters (SMS limit)."""
     print("🧪 Testing SMS character limit compliance...")
@@ -200,7 +193,6 @@ async def test_sms_character_limit_compliance():
     print("✅ All messages under 160 characters")
 
 
-@pytest.mark.asyncio
 async def test_integration_with_ghl_client():
     """Test that re-engagement engine integrates with GHL client to send SMS."""
     print("🧪 Testing GHL client integration...")
@@ -241,7 +233,6 @@ async def test_integration_with_ghl_client():
     print("✅ GHL client integration working")
 
 
-@pytest.mark.asyncio
 async def test_silent_lead_detection_from_memory():
     """Test that engine can scan memory service for silent leads."""
     print("🧪 Testing silent lead detection from memory...")
@@ -302,7 +293,6 @@ async def test_silent_lead_detection_from_memory():
     (memory_dir / f"{active_contact_id}.json").unlink()
 
 
-@pytest.mark.asyncio
 async def test_prevents_duplicate_reengagement():
     """Test that engine doesn't re-send same trigger level multiple times."""
     print("🧪 Testing duplicate prevention...")

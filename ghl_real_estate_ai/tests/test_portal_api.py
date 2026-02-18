@@ -11,7 +11,6 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -34,7 +33,6 @@ def mock_ghl_for_api_tests():
     swipe_manager.ghl_client = original_client
 
 
-@pytest.mark.asyncio
 async def test_swipe_like_endpoint():
     """Test the swipe endpoint with a like action."""
     transport = ASGITransport(app=app)
@@ -58,7 +56,6 @@ async def test_swipe_like_endpoint():
         assert "high_intent" in data
 
 
-@pytest.mark.asyncio
 async def test_swipe_pass_endpoint():
     """Test the swipe endpoint with a pass action."""
     transport = ASGITransport(app=app)
@@ -84,7 +81,6 @@ async def test_swipe_pass_endpoint():
         assert data["status"] == "preference_updated"
 
 
-@pytest.mark.asyncio
 async def test_swipe_invalid_action():
     """Test that invalid actions return error."""
     transport = ASGITransport(app=app)
@@ -105,7 +101,6 @@ async def test_swipe_invalid_action():
         assert "Invalid action" in str(data)
 
 
-@pytest.mark.asyncio
 async def test_get_lead_stats_endpoint():
     """Test the lead stats endpoint."""
     transport = ASGITransport(app=app)
@@ -134,7 +129,6 @@ async def test_get_lead_stats_endpoint():
         assert "like_rate" in data
 
 
-@pytest.mark.asyncio
 async def test_get_feedback_categories_endpoint():
     """Test the feedback categories endpoint."""
     transport = ASGITransport(app=app)
@@ -156,7 +150,6 @@ async def test_get_feedback_categories_endpoint():
         assert "icon" in first_category
 
 
-@pytest.mark.asyncio
 async def test_get_lead_interactions_endpoint():
     """Test the lead interactions endpoint."""
     transport = ASGITransport(app=app)
@@ -187,7 +180,6 @@ async def test_get_lead_interactions_endpoint():
         assert len(data["interactions"]) >= 3
 
 
-@pytest.mark.asyncio
 async def test_get_lead_interactions_with_limit():
     """Test the lead interactions endpoint with limit parameter."""
     transport = ASGITransport(app=app)
@@ -216,7 +208,6 @@ async def test_get_lead_interactions_with_limit():
             assert len(data["interactions"]) <= 5
 
 
-@pytest.mark.asyncio
 async def test_high_intent_detection_via_api(mock_ghl_for_api_tests):
     """Test that high-intent is detected through API calls."""
     transport = ASGITransport(app=app)
@@ -245,7 +236,6 @@ async def test_high_intent_detection_via_api(mock_ghl_for_api_tests):
         assert results[2]["trigger_sms"] == True
 
 
-@pytest.mark.asyncio
 async def test_pass_without_feedback():
     """Test that pass works without feedback."""
     transport = ASGITransport(app=app)
@@ -268,7 +258,6 @@ async def test_pass_without_feedback():
             assert data["status"] == "preference_updated"
 
 
-@pytest.mark.asyncio
 async def test_swipe_request_validation():
     """Test that request validation works."""
     transport = ASGITransport(app=app)

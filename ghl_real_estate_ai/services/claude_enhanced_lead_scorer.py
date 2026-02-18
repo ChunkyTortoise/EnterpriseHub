@@ -5,7 +5,7 @@ Combines quantitative scoring with Claude AI reasoning for comprehensive lead an
 
 import asyncio
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -34,30 +34,30 @@ class UnifiedScoringResult:
     ml_conversion_score: float  # 0-100 conversion probability
     churn_risk_score: float  # 0-100 risk of churn
     engagement_score: float  # 0-100 engagement level
-    frs_score: float  # 0-100 Financial Readiness Score
-    pcs_score: float  # 0-100 Psychological Commitment Score
+    frs_score: float = 0.0  # 0-100 Financial Readiness Score
+    pcs_score: float = 0.0  # 0-100 Psychological Commitment Score
 
     # Claude AI Analysis
-    strategic_summary: str  # Executive summary
-    behavioral_insights: str  # Personality and behavior analysis
-    reasoning: str  # Why this score makes sense
-    risk_factors: List[str]  # Things that could go wrong
-    opportunities: List[str]  # Growth and conversion opportunities
+    strategic_summary: str = ""  # Executive summary
+    behavioral_insights: str = ""  # Personality and behavior analysis
+    reasoning: str = ""  # Why this score makes sense
+    risk_factors: List[str] = field(default_factory=list)  # Things that could go wrong
+    opportunities: List[str] = field(default_factory=list)  # Growth and conversion opportunities
 
     # Actionable Intelligence
-    recommended_actions: List[Dict[str, Any]]  # Prioritized action items
-    next_best_action: str  # Single most important next step
-    expected_timeline: str  # When to expect conversion/action
-    success_probability: float  # 0-100 likelihood of success
+    recommended_actions: List[Dict[str, Any]] = field(default_factory=list)  # Prioritized action items
+    next_best_action: str = ""  # Single most important next step
+    expected_timeline: str = ""  # When to expect conversion/action
+    success_probability: float = 0.0  # 0-100 likelihood of success
 
     # Supporting Data
-    feature_breakdown: Dict[str, Any]  # Which features drove the score
-    conversation_context: Dict[str, Any]  # Memory and history
-    sources: List[str]  # Data sources used in analysis
+    feature_breakdown: Dict[str, Any] = field(default_factory=dict)  # Which features drove the score
+    conversation_context: Dict[str, Any] = field(default_factory=dict)  # Memory and history
+    sources: List[str] = field(default_factory=list)  # Data sources used in analysis
 
     # Performance Metrics
-    analysis_time_ms: int
-    claude_reasoning_time_ms: int
+    analysis_time_ms: int = 0
+    claude_reasoning_time_ms: int = 0
 
 
 class ClaudeEnhancedLeadScorer:

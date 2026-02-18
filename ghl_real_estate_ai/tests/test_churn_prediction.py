@@ -832,7 +832,6 @@ class TestEdgeCases:
 
 
 # Integration Test
-@pytest.mark.integration
 class TestChurnSystemIntegration:
     """Integration tests for the complete churn system"""
 

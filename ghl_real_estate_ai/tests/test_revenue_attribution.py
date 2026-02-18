@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
 
-@pytest.mark.unit
 
 
 @pytest.fixture

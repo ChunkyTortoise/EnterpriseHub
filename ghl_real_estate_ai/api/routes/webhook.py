@@ -14,6 +14,9 @@ Flow:
 8. Send response back to GHL
 """
 
+import hashlib
+import inspect
+import json
 import random
 import re
 from datetime import datetime, timezone
@@ -40,10 +43,12 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
 from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+from ghl_real_estate_ai.services.jorge.telemetry import increment_counter
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
@@ -77,6 +82,130 @@ attribution_analytics = AttributionAnalytics()
 subscription_manager = SubscriptionManager()
 handoff_service = JorgeHandoffService(analytics_service=analytics_service)
 mls_client = MLSClient()
+webhook_cache = get_cache_service()
+
+DEDUP_DELIVERY_TTL_SECONDS = 60 * 60 * 24 * 7
+DEDUP_FINGERPRINT_TTL_SECONDS = 30
+
+
+def _dedup_cache_backend_name() -> str:
+    backend = getattr(webhook_cache, "backend", None)
+    if backend is not None:
+        return type(backend).__name__
+    return type(webhook_cache).__name__
+
+
+def _extract_delivery_id(request: Request) -> str | None:
+    headers = getattr(request, "headers", {}) or {}
+    if not hasattr(headers, "get"):
+        return None
+    for header_name in ("deliveryId", "DeliveryId", "X-Delivery-Id", "X-Webhook-Id"):
+        header_value = headers.get(header_name)
+        if isinstance(header_value, str):
+            normalized = header_value.strip()
+            if normalized:
+                return normalized
+    return None
+
+
+def _build_webhook_payload_fingerprint(event: GHLWebhookEvent) -> str:
+    message_type = str(getattr(event.message.type, "value", event.message.type))
+    direction = str(getattr(event.message.direction, "value", event.message.direction))
+    timestamp = event.message.timestamp.isoformat() if event.message.timestamp else ""
+    contact_tags = event.contact.tags if event.contact and event.contact.tags else []
+    normalized_tags = sorted({str(tag).strip().lower() for tag in contact_tags if str(tag).strip()})
+    payload = {
+        "schema": "webhook-dedup-v1",
+        "event_type": event.type,
+        "location_id": event.location_id,
+        "contact_id": event.contact_id,
+        "message_type": message_type,
+        "direction": direction,
+        "message_body": event.message.body.strip(),
+        "message_timestamp": timestamp,
+        "tags": normalized_tags,
+    }
+    payload_json = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+
+
+async def _dedup_cache_contains(dedup_key: str) -> bool:
+    cache_exists = getattr(webhook_cache, "exists", None)
+    if callable(cache_exists) and inspect.iscoroutinefunction(cache_exists):
+        return bool(await cache_exists(dedup_key))
+
+    cache_get = getattr(webhook_cache, "get", None)
+    if callable(cache_get):
+        if inspect.iscoroutinefunction(cache_get):
+            cached_value = await cache_get(dedup_key)
+        else:
+            cached_value = cache_get(dedup_key)
+        return cached_value is not None
+
+    raise AttributeError("Webhook cache backend does not implement async exists() or get()")
+
+
+async def _dedup_cache_set(dedup_key: str, payload: dict[str, Any], ttl: int) -> None:
+    cache_set = getattr(webhook_cache, "set", None)
+    if not callable(cache_set):
+        raise AttributeError("Webhook cache backend does not implement set()")
+    if inspect.iscoroutinefunction(cache_set):
+        await cache_set(dedup_key, payload, ttl=ttl)
+    else:
+        cache_set(dedup_key, payload, ttl=ttl)
+
+
+def _track_webhook_dedup_observability(
+    background_tasks: BackgroundTasks,
+    *,
+    location_id: str,
+    contact_id: str,
+    dedup_source: str,
+    dedup_outcome: str,
+    cache_backend: str,
+    cache_read_error: str | None = None,
+    cache_write_error: str | None = None,
+) -> None:
+    dedup_data = {
+        "source": dedup_source,
+        "outcome": dedup_outcome,
+        "cache_backend": cache_backend,
+        "cache_read_error": cache_read_error,
+        "cache_write_error": cache_write_error,
+    }
+
+    increment_counter(
+        "jorge.webhook.dedup.total",
+        dedup_source=dedup_source,
+        dedup_outcome=dedup_outcome,
+        cache_backend=cache_backend,
+    )
+    if dedup_source == "payload_fingerprint":
+        increment_counter(
+            "jorge.webhook.dedup.fallback",
+            dedup_outcome=dedup_outcome,
+            cache_backend=cache_backend,
+        )
+    if dedup_outcome == "duplicate":
+        increment_counter(
+            "jorge.webhook.dedup.duplicate",
+            dedup_source=dedup_source,
+            cache_backend=cache_backend,
+        )
+    if cache_read_error or cache_write_error:
+        increment_counter(
+            "jorge.webhook.dedup.cache_error",
+            dedup_source=dedup_source,
+            cache_backend=cache_backend,
+        )
+
+    background_tasks.add_task(
+        analytics_service.track_event,
+        event_type="webhook_dedup",
+        location_id=location_id,
+        contact_id=contact_id,
+        data=dedup_data,
+    )
 
 
 # P3 FIX: Safe wrappers for background tasks to prevent silent delivery failures
@@ -326,6 +455,96 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
     location_id = event.location_id
     user_message = event.message.body
     tags = event.contact.tags or []
+
+    # Idempotency guard: use delivery header when present, fallback to payload fingerprint when absent.
+    delivery_id = _extract_delivery_id(request)
+    dedup_source = "delivery_header" if delivery_id else "payload_fingerprint"
+    dedup_key = (
+        f"ghl:webhook:delivery:{delivery_id}"
+        if delivery_id
+        else f"ghl:webhook:fingerprint:{_build_webhook_payload_fingerprint(event)}"
+    )
+    dedup_ttl = DEDUP_DELIVERY_TTL_SECONDS if delivery_id else DEDUP_FINGERPRINT_TTL_SECONDS
+    cache_backend = _dedup_cache_backend_name()
+
+    cache_read_error = None
+    try:
+        already_processed = await _dedup_cache_contains(dedup_key)
+    except Exception as cache_error:
+        cache_read_error = str(cache_error)
+        logger.warning(
+            "Webhook dedup read failed; continuing without dedup guard",
+            extra={
+                "location_id": location_id,
+                "delivery_id": delivery_id,
+                "dedup_source": dedup_source,
+                "cache_backend": cache_backend,
+                "error": cache_read_error,
+            },
+        )
+        already_processed = False
+
+    if already_processed:
+        logger.info(
+            "Duplicate webhook delivery ignored",
+            extra={
+                "location_id": location_id,
+                "delivery_id": delivery_id,
+                "dedup_source": dedup_source,
+                "dedup_outcome": "duplicate",
+                "cache_backend": cache_backend,
+            },
+        )
+        _track_webhook_dedup_observability(
+            background_tasks,
+            location_id=location_id,
+            contact_id=contact_id,
+            dedup_source=dedup_source,
+            dedup_outcome="duplicate",
+            cache_backend=cache_backend,
+            cache_read_error=cache_read_error,
+        )
+        return GHLWebhookResponse(
+            success=True,
+            message="DUPLICATE_EVENT",
+            actions=[],
+        )
+
+    cache_write_error = None
+    try:
+        await _dedup_cache_set(
+            dedup_key,
+            {
+                "processed_at": datetime.now(timezone.utc).isoformat(),
+                "contact_id": contact_id,
+                "location_id": location_id,
+                "dedup_source": dedup_source,
+            },
+            ttl=dedup_ttl,
+        )
+    except Exception as cache_error:
+        cache_write_error = str(cache_error)
+        logger.warning(
+            "Webhook dedup write failed; continuing processing",
+            extra={
+                "location_id": location_id,
+                "delivery_id": delivery_id,
+                "dedup_source": dedup_source,
+                "cache_backend": cache_backend,
+                "error": cache_write_error,
+            },
+        )
+
+    _track_webhook_dedup_observability(
+        background_tasks,
+        location_id=location_id,
+        contact_id=contact_id,
+        dedup_source=dedup_source,
+        dedup_outcome="processed_cache_degraded" if (cache_read_error or cache_write_error) else "processed",
+        cache_backend=cache_backend,
+        cache_read_error=cache_read_error,
+        cache_write_error=cache_write_error,
+    )
 
     # INPUT LENGTH GUARD: Cap inbound messages to prevent token abuse
     MAX_INBOUND_LENGTH = 2_000  # No legitimate SMS/chat exceeds this
@@ -776,11 +995,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 final_seller_msg = truncated.rstrip()
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
-            status, reason, violations = await compliance_guard.audit_message(
+            compliance_status, reason, violations = await compliance_guard.audit_message(
                 final_seller_msg, contact_context={"contact_id": contact_id, "mode": "seller"}
             )
 
-            if status == ComplianceStatus.BLOCKED:
+            if compliance_status == ComplianceStatus.BLOCKED:
                 logger.warning(f"Compliance BLOCKED message for {contact_id}: {reason}. Violations: {violations}")
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
@@ -806,7 +1025,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "temperature": seller_result["temperature"],
                     "questions_answered": seller_result.get("questions_answered", 0),
                     "actions_count": len(actions),
-                    "compliance_status": status.value,
+                    "compliance_status": compliance_status.value,
                 },
             )
 
@@ -924,11 +1143,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 final_buyer_msg = truncated.rstrip()
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
-            status, reason, violations = await compliance_guard.audit_message(
+            compliance_status, reason, violations = await compliance_guard.audit_message(
                 final_buyer_msg, contact_context={"contact_id": contact_id, "mode": "buyer"}
             )
 
-            if status == ComplianceStatus.BLOCKED:
+            if compliance_status == ComplianceStatus.BLOCKED:
                 logger.warning(f"Compliance BLOCKED buyer message for {contact_id}: {reason}. Violations: {violations}")
                 final_buyer_msg = (
                     "I'd love to help you find your next home. What's most important to you in a property?"
@@ -956,7 +1175,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "buyer_temperature": buyer_temp,
                     "is_qualified": buyer_result.get("is_qualified", False),
                     "actions_count": len(actions),
-                    "compliance_status": status.value,
+                    "compliance_status": compliance_status.value,
                 },
             )
 
@@ -1082,11 +1301,11 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 final_lead_msg = truncated.rstrip()
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
-            status, reason, violations = await compliance_guard.audit_message(
+            compliance_status, reason, violations = await compliance_guard.audit_message(
                 final_lead_msg, contact_context={"contact_id": contact_id, "mode": "lead"}
             )
 
-            if status == ComplianceStatus.BLOCKED:
+            if compliance_status == ComplianceStatus.BLOCKED:
                 logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
                 final_lead_msg = "Thanks for reaching out! How can I help you today?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
@@ -1114,7 +1333,7 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                     "is_qualified": is_qualified,
                     "handoff_triggered": handoff_triggered,
                     "actions_count": len(actions),
-                    "compliance_status": status.value,
+                    "compliance_status": compliance_status.value,
                     "message_length": len(final_lead_msg),
                 },
             )
@@ -1157,13 +1376,8 @@ async def handle_ghl_webhook(request: Request, event: GHLWebhookEvent, backgroun
                 actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
             )
 
-    # Raw fallback — no bot mode matched
-    logger.info(f"No bot mode matched for contact {contact_id}")
-    return GHLWebhookResponse(
-        success=True,
-        message="Thanks for reaching out! How can I help you today?",
-        actions=[],
-    )
+    # Fallback to the classic webhook pipeline when no explicit bot mode is active.
+    logger.info(f"No specialized bot mode matched for contact {contact_id}; using default webhook pipeline")
 
     try:
         # Step 0: Get tenant configuration

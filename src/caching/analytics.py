@@ -35,6 +35,7 @@ Classes:
 
 import asyncio
 import csv
+import inspect
 import io
 import json
 import logging
@@ -183,7 +184,7 @@ class HitMissRatio:
 
     hits: int
     misses: int
-    timeframe: str
+    timeframe: str = "1h"
 
     @property
     def total(self) -> int:
@@ -507,7 +508,7 @@ class CacheAnalytics:
         # Get recent metrics for this cache
         recent_metrics = await self._get_recent_metrics(cache_name, minutes=5)
 
-        if metric_type == MetricType.HIT:
+        if metric_type in (MetricType.HIT, MetricType.MISS):
             hit_rate = recent_metrics.hit_rate
             if hit_rate < self.alert_thresholds["hit_rate_min"]:
                 await self._trigger_alert(
@@ -548,7 +549,7 @@ class CacheAnalytics:
         """Trigger alert callbacks."""
         for callback in self._alert_callbacks:
             try:
-                if asyncio.iscoroutinefunction(callback):
+                if inspect.iscoroutinefunction(callback):
                     await callback(alert_type, data)
                 else:
                     callback(alert_type, data)

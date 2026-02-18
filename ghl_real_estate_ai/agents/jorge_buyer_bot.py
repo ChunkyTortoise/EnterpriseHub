@@ -394,26 +394,37 @@ class JorgeBuyerBot:
             buyer_id = state.get("buyer_id", "unknown")
 
             # Use intent decoder to analyze buyer (returns BuyerIntentProfile)
-            profile = self.intent_decoder.analyze_buyer(
-                buyer_id=buyer_id,
-                conversation_history=conversation_history,
-            )
+            profile = self.intent_decoder.analyze_buyer(buyer_id, conversation_history)
 
             # Extract key signals from BuyerIntentProfile model
             urgency_score = profile.urgency_score
             preference_clarity = profile.preference_clarity
-            buying_motivation = (profile.financial_readiness + profile.urgency_score) / 2
+            buying_motivation = profile.urgency_score
 
             # Try to extract budget range from conversation
             budget_range = await self._extract_budget_range(conversation_history)
+
+            # Emit analytics event (tests may provide an AsyncMock here)
+            publish_intent = getattr(self.event_publisher, "publish_buyer_intent_analysis", None)
+            if publish_intent:
+                await self._await_if_needed(
+                    publish_intent(
+                        contact_id=buyer_id,
+                        buyer_temperature=profile.buyer_temperature,
+                        financial_readiness=profile.financial_readiness,
+                        urgency_score=profile.urgency_score,
+                    )
+                )
 
             return {
                 "intent_profile": profile,
                 "budget_range": budget_range,
                 "urgency_score": urgency_score,
                 "buying_motivation_score": buying_motivation,
+                "financial_readiness_score": profile.financial_readiness,
                 "preference_clarity": preference_clarity,
                 "current_qualification_step": profile.next_qualification_step,
+                "buyer_temperature": profile.buyer_temperature,
             }
         except Exception as e:
             logger.error(f"Error analyzing buyer intent for {state.get('buyer_id')}: {str(e)}")
@@ -462,6 +473,11 @@ class JorgeBuyerBot:
             budget_range = state.get("budget_range")
             intelligence_context = state.get("intelligence_context")
 
+            def profile_get(key: str, default: Any = None) -> Any:
+                if isinstance(profile, dict):
+                    return profile.get(key, default)
+                return getattr(profile, key, default)
+
             # Check budget ranges first
             if not budget_range:
                 # Try to extract from conversation
@@ -470,8 +486,18 @@ class JorgeBuyerBot:
                     budget_range = extracted
 
             # Use profile for additional signals
-            financing_status = profile.get("financing_status", "unknown")
-            urgency_score = state.get("urgency_score", 25)
+            financing_status = profile_get("financing_status")
+            if not financing_status:
+                financing_status_score = float(profile_get("financing_status_score", 0) or 0)
+                if financing_status_score >= 75:
+                    financing_status = "pre_approved"
+                elif financing_status_score >= 55:
+                    financing_status = "needs_approval"
+                else:
+                    financing_status = "unknown"
+
+            urgency_score = state.get("urgency_score", profile_get("urgency_score", 25))
+            financial_readiness = float(profile_get("financial_readiness", 0) or 0)
 
             # Apply thresholds from budget_config
             if financing_status == "pre_approved":
@@ -482,7 +508,7 @@ class JorgeBuyerBot:
                 score = self.budget_config.FINANCING_NEEDS_APPROVAL_THRESHOLD
             else:
                 # Default based on budget clarity and urgency
-                score = min(100, urgency_score + (50 if budget_range else 0))
+                score = financial_readiness or min(100, urgency_score + (50 if budget_range else 0))
 
             # Apply Phase 3.3 intelligence enhancements if available
             if intelligence_context:
@@ -493,7 +519,7 @@ class JorgeBuyerBot:
             return {
                 "budget_range": budget_range,
                 "financing_status": financing_status,
-                "financial_readiness_score": min(100, score),
+                "financial_readiness_score": min(100, financial_readiness or score),
                 "current_qualification_step": "property",
             }
         except Exception as e:
@@ -574,17 +600,22 @@ class JorgeBuyerBot:
             if not profile:
                 return {"property_preferences": None, "urgency_level": "browsing"}
 
+            def profile_get(key: str, default: Any = None) -> Any:
+                if isinstance(profile, dict):
+                    return profile.get(key, default)
+                return getattr(profile, key, default)
+
             # Extract property preferences from conversation
             preferences = await self._extract_property_preferences(state["conversation_history"])
 
             # Determine urgency level using budget_config
-            urgency_score = float(state.get("urgency_score", 0))
+            urgency_score = float(state.get("urgency_score", profile_get("urgency_score", 0)))
             urgency_level = self.budget_config.get_urgency_level(urgency_score)
 
             return {
                 "property_preferences": preferences,
                 "urgency_level": urgency_level,
-                "preference_clarity_score": state.get("preference_clarity", 0.5),
+                "preference_clarity_score": state.get("preference_clarity", profile_get("preference_clarity", 0.5)),
             }
 
         except Exception as e:
@@ -602,13 +633,23 @@ class JorgeBuyerBot:
 
             budget_range = state["budget_range"]
             preferences = state.get("property_preferences") or {}
+            budget_max = budget_range.get("max")
+            budget_min = budget_range.get("min")
 
-            # Use find_buyer_matches for budget-aware matching
-            budget_max = budget_range.get("max", 0)
-            beds = preferences.get("bedrooms")
-            neighborhood = preferences.get("neighborhood")
+            enriched_preferences = dict(preferences)
+            if isinstance(budget_max, (int, float)) and budget_max > 0:
+                enriched_preferences["budget_max"] = budget_max
+            if isinstance(budget_min, (int, float)) and budget_min >= 0:
+                enriched_preferences["budget_min"] = budget_min
 
-            if budget_max > 0 and hasattr(self.property_matcher, "find_buyer_matches"):
+            if hasattr(self.property_matcher, "find_matches"):
+                if inspect.iscoroutinefunction(self.property_matcher.find_matches):
+                    matches = await self.property_matcher.find_matches(preferences=preferences, limit=5)
+                else:
+                    matches = self.property_matcher.find_matches(preferences=preferences, limit=5)
+            elif hasattr(self.property_matcher, "find_buyer_matches") and budget_max:
+                beds = preferences.get("bedrooms")
+                neighborhood = preferences.get("neighborhood")
                 if inspect.iscoroutinefunction(self.property_matcher.find_buyer_matches):
                     matches = await self.property_matcher.find_buyer_matches(
                         budget=budget_max, beds=beds, neighborhood=neighborhood, limit=5
@@ -617,20 +658,14 @@ class JorgeBuyerBot:
                     matches = self.property_matcher.find_buyer_matches(
                         budget=budget_max, beds=beds, neighborhood=neighborhood, limit=5
                     )
-            elif inspect.iscoroutinefunction(self.property_matcher.find_matches):
-                matches = await self.property_matcher.find_matches(
-                    preferences=preferences, limit=5
-                )
             else:
-                matches = self.property_matcher.find_matches(
-                    preferences=preferences, limit=5
-                )
+                matches = []
 
             # Emit property match event
             await self.event_publisher.publish_property_match_update(
                 contact_id=state["buyer_id"],
                 properties_matched=len(matches),
-                match_criteria=state["property_preferences"],
+                match_criteria=enriched_preferences,
             )
 
             return {

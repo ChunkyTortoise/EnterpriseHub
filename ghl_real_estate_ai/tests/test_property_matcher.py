@@ -9,7 +9,6 @@ import pytest
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.property_matching_strategy import BasicFilteringStrategy
 
-@pytest.mark.unit
 
 
 def test_load_listings():

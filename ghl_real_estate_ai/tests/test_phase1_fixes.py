@@ -15,7 +15,6 @@ from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-@pytest.mark.integration
 
 
 class TestSMSConstraintEnforcement:

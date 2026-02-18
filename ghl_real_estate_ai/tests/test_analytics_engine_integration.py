@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -41,7 +40,6 @@ def temp_storage(tmp_path):
     return storage_dir, data_dir
 
 
-@pytest.mark.asyncio
 async def test_comprehensive_report_integration(temp_storage):
     storage_dir, data_dir = temp_storage
 

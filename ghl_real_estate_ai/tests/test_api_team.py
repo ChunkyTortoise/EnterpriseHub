@@ -9,7 +9,6 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +19,6 @@ def mock_rate_limiter():
         yield mock
 
 
-@pytest.mark.asyncio
 async def test_add_and_list_agents():
     """Test adding and listing agents."""
     transport = ASGITransport(app=app)
@@ -44,7 +42,6 @@ async def test_add_and_list_agents():
         assert any(a["id"] == "agent_test_1" for a in agents)
 
 
-@pytest.mark.asyncio
 async def test_get_leaderboard():
     """Test getting team leaderboard."""
     transport = ASGITransport(app=app)
@@ -55,7 +52,6 @@ async def test_get_leaderboard():
         assert isinstance(response.json(), list)
 
 
-@pytest.mark.asyncio
 async def test_assign_lead():
     """Test lead assignment."""
     transport = ASGITransport(app=app)

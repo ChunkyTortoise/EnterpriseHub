@@ -5,7 +5,6 @@ import pytest
 from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
 
-@pytest.mark.unit
 
 
 @pytest.fixture
@@ -55,7 +54,6 @@ def mock_buyer_deps():
         }
 
 
-@pytest.mark.asyncio
 async def test_jorge_buyer_bot_qualification_flow(mock_buyer_deps):
     """Test the complete buyer qualification workflow."""
     bot = JorgeBuyerBot()
@@ -76,7 +74,6 @@ async def test_jorge_buyer_bot_qualification_flow(mock_buyer_deps):
     mock_buyer_deps["event"].publish_buyer_qualification_complete.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_jorge_buyer_bot_low_qualification(mock_buyer_deps):
     """Test that low scores lead to unqualified status."""
     mock_buyer_deps["profile"].financial_readiness = 20.0

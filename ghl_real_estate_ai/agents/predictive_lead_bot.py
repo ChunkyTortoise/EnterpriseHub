@@ -677,7 +677,7 @@ class PredictiveLeadBot(LeadBotWorkflow):
                         "stage_conversion_probability": conversion_analysis.stage_conversion_probability,
                         "lead_temperature": temperature_pred.get("current_temperature", 0),
                         "sequence_completion": "day_30_reached",
-                        "recommendation": "Jorge confrontational qualification recommended",
+                        "recommendation": "Jorge consultative qualification recommended",
                     },
                 )
 
@@ -798,7 +798,7 @@ class PredictiveLeadBot(LeadBotWorkflow):
                 "urgency": "critical",
                 "recommendation": "immediate_jorge_handoff",
                 "reason": f"High conversion probability ({journey_analysis.conversion_probability:.2f}) but high drop-off risk ({conversion_analysis.drop_off_risk:.2f})",
-                "suggested_action": "Deploy Jorge Seller Bot for confrontational re-engagement within 2 hours",
+                "suggested_action": "Deploy Jorge Seller Bot for consultative re-engagement within 2 hours",
             }
 
         # Scenario 2: Bottleneck detected with high urgency

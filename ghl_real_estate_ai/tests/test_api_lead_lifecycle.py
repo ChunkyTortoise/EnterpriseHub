@@ -7,10 +7,8 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_root_endpoint():
     """Test the root endpoint."""
     transport = ASGITransport(app=app)
@@ -21,7 +19,6 @@ async def test_root_endpoint():
     assert "version" in response.json()
 
 
-@pytest.mark.asyncio
 async def test_health_check():
     """Test the health check endpoint."""
     transport = ASGITransport(app=app)
@@ -31,7 +28,6 @@ async def test_health_check():
     assert response.json()["status"] == "healthy"
 
 
-@pytest.mark.asyncio
 async def test_get_journeys_no_auth():
     """Test getting journeys without authentication."""
     transport = ASGITransport(app=app)
@@ -41,7 +37,6 @@ async def test_get_journeys_no_auth():
     assert response.status_code in [200, 401, 403, 404]
 
 
-@pytest.mark.asyncio
 async def test_get_journey_stats():
     """Test getting journey statistics."""
     transport = ASGITransport(app=app)

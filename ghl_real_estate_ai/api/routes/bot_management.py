@@ -553,13 +553,8 @@ async def process_seller_message(request: SellerChatRequest):
     """
     try:
         start_time = time.time()
-
-        # Create enterprise Jorge bot with env-based feature config
-        feature_cfg = load_feature_config_from_env()
-        jorge_kwargs = feature_config_to_jorge_kwargs(feature_cfg)
-        config = JorgeFeatureConfig(**jorge_kwargs)
-        jorge_bot = JorgeSellerBot(config=config)
-        logger.info(f"Created enterprise Jorge bot for contact {request.contact_id}")
+        jorge_bot = get_jorge_bot()
+        logger.info(f"Processing seller message with Jorge bot for contact {request.contact_id}")
 
         # Build contact information for bot processing
         lead_info = {
@@ -571,10 +566,10 @@ async def process_seller_message(request: SellerChatRequest):
         }
 
         session_manager = get_session_manager()
-        conversation_history = [{"role": "user", "content": request.message}]
+        conversation_history: List[Dict[str, Any]] = []
         conversation_ids = await session_manager.get_lead_conversations(request.contact_id)
         if conversation_ids:
-            conversation_history = await session_manager.get_history(conversation_ids[-1]) + conversation_history
+            conversation_history = await session_manager.get_history(conversation_ids[-1])
             conversation_id = conversation_ids[-1]
         else:
             conversation_id = await session_manager.create_session(
@@ -583,15 +578,14 @@ async def process_seller_message(request: SellerChatRequest):
                 lead_name=lead_info.get("name", "Unknown Lead"),
             )
 
-        # Process seller message using unified bot with enhancements
-        result = await jorge_bot.process_seller_with_enhancements(
-            {
-                "contact_id": request.contact_id,
-                "lead_id": request.contact_id,  # CRITICAL FIX: Map contact_id to lead_id for bot compatibility
-                "message": request.message,
-                "conversation_history": conversation_history,
-                "lead_info": lead_info,
-            }
+        # Process seller message through the real conversational pipeline.
+        result = await jorge_bot.process_seller_message(
+            conversation_id=conversation_id,
+            user_message=request.message,
+            seller_name=lead_info.get("name", "Unknown Lead"),
+            conversation_history=conversation_history,
+            seller_phone=lead_info.get("phone"),
+            seller_email=lead_info.get("email"),
         )
 
         end_time = time.time()
@@ -606,34 +600,46 @@ async def process_seller_message(request: SellerChatRequest):
             metadata={"contact_id": request.contact_id, "message_length": len(request.message)},
         )
 
-        # Transform bot result to match frontend expectations
-        # Map QualificationResult attributes to expected API fields
-        seller_temp = getattr(result, "temperature", "cold")
-        qualification_score = getattr(result, "qualification_score", 0.0)
-        next_actions = getattr(result, "next_actions", [])
-        confidence = getattr(result, "confidence", 0.0)
+        # Transform real bot output to frontend contract
+        response_message = result.get(
+            "response_content", "Thanks for your message. Jorge will follow up shortly with specific next steps."
+        )
+        frs_score = float(result.get("frs_score", 0.0) or 0.0)
+        pcs_score = float(result.get("pcs_score", 0.0) or 0.0)
+        qualification_score = round(max(0.0, min(100.0, (frs_score + pcs_score) / 2.0)), 2)
+        seller_temp = _classify_temperature_from_scores(frs_score, pcs_score)
+        confidence = round(max(0.0, min(1.0, qualification_score / 100.0)), 2)
+        qualification_complete = qualification_score >= 70.0
+        question_count_estimate = max(1, min(5, int(round(qualification_score / 20.0)))) if qualification_score > 0 else 0
+        handoff_signals = result.get("handoff_signals", {}) or {}
+
+        action_payloads: List[Dict[str, Any]] = [
+            {"type": "add_tag", "tag": f"Seller-{seller_temp.title()}"},
+        ]
+        if qualification_complete:
+            action_payloads.append({"type": "add_tag", "tag": "Seller-Qualified"})
+        if handoff_signals:
+            action_payloads.append({"type": "handoff_recommended", "signals": handoff_signals})
 
         response = SellerChatResponse(
-            response_message=f"Based on our conversation, I can see you're {seller_temp} about selling. Let me ask you a few questions to better understand your situation.",
+            response_message=response_message,
             seller_temperature=_map_temperature(seller_temp),
-            questions_answered=1 if qualification_score > 0.2 else 0,
-            qualification_complete=qualification_score > 0.8,
-            actions_taken=_transform_actions(
-                [{"type": "qualification", "description": f"Assessed as {seller_temp} lead"}]
-            ),
-            next_steps=" | ".join(next_actions) if next_actions else "Continue qualification process",
+            questions_answered=question_count_estimate,
+            qualification_complete=qualification_complete,
+            actions_taken=_transform_actions(action_payloads),
+            next_steps=f"Current workflow step: {result.get('current_step', 'qualification')}",
             analytics={
                 "seller_temperature": seller_temp,
-                "questions_answered": 1 if qualification_score > 0.2 else 0,
-                "qualification_progress": f"{min(int(qualification_score * 4), 4)}/4",
-                "qualification_complete": qualification_score > 0.8,
+                "questions_answered": question_count_estimate,
+                "qualification_progress": f"{question_count_estimate}/5",
+                "qualification_complete": qualification_complete,
                 "qualification_score": qualification_score,
                 "confidence": confidence,
-                "frs_score": getattr(result, "frs_score", 0.0),
-                "pcs_score": getattr(result, "pcs_score", 0.0),
+                "frs_score": frs_score,
+                "pcs_score": pcs_score,
                 "processing_time_ms": round(processing_time, 2),
-                "bot_version": "unified_enterprise",
-                "enhancement_features": [],
+                "bot_version": "jorge_seller_conversational",
+                "handoff_signals": handoff_signals,
             },
         )
 
@@ -738,7 +744,15 @@ def _format_sse(data: dict) -> str:
 
 def _classify_temperature(profile) -> str:
     """Classify seller temperature based on combined scores"""
-    total_score = profile.pcs.total_score + profile.frs.total_score
+    return _classify_temperature_from_scores(
+        float(profile.frs.total_score),
+        float(profile.pcs.total_score),
+    )
+
+
+def _classify_temperature_from_scores(frs_score: float, pcs_score: float) -> str:
+    """Classify seller temperature from numeric FRS/PCS scores."""
+    total_score = float(frs_score) + float(pcs_score)
     if total_score >= 150:
         return "hot"
     elif total_score >= 100:

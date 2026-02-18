@@ -10,7 +10,6 @@ from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -24,7 +23,6 @@ def analytics_service():
         shutil.rmtree(test_dir)
 
 
-@pytest.mark.asyncio
 async def test_analytics_tracking(analytics_service):
     location_id = "test_loc_123"
     await analytics_service.track_event("message_received", location_id, "contact_1", {"msg": "hello"})
@@ -36,7 +34,6 @@ async def test_analytics_tracking(analytics_service):
     assert events[1]["data"]["score"] == 80
 
 
-@pytest.mark.asyncio
 async def test_analytics_summary(analytics_service):
     location_id = "test_loc_summary"
     await analytics_service.track_event("message_received", location_id, "c1")
@@ -50,7 +47,6 @@ async def test_analytics_summary(analytics_service):
     assert summary["active_contacts_count"] == 1
 
 
-@pytest.mark.asyncio
 async def test_enhanced_memory_returning_lead():
     # Mock LLM and RAG before instantiating ConversationManager
     with patch("core.conversation_manager.LLMClient"), patch("core.conversation_manager.RAGEngine"):

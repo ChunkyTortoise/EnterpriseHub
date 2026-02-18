@@ -817,7 +817,6 @@ class JorgePerformanceTestSuite:
 
 
 # Pytest integration
-@pytest.mark.asyncio
 class TestJorgePerformance:
     """Pytest test cases for Jorge bot performance"""
 

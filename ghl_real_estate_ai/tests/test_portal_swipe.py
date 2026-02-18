@@ -12,7 +12,6 @@ import pytest
 
 from ghl_real_estate_ai.services.portal_swipe_manager import (
 
-@pytest.mark.integration
     FeedbackCategory,
     PortalSwipeManager,
     SwipeAction,
@@ -54,7 +53,6 @@ def swipe_manager(temp_interactions_file, mock_ghl_client):
     return manager
 
 
-@pytest.mark.asyncio
 async def test_handle_like_basic(swipe_manager):
     """Test basic like functionality."""
     result = await swipe_manager.handle_swipe(
@@ -78,7 +76,6 @@ async def test_handle_like_basic(swipe_manager):
     assert interaction["meta_data"]["time_on_card"] == 12.5
 
 
-@pytest.mark.asyncio
 async def test_high_intent_detection(swipe_manager):
     """Test that high-intent behavior is detected (3+ likes in 10 minutes)."""
     lead_id = "test_lead_high_intent"
@@ -108,7 +105,6 @@ async def test_high_intent_detection(swipe_manager):
     assert len(swipe_manager.interactions) == 3
 
 
-@pytest.mark.asyncio
 async def test_handle_pass_basic(swipe_manager):
     """Test basic pass functionality without feedback."""
     result = await swipe_manager.handle_swipe(
@@ -129,7 +125,6 @@ async def test_handle_pass_basic(swipe_manager):
     assert interaction["action"] == "pass"
 
 
-@pytest.mark.asyncio
 async def test_pass_with_price_feedback(swipe_manager):
     """Test pass with 'price too high' feedback."""
     feedback = {
@@ -153,7 +148,6 @@ async def test_pass_with_price_feedback(swipe_manager):
     assert interaction["meta_data"]["feedback_text"] == "Way over my budget"
 
 
-@pytest.mark.asyncio
 async def test_pass_with_location_feedback(swipe_manager):
     """Test pass with location feedback."""
     feedback = {
@@ -174,7 +168,6 @@ async def test_pass_with_location_feedback(swipe_manager):
     assert interaction["meta_data"]["feedback_category"] == "location"
 
 
-@pytest.mark.asyncio
 async def test_get_lead_stats(swipe_manager):
     """Test getting statistics for a lead."""
     lead_id = "test_lead_stats"
@@ -215,7 +208,6 @@ async def test_get_lead_stats(swipe_manager):
     assert stats["recent_likes_10min"] == 2
 
 
-@pytest.mark.asyncio
 async def test_count_recent_likes(swipe_manager):
     """Test counting recent likes."""
     lead_id = "test_lead_recent"
@@ -278,7 +270,6 @@ def test_feedback_categories_enum():
     assert FeedbackCategory.LOCATION.value == "location"
 
 
-@pytest.mark.asyncio
 async def test_multiple_leads_isolation(swipe_manager):
     """Test that statistics are properly isolated between leads."""
     location_id = "loc_test"
@@ -324,7 +315,6 @@ async def test_multiple_leads_isolation(swipe_manager):
     assert stats_2["passes"] == 1
 
 
-@pytest.mark.asyncio
 async def test_interaction_persistence(temp_interactions_file):
     """Test that interactions are persisted to file."""
     manager1 = PortalSwipeManager(interactions_path=temp_interactions_file)
@@ -346,7 +336,6 @@ async def test_interaction_persistence(temp_interactions_file):
     assert manager2.interactions[0]["property_id"] == "mls_persist"
 
 
-@pytest.mark.asyncio
 async def test_time_on_card_tracking(swipe_manager):
     """Test that time spent on card is properly tracked."""
     await swipe_manager.handle_swipe(
@@ -361,7 +350,6 @@ async def test_time_on_card_tracking(swipe_manager):
     assert interaction["meta_data"]["time_on_card"] == 25.7
 
 
-@pytest.mark.asyncio
 async def test_swipe_action_enum():
     """Test SwipeAction enum values."""
     assert SwipeAction.LIKE.value == "like"

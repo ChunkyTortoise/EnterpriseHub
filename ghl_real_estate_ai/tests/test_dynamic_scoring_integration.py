@@ -42,7 +42,6 @@ from ghl_real_estate_ai.services.dynamic_scoring_weights import (
 from ghl_real_estate_ai.services.enhanced_lead_scorer import EnhancedLeadScorer, ScoringMode
 from ghl_real_estate_ai.services.scoring_config import ScoringConfigManager, ScoringEnvironment
 
-@pytest.mark.integration
 
 
 class TestDynamicScoringIntegration:

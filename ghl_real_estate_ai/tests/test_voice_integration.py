@@ -9,10 +9,8 @@ import pytest
 
 from ghl_real_estate_ai.services.voice_service import VoiceService
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_voice_transcription():
     """Test transcribing audio to text."""
     service = VoiceService()
@@ -22,7 +20,6 @@ async def test_voice_transcription():
     assert "Austin" in text
 
 
-@pytest.mark.asyncio
 async def test_voice_synthesis():
     """Test synthesizing text to speech."""
     service = VoiceService()
@@ -31,7 +28,6 @@ async def test_voice_synthesis():
     assert audio == b"mock_audio_content"
 
 
-@pytest.mark.asyncio
 async def test_voice_sentiment():
     """Test analyzing voice sentiment."""
     service = VoiceService()

@@ -22,7 +22,6 @@ import pytest
 
 from ghl_real_estate_ai.services.predictive_analytics_engine import (
 
-@pytest.mark.integration
     ABTestingFramework,
     ABTestResult,
     AnomalyDetection,

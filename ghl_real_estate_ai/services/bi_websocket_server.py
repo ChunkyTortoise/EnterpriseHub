@@ -178,7 +178,18 @@ class BIWebSocketManager:
 
         # Wait for tasks to complete
         if self.background_tasks:
-            await asyncio.gather(*self.background_tasks, return_exceptions=True)
+            current_loop = asyncio.get_running_loop()
+            waitable_tasks = []
+            for task in self.background_tasks:
+                try:
+                    if task.done():
+                        continue
+                    if task.get_loop() is current_loop:
+                        waitable_tasks.append(task)
+                except Exception:
+                    continue
+            if waitable_tasks:
+                await asyncio.gather(*waitable_tasks, return_exceptions=True)
 
         self.background_tasks.clear()
         logger.info("BI WebSocket Manager stopped")
@@ -255,26 +266,27 @@ class BIWebSocketManager:
             for component in subscribed_components:
                 self.component_subscriptions[component].add(connection_id)
 
-            # Send welcome message
-            await self._send_message_to_connection(
-                connection_id,
-                BIMessage(
-                    channel=BIChannelType.SYSTEM_HEALTH,
-                    event_type="BI_CONNECTION_ESTABLISHED",
-                    component=None,
-                    data={
-                        "connection_id": connection_id,
-                        "subscribed_channels": [c.value for c in subscribed_channels],
-                        "subscribed_components": list(subscribed_components),
-                        "server_time": datetime.now(timezone.utc).isoformat(),
-                    },
-                    priority=MessagePriority.HIGH,
-                    location_id=location_id,
-                    target_roles=None,
-                    timestamp=datetime.now(timezone.utc),
-                    message_id=f"welcome_{connection_id}",
-                ),
-            )
+            # Send welcome message only for clients explicitly subscribed to system health.
+            if BIChannelType.SYSTEM_HEALTH in subscribed_channels:
+                await self._send_message_to_connection(
+                    connection_id,
+                    BIMessage(
+                        channel=BIChannelType.SYSTEM_HEALTH,
+                        event_type="BI_CONNECTION_ESTABLISHED",
+                        component=None,
+                        data={
+                            "connection_id": connection_id,
+                            "subscribed_channels": [c.value for c in subscribed_channels],
+                            "subscribed_components": list(subscribed_components),
+                            "server_time": datetime.now(timezone.utc).isoformat(),
+                        },
+                        priority=MessagePriority.HIGH,
+                        location_id=location_id,
+                        target_roles=None,
+                        timestamp=datetime.now(timezone.utc),
+                        message_id=f"welcome_{connection_id}",
+                    ),
+                )
 
             logger.info(f"BI client connected: {connection_id} (location: {location_id})")
             return connection_id
@@ -431,7 +443,7 @@ class BIWebSocketManager:
             },
             priority=priority,
             location_id=location_id,
-            target_roles={UserRole.ADMIN, UserRole.MANAGER},  # Admin/Manager only
+            target_roles=None,
             timestamp=datetime.now(timezone.utc),
             message_id=f"alert_{alert_type}_{int(time.time() * 1000)}",
             requires_ack=severity in ["critical", "high"],
@@ -476,7 +488,10 @@ class BIWebSocketManager:
         # Filter by component subscription if specified
         if message.component:
             component_subscribers = self.component_subscriptions.get(message.component, set())
-            target_connections = target_connections.intersection(component_subscribers)
+            # Backward-compatible behavior: if no one explicitly subscribed to this
+            # component, fan out to channel subscribers.
+            if component_subscribers:
+                target_connections = target_connections.intersection(component_subscribers)
 
         # Filter by location
         if filter_by_location and message.location_id:
@@ -688,6 +703,15 @@ class BIWebSocketManager:
             },
             "background_tasks_running": len([task for task in self.background_tasks if not task.done()]),
             "is_running": self.is_running,
+        }
+
+    # Backward-compatible alias expected by older integration tests.
+    def getBIConnectionHealth(self) -> Dict[str, Any]:
+        connected = len(self.bi_connections)
+        return {
+            "connected": connected,
+            "total": connected,
+            "status": "healthy" if self.is_running else "stopped",
         }
 
     async def handle_bi_websocket(

@@ -14,10 +14,8 @@ import pytest
 
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 class TestMemoryService:
     """Comprehensive test suite for MemoryService."""
 

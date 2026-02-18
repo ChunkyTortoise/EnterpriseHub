@@ -28,6 +28,7 @@ Example:
 """
 
 import asyncio
+import inspect
 import json
 import logging
 import pickle
@@ -318,7 +319,9 @@ class RedisClient(BaseRedisClient):
                     await self._pubsub.close()
 
                 if self._pool:
-                    await self._pool.disconnect()
+                    pool_disconnect = self._pool.disconnect()
+                    if inspect.isawaitable(pool_disconnect):
+                        await pool_disconnect
 
                 self._connected = False
                 logger.info("Disconnected from Redis")
@@ -495,12 +498,21 @@ class RedisClient(BaseRedisClient):
             serialized_mapping = {k: self.serializer.serialize(v) for k, v in mapping.items()}
 
             # Use pipeline for atomic operation
-            async with self._client.pipeline() as pipe:
-                pipe.mset(serialized_mapping)
+            pipe_cm = self._client.pipeline()
+            if inspect.isawaitable(pipe_cm):
+                pipe_cm = await pipe_cm
+            async with pipe_cm as pipe:
+                mset_result = pipe.mset(serialized_mapping)
+                if inspect.isawaitable(mset_result):
+                    await mset_result
                 if ttl:
                     for key in mapping.keys():
-                        pipe.expire(key, ttl)
-                await pipe.execute()
+                        expire_result = pipe.expire(key, ttl)
+                        if inspect.isawaitable(expire_result):
+                            await expire_result
+                execute_result = pipe.execute()
+                if inspect.isawaitable(execute_result):
+                    await execute_result
 
             return True
         except Exception as e:
@@ -582,7 +594,10 @@ class RedisClient(BaseRedisClient):
         if not self._connected:
             await self.connect()
 
-        async with self._client.pipeline() as pipe:
+        pipe_cm = self._client.pipeline()
+        if inspect.isawaitable(pipe_cm):
+            pipe_cm = await pipe_cm
+        async with pipe_cm as pipe:
             yield pipe
 
     async def subscribe(self, channel: str, callback: Callable[[str, Any], None]) -> None:

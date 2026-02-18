@@ -8,13 +8,11 @@ import pytest
 
 from ghl_real_estate_ai.services.crm_service import CRMService
 
-@pytest.mark.integration
 
 # Set dummy env vars for test mode
 os.environ["ENVIRONMENT"] = "development"
 
 
-@pytest.mark.asyncio
 async def test_crm_config_update():
     """Test updating CRM configuration."""
     service = CRMService("test_location_crm")
@@ -30,7 +28,6 @@ async def test_crm_config_update():
     assert service.config["hubspot"]["api_key"] == "hs_key_456"
 
 
-@pytest.mark.asyncio
 async def test_crm_sync_lead():
     """Test lead synchronization to enabled CRMs."""
     service = CRMService("test_location_crm_sync")

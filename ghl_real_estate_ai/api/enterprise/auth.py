@@ -218,6 +218,8 @@ class EnterpriseAuthService:
                 ],
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to create enterprise tenant: {e}")
             raise EnterpriseAuthError(
@@ -342,6 +344,8 @@ class EnterpriseAuthService:
                 "provider": sso_provider,
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to initiate SSO login for domain {domain}: {e}")
             raise EnterpriseAuthError(f"SSO initiation failed: {str(e)}", error_code="SSO_INITIATION_FAILED")
@@ -365,20 +369,28 @@ class EnterpriseAuthService:
 
             tenant_id = sso_session["tenant_id"]
             tenant_config = await self.cache_service.get(f"enterprise_tenant:{tenant_id}")
+            if not tenant_config:
+                raise EnterpriseAuthError(
+                    f"Tenant {tenant_id} not found", error_code="TENANT_NOT_FOUND", tenant_id=tenant_id
+                )
+
+            sso_provider = tenant_config.get("sso_provider") or sso_session.get("provider")
+            sso_config = tenant_config.get("sso_config", {})
 
             # Exchange code for tokens
             tokens = await self._exchange_code_for_tokens(
-                tenant_config["sso_provider"], tenant_config["sso_config"], code, sso_session["redirect_uri"]
+                sso_provider, sso_config, code, sso_session.get("redirect_uri", "")
             )
 
             # Get user information from SSO provider
             user_info = await self._get_user_info_from_sso(
-                tenant_config["sso_provider"], tenant_config["sso_config"], tokens["access_token"]
+                sso_provider, sso_config, tokens["access_token"]
             )
 
             # Validate user belongs to tenant domain
             user_email = user_info.get("email")
-            if not user_email or not self._validate_user_domain(user_email, tenant_config["allowed_domains"]):
+            allowed_domains = tenant_config.get("allowed_domains") or [sso_session.get("domain", "")]
+            if not user_email or not self._validate_user_domain(user_email, allowed_domains):
                 raise EnterpriseAuthError(
                     f"User email {user_email} not authorized for this tenant",
                     error_code="USER_DOMAIN_NOT_AUTHORIZED",
@@ -388,8 +400,10 @@ class EnterpriseAuthService:
             # Provision or update user
             enterprise_user = await self._provision_enterprise_user(tenant_id, user_info, tenant_config)
 
-            # Generate enterprise access and refresh tokens
-            tokens = await self._generate_enterprise_tokens(enterprise_user, tenant_config)
+            # Generate enterprise access token (legacy contract used by tests and
+            # dependency patches) while still exposing refresh token when available.
+            access_token = await self._generate_enterprise_token(enterprise_user, tenant_config)
+            refresh_token = getattr(self, "_last_generated_refresh_token", None)
 
             # Clean up SSO session
             await self.cache_service.delete(f"sso_state:{state}")
@@ -398,14 +412,16 @@ class EnterpriseAuthService:
 
             return {
                 "success": True,
-                "access_token": tokens["access_token"],
-                "refresh_token": tokens["refresh_token"],
+                "access_token": access_token,
+                "refresh_token": refresh_token,
                 "token_type": "bearer",
                 "expires_in": self.enterprise_token_expiry,
                 "user": enterprise_user,
                 "tenant_id": tenant_id,
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"SSO callback handling failed: {e}")
             raise EnterpriseAuthError(f"SSO authentication failed: {str(e)}", error_code="SSO_AUTHENTICATION_FAILED")
@@ -449,6 +465,10 @@ class EnterpriseAuthService:
                 "permissions": user_session.get("permissions", []),
             }
 
+        except EnterpriseAuthError:
+            raise
+        except jwt.ExpiredSignatureError:
+            raise EnterpriseAuthError("Token expired", error_code="TOKEN_EXPIRED")
         except jwt.InvalidTokenError as e:
             logger.error(f"Invalid JWT token: {e}")
             raise EnterpriseAuthError("Invalid token", error_code="INVALID_TOKEN")
@@ -520,6 +540,8 @@ class EnterpriseAuthService:
 
             return enterprise_user
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to provision user {user_email} for tenant {tenant_id}: {e}")
             raise EnterpriseAuthError(
@@ -566,6 +588,8 @@ class EnterpriseAuthService:
 
             return user_data
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to update user roles for {user_email}: {e}")
             raise EnterpriseAuthError(
@@ -911,6 +935,15 @@ class EnterpriseAuthService:
 
         return {"access_token": access_token, "refresh_token": refresh_token}
 
+    async def _generate_enterprise_token(self, user: Dict[str, Any], tenant_config: Dict[str, Any]) -> str:
+        """Backward-compatible access-token helper.
+
+        Some call sites and tests patch/expect this method directly.
+        """
+        tokens = await self._generate_enterprise_tokens(user, tenant_config)
+        self._last_generated_refresh_token = tokens.get("refresh_token")
+        return tokens["access_token"]
+
     async def refresh_enterprise_token(self, refresh_token: str) -> Dict[str, Any]:
         """
         Refresh an enterprise access token using a valid refresh token.
@@ -956,6 +989,8 @@ class EnterpriseAuthService:
                 "expires_in": self.enterprise_token_expiry,
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Token refresh failed: {e}")
             raise EnterpriseAuthError(f"Token refresh failed: {str(e)}", error_code="TOKEN_REFRESH_FAILED")

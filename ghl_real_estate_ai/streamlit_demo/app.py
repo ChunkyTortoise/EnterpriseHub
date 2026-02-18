@@ -41,6 +41,7 @@ from ghl_real_estate_ai.streamlit_demo.services.service_registry import (
     claude,
     claude_companion,
     get_services,
+    get_runtime_transparency_status,
     load_mock_data,
     preload_dashboard_components,
     warm_critical_data,
@@ -446,6 +447,37 @@ def get_meeting_briefing(lead_name):
 from ghl_real_estate_ai.ghl_utils.config import get_environment_display, is_mock_mode
 
 env_info = get_environment_display()
+runtime_status = get_runtime_transparency_status()
+
+
+def _resolve_data_source_display(data_source_mode: str, status: dict) -> dict:
+    """Build buyer-facing data source badge values."""
+    mock_service_note = "Mock services active." if status.get("uses_mock_services") else "Live services active."
+
+    if data_source_mode == "live_ghl":
+        return {
+            "label": "Live GHL API Data",
+            "color": "#10B981",
+            "message": f"Connected to live account data. {mock_service_note}",
+        }
+    if data_source_mode == "mock_demo":
+        return {
+            "label": "Demo Sample Data",
+            "color": "#F59E0B",
+            "message": f"Environment is in demo mode with sample dataset only. {mock_service_note}",
+        }
+    if data_source_mode == "mock_fallback":
+        return {
+            "label": "Sample Data Fallback",
+            "color": "#EF4444",
+            "message": f"Live sync is unavailable; showing sample data fallback. {mock_service_note}",
+        }
+
+    return {
+        "label": "Unknown Data Source",
+        "color": "#6B7280",
+        "message": f"Data source is not verified. {mock_service_note}",
+    }
 
 
 # Live Mode Authentication Bridge
@@ -458,28 +490,46 @@ def verify_ghl_connection():
 
         if hasattr(response, "status_code") and response.status_code == 200:
             st.session_state.is_live = True
+            st.session_state.data_source_mode = "live_ghl"
             st.markdown("<style>.warning-banner { display: none !important; }</style>", unsafe_allow_html=True)
             return run_async(ghl_client.fetch_dashboard_data())
         else:
             st.session_state.is_live = False
+            st.session_state.data_source_mode = "mock_fallback"
             return None
     except Exception:
         st.session_state.is_live = False
+        st.session_state.data_source_mode = "mock_fallback"
         return None
 
 
 if is_mock_mode():
+    st.session_state.data_source_mode = "mock_demo"
     mock_data = load_mock_data()
 else:
     live_data = verify_ghl_connection()
 
     if st.session_state.get("is_live", False) and live_data:
         st.session_state.ghl_verified = True
+        st.session_state.data_source_mode = "live_ghl"
         mock_data = live_data
     else:
         if not st.session_state.get("ghl_warning_shown", False):
             pass  # The green "GHL Connected" badge in sidebar is sufficient
+        st.session_state.data_source_mode = "mock_fallback"
         mock_data = load_mock_data()
+
+data_source_mode = st.session_state.get("data_source_mode", "unknown")
+data_source_info = _resolve_data_source_display(data_source_mode, runtime_status)
+
+if data_source_mode != "live_ghl" and env_info.get("name") == "Live Mode":
+    env_info = {
+        "icon": "⚠️",
+        "name": "Live Mode (Fallback)",
+        "color": "#F59E0B",
+        "message": "Credentials detected, but this session is currently serving sample data.",
+        "banner_type": "warning",
+    }
 
 # Load custom CSS
 css_path = Path(__file__).parent / "assets" / "styles.css"
@@ -493,6 +543,18 @@ st.markdown(
 <div style='background: {env_info["color"]}; color: white; padding: 0.75rem 1.5rem;
             border-radius: 8px; margin-bottom: 1rem; text-align: center; font-weight: 600;'>
     {env_info["icon"]} {env_info["name"]}: {env_info["message"]}
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+# Explicit buyer trust indicator for actual data source in this session.
+st.markdown(
+    f"""
+<div style='background: {data_source_info["color"]}20; color: {data_source_info["color"]};
+            border: 1px solid {data_source_info["color"]}; padding: 0.75rem 1.25rem;
+            border-radius: 8px; margin-bottom: 1rem; text-align: center; font-weight: 600;'>
+    Data Source: {data_source_info["label"]} | {data_source_info["message"]}
 </div>
 """,
     unsafe_allow_html=True,

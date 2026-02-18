@@ -301,13 +301,20 @@ class SubscriptionManager:
                 currency=usage_reset_data["currency"],
                 current_period_start=usage_reset_data["current_period_start"],
                 current_period_end=usage_reset_data["current_period_end"],
-                **usage_reset_data,
+                usage_allowance=usage_reset_data["usage_allowance"],
                 usage_current=current_sub["usage_current"],
-                usage_percentage=0.0,  # Will be calculated by client
-                trial_end=None,
+                usage_percentage=round(
+                    (current_sub["usage_current"] / usage_reset_data["usage_allowance"]) * 100, 2
+                )
+                if usage_reset_data["usage_allowance"] > 0
+                else 0.0,
+                overage_rate=usage_reset_data["overage_rate"],
+                base_price=usage_reset_data["base_price"],
+                trial_end=current_sub.get("trial_end"),
                 cancel_at_period_end=stripe_subscription.cancel_at_period_end or False,
                 next_invoice_date=usage_reset_data["current_period_end"],
                 created_at=current_sub["created_at"],
+                updated_at=datetime.now(timezone.utc),
             )
 
         except BillingServiceError as e:

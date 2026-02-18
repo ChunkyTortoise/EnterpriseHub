@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -55,7 +56,7 @@ router = APIRouter(prefix="/jorge-advanced", tags=["jorge-advanced"])
 class VoiceCallStartRequest(BaseModel):
     """Request to start a voice AI call."""
 
-    phone_number: str = Field(..., description="Caller's phone number")
+    phone_number: str = Field(..., min_length=1, description="Caller's phone number")
     caller_name: Optional[str] = Field(None, description="Caller's name if known")
     call_type: Optional[CallType] = Field(CallType.NEW_LEAD, description="Type of call")
     priority: Optional[CallPriority] = Field(CallPriority.NORMAL, description="Call priority")
@@ -85,11 +86,11 @@ class VoiceCallAnalytics(BaseModel):
 class CampaignCreationRequest(BaseModel):
     """Request to create automated marketing campaign."""
 
-    trigger_type: CampaignTrigger
+    trigger_type: CampaignTrigger | str
     target_audience: Dict[str, Any] = Field(..., description="Target audience criteria")
     campaign_objectives: List[str] = Field(..., description="Campaign objectives")
-    content_formats: List[ContentFormat] = Field(..., description="Desired content formats")
-    budget_range: Optional[tuple[float, float]] = Field(None, description="Budget range (min, max)")
+    content_formats: List[ContentFormat | str] = Field(..., description="Desired content formats")
+    budget_range: Optional[tuple[float, float] | List[float]] = Field(None, description="Budget range (min, max)")
     timeline: Optional[str] = Field(None, description="Campaign timeline")
 
 
@@ -143,7 +144,7 @@ class MarketAnalysisRequest(BaseModel):
     """Request for market prediction analysis."""
 
     neighborhood: str = Field(..., description="Neighborhood to analyze")
-    time_horizon: TimeHorizon = Field(..., description="Prediction time horizon")
+    time_horizon: TimeHorizon | str = Field(..., description="Prediction time horizon")
     property_type: Optional[str] = Field(None, description="Property type filter")
     price_range: Optional[tuple[float, float]] = Field(None, description="Price range filter")
 
@@ -154,7 +155,7 @@ class InvestmentOpportunityRequest(BaseModel):
     client_budget: float = Field(..., description="Client's investment budget")
     risk_tolerance: str = Field(..., description="Risk tolerance: low, medium, high")
     investment_goals: List[str] = Field(..., description="Investment objectives")
-    time_horizon: TimeHorizon = Field(..., description="Investment time horizon")
+    time_horizon: TimeHorizon | str = Field(..., description="Investment time horizon")
 
 
 # Integration Models
@@ -177,6 +178,39 @@ class ModuleHealthStatus(BaseModel):
     last_check: datetime
     performance_metrics: Dict[str, Any]
     issues: List[str]
+
+
+def _enum_value(value: Any) -> Any:
+    return value.value if hasattr(value, "value") else value
+
+
+def _coerce_time_horizon(value: TimeHorizon | str) -> TimeHorizon:
+    if isinstance(value, TimeHorizon):
+        return value
+
+    raw = str(value).strip().lower()
+    horizon_map = {
+        "3_months": TimeHorizon.THREE_MONTHS,
+        "6_months": TimeHorizon.SIX_MONTHS,
+        "1_year": TimeHorizon.ONE_YEAR,
+        "2_years": TimeHorizon.TWO_YEARS,
+        "short_term": TimeHorizon.SHORT_TERM,
+        "medium_term": TimeHorizon.MEDIUM_TERM,
+        "long_term": TimeHorizon.LONG_TERM,
+    }
+    return horizon_map.get(raw, TimeHorizon.MEDIUM_TERM)
+
+
+def _get_field(payload: Any, *names: str, default: Any = None) -> Any:
+    if isinstance(payload, dict):
+        for name in names:
+            if name in payload:
+                return payload[name]
+        return default
+    for name in names:
+        if hasattr(payload, name):
+            return getattr(payload, name)
+    return default
 
 
 # ================== VOICE AI ENDPOINTS ==================
@@ -202,7 +236,7 @@ async def start_voice_call(request: VoiceCallStartRequest):
 
     except Exception as e:
         logger.error(f"Error starting voice call: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 
 @router.post("/voice/process-input", response_model=VoiceResponse)
@@ -239,18 +273,18 @@ async def end_voice_call(call_id: str):
         analytics = await voice_handler.handle_call_completion(call_id)
 
         return VoiceCallAnalytics(
-            call_id=analytics["call_id"],
-            duration_seconds=analytics["duration"],
-            qualification_score=analytics["qualification_score"],
-            transfer_to_jorge=analytics["transfer_to_jorge"],
-            lead_quality=analytics["lead_quality"],
+            call_id=analytics.get("call_id", call_id),
+            duration_seconds=analytics.get("duration", 0),
+            qualification_score=analytics.get("qualification_score", 0),
+            transfer_to_jorge=analytics.get("transfer_to_jorge", False),
+            lead_quality=analytics.get("lead_quality", "unknown"),
             key_information=analytics.get("extracted_info", {}),
             conversation_summary=analytics.get("summary", ""),
         )
 
     except Exception as e:
         logger.error(f"Error ending voice call: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 
 @router.get("/voice/analytics")
@@ -274,7 +308,7 @@ async def get_voice_analytics(days: int = Query(default=7, description="Number o
 # ================== MARKETING AUTOMATION ENDPOINTS ==================
 
 
-@router.post("/marketing/create-campaign", response_model=CampaignBrief)
+@router.post("/marketing/create-campaign")
 async def create_automated_campaign(request: CampaignCreationRequest):
     """
     Create automated marketing campaign.
@@ -284,24 +318,46 @@ async def create_automated_campaign(request: CampaignCreationRequest):
     try:
         marketing_engine = AutomatedMarketingEngine()
 
+        trigger_type = _enum_value(request.trigger_type)
+        content_formats = [_enum_value(fmt) for fmt in request.content_formats]
+
         campaign = await marketing_engine.create_campaign_from_trigger(
-            trigger_type=request.trigger_type.value,
+            trigger_type=trigger_type,
             trigger_data={
                 "target_audience": request.target_audience,
                 "objectives": request.campaign_objectives,
-                "formats": [f.value for f in request.content_formats],
+                "formats": content_formats,
                 "budget_range": request.budget_range,
                 "timeline": request.timeline,
             },
         )
 
-        logger.info(f"Created automated campaign {campaign.campaign_id}")
+        campaign_id = _get_field(campaign, "campaign_id")
+        name = _get_field(campaign, "name")
+        if not name:
+            campaign_type = _get_field(campaign, "campaign_type")
+            campaign_type_value = _enum_value(campaign_type) if campaign_type else "campaign"
+            name = str(campaign_type_value).replace("_", " ").title()
 
-        return campaign
+        logger.info(f"Created automated campaign {campaign_id}")
+
+        objectives = _get_field(campaign, "objectives")
+        if not objectives:
+            objective = _get_field(campaign, "objective")
+            objectives = [objective] if objective else request.campaign_objectives
+
+        return {
+            "campaign_id": campaign_id,
+            "name": name,
+            "trigger": _enum_value(_get_field(campaign, "trigger", default=trigger_type)),
+            "target_audience": _get_field(campaign, "target_audience", default=request.target_audience),
+            "objectives": objectives,
+            "status": _get_field(campaign, "status", default="draft"),
+        }
 
     except Exception as e:
         logger.error(f"Error creating campaign: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/marketing/campaigns/{campaign_id}/content")
@@ -317,7 +373,7 @@ async def get_campaign_content(campaign_id: str):
         content = await marketing_engine.get_campaign_content(campaign_id)
 
         if not content:
-            raise HTTPException(status_code=404, detail="Campaign not found")
+            return JSONResponse(status_code=404, content={"detail": "Campaign not found"})
 
         return {"campaign_id": campaign_id, "content": content}
 
@@ -458,19 +514,20 @@ async def get_client_engagement(client_id: str):
         retention_engine = ClientRetentionEngine()
 
         profile = await retention_engine.get_client_profile(client_id)
-        engagement = await retention_engine.calculate_engagement_score(client_id)
 
         if not profile:
-            raise HTTPException(status_code=404, detail="Client not found")
+            return JSONResponse(status_code=404, content={"detail": "Client not found"})
+
+        engagement = await retention_engine.calculate_engagement_score(client_id)
 
         return ClientEngagementSummary(
-            client_id=client_id,
-            total_interactions=profile.total_interactions,
-            last_interaction_date=profile.last_interaction,
-            engagement_score=engagement["score"],
-            referrals_made=profile.referrals_made,
-            lifetime_value=profile.lifetime_value,
-            retention_probability=engagement["retention_probability"],
+            client_id=_get_field(profile, "client_id", default=client_id),
+            total_interactions=_get_field(profile, "total_interactions", "total_engagements", default=0),
+            last_interaction_date=_get_field(profile, "last_interaction", "last_contact_date", default=datetime.now()),
+            engagement_score=_get_field(engagement, "score", default=0.0),
+            referrals_made=_get_field(profile, "referrals_made", "referrals_provided", default=0),
+            lifetime_value=_get_field(profile, "lifetime_value", "current_estimated_value", default=0.0),
+            retention_probability=_get_field(engagement, "retention_probability", default=0.0),
         )
 
     except HTTPException:
@@ -501,7 +558,7 @@ async def get_retention_analytics(days: int = Query(default=30, description="Num
 # ================== MARKET PREDICTION ENDPOINTS ==================
 
 
-@router.post("/market/analyze", response_model=PredictionResult)
+@router.post("/market/analyze")
 async def analyze_market(request: MarketAnalysisRequest):
     """
     Analyze market trends and predictions.
@@ -512,16 +569,35 @@ async def analyze_market(request: MarketAnalysisRequest):
         market_engine = MarketPredictionEngine()
 
         prediction = await market_engine.predict_price_appreciation(
-            neighborhood=request.neighborhood, time_horizon=request.time_horizon
+            neighborhood=request.neighborhood, time_horizon=_coerce_time_horizon(request.time_horizon)
         )
 
         logger.info(f"Generated market analysis for {request.neighborhood}")
 
-        return prediction
+        confidence_level = _get_field(prediction, "confidence_level")
+        if hasattr(confidence_level, "value"):
+            confidence_level = confidence_level.value
+        if isinstance(confidence_level, (int, float)):
+            confidence_score = float(confidence_level)
+        else:
+            confidence_score = _get_field(prediction, "confidence_score", default=0.0)
+
+        predicted_appreciation = _get_field(prediction, "predicted_appreciation")
+        if predicted_appreciation is None:
+            change_percentage = _get_field(prediction, "change_percentage", default=0.0)
+            predicted_appreciation = change_percentage / 100 if abs(change_percentage) > 1 else change_percentage
+
+        return {
+            "neighborhood": _get_field(prediction, "neighborhood", "target", default=request.neighborhood),
+            "time_horizon": _enum_value(_get_field(prediction, "time_horizon", default=request.time_horizon)),
+            "predicted_appreciation": predicted_appreciation,
+            "confidence_level": confidence_score,
+            "supporting_factors": _get_field(prediction, "supporting_factors", "key_factors", default=[]),
+        }
 
     except Exception as e:
         logger.error(f"Error analyzing market: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/market/investment-opportunities")
@@ -538,7 +614,7 @@ async def find_investment_opportunities(request: InvestmentOpportunityRequest):
             client_budget=request.client_budget,
             risk_tolerance=request.risk_tolerance,
             investment_goals=request.investment_goals,
-            time_horizon=request.time_horizon,
+            time_horizon=_coerce_time_horizon(request.time_horizon),
         )
 
         return {
@@ -548,13 +624,13 @@ async def find_investment_opportunities(request: InvestmentOpportunityRequest):
                 "budget": request.client_budget,
                 "risk_tolerance": request.risk_tolerance,
                 "goals": request.investment_goals,
-                "time_horizon": request.time_horizon.value,
+                "time_horizon": _enum_value(request.time_horizon),
             },
         }
 
     except Exception as e:
         logger.error(f"Error finding investment opportunities: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/market/trends/{neighborhood}")
@@ -586,7 +662,7 @@ async def get_market_trends(
 # ================== INTEGRATION & DASHBOARD ENDPOINTS ==================
 
 
-@router.get("/dashboard/metrics", response_model=DashboardMetrics)
+@router.get("/dashboard/metrics")
 async def get_dashboard_metrics():
     """
     Get unified dashboard metrics from all modules.
@@ -598,18 +674,28 @@ async def get_dashboard_metrics():
 
         metrics = await integration_hub.get_unified_dashboard()
 
-        return DashboardMetrics(
-            voice_ai=metrics.voice_ai_stats,
-            marketing=metrics.marketing_stats,
-            client_retention=metrics.retention_stats,
-            market_predictions=metrics.prediction_stats,
-            integration_health=metrics.performance_summary,
-            last_updated=datetime.now(),
-        )
+        if isinstance(metrics, dict):
+            return {
+                "voice_ai": metrics.get("voice_ai", {}),
+                "marketing": metrics.get("marketing", {}),
+                "client_retention": metrics.get("client_retention", {}),
+                "market_predictions": metrics.get("market_predictions", {}),
+                "integration_health": metrics.get("integration_health", {}),
+                "last_updated": datetime.now().isoformat(),
+            }
+
+        return {
+            "voice_ai": metrics.voice_ai_stats,
+            "marketing": metrics.marketing_stats,
+            "client_retention": metrics.retention_stats,
+            "market_predictions": metrics.prediction_stats,
+            "integration_health": metrics.performance_summary,
+            "last_updated": datetime.now().isoformat(),
+        }
 
     except Exception as e:
         logger.error(f"Error fetching dashboard metrics: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/health/modules")
@@ -655,7 +741,11 @@ async def trigger_integration_event(event_type: EventType, event_data: Dict[str,
         integration_hub = JorgeAdvancedIntegration()
 
         event = IntegrationEvent(
-            event_type=event_type, source_module="manual", data=event_data, timestamp=datetime.now()
+            event_id=f"manual_{event_type.value}_{int(datetime.now().timestamp())}",
+            event_type=event_type,
+            source_module="manual",
+            data=event_data,
+            timestamp=datetime.now(),
         )
 
         await integration_hub.handle_integration_event(event)
@@ -668,7 +758,7 @@ async def trigger_integration_event(event_type: EventType, event_data: Dict[str,
 
     except Exception as e:
         logger.error(f"Error triggering integration event: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ================== SYSTEM ENDPOINTS ==================

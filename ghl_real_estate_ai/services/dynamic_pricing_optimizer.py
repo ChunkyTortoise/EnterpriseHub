@@ -10,9 +10,9 @@ Created: 2026-01-17
 import asyncio
 import logging
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.analytics_engine import AnalyticsEngine
 from ghl_real_estate_ai.services.cache_service import CacheService
@@ -38,28 +38,66 @@ class PricingTier:
 class LeadPricingResult:
     """Complete pricing calculation result with business intelligence"""
 
-    lead_id: str
-    base_price: float
-    final_price: float
-    tier: str
-    multiplier: float
-    conversion_probability: float
-    expected_roi: float
-    justification: str
+    lead_id: str = ""
+    base_price: float = 0.0
+    final_price: float = 0.0
+    tier: str = "cold"
+    multiplier: float = 1.0
+    conversion_probability: float = 0.0
+    expected_roi: float = 0.0
+    justification: str = ""
 
     # Contributing factors
-    jorge_score: int  # 0-7 questions answered
-    ml_confidence: float  # ML model confidence
-    historical_performance: float  # Similar leads performance
+    jorge_score: int = 0  # 0-7 questions answered
+    ml_confidence: float = 0.0  # ML model confidence
+    historical_performance: float = 0.0  # Similar leads performance
 
     # Business intelligence
-    expected_commission: float
-    days_to_close_estimate: int
-    agent_recommendation: str
+    expected_commission: float = 0.0
+    days_to_close_estimate: int = 0
+    agent_recommendation: str = ""
 
     # Metadata
-    calculated_at: datetime
+    calculated_at: datetime = field(default_factory=datetime.utcnow)
     model_version: str = "1.0.0"
+
+    # Legacy compatibility aliases used by older tests/services
+    contact_id: Optional[str] = None
+    location_id: Optional[str] = None
+    suggested_price: Optional[float] = None
+    confidence_score: Optional[float] = None
+    price_justification: Optional[str] = None
+    tier_classification: Optional[str] = None
+    roi_multiplier: Optional[float] = None
+
+    def __post_init__(self):
+        # Legacy -> canonical mapping
+        if not self.lead_id and self.contact_id:
+            self.lead_id = self.contact_id
+        if self.final_price == 0.0 and self.suggested_price is not None:
+            self.final_price = float(self.suggested_price)
+        if self.tier_classification and (not self.tier or self.tier == "cold"):
+            self.tier = self.tier_classification
+        if not self.justification and self.price_justification:
+            self.justification = self.price_justification
+        if self.multiplier == 1.0 and self.roi_multiplier is not None:
+            self.multiplier = float(self.roi_multiplier)
+        if self.ml_confidence == 0.0 and self.confidence_score is not None:
+            self.ml_confidence = float(self.confidence_score)
+
+        # Canonical -> legacy mapping
+        if self.contact_id is None:
+            self.contact_id = self.lead_id
+        if self.suggested_price is None:
+            self.suggested_price = self.final_price
+        if self.confidence_score is None:
+            self.confidence_score = self.ml_confidence
+        if self.price_justification is None:
+            self.price_justification = self.justification
+        if self.tier_classification is None:
+            self.tier_classification = self.tier
+        if self.roi_multiplier is None:
+            self.roi_multiplier = self.multiplier
 
 
 @dataclass

@@ -68,9 +68,27 @@ class EnhancedBotOrchestrator:
         self.config = config or BotOrchestrationConfig()
 
         # Initialize enhanced bots
-        self.adaptive_jorge = get_adaptive_jorge_bot()
-        self.predictive_lead = get_predictive_lead_bot()
-        self.realtime_intent = get_realtime_intent_decoder()
+        self.adaptive_jorge = None
+        self.predictive_lead = None
+        self.realtime_intent = None
+
+        try:
+            if callable(get_adaptive_jorge_bot):
+                self.adaptive_jorge = get_adaptive_jorge_bot()
+        except Exception as exc:
+            logger.warning(f"Adaptive Jorge bot unavailable, using fallback path: {exc}")
+
+        try:
+            if callable(get_predictive_lead_bot):
+                self.predictive_lead = get_predictive_lead_bot()
+        except Exception as exc:
+            logger.warning(f"Predictive Lead bot unavailable, using fallback path: {exc}")
+
+        try:
+            if callable(get_realtime_intent_decoder):
+                self.realtime_intent = get_realtime_intent_decoder()
+        except Exception as exc:
+            logger.warning(f"Realtime intent decoder unavailable, using fallback path: {exc}")
 
         self.event_publisher = get_event_publisher()
 
@@ -146,6 +164,9 @@ class EnhancedBotOrchestrator:
 
     async def _perform_realtime_analysis(self, session: ConversationSession, message: str) -> Optional[Dict]:
         """Perform real-time intent analysis on incoming message."""
+        if not self.realtime_intent:
+            return None
+
         try:
             conversation_id = f"enhanced_{session.session_id}"
             intent_update = await self.realtime_intent.stream_intent_analysis(
@@ -177,7 +198,7 @@ class EnhancedBotOrchestrator:
         session.conversation_history.append({"role": "user", "content": message, "timestamp": datetime.now()})
 
         # Use adaptive Jorge bot
-        if self.config.enable_adaptive_questioning:
+        if self.config.enable_adaptive_questioning and self.adaptive_jorge:
             result = await self.adaptive_jorge.process_adaptive_seller_message(
                 lead_id=session.lead_id, lead_name=session.lead_name, history=session.conversation_history
             )
@@ -216,7 +237,7 @@ class EnhancedBotOrchestrator:
         # Update conversation history
         session.conversation_history.append({"role": "user", "content": message, "timestamp": datetime.now()})
 
-        if self.config.enable_predictive_timing:
+        if self.config.enable_predictive_timing and self.predictive_lead:
             # Determine sequence day from session state
             sequence_day = session.orchestration_state.get("current_sequence_day", 3)
 
@@ -328,8 +349,14 @@ class EnhancedBotOrchestrator:
 
         # Update active bots list
         bot_type = result.get("bot_type")
-        if bot_type and BotType(bot_type) not in session.active_bots:
-            session.active_bots.append(BotType(bot_type))
+        if bot_type:
+            try:
+                enum_bot = BotType(bot_type)
+                if enum_bot not in session.active_bots:
+                    session.active_bots.append(enum_bot)
+            except ValueError:
+                # Ignore non-enum bot labels from fallback and compatibility paths.
+                pass
 
         # Update intent profile
         if intent_update and "intent_update" in intent_update:

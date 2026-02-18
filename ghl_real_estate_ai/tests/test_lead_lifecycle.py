@@ -16,7 +16,6 @@ import pytest
 from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
 
 
-@pytest.mark.unit
 
 
 @pytest.fixture

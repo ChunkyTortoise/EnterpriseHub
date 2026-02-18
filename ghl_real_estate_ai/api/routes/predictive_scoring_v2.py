@@ -18,11 +18,13 @@ Author: Lead Scoring 2.0 Implementation
 Date: 2026-01-18
 """
 
+import inspect
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Header, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
@@ -51,17 +53,31 @@ market_router = MarketSpecificModelRouter()
 
 # Legacy scorer for backward compatibility
 # Lazy singleton — defer initialization until first request
-_legacy_scorer = None
+legacy_scorer = None
 
 
 def _get_legacy_scorer():
-    global _legacy_scorer
-    if _legacy_scorer is None:
-        _legacy_scorer = PredictiveLeadScorer()
-    return _legacy_scorer
+    global legacy_scorer
+    if legacy_scorer is None:
+        legacy_scorer = PredictiveLeadScorer()
+    return legacy_scorer
 
 
 router = APIRouter(prefix="/api/v2/predictive-scoring", tags=["Predictive Scoring V2"])
+_bearer = HTTPBearer(auto_error=False)
+
+
+async def _maybe_await(value: Any) -> Any:
+    """Await coroutine-like values and pass through plain values."""
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
+
+async def _get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer)) -> dict:
+    """Resolve user from bearer token with runtime patch compatibility."""
+    token = credentials.credentials if credentials else ""
+    return await _maybe_await(verify_jwt_token(token))
 
 
 # Request/Response Models
@@ -142,7 +158,7 @@ class EnhancedScoringResponse(BaseModel):
 class BatchScoringRequest(BaseModel):
     """Batch scoring request for multiple leads"""
 
-    leads: List[LeadScoringRequest] = Field(..., max_items=100, description="List of leads to score (max 100)")
+    leads: List[LeadScoringRequest] = Field(..., description="List of leads to score (max 100)")
     processing_mode: str = Field(default="batch_fast", description="Batch processing mode")
     include_performance_summary: bool = Field(default=True, description="Include batch performance summary")
 
@@ -171,6 +187,16 @@ class PerformanceMetricsResponse(BaseModel):
     system_status: str  # healthy/degraded/unhealthy
 
 
+class RoutingRecommendationRequest(BaseModel):
+    """Request payload for routing recommendation endpoint."""
+
+    lead_id: str = Field(..., description="Lead identifier")
+    lead_score: float = Field(..., description="Lead score from inference")
+    behavioral_signals: Dict[str, float] = Field(default_factory=dict, description="Behavioral signal map")
+    lead_data: Dict[str, Any] = Field(..., description="Lead profile and metadata")
+    routing_strategy: Optional[str] = Field(default=None, description="Requested routing strategy")
+
+
 # API Endpoints
 
 
@@ -179,7 +205,7 @@ async def score_lead_v2(
     request: LeadScoringRequest,
     x_api_version: Optional[str] = Header(default="2.0"),
     x_client_version: Optional[str] = Header(default=None),
-    current_user: dict = Depends(verify_jwt_token),
+    current_user: dict = Depends(_get_current_user),
 ) -> EnhancedScoringResponse:
     """
     Enhanced lead scoring with real-time inference and behavioral analysis.
@@ -294,7 +320,7 @@ async def score_lead_v2(
 
 @router.post("/swarm-analysis", response_model=Dict[str, Any])
 async def get_swarm_analysis(
-    lead_id: str, lead_data: Dict[str, Any], current_user: dict = Depends(verify_jwt_token)
+    lead_id: str, lead_data: Dict[str, Any], current_user: dict = Depends(_get_current_user)
 ) -> Dict[str, Any]:
     """
     Perform deep multi-agent swarm analysis on a lead.
@@ -334,7 +360,7 @@ async def get_swarm_analysis(
 
 @router.post("/score-batch", response_model=BatchScoringResponse)
 async def score_leads_batch(
-    request: BatchScoringRequest, current_user: dict = Depends(verify_jwt_token)
+    request: BatchScoringRequest, current_user: dict = Depends(_get_current_user)
 ) -> BatchScoringResponse:
     """
     Batch lead scoring with optimized processing.
@@ -454,6 +480,8 @@ async def score_leads_batch(
             failed_predictions=failed,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Batch scoring failed: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -464,7 +492,7 @@ async def get_behavioral_signals(
     lead_id: str,
     lead_data: Dict[str, Any],
     conversation_history: List[Dict[str, Any]] = None,
-    current_user: dict = Depends(verify_jwt_token),
+    current_user: dict = Depends(_get_current_user),
 ) -> Dict[str, Any]:
     """
     Extract detailed behavioral signals for a lead.
@@ -507,12 +535,8 @@ async def get_behavioral_signals(
 
 @router.post("/routing-recommendation")
 async def get_routing_recommendation(
-    lead_id: str,
-    lead_score: float,
-    behavioral_signals: Dict[str, float],
-    lead_data: Dict[str, Any],
-    routing_strategy: Optional[str] = None,
-    current_user: dict = Depends(verify_jwt_token),
+    request: RoutingRecommendationRequest = Body(...),
+    current_user: dict = Depends(_get_current_user),
 ) -> Dict[str, Any]:
     """
     Get intelligent lead routing recommendation.
@@ -530,25 +554,25 @@ async def get_routing_recommendation(
             "hybrid_intelligent": RoutingStrategy.HYBRID_INTELLIGENT,
         }
 
-        strategy = strategy_map.get(routing_strategy) if routing_strategy else None
+        strategy = strategy_map.get(request.routing_strategy) if request.routing_strategy else None
 
         recommendation = await lead_router.recommend_routing(
-            lead_id=lead_id,
-            lead_score=lead_score,
-            behavioral_signals=behavioral_signals,
-            lead_data=lead_data,
+            lead_id=request.lead_id,
+            lead_score=request.lead_score,
+            behavioral_signals=request.behavioral_signals,
+            lead_data=request.lead_data,
             strategy=strategy,
         )
 
         return recommendation
 
     except Exception as e:
-        logger.error(f"Routing recommendation failed for {lead_id}: {e}")
+        logger.error(f"Routing recommendation failed for {request.lead_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/performance-metrics", response_model=PerformanceMetricsResponse)
-async def get_performance_metrics(current_user: dict = Depends(verify_jwt_token)) -> PerformanceMetricsResponse:
+async def get_performance_metrics(current_user: dict = Depends(_get_current_user)) -> PerformanceMetricsResponse:
     """
     Get comprehensive performance metrics for the V2 system.
 
@@ -613,7 +637,7 @@ async def get_performance_metrics(current_user: dict = Depends(verify_jwt_token)
 async def warm_cache(
     sample_leads: List[Dict[str, Any]],
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(verify_jwt_token),
+    current_user: dict = Depends(_get_current_user),
 ) -> Dict[str, Any]:
     """
     Warm the inference cache with sample leads.
@@ -649,6 +673,8 @@ async def warm_cache(
             "initiated_at": datetime.now().isoformat(),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Cache warming failed: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -659,7 +685,7 @@ async def warm_cache(
 
 @router.post("/legacy/score")
 async def legacy_score_endpoint(
-    lead_data: Dict[str, Any], current_user: dict = Depends(verify_jwt_token)
+    lead_data: Dict[str, Any], current_user: dict = Depends(_get_current_user)
 ) -> Dict[str, Any]:
     """
     Legacy scoring endpoint for backward compatibility.

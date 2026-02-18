@@ -10,6 +10,25 @@ I built AgentForge, a minimal multi-LLM orchestrator. Total size: ~15KB of Pytho
 
 **Why?** LangChain added 250ms overhead per request. I needed something simpler.
 
+## Performance vs LangChain
+
+Benchmarks on 1,000 requests:
+
+| Metric | LangChain | AgentForge |
+|--------|-----------|------------|
+| Avg latency | 420ms | 65ms |
+| Memory/request | 12MB | 3MB |
+| Cold start | 2.5s | 0.3s |
+| Test time | 45s | 3s |
+
+| Framework | Size | Dependencies |
+|-----------|------|--------------|
+| LangChain | 15MB+ | 47 packages |
+| LlamaIndex | 10MB+ | 32 packages |
+| **AgentForge** | **15KB** | **2 packages (httpx, pytest)** |
+
+89% LLM cost reduction via 3-tier Redis caching (88% cache hit rate, verified). 4.3M tool dispatches/sec in the core engine.
+
 ## What It Does
 
 AgentForge provides three core capabilities:
@@ -81,25 +100,6 @@ async def safe_call(self, prompt: str) -> str:
         return await cb.call(self.llm.complete, prompt)
 ```
 
-## Size Comparison
-
-| Framework | Size | Dependencies |
-|-----------|------|--------------|
-| LangChain | 15MB+ | 47 packages |
-| LlamaIndex | 10MB+ | 32 packages |
-| **AgentForge** | **15KB** | **2 packages (httpx, pytest)** |
-
-## Performance
-
-Benchmarks on 1,000 requests:
-
-| Metric | LangChain | AgentForge |
-|--------|-----------|------------|
-| Avg latency | 420ms | 65ms |
-| Memory/request | 12MB | 3MB |
-| Cold start | 2.5s | 0.3s |
-| Test time | 45s | 3s |
-
 ## What's Included
 
 - **Core**: ~1,500 lines of Python (15KB)
@@ -124,7 +124,7 @@ pip install -e .
 
 ## Live Demo
 
-Try the interactive demo: [ct-agentforge.streamlit.app](https://ct-agentforge.streamlit.app)
+Try the interactive demo: [ct-agentforge.streamlit.app](https://ai-orchest-7mnwp9untg7gyyvchzevid.streamlit.app/)
 
 Features:
 - Create custom agents
@@ -211,6 +211,8 @@ MIT. Free for commercial use.
 
 **GitHub**: https://github.com/ChunkyTortoise/ai-orchestrator
 
-**Demo**: https://ct-agentforge.streamlit.app
+**Demo**: https://ai-orchest-7mnwp9untg7gyyvchzevid.streamlit.app/
+
+**Packaged version** (full source + docs + deployment guide): https://chunkmaster1.gumroad.com
 
 Questions? Drop them in the comments.

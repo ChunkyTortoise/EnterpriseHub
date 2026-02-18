@@ -5,7 +5,6 @@ import pytest
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
 from ghl_real_estate_ai.models.lead_scoring import (
 
-@pytest.mark.unit
     FinancialReadinessScore,
     LeadIntentProfile,
     PsychologicalCommitmentScore,
@@ -41,7 +40,6 @@ def mock_jorge_deps():
         yield {"intent": intent_instance, "claude": claude_instance, "profile": mock_profile}
 
 
-@pytest.mark.asyncio
 async def test_jorge_seller_bot_stall_breaking(mock_jorge_deps):
     """Test that the bot detects a stall and selects understanding tone."""
     bot = JorgeSellerBot()
@@ -58,7 +56,6 @@ async def test_jorge_seller_bot_stall_breaking(mock_jorge_deps):
     assert result["response_content"] == "Mocked Jorge Response"
 
 
-@pytest.mark.asyncio
 async def test_jorge_seller_bot_educational_mode(mock_jorge_deps):
     """Test that low PCS triggers educational tone (supportive approach)."""
     mock_jorge_deps["profile"].pcs.total_score = 10  # Low commitment

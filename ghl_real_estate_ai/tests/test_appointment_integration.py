@@ -16,10 +16,8 @@ os.environ["GHL_LOCATION_ID"] = "loc-test-123"
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_slot_fetching_for_hot_lead():
     """Test that available slots are fetched when lead score is high."""
     cm = ConversationManager()
@@ -62,7 +60,6 @@ async def test_slot_fetching_for_hot_lead():
     assert "10:00 AM" in cm.llm_client.agenerate.call_args.kwargs["system_prompt"]
 
 
-@pytest.mark.asyncio
 async def test_appointment_booking_on_slot_selection():
     """Test that an appointment is created when a slot is selected."""
     cm = ConversationManager()

@@ -793,6 +793,7 @@ class LeadBotWorkflow:
         workflow.add_node("generate_cma", self.generate_cma)
 
         # Follow-up Nodes
+        workflow.add_node("send_day_0_initial_contact", self.send_day_0_initial_contact)
         workflow.add_node("send_day_3_sms", self.send_day_3_sms)
         workflow.add_node("initiate_day_7_call", self.initiate_day_7_call)
         workflow.add_node("send_day_14_email", self.send_day_14_email)
@@ -814,6 +815,7 @@ class LeadBotWorkflow:
             self._route_next_step,
             {
                 "generate_cma": "generate_cma",
+                "day_0": "send_day_0_initial_contact",
                 "day_3": "send_day_3_sms",
                 "day_7": "initiate_day_7_call",
                 "day_14": "send_day_14_email",
@@ -829,6 +831,7 @@ class LeadBotWorkflow:
 
         # All actions end for this single-turn execution
         workflow.add_edge("generate_cma", END)
+        workflow.add_edge("send_day_0_initial_contact", END)
         workflow.add_edge("send_day_3_sms", END)
         workflow.add_edge("initiate_day_7_call", END)
         workflow.add_edge("send_day_14_email", END)
@@ -859,6 +862,7 @@ class LeadBotWorkflow:
         workflow.add_node("generate_cma", self.generate_cma)
 
         # Enhanced follow-up nodes
+        workflow.add_node("send_day_0_initial_contact", self.send_day_0_initial_contact)
         workflow.add_node("send_optimized_day_3", self.send_optimized_day_3)
         workflow.add_node("initiate_predictive_day_7", self.initiate_predictive_day_7)
         workflow.add_node("send_adaptive_day_14", self.send_adaptive_day_14)
@@ -900,6 +904,7 @@ class LeadBotWorkflow:
             self._route_enhanced_step,
             {
                 "generate_cma": "generate_cma",
+                "day_0": "send_day_0_initial_contact",
                 "day_3": "send_optimized_day_3",
                 "day_7": "initiate_predictive_day_7",
                 "day_14": "send_adaptive_day_14",
@@ -916,6 +921,7 @@ class LeadBotWorkflow:
         # All actions end
         for node in [
             "generate_cma",
+            "send_day_0_initial_contact",
             "send_optimized_day_3",
             "initiate_predictive_day_7",
             "send_adaptive_day_14",
@@ -1469,6 +1475,7 @@ class LeadBotWorkflow:
         self, state: LeadFollowUpState
     ) -> Literal[
         "generate_cma",
+        "day_0",
         "day_3",
         "day_7",
         "day_14",
@@ -1634,7 +1641,7 @@ class LeadBotWorkflow:
             # Create new sequence for new lead
             logger.info(f"Creating new sequence for lead {state['lead_id']}")
             sequence_state = await self.sequence_service.create_sequence(
-                state["lead_id"], initial_day=SequenceDay.DAY_3
+                state["lead_id"], initial_day=SequenceDay.INITIAL
             )
 
             # Schedule the initial sequence start (immediate or slight delay)
@@ -1694,8 +1701,10 @@ class LeadBotWorkflow:
         if sequence_day_val is not None:
             # Simulation/Direct mode: create temporary sequence state from sequence_day
             # Map numeric day to SequenceDay enum
-            day_enum = SequenceDay.DAY_3
-            if sequence_day_val == 7:
+            day_enum = SequenceDay.INITIAL
+            if sequence_day_val == 3:
+                day_enum = SequenceDay.DAY_3
+            elif sequence_day_val == 7:
                 day_enum = SequenceDay.DAY_7
             elif sequence_day_val == 14:
                 day_enum = SequenceDay.DAY_14
@@ -1725,7 +1734,9 @@ class LeadBotWorkflow:
         # Determine routing based on sequence day
         current_day = sequence_state.current_day
         if sequence_day_val is not None:
-            if sequence_day_val == 3:
+            if sequence_day_val == 0:
+                current_day = SequenceDay.INITIAL
+            elif sequence_day_val == 3:
                 current_day = SequenceDay.DAY_3
             elif sequence_day_val == 7:
                 current_day = SequenceDay.DAY_7
@@ -1733,6 +1744,13 @@ class LeadBotWorkflow:
                 current_day = SequenceDay.DAY_14
             elif sequence_day_val == 30:
                 current_day = SequenceDay.DAY_30
+
+        if current_day == SequenceDay.INITIAL:
+            logger.debug("determine_path - Routing to day_0")
+            await sync_service.record_lead_event(
+                state["lead_id"], "AI", "Executing Day 0 initial contact sequence.", "sequence"
+            )
+            return {"current_step": "day_0", "engagement_status": sequence_state.engagement_status}
 
         if current_day == SequenceDay.DAY_3:
             logger.debug("determine_path - Routing to day_3")
@@ -1820,6 +1838,44 @@ class LeadBotWorkflow:
             "current_step": "nurture",  # Return to nurture or wait for reply
             "last_interaction_time": datetime.now(timezone.utc),
         }
+
+    async def send_day_0_initial_contact(self, state: LeadFollowUpState) -> Dict:
+        """Day 0: Immediate initial contact message."""
+        await self.event_publisher.publish_lead_bot_sequence_update(
+            contact_id=state["lead_id"],
+            sequence_day=0,
+            action_type="message_sent",
+            success=True,
+        )
+
+        ghost_state = GhostState(
+            contact_id=state["lead_id"],
+            current_day=0,
+            frs_score=state["intent_profile"].frs.total_score if state.get("intent_profile") else 0.0,
+        )
+        action = await self.ghost_engine.process_lead_step(ghost_state, state["conversation_history"])
+        msg = self._sanitize_sms_response(
+            action.get("content", "Thanks for reaching out! I can help qualify your goals and next best steps.")
+        )
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", f"Sent Day 0 initial contact: {msg[:50]}...", "sms")
+
+        # Move persisted state to Day 3 after initial touch so subsequent routing progresses correctly.
+        sequence_state = await self.sequence_service.get_state(state["lead_id"])
+        if sequence_state and sequence_state.current_day == SequenceDay.INITIAL:
+            sequence_state.current_day = SequenceDay.DAY_3
+            sequence_state.sequence_status = SequenceStatus.IN_PROGRESS
+            sequence_state.last_action_at = datetime.now(timezone.utc)
+            await self.sequence_service.save_state(sequence_state)
+
+        if self.ghl_client:
+            try:
+                await self.ghl_client.send_message(contact_id=state["lead_id"], message=msg, channel=MessageType.SMS)
+                logger.info(f"Day 0 SMS sent successfully to contact {state['lead_id']}")
+            except Exception as e:
+                logger.error(f"Failed to send Day 0 SMS via GHL: {e}")
+
+        return {"engagement_status": "responsive", "current_step": "day_3", "response_content": msg}
 
     async def send_day_3_sms(self, state: LeadFollowUpState) -> Dict:
         """Day 3: Soft Check-in with FRS-aware logic via GhostEngine."""
@@ -2175,6 +2231,7 @@ class LeadBotWorkflow:
         self, state: LeadFollowUpState
     ) -> Literal[
         "generate_cma",
+        "day_0",
         "day_3",
         "day_7",
         "day_14",
@@ -2212,7 +2269,7 @@ class LeadBotWorkflow:
 
         # Valid steps mapping
         step = state.get("current_step", "initial")
-        if step in ["day_3", "day_7", "day_14", "day_30"]:
+        if step in ["day_0", "day_3", "day_7", "day_14", "day_30"]:
             return step
 
         # Intelligent fallback based on lead signals and engagement

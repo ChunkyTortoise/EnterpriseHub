@@ -71,17 +71,17 @@ class ClientProfile:
     """Comprehensive client profile for retention system"""
 
     client_id: str
-    name: str
-    email: str
-    phone: str
+    name: str = ""
+    email: str = ""
+    phone: str = ""
 
     # Property information
-    property_address: str
-    purchase_date: datetime
-    purchase_price: float
-    current_estimated_value: float
-    neighborhood: str
-    property_type: str
+    property_address: str = ""
+    purchase_date: datetime = None
+    purchase_price: float = 0.0
+    current_estimated_value: float = 0.0
+    neighborhood: str = ""
+    property_type: str = ""
 
     # Personal details
     family_size: int = 2
@@ -102,11 +102,27 @@ class ClientProfile:
     referral_probability: float = 0.0
     repeat_business_probability: float = 0.0
 
+    # Backward-compatible aliases used by older API/tests.
+    total_interactions: Optional[int] = None
+    last_interaction: Optional[datetime] = None
+    referrals_made: Optional[int] = None
+    lifetime_value: Optional[float] = None
+
     def __post_init__(self):
+        if self.purchase_date is None:
+            self.purchase_date = datetime.now()
         if self.life_events is None:
             self.life_events = []
         if self.interests is None:
             self.interests = []
+        if self.total_interactions is not None and self.total_engagements == 0:
+            self.total_engagements = self.total_interactions
+        if self.last_interaction and self.last_contact_date is None:
+            self.last_contact_date = self.last_interaction
+        if self.referrals_made is not None and self.referrals_provided == 0:
+            self.referrals_provided = self.referrals_made
+        if self.lifetime_value is not None and self.current_estimated_value == 0:
+            self.current_estimated_value = self.lifetime_value
 
 
 @dataclass

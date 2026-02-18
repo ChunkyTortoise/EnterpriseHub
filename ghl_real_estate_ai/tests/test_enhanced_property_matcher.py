@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 """
 Comprehensive tests for the enhanced property matching system.
 

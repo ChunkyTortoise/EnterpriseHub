@@ -20,8 +20,8 @@ from fastapi.responses import JSONResponse
 import stripe
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
+from ghl_real_estate_ai.services.database_service import get_database
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager, SubscriptionManagerError
 from ghl_real_estate_ai.services.monitoring_service import MonitoringService, AlertSeverity
 from ghl_real_estate_ai.api.schemas.billing import (
@@ -128,6 +128,166 @@ async def retry_with_exponential_backoff(
 
     # Should not reach here, but handle gracefully
     raise last_exception
+
+
+def _stripe_field(obj: Any, field_name: str, default: Any = None) -> Any:
+    """Safely get a field from Stripe objects that may behave as dicts or attrs."""
+    if obj is None:
+        return default
+
+    if hasattr(obj, field_name):
+        return getattr(obj, field_name)
+
+    if isinstance(obj, dict):
+        return obj.get(field_name, default)
+
+    try:
+        return obj[field_name]
+    except Exception:
+        return default
+
+
+def _datetime_from_unix(timestamp_value: Optional[Any]) -> Optional[datetime]:
+    """Convert Unix timestamp values to datetime."""
+    if timestamp_value in (None, ""):
+        return None
+
+    try:
+        return datetime.fromtimestamp(int(timestamp_value))
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+async def _fetch_subscription_row(subscription_id: int) -> Dict[str, Any]:
+    """Fetch one subscription row from the database."""
+    db = await get_database()
+
+    async with db.get_connection() as conn:
+        row = await conn.fetchrow("SELECT * FROM subscriptions WHERE id = $1", subscription_id)
+
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error_code": "subscription_not_found",
+                "error_message": f"No subscription found with ID {subscription_id}",
+                "error_type": "not_found",
+                "recoverable": False,
+            },
+        )
+
+    return dict(row)
+
+
+def _build_subscription_response(subscription_row: Dict[str, Any]) -> SubscriptionResponse:
+    """Normalize DB subscription row into API response model."""
+    usage_allowance = int(subscription_row.get("usage_allowance") or 0)
+    usage_current = int(subscription_row.get("usage_current") or 0)
+    usage_percentage = round((usage_current / usage_allowance) * 100, 2) if usage_allowance > 0 else 0.0
+
+    tier_value = subscription_row.get("tier", SubscriptionTier.PROFESSIONAL.value)
+    status_value = subscription_row.get("status", SubscriptionStatus.ACTIVE.value)
+    currency = subscription_row.get("currency") or "usd"
+
+    try:
+        tier = SubscriptionTier(tier_value)
+    except ValueError:
+        tier = SubscriptionTier.PROFESSIONAL
+
+    try:
+        status_enum = SubscriptionStatus(status_value)
+    except ValueError:
+        status_enum = SubscriptionStatus.ACTIVE
+
+    return SubscriptionResponse(
+        id=int(subscription_row["id"]),
+        location_id=subscription_row["location_id"],
+        stripe_subscription_id=subscription_row["stripe_subscription_id"],
+        stripe_customer_id=subscription_row["stripe_customer_id"],
+        tier=tier,
+        status=status_enum,
+        currency=currency,
+        current_period_start=subscription_row["current_period_start"],
+        current_period_end=subscription_row["current_period_end"],
+        usage_allowance=usage_allowance,
+        usage_current=usage_current,
+        usage_percentage=usage_percentage,
+        overage_rate=subscription_row.get("overage_rate", 0),
+        base_price=subscription_row.get("base_price", 0),
+        trial_end=subscription_row.get("trial_end"),
+        cancel_at_period_end=bool(subscription_row.get("cancel_at_period_end", False)),
+        next_invoice_date=subscription_row.get("current_period_end"),
+        created_at=subscription_row.get("created_at") or datetime.now(),
+        updated_at=subscription_row.get("updated_at"),
+    )
+
+
+async def _update_subscription_db_state(
+    subscription_id: int,
+    currency: Optional[str] = None,
+    cancel_at_period_end: Optional[bool] = None,
+    status_value: Optional[str] = None,
+    current_period_start: Optional[datetime] = None,
+    current_period_end: Optional[datetime] = None,
+) -> None:
+    """Persist subscription state after Stripe update/cancel operations."""
+    db = await get_database()
+
+    async with db.get_connection() as conn:
+        await conn.execute(
+            """
+            UPDATE subscriptions SET
+                currency = COALESCE($1, currency),
+                cancel_at_period_end = COALESCE($2, cancel_at_period_end),
+                status = COALESCE($3, status),
+                current_period_start = COALESCE($4, current_period_start),
+                current_period_end = COALESCE($5, current_period_end),
+                updated_at = NOW()
+            WHERE id = $6
+            """,
+            currency,
+            cancel_at_period_end,
+            status_value,
+            current_period_start,
+            current_period_end,
+            subscription_id,
+        )
+
+
+def _extract_invoice_subscription_id(invoice: Any) -> Optional[str]:
+    """Extract Stripe subscription ID from invoice object."""
+    subscription_obj = _stripe_field(invoice, "subscription")
+    if subscription_obj is None:
+        return None
+
+    if isinstance(subscription_obj, str):
+        return subscription_obj
+
+    return _stripe_field(subscription_obj, "id")
+
+
+async def _load_subscription_lookup_by_customer(customer_id: str) -> Dict[str, Dict[str, Any]]:
+    """Load local subscription mappings for a Stripe customer ID."""
+    db = await get_database()
+
+    async with db.get_connection() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, location_id, stripe_subscription_id
+            FROM subscriptions
+            WHERE stripe_customer_id = $1
+            """,
+            customer_id,
+        )
+
+    lookup: Dict[str, Dict[str, Any]] = {}
+    for row in rows:
+        row_data = dict(row)
+        stripe_subscription_id = row_data.get("stripe_subscription_id")
+        if stripe_subscription_id:
+            lookup[stripe_subscription_id] = {"id": int(row_data["id"]), "location_id": row_data.get("location_id")}
+
+    return lookup
 
 
 # ===================================================================
@@ -252,34 +412,20 @@ async def get_subscription(subscription_id: int):
         HTTPException: If subscription not found or access error
     """
     try:
-        # TODO: Implement database lookup
-        # subscription = await db.subscriptions.get(id=subscription_id)
-        # if not subscription:
-        #     raise HTTPException(404, "Subscription not found")
+        subscription_row = await _fetch_subscription_row(subscription_id)
+        response = _build_subscription_response(subscription_row)
 
-        # Get from Stripe for now (placeholder)
-        # stripe_subscription = await billing_service.get_subscription(subscription.stripe_subscription_id)
-
-        logger.info(f"Retrieved subscription {subscription_id}")
-
-        # Placeholder response - replace with actual database data
-        return SubscriptionResponse(
-            id=subscription_id,
-            location_id="placeholder_location",
-            stripe_subscription_id="sub_placeholder",
-            stripe_customer_id="cus_placeholder",
-            tier=SubscriptionTier.PROFESSIONAL,
-            status=SubscriptionStatus.ACTIVE,
-            current_period_start=datetime.now(),
-            current_period_end=datetime.now(),
-            usage_allowance=150,
-            usage_current=87,
-            usage_percentage=58.0,
-            overage_rate=1.50,
-            base_price=249.00,
-            next_invoice_date=datetime.now(),
-            created_at=datetime.now()
+        logger.info(
+            f"Retrieved subscription {subscription_id}",
+            extra={
+                "subscription_id": subscription_id,
+                "location_id": response.location_id,
+                "stripe_subscription_id": response.stripe_subscription_id,
+                "tier": response.tier.value,
+                "status": response.status.value,
+            },
         )
+        return response
 
     except HTTPException:
         raise
@@ -329,17 +475,38 @@ async def update_subscription(
             }
         )
 
-        # Handle tier change if requested
+        existing_subscription = await _fetch_subscription_row(subscription_id)
+
+        # Handle tier change if requested (full manager workflow + DB sync)
         if request.tier:
-            subscription = await subscription_manager.handle_tier_change(
-                subscription_id, request.tier
-            )
+            subscription = await subscription_manager.handle_tier_change(subscription_id, request.tier)
         else:
-            # TODO: Handle other modifications (payment method, cancellation)
-            # stripe_subscription = await billing_service.modify_subscription(
-            #     subscription.stripe_subscription_id, request
-            # )
-            pass
+            stripe_subscription = await retry_with_exponential_backoff(
+                billing_service.modify_subscription,
+                subscription_id=existing_subscription["stripe_subscription_id"],
+                request=request,
+            )
+
+            stripe_status = _stripe_field(stripe_subscription, "status")
+            stripe_period_start = _datetime_from_unix(_stripe_field(stripe_subscription, "current_period_start"))
+            stripe_period_end = _datetime_from_unix(_stripe_field(stripe_subscription, "current_period_end"))
+            stripe_cancel_at_period_end = _stripe_field(stripe_subscription, "cancel_at_period_end")
+
+            await _update_subscription_db_state(
+                subscription_id=subscription_id,
+                currency=request.currency,
+                cancel_at_period_end=(
+                    request.cancel_at_period_end
+                    if request.cancel_at_period_end is not None
+                    else stripe_cancel_at_period_end
+                ),
+                status_value=stripe_status,
+                current_period_start=stripe_period_start,
+                current_period_end=stripe_period_end,
+            )
+
+            refreshed_subscription = await _fetch_subscription_row(subscription_id)
+            subscription = _build_subscription_response(refreshed_subscription)
 
         # Track subscription modification event
         background_tasks.add_task(
@@ -352,26 +519,17 @@ async def update_subscription(
             }
         )
 
-        logger.info(f"Successfully updated subscription {subscription_id}")
-
-        # Return placeholder - replace with actual updated subscription
-        return SubscriptionResponse(
-            id=subscription_id,
-            location_id="placeholder_location",
-            stripe_subscription_id="sub_placeholder",
-            stripe_customer_id="cus_placeholder",
-            tier=request.tier or SubscriptionTier.PROFESSIONAL,
-            status=SubscriptionStatus.ACTIVE,
-            current_period_start=datetime.now(),
-            current_period_end=datetime.now(),
-            usage_allowance=150,
-            usage_current=87,
-            usage_percentage=58.0,
-            overage_rate=1.50,
-            base_price=249.00,
-            next_invoice_date=datetime.now(),
-            created_at=datetime.now()
+        logger.info(
+            f"Successfully updated subscription {subscription_id}",
+            extra={
+                "subscription_id": subscription_id,
+                "tier": subscription.tier.value,
+                "status": subscription.status.value,
+                "currency": subscription.currency,
+            },
         )
+
+        return subscription
 
     except SubscriptionManagerError as e:
         logger.error(f"Subscription manager error for {subscription_id}: {e}")
@@ -425,11 +583,27 @@ async def cancel_subscription(
             }
         )
 
-        # TODO: Get subscription from database
-        # subscription = await db.subscriptions.get(id=subscription_id)
-        # stripe_subscription = await billing_service.cancel_subscription(
-        #     subscription.stripe_subscription_id, immediate
-        # )
+        existing_subscription = await _fetch_subscription_row(subscription_id)
+        stripe_subscription = await retry_with_exponential_backoff(
+            billing_service.cancel_subscription,
+            subscription_id=existing_subscription["stripe_subscription_id"],
+            immediate=immediate,
+        )
+
+        stripe_status = _stripe_field(stripe_subscription, "status")
+        stripe_period_end = _datetime_from_unix(_stripe_field(stripe_subscription, "current_period_end"))
+        stripe_canceled_at = _datetime_from_unix(_stripe_field(stripe_subscription, "canceled_at"))
+        stripe_cancel_at_period_end = _stripe_field(stripe_subscription, "cancel_at_period_end")
+
+        effective_date = stripe_canceled_at if immediate else stripe_period_end or existing_subscription["current_period_end"]
+        canceled_at = stripe_canceled_at or datetime.now()
+
+        await _update_subscription_db_state(
+            subscription_id=subscription_id,
+            cancel_at_period_end=bool(stripe_cancel_at_period_end),
+            status_value=stripe_status or (SubscriptionStatus.CANCELED.value if immediate else None),
+            current_period_end=stripe_period_end,
+        )
 
         # Track subscription cancellation
         background_tasks.add_task(
@@ -447,10 +621,12 @@ async def cancel_subscription(
         return {
             "success": True,
             "subscription_id": subscription_id,
-            "canceled_at": datetime.now().isoformat(),
-            "effective_date": datetime.now().isoformat(),
+            "stripe_subscription_id": existing_subscription["stripe_subscription_id"],
+            "canceled_at": canceled_at.isoformat(),
+            "effective_date": effective_date.isoformat() if effective_date else datetime.now().isoformat(),
             "immediate": immediate,
-            "refund_amount": 0.0,  # Calculate based on proration
+            "status": stripe_status or ("canceled" if immediate else "active"),
+            "refund_amount": 0.0,
             "message": f"Subscription {'canceled immediately' if immediate else 'scheduled for cancellation at period end'}"
         }
 
@@ -766,14 +942,18 @@ async def list_invoices(
 
         # Get invoices from billing service
         invoices = await billing_service.get_customer_invoices(customer_id, limit)
+        subscription_lookup = await _load_subscription_lookup_by_customer(customer_id)
 
         # Convert to response format
         invoice_details = []
-        for invoice in invoices:
+        for index, invoice in enumerate(invoices, start=1):
+            stripe_subscription_id = _extract_invoice_subscription_id(invoice)
+            local_subscription = subscription_lookup.get(stripe_subscription_id or "", {})
+
             invoice_detail = InvoiceDetails(
-                id=1,  # Placeholder - use database ID
+                id=index,
                 stripe_invoice_id=invoice.id,
-                subscription_id=1,  # Placeholder - lookup from database
+                subscription_id=local_subscription.get("id", 0),
                 amount_due=invoice.amount_due / 100,
                 amount_paid=invoice.amount_paid / 100 if invoice.amount_paid else 0,
                 status=invoice.status,
@@ -824,17 +1004,21 @@ async def get_billing_history(customer_id: str):
 
         # Get invoices and calculate totals
         invoices = await billing_service.get_customer_invoices(customer_id, 100)
+        subscription_lookup = await _load_subscription_lookup_by_customer(customer_id)
 
         # Calculate total spent
         total_spent = sum(invoice.amount_paid / 100 if invoice.amount_paid else 0 for invoice in invoices)
 
         # Convert invoices to details format
         invoice_details = []
-        for invoice in invoices:
+        for index, invoice in enumerate(invoices, start=1):
+            stripe_subscription_id = _extract_invoice_subscription_id(invoice)
+            local_subscription = subscription_lookup.get(stripe_subscription_id or "", {})
+
             invoice_detail = InvoiceDetails(
-                id=1,  # Placeholder
+                id=index,
                 stripe_invoice_id=invoice.id,
-                subscription_id=1,  # Placeholder
+                subscription_id=local_subscription.get("id", 0),
                 amount_due=invoice.amount_due / 100,
                 amount_paid=invoice.amount_paid / 100 if invoice.amount_paid else 0,
                 status=invoice.status,
@@ -869,8 +1053,13 @@ async def get_billing_history(customer_id: str):
         else:
             period_start = period_end = datetime.now()
 
+        location_id = "unknown_location"
+        if subscription_lookup:
+            first_subscription = next(iter(subscription_lookup.values()))
+            location_id = first_subscription.get("location_id") or location_id
+
         billing_history = BillingHistoryResponse(
-            location_id="placeholder",  # TODO: Lookup from database
+            location_id=location_id,
             invoices=invoice_details,
             total_spent=total_spent,
             period_start=period_start,

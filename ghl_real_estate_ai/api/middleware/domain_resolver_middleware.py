@@ -5,6 +5,7 @@ in the $500K ARR platform.
 """
 
 import json
+import os
 import time
 import uuid
 from datetime import datetime, timedelta
@@ -52,18 +53,50 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.db_pool = db_pool
         self.cache = cache_service
-        self.default_agency_id = default_agency_id or settings.get("DEFAULT_AGENCY_ID")
+        self.default_agency_id = default_agency_id or self._get_setting("DEFAULT_AGENCY_ID")
 
         # Configuration
-        self.primary_domain = settings.get("PRIMARY_DOMAIN", "app.enterprisehub.com")
-        self.enable_subdomain_routing = settings.get("ENABLE_SUBDOMAIN_ROUTING", True)
-        self.force_https = settings.get("FORCE_HTTPS", True)
+        self.primary_domain = self._get_setting("PRIMARY_DOMAIN", "app.enterprisehub.com")
+        self.enable_subdomain_routing = self._get_setting("ENABLE_SUBDOMAIN_ROUTING", True)
+        self.force_https = self._get_setting("FORCE_HTTPS", True)
+        self.debug_mode = self._get_setting("DEBUG", False)
 
         # Performance settings
         self.cache_ttl = 3600  # 1 hour cache for domain resolution
         self.health_check_paths = {"/health", "/ping", "/.well-known/"}
 
         logger.info(f"Domain resolver middleware initialized with primary domain: {self.primary_domain}")
+
+    @staticmethod
+    def _get_setting(name: str, default: Any = None) -> Any:
+        """
+        Read settings from pydantic Settings attributes first, then environment.
+
+        Supports legacy upper-case config keys used by this middleware while keeping
+        compatibility with lower-case pydantic Settings fields.
+        """
+        attr_name = name.lower()
+        if hasattr(settings, attr_name):
+            value = getattr(settings, attr_name)
+            return default if value is None else value
+
+        env_value = os.getenv(name)
+        if env_value is None:
+            return default
+
+        if isinstance(default, bool):
+            return env_value.strip().lower() in {"1", "true", "yes", "on"}
+        if isinstance(default, int):
+            try:
+                return int(env_value)
+            except ValueError:
+                return default
+        if isinstance(default, float):
+            try:
+                return float(env_value)
+            except ValueError:
+                return default
+        return env_value
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """Process request through domain resolution middleware."""
@@ -86,7 +119,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             request.state.tenant = tenant_context
 
             # Add custom headers for debugging
-            if settings.get("DEBUG", False):
+            if self.debug_mode:
                 request.state.debug_info = {
                     "agency_id": tenant_context.agency_id,
                     "client_id": tenant_context.client_id,
@@ -241,16 +274,22 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
 
     async def _resolve_subdomain_routing(self, domain_name: str) -> TenantContext:
         """Resolve subdomain-based routing (e.g., agency.app.com or client.agency.app.com)."""
-
         parts = domain_name.split(".")
-        if len(parts) < 3:  # Minimum: subdomain.app.com
+        primary_parts = self.primary_domain.split(".")
+        if len(parts) <= len(primary_parts):
+            return await self._get_default_context()
+        if parts[-len(primary_parts) :] != primary_parts:
+            return await self._get_default_context()
+
+        subdomain_parts = parts[: -len(primary_parts)]
+        if not subdomain_parts:
             return await self._get_default_context()
 
         try:
             async with self.db_pool.acquire() as conn:
-                if len(parts) == 3:
-                    # Format: agency.app.com
-                    agency_slug = parts[0]
+                if len(subdomain_parts) == 1:
+                    # Format: agency.<primary_domain>
+                    agency_slug = subdomain_parts[0]
 
                     agency_info = await conn.fetchrow(
                         """
@@ -262,16 +301,19 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     )
 
                     if agency_info:
+                        agency_id = agency_info["agency_id"] if "agency_id" in agency_info else None
+                        if not agency_id:
+                            return await self._get_default_context()
                         context = TenantContext()
-                        context.agency_id = agency_info["agency_id"]
+                        context.agency_id = agency_id
                         context.is_white_label = True
                         context.primary_domain = False
                         return context
 
-                elif len(parts) == 4:
-                    # Format: client.agency.app.com
-                    client_slug = parts[0]
-                    agency_slug = parts[1]
+                elif len(subdomain_parts) == 2:
+                    # Format: client.agency.<primary_domain>
+                    client_slug = subdomain_parts[0]
+                    agency_slug = subdomain_parts[1]
 
                     client_info = await conn.fetchrow(
                         """
@@ -286,9 +328,13 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                     )
 
                     if client_info:
+                        agency_id = client_info["agency_id"] if "agency_id" in client_info else None
+                        client_id = client_info["client_id"] if "client_id" in client_info else None
+                        if not agency_id or not client_id:
+                            return await self._get_default_context()
                         context = TenantContext()
-                        context.agency_id = client_info["agency_id"]
-                        context.client_id = client_info["client_id"]
+                        context.agency_id = agency_id
+                        context.client_id = client_id
                         context.is_white_label = True
                         context.primary_domain = False
                         return context

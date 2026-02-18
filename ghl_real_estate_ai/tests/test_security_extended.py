@@ -22,10 +22,8 @@ from ghl_real_estate_ai.security.auth_manager import (
 )
 from ghl_real_estate_ai.security.security_middleware import SecurityHeaders, SecurityMiddleware
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 class TestAuthManager:
     """Tests for Enterprise AuthManager."""
 
@@ -146,7 +144,6 @@ class TestAuthManager:
             assert exc.value.detail == "Session expired"
 
 
-@pytest.mark.asyncio
 class TestSecurityMiddleware:
     """Tests for SecurityMiddleware."""
 

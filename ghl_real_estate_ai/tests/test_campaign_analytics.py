@@ -16,7 +16,6 @@ import pytest
 from ghl_real_estate_ai.services.campaign_analytics import CampaignTracker
 
 
-@pytest.mark.unit
 
 @pytest.fixture
 def test_location_id():

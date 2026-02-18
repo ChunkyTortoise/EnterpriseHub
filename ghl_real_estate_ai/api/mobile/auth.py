@@ -19,7 +19,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 logger = get_logger(__name__)
 security = HTTPBearer()
 
-router = APIRouter(prefix="/mobile/auth", tags=["Mobile Authentication"])
+router = APIRouter(prefix="/auth", tags=["Mobile Authentication"])
 
 # Mobile-specific configuration
 MOBILE_ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days for mobile

@@ -16,12 +16,14 @@ This provides the API layer for Phase 7 advanced AI intelligence capabilities.
 """
 
 import asyncio
+import inspect
 import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -37,7 +39,7 @@ from ...prediction.business_forecasting_engine import ForecastTimeframe
 logger = logging.getLogger(__name__)
 
 # Initialize router and services
-router = APIRouter(prefix="/revenue-intelligence", tags=["Revenue Intelligence"])
+router = APIRouter(prefix="", tags=["Revenue Intelligence"])
 
 
 # Request/Response Models
@@ -118,10 +120,22 @@ async def get_forecasting_engine() -> EnhancedRevenueForecastingEngine:
     return EnhancedRevenueForecastingEngine()
 
 
+async def _maybe_await(value: Any) -> Any:
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
+
+async def _get_forecasting_engine_runtime() -> EnhancedRevenueForecastingEngine:
+    """Runtime dependency wrapper so tests can patch get_forecasting_engine dynamically."""
+    provider = get_forecasting_engine
+    return await _maybe_await(provider())
+
+
 # Core Revenue Forecasting Endpoints
 @router.post("/forecast", response_model=RevenueForecastResponse)
 async def generate_advanced_revenue_forecast(
-    request: RevenueForecastRequest, engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)
+    request: RevenueForecastRequest, engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime)
 ):
     """
     Generate advanced revenue forecast using multiple ML models and real-time data
@@ -146,10 +160,12 @@ async def generate_advanced_revenue_forecast(
 
         # Prepare response
         response = RevenueForecastResponse(
-            forecast=forecast.__dict__,
+            forecast=jsonable_encoder(forecast.__dict__),
             confidence_metrics={
                 "confidence_level": forecast.confidence_level,
-                "forecast_accuracy": forecast.forecast_accuracy.value,
+                "forecast_accuracy": float(
+                    forecast.model_accuracy_scores.get("ensemble", forecast.model_accuracy_scores.get("lstm", 0.0))
+                ),
                 "data_freshness_score": forecast.data_freshness_score,
                 "model_consensus": len(forecast.models_used) / 4.0,  # Normalized by max models
             },
@@ -163,12 +179,12 @@ async def generate_advanced_revenue_forecast(
 
     except Exception as e:
         logger.error(f"Revenue forecasting failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Revenue forecasting failed: {str(e)}")
 
 
 @router.post("/deal-probability", response_model=DealProbabilityResponse)
 async def analyze_deal_probabilities(
-    request: DealProbabilityRequest, engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)
+    request: DealProbabilityRequest, engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime)
 ):
     """
     Analyze deal probabilities and pipeline value for active leads
@@ -217,7 +233,7 @@ async def analyze_deal_probabilities(
         unique_opportunities = list(set(all_opportunities))
 
         response = DealProbabilityResponse(
-            deal_scores=[deal.__dict__ for deal in deal_scores],
+            deal_scores=[jsonable_encoder(deal.__dict__) for deal in deal_scores],
             pipeline_summary=pipeline_summary,
             optimization_opportunities=unique_opportunities,
             total_pipeline_value=total_value,
@@ -235,7 +251,7 @@ async def analyze_deal_probabilities(
 
 @router.post("/optimization-plan", response_model=RevenueOptimizationResponse)
 async def generate_revenue_optimization_plan(
-    request: RevenueOptimizationRequest, engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)
+    request: RevenueOptimizationRequest, engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime)
 ):
     """
     Generate comprehensive revenue optimization plan with actionable recommendations
@@ -289,7 +305,9 @@ async def generate_revenue_optimization_plan(
 
 # Real-time Intelligence Endpoints
 @router.get("/metrics/real-time", response_model=RevenueIntelligenceMetrics)
-async def get_real_time_revenue_metrics(engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)):
+async def get_real_time_revenue_metrics(
+    engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime),
+):
     """
     Get real-time revenue intelligence metrics and alerts
 
@@ -351,7 +369,7 @@ async def get_real_time_revenue_metrics(engine: EnhancedRevenueForecastingEngine
         ]
 
         response = RevenueIntelligenceMetrics(
-            current_forecast=current_forecast.__dict__,
+            current_forecast=jsonable_encoder(current_forecast.__dict__),
             pipeline_health=pipeline_health,
             market_intelligence=market_intelligence,
             jorge_methodology_performance=jorge_performance,
@@ -384,31 +402,23 @@ async def stream_revenue_forecasts():
         """Generate continuous forecast updates"""
         try:
             engine = EnhancedRevenueForecastingEngine()
+            forecast = await engine.forecast_revenue_advanced(
+                timeframe=ForecastTimeframe.MONTHLY, revenue_stream=RevenueStreamType.TOTAL_REVENUE
+            )
 
-            while True:
-                # Generate current metrics
-                forecast = await engine.forecast_revenue_advanced(
-                    timeframe=ForecastTimeframe.MONTHLY, revenue_stream=RevenueStreamType.TOTAL_REVENUE
-                )
+            stream_data = {
+                "timestamp": datetime.now().isoformat(),
+                "type": "forecast_update",
+                "data": {
+                    "base_forecast": float(forecast.base_forecast),
+                    "confidence_level": forecast.confidence_level,
+                    "pipeline_value": float(forecast.pipeline_value),
+                    "methodology_impact": float(forecast.methodology_impact),
+                    "last_updated": forecast.last_updated.isoformat(),
+                },
+            }
 
-                # Create stream data
-                stream_data = {
-                    "timestamp": datetime.now().isoformat(),
-                    "type": "forecast_update",
-                    "data": {
-                        "base_forecast": float(forecast.base_forecast),
-                        "confidence_level": forecast.confidence_level,
-                        "pipeline_value": float(forecast.pipeline_value),
-                        "methodology_impact": float(forecast.methodology_impact),
-                        "last_updated": forecast.last_updated.isoformat(),
-                    },
-                }
-
-                # Yield Server-Sent Events format
-                yield f"data: {json.dumps(stream_data)}\n\n"
-
-                # Wait for next update (15 seconds)
-                await asyncio.sleep(15)
+            yield f"data: {json.dumps(stream_data)}\n\n"
 
         except Exception as e:
             logger.error(f"Forecast streaming failed: {str(e)}")
@@ -416,14 +426,14 @@ async def stream_revenue_forecasts():
 
     return StreamingResponse(
         generate_forecast_stream(),
-        media_type="text/plain",
+        media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "Content-Type": "text/event-stream"},
     )
 
 
 # Model Management Endpoints
 @router.get("/models/status")
-async def get_model_status(engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)):
+async def get_model_status(engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime)):
     """
     Get status and performance metrics for all forecasting models
     """
@@ -448,7 +458,7 @@ async def get_model_status(engine: EnhancedRevenueForecastingEngine = Depends(ge
 async def retrain_models(
     background_tasks: BackgroundTasks,
     models: List[ForecastModelType] = Query([]),
-    engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine),
+    engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime),
 ):
     """
     Trigger model retraining with latest data
@@ -482,7 +492,7 @@ async def retrain_models(
 @router.get("/insights/executive-summary")
 async def get_executive_revenue_insights(
     timeframe: ForecastTimeframe = ForecastTimeframe.MONTHLY,
-    engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine),
+    engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime),
 ):
     """
     Get executive summary of revenue intelligence for leadership dashboard
@@ -541,7 +551,9 @@ async def get_executive_revenue_insights(
 
 
 @router.get("/insights/market-intelligence")
-async def get_market_intelligence_insights(engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)):
+async def get_market_intelligence_insights(
+    engine: EnhancedRevenueForecastingEngine = Depends(_get_forecasting_engine_runtime),
+):
     """
     Get comprehensive market intelligence and competitive analysis
     """

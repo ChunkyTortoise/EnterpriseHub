@@ -1,6 +1,5 @@
 import pytest
 
-@pytest.mark.integration
 import asyncio
 import json
 import uuid

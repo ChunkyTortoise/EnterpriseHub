@@ -6,12 +6,14 @@ action recommendations, and predictive insights through FastAPI endpoints.
 """
 
 import asyncio
+import inspect
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
@@ -34,6 +36,23 @@ action_engine = ActionRecommendationsEngine()
 ml_model = ClosingProbabilityModel()
 
 router = APIRouter(prefix="/api/v1/predictive", tags=["Predictive Analytics"])
+_bearer = HTTPBearer(auto_error=True)
+
+
+async def _maybe_await(value: Any) -> Any:
+    """Await coroutine-like values and pass through plain values."""
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
+
+async def _get_current_user(credentials: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
+    """Resolve user from bearer token.
+
+    Wrapped helper keeps compatibility with tests that patch
+    `predictive_analytics.verify_jwt_token` at runtime.
+    """
+    return await _maybe_await(verify_jwt_token(credentials.credentials))
 
 
 # Pydantic models for request/response
@@ -156,7 +175,7 @@ class ModelPerformanceResponse(BaseModel):
 
 
 @router.post("/score", response_model=PredictiveScoreResponse)
-async def get_predictive_score(request: ConversationContextRequest, current_user: dict = Depends(verify_jwt_token)):
+async def get_predictive_score(request: ConversationContextRequest, current_user: dict = Depends(_get_current_user)):
     """
     Get comprehensive predictive score for a lead.
 
@@ -174,7 +193,7 @@ async def get_predictive_score(request: ConversationContextRequest, current_user
         }
 
         # Get predictive score
-        score = await predictive_scorer.calculate_predictive_score(context, request.location)
+        score = await _maybe_await(predictive_scorer.calculate_predictive_score(context, request.location))
 
         # Convert to response model
         response = PredictiveScoreResponse(
@@ -203,11 +222,11 @@ async def get_predictive_score(request: ConversationContextRequest, current_user
 
     except Exception as e:
         logger.error(f"Error generating predictive score: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 @router.post("/insights", response_model=LeadInsightsResponse)
-async def get_lead_insights(request: ConversationContextRequest, current_user: dict = Depends(verify_jwt_token)):
+async def get_lead_insights(request: ConversationContextRequest, current_user: dict = Depends(_get_current_user)):
     """
     Get deep insights for lead decision making.
 
@@ -225,7 +244,7 @@ async def get_lead_insights(request: ConversationContextRequest, current_user: d
         }
 
         # Generate insights
-        insights = await predictive_scorer.generate_lead_insights(context, request.location)
+        insights = await _maybe_await(predictive_scorer.generate_lead_insights(context, request.location))
 
         # Convert to response model
         response = LeadInsightsResponse(
@@ -253,7 +272,7 @@ async def get_lead_insights(request: ConversationContextRequest, current_user: d
 
 @router.post("/actions", response_model=List[ActionRecommendationResponse])
 async def get_action_recommendations(
-    request: ConversationContextRequest, limit: Optional[int] = 5, current_user: dict = Depends(verify_jwt_token)
+    request: ConversationContextRequest, limit: Optional[int] = 5, current_user: dict = Depends(_get_current_user)
 ):
     """
     Get prioritized action recommendations for a lead.
@@ -272,7 +291,7 @@ async def get_action_recommendations(
         }
 
         # Generate action recommendations
-        recommendations = await action_engine.generate_action_recommendations(context, request.location)
+        recommendations = await _maybe_await(action_engine.generate_action_recommendations(context, request.location))
 
         # Limit results
         if limit:
@@ -314,7 +333,7 @@ async def get_action_recommendations(
 async def get_action_sequence(
     request: ConversationContextRequest,
     sequence_type: str = "conversion_focused",
-    current_user: dict = Depends(verify_jwt_token),
+    current_user: dict = Depends(_get_current_user),
 ):
     """
     Get complete action sequence for lead nurturing and conversion.
@@ -333,7 +352,7 @@ async def get_action_sequence(
         }
 
         # Generate action sequence
-        sequence = await action_engine.generate_action_sequence(context, request.location, sequence_type)
+        sequence = await _maybe_await(action_engine.generate_action_sequence(context, request.location, sequence_type))
 
         # Convert to dict for JSON response
         def action_to_dict(action: ActionRecommendation) -> Dict:
@@ -374,7 +393,7 @@ async def get_action_sequence(
 
 @router.post("/timing-optimization")
 async def optimize_timing(
-    request: ConversationContextRequest, action_type: str, current_user: dict = Depends(verify_jwt_token)
+    request: ConversationContextRequest, action_type: str, current_user: dict = Depends(_get_current_user)
 ):
     """
     Optimize timing for specific actions based on lead behavior.
@@ -399,7 +418,7 @@ async def optimize_timing(
         }
 
         # Optimize timing
-        timing = await action_engine.optimize_timing(context, action_type_enum)
+        timing = await _maybe_await(action_engine.optimize_timing(context, action_type_enum))
 
         response = {
             "action_type": action_type,
@@ -412,13 +431,15 @@ async def optimize_timing(
 
         return JSONResponse(content=response)
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error optimizing timing: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/model-performance", response_model=ModelPerformanceResponse)
-async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
+async def get_model_performance(current_user: dict = Depends(_get_current_user)):
     """
     Get current ML model performance metrics.
 
@@ -429,7 +450,7 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
         logger.info("Retrieving model performance metrics")
 
         # Get model metrics
-        metrics = await ml_model.get_model_performance()
+        metrics = await _maybe_await(ml_model.get_model_performance())
 
         if metrics is None:
             # Model not trained yet
@@ -445,7 +466,7 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
             )
 
         # Check if retraining needed
-        needs_retraining = await ml_model.needs_retraining()
+        needs_retraining = await _maybe_await(ml_model.needs_retraining())
 
         response = ModelPerformanceResponse(
             accuracy=metrics.accuracy,
@@ -467,7 +488,7 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
 
 @router.post("/train-model")
 async def train_model(
-    background_tasks: BackgroundTasks, use_synthetic_data: bool = True, current_user: dict = Depends(verify_jwt_token)
+    background_tasks: BackgroundTasks, use_synthetic_data: bool = True, current_user: dict = Depends(_get_current_user)
 ):
     """
     Trigger ML model training (admin only).
@@ -478,7 +499,7 @@ async def train_model(
     try:
         # Check if user has admin permissions
         if current_user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Admin access required for model training")
+            return JSONResponse(status_code=403, content={"detail": "Admin access required for model training"})
 
         logger.info("Starting ML model training...")
 
@@ -496,7 +517,7 @@ async def train_model(
                     )
 
                 # Train model
-                metrics = await ml_model.train_model(training_data)
+                metrics = await _maybe_await(ml_model.train_model(training_data))
                 logger.info(f"Model training completed. AUC: {metrics.auc_score:.3f}")
 
             except Exception as e:
@@ -512,13 +533,15 @@ async def train_model(
             "timestamp": datetime.now().isoformat(),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error starting model training: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/pipeline-status")
-async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
+async def get_pipeline_status(current_user: dict = Depends(_get_current_user)):
     """
     Get status of the predictive analytics pipeline.
 
@@ -526,11 +549,11 @@ async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
     """
     try:
         # Check model status
-        model_metrics = await ml_model.get_model_performance()
+        model_metrics = await _maybe_await(ml_model.get_model_performance())
         model_trained = model_metrics is not None
 
         # Check if retraining needed
-        needs_retraining = await ml_model.needs_retraining() if model_trained else True
+        needs_retraining = await _maybe_await(ml_model.needs_retraining()) if model_trained else True
 
         # System status
         status = {
@@ -565,7 +588,7 @@ async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
 
 # Batch operations for processing multiple leads
 @router.post("/batch-score")
-async def batch_score_leads(leads: List[ConversationContextRequest], current_user: dict = Depends(verify_jwt_token)):
+async def batch_score_leads(leads: List[ConversationContextRequest], current_user: dict = Depends(_get_current_user)):
     """
     Process multiple leads for batch scoring.
 
@@ -577,7 +600,7 @@ async def batch_score_leads(leads: List[ConversationContextRequest], current_use
 
         # Limit batch size
         if len(leads) > 50:
-            raise HTTPException(status_code=400, detail="Batch size limited to 50 leads per request")
+            return JSONResponse(status_code=400, content={"detail": "Batch size limited to 50 leads per request"})
 
         results = []
 
@@ -590,7 +613,7 @@ async def batch_score_leads(leads: List[ConversationContextRequest], current_use
                     "created_at": lead_request.created_at,
                 }
 
-                score = await predictive_scorer.calculate_predictive_score(context, lead_request.location)
+                score = await _maybe_await(predictive_scorer.calculate_predictive_score(context, lead_request.location))
 
                 return {
                     "lead_id": lead_request.lead_id,
@@ -631,6 +654,8 @@ async def batch_score_leads(leads: List[ConversationContextRequest], current_use
 
         return JSONResponse(content=response)
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in batch scoring: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

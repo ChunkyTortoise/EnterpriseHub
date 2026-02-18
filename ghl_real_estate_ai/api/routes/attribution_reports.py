@@ -172,6 +172,8 @@ async def get_source_performance(
         logger.info(f"Retrieved performance data for {len(response_data)} sources")
         return response_data
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting source performance: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve performance data")

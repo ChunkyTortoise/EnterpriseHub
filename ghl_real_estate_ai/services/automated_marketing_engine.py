@@ -93,12 +93,12 @@ class CampaignBrief:
     """Marketing campaign brief and requirements"""
 
     campaign_id: str
-    campaign_type: CampaignType
-    target_audience: str
-    objective: str
-    content_formats: List[ContentFormat]
-    priority: CampaignPriority
-    deadline: datetime
+    campaign_type: CampaignType = CampaignType.MARKET_UPDATE
+    target_audience: Any = ""
+    objective: str = ""
+    content_formats: List[ContentFormat] = None
+    priority: CampaignPriority = CampaignPriority.MEDIUM
+    deadline: datetime = None
 
     # Content parameters
     tone: str = "professional_friendly"  # professional, friendly, urgent, educational
@@ -115,13 +115,38 @@ class CampaignBrief:
     created_at: datetime = None
     status: str = "draft"  # draft, approved, published, analytics
 
+    # Backward-compatible aliases used by older API/tests.
+    name: Optional[str] = None
+    trigger: Optional[CampaignTrigger] = None
+    objectives: Optional[List[str]] = None
+
     def __post_init__(self):
+        if self.deadline is None:
+            self.deadline = datetime.now() + timedelta(days=7)
         if self.created_at is None:
             self.created_at = datetime.now()
+        if self.content_formats is None:
+            self.content_formats = []
         if self.target_neighborhoods is None:
             self.target_neighborhoods = []
         if self.target_demographics is None:
             self.target_demographics = []
+        if self.objectives and not self.objective:
+            self.objective = self.objectives[0]
+
+        # Map legacy trigger -> campaign_type when campaign_type wasn't supplied.
+        if self.trigger and self.campaign_type == CampaignType.MARKET_UPDATE:
+            trigger = self.trigger.value if isinstance(self.trigger, CampaignTrigger) else str(self.trigger)
+            trigger_map = {
+                CampaignTrigger.NEW_LISTING.value: CampaignType.LISTING_PROMOTION,
+                CampaignTrigger.PRICE_REDUCTION.value: CampaignType.LISTING_PROMOTION,
+                CampaignTrigger.OPEN_HOUSE.value: CampaignType.LISTING_PROMOTION,
+                CampaignTrigger.SUCCESSFUL_CLOSING.value: CampaignType.SUCCESS_STORY,
+                CampaignTrigger.MARKET_MILESTONE.value: CampaignType.MARKET_UPDATE,
+                CampaignTrigger.SEASONAL_OPPORTUNITY.value: CampaignType.SEASONAL,
+                CampaignTrigger.LEAD_MAGNET_REQUEST.value: CampaignType.LEAD_MAGNET,
+            }
+            self.campaign_type = trigger_map.get(trigger, self.campaign_type)
 
 
 @dataclass

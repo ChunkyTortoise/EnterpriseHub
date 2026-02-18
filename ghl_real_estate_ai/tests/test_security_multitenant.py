@@ -20,7 +20,6 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
-@pytest.mark.integration
 
 
 class TestTenantIsolation:

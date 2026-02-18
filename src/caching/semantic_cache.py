@@ -37,6 +37,7 @@ Classes:
 
 import asyncio
 import hashlib
+import inspect
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -465,7 +466,11 @@ class SemanticCache:
 
         # Create cache entry
         entry = CacheEntry(
-            key=cache_key, value=value, embedding=embedding, ttl=ttl or self.default_ttl, tags=tags or []
+            key=cache_key,
+            value=value,
+            embedding=embedding,
+            ttl=self.default_ttl if ttl is None else ttl,
+            tags=tags or [],
         )
 
         async with self._lock:
@@ -496,7 +501,7 @@ class SemanticCache:
             return value, True, similarity
 
         # Compute value
-        if asyncio.iscoroutinefunction(compute_fn):
+        if inspect.iscoroutinefunction(compute_fn):
             value = await compute_fn()
         else:
             value = compute_fn()
@@ -578,9 +583,11 @@ class SemanticCache:
             if not entry.is_expired():
                 entry.touch()
                 self._update_access_stats(cache_key)
+                self._memory_cache.move_to_end(cache_key)
                 return entry.value, 1.0
             else:
                 del self._memory_cache[cache_key]
+                self._access_stats.pop(cache_key, None)
 
         # Check Redis
         if self.enable_persistence and self.redis:
@@ -645,6 +652,8 @@ class SemanticCache:
         if best_match:
             best_match.touch()
             self._update_access_stats(best_match.key)
+            if best_match.key in self._memory_cache:
+                self._memory_cache.move_to_end(best_match.key)
             return best_match.value, best_similarity
 
         return None
@@ -657,6 +666,7 @@ class SemanticCache:
 
         # Store entry
         self._memory_cache[key] = entry
+        self._memory_cache.move_to_end(key)
         self._access_stats[key] = 0
 
     async def _persist_to_redis(self, key: str, entry: CacheEntry) -> None:
@@ -666,7 +676,7 @@ class SemanticCache:
 
         try:
             data = entry.to_dict()
-            ttl = entry.ttl or self.default_ttl
+            ttl = self.default_ttl if entry.ttl is None else entry.ttl
             await self.redis.set(key, data, ttl=ttl)
         except Exception as e:
             # Log but don't fail on persistence errors
@@ -704,7 +714,7 @@ class SemanticCache:
             # Remove entry closest to expiration
             min_ttl_remaining = float("inf")
             for key, entry in self._memory_cache.items():
-                if entry.ttl:
+                if entry.ttl is not None:
                     remaining = entry.ttl - (datetime.now() - entry.created_at).total_seconds()
                     if remaining < min_ttl_remaining:
                         min_ttl_remaining = remaining

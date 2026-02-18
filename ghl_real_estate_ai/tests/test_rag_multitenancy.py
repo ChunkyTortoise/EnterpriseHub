@@ -9,7 +9,6 @@ import pytest
 
 from ghl_real_estate_ai.core.rag_engine import RAGEngine
 
-@pytest.mark.integration
 
 
 def create_rag(name):

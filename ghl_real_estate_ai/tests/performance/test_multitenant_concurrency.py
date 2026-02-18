@@ -18,10 +18,8 @@ import pytest_asyncio
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 class TestMultiTenantConcurrency:
     """Test suite for multi-tenant isolation under load."""
 

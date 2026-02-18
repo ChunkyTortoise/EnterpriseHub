@@ -7,10 +7,8 @@ from httpx import ASGITransport, AsyncClient
 
 from ghl_real_estate_ai.api.main import app
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_analytics_dashboard_metrics():
     """Test getting dashboard metrics."""
     transport = ASGITransport(app=app)
@@ -24,7 +22,6 @@ async def test_analytics_dashboard_metrics():
             assert "period_start" in data
 
 
-@pytest.mark.asyncio
 async def test_create_experiment():
     """Test creating an A/B experiment."""
     transport = ASGITransport(app=app)
@@ -44,7 +41,6 @@ async def test_create_experiment():
             assert data["status"] == "active"
 
 
-@pytest.mark.asyncio
 async def test_list_experiments():
     """Test listing experiments."""
     transport = ASGITransport(app=app)
@@ -56,7 +52,6 @@ async def test_list_experiments():
             assert isinstance(data.get("experiments"), list)
 
 
-@pytest.mark.asyncio
 async def test_campaign_performance():
     """Test campaign performance endpoint."""
     transport = ASGITransport(app=app)
@@ -68,7 +63,6 @@ async def test_campaign_performance():
             assert isinstance(data, list)
 
 
-@pytest.mark.asyncio
 async def test_next_question_optimization():
     """Test next question suggestion endpoint."""
     transport = ASGITransport(app=app)

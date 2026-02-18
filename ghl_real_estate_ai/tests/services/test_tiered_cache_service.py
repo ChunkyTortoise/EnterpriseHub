@@ -15,7 +15,6 @@ import pytest_asyncio
 
 from ghl_real_estate_ai.services.tiered_cache_service import CacheItem, TieredCacheService
 
-@pytest.mark.integration
 
 
 @pytest_asyncio.fixture
@@ -40,7 +39,6 @@ async def tiered_cache():
         await service.stop()
 
 
-@pytest.mark.asyncio
 async def test_l2_to_l1_promotion_logic(tiered_cache):
     """
     Verify that items are promoted from L2 to L1 after 2 accesses.
@@ -87,7 +85,6 @@ async def test_l2_to_l1_promotion_logic(tiered_cache):
     assert result3 == value
 
 
-@pytest.mark.asyncio
 async def test_cache_set_stores_in_both_layers(tiered_cache):
     """Verify that set() stores data in both L1 and L2."""
     key = "dual_store_key"
@@ -102,7 +99,6 @@ async def test_cache_set_stores_in_both_layers(tiered_cache):
     tiered_cache.l2_backend.set.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_cache_delete_removes_from_both_layers(tiered_cache):
     """Verify that delete() removes from both layers."""
     key = "delete_key"

@@ -6,7 +6,6 @@ import pytest
 
 from ghl_real_estate_ai.services.team_service import TeamManager
 
-@pytest.mark.unit
 
 
 def test_add_agent():

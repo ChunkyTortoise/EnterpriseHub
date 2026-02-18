@@ -39,6 +39,7 @@ Classes:
 
 import asyncio
 import hashlib
+import inspect
 import json
 import logging
 import time
@@ -327,7 +328,7 @@ class WarmingTask:
     async def execute(self) -> Optional[Any]:
         """Execute the warming task."""
         try:
-            if asyncio.iscoroutinefunction(self.compute_fn):
+            if inspect.iscoroutinefunction(self.compute_fn):
                 result = await self.compute_fn()
             else:
                 result = self.compute_fn()
@@ -377,6 +378,7 @@ class QueryCache:
         dedup_strategy: DeduplicationStrategy = DeduplicationStrategy.CONTENT_HASH,
         warming_strategy: CacheWarmingStrategy = CacheWarmingStrategy.INCREMENTAL,
         enable_compression: bool = True,
+        enable_persistence: Optional[bool] = None,
         default_ttl: int = 300,
         max_warming_tasks: int = 10,
         key_prefix: str = "query_cache",
@@ -385,15 +387,21 @@ class QueryCache:
         self.dedup_strategy = dedup_strategy
         self.warming_strategy = warming_strategy
         self.enable_compression = enable_compression
+        # Backward-compatible flag used by existing tests and callers.
+        persistence_enabled = enable_persistence if enable_persistence is not None else redis_client is not None
+        self.enable_persistence = persistence_enabled and redis_client is not None
         self.default_ttl = default_ttl
         self.max_warming_tasks = max_warming_tasks
         self.key_prefix = key_prefix
 
         # In-memory cache
         self._memory_cache: Dict[str, QueryResult] = {}
+        # Backward-compatible alias used by older tests.
+        self._cache = self._memory_cache
 
         # Fingerprint index for deduplication
         self._fingerprint_index: Dict[str, str] = {}  # fingerprint -> cache_key
+        self._content_hash_index: Dict[str, str] = {}  # content_hash -> cache_key
 
         # Warming tasks
         self._warming_tasks: Dict[str, WarmingTask] = {}
@@ -435,12 +443,15 @@ class QueryCache:
                 if not result.is_expired():
                     result.touch()
                     self._stats["hits"] += 1
-                    return result.result, self._get_metadata(result)
+                    return self._decode_result(result.result), self._get_metadata(result)
                 else:
                     del self._memory_cache[cache_key]
+                    if result.fingerprint:
+                        self._fingerprint_index.pop(result.fingerprint.to_key(), None)
+                        self._content_hash_index.pop(result.fingerprint.content_hash, None)
 
             # Check Redis
-            if self.redis:
+            if self.enable_persistence and self.redis:
                 try:
                     data = await self.redis.get(cache_key)
                     if data:
@@ -450,7 +461,7 @@ class QueryCache:
                             self._memory_cache[cache_key] = result
                             result.touch()
                             self._stats["hits"] += 1
-                            return result.result, self._get_metadata(result)
+                            return self._decode_result(result.result), self._get_metadata(result)
                 except Exception as e:
                     logger.error(f"Error retrieving from Redis: {e}")
 
@@ -498,7 +509,7 @@ class QueryCache:
 
         # Create cache entry
         cache_key = self._generate_cache_key(query, parameters)
-        ttl_seconds = ttl or self.default_ttl
+        ttl_seconds = self.default_ttl if ttl is None else ttl
 
         query_result = QueryResult(
             query=query,
@@ -520,9 +531,11 @@ class QueryCache:
 
             # Index fingerprint
             self._fingerprint_index[fingerprint.to_key()] = cache_key
+            if fingerprint.content_hash:
+                self._content_hash_index[fingerprint.content_hash] = cache_key
 
             # Persist to Redis
-            if self.redis:
+            if self.enable_persistence and self.redis:
                 try:
                     await self.redis.set(cache_key, query_result.to_dict(), ttl=ttl_seconds)
                 except Exception as e:
@@ -552,7 +565,7 @@ class QueryCache:
 
         # Compute result
         start_time = time.time()
-        if asyncio.iscoroutinefunction(compute_fn):
+        if inspect.iscoroutinefunction(compute_fn):
             result = await compute_fn()
         else:
             result = compute_fn()
@@ -580,9 +593,10 @@ class QueryCache:
                 result = self._memory_cache.pop(cache_key)
                 if result.fingerprint:
                     self._fingerprint_index.pop(result.fingerprint.to_key(), None)
+                    self._content_hash_index.pop(result.fingerprint.content_hash, None)
 
             # Remove from Redis
-            if self.redis:
+            if self.enable_persistence and self.redis:
                 try:
                     await self.redis.delete(cache_key)
                 except Exception as e:
@@ -602,10 +616,11 @@ class QueryCache:
                 result = self._memory_cache.pop(key)
                 if result.fingerprint:
                     self._fingerprint_index.pop(result.fingerprint.to_key(), None)
+                    self._content_hash_index.pop(result.fingerprint.content_hash, None)
                 removed += 1
 
             # Remove from Redis
-            if self.redis:
+            if self.enable_persistence and self.redis:
                 try:
                     cursor = 0
                     while True:
@@ -629,8 +644,9 @@ class QueryCache:
         async with self._lock:
             self._memory_cache.clear()
             self._fingerprint_index.clear()
+            self._content_hash_index.clear()
 
-            if self.redis:
+            if self.enable_persistence and self.redis:
                 try:
                     await self.redis.delete_pattern(f"{self.key_prefix}:*")
                 except Exception as e:
@@ -701,8 +717,13 @@ class QueryCache:
         if self._warming_active:
             return
 
-        self._warming_active = True
-        self._warming_task = asyncio.create_task(self._warming_loop())
+        try:
+            self._warming_task = asyncio.create_task(self._warming_loop())
+            self._warming_active = True
+        except RuntimeError:
+            # Keep cache functional even if no event loop is running at construction time.
+            self._warming_active = False
+            self._warming_task = None
 
     def stop_warming(self) -> None:
         """Stop background warming."""
@@ -772,6 +793,8 @@ class QueryCache:
 
         elif self.dedup_strategy == DeduplicationStrategy.CONTENT_HASH:
             fingerprint = ContentHasher.generate_fingerprint(query, parameters, result)
+            if fingerprint.content_hash in self._content_hash_index:
+                return self._content_hash_index[fingerprint.content_hash]
             fp_key = fingerprint.to_key()
             if fp_key in self._fingerprint_index:
                 return self._fingerprint_index[fp_key]
@@ -802,6 +825,21 @@ class QueryCache:
             "tags": result.tags,
             **result.metadata,
         }
+
+    def _decode_result(self, result: Any) -> Any:
+        """Decode a stored result payload (including compressed payloads)."""
+        if (
+            isinstance(result, dict)
+            and result.get("_compressed") is True
+            and isinstance(result.get("_data"), str)
+        ):
+            try:
+                compressed_bytes = bytes.fromhex(result["_data"])
+                raw = CompressionHandler.decompress(compressed_bytes, was_compressed=True)
+                return json.loads(raw.decode())
+            except Exception as e:
+                logger.error(f"Error decoding compressed query result: {e}")
+        return result
 
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""

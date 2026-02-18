@@ -1,0 +1,70 @@
+name: Trust Hardening Gate
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/trust-hardening-gate.yml"
+      - "ghl_real_estate_ai/api/middleware/**"
+      - "ghl_real_estate_ai/api/routes/analytics.py"
+      - "ghl_real_estate_ai/api/routes/ai_concierge.py"
+      - "ghl_real_estate_ai/api/routes/billing.py"
+      - "ghl_real_estate_ai/streamlit_demo/app.py"
+      - "tests/api/test_websocket_auth_hardening.py"
+      - "tests/api/test_billing_routes.py"
+      - "tests/streamlit_demo/test_trust_badge_ui.py"
+  workflow_dispatch:
+
+jobs:
+  trust-hardening-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ANTHROPIC_API_KEY: sk-ant-test-key-for-ci
+      GHL_API_KEY: test-ghl-key-for-ci
+      GHL_LOCATION_ID: test-location-for-ci
+      JWT_SECRET_KEY: trust-hardening-ci-jwt-secret-minimum-32-chars
+      STRIPE_SECRET_KEY: sk_test_ci_key
+      STRIPE_WEBHOOK_SECRET: whsec_ci_secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-trust-gate-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-trust-gate-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Install Playwright Chromium
+        run: python -m playwright install chromium
+
+      - name: Run targeted API hardening tests
+        run: |
+          pytest -q -o addopts='' \
+            tests/api/test_websocket_auth_hardening.py \
+            tests/api/test_billing_routes.py
+
+      - name: Run trust badge UI automation test
+        run: |
+          pytest -q -o addopts='' tests/streamlit_demo/test_trust_badge_ui.py
+
+      - name: Upload Playwright artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust-hardening-playwright-artifacts
+          path: output/playwright
+          if-no-files-found: ignore

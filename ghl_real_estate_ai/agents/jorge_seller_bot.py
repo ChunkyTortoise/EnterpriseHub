@@ -41,6 +41,8 @@ from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCo
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
 
+logger = get_logger(__name__)
+
 # Track 3.1 Predictive Intelligence Integration
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
@@ -85,8 +87,6 @@ try:
     MCP_INTEGRATION_AVAILABLE = True
 except ImportError:
     MCP_INTEGRATION_AVAILABLE = False
-
-logger = get_logger(__name__)
 
 # ================================
 # ENHANCED FEATURES DATACLASSES
@@ -306,7 +306,11 @@ class JorgeSellerBot:
 
         # Track 3.1 Predictive Intelligence Engine (always enabled)
         if self.config.enable_track3_intelligence:
-            self.ml_analytics = get_ml_analytics_engine(tenant_id)
+            try:
+                self.ml_analytics = get_ml_analytics_engine(tenant_id)
+            except TypeError:
+                # Stub fallback in standalone mode uses a zero-arg factory.
+                self.ml_analytics = get_ml_analytics_engine()
         else:
             self.ml_analytics = None
 
@@ -1821,19 +1825,44 @@ class JorgeSellerBot:
 
     async def process_seller_message(
         self,
-        conversation_id: str,
-        user_message: str,
+        conversation_id: Optional[str] = None,
+        user_message: Optional[str] = None,
         seller_name: Optional[str] = None,
         conversation_history: Optional[List[ConversationMessage]] = None,
         seller_phone: Optional[str] = None,
         seller_email: Optional[str] = None,
         metadata: Optional[BotMetadata] = None,
+        lead_id: Optional[str] = None,
+        lead_name: Optional[str] = None,
+        history: Optional[List[ConversationMessage]] = None,
+        **legacy_kwargs: Any,
     ) -> SellerBotResponse:
         try:
             _workflow_start = time.time()
 
-            if conversation_history is None:
-                conversation_history = []
+            # Backward-compatible aliases used by existing tests/integrations
+            if not conversation_id:
+                conversation_id = lead_id or legacy_kwargs.get("conversation_id")
+            if not seller_name and lead_name:
+                seller_name = lead_name
+            if conversation_history is None and history is not None:
+                conversation_history = history
+            conversation_history = list(conversation_history or [])
+
+            if not conversation_id:
+                raise ValueError("conversation_id (or lead_id) is required")
+
+            if not user_message or not str(user_message).strip():
+                for message in reversed(conversation_history):
+                    if str(message.get("role", "")).lower() != "user":
+                        continue
+                    content = str(message.get("content", "")).strip()
+                    if content:
+                        user_message = content
+                        break
+
+            if not user_message or not str(user_message).strip():
+                user_message = "I want to sell my home."
 
             conversation_history.append(
                 {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
@@ -1927,6 +1956,8 @@ class JorgeSellerBot:
                 "engagement_status": result.get("current_journey_stage", "qualification"),
                 "frs_score": frs_score,
                 "pcs_score": pcs_score,
+                "intent_profile": intent_profile,
+                "stall_detected": bool(result.get("stall_detected", False)),
                 "handoff_signals": handoff_signals,
                 "ab_test": {
                     "experiment_id": ABTestingService.RESPONSE_TONE_EXPERIMENT,
@@ -1951,6 +1982,8 @@ class JorgeSellerBot:
                 "engagement_status": "error",
                 "frs_score": 0.0,
                 "pcs_score": 0.0,
+                "intent_profile": None,
+                "stall_detected": False,
                 "handoff_signals": {},
             }
 

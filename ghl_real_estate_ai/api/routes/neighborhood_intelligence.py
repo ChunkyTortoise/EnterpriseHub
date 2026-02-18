@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, Path, Query, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -94,22 +95,6 @@ class AlertRuleRequest(BaseModel):
     severity: str = Field("medium", description="Alert severity")
     delivery_channels: List[str] = Field(default=["email"], description="Delivery channels")
     throttle_minutes: int = Field(60, ge=5, le=1440, description="Throttle period in minutes")
-
-    @field_validator("alert_type")
-    @classmethod
-    def validate_alert_type(cls, v):
-        valid_types = [alert_type.value for alert_type in AlertType]
-        if v not in valid_types:
-            raise ValueError(f"Invalid alert type. Must be one of: {valid_types}")
-        return v
-
-    @field_validator("severity")
-    @classmethod
-    def validate_severity(cls, v):
-        valid_severities = [severity.value for severity in AlertSeverity]
-        if v not in valid_severities:
-            raise ValueError(f"Invalid severity. Must be one of: {valid_severities}")
-        return v
 
 
 class InvestmentAnalysisRequest(BaseModel):
@@ -197,7 +182,19 @@ class ErrorResponse(BaseModel):
 
 async def get_intelligence_service() -> NeighborhoodIntelligenceService:
     """Get neighborhood intelligence service."""
-    return await get_neighborhood_intelligence_service()
+    try:
+        return await get_neighborhood_intelligence_service()
+    except Exception as e:
+        logger.error(f"Failed to initialize neighborhood intelligence service: {e}")
+
+        class _UnavailableNeighborhoodService:
+            async def _raise(self, *args, **kwargs):
+                raise RuntimeError(str(e))
+
+            def __getattr__(self, name):
+                return self._raise
+
+        return _UnavailableNeighborhoodService()
 
 
 async def get_prediction_engine():
@@ -221,13 +218,13 @@ async def get_alert_system():
 def create_success_response(data: Any, message: str = "Success", execution_time: float = None) -> JSONResponse:
     """Create standardized success response."""
     response = APIResponse(success=True, data=data, message=message, execution_time_ms=execution_time)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response.dict())
+    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(response.model_dump(mode="json")))
 
 
 def create_error_response(error: str, message: str, status_code: int = 400) -> JSONResponse:
     """Create standardized error response."""
     response = ErrorResponse(error=error, message=message)
-    return JSONResponse(status_code=status_code, content=response.dict())
+    return JSONResponse(status_code=status_code, content=jsonable_encoder(response.model_dump(mode="json")))
 
 
 # Main API endpoints

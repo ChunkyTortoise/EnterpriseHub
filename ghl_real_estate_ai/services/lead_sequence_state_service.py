@@ -246,7 +246,7 @@ class LeadSequenceStateService:
         logger.info(f"Lead {lead_id} status transition: {old_status.value} -> {new_status.value}")
         return True, None
 
-    async def create_sequence(self, lead_id: str, initial_day: SequenceDay = SequenceDay.DAY_3) -> LeadSequenceState:
+    async def create_sequence(self, lead_id: str, initial_day: SequenceDay = SequenceDay.INITIAL) -> LeadSequenceState:
         """Create a new sequence for a lead."""
         now = datetime.now()
 
@@ -314,6 +314,7 @@ class LeadSequenceStateService:
 
         # Determine the next day based on current day
         next_day_map = {
+            SequenceDay.INITIAL: SequenceDay.DAY_3,
             SequenceDay.DAY_3: SequenceDay.DAY_7,
             SequenceDay.DAY_7: SequenceDay.DAY_14,
             SequenceDay.DAY_14: SequenceDay.DAY_30,
@@ -333,7 +334,11 @@ class LeadSequenceStateService:
                 return None
 
         # Mark current day as completed and advance
-        if state.current_day == SequenceDay.DAY_3:
+        if state.current_day == SequenceDay.INITIAL:
+            state.current_day = SequenceDay.DAY_3
+            state.next_scheduled_at = now + timedelta(days=3)
+
+        elif state.current_day == SequenceDay.DAY_3:
             state.day_3_completed = True
             state.day_3_delivered_at = now
             state.current_day = SequenceDay.DAY_7

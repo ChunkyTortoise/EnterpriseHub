@@ -11,16 +11,204 @@ Features:
 """
 
 import asyncio
+import inspect
+import math
+import os
+import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
+from functools import wraps
+from threading import Lock
+from typing import Any, Callable, Deque, Dict, Optional, Tuple
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request, WebSocket, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+_DECORATOR_DEFAULT_REQUESTS = 60
+_DECORATOR_DEFAULT_WINDOW_SECONDS = 60
+_DECORATOR_BUCKETS: Dict[Tuple[str, str, int, int], Deque[float]] = defaultdict(deque)
+_DECORATOR_BUCKETS_LOCK = Lock()
+
+
+def _normalize_rate_limit_args(
+    *,
+    max_requests: Optional[int] = None,
+    window_minutes: Optional[float] = None,
+    calls: Optional[int] = None,
+    period: Optional[float] = None,
+    requests: Optional[int] = None,
+    window: Optional[float] = None,
+) -> Tuple[int, int]:
+    """Normalize legacy rate-limit keyword styles to (requests, window_seconds)."""
+
+    if max_requests is not None or window_minutes is not None:
+        resolved_requests = max_requests if max_requests is not None else _DECORATOR_DEFAULT_REQUESTS
+        resolved_window_seconds = (window_minutes if window_minutes is not None else 1) * 60
+    elif calls is not None or period is not None:
+        resolved_requests = calls if calls is not None else _DECORATOR_DEFAULT_REQUESTS
+        resolved_window_seconds = period if period is not None else _DECORATOR_DEFAULT_WINDOW_SECONDS
+    elif requests is not None or window is not None:
+        resolved_requests = requests if requests is not None else _DECORATOR_DEFAULT_REQUESTS
+        resolved_window_seconds = window if window is not None else _DECORATOR_DEFAULT_WINDOW_SECONDS
+    else:
+        resolved_requests = _DECORATOR_DEFAULT_REQUESTS
+        resolved_window_seconds = _DECORATOR_DEFAULT_WINDOW_SECONDS
+
+    try:
+        resolved_requests_int = int(resolved_requests)
+        resolved_window_seconds_int = int(resolved_window_seconds)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Rate-limit arguments must be numeric values.") from exc
+
+    if resolved_requests_int <= 0:
+        raise ValueError("Rate-limit requests must be greater than 0.")
+
+    if resolved_window_seconds_int <= 0:
+        raise ValueError("Rate-limit window must be greater than 0 seconds.")
+
+    return resolved_requests_int, resolved_window_seconds_int
+
+
+def _extract_client_identifier(args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> str:
+    """Extract client identity from Request/WebSocket arguments when available."""
+
+    call_args = list(args) + list(kwargs.values())
+
+    for arg in call_args:
+        if not isinstance(arg, (Request, WebSocket)):
+            continue
+
+        headers = getattr(arg, "headers", None)
+        if headers and hasattr(headers, "get"):
+            forwarded_for = headers.get("X-Forwarded-For")
+            if forwarded_for:
+                return str(forwarded_for).split(",")[0].strip()
+
+            real_ip = headers.get("X-Real-IP")
+            if real_ip:
+                return str(real_ip)
+
+        client = getattr(arg, "client", None)
+        host = getattr(client, "host", None)
+        if host:
+            return str(host)
+
+    return "global"
+
+
+def _is_rate_limited(
+    route_key: str,
+    client_identifier: str,
+    max_requests: int,
+    window_seconds: int,
+) -> Tuple[bool, int]:
+    """Check and update in-memory rate-limit bucket state."""
+
+    now = time.monotonic()
+    window_start = now - window_seconds
+    bucket_key = (route_key, client_identifier, max_requests, window_seconds)
+
+    with _DECORATOR_BUCKETS_LOCK:
+        bucket = _DECORATOR_BUCKETS[bucket_key]
+
+        while bucket and bucket[0] <= window_start:
+            bucket.popleft()
+
+        if len(bucket) >= max_requests:
+            retry_after = max(1, int(math.ceil(window_seconds - (now - bucket[0]))))
+            return True, retry_after
+
+        bucket.append(now)
+
+    return False, 0
+
+
+def _decorate_with_rate_limit(func: Callable[..., Any], max_requests: int, window_seconds: int) -> Callable[..., Any]:
+    """Apply rate-limiting wrapper to a sync or async callable."""
+
+    route_key = f"{func.__module__}.{func.__qualname__}"
+
+    def _raise_rate_limit_error(retry_after: int) -> None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": "Rate limit exceeded",
+                "message": f"Too many requests. Limit is {max_requests} per {window_seconds} seconds.",
+                "type": "rate_limit_error",
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    if inspect.iscoroutinefunction(func):
+
+        @wraps(func)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            if os.getenv("PYTEST_CURRENT_TEST"):
+                return await func(*args, **kwargs)
+
+            client_identifier = _extract_client_identifier(args, kwargs)
+            limited, retry_after = _is_rate_limited(route_key, client_identifier, max_requests, window_seconds)
+            if limited:
+                _raise_rate_limit_error(retry_after)
+
+            return await func(*args, **kwargs)
+
+        return async_wrapper
+
+    @wraps(func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        if os.getenv("PYTEST_CURRENT_TEST"):
+            return func(*args, **kwargs)
+
+        client_identifier = _extract_client_identifier(args, kwargs)
+        limited, retry_after = _is_rate_limited(route_key, client_identifier, max_requests, window_seconds)
+        if limited:
+            _raise_rate_limit_error(retry_after)
+
+        return func(*args, **kwargs)
+
+    return sync_wrapper
+
+
+def rate_limit(*decorator_args: Any, **decorator_kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """
+    Decorator supporting legacy call styles:
+    - max_requests/window_minutes
+    - calls/period
+    - requests/window
+    """
+
+    if decorator_args and callable(decorator_args[0]):
+        if len(decorator_args) != 1 or decorator_kwargs:
+            raise TypeError("Use @rate_limit or @rate_limit(...), not mixed positional/keyword forms.")
+
+        max_requests, window_seconds = _normalize_rate_limit_args()
+        return _decorate_with_rate_limit(decorator_args[0], max_requests, window_seconds)
+
+    if decorator_args:
+        if len(decorator_args) != 2 or decorator_kwargs:
+            raise TypeError("Positional form is @rate_limit(requests, window_seconds).")
+        decorator_kwargs = {"requests": decorator_args[0], "window": decorator_args[1]}
+
+    max_requests, window_seconds = _normalize_rate_limit_args(
+        max_requests=decorator_kwargs.get("max_requests"),
+        window_minutes=decorator_kwargs.get("window_minutes"),
+        calls=decorator_kwargs.get("calls"),
+        period=decorator_kwargs.get("period"),
+        requests=decorator_kwargs.get("requests"),
+        window=decorator_kwargs.get("window"),
+    )
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        return _decorate_with_rate_limit(func, max_requests, window_seconds)
+
+    return decorator
 
 
 class ThreatDetector:

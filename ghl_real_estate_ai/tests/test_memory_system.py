@@ -18,10 +18,8 @@ sys.path.append(os.path.join(os.getcwd(), "ghl-real-estate-ai"))
 from ghl_real_estate_ai.core.conversation_manager import AIResponse, ConversationManager
 from ghl_real_estate_ai.services.memory_service import MemoryService
 
-@pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_memory_persistence():
     print("🚀 Testing Memory Persistence...")
 

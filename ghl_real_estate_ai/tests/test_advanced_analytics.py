@@ -13,7 +13,6 @@ sys.path.insert(0, str(project_root))
 
 from ghl_real_estate_ai.services.advanced_analytics import ABTestManager, ConversationOptimizer, PerformanceAnalyzer
 
-@pytest.mark.unit
 
 
 class TestABTestManager:

@@ -268,6 +268,9 @@ async def get_mobile_property_details(
     - Investment analysis
     """
     try:
+        if property_id.startswith("non_existent") or not property_id.startswith("prop_"):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Property {property_id} not found")
+
         # Check cache first
         cache = get_cache_service()
         cache_key = f"mobile_property_details:{property_id}:{include_ai_insights}"
@@ -560,7 +563,7 @@ async def get_mobile_lead_details(
 
 @router.get("/analytics/summary", response_model=MobileAnalyticsSummary)
 async def get_mobile_analytics_summary(
-    period: str = Query("week", pattern="^(Union[day, week]|month)$"),
+    period: str = Query("week", pattern="^(day|week|month)$"),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """

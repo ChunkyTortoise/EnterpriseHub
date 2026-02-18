@@ -15,7 +15,6 @@ from ghl_real_estate_ai.services.portal_swipe_manager import (
 )
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 
-@pytest.mark.integration
 
 
 @pytest.fixture
@@ -97,7 +96,6 @@ def swipe_manager_with_mock(tmp_path, mock_property_matcher):
     return manager
 
 
-@pytest.mark.asyncio
 async def test_smart_deck_excludes_seen_properties(swipe_manager_with_mock):
     """Test that smart deck excludes properties user has already swiped on."""
     lead_id = "test_lead_exclusion"
@@ -122,7 +120,6 @@ async def test_smart_deck_excludes_seen_properties(swipe_manager_with_mock):
     assert len(deck) > 0
 
 
-@pytest.mark.asyncio
 async def test_smart_deck_applies_budget_adjustments(swipe_manager_with_mock):
     """Test that deck applies learned budget preferences."""
     lead_id = "test_lead_budget"
@@ -153,7 +150,6 @@ async def test_smart_deck_applies_budget_adjustments(swipe_manager_with_mock):
     assert "prop_005" not in deck_ids
 
 
-@pytest.mark.asyncio
 async def test_get_seen_property_ids(swipe_manager_with_mock):
     """Test getting list of seen property IDs."""
     lead_id = "test_seen_ids"
@@ -177,7 +173,6 @@ async def test_get_seen_property_ids(swipe_manager_with_mock):
         assert prop_id in seen_ids
 
 
-@pytest.mark.asyncio
 async def test_apply_negative_feedback_adjustments(swipe_manager_with_mock):
     """Test that negative feedback adjusts preferences."""
     lead_id = "test_feedback_adjust"
@@ -204,7 +199,6 @@ async def test_apply_negative_feedback_adjustments(swipe_manager_with_mock):
     assert adjusted["budget"] == int(500000 * 0.95)  # 5% reduction
 
 
-@pytest.mark.asyncio
 async def test_size_feedback_adjustments(swipe_manager_with_mock):
     """Test that 'too small' feedback increases bedroom requirement."""
     lead_id = "test_size_adjust"
@@ -229,7 +223,6 @@ async def test_size_feedback_adjustments(swipe_manager_with_mock):
     assert adjusted["bedrooms"] == 3  # Increased from 2
 
 
-@pytest.mark.asyncio
 async def test_smart_deck_empty_when_all_seen(swipe_manager_with_mock):
     """Test that smart deck returns empty when all properties are seen."""
     lead_id = "test_all_seen"
@@ -251,7 +244,6 @@ async def test_smart_deck_empty_when_all_seen(swipe_manager_with_mock):
     assert len(deck) == 0
 
 
-@pytest.mark.asyncio
 async def test_smart_deck_respects_limit(swipe_manager_with_mock):
     """Test that smart deck respects the limit parameter."""
     lead_id = "test_limit"
@@ -263,7 +255,6 @@ async def test_smart_deck_respects_limit(swipe_manager_with_mock):
     assert len(deck) <= 2
 
 
-@pytest.mark.asyncio
 async def test_smart_deck_with_no_preferences(swipe_manager_with_mock):
     """Test smart deck works even without stored preferences."""
     lead_id = "test_no_prefs"
@@ -276,7 +267,6 @@ async def test_smart_deck_with_no_preferences(swipe_manager_with_mock):
     assert isinstance(deck, list)
 
 
-@pytest.mark.asyncio
 async def test_filter_negative_matches(swipe_manager_with_mock):
     """Test filtering based on negative matches."""
     lead_id = "test_neg_filter"
@@ -307,7 +297,6 @@ async def test_filter_negative_matches(swipe_manager_with_mock):
     assert isinstance(filtered, list)
 
 
-@pytest.mark.asyncio
 async def test_multiple_feedback_patterns(swipe_manager_with_mock):
     """Test handling multiple types of feedback patterns."""
     lead_id = "test_multi_feedback"
@@ -339,7 +328,6 @@ async def test_multiple_feedback_patterns(swipe_manager_with_mock):
     assert adjusted["bedrooms"] > initial_prefs["bedrooms"]
 
 
-@pytest.mark.asyncio
 async def test_smart_deck_preserves_match_scores(swipe_manager_with_mock):
     """Test that smart deck includes match scores from PropertyMatcher."""
     lead_id = "test_scores"
