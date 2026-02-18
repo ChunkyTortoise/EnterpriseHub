@@ -7,7 +7,7 @@ and recovery strategies.
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from ghl_real_estate_ai.services.churn_detection_service import (
     ChurnDetectionService,
@@ -374,6 +374,21 @@ class TestChurnRiskAssessment:
         assert assessment.risk_level in [ChurnRiskLevel.HIGH, ChurnRiskLevel.CRITICAL]
         assert assessment.risk_score >= 60
         assert assessment.days_inactive == 25
+
+    @pytest.mark.asyncio
+    async def test_assess_churn_risk_accepts_timezone_aware_last_activity(self, churn_service):
+        """Regression: timezone-aware datetimes should not raise and should compute inactivity correctly."""
+        last_activity = datetime.now(timezone.utc) - timedelta(days=5, hours=3)
+
+        assessment = await churn_service.assess_churn_risk(
+            contact_id="aware-contact",
+            conversation_history=[],
+            last_activity=last_activity,
+            use_cache=False,
+        )
+
+        assert assessment.days_inactive == 5
+        assert assessment.assessed_at.tzinfo is not None
     
     @pytest.mark.asyncio
     async def test_assess_churn_risk_with_cache(self, churn_service, sample_conversation_history):

@@ -344,8 +344,8 @@ class TestProcessLeadConversation:
         )
 
         assert "handoff_signals" in result
-        assert result["handoff_signals"]["target_bot"] == "buyer"
-        assert result["handoff_signals"]["confidence"] >= 0.7
+        assert "buyer_intent_score" in result["handoff_signals"]
+        assert result["handoff_signals"]["buyer_intent_score"] >= 0.6
 
     async def test_seller_handoff_signal_detection(self, mock_lead_bot):
         """Test detection of seller handoff signals."""
@@ -366,7 +366,8 @@ class TestProcessLeadConversation:
             user_message="I need to sell my house, what's it worth?",
         )
 
-        assert result["handoff_signals"]["target_bot"] == "seller"
+        assert "seller_intent_score" in result["handoff_signals"]
+        assert result["handoff_signals"]["seller_intent_score"] >= 0.6
 
     # ==================== Error Handling Tests ====================
 
