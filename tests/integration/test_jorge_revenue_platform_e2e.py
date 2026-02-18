@@ -24,7 +24,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 # Import core application components
 from ghl_real_estate_ai.api.main import app
@@ -68,7 +68,7 @@ class TestJorgeRevenuePlatformE2E:
     @pytest.fixture
     def async_client(self):
         """Async HTTP client for concurrent request testing."""
-        return AsyncClient(app=app, base_url="http://test")
+        return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
     @pytest.fixture
     def jorge_location_id(self):
@@ -175,7 +175,8 @@ class TestJorgeRevenuePlatformE2E:
         with patch.object(
             golden_detector.predictive_scorer,
             "predict_conversion_probability",
-            return_value=asyncio.coroutine(lambda: 0.92)(),
+            new_callable=AsyncMock,
+            return_value=0.92,
         ):
             # STEP 1: Process webhook and extract lead intelligence
             conversation_context = {
@@ -673,12 +674,14 @@ class TestJorgeRevenuePlatformE2E:
             patch.object(
                 lead_scorer,
                 "calculate",
-                return_value=asyncio.coroutine(lambda *args: {"questions_answered": 4, "engagement_score": 0.75})(),
+                new_callable=AsyncMock,
+                return_value={"questions_answered": 4, "engagement_score": 0.75},
             ),
             patch.object(
                 golden_detector.predictive_scorer,
                 "predict_conversion_probability",
-                return_value=asyncio.coroutine(lambda: 0.82)(),
+                new_callable=AsyncMock,
+                return_value=0.82,
             ),
         ):
             # STEP 1: Lead scoring
