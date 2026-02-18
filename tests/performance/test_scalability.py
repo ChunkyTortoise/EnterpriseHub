@@ -6,6 +6,7 @@ Validates Service 6 scalability targets: 100+ leads/hour, <30s response times
 import asyncio
 import json
 import logging
+import socket
 import statistics
 import time
 from dataclasses import dataclass
@@ -13,6 +14,21 @@ from typing import Any, Dict, List
 
 import aiohttp
 import pytest
+
+
+def _server_available(host: str = "localhost", port: int = 8501) -> bool:
+    """Check if the target server is reachable."""
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+pytestmark = pytest.mark.skipif(
+    not _server_available(),
+    reason="requires running server at localhost:8501",
+)
 
 logger = logging.getLogger(__name__)
 
