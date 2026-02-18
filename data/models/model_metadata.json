@@ -1,0 +1,30 @@
+{
+  "feature_names": [
+    "message_count_norm",
+    "avg_response_time_norm",
+    "conversation_duration_norm",
+    "sentiment_norm",
+    "urgency_score",
+    "engagement_score",
+    "question_frequency",
+    "price_mentions_norm",
+    "urgency_signals_norm",
+    "location_specificity",
+    "budget_market_ratio",
+    "budget_confidence",
+    "qualification_completeness",
+    "message_variance_norm",
+    "response_consistency",
+    "weekend_activity",
+    "late_night_activity",
+    "inventory_level",
+    "days_on_market_norm",
+    "price_trend_norm",
+    "seasonal_factor",
+    "competition_level",
+    "interest_rate_norm"
+  ],
+  "last_training_date": "2026-02-16T15:54:26.732617",
+  "model_type": "RandomForestClassifier",
+  "feature_count": 23
+}

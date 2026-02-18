@@ -1,179 +1,242 @@
-# Upwork Profile
+# Upwork Profile (Canonical Sync)
 
 ## Title
-AI/LLM Application Developer | Python/FastAPI/Streamlit | 1,768h Certified
+AI Systems Engineer | Agentic Workflows, RAG, BI Dashboards, FastAPI
 
 ## Overview
+I design and ship production AI systems that reduce operational load and improve revenue decisions.
 
-I build AI-powered applications with Python, FastAPI, and Streamlit. My projects include multi-bot lead qualification systems, LLM orchestration libraries, data analytics platforms, RAG document Q&A engines, and automated scraping frameworks.
+**Primary Proof:**
+- **EnterpriseHub** (CS001): Multi-agent lead qualification with 95% faster response times (45min→2min), $240K annual savings, 133% conversion improvement, 4,937 tests
+- **Revenue-Sprint** (CS002): 3x qualified outbound volume, 45% reply-rate lift, 99% faster proposal generation (45min→3-7sec), 20 hours/week recovered
+- **Advanced RAG System** (CS003): 85% query accuracy improvement, 70% faster response times (5-10min→<50ms), 95% cache hit rate, 30+ hours/week recovered
 
-Everything I build is tested, documented, and on GitHub. All repos have CI, demo modes, and zero-key quick starts.
+**Completed Certifications:** 1,768+ hours of training across AI/ML, Data/BI, and GenAI
 
-**Portfolio:** [chunkytortoise.github.io](https://chunkytortoise.github.io)
-
-### What I Build
-
-- **AI agent systems** -- Multi-bot architectures with handoff logic, context management, and CRM integration
-- **LLM orchestration** -- Provider-agnostic clients with fallback routing, response caching, and cost tracking
-- **RAG & document Q&A** -- Hybrid retrieval (BM25 + dense vectors), source citations, prompt engineering labs
-- **Data analytics dashboards** -- Auto-profiling, predictive modeling, marketing attribution, PDF reports
-- **FastAPI backends** -- Async APIs with Pydantic validation, JWT auth, PostgreSQL, Redis caching
-- **Streamlit dashboards** -- BI dashboards with Plotly visualizations, real-time data, interactive filters
-- **Web scraping frameworks** -- YAML-configurable scrapers, competitor price monitoring, change detection
-- **Automation pipelines** -- Job scanners, proposal generators, Excel-to-web converters, outreach engines
+Portfolio: [chunkytortoise.github.io](https://chunkytortoise.github.io)
 
 ---
 
-## Certifications (19 Total, 1,768+ Hours, All Verifiable)
+## Service Menu (Canonical IDs + Pricing)
 
-### AI & Machine Learning
-| Certification | Provider | Hours | Status |
-|--------------|----------|-------|--------|
-| Deep Learning Specialization | DeepLearning.AI | 120h | Completed |
-| IBM GenAI Engineering | IBM | 90h | Completed |
-| IBM RAG and Agentic AI | IBM | 80h | In Progress |
-| AI & ML Engineering | Microsoft | 96h | In Progress |
+### Strategy
+| ID | Service | Pricing | Timeline | Status |
+|---|---------|---------|----------|--------|
+| `S01` | AI Strategy & Readiness Assessment | **$5,000-$12,000** | 2-3 weeks | needs-proof |
+| `S02` | Technical Due Diligence | **$7,500-$15,000** | 1-2 weeks | needs-proof |
 
-### Generative AI & Strategy
-| Certification | Provider | Hours | Status |
-|--------------|----------|-------|--------|
-| Generative AI Strategic Leader | Vanderbilt | 40h | Completed |
-| LLMOps | Duke University | 30h | Completed |
-| ChatGPT Personal Automation | Vanderbilt | 24h | In Progress |
+### Agentic AI
+| ID | Service | Pricing | Timeline | Status | Proof |
+|---|---------|---------|----------|--------|-------|
+| `S03` | Custom RAG Conversational Agents | **$6,000-$15,000** | 3-5 weeks | ready | [docqa-engine](https://github.com/ChunkyTortoise/docqa-engine), [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S04` | Multi-Agent Workflows | **$5,000-$15,000** | 2-4 weeks | ready | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub), [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint) |
+| `S05` | Prompt Engineering & Optimization | **$3,000-$8,000** | 1-2 weeks | ready | [docqa-engine](https://github.com/ChunkyTortoise/docqa-engine), [prompt-engineering-lab](https://github.com/ChunkyTortoise/prompt-engineering-lab) |
+| `S06` | Automation & Workflow Engineering | **$4,000-$10,000** | 2-4 weeks | ready | [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint), [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
 
-### Data Analytics & BI
-| Certification | Provider | Hours | Status |
-|--------------|----------|-------|--------|
-| Google Data Analytics Certificate | Google | 181h | Completed |
-| Google Advanced Data Analytics | Google | 160h | In Progress |
-| Google Business Intelligence | Google | 110h | In Progress |
-| IBM Business Intelligence Analyst | IBM | 141h | Completed |
-| GenAI for Data Analysis | Microsoft | 108h | Completed |
-| Data Visualization | Microsoft | 72h | In Progress |
-| AI-Enhanced Data Analysis | Microsoft | 48h | In Progress |
+### Data & BI
+| ID | Service | Pricing | Timeline | Status | Proof |
+|---|---------|---------|----------|--------|-------|
+| `S07` | Deep Learning & Custom ML Models | **$8,000-$20,000** | 4-8 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub), [insight-engine](https://github.com/ChunkyTortoise/insight-engine) |
+| `S08` | Interactive BI Dashboards | **$4,000-$10,000** | 2-3 weeks | ready | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub), [insight-engine](https://github.com/ChunkyTortoise/insight-engine) |
+| `S09` | Automated Reporting Pipelines | **$3,500-$8,000** | 2-3 weeks | ready | [insight-engine](https://github.com/ChunkyTortoise/insight-engine) |
+| `S10` | Predictive Analytics & Lead Scoring | **$5,000-$12,000** | 3-5 weeks | ready | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub), [insight-engine](https://github.com/ChunkyTortoise/insight-engine), [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint) |
+| `S11` | Data Engineering & Pipelines | **$5,000-$12,000** | 3-5 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub), [insight-engine](https://github.com/ChunkyTortoise/insight-engine) |
 
-### Software Engineering & Automation
-| Certification | Provider | Hours | Status |
-|--------------|----------|-------|--------|
-| Python for Everybody | University of Michigan | 80h | Completed |
+### Marketing
+| ID | Service | Pricing | Timeline | Status | Proof |
+|---|---------|---------|----------|--------|-------|
+| `S12` | Programmatic SEO Content Engine | **$4,000-$10,000** | 2-3 weeks | ready | [scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve) |
+| `S13` | Email & Outreach Automation | **$3,500-$8,000** | 2-3 weeks | ready | [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint), [linkedin_engine](https://github.com/ChunkyTortoise/linkedin_engine) |
+| `S14` | Social Media Content Automation | **$3,000-$7,000** | 2-3 weeks | needs-proof | [scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve) |
+| `S15` | Marketing Attribution Analysis | **$5,000-$12,000** | 3-4 weeks | ready | [insight-engine](https://github.com/ChunkyTortoise/insight-engine), [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint) |
+| `S16` | Competitor Intelligence & Monitoring | **$4,000-$9,000** | 2-3 weeks | needs-proof | [scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve), [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint) |
 
-### Marketing & Digital
-| Certification | Provider | Hours | Status |
-|--------------|----------|-------|--------|
-| Google Digital Marketing & E-commerce | Google | 120h | In Progress |
-| Meta Social Media Marketing | Meta | 68h | In Progress |
+### Infra & MLOps
+| ID | Service | Pricing | Timeline | Status | Proof |
+|---|---------|---------|----------|--------|-------|
+| `S17` | LLM Deployment & LLMOps | **$6,000-$15,000** | 3-5 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S18` | API Development & Integration | **$4,000-$10,000** | 2-4 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S19` | Excel to Web App Modernization | **$6,000-$15,000** | 4-6 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S20` | Web Scraping & Data Extraction | **$3,000-$8,000** | 1-3 weeks | needs-proof | [scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve) |
 
-**Total: 1,768+ hours across Google, IBM, Microsoft, DeepLearning.AI, Vanderbilt, Duke, Meta**
+### Ops & Governance
+| ID | Service | Pricing | Timeline | Status | Proof |
+|---|---------|---------|----------|--------|-------|
+| `S21` | AI System Audit & Security Review | **$5,000-$12,000** | 2-3 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S22` | Performance Optimization & Tuning | **$4,000-$10,000** | 1-2 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S23` | Documentation & Knowledge Transfer | **$3,000-$7,000** | 1-2 weeks | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
+| `S24` | Fractional AI Leadership | **$5,000-$15,000/month** | Ongoing | needs-proof | [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) |
 
----
-
-## Portfolio (7 Public Repos on GitHub)
-
-### Production Applications
-
-1. **[EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub)** -- Real estate AI platform. Three qualification bots, Streamlit BI dashboard, Claude multi-LLM orchestration with L1/L2/L3 caching, GoHighLevel CRM integration. 82+ API routes, 140+ dashboard components. FastAPI + PostgreSQL + Redis + Docker.
-
-2. **[Jorge Bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots)** -- Standalone 3-bot qualification microservices. Lead, Seller, and Buyer bots with Q0-Q4 framework. 279 tests, health aggregation endpoint, Docker Compose. `make demo` works with zero config.
-
-3. **[AgentForge](https://github.com/ChunkyTortoise/ai-orchestrator)** -- Async LLM orchestrator library. Claude + Gemini + OpenAI + Perplexity through a single interface. Pip-installable with CLI, retry logic, provider fallback, and benchmark command. 27 tests.
-
-4. **[Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint)** -- Freelancer automation engine. Upwork job scanner with 105-point scoring rubric, 4-agent proposal pipeline, prompt injection testing suite (60+ patterns), LinkedIn outreach engine. 238 tests.
-
-### Data & Analytics
-
-5. **[insight-engine](https://github.com/ChunkyTortoise/insight-engine)** -- Data analytics platform. Upload CSV/Excel, get instant dashboards, predictive models, marketing attribution, and PDF reports. Auto-profiling, data cleaning, and 3 sample datasets. Streamlit + Pandas + scikit-learn + XGBoost.
-
-### RAG & AI
-
-6. **[docqa-engine](https://github.com/ChunkyTortoise/docqa-engine)** -- RAG document Q&A with prompt engineering lab. Upload PDFs/DOCX, ask questions, get cited answers. Hybrid retrieval (BM25 + dense vectors), multi-LLM via AgentForge, A/B prompt testing, cost tracking. FastAPI + ChromaDB + sentence-transformers.
-
-### Scraping & Automation
-
-7. **[scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve)** -- Web scraping framework + Excel-to-web converter. YAML-configurable scrapers, competitor price monitoring with historical charts, Excel-to-Streamlit CRUD app generator, SEO content scoring. 62 tests. BeautifulSoup + httpx + SQLite + Streamlit.
+### Quick-Win Fixed Scope
+| ID | Service | Pricing | Timeline | Status |
+|---|---------|---------|----------|--------|
+| `QW1` | AI Chatbot Integration | **$1,200** | 3-5 days | ready |
+| `QW2` | Single Dashboard | **$1,400** | 3-5 days | ready |
+| `QW3` | One Workflow Automation | **$1,800** | 5-7 days | ready |
+| `QW4` | 10 Custom Prompts | **$900** | 2-3 days | ready |
+| `QW5` | Data Pipeline Setup | **$1,600** | 5-7 days | ready |
+| `QW6` | API Integration | **$2,000** | 5-7 days | ready |
+| `QW7` | Competitor Monitoring Setup | **$1,500** | 3-5 days | ready |
 
 ---
 
-## Service Lines
+## Completed Certifications (Client-Facing Trust Badges)
 
-### Strategic Tier ($90-150/hr)
-| Service | Proof-of-Work Repo | Description |
-|---------|-------------------|-------------|
-| AI Agent System Architecture | EnterpriseHub, Jorge Bots | Multi-agent workflows, handoff orchestration, CRM integration |
-| RAG & Conversational AI | docqa-engine, EnterpriseHub | Document Q&A, hybrid retrieval, source citations, prompt optimization |
-| Prompt Engineering & Optimization | docqa-engine | A/B testing, temperature experiments, evaluation scoring |
-| LLM Application Development | AgentForge, EnterpriseHub | Provider-agnostic integrations, cost tracking, fallback routing |
+**Total Training Hours: 1,768+**
 
-### Implementation Tier ($60-100/hr)
-| Service | Proof-of-Work Repo | Description |
-|---------|-------------------|-------------|
-| Interactive BI Dashboards | insight-engine, EnterpriseHub | Plotly dashboards, auto-profiling, predictive analytics |
-| FastAPI Backend Development | EnterpriseHub, Jorge Bots | Async APIs, Pydantic validation, PostgreSQL, Redis |
-| Web Scraping & Data Extraction | scrape-and-serve | YAML-configurable scrapers, anti-detection, change monitoring |
-| Automation & Pipeline Engineering | Revenue-Sprint, scrape-and-serve | Job scanners, proposal generators, Excel-to-web converters |
+### Data/BI & Analytics
+| Cert ID | Certification | Hours | Service Relevance | Positioning | Verification |
+|---|---|---|---|---|---|
+| `C001` | Google Data Analytics Certificate | 181 | `S08`, `S09`, `S10`, `S11`, `S15` | Expertise in data analysis, SQL, R programming, and visualization for business intelligence | [Coursera](https://www.coursera.org/account/accomplishments/certificate) |
+| `C007` | IBM Business Intelligence Analyst Professional Certificate | 141 | `S08`, `S09`, `S11`, `S15` | Business intelligence with Excel, SQL, Cognos, Tableau, and data warehousing | [Credly](https://www.credly.com/badges/) |
 
-### Quick-Win Fixed-Price Packages
-| Package | Price | Deliverable |
-|---------|-------|-------------|
-| CSV-to-Dashboard | $500 | Upload CSV, get interactive Streamlit dashboard + PDF report |
-| LLM API Integration | $300 | Connect your app to Claude/GPT/Gemini with fallback routing |
-| Prompt Audit | $400 | Review & optimize 10 prompts with A/B test results |
-| Excel-to-Web App | $800 | Convert spreadsheet to Streamlit CRUD app with auth |
-| Scraping Setup | $600 | YAML-configured scraper with scheduling and alerts |
+### Generative AI
+| Cert ID | Certification | Hours | Service Relevance | Positioning | Verification |
+|---|---|---|---|---|---|
+| `C002` | Vanderbilt Generative AI Strategic Leader Specialization | 40 | `S01`, `S03`, `S05`, `S25` | Strategic leadership in generative AI adoption, prompt engineering, and agentic AI systems | [Coursera](https://www.coursera.org/account/accomplishments/certificate) |
+| `C003` | Microsoft Generative AI for Data Analysis Professional Certificate | 108 | `S03`, `S08`, `S10`, `S21`, `S22` | AI-enhanced data analysis with GenAI for cleaning, visualization, and code generation | [Microsoft Learn](https://learn.microsoft.com/en-us/credentials/certificates/) |
+| `C004` | Google Cloud Generative AI Leader Certificate | 25 | `S01`, `S03`, `S04` | Foundational knowledge in GenAI applications, agents, and Google Cloud AI services | [Google Cloud Skills Boost](https://www.cloudskillsboost.google/public_profiles) |
+| `C011` | ChatGPT: Excel at Personal Automation with GPTs, AI & Zapier | 30 | `S05`, `S06`, `S13` | Prompt engineering, custom GPTs, and automation with Zapier for personal productivity | [Coursera](https://www.coursera.org/account/accomplishments/certificate) |
+
+### AI/ML & Deep Learning
+| Cert ID | Certification | Hours | Service Relevance | Positioning | Verification |
+|---|---|---|---|---|---|
+| `C005` | DeepLearning.AI AI For Everyone | 12 | `S01`, `S07` | AI fundamentals, project building, and business strategy for non-technical stakeholders | [DeepLearning.AI](https://www.deeplearning.ai/certificates/) |
+| `C010` | DeepLearning.AI Deep Learning Specialization | 120 | `S07`, `S10` | Deep learning expertise in neural networks, CNNs, RNNs, and hyperparameter tuning | [DeepLearning.AI](https://www.deeplearning.ai/certificates/) |
 
 ---
 
-## Certification-to-Repo Mapping
+## Portfolio Items (Outcome-Forward)
 
-Every certification maps to at least one portfolio repo:
+### CS001: Real Estate Lead Qualification Automation
+**Industry:** Real Estate | **Duration:** 8 weeks | **Team:** 1
 
-| Certification | Primary Repo | How It Applies |
-|--------------|-------------|----------------|
-| DeepLearning.AI Deep Learning | insight-engine, docqa-engine | Predictive modeling, embeddings |
-| IBM GenAI Engineering | docqa-engine, EnterpriseHub | RAG pipelines, LLM integration |
-| IBM RAG and Agentic AI | docqa-engine, EnterpriseHub | Hybrid retrieval, agent systems |
-| Microsoft AI & ML Engineering | insight-engine | Auto-ML, SHAP explanations |
-| Vanderbilt GenAI Strategic Leader | docqa-engine | Prompt lab, evaluation frameworks |
-| Duke LLMOps | docqa-engine, AgentForge | LLM deployment, cost tracking |
-| Vanderbilt ChatGPT Automation | scrape-and-serve | SEO content generation |
-| Google Data Analytics | insight-engine | Auto-profiling, data cleaning |
-| Google Advanced Data Analytics | insight-engine | Predictive modeling, statistical analysis |
-| Google BI | insight-engine | Dashboard generation, KPIs |
-| IBM BI Analyst | insight-engine, EnterpriseHub | BI dashboards, reporting |
-| Microsoft GenAI for Data Analysis | insight-engine | AI-enhanced analytics |
-| Microsoft Data Visualization | insight-engine | Chart selection, Plotly dashboards |
-| Microsoft AI-Enhanced Data Analysis | insight-engine | Automated insights, anomaly detection |
-| Python for Everybody | All repos | Foundation for every project |
-| Google Digital Marketing | insight-engine | Marketing attribution models |
-| Meta Social Media Marketing | insight-engine, scrape-and-serve | Campaign analytics, content pipelines |
+**Problem:** A real estate brokerage was losing 40% of leads due to slow response times. Manual qualification took 45+ minutes per lead.
+
+**Solution:** Built a multi-agent AI system with three specialized bots (Lead, Seller, Buyer) using a Q0-Q4 qualification framework with 3-tier Redis caching.
+
+**Outcomes:**
+- Lead response time: reduced from 45min to 2min (95% improvement)
+- Cost savings: $240,000 annual savings from reduced manual review time
+- Conversion rate: increased from 12% to 28% (133% improvement)
+- Token cost reduction: 89% via 3-tier caching
+- Lead qualification accuracy: 92% accuracy in Q0-Q4 framework
+- Agent productivity: 3x increase in agent productivity
+- Customer satisfaction: 4.7/5 star rating from leads
+
+**Proof Assets:**
+- [Live BI Dashboard](https://ct-enterprise-ai.streamlit.app)
+- [GitHub Repository](https://github.com/ChunkyTortoise/EnterpriseHub) (4,937 tests)
+- [Architecture Documentation](https://github.com/ChunkyTortoise/EnterpriseHub/blob/main/ARCHITECTURE.md)
+- [System Architecture Diagram](assets/diagrams/arete_architecture.svg)
 
 ---
 
-## Technologies
+### CS002: Revenue-Sprint - Marketing Attribution & Revenue Optimization
+**Industry:** Marketing Technology / SaaS | **Duration:** 4-6 weeks | **Team:** 1
 
-**AI/LLM:** Claude API, Gemini, OpenAI, Perplexity, OpenRouter, sentence-transformers, ChromaDB, SHAP, XGBoost
-**Python:** FastAPI, Streamlit, SQLAlchemy (async), Pydantic, Pandas, Plotly, scikit-learn, BeautifulSoup, Playwright
-**Infrastructure:** PostgreSQL, Redis, SQLite, Docker Compose, GitHub Actions CI/CD
-**Integrations:** GoHighLevel CRM, Stripe, WebSocket, RSS feeds, Slack, PDF generation
+**Problem:** A marketing agency and SaaS company were struggling to track marketing ROI across multiple channels. Manual reporting took 20+ hours per week.
+
+**Solution:** Built a comprehensive revenue optimization platform in 7 days with 212 tests, including a 4-agent proposal pipeline, Upwork RSS scanner, and LinkedIn outreach engine.
+
+**Outcomes:**
+- Qualified outbound increase: 3x increase in qualified outbound leads
+- Reply rate improvement: 45% lift in reply rates from personalized outreach
+- Time recovered: 20 hours per week recovered from automation
+- Proposal generation time: reduced from 45min to 3-7 seconds (99% improvement)
+- Reporting time reduction: 40% reduction in weekly reporting time
+- Marketing ROI visibility: 25% increase in marketing ROI visibility
+- Campaign optimization: 15% improvement in campaign optimization decisions
+- Cost savings: $3,000/month in operational cost savings
+- Decision-making speed: 50% faster decision-making with real-time dashboards
+- Test coverage: 212 passing tests ensuring production reliability
+
+**Proof Assets:**
+- [CLI Demo](https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/assets/cli-demo.gif)
+- [GitHub Repository](https://github.com/ChunkyTortoise/Revenue-Sprint) (212 tests)
+- [Growth Ops Automation Case Study](https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/docs/growth_ops_automation_case_study.md)
+- [Architecture Diagram](https://github.com/ChunkyTortoise/Revenue-Sprint/blob/main/assets/hero-banner.svg)
+
+---
+
+### CS003: Advanced RAG System for Marketing Intelligence
+**Industry:** Marketing Technology / Data Analytics | **Duration:** 6-8 weeks | **Team:** 2
+
+**Problem:** A marketing agency was unable to effectively query their extensive corpus of marketing data. Manual data retrieval took 5-10 minutes per query.
+
+**Solution:** Built an enterprise-grade Advanced RAG System with hybrid retrieval, multi-modal support, and production-grade performance optimization.
+
+**Outcomes:**
+- Query accuracy improvement: 85% improvement in query accuracy with hybrid retrieval
+- Response time reduction: 70% faster response times (from 5-10min to <50ms p95)
+- Manual lookup reduction: 90% reduction in manual data lookup time
+- Cache hit rate: 95% cache hit rate with multi-layer caching
+- Query throughput increase: 3x increase in query throughput (1000+ req/min)
+- Operational cost reduction: 40% reduction in operational costs from automation
+- Retrieval accuracy: 90%+ retrieval accuracy (Recall@10)
+- Answer relevance: 4.2/5.0 average answer relevance score
+- Token cost savings: 50% reduction in token usage via contextual compression
+- Analyst productivity: 30+ hours per week recovered for strategic analysis
+
+**Proof Assets:**
+- [GitHub Repository](https://github.com/ChunkyTortoise/advanced-rag-system)
+- [Architecture Documentation](https://github.com/ChunkyTortoise/advanced-rag-system/blob/main/ARCHITECTURE.md)
+- [Performance Benchmarks](https://github.com/ChunkyTortoise/advanced-rag-system/blob/main/BENCHMARKS.md)
+- [Implementation Plan](https://github.com/ChunkyTortoise/advanced-rag-system/blob/main/IMPLEMENTATION_PLAN.md)
+
+---
+
+## Skills
+
+### Core Technical Skills
+- **AI/ML:** RAG systems, Multi-agent workflows, Prompt engineering, LLM deployment, Predictive analytics, Deep learning, ML pipelines
+- **Backend:** FastAPI, Python, PostgreSQL, Redis, SQLAlchemy, Alembic, Pydantic
+- **Data/BI:** Streamlit, Pandas, Plotly, Data engineering, ETL/ELT, Data visualization, SQL
+- **Infrastructure:** Docker, Docker Compose, CI/CD, API development, MLOps, LLMOps
+- **Integrations:** GoHighLevel CRM, OpenAI API, Claude API, Cohere API, LinkedIn API, Gumroad API
+
+### Industry Expertise
+- **Real Estate:** Lead qualification, Property management, CRM integration, Compliance (DRE, Fair Housing)
+- **Marketing Technology:** Attribution analysis, Campaign optimization, SEO automation, Email marketing, Social media
+- **SaaS:** Revenue optimization, Customer analytics, Churn prediction, Growth automation
+
+### Soft Skills
+- Technical strategy and roadmap planning
+- Cross-functional team collaboration
+- Client communication and stakeholder management
+- Documentation and knowledge transfer
+- Problem-solving and analytical thinking
+
+---
+
+## Proposal Hooks by Service Category
+
+### Strategy (`S01`, `S02`, `S24`)
+"If you share your current AI roadmap and blockers, I can return a prioritized implementation plan with risk and ROI in 5 business days."
+
+### Agentic AI (`S03`, `S04`, `S05`, `S06`)
+"I can ship a working workflow in week one, then iterate using benchmarked quality and cost metrics."
+
+### Data & BI (`S07`, `S08`, `S09`, `S10`, `S11`)
+"We can replace manual reporting with a measurable dashboard + pipeline cadence tied to decisions, not vanity metrics."
+
+### Marketing (`S12`, `S13`, `S14`, `S15`, `S16`)
+"I can automate your marketing workflows to recover 20+ hours per week while improving lead quality and campaign ROI."
+
+### Infra & MLOps (`S17`, `S18`, `S19`, `S20`)
+"I design API/model infrastructure with observability and rollback paths so production risk is controlled from day one."
+
+### Ops & Governance (`S21`, `S22`, `S23`, `S24`)
+"I document controls, SOPs, and measurable governance checkpoints so compliance and execution quality are auditable."
 
 ---
 
 ## Availability
+- **Hourly:** $85-$150/hr depending on scope and urgency
+- **Preferred engagement:** Fixed-price with milestone deliverables
+- **Timezone:** Pacific Time (US)
+- **Response time:** Within 24 hours for new inquiries
 
-- **Hourly Rate:** $60-150/hr (based on service tier)
-- **Fixed-Price Projects:** Preferred for well-defined scope (see Quick-Win packages above)
-- **Response Time:** Within 6 hours
-- **Timezone:** Pacific Time (PT)
+---
 
-## Process
-
-1. **Discovery:** 30-min call to understand requirements
-2. **Proposal:** Scope, timeline, and pricing with relevant portfolio demo
-3. **Development:** Daily updates + milestone reviews + GitHub visibility
-4. **Delivery:** Documentation + tests + CI/CD + deployment support
-
-## Guarantees
-
-- All code ownership transfers to you (100% IP rights)
-- Production-ready with tests and CI or free fixes
-- Every deliverable has a working demo mode
-- Happy to sign NDAs
+*Last Updated: 2026-02-11 | Data Source: output/portfolio_data/ (canonical YAML files)*

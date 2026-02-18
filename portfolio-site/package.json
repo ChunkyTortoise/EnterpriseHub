@@ -1,0 +1,33 @@
+{
+  "name": "portfolio-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Professional portfolio site with Next.js and static export",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "validate": "ts-node scripts/validate_data.ts",
+    "build-content": "ts-node scripts/build_content.ts",
+    "check-links": "ts-node scripts/check_links.ts",
+    "release-manifest": "ts-node scripts/release_manifest.ts"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "20.19.33",
+    "@types/react": "18.3.28",
+    "@types/react-dom": "^18.3.0",
+    "ajv": "^8.13.0",
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.9.3"
+  }
+}

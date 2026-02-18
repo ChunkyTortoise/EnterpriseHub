@@ -12,6 +12,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+TEST_COUNT = 4_937
+TEST_COUNT_LABEL = f"{TEST_COUNT:,}"
+TEST_COUNT_BADGE = TEST_COUNT_LABEL.replace(",", "%2C")
+
 st.set_page_config(
     page_title="EnterpriseHub — Real Estate AI Platform",
     page_icon="\U0001f3e2",
@@ -171,6 +175,60 @@ HANDOFFS = [
     },
 ]
 
+SHOWCASE_SCENARIOS = {
+    "Boutique Brokerage Expansion": {
+        "client_profile": "8-agent brokerage expanding into a second market",
+        "monthly_leads": 180,
+        "baseline_conversion": 0.11,
+        "improved_conversion": 0.21,
+        "avg_commission": 9800,
+        "sla_before_mins": 18,
+        "sla_after_mins": 3,
+        "platform_cost": 1800,
+        "pain_point": "Lead response times were too slow and handoffs between agents were inconsistent.",
+        "solution": "Lead, Buyer, and Seller bots enforce the 5-minute SLA and route qualified leads automatically.",
+        "proof_points": [
+            "Hot lead tagging synced directly into GoHighLevel workflows",
+            "Cross-bot handoffs tracked with confidence thresholds and circular prevention",
+            "Executive dashboard centralizes conversion, response, and revenue metrics",
+        ],
+    },
+    "Luxury Listing Team": {
+        "client_profile": "5-agent luxury listing team with high deal value",
+        "monthly_leads": 95,
+        "baseline_conversion": 0.15,
+        "improved_conversion": 0.27,
+        "avg_commission": 16500,
+        "sla_before_mins": 12,
+        "sla_after_mins": 2,
+        "platform_cost": 2200,
+        "pain_point": "High-intent inquiries were delayed, causing premium sellers to choose competing brokers.",
+        "solution": "Seller Bot qualifies intent fast, launches CMA workflows, and escalates high-value leads instantly.",
+        "proof_points": [
+            "Priority workflows for high-value seller opportunities",
+            "AI-generated follow-up plans tailored to timeline and readiness",
+            "Pipeline analytics expose where luxury deals stall",
+        ],
+    },
+    "High-Volume ISA Team": {
+        "client_profile": "Inside sales team handling paid media lead volume",
+        "monthly_leads": 420,
+        "baseline_conversion": 0.07,
+        "improved_conversion": 0.16,
+        "avg_commission": 7400,
+        "sla_before_mins": 26,
+        "sla_after_mins": 4,
+        "platform_cost": 2600,
+        "pain_point": "Reps were overloaded and lead quality decisions were inconsistent across channels.",
+        "solution": "Automated qualification + temperature scoring filters noise before human reps engage.",
+        "proof_points": [
+            "Unified scoring model across Zillow, referrals, ads, and website traffic",
+            "Warm/cold nurture automations stop rep time from being spent on low-intent leads",
+            "Cost dashboard tracks token spend and cache efficiency by workflow",
+        ],
+    },
+}
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -199,6 +257,34 @@ def temp_badge(temp):
     return f"<span style='background:{TEMP_COLORS[temp]}20;color:{TEMP_COLORS[temp]};padding:2px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600'>{temp}</span>"
 
 
+def compute_showcase_outcome(scenario):
+    baseline_closed = int(round(scenario["monthly_leads"] * scenario["baseline_conversion"]))
+    improved_closed = int(round(scenario["monthly_leads"] * scenario["improved_conversion"]))
+    baseline_revenue = baseline_closed * scenario["avg_commission"]
+    improved_revenue = improved_closed * scenario["avg_commission"]
+    monthly_uplift = improved_revenue - baseline_revenue
+    conversion_gain_pp = (scenario["improved_conversion"] - scenario["baseline_conversion"]) * 100
+    sla_improvement_pct = (scenario["sla_before_mins"] - scenario["sla_after_mins"]) / scenario["sla_before_mins"] * 100
+    revenue_uplift_pct = monthly_uplift / baseline_revenue * 100 if baseline_revenue > 0 else 0
+    closing_growth_pct = (improved_closed - baseline_closed) / baseline_closed * 100 if baseline_closed > 0 else 0
+    daily_uplift = monthly_uplift / 30 if monthly_uplift > 0 else 0
+    payback_days = scenario["platform_cost"] / daily_uplift if daily_uplift > 0 else None
+
+    return {
+        "baseline_closed": baseline_closed,
+        "improved_closed": improved_closed,
+        "baseline_revenue": baseline_revenue,
+        "improved_revenue": improved_revenue,
+        "monthly_uplift": monthly_uplift,
+        "conversion_gain_pp": conversion_gain_pp,
+        "additional_closings": improved_closed - baseline_closed,
+        "sla_improvement_pct": sla_improvement_pct,
+        "revenue_uplift_pct": revenue_uplift_pct,
+        "closing_growth_pct": closing_growth_pct,
+        "payback_days": payback_days,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
@@ -216,6 +302,7 @@ with st.sidebar:
             "Bot Orchestration",
             "AI Cost Tracking",
             "Pipeline Analytics",
+            "Client Showcase",
         ],
         label_visibility="collapsed",
     )
@@ -227,8 +314,8 @@ with st.sidebar:
     st.caption("GoHighLevel CRM Integration")
     st.markdown("---")
     st.markdown(
-        "[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github)](https://github.com/ChunkyTortoise/EnterpriseHub) "
-        "[![Tests](https://img.shields.io/badge/tests-4%2C467-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
+        f"[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github)](https://github.com/ChunkyTortoise/EnterpriseHub) "
+        f"[![Tests](https://img.shields.io/badge/tests-{TEST_COUNT_BADGE}-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
     )
 
 # ---------------------------------------------------------------------------
@@ -648,6 +735,74 @@ elif hub == "Pipeline Analytics":
     st.dataframe(perf, width="stretch", hide_index=True)
 
 # ---------------------------------------------------------------------------
+# Client Showcase
+# ---------------------------------------------------------------------------
+
+elif hub == "Client Showcase":
+    st.title("Client Showcase")
+    st.caption("Guided ROI narrative for live client calls and demos")
+
+    selected_scenario_name = st.selectbox("Choose a client scenario", list(SHOWCASE_SCENARIOS.keys()))
+    scenario = SHOWCASE_SCENARIOS[selected_scenario_name]
+    outcome = compute_showcase_outcome(scenario)
+
+    st.markdown("### Demo Flow (3 Steps)")
+    st.markdown(
+        "1. **Problem**: Anchor on the response-time and handoff pain point shown below.\n"
+        "2. **Intervention**: Explain how EnterpriseHub automates qualification + routing.\n"
+        "3. **Outcome**: Quantify uplift, extra closings, and payback period with the KPI cards."
+    )
+
+    st.info(
+        f"**Profile:** {scenario['client_profile']}  \n"
+        f"**Pain Point:** {scenario['pain_point']}  \n"
+        f"**EnterpriseHub Fit:** {scenario['solution']}"
+    )
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        kpi_card("Revenue Uplift", f"${outcome['monthly_uplift']:,}", delta=outcome["revenue_uplift_pct"])
+    with c2:
+        kpi_card("Conv. Lift", f"{outcome['conversion_gain_pp']:.1f}", suffix="pp")
+    with c3:
+        kpi_card("Extra Closings", str(outcome["additional_closings"]), delta=outcome["closing_growth_pct"])
+    with c4:
+        payback_value = f"{outcome['payback_days']:.1f}d" if outcome["payback_days"] is not None else "n/a"
+        kpi_card("Payback Period", payback_value, delta=outcome["sla_improvement_pct"])
+
+    comparison = pd.DataFrame(
+        {
+            "Metric": ["Monthly Closed Deals", "Monthly Revenue", "Avg Response Time"],
+            "Before EnterpriseHub": [
+                f"{outcome['baseline_closed']}",
+                f"${outcome['baseline_revenue']:,}",
+                f"{scenario['sla_before_mins']} min",
+            ],
+            "With EnterpriseHub": [
+                f"{outcome['improved_closed']}",
+                f"${outcome['improved_revenue']:,}",
+                f"{scenario['sla_after_mins']} min",
+            ],
+        }
+    )
+    st.subheader("Before vs After")
+    st.dataframe(comparison, width="stretch", hide_index=True)
+
+    st.subheader("Proof Points to Call Out")
+    for proof in scenario["proof_points"]:
+        st.markdown(f"- {proof}")
+
+    talk_track = (
+        f"Client profile: {scenario['client_profile']}\n"
+        f"Current state: {scenario['pain_point']}\n"
+        f"Expected monthly uplift: ${outcome['monthly_uplift']:,} with {outcome['additional_closings']} extra closings\n"
+        f"System behavior: {scenario['solution']}"
+    )
+
+    st.subheader("Copy-Ready Talk Track")
+    st.code(talk_track, language="text")
+
+# ---------------------------------------------------------------------------
 # Footer
 # ---------------------------------------------------------------------------
 
@@ -657,7 +812,7 @@ st.markdown(
     "EnterpriseHub — Portfolio Demo &bull; "
     "<a href='https://github.com/ChunkyTortoise/EnterpriseHub' style='color:#6366f1'>Source Code</a> &bull; "
     "<a href='https://chunkytortoise.github.io' style='color:#6366f1'>Portfolio</a> &bull; "
-    "4,467 tests &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
+    f"{TEST_COUNT_LABEL} tests &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
     "</div>",
     unsafe_allow_html=True,
 )

@@ -26,6 +26,15 @@ class StateDetailsResult(TypedDict):
     details: dict[str, Any]
 
 
+def _get_nested(payload: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    current: Any = payload
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            raise KeyError(".".join(keys))
+        current = current[key]
+    return current
+
+
 def _request_json(
     *,
     method: str,
@@ -119,6 +128,40 @@ def main() -> int:
         return 1
 
     details_result: StateDetailsResult = details_body  # type: ignore[assignment]
+    try:
+        inventory_interactions = _get_nested(details_result, ("details", "inventory", "interaction_count"))
+        appointments = _get_nested(details_result, ("details", "appointment", "booking_count"))
+    except KeyError as exc:
+        print(
+            json.dumps(
+                {
+                    "step": "state-details",
+                    "status": details_status,
+                    "error": "unexpected response shape",
+                    "missing_key_path": str(exc),
+                    "body": details_body,
+                },
+                indent=2,
+            )
+        )
+        return 1
+
+    if not isinstance(inventory_interactions, int) or not isinstance(appointments, int):
+        print(
+            json.dumps(
+                {
+                    "step": "state-details",
+                    "status": details_status,
+                    "error": "unexpected value types",
+                    "inventory_interactions_type": type(inventory_interactions).__name__,
+                    "appointments_type": type(appointments).__name__,
+                    "body": details_body,
+                },
+                indent=2,
+            )
+        )
+        return 1
+
     print(
         json.dumps(
             {
@@ -126,8 +169,8 @@ def main() -> int:
                 "status": details_status,
                 "request_id_sent": details_request_id,
                 "request_id_received": details_headers.get("x-request-id"),
-                "inventory_interactions": details_result["details"]["inventory"]["interaction_count"],
-                "appointments": details_result["details"]["appointment"]["booking_count"],
+                "inventory_interactions": inventory_interactions,
+                "appointments": appointments,
             },
             indent=2,
         )
