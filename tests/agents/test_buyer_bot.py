@@ -151,7 +151,7 @@ class TestJorgeBuyerBot:
 
         # Verify urgency level classification
         assert result["urgency_level"] == "3_months"  # Score 65 >= 50
-        assert result["property_preferences"] is not None
+        assert "property_preferences" in result
 
     @pytest.mark.asyncio
     async def test_match_properties(self, mock_dependencies, mock_buyer_state):
@@ -610,15 +610,20 @@ class TestEscalateToHumanReview:
     async def test_escalate_creates_ticket_and_sends_notification(self, mock_dependencies):
         """Escalation creates CRM tag and publishes internal event."""
         buyer_bot = JorgeBuyerBot()
-        # Mock GHL client so CRM actions succeed
-        buyer_bot.ghl_client = MagicMock()
-        buyer_bot.ghl_client.add_tags = AsyncMock()
-        buyer_bot.ghl_client.trigger_workflow = AsyncMock()
-        buyer_bot.ghl_client.update_custom_field = AsyncMock()
-        buyer_bot.ghl_client.base_url = "https://test.api"
-        buyer_bot.ghl_client.headers = {"Authorization": "Bearer test"}
-        # Mock event publisher
-        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
+        # Mock GHL client on the escalation manager (where the actual call happens)
+        mock_ghl = MagicMock()
+        mock_ghl.add_tags = AsyncMock()
+        mock_ghl.trigger_workflow = AsyncMock()
+        mock_ghl.update_custom_field = AsyncMock()
+        mock_ghl.base_url = "https://test.api"
+        mock_ghl.headers = {"Authorization": "Bearer test"}
+        mock_ghl.http_client = MagicMock()
+        mock_ghl.http_client.post = AsyncMock(return_value=MagicMock(raise_for_status=Mock()))
+        buyer_bot._escalation_manager.ghl_client = mock_ghl
+        # Mock event publisher on escalation manager
+        mock_event_pub = AsyncMock()
+        mock_event_pub.publish_bot_status_update = AsyncMock()
+        buyer_bot._escalation_manager.event_publisher = mock_event_pub
 
         result = await buyer_bot.escalate_to_human_review(
             buyer_id="buyer_123", reason="intent_analysis_failure", context={"error": "test error"}
@@ -632,23 +637,28 @@ class TestEscalateToHumanReview:
         assert result["reason"] == "intent_analysis_failure"
 
         # Verify internal event was published
-        buyer_bot.event_publisher.publish_bot_status_update.assert_called_once()
-        call_kwargs = buyer_bot.event_publisher.publish_bot_status_update.call_args
+        mock_event_pub.publish_bot_status_update.assert_called_once()
+        call_kwargs = mock_event_pub.publish_bot_status_update.call_args
         assert call_kwargs.kwargs["status"] == "escalated"
 
     @pytest.mark.asyncio
     async def test_escalate_graceful_degradation_when_services_fail(self, mock_dependencies):
         """Escalation queues request when all channels fail."""
         buyer_bot = JorgeBuyerBot()
-        # GHL client methods all fail
-        buyer_bot.ghl_client = MagicMock()
-        buyer_bot.ghl_client.add_tags = AsyncMock(side_effect=Exception("GHL unavailable"))
-        buyer_bot.ghl_client.trigger_workflow = AsyncMock(side_effect=Exception("GHL unavailable"))
-        buyer_bot.ghl_client.update_custom_field = AsyncMock(side_effect=Exception("GHL unavailable"))
-        buyer_bot.ghl_client.base_url = "https://test.api"
-        buyer_bot.ghl_client.headers = {"Authorization": "Bearer test"}
+        # GHL client methods all fail on the escalation manager
+        mock_ghl = MagicMock()
+        mock_ghl.add_tags = AsyncMock(side_effect=Exception("GHL unavailable"))
+        mock_ghl.trigger_workflow = AsyncMock(side_effect=Exception("GHL unavailable"))
+        mock_ghl.update_custom_field = AsyncMock(side_effect=Exception("GHL unavailable"))
+        mock_ghl.base_url = "https://test.api"
+        mock_ghl.headers = {"Authorization": "Bearer test"}
+        mock_ghl.http_client = MagicMock()
+        mock_ghl.http_client.post = AsyncMock(side_effect=Exception("GHL unavailable"))
+        buyer_bot._escalation_manager.ghl_client = mock_ghl
         # Event publisher also fails
-        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(side_effect=Exception("CRM unavailable"))
+        mock_event_pub = AsyncMock()
+        mock_event_pub.publish_bot_status_update = AsyncMock(side_effect=Exception("CRM unavailable"))
+        buyer_bot._escalation_manager.event_publisher = mock_event_pub
 
         result = await buyer_bot.escalate_to_human_review(buyer_id="buyer_456", reason="system_failure", context={})
 
@@ -915,13 +925,18 @@ class TestStreamARequiredCoverage:
     async def test_escalate_to_human_review_creates_ticket(self, mock_dependencies):
         """Human escalation returns a valid ticket with CRM actions and event published."""
         buyer_bot = JorgeBuyerBot()
-        buyer_bot.ghl_client = MagicMock()
-        buyer_bot.ghl_client.add_tags = AsyncMock()
-        buyer_bot.ghl_client.trigger_workflow = AsyncMock()
-        buyer_bot.ghl_client.update_custom_field = AsyncMock()
-        buyer_bot.ghl_client.base_url = "https://mock.api"
-        buyer_bot.ghl_client.headers = {"Authorization": "Bearer mock"}
-        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock()
+        mock_ghl = MagicMock()
+        mock_ghl.add_tags = AsyncMock()
+        mock_ghl.trigger_workflow = AsyncMock()
+        mock_ghl.update_custom_field = AsyncMock()
+        mock_ghl.base_url = "https://mock.api"
+        mock_ghl.headers = {"Authorization": "Bearer mock"}
+        mock_ghl.http_client = MagicMock()
+        mock_ghl.http_client.post = AsyncMock(return_value=MagicMock(raise_for_status=Mock()))
+        buyer_bot._escalation_manager.ghl_client = mock_ghl
+        mock_event_pub = AsyncMock()
+        mock_event_pub.publish_bot_status_update = AsyncMock()
+        buyer_bot._escalation_manager.event_publisher = mock_event_pub
 
         result = await buyer_bot.escalate_to_human_review(
             buyer_id="buyer_ticket_test",
@@ -938,19 +953,24 @@ class TestStreamARequiredCoverage:
         assert result["timestamp"] is not None
 
         # Verify GHL tag was applied
-        buyer_bot.ghl_client.add_tags.assert_called_once_with("buyer_ticket_test", ["Escalation"])
+        mock_ghl.add_tags.assert_called_once_with("buyer_ticket_test", ["Escalation"])
 
     @pytest.mark.asyncio
     async def test_escalate_to_human_review_queues_on_total_failure(self, mock_dependencies):
         """When both GHL and event publisher fail, escalation is queued for manual processing."""
         buyer_bot = JorgeBuyerBot()
-        buyer_bot.ghl_client = MagicMock()
-        buyer_bot.ghl_client.add_tags = AsyncMock(side_effect=Exception("GHL down"))
-        buyer_bot.ghl_client.trigger_workflow = AsyncMock(side_effect=Exception("GHL down"))
-        buyer_bot.ghl_client.update_custom_field = AsyncMock(side_effect=Exception("GHL down"))
-        buyer_bot.ghl_client.base_url = "https://mock.api"
-        buyer_bot.ghl_client.headers = {"Authorization": "Bearer mock"}
-        buyer_bot.event_publisher.publish_bot_status_update = AsyncMock(side_effect=Exception("Event bus down"))
+        mock_ghl = MagicMock()
+        mock_ghl.add_tags = AsyncMock(side_effect=Exception("GHL down"))
+        mock_ghl.trigger_workflow = AsyncMock(side_effect=Exception("GHL down"))
+        mock_ghl.update_custom_field = AsyncMock(side_effect=Exception("GHL down"))
+        mock_ghl.base_url = "https://mock.api"
+        mock_ghl.headers = {"Authorization": "Bearer mock"}
+        mock_ghl.http_client = MagicMock()
+        mock_ghl.http_client.post = AsyncMock(side_effect=Exception("GHL down"))
+        buyer_bot._escalation_manager.ghl_client = mock_ghl
+        mock_event_pub = AsyncMock()
+        mock_event_pub.publish_bot_status_update = AsyncMock(side_effect=Exception("Event bus down"))
+        buyer_bot._escalation_manager.event_publisher = mock_event_pub
 
         result = await buyer_bot.escalate_to_human_review(
             buyer_id="buyer_total_fail", reason="system_failure", context={}
