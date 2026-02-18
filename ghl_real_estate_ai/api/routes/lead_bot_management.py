@@ -5,7 +5,7 @@ Provides endpoints for managing Lead Bot 3-7-30 day sequence automation.
 Integrates with frontend for sequence control and monitoring.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -95,29 +95,15 @@ async def create_sequence(
         if not lead_scheduler or not lead_scheduler.enabled:
             raise HTTPException(status_code=503, detail="Lead sequence scheduler is not available")
 
-        # Create initial sequence state
-        from ghl_real_estate_ai.services.lead_sequence_state_service import LeadSequenceState
-
-        sequence_state = LeadSequenceState(
-            lead_id=request.lead_id,
-            current_day=SequenceDay.DAY_3,
-            sequence_phase="day_3_pending",
-            started_at=datetime.now(),
-            next_scheduled_at=datetime.now(),
-            lead_metadata={
-                "name": request.lead_name,
-                "phone": request.phone,
-                "email": request.email,
-                "property_address": request.property_address,
-            },
-        )
-
-        # Save sequence state
+        # Create initial sequence state using service contract
+        start_day = SequenceDay.INITIAL if request.start_delay_minutes == 0 else SequenceDay.DAY_3
+        sequence_state = await sequence_service.create_sequence(request.lead_id, initial_day=start_day)
+        sequence_state.next_scheduled_at = datetime.now() + timedelta(minutes=request.start_delay_minutes)
         await sequence_service.save_state(sequence_state)
 
-        # Schedule first action (Day 3 SMS)
+        # Schedule first action (Day 0 INITIAL if immediate, otherwise Day 3)
         success = await lead_scheduler.schedule_sequence_start(
-            lead_id=request.lead_id, sequence_day=SequenceDay.DAY_3, delay_minutes=request.start_delay_minutes
+            lead_id=request.lead_id, sequence_day=start_day, delay_minutes=request.start_delay_minutes
         )
 
         if success:
@@ -135,6 +121,8 @@ async def create_sequence(
         else:
             raise HTTPException(status_code=500, detail="Failed to schedule sequence start")
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating sequence for lead {request.lead_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -210,10 +198,12 @@ async def get_sequence_status(lead_id: str, _auth=Depends(require_auth)):
         return SequenceStatusResponse(
             lead_id=lead_id,
             current_day=sequence_state.current_day.value if sequence_state.current_day else None,
-            status=sequence_state.status or "unknown",
+            status=sequence_state.sequence_status.value if sequence_state.sequence_status else "unknown",
             progress=progress,
             next_action=next_action,
-            sequence_started_at=sequence_state.started_at.isoformat() if sequence_state.started_at else None,
+            sequence_started_at=sequence_state.sequence_started_at.isoformat()
+            if sequence_state.sequence_started_at
+            else None,
             last_activity_at=sequence_state.last_action_at.isoformat() if sequence_state.last_action_at else None,
         )
 
@@ -234,12 +224,14 @@ async def pause_sequence(lead_id: str, _auth=Depends(require_auth)):
     try:
         sequence_service = get_sequence_service()
 
-        result = await sequence_service.pause_sequence(lead_id)
+        success, error_message = await sequence_service.pause_sequence(lead_id)
 
-        if result:
+        if success:
             return {"success": True, "message": f"Sequence paused for lead {lead_id}"}
-        else:
-            raise HTTPException(status_code=404, detail=f"No active sequence found for lead {lead_id}")
+
+        if error_message and "No sequence state found" in error_message:
+            raise HTTPException(status_code=404, detail=f"No sequence found for lead {lead_id}")
+        raise HTTPException(status_code=400, detail=error_message or "Unable to pause sequence")
 
     except HTTPException:
         raise
@@ -258,12 +250,14 @@ async def resume_sequence(lead_id: str, _auth=Depends(require_auth)):
     try:
         sequence_service = get_sequence_service()
 
-        result = await sequence_service.resume_sequence(lead_id)
+        success, error_message = await sequence_service.resume_sequence(lead_id)
 
-        if result:
+        if success:
             return {"success": True, "message": f"Sequence resumed for lead {lead_id}"}
-        else:
-            raise HTTPException(status_code=404, detail=f"No paused sequence found for lead {lead_id}")
+
+        if error_message and "No sequence state found" in error_message:
+            raise HTTPException(status_code=404, detail=f"No sequence found for lead {lead_id}")
+        raise HTTPException(status_code=400, detail=error_message or "Unable to resume sequence")
 
     except HTTPException:
         raise
@@ -282,12 +276,14 @@ async def cancel_sequence(lead_id: str, _auth=Depends(require_auth)):
     try:
         sequence_service = get_sequence_service()
 
-        result = await sequence_service.complete_sequence(lead_id, "cancelled")
+        success, error_message = await sequence_service.complete_sequence(lead_id, "cancelled")
 
-        if result:
+        if success:
             return {"success": True, "message": f"Sequence cancelled for lead {lead_id}"}
-        else:
-            raise HTTPException(status_code=404, detail=f"No active sequence found for lead {lead_id}")
+
+        if error_message and "No sequence state found" in error_message:
+            raise HTTPException(status_code=404, detail=f"No sequence found for lead {lead_id}")
+        raise HTTPException(status_code=400, detail=error_message or "Unable to cancel sequence")
 
     except HTTPException:
         raise

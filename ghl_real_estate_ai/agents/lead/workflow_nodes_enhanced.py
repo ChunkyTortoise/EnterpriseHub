@@ -40,8 +40,8 @@ class EnhancedWorkflowNodes:
                     lead_id=state["lead_id"],
                     location_id="national",
                     bot_type="lead-bot",
-                    conversation_history=state["conversation_history"],
-                    current_context={
+                    conversation_context=state["conversation_history"],
+                    preferences={
                         "sequence_day": state.get("sequence_day"),
                         "engagement_status": state.get("engagement_status"),
                         "nurture_focus": True,
