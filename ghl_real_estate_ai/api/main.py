@@ -268,6 +268,24 @@ async def lifespan(app: FastAPI):
         logger.warning("Jorge metrics will operate in memory-only mode")
 
     # ========================================================================
+    # REDIS HANDOFF REPOSITORY (multi-worker safe history + locks)
+    # ========================================================================
+
+    redis_handoff_repo = None
+    try:
+        from ghl_real_estate_ai.services.jorge.handoff_repository import RedisHandoffRepository
+
+        redis_handoff_repo = RedisHandoffRepository()
+        if await redis_handoff_repo.initialize():
+            logger.info("✅ Redis handoff repository initialized (history + locks)")
+        else:
+            redis_handoff_repo = None
+            logger.info("⚠️ Redis handoff repository not available — using in-memory fallback")
+    except Exception as e:
+        logger.warning(f"Redis handoff repository init failed: {e}")
+        redis_handoff_repo = None
+
+    # ========================================================================
     # JORGE BOT MONITORING: Periodic alerting background task
     # ========================================================================
 
@@ -299,6 +317,11 @@ async def lifespan(app: FastAPI):
                     # Hydrate handoff outcomes (last 7 days)
                     loaded_outcomes = await handoff_service.load_from_database(since_minutes=10080)
                     logger.info(f"✅ Loaded {loaded_outcomes} handoff outcomes from database")
+
+                    # Attach Redis handoff repo for multi-worker history + locks
+                    if redis_handoff_repo is not None:
+                        handoff_service._redis_handoff_repo = redis_handoff_repo
+                        logger.info("✅ Redis handoff repository attached to JorgeHandoffService")
                 except Exception as e:
                     logger.warning(f"Failed to wire repository into handoff service: {e}")
 
@@ -428,6 +451,14 @@ async def lifespan(app: FastAPI):
         logger.warning("GHL webhooks will not function - incoming GHL events will be rejected")
 
     yield
+
+    # Shutdown logic - Redis handoff repository
+    if redis_handoff_repo is not None:
+        try:
+            await redis_handoff_repo.close()
+            logger.info("Redis handoff repository closed")
+        except Exception as e:
+            logger.warning(f"Redis handoff repo shutdown error: {e}")
 
     # Shutdown logic - GHL Integration
     try:
