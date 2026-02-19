@@ -411,6 +411,7 @@ async def lifespan(app: FastAPI):
     # STARTUP ENV VAR VALIDATION (non-blocking warnings)
     # ========================================================================
 
+    _validate_critical_env_vars(logger)
     _validate_jorge_services_config(logger)
 
     # ========================================================================
@@ -524,6 +525,28 @@ async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
         "rate_limit_error_rate": rate_limit_error_rate,
     }
     return stats
+
+
+def _validate_critical_env_vars(logger) -> None:
+    """Warn on missing critical env vars at startup.
+
+    Logs errors for each missing variable but does NOT raise — the app
+    should still start so health endpoints are reachable for debugging.
+    """
+    required = {
+        "REDIS_URL": "Redis cache/session store",
+        "DATABASE_URL": "PostgreSQL database",
+        "GHL_API_KEY": "GoHighLevel CRM integration",
+        "ANTHROPIC_API_KEY": "Claude AI responses",
+    }
+    missing = [k for k in required if not os.getenv(k)]
+    if missing:
+        for var in missing:
+            logger.error("MISSING required env var %s (%s)", var, required[var])
+        logger.error(
+            "Application may not function correctly without: %s",
+            ", ".join(missing),
+        )
 
 
 def _validate_jorge_services_config(logger) -> None:

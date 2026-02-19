@@ -1,0 +1,27 @@
+app = "jorge-ghl-bots"
+primary_region = "lax"
+
+[build]
+dockerfile = "Dockerfile"
+
+[env]
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+
+[http_service]
+internal_port = 8000
+force_https = true
+auto_stop_machines = true
+auto_start_machines = true
+
+[[http_service.checks]]
+grace_period = "10s"
+interval = "30s"
+timeout = "5s"
+method = "get"
+path = "/api/health/live"
+
+[[vm]]
+memory = "512mb"
+cpu_kind = "shared"
+cpus = 1

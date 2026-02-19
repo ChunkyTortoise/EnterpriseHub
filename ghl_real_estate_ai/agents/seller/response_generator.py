@@ -124,6 +124,14 @@ class ResponseGenerator:
                 "Got it. Is there a specific date you're working toward?",
                 "Timelines are flexible. What would the ideal scenario look like for you?",
             ]),
+            "just_looking": random.choice([
+                "Hey, I appreciate that. Most people start that way. Quick question — if a serious buyer showed up with cash and wanted to close fast, would that be worth exploring?",
+                "Totally fair! That said, would it help to know what your home could go for in today's market? No strings attached.",
+                "No pressure at all. A lot of folks just want a number to keep in their back pocket. Want me to pull some comps from your area?",
+            ]) if not is_investor else random.choice([
+                "Smart to keep options open. If I could show you the ROI on selling now vs. holding, would that be useful?",
+                "Totally get it. Want me to run the numbers on what your equity position looks like right now?",
+            ]),
         }
 
         # Get tone variant if not provided

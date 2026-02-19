@@ -214,6 +214,14 @@ class JorgeSellerConfig:
         ],
     }
 
+    # ========== CMA DISCLAIMER & CONFIDENCE ROUTING ==========
+    CMA_DISCLAIMERS = {
+        "high": "This estimate is based on {comp_count} comparable sales in your area. Market conditions, property condition, and buyer demand may affect actual value. Not a professional appraisal.",
+        "medium": "This is a preliminary estimate based on limited comparable data. For a precise valuation, Jorge can walk you through it in person.",
+        "low": "We don't have enough recent sales data to give a reliable estimate for your area right now. Jorge can provide a personalized analysis.",
+    }
+    CMA_CONFIDENCE_THRESHOLDS = {"high": 70.0, "medium": 50.0}
+
     # ========== HOT SELLER HANDOFF MESSAGES ==========
     HOT_SELLER_HANDOFF_MESSAGES = [
         "Great news! I'm connecting you with Jorge directly. He'll reach out shortly to go over everything.",
