@@ -14,7 +14,7 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
 
 logger = logging.getLogger(__name__)
 
-SMS_MAX_CHARS = 160
+SMS_MAX_CHARS = 320
 SENTENCE_SEPARATORS = (". ", "! ", "? ")
 
 

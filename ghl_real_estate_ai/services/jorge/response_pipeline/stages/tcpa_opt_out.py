@@ -61,6 +61,7 @@ class TCPAOptOutProcessor(ResponseProcessorStage):
 
             response.message = OPT_OUT_RESPONSE_ES if lang == "es" else OPT_OUT_RESPONSE_EN
             response.action = ProcessingAction.SHORT_CIRCUIT
+            response.actions.append({"type": "add_tag", "tag": "TCPA-Opt-Out"})
             response.actions.append({"type": "add_tag", "tag": "AI-Off"})
             response.compliance_flags.append(
                 ComplianceFlag(
