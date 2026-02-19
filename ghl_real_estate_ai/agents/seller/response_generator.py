@@ -85,14 +85,45 @@ class ResponseGenerator:
             current_step="generate_response"
         )
 
-        # Friendly response templates for stalls
+        # Persona-aware stall responses (rotate to avoid repetition)
+        import random
+        seller_persona = state.get("seller_persona", {})
+        persona_type = seller_persona.get("persona_type", "Traditional")
+        is_investor = persona_type.lower() in ("investor", "arbitrage")
+
         friendly_responses = {
-            "thinking": "Totally get it—big decision. What's the main thing holding you back? Happy to pull numbers if that helps.",
-            "get_back": "No rush! Has anything changed with your timeline? I can send fresh comps if useful.",
-            "zestimate": "Zillow can't walk through your house! Want to see what neighbors actually sold for recently? Real numbers might surprise you.",
-            "agent": "Great you have someone! Happy to share comps from your area—could be useful for your agent too.",
-            "price": "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing every time.",
-            "timeline": "Makes sense. What's driving your timeline—market, a move, or something else?",
+            "thinking": random.choice([
+                "Totally get it, big decision. What's the main thing on your mind? Happy to pull numbers if that helps.",
+                "No pressure at all. What info would help you feel more confident?",
+                "Take your time. Is there something specific I can look into for you?",
+            ]) if not is_investor else random.choice([
+                "Makes sense to weigh the numbers. Want me to run a quick comp analysis so you can see the ROI picture?",
+                "Smart to think it through. I can pull recent sale data for your area if that helps the decision.",
+            ]),
+            "get_back": random.choice([
+                "No rush! Has anything changed with your timeline? I can send fresh comps if useful.",
+                "Sounds good. When you're ready, I'm here. Anything new on your end?",
+                "All good. Want me to keep an eye on the market for you in the meantime?",
+            ]),
+            "zestimate": random.choice([
+                "Zillow can't walk through your house! Want to see what neighbors actually sold for recently?",
+                "Online estimates miss a lot. I can show you what similar homes near you actually closed at.",
+                "Those online numbers are a starting point. The real picture comes from actual closed sales nearby.",
+            ]),
+            "agent": random.choice([
+                "Great you have someone! Happy to share comps from your area, could be useful for your agent too.",
+                "Good to hear. If you ever want a second set of eyes on the numbers, I'm happy to help.",
+            ]),
+            "price": random.choice([
+                "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing.",
+                "The right price makes all the difference. I can show you what's actually selling in your area.",
+                "Happy to dig into the numbers with you. What range are you thinking?",
+            ]),
+            "timeline": random.choice([
+                "Makes sense. What's driving your timeline, a move, the market, or something else?",
+                "Got it. Is there a specific date you're working toward?",
+                "Timelines are flexible. What would the ideal scenario look like for you?",
+            ]),
         }
 
         # Get tone variant if not provided
@@ -158,6 +189,11 @@ class ResponseGenerator:
         {self.PERSONA_GUIDANCE.get(persona_type, "")}
         {sentiment_context}
 
+        AGENT STATUS DETECTION: If the seller mentions working with another agent, having a
+        listing agreement, or being under contract, acknowledge positively and flag it.
+        Example: "Great you have someone! Jorge can still share comps from your area if that's helpful."
+        Never disparage another agent or pressure the seller to switch.
+
         TASK: Generate a helpful, friendly response that builds trust and provides value.
         Tailor your response to the seller's persona type above and detected sentiment.
         """
@@ -213,7 +249,11 @@ class ResponseGenerator:
             response.get("content")
             or response.get("analysis")
             or state.get("objection_response_text")  # Fallback to objection response
-            or "Happy to help with any questions about your property. What would be most useful to know?"
+            or random.choice([
+                "What questions do you have about the selling process? Happy to walk you through it.",
+                "What would be most helpful for me to look into for you right now?",
+                "Anything specific about your home or the market you're curious about?",
+            ])
         )
 
         # Calendar-focused mode: append real calendar slots for HOT sellers

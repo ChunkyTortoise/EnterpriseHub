@@ -173,18 +173,27 @@ class ResponseGenerator:
 
             response = await self.claude.generate_response(response_prompt)
 
+            import random
+            fallback = random.choice([
+                "What are you looking for in your next home? I want to make sure we're on the same page.",
+                "What matters most to you in your next home — area, size, style?",
+                "What's the most important thing on your wish list for your next place?",
+            ])
             return {
-                "response_content": response.get(
-                    "content", "I'd love to help you find the perfect property for your needs."
-                ),
+                "response_content": response.get("content", fallback),
                 "response_tone": "friendly_consultative",
                 "next_action": "send_response",
             }
 
         except Exception as e:
             logger.error(f"Error generating buyer response for {state.get('buyer_id')}: {str(e)}")
+            import random
             return {
-                "response_content": "I'd love to help you find the perfect property for your needs.",
+                "response_content": random.choice([
+                    "What area are you looking in? I can check what's available right now.",
+                    "What matters most to you in your next home? Let's start there.",
+                    "To find you the best matches, what price range works for your situation?",
+                ]),
                 "response_tone": "friendly_supportive",
                 "next_action": "send_response",
             }

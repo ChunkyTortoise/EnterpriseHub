@@ -46,6 +46,7 @@ class ProcessingContext:
     user_message: str = ""
     detected_language: str = "en"
     is_opt_out: bool = False
+    is_first_message: bool = False
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 

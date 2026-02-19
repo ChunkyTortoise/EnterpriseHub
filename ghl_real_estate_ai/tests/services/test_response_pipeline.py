@@ -868,3 +868,151 @@ class TestPipelineInfrastructure:
         assert resp.compliance_flags == []
         assert resp.actions == []
         assert resp.stage_log == []
+
+    def test_processing_context_is_first_message_default(self):
+        """ProcessingContext.is_first_message defaults to False."""
+        ctx = ProcessingContext()
+        assert ctx.is_first_message is False
+
+
+# ===========================================================================
+# 9. Proactive AI Disclosure (SB 1001)
+# ===========================================================================
+
+
+class TestProactiveAIDisclosure:
+    """SB 1001 proactive AI disclosure on first message of conversation."""
+
+    @pytest.fixture
+    def stage(self):
+        return AIDisclosureProcessor()
+
+    @pytest.mark.asyncio
+    async def test_first_message_has_proactive_disclosure(self, stage):
+        """First message prepends 'Hey! I'm Jorge's AI assistant.' + keeps footer."""
+        resp, ctx = _make_response(
+            message="Welcome! What brings you here?",
+            detected_language="en",
+        )
+        ctx.is_first_message = True
+        result = await stage.process(resp, ctx)
+
+        assert result.message.startswith("Hey! I'm Jorge's AI assistant. ")
+        assert result.message.endswith(DISCLOSURE_EN)
+        assert result.action == ProcessingAction.MODIFY
+
+    @pytest.mark.asyncio
+    async def test_first_message_spanish_proactive_disclosure(self, stage):
+        """Spanish first message prepends Spanish proactive disclosure."""
+        from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
+            PROACTIVE_DISCLOSURE_ES,
+        )
+
+        resp, ctx = _make_response(
+            message="Bienvenido!",
+            detected_language="es",
+        )
+        ctx.is_first_message = True
+        result = await stage.process(resp, ctx)
+
+        assert result.message.startswith(PROACTIVE_DISCLOSURE_ES)
+        assert result.message.endswith(DISCLOSURE_ES)
+
+    @pytest.mark.asyncio
+    async def test_subsequent_messages_keep_footer_only(self, stage):
+        """Non-first messages get footer but no proactive disclosure."""
+        resp, ctx = _make_response(
+            message="Here's more info for you.",
+            detected_language="en",
+        )
+        ctx.is_first_message = False
+        result = await stage.process(resp, ctx)
+
+        assert not result.message.startswith("Hey! I'm Jorge's AI assistant.")
+        assert result.message.endswith(DISCLOSURE_EN)
+
+    @pytest.mark.asyncio
+    async def test_first_message_not_duplicated(self, stage):
+        """Proactive disclosure not duplicated if already present."""
+        from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
+            PROACTIVE_DISCLOSURE_EN,
+        )
+
+        msg = PROACTIVE_DISCLOSURE_EN + "Welcome!"
+        resp, ctx = _make_response(message=msg, detected_language="en")
+        ctx.is_first_message = True
+        result = await stage.process(resp, ctx)
+
+        assert result.message.count("Hey! I'm Jorge's AI assistant.") == 1
+
+
+# ===========================================================================
+# 10. Carrier Spam Guard
+# ===========================================================================
+
+
+class TestCarrierSpamGuard:
+    """Carrier spam trigger sanitization in SMS truncation stage."""
+
+    @pytest.fixture
+    def stage(self):
+        return SMSTruncationProcessor()
+
+    @pytest.mark.asyncio
+    async def test_spam_word_lowered(self, stage):
+        """All-caps spam trigger words are lowercased."""
+        resp, ctx = _make_response(
+            message="Get a FREE home valuation today!",
+            channel="sms",
+        )
+        result = await stage.process(resp, ctx)
+
+        assert "FREE" not in result.message
+        assert "Free" in result.message or "free" in result.message
+
+    @pytest.mark.asyncio
+    async def test_excessive_caps_converted(self, stage):
+        """Messages with >30% uppercase are converted to sentence case."""
+        resp, ctx = _make_response(
+            message="YOUR HOME IS WORTH MORE THAN YOU THINK! CALL NOW FOR DETAILS.",
+            channel="sms",
+        )
+        result = await stage.process(resp, ctx)
+
+        # Should be sentence case, not all-caps
+        alpha_chars = [c for c in result.message if c.isalpha()]
+        upper_ratio = sum(1 for c in alpha_chars if c.isupper()) / len(alpha_chars) if alpha_chars else 0
+        assert upper_ratio < 0.30
+
+    @pytest.mark.asyncio
+    async def test_url_shortener_warning(self, stage):
+        """URL shorteners are detected and logged (message unchanged)."""
+        msg = "Check this out: https://bit.ly/abc123"
+        resp, ctx = _make_response(message=msg, channel="sms")
+        result = await stage.process(resp, ctx)
+
+        # Message should still contain the URL (we warn, not remove)
+        assert "bit.ly" in result.message
+
+    @pytest.mark.asyncio
+    async def test_normal_message_not_modified_by_spam_guard(self, stage):
+        """Normal messages without spam triggers pass through unchanged."""
+        msg = "Thanks for sharing! What price would make you feel good about selling?"
+        resp, ctx = _make_response(message=msg, channel="sms")
+        result = await stage.process(resp, ctx)
+
+        assert result.message == msg
+        assert result.action == ProcessingAction.PASS
+
+    @pytest.mark.asyncio
+    async def test_spam_guard_works_after_truncation(self, stage):
+        """Spam guard runs after truncation on long messages."""
+        # Long message with spam words that gets truncated
+        msg = "A" * 200 + ". Get your FREE home valuation. " + "B" * 200
+        resp, ctx = _make_response(message=msg, channel="sms")
+        result = await stage.process(resp, ctx)
+
+        assert len(result.message) <= SMS_MAX_CHARS
+        # If FREE survived truncation, it should be lowercased
+        if "free" in result.message.lower():
+            assert "FREE" not in result.message

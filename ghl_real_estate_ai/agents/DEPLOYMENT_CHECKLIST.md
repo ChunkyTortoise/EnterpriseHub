@@ -5,8 +5,29 @@ Production deployment guide for Jorge's 3 bots (Seller, Buyer, Lead).
 
 ---
 
+## Step 0: A2P 10DLC Registration (CRITICAL)
+
+**Without A2P 10DLC registration, ALL SMS messages will be blocked by carriers since Feb 2025. Fines up to $10,000 per violation.**
+
+1. **Register your brand** with The Campaign Registry (TCR) via your SMS provider (Twilio, GHL native, etc.)
+   - Business EIN required
+   - Approval takes 1-5 business days
+2. **Register your campaign** (use case: "Real estate lead qualification")
+   - Campaign type: Mixed / Conversational
+   - Sample messages: Include one qualifying question + opt-out language
+3. **Verify registration status** is "Active" before sending any SMS
+4. **Include opt-out language** in at least the first message: "Reply STOP to opt out"
+
+Resources:
+- GHL A2P guide: Settings > Phone Numbers > A2P Registration
+- TCR portal: https://csp.campaignregistry.com/
+- FCC guidelines: https://www.fcc.gov/consumers/guides/spam-text-messages
+
+---
+
 ## Prerequisites
 
+- [ ] **A2P 10DLC registration active** (see Step 0 above — mandatory for SMS delivery)
 - [ ] GHL account with API access (Settings > API > Generate Key)
 - [ ] GHL custom fields created (see GHL Setup Validation below)
 - [ ] GHL workflows created for hot/warm routing
