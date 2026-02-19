@@ -7,6 +7,7 @@ Handles CMA generation, valuation defense, and pricing guidance for seller leads
 from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -61,6 +62,20 @@ class CMAService:
                 f"estimated value ${report.estimated_value:,.0f}"
             )
 
+            # Confidence routing + disclaimer injection
+            confidence = report.confidence_score
+            thresholds = JorgeSellerConfig.CMA_CONFIDENCE_THRESHOLDS
+            disclaimers = JorgeSellerConfig.CMA_DISCLAIMERS
+            if confidence >= thresholds["high"]:
+                disclaimer = disclaimers["high"].format(comp_count=len(comparable_properties) or "several")
+                use_full_cma = True
+            elif confidence >= thresholds["medium"]:
+                disclaimer = disclaimers["medium"]
+                use_full_cma = True
+            else:
+                disclaimer = disclaimers["low"]
+                use_full_cma = False
+
             return {
                 "cma_report": {
                     "estimated_value": report.estimated_value,
@@ -70,6 +85,8 @@ class CMAService:
                     "zillow_variance_percent": report.zillow_variance_percent,
                     "zillow_explanation": report.zillow_explanation,
                     "market_narrative": report.market_narrative,
+                    "disclaimer": disclaimer,
+                    "use_full_cma": use_full_cma,
                 },
                 "estimated_value": report.estimated_value,
                 "comparable_properties": comparable_properties,

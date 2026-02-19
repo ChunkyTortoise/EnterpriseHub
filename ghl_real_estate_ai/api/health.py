@@ -14,6 +14,7 @@ Status: Production Health Check System
 
 import asyncio
 import logging
+import os
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -75,14 +76,16 @@ class HealthChecker:
     async def initialize(self):
         """Initialize health checker connections"""
         try:
-            # Initialize Redis connection
-            self.redis_client = redis.Redis(
-                host="localhost", port=6379, decode_responses=True, socket_timeout=3.0, socket_connect_timeout=3.0
+            # Initialize Redis connection from env
+            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+            self.redis_client = redis.from_url(
+                redis_url, decode_responses=True, socket_timeout=3.0, socket_connect_timeout=3.0
             )
 
-            # Initialize database connection pool
+            # Initialize database connection pool from env
+            db_url = os.getenv("DATABASE_URL", "postgresql://localhost:5432/ghl_real_estate")
             self.db_pool = await asyncpg.create_pool(
-                "postgresql://localhost:5432/ghl_real_estate", min_size=1, max_size=3, command_timeout=5.0
+                db_url, min_size=1, max_size=3, command_timeout=5.0
             )
 
             logger.info("Health checker initialized successfully")

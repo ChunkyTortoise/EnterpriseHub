@@ -44,6 +44,8 @@ from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compl
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+from ghl_real_estate_ai.services.jorge.response_pipeline.factory import get_response_pipeline
+from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessingContext
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
@@ -662,17 +664,19 @@ async def handle_ghl_webhook(
                 },
             )
 
-            # SMS length guard (seller mode)
+            # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
             final_seller_msg = seller_result["message"]
-            SMS_MAX_CHARS = 320
-            if len(final_seller_msg) > SMS_MAX_CHARS:
-                truncated = final_seller_msg[:SMS_MAX_CHARS]
-                for sep in (". ", "! ", "? "):
-                    idx = truncated.rfind(sep)
-                    if idx > SMS_MAX_CHARS // 2:
-                        truncated = truncated[: idx + 1]
-                        break
-                final_seller_msg = truncated.rstrip()
+            seller_history = await conversation_manager.get_conversation_history(contact_id)
+            pipeline_context = ProcessingContext(
+                contact_id=contact_id,
+                bot_mode="seller",
+                channel="sms",
+                user_message=user_message,
+                is_first_message=not seller_history,
+            )
+            pipeline = get_response_pipeline()
+            processed = await pipeline.process(final_seller_msg, pipeline_context)
+            final_seller_msg = processed.message
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
@@ -824,19 +828,20 @@ async def handle_ghl_webhook(
                 },
             )
 
-            # SMS length guard (buyer mode)
+            # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
             final_buyer_msg = buyer_result.get(
                 "response_content", "I'd love to help you find the perfect property. What area are you looking in?"
             )
-            SMS_MAX_CHARS = 320
-            if len(final_buyer_msg) > SMS_MAX_CHARS:
-                truncated = final_buyer_msg[:SMS_MAX_CHARS]
-                for sep in (". ", "! ", "? "):
-                    idx = truncated.rfind(sep)
-                    if idx > SMS_MAX_CHARS // 2:
-                        truncated = truncated[: idx + 1]
-                        break
-                final_buyer_msg = truncated.rstrip()
+            pipeline_context = ProcessingContext(
+                contact_id=contact_id,
+                bot_mode="buyer",
+                channel="sms",
+                user_message=user_message,
+                is_first_message=not history,
+            )
+            pipeline = get_response_pipeline()
+            processed = await pipeline.process(final_buyer_msg, pipeline_context)
+            final_buyer_msg = processed.message
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
@@ -1003,17 +1008,18 @@ async def handle_ghl_webhook(
                 },
             )
 
-            # SMS length guard (lead mode)
+            # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
             final_lead_msg = lead_result.get("response_content", "Thanks for reaching out! How can I help you today?")
-            SMS_MAX_CHARS = 320
-            if len(final_lead_msg) > SMS_MAX_CHARS:
-                truncated = final_lead_msg[:SMS_MAX_CHARS]
-                for sep in (". ", "! ", "? "):
-                    idx = truncated.rfind(sep)
-                    if idx > SMS_MAX_CHARS // 2:
-                        truncated = truncated[: idx + 1]
-                        break
-                final_lead_msg = truncated.rstrip()
+            pipeline_context = ProcessingContext(
+                contact_id=contact_id,
+                bot_mode="lead",
+                channel="sms",
+                user_message=user_message,
+                is_first_message=not history,
+            )
+            pipeline = get_response_pipeline()
+            processed = await pipeline.process(final_lead_msg, pipeline_context)
+            final_lead_msg = processed.message
 
             # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
             status, reason, violations = await compliance_guard.audit_message(
