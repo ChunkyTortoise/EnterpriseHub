@@ -18,9 +18,17 @@ logger = logging.getLogger(__name__)
 DISCLOSURE_EN = "\n[AI-assisted message]"
 DISCLOSURE_ES = "\n[Mensaje asistido por IA]"
 
+# SB 1001 proactive disclosure — must appear in first message of each conversation
+PROACTIVE_DISCLOSURE_EN = "Hey! I'm Jorge's AI assistant. "
+PROACTIVE_DISCLOSURE_ES = "¡Hola! Soy el asistente de IA de Jorge. "
+
 
 class AIDisclosureProcessor(ResponseProcessorStage):
-    """Appends SB 243 AI disclosure footer, respecting detected language."""
+    """Appends SB 243 AI disclosure footer, respecting detected language.
+
+    On the first message of a conversation (context.is_first_message),
+    also prepends a proactive AI identity disclosure per SB 1001.
+    """
 
     @property
     def name(self) -> str:
@@ -35,8 +43,18 @@ class AIDisclosureProcessor(ResponseProcessorStage):
         if response.action in (ProcessingAction.SHORT_CIRCUIT, ProcessingAction.BLOCK):
             return response
 
-        disclosure = DISCLOSURE_ES if context.detected_language == "es" else DISCLOSURE_EN
+        is_spanish = context.detected_language == "es"
+        disclosure = DISCLOSURE_ES if is_spanish else DISCLOSURE_EN
 
+        # SB 1001: Proactive disclosure on first message
+        if context.is_first_message:
+            proactive = PROACTIVE_DISCLOSURE_ES if is_spanish else PROACTIVE_DISCLOSURE_EN
+            if not response.message.startswith(proactive):
+                response.message = proactive + response.message
+                if response.action == ProcessingAction.PASS:
+                    response.action = ProcessingAction.MODIFY
+
+        # SB 243: Footer on every message
         if disclosure.strip() not in response.message:
             response.message = response.message.rstrip() + disclosure
             if response.action == ProcessingAction.PASS:

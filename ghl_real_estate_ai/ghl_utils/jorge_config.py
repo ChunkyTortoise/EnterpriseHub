@@ -116,11 +116,18 @@ class JorgeSellerConfig:
         "property_type": "",
         "last_bot_interaction": "",
         "qualification_complete": "",
+        # Bot tracking fields (recommended for CRM reporting)
+        "bot_buyer_persona": os.environ.get("CUSTOM_FIELD_BOT_BUYER_PERSONA", ""),
+        "bot_language": os.environ.get("CUSTOM_FIELD_BOT_LANGUAGE", ""),
+        "bot_conversation_stage": os.environ.get("CUSTOM_FIELD_BOT_CONVERSATION_STAGE", ""),
+        "bot_last_interaction": os.environ.get("CUSTOM_FIELD_BOT_LAST_INTERACTION", ""),
+        "bot_qualification_score": os.environ.get("CUSTOM_FIELD_BOT_QUALIFICATION_SCORE", ""),
+        "bot_active": os.environ.get("CUSTOM_FIELD_BOT_ACTIVE", ""),
     }
 
     # ========== MESSAGE SETTINGS ==========
     # Jorge's friendly SMS requirements
-    MAX_SMS_LENGTH = 160
+    MAX_SMS_LENGTH = 320
     FRIENDLY_APPROACH = True
     USE_WARM_LANGUAGE = True
     NO_HYPHENS = True
@@ -148,10 +155,10 @@ class JorgeSellerConfig:
 
     # Simplified 4-question flow (friendly/high-conversion)
     SELLER_QUESTIONS_SIMPLE = {
-        1: "What's got you considering wanting to sell, where would you move to?",
-        2: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
-        3: "How would you describe your home, would you say it's move-in ready or would it need some work?",
-        4: "What price would incentivize you to sell?",
+        1: "What's making you think about selling, and where would you move to?",
+        2: "If our team sold your home within the next 30 to 45 days, would that work for you?",
+        3: "How would you describe your home — move in ready or would it need some work?",
+        4: "What price would make you feel good about selling?",
     }
 
     # Default to simple mode (configured via JORGE_SIMPLE_MODE)
@@ -209,9 +216,9 @@ class JorgeSellerConfig:
 
     # ========== HOT SELLER HANDOFF MESSAGES ==========
     HOT_SELLER_HANDOFF_MESSAGES = [
-        "Based on what you've shared, it sounds like we can really help you achieve your goals. I'd love to schedule a consultation. Let me pull up our available time slots for you.",
-        "Perfect. You're a great fit for our program. Let me check our calendar and find the best time for a consultation call.",
-        "You answered all my questions, which tells me you're serious. Let me get you scheduled with our team. Here are the available times.",
+        "Great news! I'm connecting you with Jorge directly. He'll reach out shortly to go over everything.",
+        "You're a great fit. Let me get Jorge on the line — he'll follow up with you soon.",
+        "Awesome, you answered everything! Jorge's going to love working with you. He'll be in touch shortly.",
     ]
 
     # ========== BUYER BOT SETTINGS ==========
@@ -374,9 +381,10 @@ class JorgeSellerConfig:
             for pattern in robotic_patterns:
                 message = re.sub(pattern, "", message, flags=re.IGNORECASE)
 
-        # Ensure SMS length compliance
-        if len(message) > cls.MAX_SMS_LENGTH:
-            message = message[: cls.MAX_SMS_LENGTH - 3] + "..."
+        # Ensure SMS length compliance (reserve 30 chars for AI disclosure footer)
+        effective_limit = cls.MAX_SMS_LENGTH - 30
+        if len(message) > effective_limit:
+            message = message[:effective_limit - 3] + "..."
 
         return message.strip()
 

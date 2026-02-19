@@ -1011,6 +1011,109 @@ class JorgeHandoffService:
             enriched_context=enriched,
         )
 
+    # ── Human Escalation Evaluation ──────────────────────────────────
+
+    # Patterns that indicate the user wants a human
+    HUMAN_REQUEST_PATTERNS = [
+        r"\btalk\s+to\s+(jorge|a\s+person|a\s+human|someone|an?\s+agent)\b",
+        r"\bspeak\s+(to|with)\s+(jorge|a\s+person|a\s+human|someone|an?\s+agent)\b",
+        r"\breal\s+person\b",
+        r"\bactual\s+human\b",
+        r"\bnot\s+a\s+bot\b",
+        r"\bstop\s+(the\s+)?bot\b",
+    ]
+
+    # Keywords that signal legal/financial topics beyond bot scope
+    LEGAL_FINANCIAL_KEYWORDS = [
+        r"\bforeclosure\b",
+        r"\bbankruptcy\b",
+        r"\battorney\b",
+        r"\blawyer\b",
+        r"\bshort\s+sale\b",
+        r"\btax\s+lien\b",
+        r"\bprobate\b",
+        r"\bdivorce\b",
+        r"\blawsuit\b",
+        r"\bcourt\s+order\b",
+        r"\bestate\s+planning\b",
+        r"\btrust\s+deed\b",
+    ]
+
+    async def evaluate_human_escalation(
+        self,
+        contact_id: str,
+        user_message: str,
+        temperature: str = "cold",
+        loop_count: int = 0,
+        questions_answered: int = 0,
+        total_questions: int = 4,
+    ) -> Optional[HandoffDecision]:
+        """Evaluate whether the conversation should escalate to a human agent.
+
+        Triggers on:
+        1. Explicit human request ("talk to Jorge", "real person", etc.)
+        2. Financial/legal keywords beyond bot scope (foreclosure, attorney, etc.)
+        3. Unproductive conversation loops (loop_count >= 3)
+        4. Hot lead with all questions answered (ready for human follow-up)
+
+        Args:
+            contact_id: GHL contact ID.
+            user_message: The user's latest message.
+            temperature: Current lead temperature ("hot", "warm", "cold").
+            loop_count: Number of unproductive conversation loops detected.
+            questions_answered: Number of qualification questions answered.
+            total_questions: Total number of qualification questions.
+
+        Returns:
+            HandoffDecision with target="human" if escalation needed, None otherwise.
+        """
+        msg_lower = user_message.lower()
+        reason = None
+
+        # 1. Explicit human request
+        for pattern in self.HUMAN_REQUEST_PATTERNS:
+            if re.search(pattern, msg_lower):
+                reason = "explicit_human_request"
+                break
+
+        # 2. Financial/legal keywords
+        if not reason:
+            for pattern in self.LEGAL_FINANCIAL_KEYWORDS:
+                if re.search(pattern, msg_lower):
+                    reason = "legal_financial_topic"
+                    break
+
+        # 3. Unproductive loop detection
+        if not reason and loop_count >= 3:
+            reason = "unproductive_loop"
+
+        # 4. Hot + all questions answered
+        if not reason and temperature == "hot" and questions_answered >= total_questions:
+            reason = "hot_lead_qualified"
+
+        if not reason:
+            return None
+
+        logger.info(
+            "Human escalation triggered for %s: %s",
+            contact_id,
+            reason,
+        )
+
+        return HandoffDecision(
+            source_bot="bot",
+            target_bot="human",
+            reason=reason,
+            confidence=1.0,
+            context={
+                "contact_id": contact_id,
+                "trigger": reason,
+                "temperature": temperature,
+                "loop_count": loop_count,
+                "questions_answered": questions_answered,
+            },
+        )
+
     @trace_operation("jorge.handoff", "evaluate_handoff")
     async def evaluate_handoff(
         self,
