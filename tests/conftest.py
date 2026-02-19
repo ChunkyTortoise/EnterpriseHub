@@ -55,8 +55,12 @@ logger = logging.getLogger(__name__)
 def pytest_configure(config):
     """Configure pytest with custom markers and options"""
 
-    # Set required env vars before module collection to prevent import-time errors
+    # Set required env vars before module collection to prevent import-time errors.
+    # config.py validates these at module level via Pydantic and calls SystemExit(1) if missing.
     _test_env_defaults = {
+        "ANTHROPIC_API_KEY": "sk-ant-test-fake-key-for-testing-only",
+        "GHL_API_KEY": "test_ghl_api_key_for_testing",
+        "GHL_LOCATION_ID": "test_location_id",
         "JWT_SECRET_KEY": "test-jwt-secret-key-for-testing-only",
         "STRIPE_SECRET_KEY": "sk_test_fake_key_for_testing",
         "STRIPE_WEBHOOK_SECRET": "whsec_test_fake_secret",

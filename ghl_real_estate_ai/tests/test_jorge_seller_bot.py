@@ -114,3 +114,17 @@ def test_budget_keyword_under_500_maps_to_500k(mock_jorge_deps):
     )
 
     assert preferences["budget_max"] == 500000
+
+
+class TestToneEnginePersonalization:
+    """Fix 11: _personalize should lowercase only the first char, not the whole message."""
+
+    def test_handoff_preserves_casing(self):
+        from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
+
+        engine = JorgeToneEngine()
+        msg = engine.generate_hot_seller_handoff(seller_name="John")
+        # First char lowered: "Based on..." -> "based on..."
+        assert "John, based on" in msg
+        # Mid-sentence "What" must stay capitalised (old .lower() broke this)
+        assert "What time" in msg

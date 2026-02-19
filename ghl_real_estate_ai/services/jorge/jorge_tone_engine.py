@@ -90,6 +90,10 @@ class JorgeToneEngine:
         self.tone_profile = ToneProfile()
         self.config = JorgeSellerConfig()
 
+    def _personalize(self, name: str, message: str) -> str:
+        """Prepend seller name, lowercasing only the first char for natural flow."""
+        return f"{name}, {message[0].lower()}{message[1:]}" if message else f"{name},"
+
     def generate_qualification_message(
         self, question_number: int, seller_name: Optional[str] = None, context: Optional[Dict[str, Any]] = None
     ) -> str:
@@ -140,7 +144,7 @@ class JorgeToneEngine:
             message = self._generate_inadequate_response_followup(question_number, last_response)
 
         if seller_name:
-            message = f"{seller_name}, {message.lower()}"
+            message = self._personalize(seller_name, message)
 
         return self._ensure_sms_compliance(message)
 
@@ -158,7 +162,7 @@ class JorgeToneEngine:
         base_message = f"Based on your responses, {agent_name} needs to speak with you today. What time works best for a quick call?"
 
         if seller_name:
-            base_message = f"{seller_name}, {base_message.lower()}"
+            base_message = self._personalize(seller_name, base_message)
 
         return self._ensure_sms_compliance(base_message)
 
@@ -187,7 +191,7 @@ class JorgeToneEngine:
             )
 
         if seller_name:
-            base_message = f"{seller_name}, {base_message.lower()}"
+            base_message = self._personalize(seller_name, base_message)
 
         return self._ensure_sms_compliance(base_message)
 
@@ -223,7 +227,7 @@ class JorgeToneEngine:
             base_message = f"At ${price_expectation:,.0f}, the net yield is only {net_yield:.1%}. Our valuation is closer to ${ai_valuation:,.0f}. What is your bottom dollar?"
 
         if seller_name:
-            base_message = f"{seller_name}, {base_message.lower()}"
+            base_message = self._personalize(seller_name, base_message)
 
         return self._ensure_sms_compliance(base_message)
 
@@ -250,7 +254,7 @@ class JorgeToneEngine:
         message = objection_responses.get(objection_type, "I understand. Help me understand what's holding you back.")
 
         if seller_name:
-            message = f"{seller_name}, {message.lower()}"
+            message = self._personalize(seller_name, message)
 
         return self._ensure_sms_compliance(message)
 
@@ -273,7 +277,7 @@ class JorgeToneEngine:
             base_message = "Inventory velocity is slowing. Every week you wait increases your holding costs and lowers your net exit. Do you want to sell now or lose more?"
 
         if seller_name:
-            base_message = f"{seller_name}, {base_message.lower()}"
+            base_message = self._personalize(seller_name, base_message)
 
         return self._ensure_sms_compliance(base_message)
 
@@ -297,7 +301,7 @@ class JorgeToneEngine:
             base_message = f"We are tracking sub markets where yield spreads are outpacing city averages. This is an elite opportunity for capital deployment. What is your goal?"
 
         if seller_name:
-            base_message = f"{seller_name}, {base_message.lower()}"
+            base_message = self._personalize(seller_name, base_message)
 
         return self._ensure_sms_compliance(base_message)
 
@@ -312,7 +316,7 @@ class JorgeToneEngine:
         )
 
         if seller_name:
-            label = f"{seller_name}, {label.lower()}"
+            label = self._personalize(seller_name, label)
 
         return self._ensure_sms_compliance(label)
 
@@ -321,7 +325,7 @@ class JorgeToneEngine:
         question = NegotiationStrategy.CALIBRATED_QUESTIONS[index % len(NegotiationStrategy.CALIBRATED_QUESTIONS)]
 
         if seller_name:
-            question = f"{seller_name}, {question.lower()}"
+            question = self._personalize(seller_name, question)
 
         return self._ensure_sms_compliance(question)
 
@@ -390,7 +394,7 @@ class JorgeToneEngine:
 
         # Add personalization if name provided
         if seller_name:
-            message = f"{seller_name}, {message.lower()}"
+            message = self._personalize(seller_name, message)
 
         return message
 

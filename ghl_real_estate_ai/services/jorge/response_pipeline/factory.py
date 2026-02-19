@@ -1,9 +1,6 @@
 """Factory functions for creating pipeline instances."""
 
 from ghl_real_estate_ai.services.jorge.response_pipeline.pipeline import ResponsePostProcessor
-from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-    AIDisclosureProcessor,
-)
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.compliance_check import (
     ComplianceCheckProcessor,
 )
@@ -25,15 +22,18 @@ def create_default_pipeline() -> ResponsePostProcessor:
         1. LanguageMirrorProcessor — detect language, set context
         2. TCPAOptOutProcessor     — can short-circuit on "stop"/"unsubscribe"
         3. ComplianceCheckProcessor — FHA/RESPA enforcement
-        4. AIDisclosureProcessor    — SB 243 footer
-        5. SMSTruncationProcessor   — 320 char limit for SMS
+        4. SMSTruncationProcessor   — 160 char limit for SMS (per Jorge spec)
+
+    Note: AIDisclosureProcessor (SB 243) removed — Jorge's spec requires
+    responses that sound "100% human". If SB 243 compliance is needed later,
+    it should be discussed with the client first.
     """
     return ResponsePostProcessor(
         stages=[
             LanguageMirrorProcessor(),
+            # Defense-in-depth: primary opt-out check is in webhook.py (lines 408-437)
             TCPAOptOutProcessor(),
             ComplianceCheckProcessor(),
-            AIDisclosureProcessor(),
             SMSTruncationProcessor(),
         ]
     )

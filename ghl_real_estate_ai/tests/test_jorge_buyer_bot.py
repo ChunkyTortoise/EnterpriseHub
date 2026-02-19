@@ -184,3 +184,34 @@ async def test_gather_buyer_intelligence_calls_enhance_bot_context(mock_buyer_de
             "urgency_level": "high",
         },
     )
+
+
+class TestBuyerFollowUpSchedule:
+    """Tests for spec day-based buyer follow-up scheduling."""
+
+    def test_next_followup_day_from_start(self):
+        from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+        service = BuyerWorkflowService()
+        assert service._get_next_buyer_followup_day(0) == 2
+        assert service._get_next_buyer_followup_day(2) == 5
+        assert service._get_next_buyer_followup_day(5) == 8
+
+    def test_next_followup_day_longterm(self):
+        from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+        service = BuyerWorkflowService()
+        assert service._get_next_buyer_followup_day(30) == 44  # 30 + 14
+
+    def test_next_followup_day_at_boundary(self):
+        from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+        service = BuyerWorkflowService()
+        assert service._get_next_buyer_followup_day(29) is None  # At last active day, no more active days
+
+    @pytest.mark.asyncio
+    async def test_schedule_uses_day_based_timing(self):
+        from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+        service = BuyerWorkflowService()
+        state = {"financial_readiness_score": 25, "days_since_start": 0, "buyer_id": "test-buyer"}
+        result = await service.schedule_next_action(state)
+        # Day 0 → next day is 2 → 48 hours
+        assert result["follow_up_hours"] == 48
+        assert result["follow_up_scheduled"] is True
