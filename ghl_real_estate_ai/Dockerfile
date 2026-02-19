@@ -43,17 +43,13 @@ RUN mkdir -p data/knowledge_base data/memory data/analytics .chroma_db
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV STREAMLIT_SERVER_PORT=8501
-ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
-ENV STREAMLIT_SERVER_HEADLESS=true
-ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
-# Expose Streamlit port
-EXPOSE 8501
+# Expose FastAPI port
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+    CMD curl --fail http://localhost:8000/api/health/live || exit 1
 
-# Run Streamlit app
-CMD ["streamlit", "run", "streamlit_demo/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Run FastAPI with uvicorn
+CMD ["uvicorn", "ghl_real_estate_ai.api.main:socketio_app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

@@ -62,6 +62,14 @@ class ResponseGenerator:
                     "I can keep you updated on new listings that match your criteria",
                 ],
             },
+            "just_looking": {
+                "approach": "Validate their pace, redirect with value and curiosity",
+                "talking_points": [
+                    "Totally get it! A lot of buyers start by exploring. What area are you most curious about?",
+                    "No rush at all. Want me to send you some listings in a specific area so you can get a feel for the market?",
+                    "That's a great way to start. What caught your eye so far?",
+                ],
+            },
         }
 
         strategy = objection_strategies.get(objection_type, {

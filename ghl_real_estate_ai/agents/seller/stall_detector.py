@@ -22,6 +22,10 @@ class StallDetector:
         "get_back": ["get back", "later", "next week", "busy"],
         "zestimate": ["zestimate", "zillow", "online value", "estimate says"],
         "agent": ["agent", "realtor", "broker", "with someone"],
+        "just_looking": [
+            "just looking", "just browsing", "exploring options",
+            "kicking tires", "not ready yet", "window shopping", "just curious",
+        ],
     }
 
     # Friendly response templates for detected stalls
