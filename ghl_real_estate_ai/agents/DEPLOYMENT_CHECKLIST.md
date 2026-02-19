@@ -1,7 +1,7 @@
 # Jorge Bot Deployment Checklist
 
 Production deployment guide for Jorge's 3 bots (Seller, Buyer, Lead).
-157 passing tests. All bots feature-complete as of Feb 2026.
+205 passing tests. All bots feature-complete as of Feb 2026.
 
 ---
 
@@ -78,17 +78,36 @@ Production deployment guide for Jorge's 3 bots (Seller, Buyer, Lead).
 | `LEAD_ACTIVATION_TAG` | `Needs Qualifying` | Tag that activates lead routing |
 | `NOTIFY_AGENT_WORKFLOW_ID` | (empty) | Agent notification workflow |
 
-### Calendar
+### Seller Bot (continued — additional fields)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CUSTOM_FIELD_PCS_SCORE` | (empty) | Property condition score field |
+| `CUSTOM_FIELD_SELLER_LIENS` | (empty) | Seller liens/encumbrances field |
+| `CUSTOM_FIELD_SELLER_REPAIRS` | (empty) | Seller needed repairs field |
+| `CUSTOM_FIELD_SELLER_LISTING_HISTORY` | (empty) | Previous listing history field |
+| `CUSTOM_FIELD_SELLER_DECISION_MAKER` | (empty) | Decision maker status field |
+
+### Calendar & Appointment Booking
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `JORGE_CALENDAR_ID` | (empty) | GHL calendar ID for HOT seller booking |
+| `JORGE_USER_ID` | (empty) | Jorge's GHL user ID for appointment assignment |
+| `MANUAL_SCHEDULING_WORKFLOW_ID` | (empty) | Workflow fallback if auto-booking fails |
+| `CUSTOM_FIELD_APPOINTMENT_TIME` | (empty) | GHL field for scheduled appointment time |
+| `CUSTOM_FIELD_APPOINTMENT_TYPE` | (empty) | GHL field for appointment type |
+| `APPOINTMENT_AUTO_BOOKING_ENABLED` | `true` | Enable/disable auto-booking for HOT sellers |
+| `APPOINTMENT_BUFFER_MINUTES` | `15` | Buffer time between appointments |
+| `APPOINTMENT_DEFAULT_DURATION` | `60` | Default appointment duration (minutes) |
+| `APPOINTMENT_MAX_DAYS_AHEAD` | `14` | Max days ahead to show availability |
+| `APPOINTMENT_TIMEZONE` | `America/Los_Angeles` | Business timezone |
 
 ### Message Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MAX_SMS_LENGTH` | `160` | Max SMS character limit |
+| `MAX_SMS_LENGTH` | `320` | Max SMS character limit (2 segments) |
 | `USE_WARM_LANGUAGE` | `true` | Strip special chars, keep friendly tone |
 | `NO_HYPHENS` | `true` | Remove hyphens from messages |
 
@@ -173,6 +192,9 @@ For HOT seller automatic booking:
 | `Stop-Bot` | Deactivates all bot processing |
 | `Qualified` | Deactivates (qualification complete) |
 | `Seller-Qualified` | Deactivates seller bot |
+| `TCPA-Opt-Out` | Applied on opt-out detection (STOP/unsubscribe) |
+| `Compliance-Alert` | Applied when FHA/RESPA violation detected |
+| `Human-Escalation-Needed` | Applied when conversation repair exhausts automated strategies |
 
 ---
 
@@ -297,3 +319,11 @@ All bot responses pass through 5 processing stages (in order):
 | 3. Compliance Check | FHA/RESPA enforcement | No |
 | 4. AI Disclosure | SB 243 AI-generated content footer | No |
 | 5. SMS Truncation | Enforce 320-char SMS limit | No |
+
+**Optional stage** (not in default pipeline):
+
+| Stage | Purpose | Can Short-Circuit |
+|-------|---------|-------------------|
+| Conversation Repair | Detect breakdowns (low confidence, repeated questions, contradictions) and apply graduated repair | No |
+
+To add conversation repair, use `pipeline.add_stage(ConversationRepairProcessor())` after constructing the default pipeline.

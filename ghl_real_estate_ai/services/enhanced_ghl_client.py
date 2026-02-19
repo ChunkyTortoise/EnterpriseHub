@@ -430,11 +430,16 @@ class EnhancedGHLClient(GHLClient):
         if "tags" in updates:
             payload["tags"] = updates["tags"]
 
-        # Handle custom fields
+        # Handle custom fields — skip entries with empty/None field IDs
         if "custom_fields" in updates:
-            payload["customFields"] = [
-                {"id": field_id, "value": value} for field_id, value in updates["custom_fields"].items()
-            ]
+            custom_fields = []
+            for field_id, value in updates["custom_fields"].items():
+                if not field_id:
+                    logger.warning("Skipping custom field with empty ID during contact update")
+                    continue
+                custom_fields.append({"id": field_id, "value": value})
+            if custom_fields:
+                payload["customFields"] = custom_fields
 
         try:
             await self._make_request("PUT", f"/contacts/{contact_id}", data=payload)
@@ -568,6 +573,150 @@ class EnhancedGHLClient(GHLClient):
         except Exception as e:
             logger.error(f"Failed to get opportunities for contact {contact_id}: {e}")
             return []
+
+    # ============================================================================
+    # Calendar Management
+    # ============================================================================
+
+    async def get_free_slots(self, calendar_id: str) -> List[Dict[str, Any]]:
+        """Get available appointment slots from a GHL calendar.
+
+        Retrieves free slots and filters to 9am-5pm PT window.
+
+        Args:
+            calendar_id: GHL calendar ID.
+
+        Returns:
+            List of up to 3 slot dicts with keys: start, end, formatted.
+        """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] get_free_slots calendar={calendar_id}",
+                extra={"calendar_id": calendar_id, "test_mode": True},
+            )
+            # Return 3 mock slots within 9am-5pm PT
+            base = datetime.utcnow().replace(hour=17, minute=0, second=0, microsecond=0)
+            mock_slots = []
+            for i, hour in enumerate([9, 11, 14]):
+                start = base.replace(hour=hour + 8)  # PT offset (UTC-8)
+                end = start + timedelta(minutes=30)
+                start_iso = start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                end_iso = end.strftime("%Y-%m-%dT%H:%M:%SZ")
+                mock_slots.append({
+                    "start": start_iso,
+                    "end": end_iso,
+                    "formatted": start.strftime("%A, %B %d at %I:%M %p"),
+                })
+            return mock_slots
+
+        try:
+            now = datetime.utcnow()
+            start_date = now.strftime("%Y-%m-%d")
+            end_date = (now + timedelta(days=7)).strftime("%Y-%m-%d")
+
+            response = await self._make_request(
+                "GET",
+                f"/calendars/{calendar_id}/free-slots",
+                params={
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "timezone": "America/Los_Angeles",
+                },
+            )
+
+            raw_slots = response.get("slots", []) if isinstance(response, dict) else []
+
+            # Filter to 9am-5pm PT and limit to 3 slots
+            filtered = []
+            for slot in raw_slots:
+                start_str = slot.get("startTime") or slot.get("start", "")
+                end_str = slot.get("endTime") or slot.get("end", "")
+                if not start_str:
+                    continue
+                try:
+                    dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                    # Rough PT filter: UTC hour 17-01 maps to 9am-5pm PT (UTC-8)
+                    pt_hour = (dt.hour - 8) % 24
+                    if 9 <= pt_hour < 17:
+                        formatted = dt.strftime("%A, %B %d at %I:%M %p")
+                        filtered.append({
+                            "start": start_str,
+                            "end": end_str,
+                            "formatted": formatted,
+                        })
+                except (ValueError, AttributeError):
+                    continue
+
+                if len(filtered) >= 3:
+                    break
+
+            return filtered
+
+        except Exception as e:
+            logger.warning(f"Failed to get free slots for calendar {calendar_id}: {e}")
+            return []
+
+    async def create_appointment(
+        self,
+        calendar_id: str,
+        contact_id: str,
+        start_time: str,
+        end_time: str,
+        title: str = "Consultation",
+    ) -> Optional[Dict[str, Any]]:
+        """Create an appointment on a GHL calendar.
+
+        Args:
+            calendar_id: GHL calendar ID.
+            contact_id: GHL contact ID.
+            start_time: ISO format start time.
+            end_time: ISO format end time.
+            title: Appointment title.
+
+        Returns:
+            Appointment dict on success, None on failure.
+        """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] create_appointment calendar={calendar_id} contact={contact_id}",
+                extra={
+                    "calendar_id": calendar_id,
+                    "contact_id": contact_id,
+                    "test_mode": True,
+                },
+            )
+            return {
+                "id": f"appt_mock_{int(datetime.utcnow().timestamp())}",
+                "calendarId": calendar_id,
+                "contactId": contact_id,
+                "startTime": start_time,
+                "endTime": end_time,
+                "title": title,
+                "status": "confirmed",
+            }
+
+        payload = {
+            "calendarId": calendar_id,
+            "locationId": self.config.location_id,
+            "contactId": contact_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "title": title,
+        }
+
+        try:
+            response = await self._make_request("POST", "/calendars/events", data=payload)
+            logger.info(
+                f"Created appointment for contact {contact_id} in calendar {calendar_id}",
+                extra={"contact_id": contact_id, "calendar_id": calendar_id},
+            )
+            return response
+        except Exception as e:
+            logger.error(
+                f"Failed to create appointment for contact {contact_id}: {e}",
+                extra={"contact_id": contact_id, "calendar_id": calendar_id, "error": str(e)},
+            )
+            return None
 
     # ============================================================================
     # Enhanced Messaging
@@ -1088,6 +1237,10 @@ class EnhancedGHLClient(GHLClient):
         Overrides base GHLClient.trigger_workflow to accept SDR-specific
         location_id and event_data parameters (both optional for backward compat).
         """
+        if not workflow_id:
+            logger.warning("trigger_workflow called with empty workflow_id, skipping")
+            return {}
+
         if settings.test_mode:
             logger.info(
                 f"[TEST MODE] trigger_workflow workflow={workflow_id} contact={contact_id}",

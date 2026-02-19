@@ -14,6 +14,7 @@ Created: 2026-01-19
 """
 
 import re
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -179,7 +180,16 @@ class JorgeToneEngine:
 
         Returns:
             Confrontational take-away close message
+
+        .. deprecated::
+            Use friendly/consultative tone methods instead. See TONE_DEPRECATION.md.
         """
+        warnings.warn(
+            "generate_take_away_close is deprecated. Use friendly/consultative tone methods instead. "
+            "See services/jorge/TONE_DEPRECATION.md.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         # If seller has high emotional attachment, use loss aversion
         if psychology_profile and getattr(psychology_profile, "emotional_attachment_score", 0) > 70:
             base_message = "It seems you are too attached to the property to see the market reality. I'm going to close your file. Let me know if you decide to be a seller instead of a homeowner."
@@ -217,7 +227,16 @@ class JorgeToneEngine:
 
         Returns:
             SMS-compliant ROI justification message
+
+        .. deprecated::
+            Use friendly/consultative tone methods instead. See TONE_DEPRECATION.md.
         """
+        warnings.warn(
+            "generate_net_yield_justification is deprecated. Use friendly/consultative tone methods instead. "
+            "See services/jorge/TONE_DEPRECATION.md.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         # If distressed, be even more direct about the financial reality
         if psychology_profile and getattr(psychology_profile, "motivation_type", "") == "distressed":
             base_message = f"Financial reality check: ${price_expectation:,.0f} is a pipe dream given the condition. Our max is ${ai_valuation:,.0f}. Are you ready to solve this problem or not?"
@@ -270,7 +289,16 @@ class JorgeToneEngine:
 
         Returns:
             Confrontational urgency message
+
+        .. deprecated::
+            Use friendly/consultative tone methods instead. See TONE_DEPRECATION.md.
         """
+        warnings.warn(
+            "generate_cost_of_waiting_message is deprecated. Use friendly/consultative tone methods instead. "
+            "See services/jorge/TONE_DEPRECATION.md.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if "rate" in market_trend.lower():
             base_message = "Yield spreads are tightening due to rate volatility. If you wait, your equity position will be diluted. Are you prepared to take that loss?"
         else:
@@ -294,7 +322,16 @@ class JorgeToneEngine:
 
         Returns:
             Technical, data-driven arbitrage message
+
+        .. deprecated::
+            Use friendly/consultative tone methods instead. See TONE_DEPRECATION.md.
         """
+        warnings.warn(
+            "generate_arbitrage_pitch is deprecated. Use friendly/consultative tone methods instead. "
+            "See services/jorge/TONE_DEPRECATION.md.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if yield_spread > 0:
             base_message = f"Market data indicates a {yield_spread:.1f}% yield spread in {market_area}. We are currently exploiting this pricing arbitrage. Do you want in or not?"
         else:
