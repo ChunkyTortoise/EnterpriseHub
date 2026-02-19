@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
+from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig, JorgeSellerConfig
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
 from ghl_real_estate_ai.services.event_publisher import EventPublisher
 from ghl_real_estate_ai.services.buyer_persona_service import BuyerPersonaService
@@ -34,16 +34,22 @@ class BuyerWorkflowService:
     async def schedule_next_action(self, state: BuyerBotState) -> Dict:
         """
         Schedule next action based on buyer qualification level and engagement.
-        Follows proven lead nurturing sequences.
-        Uses budget_config for qualification thresholds.
+        Uses spec day-based schedule (days 2, 5, 8, 11, ..., 29, then every 14 days).
         """
         try:
             qualification_score = state.get("financial_readiness_score", 25)
+            days_since_start = state.get("days_since_start", 0)
 
-            # Determine next action using budget_config
-            next_action, follow_up_hours = self.budget_config.get_next_action(qualification_score)
+            # Use budget_config for action TYPE (what to do)
+            next_action, _ = self.budget_config.get_next_action(qualification_score)
 
-            # Schedule the action
+            # Use spec day-based schedule for TIMING (when to do it)
+            next_day = self._get_next_buyer_followup_day(days_since_start)
+            if next_day is not None:
+                follow_up_hours = (next_day - days_since_start) * 24
+            else:
+                follow_up_hours = JorgeSellerConfig.BUYER_LONGTERM_INTERVAL * 24
+
             await self._schedule_follow_up(state.get("buyer_id", "unknown"), next_action, follow_up_hours)
 
             return {
@@ -56,6 +62,18 @@ class BuyerWorkflowService:
         except Exception as e:
             logger.error(f"Error scheduling next action for {state.get('buyer_id')}: {str(e)}")
             return {"next_action": "manual_review", "follow_up_scheduled": False}
+
+    def _get_next_buyer_followup_day(self, days_since_start: int) -> Optional[int]:
+        """Get the next scheduled follow-up day using spec day-based schedule."""
+        schedule = JorgeSellerConfig.BUYER_FOLLOWUP_SCHEDULE
+        max_active_day = max(schedule) if schedule else 29
+        if days_since_start <= max_active_day:
+            for day in schedule:
+                if day > days_since_start:
+                    return day
+            return None
+        else:
+            return days_since_start + JorgeSellerConfig.BUYER_LONGTERM_INTERVAL
 
     async def _schedule_follow_up(self, buyer_id: str, action: str, hours: int):
         """Schedule follow-up action for buyer."""
@@ -125,7 +143,7 @@ class BuyerWorkflowService:
             confidence_tag = f"Persona-Conf-{int(persona_classification.confidence * 100)}%"
 
             # Add tags to contact in GHL
-            await self.ghl_client.add_contact_tags(
+            await self.ghl_client.add_tags(
                 contact_id=buyer_id,
                 tags=[persona_tag, confidence_tag]
             )

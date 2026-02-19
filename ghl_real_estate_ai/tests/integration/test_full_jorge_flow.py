@@ -188,8 +188,8 @@ class TestFullJorgeFlow:
         remove_tags = [a.tag for a in ghl_actions if a.type == ActionType.REMOVE_TAG]
         add_tags = [a.tag for a in ghl_actions if a.type == ActionType.ADD_TAG]
 
-        # Seller and lead use same tag "Needs Qualifying"
-        assert "Needs Qualifying" in remove_tags
+        # Seller uses distinct "Seller-Lead" activation tag
+        assert "Seller-Lead" in remove_tags
         assert "Buyer-Lead" in add_tags
         assert "Handoff-Seller-to-Buyer" in add_tags
 
@@ -260,7 +260,7 @@ class TestFullJorgeFlow:
         add_tags = [a.tag for a in ghl_actions if a.type == ActionType.ADD_TAG]
 
         assert "Buyer-Lead" in remove_tags
-        assert "Needs Qualifying" in add_tags
+        assert "Seller-Lead" in add_tags
         assert "Handoff-Buyer-to-Seller" in add_tags
 
         # Verify analytics

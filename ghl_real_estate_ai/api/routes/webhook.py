@@ -414,6 +414,7 @@ async def handle_ghl_webhook(
         "remove me",
         "not interested",
         "no more",
+        "no more messages",
         "opt out",
         "leave me alone",
         "take me off",
@@ -603,7 +604,7 @@ async def handle_ghl_webhook(
             logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
 
     # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
-    jorge_seller_mode = "Needs Qualifying" in tags and jorge_settings.JORGE_SELLER_MODE and not should_deactivate
+    jorge_seller_mode = ("Needs Qualifying" in tags or "Seller-Lead" in tags) and jorge_settings.JORGE_SELLER_MODE and not should_deactivate
 
     if jorge_seller_mode:
         logger.info(f"Jorge seller mode activated for contact {contact_id}")
@@ -1371,8 +1372,14 @@ async def initiate_qualification(
     try:
         contact = await ghl_client_default.get_contact(contact_id)
         first_name = contact.get("firstName", "there")
+        tags = contact.get("tags", [])
 
-        opening = f"Hey {first_name}, saw your property inquiry. Are you still thinking about selling?"
+        if "Buyer-Lead" in tags:
+            opening = f"Hey {first_name}, I found some great options in your area. Are you still looking to buy?"
+        elif "Seller-Lead" in tags or "Needs Qualifying" in tags:
+            opening = f"Hey {first_name}, saw your property inquiry. Are you still thinking about selling?"
+        else:
+            opening = f"Hey {first_name}, thanks for reaching out! Are you looking to buy or sell?"
 
         # Send the opening message via GHL
         background_tasks.add_task(

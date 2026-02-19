@@ -85,7 +85,7 @@ class TestLeadToSellerHandoff:
         add_tags = [a["tag"] for a in actions if a.get("type") == "add_tag"]
 
         assert "Needs Qualifying" in remove_tags
-        assert "Needs Qualifying" in add_tags  # Seller uses same tag
+        assert "Seller-Lead" in add_tags
         assert "Handoff-Lead-to-Seller" in add_tags
 
         # Step 4: Verify analytics

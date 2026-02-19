@@ -109,7 +109,7 @@ class JorgeHandoffService:
     TAG_MAP = {
         "lead": "Needs Qualifying",
         "buyer": "Buyer-Lead",
-        "seller": "Needs Qualifying",
+        "seller": "Seller-Lead",
     }
 
     # Confidence thresholds per handoff direction

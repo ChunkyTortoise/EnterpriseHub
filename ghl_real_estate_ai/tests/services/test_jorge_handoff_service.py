@@ -348,3 +348,22 @@ class TestJorgeHandoffService:
         tracking_tags = [a["tag"] for a in actions if a["type"] == "add_tag" and "Handoff" in a["tag"]]
 
         assert "Handoff-Buyer-to-Seller" in tracking_tags
+
+    @pytest.mark.asyncio
+    async def test_seller_handoff_uses_seller_lead_tag(self, handoff_service, mock_analytics_service):
+        """Test that seller handoff uses Seller-Lead tag (not Needs Qualifying)."""
+        decision = HandoffDecision(
+            source_bot="lead",
+            target_bot="seller",
+            reason="seller_intent_detected",
+            confidence=0.85,
+            context={},
+        )
+        actions = await handoff_service.execute_handoff(
+            decision=decision,
+            contact_id="contact_123",
+        )
+        add_tags = [a for a in actions if a["type"] == "add_tag"]
+        remove_tags = [a for a in actions if a["type"] == "remove_tag"]
+        assert any(a["tag"] == "Seller-Lead" for a in add_tags)
+        assert any(a["tag"] == "Needs Qualifying" for a in remove_tags)
