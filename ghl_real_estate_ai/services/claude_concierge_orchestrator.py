@@ -306,6 +306,7 @@ class ClaudeConciergeOrchestrator:
         current_page: str = None,
         user_role: str = "agent",
         session_id: str = None,
+        tenant_id: Optional[str] = None,
     ) -> ConciergeResponse:
         """
         Generate intelligent guidance based on current platform state.
@@ -314,6 +315,7 @@ class ClaudeConciergeOrchestrator:
         Track 3 Enhancement: Now supports live GHL data integration.
         """
         start_time = time.time()
+        resolved_tenant = tenant_id or self._default_config.tenant_id
 
         try:
             # Track 3: Generate live context if not provided
@@ -331,7 +333,7 @@ class ClaudeConciergeOrchestrator:
             scope = scope or self.intelligence_config[mode]["intelligence_depth"]
 
             # Check cache first for performance
-            cache_key = self._generate_context_cache_key(context, mode, scope)
+            cache_key = self._generate_context_cache_key(context, mode, scope, resolved_tenant)
             cached_response = await self._get_cached_response(cache_key)
             if cached_response:
                 logger.debug(f"Cache hit for contextual guidance: {context.current_page}")
@@ -353,13 +355,13 @@ class ClaudeConciergeOrchestrator:
                     "concierge_mode": mode.value,
                     "intelligence_scope": scope.value,
                     "session_history": await self._get_session_history(
-                        self._default_config.tenant_id, context.session_id
+                        resolved_tenant, context.session_id
                     ),
                 },
                 prompt=intelligence_prompt,
                 max_tokens=4000,
                 temperature=0.6,  # Balanced creativity for guidance
-                system_prompt=self._get_concierge_system_prompt(mode, self._default_config.tenant_id),
+                system_prompt=self._get_concierge_system_prompt(mode, resolved_tenant),
             )
 
             # Get Claude's intelligent analysis
@@ -385,7 +387,7 @@ class ClaudeConciergeOrchestrator:
 
             # Update session context for continuity
             await self._update_session_context(
-                self._default_config.tenant_id, context.session_id, context, structured_response
+                resolved_tenant, context.session_id, context, structured_response
             )
 
             self.metrics["requests_processed"] += 1
@@ -1273,9 +1275,10 @@ class ClaudeConciergeOrchestrator:
         return analysis
 
     def _generate_context_cache_key(
-        self, context: PlatformContext, mode: ConciergeMode, scope: IntelligenceScope
+        self, context: PlatformContext, mode: ConciergeMode, scope: IntelligenceScope, tenant_id: Optional[str] = None
     ) -> str:
-        """Generate cache key for context-specific responses."""
+        """Generate tenant-scoped cache key for context-specific responses."""
+        tid = tenant_id or self._default_config.tenant_id
         key_components = [
             context.current_page,
             context.user_role,
@@ -1284,7 +1287,7 @@ class ClaudeConciergeOrchestrator:
             str(len(context.active_leads)),
             str(hash(json.dumps(context.bot_statuses, sort_keys=True))),
         ]
-        return f"concierge_guidance::{':'.join(key_components)}"
+        return f"concierge:{tid}:guidance:{':'.join(key_components)}"
 
     async def _get_cached_response(self, cache_key: str) -> Optional[ConciergeResponse]:
         """Get cached concierge response if available."""
