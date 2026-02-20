@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+from ghl_real_estate_ai.core.llm_client import LLMCircuitOpenError
 from ghl_real_estate_ai.models.lead_scoring import (
     FinancialReadinessScore,
     LeadIntentProfile,
@@ -332,3 +333,141 @@ class TestSellerErrorResilience:
 
         assert result["lead_id"] == "resilience_002"
         assert "response_content" in result
+
+
+# ---------------------------------------------------------------------------
+# Phase 3: Workflow Trigger + Circuit Breaker Tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+class TestSellerHotWorkflowTriggered:
+    """Full Hot-Seller qualification → apply_auto_tags called with high FRS."""
+
+    @pytest.mark.asyncio
+    async def test_hot_seller_workflow_triggered(self, _mock_seller_deps):
+        """4 positive answers → FRS >= 80 → apply_auto_tags called."""
+        _mock_seller_deps["profile"].frs.classification = "Hot Lead"
+        _mock_seller_deps["profile"].frs.total_score = 88
+        _mock_seller_deps["profile"].pcs.total_score = 82
+
+        mock_workflow_service = AsyncMock()
+        mock_workflow_service.apply_auto_tags = AsyncMock()
+
+        with patch(
+            "ghl_real_estate_ai.agents.jorge_seller_bot.GHLWorkflowService",
+            return_value=mock_workflow_service,
+        ):
+            bot = JorgeSellerBot()
+            result = await bot.process_seller_message(
+                conversation_id="hot_wf_001",
+                user_message="Around $650k, that would be great",
+                seller_name="Carlos Seller",
+                conversation_history=[
+                    {"role": "assistant", "content": "What's your motivation for selling?"},
+                    {"role": "user", "content": "Moving closer to family, very motivated."},
+                    {"role": "assistant", "content": "What timeline works for you?"},
+                    {"role": "user", "content": "30-45 days works perfectly."},
+                    {"role": "assistant", "content": "How is the property condition?"},
+                    {"role": "user", "content": "Move-in ready, just updated kitchen."},
+                    {"role": "assistant", "content": "What price are you expecting?"},
+                ],
+            )
+
+        assert result["frs_score"] >= 80
+        mock_workflow_service.apply_auto_tags.assert_called_once()
+        call_kwargs = mock_workflow_service.apply_auto_tags.call_args
+        scores = call_kwargs.kwargs.get("scores") or call_kwargs.args[1]
+        assert scores["frs"] >= 80
+
+
+@pytest.mark.integration
+class TestSellerWarmNoHotWorkflow:
+    """3/4 positive answers → Warm classification (FRS < 80)."""
+
+    @pytest.mark.asyncio
+    async def test_warm_seller_no_hot_workflow_trigger(self, _mock_seller_deps):
+        """Warm seller should have FRS < 80, not classified as Hot."""
+        _mock_seller_deps["profile"].frs.classification = "Warm Lead"
+        _mock_seller_deps["profile"].frs.total_score = 60
+        _mock_seller_deps["profile"].pcs.total_score = 55
+
+        mock_workflow_service = AsyncMock()
+        mock_workflow_service.apply_auto_tags = AsyncMock()
+
+        with patch(
+            "ghl_real_estate_ai.agents.jorge_seller_bot.GHLWorkflowService",
+            return_value=mock_workflow_service,
+        ):
+            bot = JorgeSellerBot()
+            result = await bot.process_seller_message(
+                conversation_id="warm_wf_001",
+                user_message="Maybe around $600k, not sure",
+                seller_name="Dana Warm",
+                conversation_history=[
+                    {"role": "assistant", "content": "What's your motivation?"},
+                    {"role": "user", "content": "Just thinking about it for now."},
+                ],
+            )
+
+        assert result["frs_score"] < 80
+        # apply_auto_tags may still be called but with warm-level scores
+        if mock_workflow_service.apply_auto_tags.called:
+            call_kwargs = mock_workflow_service.apply_auto_tags.call_args
+            scores = call_kwargs.kwargs.get("scores") or call_kwargs.args[1]
+            assert scores["frs"] < 80
+
+
+@pytest.mark.integration
+class TestSellerIncompleteQualification:
+    """Only 1 question answered → Cold/incomplete, no hot tag."""
+
+    @pytest.mark.asyncio
+    async def test_incomplete_qualification_no_hot_tag(self, _mock_seller_deps):
+        """Single vague answer → FRS <= 30, PCS <= 30."""
+        _mock_seller_deps["profile"].frs.classification = "Cold Lead"
+        _mock_seller_deps["profile"].frs.total_score = 20
+        _mock_seller_deps["profile"].pcs.total_score = 25
+
+        bot = JorgeSellerBot()
+        result = await bot.process_seller_message(
+            conversation_id="incomplete_001",
+            user_message="Maybe someday",
+            seller_name="Earl Vague",
+            conversation_history=[],
+        )
+
+        assert result["frs_score"] <= 30
+        assert result["pcs_score"] <= 30
+        assert "response_content" in result
+
+
+@pytest.mark.integration
+class TestSellerCircuitBreakerFallback:
+    """Claude circuit open → bot returns fallback, no unhandled exception."""
+
+    @pytest.mark.asyncio
+    async def test_circuit_breaker_open_sends_fallback_sms(self, _mock_seller_deps):
+        """When Claude circuit is open, bot returns a safe fallback response."""
+        _mock_seller_deps["claude"].analyze_with_context = AsyncMock(
+            side_effect=LLMCircuitOpenError("Circuit open")
+        )
+        _mock_seller_deps["claude"].generate_response = AsyncMock(
+            side_effect=LLMCircuitOpenError("Circuit open")
+        )
+        _mock_seller_deps["intent"].analyze_lead = MagicMock(
+            side_effect=LLMCircuitOpenError("Circuit open")
+        )
+
+        bot = JorgeSellerBot()
+        # Should NOT raise — must return a fallback result dict
+        result = await bot.process_seller_message(
+            conversation_id="circuit_001",
+            user_message="I want to sell my home",
+            seller_name="Frank Circuit",
+            conversation_history=[],
+        )
+
+        # The bot must degrade gracefully
+        assert "response_content" in result
+        assert result["response_content"]  # non-empty fallback

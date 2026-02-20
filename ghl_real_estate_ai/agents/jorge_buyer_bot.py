@@ -21,51 +21,45 @@ from typing import Any, Dict, List, Literal, Optional
 
 from langgraph.graph import END, StateGraph
 
+from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
+from ghl_real_estate_ai.agents.buyer.constants import (
+    MAX_CONVERSATION_HISTORY,
+    MAX_MESSAGE_LENGTH,
+    OPT_OUT_PHRASES,
+    SMS_MAX_LENGTH,
+)
+from ghl_real_estate_ai.agents.buyer.escalation_manager import EscalationManager
+
 # Import from decomposed modules for backward compatibility
 from ghl_real_estate_ai.agents.buyer.exceptions import (
-    BuyerQualificationError,
     BuyerIntentAnalysisError,
-    FinancialAssessmentError,
+    BuyerQualificationError,
     ClaudeAPIError,
-    NetworkError,
     ComplianceValidationError,
-)
-from ghl_real_estate_ai.agents.buyer.retry_utils import (
-    RetryConfig,
-    async_retry_with_backoff,
-    DEFAULT_RETRY_CONFIG,
-    RETRYABLE_EXCEPTIONS,
-    NON_RETRYABLE_EXCEPTIONS,
-)
-from ghl_real_estate_ai.agents.buyer.constants import (
-    OPT_OUT_PHRASES,
-    MAX_CONVERSATION_HISTORY,
-    SMS_MAX_LENGTH,
-    MAX_MESSAGE_LENGTH,
-)
-from ghl_real_estate_ai.agents.buyer.utils import (
-    extract_budget_range,
-    extract_property_preferences,
-    assess_financial_from_conversation,
+    FinancialAssessmentError,
+    NetworkError,
 )
 from ghl_real_estate_ai.agents.buyer.financial_assessor import FinancialAssessor
+from ghl_real_estate_ai.agents.buyer.handoff_manager import HandoffManager
 from ghl_real_estate_ai.agents.buyer.property_service import PropertyService
 from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
-from ghl_real_estate_ai.agents.buyer.handoff_manager import HandoffManager
-from ghl_real_estate_ai.agents.buyer.escalation_manager import EscalationManager
+from ghl_real_estate_ai.agents.buyer.retry_utils import (
+    DEFAULT_RETRY_CONFIG,
+    NON_RETRYABLE_EXCEPTIONS,
+    RETRYABLE_EXCEPTIONS,
+    RetryConfig,
+    async_retry_with_backoff,
+)
 from ghl_real_estate_ai.agents.buyer.state_manager import StateManager
+from ghl_real_estate_ai.agents.buyer.utils import (
+    assess_financial_from_conversation,
+    extract_budget_range,
+    extract_property_preferences,
+)
 from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
 
 # Original imports
 from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
-from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
-from ghl_real_estate_ai.services.buyer_persona_service import BuyerPersonaService
-from ghl_real_estate_ai.services.sentiment_analysis_service import (
-    SentimentAnalysisService,
-)
-from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringIntegration
-from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
-from ghl_real_estate_ai.services.churn_detection_service import ChurnDetectionService
 from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.bot_context_types import (
@@ -73,17 +67,25 @@ from ghl_real_estate_ai.models.bot_context_types import (
     BuyerBotResponse,
     ConversationMessage,
 )
+from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
+from ghl_real_estate_ai.services.buyer_persona_service import BuyerPersonaService
+from ghl_real_estate_ai.services.churn_detection_service import ChurnDetectionService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
-from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
-from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
-from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 from ghl_real_estate_ai.services.jorge.buyer_conversation_memory import get_buyer_conversation_memory
+from ghl_real_estate_ai.services.jorge.cost_tracker import cost_tracker as _cost_tracker
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringIntegration
+from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+from ghl_real_estate_ai.services.sentiment_analysis_service import (
+    SentimentAnalysisService,
+)
 
 # Phase 3 Loop 3: Handoff context propagation
 try:
@@ -666,6 +668,12 @@ class JorgeBuyerBot(BaseBotWorkflow):
             # Record performance metrics
             await self.performance_tracker.track_operation("buyer_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("buyer", duration_ms=_workflow_duration_ms, success=True)
+
+            # Record API cost (fire-and-forget)
+            try:
+                await _cost_tracker.record_bot_call(conversation_id, contact_id, "buyer")
+            except Exception:
+                pass
 
             # Feed metrics to alerting (non-blocking)
             try:

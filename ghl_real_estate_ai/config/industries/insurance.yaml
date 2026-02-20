@@ -1,0 +1,253 @@
+# P&C Insurance — Industry Config
+# Property & Casualty insurance lead qualification vertical
+industry: insurance
+version: "1.0"
+vertical: "property_casualty"
+description: "P&C insurance lead qualification — homeowner, auto, commercial lines"
+
+market:
+  name: Lyrio Insurance Services
+  state: CA
+  regulatory_authority: California Department of Insurance
+  service_areas:
+    - Rancho Cucamonga
+    - Inland Empire
+    - Los Angeles County
+    - Orange County
+    - San Bernardino County
+  neighborhoods: []
+  price_ranges:
+    auto: {min: 80, max: 300, description: Monthly auto insurance premium}
+    homeowner: {min: 100, max: 500, description: Monthly homeowner premium}
+    bundle: {min: 150, max: 700, description: Monthly home + auto bundle}
+    commercial_bop: {min: 300, max: 2000, description: Monthly BOP premium}
+  compliance_notes:
+    - Licensed by the California Department of Insurance
+    - California Insurance Code compliance
+    - CAN-SPAM / TCPA opt-out honored immediately
+    - Never guarantee rates — licensed agents provide personalized quotes
+    - HIPAA-adjacent medical data must never be discussed
+    - No binding coverage commitments from the bot
+
+personas:
+  homeowner:
+    description: "New homeowner needs bundle (home + auto)"
+    signals: ["just bought", "new home", "closing", "mortgage required"]
+  auto_shopper:
+    description: "Comparing rates, price-sensitive"
+    signals: ["rate went up", "switching carriers", "shopping around"]
+  business_owner:
+    description: "Commercial lines — BOP or umbrella policy"
+    signals: ["business", "commercial property", "employees", "liability"]
+  high_risk:
+    description: "DUI/claims history, specialty market"
+    signals: ["prior claims", "DUI", "high-risk", "non-standard"]
+
+personality:
+  name: Lyrio Insurance Assistant
+  role: Insurance Intake Coordinator
+  approach: PROFESSIONAL, EMPATHETIC, and HELPFUL
+  core_values:
+    - Help clients find the right coverage for their situation
+    - Build trust through transparency and education
+    - Respect client time with efficient qualification
+    - Always defer specific advice to licensed agents
+  system_prompt_template: |
+    You are {{ name }}, a professional insurance intake coordinator.
+    Your approach is: {{ approach }}.
+    You help qualify leads so licensed agents can prepare the best options.
+
+    CORE VALUES:
+    {% for value in core_values %}- {{ value }}
+    {% endfor %}
+    CURRENT CONTEXT:
+    Lead: {{ lead_name }}
+    Coverage Type: {{ coverage_type }}
+  tone_instructions:
+    empathetic: Be warm, understanding, especially about rate frustrations
+    professional: Be direct, efficient, focus on coverage needs
+    urgent: Prioritize immediate coverage gaps, express concern about lapse
+  phrases:
+    greeting: ["Hi! I'm here to help find the right coverage for your situation. I'll ask a few quick questions so our licensed agents can prepare the best options for you."]
+    closing: ["Our licensed agents will prepare a personalized quote for you!"]
+
+bant_qualification:
+  budget:
+    question: "What are you currently paying for coverage, and are you open to adjusting that for better protection?"
+    hot_signals:
+      - "paying too much"
+      - "rate went up"
+      - "open to change"
+      - "currently uninsured"
+    warm_signals:
+      - "budget is tight"
+      - "looking for savings"
+
+  authority:
+    question: "Are you the primary decision-maker, or does a spouse/partner need to be part of the conversation?"
+    disqualify_if:
+      - "not the decision maker"
+      - "need to ask my partner"
+    hot_signals:
+      - "yes just me"
+      - "I decide"
+      - "sole owner"
+
+  need:
+    question: "What's prompting you to look at coverage right now — new home, new car, life event, or rate increase?"
+    urgency_signals:
+      - "new home"
+      - "lapse in coverage"
+      - "claim"
+      - "uninsured"
+      - "within 30 days"
+      - "moving"
+    hot_signals:
+      - "currently uninsured"
+      - "policy lapsed"
+      - "moving next week"
+
+  timeline:
+    question: "When does your current policy renew, or when do you need coverage in place?"
+    hot_signals:
+      - "immediately"
+      - "this month"
+      - "already lapsed"
+      - "within 30 days"
+    warm_signals:
+      - "3 months"
+      - "next quarter"
+
+intents:
+  motivation:
+    high: [rate went up, uninsured, lapse, claim denied, switching carriers, new home]
+    medium: [shopping around, comparing rates, renewal coming up, curious about savings]
+    low: [just browsing, not sure, maybe later]
+  timeline:
+    high: [immediately, this month, already lapsed, within 30 days, asap]
+    medium: [soon, this quarter, next renewal, flexible]
+    low: [eventually, sometime, no rush, next year]
+  condition:
+    high: [currently uninsured, lapse in coverage, claim pending, no coverage]
+    medium: [underinsured, wrong coverage, deductible too high]
+    low: [happy with coverage, just comparing, cosmetic change]
+  price:
+    high: [how much, current premium, rate comparison, paying too much]
+    medium: [ballpark, estimate, rough quote]
+    low: []
+  buyer_patterns: []
+  seller_patterns: []
+  scoring_weights:
+    budget_clarity: 0.25
+    decision_authority: 0.20
+    coverage_need: 0.30
+    timeline_urgency: 0.25
+  temperature_thresholds:
+    hot: 75
+    warm: 50
+    cold: 25
+
+temperature_thresholds:
+  hot: 75
+  warm: 50
+  cold: 25
+
+questions:
+  questions:
+    - {id: 1, text: "What type of coverage are you looking for — home, auto, business, or a bundle?"}
+    - {id: 2, text: "What's prompting you to look at coverage right now?"}
+    - {id: 3, text: "What are you currently paying, and are you open to adjusting for better protection?"}
+    - {id: 4, text: "When does your current policy renew, or when do you need coverage in place?"}
+  follow_ups:
+    rate_increase:
+      - "Rate increases are frustrating! Let me connect you with an agent who can find better options."
+    lapse:
+      - "A lapse in coverage is serious — let me prioritize getting you to an agent right away."
+    commercial:
+      - "Commercial coverage has unique requirements. I'll connect you with our business specialist."
+  accelerators:
+    - "It sounds like you need coverage quickly. Let me get our agent on this right away!"
+    - "Based on what you've shared, we can likely find better options. Want to get a quote started?"
+
+handoff:
+  thresholds:
+    default: 0.6
+    triage_to_personal_lines: 0.6
+    triage_to_commercial: 0.7
+  rate_limits:
+    per_hour: 5
+    per_day: 20
+  circular_prevention_window: 1200
+  buyer_intent_patterns: []
+  seller_intent_patterns: []
+
+compliance_rules:
+  - "Never guarantee rates — always say 'our licensed agents will prepare a personalized quote'"
+  - "NEVER discuss health conditions or any HIPAA-adjacent personal medical data"
+  - "State licensing caveat: 'I'll connect you with a licensed agent in your state'"
+  - "CAN-SPAM / TCPA opt-out must be honored immediately upon request"
+  - "Never advise on specific coverage amounts — defer to licensed agents"
+  - "Do not make binding coverage commitments of any kind"
+
+custom_field_mapping:
+  coverage_type:
+    ghl_field_id: ""
+    env_var: "CUSTOM_FIELD_INSURANCE_TYPE"
+    description: "homeowner / auto / commercial / bundle"
+  current_carrier:
+    ghl_field_id: ""
+    env_var: "CUSTOM_FIELD_CURRENT_CARRIER"
+    description: "Incumbent insurance carrier name"
+  policy_renewal_date:
+    ghl_field_id: ""
+    env_var: "CUSTOM_FIELD_RENEWAL_DATE"
+    description: "YYYY-MM-DD renewal date"
+  quote_requested:
+    ghl_field_id: ""
+    env_var: "CUSTOM_FIELD_QUOTE_STATUS"
+    description: "boolean — quote requested by lead"
+  bant_score:
+    ghl_field_id: ""
+    env_var: "CUSTOM_FIELD_BANT_SCORE"
+    description: "0-100 BANT qualification score"
+
+workflow_triggers:
+  hot_lead_workflow_id:
+    env_var: "HOT_INSURANCE_WORKFLOW_ID"
+    description: "Immediate agent assignment for hot leads"
+  warm_lead_workflow_id:
+    env_var: "WARM_INSURANCE_WORKFLOW_ID"
+    description: "Nurture sequence for warm leads"
+  cold_lead_workflow_id:
+    env_var: "COLD_INSURANCE_WORKFLOW_ID"
+    description: "Long-term drip for cold leads"
+
+follow_up_sequence:
+  day_3:
+    channel: sms
+    message_template: "rate_reminder"
+    message: "Hi {first_name}! Just checking in — have you had a chance to review coverage options? Our agents are ready to prepare a personalized quote. Reply STOP to opt out."
+  day_7:
+    channel: email
+    message_template: "coverage_gap_education"
+    subject: "Do you have the right coverage? {first_name}, here's what to check"
+  day_14:
+    channel: sms
+    message_template: "final_check_in"
+    message: "Last check-in from {agent_name}'s team — still interested in a free insurance review? Reply STOP to opt out."
+
+escalation_triggers:
+  - trigger: "lapse in coverage"
+    action: "immediate_hot_classification"
+    note: "Uninsured leads are highest priority"
+  - trigger: "commercial OR business"
+    action: "route_to_commercial_specialist"
+    note: "Commercial lines need different expertise"
+
+business_rules:
+  sms_max_length: 320
+  hot_lead_tag: Hot-Insurance-Lead
+  warm_lead_tag: Warm-Insurance-Lead
+  cold_lead_tag: Cold-Insurance-Lead
+  quote_turnaround_hours: 24
+  max_follow_ups: 3
