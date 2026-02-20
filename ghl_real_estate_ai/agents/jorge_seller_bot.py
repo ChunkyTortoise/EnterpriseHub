@@ -1535,9 +1535,9 @@ class JorgeSellerBot(BaseBotWorkflow):
 
             # Record API cost (fire-and-forget)
             try:
-                await _cost_tracker.record_bot_call(conversation_id, contact_id, "seller")
-            except Exception:
-                pass
+                await _cost_tracker.record_bot_call(conversation_id, conversation_id, "seller")
+            except Exception as _e:
+                logger.debug(f"Cost tracker record failed: {_e}")
 
             # Feed metrics to alerting (non-blocking)
             try:

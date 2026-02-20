@@ -293,7 +293,7 @@ def render_footer_cta():
             </div>
             <div style='margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2);'>
                 <p style='font-size: 0.9rem; opacity: 0.8; margin: 0;'>
-                    📧 caymanroden@gmail.com | 🔗 LinkedIn | 💼 Portfolio
+                    📧 realtorjorgesalas@gmail.com | 🔗 LinkedIn | 💼 Portfolio
                 </p>
                 <p style='font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;'>
                     30-Day Money-Back Guarantee | Fixed-Price Transparency | 19 Professional Certifications

@@ -60,13 +60,14 @@ class DigestService:
         except Exception as exc:
             stats.errors.append(f"Handoff stats failed: {exc}")
 
-        # API cost from token tracker (optional)
+        # API cost from cost tracker (optional)
         try:
-            from ghl_real_estate_ai.services.token_tracker import TokenTracker
+            from ghl_real_estate_ai.services.jorge.cost_tracker import CostTracker
 
-            tracker = TokenTracker()
-            # TokenTracker doesn't expose get_month_total; skip gracefully
-            stats.api_cost_usd = None
+            cost_tracker = CostTracker()
+            stats.api_cost_usd = await cost_tracker.get_month_total(
+                stats.date.year, stats.date.month
+            )
         except Exception as exc:
             stats.errors.append(f"API cost fetch failed: {exc}")
 
