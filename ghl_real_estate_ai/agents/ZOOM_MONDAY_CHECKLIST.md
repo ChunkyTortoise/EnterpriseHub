@@ -12,9 +12,58 @@ Only 4 workflows remain. Jorge must do these as account owner.
 
 ---
 
-## Zoom: Create 4 Workflows (~15 min)
+## Zoom: Create 6 Workflows (~25 min)
 
 **Jorge logs in → Automation → Workflows → "+ Create Workflow" → Start from Scratch**
+
+---
+
+### Workflow 0: Seller Bot — First Message Trigger (~3 min) ⚠️ CRITICAL
+
+**Name**: `Jorge — Seller Bot Trigger`
+
+**Trigger**:
+- Type: **Contact Tag Added**
+- Tag: `Needs Qualifying`
+
+**Actions** (in order):
+1. **Custom Webhook** → Method: POST → URL: `https://sparkling-light.up.railway.app/api/ghl/tag-webhook`
+   - Header: `X-GHL-Signature: change-me-to-a-32-char-random-secret`
+   - Body (JSON):
+   ```json
+   {
+     "tag": "Needs Qualifying",
+     "contactId": "{{contact.id}}",
+     "locationId": "{{location.id}}",
+     "contact": {
+       "contactId": "{{contact.id}}",
+       "firstName": "{{contact.first_name}}",
+       "lastName": "{{contact.last_name}}",
+       "phone": "{{contact.phone}}"
+     }
+   }
+   ```
+
+**Publish** (no ID needed — not pasted into Railway)
+
+> This is what makes the seller bot reach out FIRST. Without this, the bot only responds — it never initiates.
+
+---
+
+### Workflow 00: Buyer Bot — First Message Trigger (~3 min) ⚠️ CRITICAL
+
+**Name**: `Jorge — Buyer Bot Trigger`
+
+**Trigger**:
+- Type: **Contact Tag Added**
+- Tag: `Buyer-Lead`
+
+**Actions** (in order):
+1. **Send SMS** → To: `{{contact.phone}}` → Message: "Hi {{contact.first_name}}, this is Jorge. I help buyers find homes in Rancho Cucamonga. What area are you looking in and what's your ideal timeline? [AI-assisted message]"
+
+**Publish** (no ID needed)
+
+> Buyer bot doesn't auto-send via webhook yet — this GHL action sends the first message directly so the buyer bot can take over on their reply.
 
 ---
 
@@ -92,9 +141,9 @@ Paste into Railway: `NOTIFY_AGENT_WORKFLOW_ID=XXXXXXXX`
 
 ---
 
-## After All 4 Workflows: Update Railway
+## After All 6 Workflows: Update Railway
 
-In Railway `sparkling-light` → Variables tab → add all 4 IDs:
+In Railway `sparkling-light` → Variables tab → add all 4 IDs (Workflows 0 and 00 don't need IDs):
 
 ```
 HOT_SELLER_WORKFLOW_ID=<paste ID 1>
