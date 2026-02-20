@@ -341,14 +341,41 @@ class JorgePropertyMatchingService:
         if cached:
             return [Property.parse_obj(p) for p in json.loads(cached)]
 
-        # TODO: In production, this would query MLS API or tenant's internal database
-        # For now, use mock data filtered by tenant context
-        properties = await self._get_mock_inventory(tenant_id, preferences)
+        # In production, swap _get_real_inventory for an actual MLS API call.
+        # _get_real_inventory delegates to _get_mock_inventory and adds filtering.
+        properties = await self._get_real_inventory(tenant_id, preferences)
 
         # Cache filtered inventory
         await cache_service.set(cache_key, json.dumps([p.dict() for p in properties]), ttl=CACHE_TTL_INVENTORY)
 
         return properties
+
+    async def _get_real_inventory(self, tenant_id: str, preferences: LeadPropertyPreferences) -> List[Property]:
+        """Filter mock inventory using preference constraints.
+
+        In production, replace _get_mock_inventory with an actual MLS API call.
+        """
+        all_properties = await self._get_mock_inventory(tenant_id, preferences)
+
+        filtered = []
+        for prop in all_properties:
+            # Price range filter
+            if preferences.budget_max and prop.price > preferences.budget_max:
+                continue
+            if preferences.budget_min and prop.price < preferences.budget_min:
+                continue
+            # Bedroom filter (accept +/- 1 from preference)
+            if preferences.min_bedrooms and prop.features.bedrooms < preferences.min_bedrooms - 1:
+                continue
+            # Bathroom filter
+            if preferences.min_bathrooms and prop.features.bathrooms < preferences.min_bathrooms - 0.5:
+                continue
+            # Neighborhood filter (if specified)
+            if preferences.preferred_neighborhoods and prop.address.neighborhood not in preferences.preferred_neighborhoods:
+                continue
+            filtered.append(prop)
+
+        return filtered
 
     async def _get_mock_inventory(self, tenant_id: str, preferences: LeadPropertyPreferences) -> List[Property]:
         """Get mock inventory for development/demo."""
@@ -716,8 +743,11 @@ class JorgePropertyMatchingService:
 
         # Feature preferences
         if preferences.must_have_features:
-            # TODO: Check property features against must-haves
-            score += 0.2
+            # Check property features against must-haves using boolean attr names
+            feature_attrs = {k for k, v in property.features.model_dump().items() if v is True}
+            matched = sum(1 for mh in preferences.must_have_features if mh.lower() in feature_attrs)
+            match_ratio = matched / len(preferences.must_have_features)
+            score += 0.2 * match_ratio  # 0.0–0.2 based on must-have coverage
 
         # Neighborhood preference
         if preferences.preferred_neighborhoods and property.address.neighborhood in preferences.preferred_neighborhoods:

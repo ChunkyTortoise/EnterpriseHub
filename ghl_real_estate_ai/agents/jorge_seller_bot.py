@@ -26,28 +26,30 @@ from uuid import uuid4
 
 from langgraph.graph import END, StateGraph
 
-# Import new modular services
-from ghl_real_estate_ai.agents.seller import (
-    JorgeFeatureConfig,
-    QualificationResult,
-    CMAService,
-    MarketAnalyzer,
-    StallDetector,
-    ResponseGenerator,
-    StrategySelector,
-    ListingService,
-    FollowUpService,
-    HandoffManager,
-    ConversationMemory,
-    AdaptiveQuestionEngine,
-    ExecutiveService,
-    ObjectionHandler,
-)
-from ghl_real_estate_ai.config.market_intelligence_loader import get_market_loader
-from ghl_real_estate_ai.agents.voss_negotiation_agent import VossNegotiationAgent
+from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
+# Import new modular services
+from ghl_real_estate_ai.agents.seller import (
+    AdaptiveQuestionEngine,
+    CMAService,
+    ConversationMemory,
+    ExecutiveService,
+    FollowUpService,
+    HandoffManager,
+    JorgeFeatureConfig,
+    ListingService,
+    MarketAnalyzer,
+    ObjectionHandler,
+    QualificationResult,
+    ResponseGenerator,
+    StallDetector,
+    StrategySelector,
+)
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
+from ghl_real_estate_ai.agents.voss_negotiation_agent import VossNegotiationAgent
+from ghl_real_estate_ai.config.market_intelligence_loader import get_market_loader
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.bot_context_types import (
     BotMetadata,
@@ -56,23 +58,23 @@ from ghl_real_estate_ai.models.bot_context_types import (
     SellerBotResponse,
 )
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
+from ghl_real_estate_ai.services.churn_detection_service import ChurnDetectionService
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeRequest, ClaudeTaskType, get_claude_orchestrator
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
+from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 from ghl_real_estate_ai.services.jorge.acceptance_predictor_service import get_acceptance_predictor_service
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.cost_tracker import cost_tracker as _cost_tracker
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringIntegration
 from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
 from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
-from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 
 # Phase 1.5 - 1.8 Integration
 from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnalysisService
-from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringIntegration
-from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
-from ghl_real_estate_ai.services.churn_detection_service import ChurnDetectionService
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeRequest, ClaudeTaskType
 
 # Phase 3 Loop 3: Handoff context propagation
 try:
@@ -643,13 +645,13 @@ class JorgeSellerBot(BaseBotWorkflow):
             logger.info(f"Skipping intent analysis for {state.get('lead_id')} - using handoff context")
             # Return high-quality default profile for handed-off contacts
             from ghl_real_estate_ai.models.lead_scoring import (
-                LeadIntentProfile,
-                FinancialReadinessScore,
-                PsychologicalCommitmentScore,
-                MotivationSignals,
-                TimelineCommitment,
                 ConditionRealism,
+                FinancialReadinessScore,
+                LeadIntentProfile,
+                MotivationSignals,
                 PriceResponsiveness,
+                PsychologicalCommitmentScore,
+                TimelineCommitment,
             )
 
             # Create high-confidence profile for handed-off seller
@@ -1530,6 +1532,12 @@ class JorgeSellerBot(BaseBotWorkflow):
             # Record performance metrics
             await self.performance_tracker.track_operation("seller_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("seller", duration_ms=_workflow_duration_ms, success=True)
+
+            # Record API cost (fire-and-forget)
+            try:
+                await _cost_tracker.record_bot_call(conversation_id, contact_id, "seller")
+            except Exception:
+                pass
 
             # Feed metrics to alerting (non-blocking)
             try:
