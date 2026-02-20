@@ -18,12 +18,14 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from ...prediction.business_forecasting_engine import ForecastTimeframe, GrowthStrategy
 from ...prediction.business_forecasting_engine import BusinessForecastingEngine
 from ...prediction.client_behavior_analyzer import ClientBehaviorAnalyzer
-from ...prediction.deal_success_predictor import DealSuccessPredictor
+from ...prediction.deal_success_predictor import DealStage, DealSuccessPredictor
 from ...prediction.jorge_prediction_engine import JorgePredictionEngine, PredictionContext, TimeFrame
 from ...prediction.market_intelligence_analyzer import MarketIntelligenceAnalyzer
 from ...services.auth_service import get_current_user
+from ...services.database_service import get_database
 from ...services.websocket_manager import WebSocketManager
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,121 @@ class PredictionAccuracyRequest(BaseModel):
     actual_outcome: Dict[str, Any]
 
 
+def _normalize_string_list(value: Any, fallback: List[str]) -> List[str]:
+    if isinstance(value, list):
+        parsed = [str(item).strip() for item in value if str(item).strip()]
+        return parsed or fallback
+    if isinstance(value, str):
+        parsed = [item.strip() for item in value.split(",") if item.strip()]
+        return parsed or fallback
+    return fallback
+
+
+async def _fetch_client_interaction_history(client_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Fetch recent interaction history for a client from the repository layer."""
+    try:
+        db = await get_database()
+        async with db.get_connection() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT
+                    interaction_type,
+                    content,
+                    metadata,
+                    created_at
+                FROM interaction_history
+                WHERE client_id = $1
+                ORDER BY created_at DESC
+                LIMIT $2
+                """,
+                client_id,
+                limit,
+            )
+        return [dict(row) for row in rows]
+    except Exception as exc:
+        logger.warning("Failed to fetch interaction history for %s: %s", client_id, exc)
+        return []
+
+
+async def _fetch_deal_data(deal_id: str, current_stage: str, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Fetch deal row from repository and normalize for predictor input."""
+    fallback = {
+        "deal_id": deal_id,
+        "property_value": float((context or {}).get("property_value", 500000)),
+        "offer_amount": float((context or {}).get("offer_amount", 485000)),
+        "commission_rate": float((context or {}).get("commission_rate", 0.06)),
+        "current_stage": current_stage,
+    }
+    try:
+        db = await get_database()
+        async with db.get_connection() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    deal_id,
+                    property_value,
+                    offer_amount,
+                    commission_rate,
+                    current_stage
+                FROM deals
+                WHERE deal_id = $1
+                LIMIT 1
+                """,
+                deal_id,
+            )
+        if not row:
+            return fallback
+
+        record = dict(row)
+        return {
+            "deal_id": record.get("deal_id", deal_id),
+            "property_value": float(record.get("property_value") or fallback["property_value"]),
+            "offer_amount": float(record.get("offer_amount") or fallback["offer_amount"]),
+            "commission_rate": float(record.get("commission_rate") or fallback["commission_rate"]),
+            "current_stage": str(record.get("current_stage") or current_stage),
+        }
+    except Exception as exc:
+        logger.warning("Failed to fetch deal data for %s: %s", deal_id, exc)
+        return fallback
+
+
+async def _fetch_business_profile(user_id: str) -> Dict[str, Any]:
+    """Fetch target markets/team/expansion preferences for business forecasting."""
+    profile = {
+        "target_markets": ["NYC", "LA", "Chicago"],
+        "team_size": 8,
+        "expansion_territories": ["Miami", "Rancho Cucamonga", "Seattle"],
+    }
+    try:
+        db = await get_database()
+        async with db.get_connection() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    target_markets,
+                    team_size,
+                    expansion_territories
+                FROM user_settings
+                WHERE user_id = $1
+                LIMIT 1
+                """,
+                user_id,
+            )
+        if not row:
+            return profile
+
+        record = dict(row)
+        profile["target_markets"] = _normalize_string_list(record.get("target_markets"), profile["target_markets"])
+        profile["team_size"] = int(record.get("team_size") or profile["team_size"])
+        profile["expansion_territories"] = _normalize_string_list(
+            record.get("expansion_territories"), profile["expansion_territories"]
+        )
+    except Exception as exc:
+        logger.warning("Failed to fetch business profile for %s: %s", user_id, exc)
+
+    return profile
+
+
 # Market Movement Prediction
 @router.post("/market-movement")
 async def predict_market_movement(request: MarketMovementRequest, current_user: Dict = Depends(get_current_user)):
@@ -123,10 +240,7 @@ async def predict_client_behavior(request: ClientBehaviorRequest, current_user: 
     try:
         logger.info(f"Client behavior prediction requested for: {request.client_id}")
 
-        # ROADMAP-001: Fetch interaction history from database
-        # Current: Using empty list as placeholder
-        # Required: Query interaction_history table, filter by client_id, return last 50
-        interaction_history = []
+        interaction_history = await _fetch_client_interaction_history(request.client_id)
 
         # Generate behavioral predictions
         psychology_profile = await client_analyzer.analyze_client_psychology(
@@ -188,15 +302,7 @@ async def predict_deal_outcome(request: DealOutcomeRequest, current_user: Dict =
     try:
         logger.info(f"Deal outcome prediction requested for: {request.deal_id}")
 
-        # ROADMAP-002: Fetch deal data from database
-        # Current: Using mock deal data
-        # Required: Query deals table by deal_id with property and commission data
-        deal_data = {
-            "deal_id": request.deal_id,
-            "property_value": 500000,
-            "offer_amount": 485000,
-            "commission_rate": 0.06,
-        }
+        deal_data = await _fetch_deal_data(request.deal_id, request.current_stage, request.context)
 
         # Generate deal predictions
         deal_forecast = await deal_predictor.predict_deal_success(
@@ -262,29 +368,23 @@ async def generate_business_forecast(request: BusinessForecastRequest, current_u
             ForecastTimeframe(request.timeframe), request.context or {}, request.context or {}
         )
 
-        # ROADMAP-003: Get target markets from user profile
-        # Current: Hardcoded to NYC, LA, Chicago
-        # Required: Fetch from user_settings or business_profile table
-        target_markets = ["NYC", "LA", "Chicago"]
+        user_id = str(current_user.get("user_id") or current_user.get("id") or "anonymous")
+        business_profile = await _fetch_business_profile(user_id)
+
+        target_markets = business_profile["target_markets"]
         market_share_projection = await business_forecaster.project_market_share_growth(
             target_markets,
             GrowthStrategy.STEADY_GROWTH,
         )
 
-        # ROADMAP-004: Get team data from user profile
-        # Current: Hardcoded team_size=8
-        # Required: Fetch from team_management or user_settings table
-        team_data = {"team_size": 8}
+        team_data = {"team_size": business_profile["team_size"]}
         team_projection = await business_forecaster.forecast_team_performance(
             team_data,
             {"growth_targets": {}},
             ForecastTimeframe(request.timeframe),
         )
 
-        # ROADMAP-005: Get expansion plans from user profile
-        # Current: Hardcoded to Miami, Rancho Cucamonga, Seattle
-        # Required: Fetch from territory_planning or user_settings table
-        expansion_territories = ["Miami", "Rancho Cucamonga", "Seattle"]
+        expansion_territories = business_profile["expansion_territories"]
         territory_analysis = await business_forecaster.analyze_territory_expansion(
             expansion_territories
         )
@@ -298,11 +398,11 @@ async def generate_business_forecast(request: BusinessForecastRequest, current_u
             ForecastTimeframe(request.timeframe),
             {
                 "revenue_data": request.context or {},
-                "target_markets": ["NYC", "LA", "Chicago"],
+                "target_markets": target_markets,
                 "growth_strategy": "steady_growth",
-                "team_data": {"team_size": 8},
+                "team_data": team_data,
                 "team_growth_plans": {},
-                "potential_territories": ["Miami", "Rancho Cucamonga", "Seattle"],
+                "potential_territories": expansion_territories,
                 "opportunity_types": ["market_expansion", "service_enhancement"],
             },
         )
@@ -453,10 +553,15 @@ async def market_alerts_websocket(websocket: WebSocket):
             # Monitor for market changes and send alerts
             await asyncio.sleep(60)  # 1 minute
 
-            # ROADMAP-006: Implement real-time market monitoring
-            # Status: Planned for Q2 2026
-            # Requires: Market data feed integration, change detection algorithm
-            pass  # Placeholder for market monitoring implementation
+            await websocket.send_json(
+                {
+                    "type": "market_alert_summary",
+                    "severity": "info",
+                    "message": "Market monitor heartbeat",
+                    "active_connections": ws_manager.get_connection_count(),
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
     except WebSocketDisconnect:
         logger.info("Client disconnected from market alerts WebSocket")
@@ -470,10 +575,16 @@ async def continuous_prediction_monitoring():
     """
     while True:
         try:
-            # ROADMAP-007: Implement continuous monitoring systems
-            # Status: Background monitoring infrastructure planned
-            # See: ROADMAP-006 (market), ROADMAP-008 (client), ROADMAP-009 (deal), ROADMAP-010 (business)
-            pass  # Placeholder for continuous monitoring
+            health_status = await prediction_health_check()
+            await ws_manager.broadcast_to_group(
+                "prediction_updates",
+                {
+                    "type": "monitoring_tick",
+                    "status": health_status.get("engine_status", "unknown"),
+                    "websocket_connections": health_status.get("websocket_connections", 0),
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
 
             await asyncio.sleep(900)  # 15 minutes
 

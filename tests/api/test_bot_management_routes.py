@@ -426,6 +426,65 @@ class TestIntentDecoderScore:
 
 
 # ---------------------------------------------------------------------------
+# POST /api/jorge-seller/{lead_id}/handoff
+# ---------------------------------------------------------------------------
+
+class TestJorgeSellerHandoff:
+    """Tests for Jorge handoff route idempotency and execution."""
+
+    def test_handoff_manual_fallback_and_idempotency_cache(self):
+        from ghl_real_estate_ai.api.main import app
+
+        handoff_service = MagicMock()
+        handoff_service.evaluate_handoff = AsyncMock(return_value=None)
+        handoff_service.execute_handoff = AsyncMock(
+            return_value=[{"type": "add_tag", "tag": "Buyer-Lead", "handoff_executed": True}]
+        )
+        handoff_service.record_outcome = MagicMock()
+
+        cache = MagicMock()
+        cache.get = AsyncMock(
+            side_effect=[
+                None,
+                {
+                    "success": True,
+                    "handoff_id": "handoff_cached_001",
+                    "target_bot": "buyer",
+                    "actions": [{"type": "add_tag", "tag": "Buyer-Lead", "handoff_executed": True}],
+                    "blocked": False,
+                    "block_reason": None,
+                    "estimated_time_seconds": 30,
+                },
+            ]
+        )
+        cache.set = AsyncMock()
+
+        app.dependency_overrides[bot_management.get_handoff_service] = lambda: handoff_service
+        app.dependency_overrides[bot_management.get_cache_service] = lambda: cache
+        client = _make_client()
+
+        payload = {
+            "target_bot": "buyer",
+            "reason": "manual_handoff",
+            "confidence": 0.9,
+            "idempotency_key": "handoff-key-001",
+            "message": "I need help buying now",
+            "conversation_history": [{"role": "user", "content": "Need a buyer agent"}],
+        }
+        first = client.post("/api/jorge-seller/lead-001/handoff", json=payload, headers=_ADMIN_HEADER)
+        second = client.post("/api/jorge-seller/lead-001/handoff", json=payload, headers=_ADMIN_HEADER)
+        app.dependency_overrides = {}
+
+        assert first.status_code == 200
+        assert first.json()["success"] is True
+        assert second.status_code == 200
+        assert second.json()["handoff_id"] == "handoff_cached_001"
+        handoff_service.execute_handoff.assert_awaited_once()
+        handoff_service.record_outcome.assert_called_once()
+        cache.set.assert_awaited()
+
+
+# ---------------------------------------------------------------------------
 # POST /api/jorge-seller/test
 # ---------------------------------------------------------------------------
 
