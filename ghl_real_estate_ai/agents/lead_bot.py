@@ -31,7 +31,15 @@ from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_ghost_followup_engine
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+
+# Enhanced Analytics Components (extracted from god class)
+from ghl_real_estate_ai.services.jorge.analytics.behavioral_analytics import BehavioralAnalyticsEngine
+from ghl_real_estate_ai.services.jorge.analytics.models import ResponsePattern, SequenceOptimization
+from ghl_real_estate_ai.services.jorge.analytics.personality_adapter import PersonalityAdapter
+from ghl_real_estate_ai.services.jorge.analytics.temperature_prediction import TemperaturePredictionEngine
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+from ghl_real_estate_ai.services.jorge.caching.ttl_lru_cache import TTLLRUCache
+from ghl_real_estate_ai.services.jorge.cost_tracker import cost_tracker as _cost_tracker
 from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 from ghl_real_estate_ai.services.lead_sequence_scheduler import get_lead_scheduler
 from ghl_real_estate_ai.services.lead_sequence_state_service import (
@@ -41,13 +49,6 @@ from ghl_real_estate_ai.services.lead_sequence_state_service import (
     get_sequence_service,
 )
 from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
-
-# Enhanced Analytics Components (extracted from god class)
-from ghl_real_estate_ai.services.jorge.analytics.behavioral_analytics import BehavioralAnalyticsEngine
-from ghl_real_estate_ai.services.jorge.analytics.models import ResponsePattern, SequenceOptimization
-from ghl_real_estate_ai.services.jorge.analytics.personality_adapter import PersonalityAdapter
-from ghl_real_estate_ai.services.jorge.analytics.temperature_prediction import TemperaturePredictionEngine
-from ghl_real_estate_ai.services.jorge.caching.ttl_lru_cache import TTLLRUCache
 
 # Enhanced Features (Track 3.1 Integration)
 try:
@@ -2345,6 +2346,12 @@ class LeadBotWorkflow(BaseBotWorkflow):
             # Record performance metrics
             await self.performance_tracker.track_operation("lead_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("lead", duration_ms=_workflow_duration_ms, success=True)
+
+            # Record API cost (fire-and-forget)
+            try:
+                await _cost_tracker.record_bot_call(conversation_id, contact_id, "lead")
+            except Exception:
+                pass
 
             # Feed metrics to alerting (non-blocking)
             try:

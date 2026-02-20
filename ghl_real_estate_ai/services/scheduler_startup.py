@@ -56,6 +56,21 @@ class SchedulerStartupService:
                 self.health_status = "healthy"
                 self.last_error = None
                 logger.info("✅ Lead Sequence Scheduler started successfully")
+
+                # Register daily digest job (7am PT)
+                try:
+                    import os
+
+                    from ghl_real_estate_ai.services.jorge.digest_service import DigestService
+                    _digest = DigestService()
+                    await _digest.schedule_daily_digest(
+                        self.scheduler.scheduler,
+                        recipient_email=os.getenv("JORGE_DIGEST_EMAIL", "realtorjorgesalas@gmail.com"),
+                    )
+                    logger.info("✅ Daily digest job registered (7am PT)")
+                except Exception as _digest_err:
+                    logger.warning(f"Daily digest registration failed (non-fatal): {_digest_err}")
+
                 return True
             else:
                 error_msg = "Failed to start Lead Sequence Scheduler"
