@@ -35,10 +35,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy application code
-COPY . .
+# Copy application code into named package directory so "ghl_real_estate_ai"
+# is importable from WORKDIR (/app). Railway build context = ghl_real_estate_ai/,
+# so COPY . . puts contents flat in /app/ — package wouldn't be found.
+COPY . ./ghl_real_estate_ai/
 
-# Create necessary directories
+# Create necessary runtime directories (relative to WORKDIR /app)
 RUN mkdir -p data/knowledge_base data/memory data/analytics .chroma_db
 
 # Set environment variables
