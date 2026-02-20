@@ -30,7 +30,7 @@ class JorgeSellerConfig:
     JORGE_SIMPLE_MODE: bool = os.getenv("JORGE_SIMPLE_MODE", "true").lower() == "true"
 
     # ========== ACTIVATION/DEACTIVATION TAGS ==========
-    ACTIVATION_TAGS = ["Needs Qualifying", "Seller-Lead"]
+    ACTIVATION_TAGS = ["needs qualifying", "Needs Qualifying", "Seller-Lead"]
     DEACTIVATION_TAGS = ["AI-Off", "Qualified", "Stop-Bot", "Seller-Qualified"]
 
     # ========== TEMPERATURE TAGS ==========
