@@ -181,6 +181,9 @@ class ClaudeConciergeOrchestrator:
             "learning_events": 0,
         }
 
+        # Per-tenant metrics
+        self._tenant_metrics: Dict[str, Dict] = {}
+
         # Performance Optimization
         self.response_cache_ttl = 300  # 5 minutes for context-specific responses
         self.context_cache_ttl = 60  # 1 minute for platform context
@@ -338,6 +341,7 @@ class ClaudeConciergeOrchestrator:
             if cached_response:
                 logger.debug(f"Cache hit for contextual guidance: {context.current_page}")
                 self.metrics["cache_hits"] += 1
+                self._get_tenant_metrics(resolved_tenant)["cache_hits"] += 1
                 return cached_response
 
             # Get Jorge's learned preferences for this context
@@ -393,11 +397,16 @@ class ClaudeConciergeOrchestrator:
             self.metrics["requests_processed"] += 1
             self.metrics["total_response_time_ms"] += structured_response.response_time_ms
 
+            tm = self._get_tenant_metrics(resolved_tenant)
+            tm["requests_processed"] += 1
+            tm["total_response_time_ms"] += structured_response.response_time_ms
+
             return structured_response
 
         except Exception as e:
             logger.error(f"Error generating contextual guidance: {e}")
             self.metrics["errors"] += 1
+            self._get_tenant_metrics(resolved_tenant)["errors"] += 1
 
             # Fallback response to ensure platform reliability
             return self._generate_fallback_response(context, mode, str(e))
@@ -749,6 +758,31 @@ class ClaudeConciergeOrchestrator:
         """
         return await self.jorge_memory.predict_jorge_preference(situation, context)
 
+    def _get_tenant_metrics(self, tenant_id: str) -> Dict:
+        """Return (and lazily initialise) the per-tenant counters dict."""
+        if tenant_id not in self._tenant_metrics:
+            self._tenant_metrics[tenant_id] = {
+                "requests_processed": 0,
+                "total_response_time_ms": 0,
+                "errors": 0,
+                "cache_hits": 0,
+            }
+        return self._tenant_metrics[tenant_id]
+
+    def get_tenant_stats(self, tenant_id: str) -> Dict:
+        """Return computed stats for a single tenant."""
+        tm = self._get_tenant_metrics(tenant_id)
+        total = tm["requests_processed"]
+        avg_rt = tm["total_response_time_ms"] / max(total, 1)
+        cache_rate = tm["cache_hits"] / max(total, 1)
+        return {
+            "tenant_id": tenant_id,
+            "requests_processed": total,
+            "avg_response_time_ms": int(avg_rt),
+            "errors": tm["errors"],
+            "cache_hit_rate": round(cache_rate, 3),
+        }
+
     def get_metrics(self) -> Dict[str, Any]:
         """Return current performance metrics for wiring to /metrics endpoint."""
         count = self.metrics["requests_processed"]
@@ -762,6 +796,10 @@ class ClaudeConciergeOrchestrator:
             "cache_hit_rate": round(cache_rate, 3),
             "active_sessions": len(self.session_contexts),  # in-process fallback count
             "learning_events": self.metrics["learning_events"],
+            "tenant_breakdown": {
+                tid: self.get_tenant_stats(tid)
+                for tid in self._tenant_metrics
+            },
         }
 
     # ========================================================================
