@@ -44,12 +44,8 @@ RUN mkdir -p data/knowledge_base data/memory data/analytics .chroma_db
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 
-# Expose FastAPI port
+# Expose FastAPI port (Railway overrides with $PORT)
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl --fail http://localhost:8000/api/health/live || exit 1
-
-# Run FastAPI with uvicorn
-CMD ["uvicorn", "ghl_real_estate_ai.api.main:socketio_app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Run FastAPI with uvicorn (shell form so $PORT is expanded)
+CMD ["/bin/sh", "-c", "uvicorn ghl_real_estate_ai.api.main:socketio_app --host 0.0.0.0 --port ${PORT:-8000} --workers 4"]
