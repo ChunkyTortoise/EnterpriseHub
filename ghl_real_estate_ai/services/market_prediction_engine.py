@@ -22,11 +22,17 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, r2_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+
+try:
+    import pandas as pd
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.metrics import mean_absolute_error, r2_score
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+    _ML_AVAILABLE = True
+except ImportError:
+    pd = None
+    _ML_AVAILABLE = False
 
 from ghl_real_estate_ai.core.llm_client import LLMClient
 from ghl_real_estate_ai.data.rancho_cucamonga_market_data import get_rancho_cucamonga_market_intelligence
