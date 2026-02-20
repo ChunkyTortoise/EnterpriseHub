@@ -415,3 +415,55 @@ class TestClientConfigPackage:
     def test_config_compliance_summary_property(self, dental_config):
         summary = dental_config.compliance_summary
         assert "HIPAA" in summary
+
+
+# ---------------------------------------------------------------------------
+# Loose-end fixes: tenant-scoped cache key, tenant_id threading
+# ---------------------------------------------------------------------------
+
+class TestTenantScopedCacheKey:
+    def _make_orchestrator(self, config: ConciergeClientConfig) -> ClaudeConciergeOrchestrator:
+        with patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"), \
+             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"), \
+             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"), \
+             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"), \
+             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"), \
+             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"):
+            orch = ClaudeConciergeOrchestrator(client_config=config)
+        return orch
+
+    def test_cache_key_includes_tenant_id(self, jorge_config):
+        from ghl_real_estate_ai.services.claude_concierge_orchestrator import IntelligenceScope, PlatformContext
+        orch = self._make_orchestrator(jorge_config)
+        ctx = PlatformContext(current_page="leads", user_role="agent", bot_statuses={})
+        key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "jorge")
+        assert "jorge" in key
+        assert "concierge:" in key
+
+    def test_cache_keys_differ_by_tenant(self, jorge_config):
+        from ghl_real_estate_ai.services.claude_concierge_orchestrator import IntelligenceScope, PlatformContext
+        orch = self._make_orchestrator(jorge_config)
+        ctx = PlatformContext(current_page="leads", user_role="agent", bot_statuses={})
+        jorge_key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "jorge")
+        dental_key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "dental")
+        assert jorge_key != dental_key
+
+    def test_cache_key_defaults_to_config_tenant(self, dental_config):
+        from ghl_real_estate_ai.services.claude_concierge_orchestrator import IntelligenceScope, PlatformContext
+        orch = self._make_orchestrator(dental_config)
+        ctx = PlatformContext(current_page="leads", user_role="agent", bot_statuses={})
+        key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW)
+        assert "dental" in key  # uses default_config.tenant_id
+
+    @pytest.mark.asyncio
+    async def test_apply_suggestion_uses_tenant_id(self, jorge_config):
+        orch = self._make_orchestrator(jorge_config)
+        mock_cache = AsyncMock()
+        mock_cache.get = AsyncMock(return_value=None)
+        orch.cache = mock_cache
+
+        result = await orch.apply_suggestion("nonexistent-123", tenant_id="dental")
+        # Should attempt Redis lookup with dental tenant key
+        mock_cache.get.assert_called_once()
+        call_key = mock_cache.get.call_args[0][0]
+        assert "dental" in call_key
