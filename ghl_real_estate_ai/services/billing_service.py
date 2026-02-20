@@ -47,7 +47,7 @@ class BillingService:
         # Initialize Stripe with secret key
         stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
         if not stripe.api_key:
-            raise ValueError("STRIPE_SECRET_KEY environment variable required")
+            logger.warning("STRIPE_SECRET_KEY not set — billing features disabled")
 
         # Webhook secret for signature verification
         self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
