@@ -11,7 +11,12 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from textblob import TextBlob
+try:
+    from textblob import TextBlob
+    _TEXTBLOB_AVAILABLE = True
+except ImportError:
+    TextBlob = None
+    _TEXTBLOB_AVAILABLE = False
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
