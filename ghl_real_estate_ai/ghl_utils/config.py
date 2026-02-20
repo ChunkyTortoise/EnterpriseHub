@@ -29,10 +29,10 @@ class Settings(BaseSettings):
     ghl_agency_id: Optional[str] = None
 
     # LLM Configuration
-    claude_model: str = "claude-sonnet-4-5-20250514"
-    claude_sonnet_model: str = "claude-sonnet-4-5-20250514"
-    claude_haiku_model: str = "claude-sonnet-4-5-20250514"  # Consolidated to Sonnet 4.5
-    claude_opus_model: str = "claude-opus-4-5-20251101"  # High-stakes tasks
+    claude_model: str = "claude-sonnet-4-6"
+    claude_sonnet_model: str = "claude-sonnet-4-6"
+    claude_haiku_model: str = "claude-haiku-4-5-20251001"
+    claude_opus_model: str = "claude-opus-4-6"
     temperature: float = 0.7
     max_tokens: int = 150
     default_llm_provider: str = "claude"

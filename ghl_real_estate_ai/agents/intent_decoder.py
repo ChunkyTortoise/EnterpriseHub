@@ -258,6 +258,7 @@ class LeadIntentDecoder:
         # 2. Calculate FRS (config-driven weights with fallback)
         # Priority: jorge_bots.yaml > IndustryConfig > hardcoded defaults
         # This allows gradual migration from IndustryConfig to unified config (Task #24)
+        cfg = self._cfg  # always defined for temperature thresholds below
         try:
             from ghl_real_estate_ai.config.jorge_config_loader import get_config
             unified_config = get_config()
@@ -270,7 +271,6 @@ class LeadIntentDecoder:
         except Exception as e:
             # Fallback to IndustryConfig
             logger.debug(f"Unified config not available, using IndustryConfig: {e}")
-            cfg = self._cfg
             weights = cfg.intents.scoring_weights if cfg and cfg.intents.scoring_weights else {}
             w_motivation = weights.get("motivation", 0.35)
             w_timeline = weights.get("timeline", 0.30)

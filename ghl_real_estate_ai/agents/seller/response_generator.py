@@ -175,6 +175,14 @@ class ResponseGenerator:
 
         # Base prompt for Jorge Persona
         prompt = f"""
+        MARKET CONTEXT:
+        - Jorge specializes exclusively in Rancho Cucamonga, CA (Inland Empire, San Bernardino County)
+        - Typical single-family home range: $550K–$1.2M; luxury above $1.2M
+        - Key neighborhoods/areas: Etiwanda, Alta Loma, Day Creek, Victoria Groves, Heritage, Caryn, Windrows, Old Alta Loma
+        - Market dynamics: strong demand, fast-moving inventory, commuter-friendly (SR-210/I-15 access, 55-65 min to downtown LA), highly ranked schools (CVUSD)
+        - When relevant, reference specific neighborhoods, school names, or local landmarks to demonstrate market expertise
+        - Common seller motivations: upsizing, relocating out of state, estate sales, investor exits, divorce
+
         You are Jorge Salas, a caring and knowledgeable real estate professional.
         Your approach is: HELPFUL, CONSULTATIVE, and RELATIONSHIP-FOCUSED.
         You genuinely want to help sellers achieve their goals and make great decisions.
@@ -259,17 +267,24 @@ class ResponseGenerator:
         if state.get("intelligence_available") and state.get("intelligence_context"):
             prompt = await self._enhance_prompt_with_intelligence(prompt, state["intelligence_context"], state)
 
-        response = await self.claude.analyze_with_context(prompt)
-        content = (
-            response.get("content")
-            or response.get("analysis")
-            or state.get("objection_response_text")  # Fallback to objection response
-            or random.choice([
-                "What questions do you have about the selling process? Happy to walk you through it.",
-                "What would be most helpful for me to look into for you right now?",
-                "Anything specific about your home or the market you're curious about?",
-            ])
+        # Final constraint: ensure Claude returns a short conversational SMS, not a report
+        prompt += (
+            "\n\nIf you know the property address, reference its specific neighborhood. "
+            "Never give a generic 'your home might be worth X' — always qualify with local comp data."
+            "\n\nIMPORTANT: Reply with ONLY the short SMS message to send (max 290 chars). "
+            "No headers, no markdown, no analysis. Just the conversational text."
         )
+
+        content = await self.claude.generate_response(prompt)
+        if not content:
+            content = (
+                state.get("objection_response_text")  # Fallback to objection response
+                or random.choice([
+                    "What questions do you have about the selling process? Happy to walk you through it.",
+                    "What would be most helpful for me to look into for you right now?",
+                    "Anything specific about your home or the market you're curious about?",
+                ])
+            )
 
         # Calendar-focused mode: append real calendar slots for HOT sellers
         if state.get("adaptive_mode") == "calendar_focused" and self.calendar_service:
@@ -358,10 +373,10 @@ class ResponseGenerator:
         RECOMMENDED QUESTION: {next_question}
 
         TASK: Deliver the question in Jorge's helpful, consultative style that builds trust and rapport.
+        Reply with ONLY the short SMS message (max 290 chars). No headers or markdown.
         """
 
-        response = await self.claude.analyze_with_context(prompt)
-        content = response.get("content", next_question)
+        content = await self.claude.generate_response(prompt) or next_question
 
         # Calendar-focused mode: append real calendar slots for HOT sellers
         if state.get("adaptive_mode") == "calendar_focused" and self.calendar_service:

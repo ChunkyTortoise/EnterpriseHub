@@ -54,7 +54,7 @@ class ClaudeRequest:
     context: OrchestratorContext
     prompt: str
     tenant_id: Optional[str] = None
-    model: str = "claude-sonnet-4-5-20250514"
+    model: str = "claude-sonnet-4-6"
     max_tokens: int = 4000
     temperature: float = 0.7
     system_prompt: Optional[str] = None
