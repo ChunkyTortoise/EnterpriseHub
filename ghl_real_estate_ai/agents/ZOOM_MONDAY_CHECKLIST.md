@@ -80,18 +80,35 @@ CUSTOM_FIELD_LEAD_SCORE=...
 
 > **ANTHROPIC_API_KEY** — leave blank for now, Jorge provides on the call.
 
-### 4. Update GHL Webhook URL
+### 4. Create GHL Trigger Workflows (2 workflows)
 
-GHL → Settings → Integrations → Webhooks → update the webhook URL to:
-```
-https://jorge-realty-ai.onrender.com/api/webhooks/ghl
-```
+The GHL Settings > Webhooks page does not load on this sub-account.
+Instead, configure via **Automation → Workflows → + Create Workflow** (Start from Scratch):
+
+**Workflow A — "Jorge — Needs Qualifying Trigger"**
+- Trigger: **Contact Tag Added** → tag value: `Needs Qualifying`
+- Action: **Custom Webhook** → Method: POST → URL:
+  ```
+  https://jorge-realty-ai.onrender.com/api/ghl/tag-webhook
+  ```
+- Save → Publish
+
+**Workflow B — "Jorge — Inbound Message Handler"**
+- Trigger: **Customer Replied** (inbound SMS/message received)
+- Filter: Contact has tag `Needs Qualifying` OR `Buyer-Lead`
+- Action: **Custom Webhook** → Method: POST → URL:
+  ```
+  https://jorge-realty-ai.onrender.com/api/ghl/webhook
+  ```
+- Save → Publish
+
+> These two workflows are how GHL calls the bot server. Without them, the bot never fires.
 
 ### 5. Verify the app is live
 
 ```bash
-curl https://jorge-realty-ai.onrender.com/api/health/live
-# Expected: {"status":"ok"}
+curl https://jorge-realty-ai.onrender.com/api/ghl/health
+# Expected: {"status":"healthy","service":"ghl-real-estate-ai",...}
 ```
 
 ### 6. Verify phone numbers in GHL workflows
