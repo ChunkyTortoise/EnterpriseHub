@@ -433,8 +433,23 @@ def build_seller_system_prompt(
     return system_prompt
 
 
-def _get_next_seller_question(seller_data: dict) -> str:
-    """Get the next unanswered question in Jorge's sequence"""
+def _get_next_seller_question(seller_data: dict, is_first_message: bool = False) -> str:
+    """Get the next unanswered question in Jorge's sequence.
+
+    In simple mode the sequence is:
+      Q0 (address)  — asked only when is_first_message=True or address not yet captured.
+                      Once the contact's reply contains a number + street name the bot
+                      saves it to property_address and moves to Q1.
+      Q1 motivation → Q2 timeline → Q3 condition → Q4 price
+    """
+    import re as _re
+
+    # Q0: address capture — ask when address is missing
+    # (is_first_message=True is the canonical trigger, but missing field is sufficient
+    # because on the very first exchange property_address will always be blank)
+    if not seller_data.get("property_address"):
+        return "Before we dive in — what's the property address? Just so I can look up the right information for your area."
+
     questions = [
         ("motivation", "What's got you considering wanting to sell, where would you move to?"),
         (

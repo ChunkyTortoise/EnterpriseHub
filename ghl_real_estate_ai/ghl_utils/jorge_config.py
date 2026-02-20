@@ -196,8 +196,11 @@ class JorgeSellerConfig:
         10: "What's the best way to reach you - call, text, or email?",
     }
 
-    # Simplified 4-question flow (friendly/high-conversion)
+    # Simplified 5-question flow (friendly/high-conversion)
+    # Q0: address capture (asked only on first message, triggers MLS/CMA lookup)
+    # Q1-Q4: qualification questions
     SELLER_QUESTIONS_SIMPLE = {
+        0: "Before we dive in — what's the property address? Just so I can look up the right information for your area.",
         1: "What's making you think about selling, and where would you move to?",
         2: "If our team sold your home within the next 30 to 45 days, would that work for you?",
         3: "How would you describe your home — move in ready or would it need some work?",
@@ -222,7 +225,9 @@ class JorgeSellerConfig:
     }
 
     # Question field mapping for simple flow
+    # Q0 captures property_address before the 4 qualification questions
     QUESTION_FIELD_MAPPING_SIMPLE = {
+        0: {"field": "property_address", "secondary": "property_type"},
         1: {"field": "motivation", "secondary": "relocation_destination"},
         2: {"field": "timeline_acceptable", "secondary": "timeline_urgency"},
         3: {"field": "property_condition", "secondary": "repair_estimate"},

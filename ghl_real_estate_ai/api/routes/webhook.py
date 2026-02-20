@@ -33,6 +33,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
     MessageType,
 )
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
+from ghl_real_estate_ai.core.llm_client import LLMCircuitOpenError, LLMTimeoutError
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
@@ -56,6 +57,12 @@ from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/ghl", tags=["ghl"])
+
+# Graceful fallback when Claude API is unavailable (timeout / circuit breaker)
+LLM_FALLBACK_MSG = (
+    "I'm having a brief connection issue — I'll follow up with you shortly. "
+    "You can also reach Jorge directly."
+)
 
 # Initialize services for internal use and testing
 conversation_manager = ConversationManager()
@@ -828,7 +835,8 @@ async def handle_ghl_webhook(
             # Initialize and run buyer bot
             buyer_bot = JorgeBuyerBot()
             buyer_result = await buyer_bot.process_buyer_conversation(
-                buyer_id=contact_id,
+                conversation_id=contact_id,
+                user_message=user_message,
                 buyer_name=event.contact.first_name or "there",
                 conversation_history=conversation_history,
             )
@@ -842,6 +850,13 @@ async def handle_ghl_webhook(
 
             if buyer_result.get("is_qualified"):
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
+
+            if buyer_temp == "hot" and jorge_settings.hot_buyer_workflow_id:
+                actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW,
+                                         workflow_id=jorge_settings.hot_buyer_workflow_id))
+            elif buyer_temp == "warm" and jorge_settings.warm_buyer_workflow_id:
+                actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW,
+                                         workflow_id=jorge_settings.warm_buyer_workflow_id))
 
             # Track buyer analytics
             background_tasks.add_task(
@@ -1000,194 +1015,213 @@ async def handle_ghl_webhook(
     )
 
     if jorge_lead_mode:
-        logger.info(f"Jorge lead mode activated for contact {contact_id}")
-        try:
-            from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
-
-            # Get tenant configuration
-            tenant_config = await tenant_service.get_tenant_config(location_id)
-
-            # Initialize GHL client
-            current_ghl_client = ghl_client_default
-            if tenant_config and tenant_config.get("ghl_api_key"):
-                current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
-
-            # Build conversation history from manager
-            history = await conversation_manager.get_conversation_history(contact_id)
-            conversation_history = history if history else [{"role": "user", "content": user_message}]
-            # Ensure current message is included
-            if not conversation_history or conversation_history[-1].get("content") != user_message:
-                conversation_history.append({"role": "user", "content": user_message})
-
-            # Initialize and run lead bot
-            lead_bot = LeadBotWorkflow(ghl_client=current_ghl_client)
-            lead_result = await lead_bot.process_enhanced_lead_sequence(
-                lead_id=contact_id,
-                sequence_day=0,  # Initial contact
-                conversation_history=conversation_history,
-            )
-
-            # Extract lead temperature from intent profile classification
-            lead_temp = "cold"
-            if lead_result.get("intent_profile"):
-                classification = lead_result["intent_profile"].frs.classification
-                if classification == "Hot Lead":
-                    lead_temp = "hot"
-                elif classification == "Warm Lead":
-                    lead_temp = "warm"
-
-            # Apply lead bot actions (tags based on temperature)
-            actions = []
-            temp_tag_map = {"hot": "Hot-Lead", "warm": "Warm-Lead", "cold": "Cold-Lead"}
-            if lead_temp in temp_tag_map:
-                actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[lead_temp]))
-
-            is_qualified = lead_result.get("engagement_status") == "qualified"
-            if is_qualified:
-                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Lead-Qualified"))
-
-            # Check for Jorge handoff signals
-            handoff_triggered = False
-            handoff_signals = lead_result.get("jorge_handoff_recommended") or lead_result.get("jorge_handoff_eligible")
-
-            # Track lead analytics
-            background_tasks.add_task(
-                analytics_service.track_event,
-                event_type="jorge_lead_interaction",
-                location_id=location_id,
-                contact_id=contact_id,
-                data={
-                    "lead_temperature": lead_temp,
-                    "is_qualified": is_qualified,
-                    "handoff_signals": handoff_signals,
-                    "message_length": len(lead_result.get("response_content", "")),
-                },
-            )
-
-            # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
-            final_lead_msg = lead_result.get("response_content", "Thanks for reaching out! How can I help you today?")
-            pipeline_context = ProcessingContext(
-                contact_id=contact_id,
-                bot_mode="lead",
-                channel="sms",
-                user_message=user_message,
-                is_first_message=not history,
-            )
-            pipeline = get_response_pipeline()
-            processed = await pipeline.process(final_lead_msg, pipeline_context)
-            final_lead_msg = processed.message
-
-            # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
-            status, reason, violations = await compliance_guard.audit_message(
-                final_lead_msg, contact_context={"contact_id": contact_id, "mode": "lead"}
-            )
-
-            if status == ComplianceStatus.BLOCKED:
-                logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
-                final_lead_msg = "Thanks for reaching out! How can I help you today?"
-                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
-
-            # --- CROSS-BOT HANDOFF CHECK ---
-            if handoff_signals:
-                handoff = await handoff_service.evaluate_handoff(
-                    current_bot="lead",
-                    contact_id=contact_id,
-                    conversation_history=conversation_history,
-                    intent_signals={"jorge_handoff_recommended": True},
-                )
-                if handoff:
-                    handoff_actions = await handoff_service.execute_handoff(
-                        handoff, contact_id, location_id=location_id
-                    )
-                    for ha in handoff_actions:
-                        if ha["type"] == "add_tag":
-                            actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
-                        elif ha["type"] == "remove_tag":
-                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
-                    handoff_triggered = True
-
-            logger.info(
-                f"Jorge lead processing completed for {contact_id}",
-                extra={
-                    "contact_id": contact_id,
-                    "lead_temperature": lead_temp,
-                    "is_qualified": is_qualified,
-                    "handoff_triggered": handoff_triggered,
-                    "actions_count": len(actions),
-                    "compliance_status": status.value,
-                    "message_length": len(final_lead_msg),
-                },
-            )
-
-            # Send the lead response via GHL API (background task) - P3 FIX: Use safe wrapper
-            background_tasks.add_task(
-                safe_send_message,
-                current_ghl_client,
+        if jorge_seller_mode and "Needs Qualifying" in tags:
+            logger.warning(
+                "Dual-bot collision detected: contact %s has 'Needs Qualifying' tag with both "
+                "seller and lead mode active — skipping lead bot to prevent race condition",
                 contact_id,
-                final_lead_msg,
-                event.message.type,
             )
-
-            # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
-            if actions:
-                background_tasks.add_task(
-                    safe_apply_actions,
-                    current_ghl_client,
-                    contact_id,
-                    actions,
-                )
-
-            # Track billing and pricing (Jorge's revenue foundation)
-            background_tasks.add_task(
-                _calculate_lead_pricing,
-                contact_id,
-                location_id,
-                context,
-                pricing_optimizer,
-                analytics_service,
-            )
-            background_tasks.add_task(
-                _handle_billing_usage,
-                contact_id,
-                location_id,
-                lead_score,
-                lead_result.get("extracted_data", {}),
-                lead_temp,
-                subscription_manager,
-                pricing_optimizer,
-                analytics_service,
-            )
-
-            return GHLWebhookResponse(
-                success=True,
-                message=final_lead_msg,
-                actions=actions,
-            )
-
-        except Exception as e:
-            logger.error(f"Jorge lead mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
-            
-            fallback_msg = "Thanks for reaching out! How can I help you today?"
-            
-            # Tag contact with Bot-Fallback-Active for monitoring
+        else:
+            logger.info(f"Jorge lead mode activated for contact {contact_id}")
             try:
-                background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["Bot-Fallback-Active"])
-                # Also send the fallback message via API for reliability
+                from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
+
+                # Get tenant configuration
+                tenant_config = await tenant_service.get_tenant_config(location_id)
+
+                # Initialize GHL client
+                current_ghl_client = ghl_client_default
+                if tenant_config and tenant_config.get("ghl_api_key"):
+                    current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
+
+                # Build conversation history from manager
+                history = await conversation_manager.get_conversation_history(contact_id)
+                conversation_history = history if history else [{"role": "user", "content": user_message}]
+                # Ensure current message is included
+                if not conversation_history or conversation_history[-1].get("content") != user_message:
+                    conversation_history.append({"role": "user", "content": user_message})
+
+                # Determine sequence_day from first contact timestamp
+                lead_ctx = await conversation_manager.get_context(contact_id, location_id)
+                first_contact = lead_ctx.get("first_contact_at")
+                if not first_contact:
+                    lead_ctx["first_contact_at"] = datetime.utcnow().isoformat()
+                    sequence_day = 0
+                else:
+                    delta = datetime.utcnow() - datetime.fromisoformat(first_contact)
+                    sequence_day = delta.days
+                await conversation_manager.memory_service.save_context(contact_id, lead_ctx, location_id=location_id)
+
+                # Initialize and run lead bot
+                lead_bot = LeadBotWorkflow(ghl_client=current_ghl_client)
+                lead_result = await lead_bot.process_enhanced_lead_sequence(
+                    lead_id=contact_id,
+                    sequence_day=sequence_day,
+                    conversation_history=conversation_history,
+                )
+
+                # Extract lead temperature from intent profile classification
+                lead_temp = "cold"
+                if lead_result.get("intent_profile"):
+                    classification = lead_result["intent_profile"].frs.classification
+                    if classification == "Hot Lead":
+                        lead_temp = "hot"
+                    elif classification == "Warm Lead":
+                        lead_temp = "warm"
+
+                # Apply lead bot actions (tags based on temperature)
+                actions = []
+                temp_tag_map = {"hot": "Hot-Lead", "warm": "Warm-Lead", "cold": "Cold-Lead"}
+                if lead_temp in temp_tag_map:
+                    actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[lead_temp]))
+
+                is_qualified = lead_result.get("engagement_status") == "qualified"
+                if is_qualified:
+                    actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Lead-Qualified"))
+
+                # Check for Jorge handoff signals
+                handoff_triggered = False
+                handoff_signals = lead_result.get("jorge_handoff_recommended") or lead_result.get("jorge_handoff_eligible")
+
+                # Track lead analytics
+                background_tasks.add_task(
+                    analytics_service.track_event,
+                    event_type="jorge_lead_interaction",
+                    location_id=location_id,
+                    contact_id=contact_id,
+                    data={
+                        "lead_temperature": lead_temp,
+                        "is_qualified": is_qualified,
+                        "handoff_signals": handoff_signals,
+                        "message_length": len(lead_result.get("response_content", "")),
+                    },
+                )
+
+                # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
+                final_lead_msg = lead_result.get("response_content", "Thanks for reaching out! How can I help you today?")
+                pipeline_context = ProcessingContext(
+                    contact_id=contact_id,
+                    bot_mode="lead",
+                    channel="sms",
+                    user_message=user_message,
+                    is_first_message=not history,
+                )
+                pipeline = get_response_pipeline()
+                processed = await pipeline.process(final_lead_msg, pipeline_context)
+                final_lead_msg = processed.message
+
+                # --- BULLETPROOF COMPLIANCE INTERCEPTOR ---
+                status, reason, violations = await compliance_guard.audit_message(
+                    final_lead_msg, contact_context={"contact_id": contact_id, "mode": "lead"}
+                )
+
+                if status == ComplianceStatus.BLOCKED:
+                    logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
+                    final_lead_msg = "Thanks for reaching out! How can I help you today?"
+                    actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+                # --- CROSS-BOT HANDOFF CHECK ---
+                if handoff_signals:
+                    handoff = await handoff_service.evaluate_handoff(
+                        current_bot="lead",
+                        contact_id=contact_id,
+                        conversation_history=conversation_history,
+                        intent_signals={"jorge_handoff_recommended": True},
+                    )
+                    if handoff:
+                        handoff_actions = await handoff_service.execute_handoff(
+                            handoff, contact_id, location_id=location_id
+                        )
+                        for ha in handoff_actions:
+                            if ha["type"] == "add_tag":
+                                actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
+                            elif ha["type"] == "remove_tag":
+                                actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+                        handoff_triggered = True
+
+                logger.info(
+                    f"Jorge lead processing completed for {contact_id}",
+                    extra={
+                        "contact_id": contact_id,
+                        "lead_temperature": lead_temp,
+                        "is_qualified": is_qualified,
+                        "handoff_triggered": handoff_triggered,
+                        "actions_count": len(actions),
+                        "compliance_status": status.value,
+                        "message_length": len(final_lead_msg),
+                    },
+                )
+
+                # Send the lead response via GHL API (background task) - P3 FIX: Use safe wrapper
                 background_tasks.add_task(
                     safe_send_message,
-                    ghl_client_default,
+                    current_ghl_client,
                     contact_id,
-                    fallback_msg,
+                    final_lead_msg,
                     event.message.type,
                 )
-            except Exception as tag_error:
-                logger.error(f"Failed to add Bot-Fallback-Active actions: {tag_error}")
 
-            return GHLWebhookResponse(
-                success=True,
-                message=fallback_msg,
-                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
-            )
+                # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
+                if actions:
+                    background_tasks.add_task(
+                        safe_apply_actions,
+                        current_ghl_client,
+                        contact_id,
+                        actions,
+                    )
+
+                # Track billing and pricing (Jorge's revenue foundation)
+                background_tasks.add_task(
+                    _calculate_lead_pricing,
+                    contact_id,
+                    location_id,
+                    context,
+                    pricing_optimizer,
+                    analytics_service,
+                )
+                lead_score = lead_result.get("lead_score", 1 if lead_temp in ("hot", "warm") else 0)
+                background_tasks.add_task(
+                    _handle_billing_usage,
+                    contact_id,
+                    location_id,
+                    lead_score,
+                    lead_result.get("extracted_data", {}),
+                    lead_temp,
+                    subscription_manager,
+                    pricing_optimizer,
+                    analytics_service,
+                )
+
+                return GHLWebhookResponse(
+                    success=True,
+                    message=final_lead_msg,
+                    actions=actions,
+                )
+
+            except Exception as e:
+                logger.error(f"Jorge lead mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
+
+                fallback_msg = "Thanks for reaching out! How can I help you today?"
+
+                # Tag contact with Bot-Fallback-Active for monitoring
+                try:
+                    background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["Bot-Fallback-Active"])
+                    # Also send the fallback message via API for reliability
+                    background_tasks.add_task(
+                        safe_send_message,
+                        ghl_client_default,
+                        contact_id,
+                        fallback_msg,
+                        event.message.type,
+                    )
+                except Exception as tag_error:
+                    logger.error(f"Failed to add Bot-Fallback-Active actions: {tag_error}")
+
+                return GHLWebhookResponse(
+                    success=True,
+                    message=fallback_msg,
+                    actions=[GHLAction(type=ActionType.ADD_TAG, tag="Bot-Fallback-Active")],
+                )
 
     # Raw fallback — no bot mode matched
     logger.info(f"No bot mode matched for contact {contact_id}")

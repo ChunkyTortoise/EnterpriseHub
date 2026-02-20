@@ -257,16 +257,20 @@ class JorgeBuyerBot(BaseBotWorkflow):
         workflow.set_entry_point("analyze_buyer_intent")
 
         # Conditional routing for intelligence gathering
+        # Graph order: analyze_buyer_intent → classify_buyer_persona → qualify_property_needs
+        #              → assess_financial_readiness → calculate_affordability → match_properties
+        # Rationale: location/motivation questions before financial to reduce early opt-outs
+        # from FHA/VA buyers who disengage when asked about finances first.
         if self.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_edge("analyze_buyer_intent", "gather_buyer_intelligence")
             workflow.add_edge("gather_buyer_intelligence", "classify_buyer_persona")
-            workflow.add_edge("classify_buyer_persona", "assess_financial_readiness")
+            workflow.add_edge("classify_buyer_persona", "qualify_property_needs")
         else:
             workflow.add_edge("analyze_buyer_intent", "classify_buyer_persona")
-            workflow.add_edge("classify_buyer_persona", "assess_financial_readiness")
+            workflow.add_edge("classify_buyer_persona", "qualify_property_needs")
+        workflow.add_edge("qualify_property_needs", "assess_financial_readiness")
         workflow.add_edge("assess_financial_readiness", "calculate_affordability")
-        workflow.add_edge("calculate_affordability", "qualify_property_needs")
-        workflow.add_edge("qualify_property_needs", "match_properties")
+        workflow.add_edge("calculate_affordability", "match_properties")
 
         # Routing based on qualification, objections, and property matches
         workflow.add_conditional_edges(

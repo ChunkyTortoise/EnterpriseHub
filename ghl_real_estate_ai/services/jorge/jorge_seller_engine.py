@@ -685,10 +685,11 @@ class JorgeSellerEngine:
 
         # 2. Vague streak >= 2 → take-away close
         elif vague_streak >= 2:
-            message = self.tone_engine.generate_take_away_close(
-                seller_name=seller_data.get("contact_name"), reason="vague"
+            message = self.tone_engine.generate_objection_response(
+                "just_looking",
+                seller_name=seller_data.get("contact_name"),
             )
-            response_type = "take_away_close"
+            response_type = "clarification_nudge"
 
         # 3. Questions < 4 → next question (or confrontational follow-up if vague)
         elif questions_answered < 4 and current_question_number <= 4:
@@ -774,10 +775,10 @@ class JorgeSellerEngine:
 
         # 2. LOSS AVERSION / COST OF WAITING (Tactical Behavioral Response)
         elif primary_persona == "loss_aversion" and questions_answered >= 1:
-            # Emphasize the cost of waiting while still moving the qualification forward
-            cost_msg = self.tone_engine.generate_cost_of_waiting_message(
+            # Friendly urgency framing while still moving qualification forward
+            cost_msg = self.tone_engine.generate_objection_response(
+                "market_timing",
                 seller_name=seller_data.get("contact_name"),
-                market_trend="interest rates" if "rate" in user_message.lower() else "rising inventory",
             )
 
             # Get next question
@@ -869,15 +870,11 @@ class JorgeSellerEngine:
                 dynamic_threshold = 0.20 - (opportunity_score / 100.0) * 0.10
 
                 if predictive_result.net_yield_estimate < dynamic_threshold:
-                    message = self.tone_engine.generate_net_yield_justification(
-                        price_expectation=price_val,
-                        ai_valuation=ai_valuation,
-                        net_yield=predictive_result.net_yield_estimate,
-                        repair_estimate=float(seller_data.get("repair_estimate", 50000)),  # Default repair if unknown
+                    message = self.tone_engine.generate_objection_response(
+                        "price_too_low",
                         seller_name=seller_data.get("contact_name"),
-                        psychology_profile=psychology_profile,
                     )
-                    response_type = "roi_justification"
+                    response_type = "roi_qualification_followup"
                 else:
                     # Proceed to normal qualification if yield is acceptable for this market
                     message = self.tone_engine.generate_qualification_message(
@@ -898,12 +895,12 @@ class JorgeSellerEngine:
 
         # 3. Low Probability or Vague Answer Escalation (Take-Away Close)
         elif low_probability or vague_streak >= 2:
-            # Pillar 1: Vague Answer Escalation / Proactive Intelligence
-            reason = "low_probability" if low_probability else "vague"
-            message = self.tone_engine.generate_take_away_close(
-                seller_name=seller_data.get("contact_name"), reason=reason, psychology_profile=psychology_profile
+            # Friendly reset that keeps qualification moving.
+            message = self.tone_engine.generate_objection_response(
+                "not_ready",
+                seller_name=seller_data.get("contact_name"),
             )
-            response_type = "take_away_close"
+            response_type = "reengage_qualification"
 
         # Phase 7: Arbitrage Execution for Investors
         elif (
@@ -925,12 +922,19 @@ class JorgeSellerEngine:
                     (o for o in dashboard.get("opportunities", []) if o["type"] == "pricing_arbitrage"), None
                 )
 
-                # Use centralized tone engine for elite arbitrage pitch
-                ack = self.tone_engine.generate_arbitrage_pitch(
-                    seller_name=seller_data.get("contact_name"),
-                    yield_spread=arbitrage_opp["score"] if arbitrage_opp else 0.0,
-                    market_area="adjacent zones" if arbitrage_opp else "sub markets",
-                )
+                # Use consultative framing for investor conversations.
+                spread_pct = (arbitrage_opp["score"] if arbitrage_opp else 0.0) * 100
+                if spread_pct > 0:
+                    ack = (
+                        f"I can share where values are moving fastest near {market_area}. "
+                        f"We're seeing about {spread_pct:.1f}% spread opportunities right now."
+                    )
+                else:
+                    ack = (
+                        "I can walk you through where values are trending right now so you can decide "
+                        "if selling now makes sense."
+                    )
+                ack = self.tone_engine._ensure_sms_compliance(ack)
 
                 next_q = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
@@ -1002,8 +1006,9 @@ class JorgeSellerEngine:
                     if seller_data.get("investor_q1_answered"):
                         message = SellerQuestions.INVESTOR_LIQUIDITY
 
-                    # Apply Jorge's tone & compliance
-                    message = self.tone_engine._apply_confrontational_tone(message, seller_data.get("contact_name"))
+                    # Keep investor branch direct but non-confrontational.
+                    if seller_data.get("contact_name"):
+                        message = f"{seller_data.get('contact_name')}, {message[0].lower()}{message[1:]}"
                     message = self.tone_engine._ensure_sms_compliance(message)
                     response_type = "investor_branch"
 
@@ -1013,8 +1018,9 @@ class JorgeSellerEngine:
                     if seller_data.get("loss_aversion_q1_answered"):
                         message = SellerQuestions.LOSS_AVERSION_RATE_RISK
 
-                    # Apply Jorge's tone & compliance
-                    message = self.tone_engine._apply_confrontational_tone(message, seller_data.get("contact_name"))
+                    # Keep loss-aversion branch supportive, not confrontational.
+                    if seller_data.get("contact_name"):
+                        message = f"{seller_data.get('contact_name')}, {message[0].lower()}{message[1:]}"
                     message = self.tone_engine._ensure_sms_compliance(message)
                     response_type = "loss_aversion_branch"
 
