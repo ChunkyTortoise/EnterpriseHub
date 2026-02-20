@@ -34,6 +34,11 @@ env/
 .env.local
 .env.production
 
+# Secrets (auto-generated at runtime, never commit)
+.jwt_secret
+*.jwt_secret
+*/.jwt_secret
+
 # IDEs
 .vscode/
 .idea/

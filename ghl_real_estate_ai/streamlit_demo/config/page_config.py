@@ -25,7 +25,7 @@ def configure_page():
     """Set Streamlit page config. MUST be the first Streamlit call in the app."""
     st.set_page_config(
         page_title="Lyrio Union[AI, Obsidian] Command",
-        page_icon="https://raw.githubusercontent.com/ChunkyTortoise/EnterpriseHub/main/assets/favicon.png",
+        page_icon="🏠",
         layout="wide",
         initial_sidebar_state="expanded",
         menu_items={"About": "Lyrio AI - Obsidian Union[Edition, Premium] Real Estate Intelligence"},

@@ -251,7 +251,7 @@ def render_cta():
             <div style='font-size: 0.9rem; opacity: 0.9;'>Custom RAG solutions</div>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown("caymanroden@gmail.com")
+        st.markdown("realtorjorgesalas@gmail.com")
 
 
 if __name__ == "__main__":

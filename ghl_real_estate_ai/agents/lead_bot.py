@@ -92,8 +92,6 @@ async def _safe_background_task(coro, task_name: str, retry_count: int = 0):
             },
             exc_info=True,
         )
-        # TODO: Implement retry logic if retry_count > 0
-        # TODO: Send to DLQ or alerting system for critical tasks
 
 
 # Phase 3.3 Bot Intelligence Middleware Integration
@@ -2349,9 +2347,9 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
             # Record API cost (fire-and-forget)
             try:
-                await _cost_tracker.record_bot_call(conversation_id, contact_id, "lead")
-            except Exception:
-                pass
+                await _cost_tracker.record_bot_call(conversation_id, conversation_id, "lead")
+            except Exception as _e:
+                logger.debug(f"Cost tracker record failed: {_e}")
 
             # Feed metrics to alerting (non-blocking)
             try:
