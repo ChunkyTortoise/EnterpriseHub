@@ -1,0 +1,63 @@
+# concierge_configs/dental.yaml
+# SmileBright Dental — Fee-for-Service Dental Practice (Rancho Cucamonga, CA)
+# Second tenant config proving the config-driven concierge system.
+
+domain: dental_practice
+client_name: SmileBright Dental
+
+business_model: >
+  Fee-for-service dental practice. Revenue from cleanings ($100-$300),
+  fillings ($150-$500), crowns ($800-$1,500), and implants ($3,000-$6,000).
+  15% new patient discount. 24-hour cancellation policy. 2 emergency slots
+  reserved daily.
+
+market_context: >
+  Rancho Cucamonga, CA — Inland Empire suburban dental market. Service areas
+  include Upland, Ontario, and Fontana. 3+ competitors within 2 miles.
+  Patient base skews family and cosmetic. Appointment duration averages 60
+  minutes.
+
+client_style: >
+  Warm, reassuring, and patient-focused. Avoid medical jargon. Reduce dental
+  anxiety through clear communication. Respect patient time and schedule.
+  Friendly and informative tone in all interactions.
+
+platform_features:
+  scheduling:
+    - Online Booking
+    - SMS Reminders
+    - Cancellation Management
+    - Emergency Slot Reservation
+  intake:
+    - Digital Patient Forms
+    - Insurance Verification
+    - New Patient Onboarding
+  patient_communication:
+    - Appointment Confirmations
+    - Post-Procedure Follow-ups
+    - Recall Reminders
+    - Treatment Plan Explanations
+  reporting:
+    - Daily Appointment Summary
+    - No-Show Tracking
+    - Revenue by Procedure
+    - Patient Retention Metrics
+
+compliance_requirements:
+  - HIPAA patient privacy compliance
+  - California Dental Board licensing
+  - Informed consent required for all procedures
+  - Emergency protocols posted
+
+agents:
+  - name: Appointment Scheduler Bot
+    agent_type: scheduler
+    capabilities: [slot_finding, sms_reminder, cancellation_handling]
+    specializations: [dental_scheduling, emergency_triage]
+    invoke_pattern: scheduler
+
+  - name: Patient Intake Bot
+    agent_type: intake
+    capabilities: [form_collection, insurance_verify, medical_history]
+    specializations: [new_patient_onboarding, records_transfer]
+    invoke_pattern: intake

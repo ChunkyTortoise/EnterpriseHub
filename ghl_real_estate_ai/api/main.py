@@ -762,6 +762,10 @@ def _setup_routers(app: FastAPI):
     app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
     app.include_router(checkout.router, prefix="/api")  # No auth — public checkout
 
+    # Concierge Admin (multi-tenant management + hot-reload)
+    from ghl_real_estate_ai.api.routes.concierge_admin import router as concierge_admin_router
+    app.include_router(concierge_admin_router, prefix="/admin/concierge", tags=["Concierge Admin"])
+
     # GHL Unified Webhook Integration (Phase 1: Lead/Seller/Buyer bot handlers)
     app.include_router(ghl_router, prefix="/ghl")
 
