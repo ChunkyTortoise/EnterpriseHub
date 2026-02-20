@@ -203,7 +203,7 @@ class MarketPredictionEngine:
 
     def __init__(self):
         self.llm_client = LLMClient(provider="claude")
-        self.rc_assistant = get_rancho_cucamonga_ai_assistant()
+        self._rc_assistant = None  # Lazy-initialized to avoid Streamlit session_state at startup
         self.cache = get_cache_service()
         self.market_intelligence = get_rancho_cucamonga_market_intelligence()
 
