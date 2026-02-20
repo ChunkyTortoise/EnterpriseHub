@@ -7,7 +7,10 @@ Extracted from ClaudeAssistant god class.
 import asyncio
 from typing import Any, Dict
 
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    st = None
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

@@ -10,7 +10,10 @@ in ghl_real_estate_ai.services.assistant/. The public API is fully preserved.
 
 from typing import Any, Dict, List, Optional
 
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    st = None
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -106,6 +109,8 @@ class ClaudeAssistant:
         self._ui.initialize_state()
 
     def _initialize_state(self):
+        if st is None:
+            return
         if "assistant_greeted" not in st.session_state:
             st.session_state.assistant_greeted = False
         if "claude_history" not in st.session_state:
