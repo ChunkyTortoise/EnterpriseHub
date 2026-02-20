@@ -7,11 +7,12 @@ Requirements:
 - matplotlib for charts/diagrams
 """
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from pathlib import Path
+
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 # Output directory
 OUTPUT_DIR = Path("/Users/cave/Documents/GitHub/EnterpriseHub/output/launch-images")

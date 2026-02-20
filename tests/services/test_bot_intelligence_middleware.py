@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -46,7 +47,6 @@ from ghl_real_estate_ai.models.intelligence_context import (
 
 # Import service under test
 from ghl_real_estate_ai.services.bot_intelligence_middleware import (
-
     BotIntelligenceMiddleware,
     get_bot_intelligence_middleware,
 )

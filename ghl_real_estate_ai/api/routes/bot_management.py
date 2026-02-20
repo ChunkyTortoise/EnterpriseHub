@@ -22,16 +22,16 @@ from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeFeatureConfig, Jorge
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.config.feature_config import feature_config_to_jorge_kwargs, load_feature_config_from_env
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.bot_context_types import IntentSignals
 from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
 from ghl_real_estate_ai.services.conversation_session_manager import ConversationSessionManager, get_session_manager
 
 # Service imports
 from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
-from ghl_real_estate_ai.services.performance_monitor import PerformanceMonitor, get_performance_monitor
 
 # Jorge Handoff Service imports
-from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService, HandoffDecision
-from ghl_real_estate_ai.models.bot_context_types import IntentSignals
+from ghl_real_estate_ai.services.jorge.jorge_handoff_service import HandoffDecision, JorgeHandoffService
+from ghl_real_estate_ai.services.performance_monitor import PerformanceMonitor, get_performance_monitor
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["Bot Management"])
@@ -101,6 +101,53 @@ class HandoffResponse(BaseModel):
     blocked: bool = False
     block_reason: Optional[str] = None
     estimated_time_seconds: int = 30
+
+
+# ROADMAP-016: Question progress tracking model
+class QuestionProgress(BaseModel):
+    """Tracks current question index and answers for a bot session."""
+    lead_id: str
+    conversation_id: str
+    current_question_index: int = 0
+    total_questions: int = 5
+    answers: Dict[str, Any] = Field(default_factory=dict)
+    last_message_at: Optional[str] = None
+    started_at: Optional[str] = None
+
+
+# ROADMAP-017: Stall detection result model
+class StallDetectionResult(BaseModel):
+    """Result of stall detection analysis."""
+    stall_detected: bool = False
+    stall_type: Optional[str] = None
+    stall_score: float = 0.0
+    time_since_last_message_seconds: Optional[float] = None
+    recommendation: Optional[str] = None
+
+
+# ROADMAP-018: Effectiveness score model
+class EffectivenessScore(BaseModel):
+    """Confrontational effectiveness score for a bot session."""
+    score: int
+    completion_rate: float
+    avg_response_latency_seconds: float
+    engagement_depth: float
+    qualification_progression: float
+    breakdown: Dict[str, float]
+
+
+# ROADMAP-020: CoordinationEvent model for cross-bot event emission
+class CoordinationEvent(BaseModel):
+    """Event emitted on handoff, stall, or qualification completion."""
+    event_id: str
+    event_type: Literal["handoff", "stall_detected", "qualification_complete", "session_timeout"]
+    source_bot: str
+    target_bot: Optional[str] = None
+    lead_id: str
+    conversation_id: Optional[str] = None
+    timestamp: str
+    confidence: float = 0.0
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 # Bot singletons - FastAPI dependency injection pattern
@@ -866,6 +913,219 @@ async def _track_conversation_metrics(bot_type: str, processing_time: float, cac
         logger.error(f"Failed to track metrics for {bot_type}: {e}")
 
 
+# ========================================================================
+# ROADMAP-016: Question Progress Tracking Helpers
+# ========================================================================
+
+
+async def _get_question_progress(lead_id: str, cache: CacheService) -> Optional[QuestionProgress]:
+    """Retrieve question progress for a lead from cache-backed session store."""
+    cache_key = f"bot_session:progress:{lead_id}"
+    data = await cache.get(cache_key)
+    if data and isinstance(data, dict):
+        return QuestionProgress(**data)
+    return None
+
+
+async def _save_question_progress(progress: QuestionProgress, cache: CacheService) -> None:
+    """Persist question progress to cache-backed session store."""
+    cache_key = f"bot_session:progress:{progress.lead_id}"
+    data = _model_to_dict(progress)
+    await cache.set(cache_key, data, ttl=86400 * 7)
+
+
+async def _update_question_progress(
+    lead_id: str,
+    conversation_id: str,
+    question_index: int,
+    answer: Optional[Dict[str, Any]],
+    cache: CacheService,
+) -> QuestionProgress:
+    """Update question progress after a bot interaction."""
+    progress = await _get_question_progress(lead_id, cache)
+    if not progress:
+        progress = QuestionProgress(
+            lead_id=lead_id,
+            conversation_id=conversation_id,
+            started_at=datetime.now().isoformat(),
+        )
+    progress.current_question_index = question_index
+    progress.last_message_at = datetime.now().isoformat()
+    if answer:
+        progress.answers[str(question_index)] = answer
+    await _save_question_progress(progress, cache)
+    return progress
+
+
+# ========================================================================
+# ROADMAP-017: Stall Detection Algorithm
+# ========================================================================
+
+STALL_TIMEOUT_SECONDS = 24 * 3600
+STALL_VAGUE_KEYWORDS = {"maybe", "i guess", "idk", "not sure", "i don't know", "possibly", "perhaps"}
+
+
+async def _detect_stall(
+    lead_id: str,
+    conversation_history: List[Dict[str, str]],
+    cache: CacheService,
+) -> StallDetectionResult:
+    """Detect if a conversation has stalled based on timeout, repetition, or vague answers."""
+    progress = await _get_question_progress(lead_id, cache)
+
+    elapsed = None
+    if progress and progress.last_message_at:
+        last_msg_time = datetime.fromisoformat(progress.last_message_at)
+        elapsed = (datetime.now() - last_msg_time).total_seconds()
+        if elapsed > STALL_TIMEOUT_SECONDS:
+            return StallDetectionResult(
+                stall_detected=True,
+                stall_type="timeout",
+                stall_score=min(1.0, elapsed / (STALL_TIMEOUT_SECONDS * 2)),
+                time_since_last_message_seconds=elapsed,
+                recommendation="Send a re-engagement message to revive the conversation",
+            )
+
+    user_messages = [h.get("content", "").lower() for h in conversation_history if h.get("role") == "user"]
+
+    if len(user_messages) >= 2:
+        vague_count = sum(
+            1 for msg in user_messages[-3:]
+            if any(kw in msg for kw in STALL_VAGUE_KEYWORDS) or len(msg.split()) <= 2
+        )
+        if vague_count >= 2:
+            return StallDetectionResult(
+                stall_detected=True,
+                stall_type="vague_answers",
+                stall_score=min(1.0, vague_count / 3.0),
+                time_since_last_message_seconds=elapsed,
+                recommendation="Apply confrontational stall-breaker to push for commitment",
+            )
+
+    if len(user_messages) >= 3:
+        last_three = user_messages[-3:]
+        if len(set(last_three)) == 1:
+            return StallDetectionResult(
+                stall_detected=True,
+                stall_type="repetition",
+                stall_score=0.8,
+                time_since_last_message_seconds=elapsed,
+                recommendation="Acknowledge and redirect the conversation with a new question",
+            )
+
+    if len(user_messages) >= 4:
+        lengths = [len(msg.split()) for msg in user_messages[-4:]]
+        if all(lengths[i] > lengths[i + 1] for i in range(len(lengths) - 1)) and lengths[-1] <= 2:
+            return StallDetectionResult(
+                stall_detected=True,
+                stall_type="disengagement",
+                stall_score=0.6,
+                time_since_last_message_seconds=elapsed,
+                recommendation="Increase urgency or offer a specific value proposition",
+            )
+
+    return StallDetectionResult(
+        stall_detected=False,
+        time_since_last_message_seconds=elapsed,
+    )
+
+
+# ========================================================================
+# ROADMAP-018: Effectiveness Score Calculation
+# ========================================================================
+
+
+async def _calculate_effectiveness_score(
+    lead_id: str,
+    conversation_history: List[Dict[str, str]],
+    cache: CacheService,
+    stall_result: Optional[StallDetectionResult] = None,
+) -> EffectivenessScore:
+    """Calculate confrontational effectiveness score from completion rate + response latency."""
+    progress = await _get_question_progress(lead_id, cache)
+
+    total_questions = 5
+    questions_answered = len(progress.answers) if progress else 0
+    completion_rate = min(1.0, questions_answered / total_questions)
+
+    avg_latency = 0.0
+    if progress and progress.started_at and progress.last_message_at:
+        started = datetime.fromisoformat(progress.started_at)
+        last = datetime.fromisoformat(progress.last_message_at)
+        duration_seconds = max(1.0, (last - started).total_seconds())
+        user_msg_count = len([h for h in conversation_history if h.get("role") == "user"])
+        avg_latency = duration_seconds / max(1, user_msg_count)
+
+    user_messages = [h.get("content", "") for h in conversation_history if h.get("role") == "user"]
+    substantive = sum(1 for msg in user_messages if len(msg.split()) > 5)
+    engagement_depth = substantive / max(1, len(user_messages))
+
+    qualification_progression = completion_rate
+
+    stall_penalty = 0.0
+    if stall_result and stall_result.stall_detected:
+        stall_penalty = stall_result.stall_score * 0.3
+
+    raw_score = (
+        completion_rate * 0.35
+        + engagement_depth * 0.25
+        + qualification_progression * 0.25
+        + (1.0 - min(1.0, avg_latency / 600.0)) * 0.15
+    )
+    final_score = max(0, min(100, int((raw_score - stall_penalty) * 100)))
+
+    return EffectivenessScore(
+        score=final_score,
+        completion_rate=round(completion_rate, 2),
+        avg_response_latency_seconds=round(avg_latency, 1),
+        engagement_depth=round(engagement_depth, 2),
+        qualification_progression=round(qualification_progression, 2),
+        breakdown={
+            "completion_weight": round(completion_rate * 0.35, 3),
+            "engagement_weight": round(engagement_depth * 0.25, 3),
+            "progression_weight": round(qualification_progression * 0.25, 3),
+            "latency_weight": round((1.0 - min(1.0, avg_latency / 600.0)) * 0.15, 3),
+            "stall_penalty": round(stall_penalty, 3),
+        },
+    )
+
+
+# ========================================================================
+# ROADMAP-020: CoordinationEvent Emission Helpers
+# ========================================================================
+
+
+async def _emit_coordination_event(
+    event_type: str,
+    source_bot: str,
+    lead_id: str,
+    event_publisher: EventPublisher,
+    target_bot: Optional[str] = None,
+    conversation_id: Optional[str] = None,
+    confidence: float = 0.0,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> CoordinationEvent:
+    """Create and emit a CoordinationEvent via the event publisher."""
+    event = CoordinationEvent(
+        event_id=f"coord_{int(time.time())}_{lead_id[:8]}",
+        event_type=event_type,
+        source_bot=source_bot,
+        target_bot=target_bot,
+        lead_id=lead_id,
+        conversation_id=conversation_id,
+        timestamp=datetime.now().isoformat(),
+        confidence=confidence,
+        metadata=metadata or {},
+    )
+
+    await event_publisher.publish_event(
+        "coordination_event",
+        _model_to_dict(event),
+    )
+    logger.info(f"Emitted coordination event: {event_type} for lead {lead_id}")
+    return event
+
+
 async def _execute_lead_sequence(lead_bot, lead_id: str, sequence_day: int) -> None:
     """Execute lead bot sequence in background"""
     try:
@@ -1118,10 +1378,15 @@ async def get_jorge_qualification_progress(
     lead_id: str,
     intent_decoder: LeadIntentDecoder = Depends(get_intent_decoder),
     session_manager: ConversationSessionManager = Depends(get_session_manager),
+    cache: CacheService = Depends(get_cache_service),
+    event_publisher: EventPublisher = Depends(get_event_publisher),
 ):
     """
     Get Jorge Seller Bot qualification progress for a lead.
     Expected by frontend: jorge-seller-api.ts line 122
+
+    Implements ROADMAP-016 (question tracking), ROADMAP-017 (stall detection),
+    ROADMAP-018 (effectiveness score).
     """
     try:
         conversation_history = []
@@ -1132,29 +1397,49 @@ async def get_jorge_qualification_progress(
         # Analyze lead intent
         profile = intent_decoder.analyze_lead(lead_id, conversation_history)
 
-        # Map to frontend expected format
+        # ROADMAP-016: Retrieve persisted question progress
+        progress = await _get_question_progress(lead_id, cache)
+        current_question = progress.current_question_index + 1 if progress else 1
+        questions_answered = len(progress.answers) if progress else len(
+            [h for h in conversation_history if h.get("role") == "user"]
+        )
+
+        # ROADMAP-017: Run stall detection algorithm
+        stall_result = await _detect_stall(lead_id, conversation_history, cache)
+
+        # ROADMAP-018: Calculate effectiveness score
+        effectiveness = await _calculate_effectiveness_score(
+            lead_id, conversation_history, cache, stall_result
+        )
+
+        # ROADMAP-020: Emit coordination event if stall detected
+        if stall_result.stall_detected:
+            await _emit_coordination_event(
+                event_type="stall_detected",
+                source_bot="jorge-seller-bot",
+                lead_id=lead_id,
+                event_publisher=event_publisher,
+                conversation_id=conversation_ids[-1] if conversation_ids else None,
+                confidence=stall_result.stall_score,
+                metadata={
+                    "stall_type": stall_result.stall_type,
+                    "recommendation": stall_result.recommendation,
+                },
+            )
+
         return {
             "contact_id": lead_id,
-            # ROADMAP-016: Track real question progress in qualification flow
-            # Current: Hardcoded to question 1
-            # Required: Store and retrieve current question index from conversation state
-            "current_question": 1,
-            "questions_answered": len([h for h in conversation_history if h.get("role") == "user"]),
+            "current_question": current_question,
+            "questions_answered": questions_answered,
             "seller_temperature": _classify_temperature(profile),
             "qualification_scores": {"frs_score": profile.frs.total_score, "pcs_score": profile.pcs.total_score},
             "next_action": profile.next_best_action,
-            "timestamp": datetime.now(isoformat()),
-            # ROADMAP-017: Implement stall detection algorithm
-            # Current: Always returns False
-            # Required: Analyze conversation patterns to detect hesitation/stalling
-            # Signals: Repeated questions, delays between responses, vague answers
-            "stall_detected": False,
-            "detected_stall_type": None,
-            # ROADMAP-018: Calculate confrontational effectiveness score
-            # Current: Hardcoded to 85
-            # Required: Analyze response patterns to measure effectiveness
-            # Metrics: Response rate, qualification progression, engagement depth
-            "confrontational_effectiveness": 85,
+            "timestamp": datetime.now().isoformat(),
+            "stall_detected": stall_result.stall_detected,
+            "detected_stall_type": stall_result.stall_type,
+            "stall_recommendation": stall_result.recommendation,
+            "confrontational_effectiveness": effectiveness.score,
+            "effectiveness_breakdown": _model_to_dict(effectiveness),
         }
     except Exception as e:
         logger.error(f"Failed to get Jorge qualification progress: {e}")
@@ -1165,31 +1450,48 @@ async def get_jorge_qualification_progress(
 async def get_jorge_conversation_state(
     conversation_id: str,
     session_manager: ConversationSessionManager = Depends(get_session_manager),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Get Jorge Seller Bot conversation state.
     Expected by frontend: jorge-seller-api.ts line 149
+
+    Implements ROADMAP-016 (question tracking), ROADMAP-017 (stall detection).
     """
     try:
         summary = await session_manager.get_conversation_summary(conversation_id)
         if not summary:
             raise HTTPException(status_code=404, detail="Conversation not found")
 
+        lead_id = summary.get("lead_id", "")
+
+        # ROADMAP-016: Get question progress
+        progress = await _get_question_progress(lead_id, cache)
+        questions_answered = len(progress.answers) if progress else summary.get("user_messages", 0)
+        current_question = (progress.current_question_index + 1) if progress else questions_answered + 1
+
+        # ROADMAP-017: Run stall detection on conversation history
+        conversation_history = await session_manager.get_history(conversation_id)
+        stall_result = await _detect_stall(lead_id, conversation_history, cache)
+
         return {
             "conversation_id": conversation_id,
-            "lead_id": summary.get("lead_id"),
+            "lead_id": lead_id,
             "lead_name": summary.get("lead_name"),
             "stage": "qualification",
             "current_tone": "CONFRONTATIONAL",
-            "stall_detected": False,
-            "detected_stall_type": None,
+            "stall_detected": stall_result.stall_detected,
+            "detected_stall_type": stall_result.stall_type,
+            "stall_recommendation": stall_result.recommendation,
             "seller_temperature": "warm",
             "psychological_commitment": 65,
-            "is_qualified": False,
-            "questions_answered": summary.get("user_messages", 0),
-            "current_question": summary.get("user_messages", 0) + 1,
+            "is_qualified": questions_answered >= 5,
+            "questions_answered": questions_answered,
+            "current_question": current_question,
             "ml_confidence": 0.85,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get conversation state: {e}")
         raise HTTPException(status_code=500, detail="Failed to get conversation state")
@@ -1372,8 +1674,26 @@ async def trigger_jorge_handoff(
             estimated_time_seconds=30 if handoff_executed else 0,
         )
         await cache.set(cache_key, _model_to_dict(response), ttl=3600)
+
+        # ROADMAP-020: Emit coordination event for handoff
+        event_pub = get_event_publisher()
+        await _emit_coordination_event(
+            event_type="handoff",
+            source_bot=source_bot,
+            lead_id=lead_id,
+            event_publisher=event_pub,
+            target_bot=target_bot,
+            confidence=decision.confidence,
+            metadata={
+                "handoff_id": handoff_id,
+                "reason": request.reason,
+                "blocked": not handoff_executed,
+                "block_reason": block_reason,
+            },
+        )
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Failed to trigger handoff: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to trigger handoff: {str(e)}")

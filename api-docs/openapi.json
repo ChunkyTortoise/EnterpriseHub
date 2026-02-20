@@ -1,0 +1,1438 @@
+{
+  "components": {
+    "schemas": {
+      "ApiErrorDetail": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiErrorDetail",
+        "type": "object"
+      },
+      "ApiErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ApiErrorResponse",
+        "type": "object"
+      },
+      "AppointmentBookingSnapshot": {
+        "properties": {
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "property_address": {
+            "title": "Property Address",
+            "type": "string"
+          },
+          "slot_time": {
+            "title": "Slot Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contact_id",
+          "property_address",
+          "slot_time"
+        ],
+        "title": "AppointmentBookingSnapshot",
+        "type": "object"
+      },
+      "AppointmentDetailedState": {
+        "properties": {
+          "booking_count": {
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "recent_bookings": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentBookingSnapshot"
+            },
+            "title": "Recent Bookings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "booking_count",
+          "recent_bookings"
+        ],
+        "title": "AppointmentDetailedState",
+        "type": "object"
+      },
+      "DeckResponse": {
+        "properties": {
+          "deck": {
+            "items": {
+              "$ref": "#/components/schemas/PropertyCard"
+            },
+            "title": "Deck",
+            "type": "array"
+          }
+        },
+        "required": [
+          "deck"
+        ],
+        "title": "DeckResponse",
+        "type": "object"
+      },
+      "DetailedStateResponse": {
+        "properties": {
+          "details": {
+            "$ref": "#/components/schemas/DetailedStateSnapshot"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "details",
+          "status"
+        ],
+        "title": "DetailedStateResponse",
+        "type": "object"
+      },
+      "DetailedStateSnapshot": {
+        "properties": {
+          "appointment": {
+            "$ref": "#/components/schemas/AppointmentDetailedState"
+          },
+          "ghl": {
+            "$ref": "#/components/schemas/GHLDetailedState"
+          },
+          "inventory": {
+            "$ref": "#/components/schemas/InventoryDetailedState"
+          }
+        },
+        "required": [
+          "appointment",
+          "ghl",
+          "inventory"
+        ],
+        "title": "DetailedStateSnapshot",
+        "type": "object"
+      },
+      "GHLDetailedState": {
+        "properties": {
+          "action_count": {
+            "title": "Action Count",
+            "type": "integer"
+          },
+          "recent_actions": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Recent Actions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "action_count",
+          "recent_actions"
+        ],
+        "title": "GHLDetailedState",
+        "type": "object"
+      },
+      "GHLField": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "title": "GHLField",
+        "type": "object"
+      },
+      "GHLFieldsResponse": {
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/GHLField"
+            },
+            "title": "Fields",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "title": "GHLFieldsResponse",
+        "type": "object"
+      },
+      "GHLFieldsUnavailableResponse": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "GHLFieldsUnavailableResponse",
+        "type": "object"
+      },
+      "GHLSyncResponse": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "synced_count": {
+            "title": "Synced Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "synced_count"
+        ],
+        "title": "GHLSyncResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "status"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "Interaction": {
+        "properties": {
+          "action": {
+            "enum": [
+              "like",
+              "pass"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "property_id": {
+            "title": "Property Id",
+            "type": "string"
+          },
+          "time_on_card": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time On Card"
+          }
+        },
+        "required": [
+          "action",
+          "contact_id",
+          "property_id"
+        ],
+        "title": "Interaction",
+        "type": "object"
+      },
+      "InventoryDetailedState": {
+        "properties": {
+          "interaction_count": {
+            "title": "Interaction Count",
+            "type": "integer"
+          },
+          "lead_count": {
+            "title": "Lead Count",
+            "type": "integer"
+          },
+          "property_count": {
+            "title": "Property Count",
+            "type": "integer"
+          },
+          "recent_interactions": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryInteractionSnapshot"
+            },
+            "title": "Recent Interactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "interaction_count",
+          "lead_count",
+          "property_count",
+          "recent_interactions"
+        ],
+        "title": "InventoryDetailedState",
+        "type": "object"
+      },
+      "InventoryInteractionSnapshot": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "feedback": {
+            "title": "Feedback",
+            "type": "object"
+          },
+          "lead_id": {
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "property_id": {
+            "title": "Property Id",
+            "type": "string"
+          },
+          "time_on_card": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time On Card"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "feedback",
+          "lead_id",
+          "property_id",
+          "timestamp"
+        ],
+        "title": "InventoryInteractionSnapshot",
+        "type": "object"
+      },
+      "PropertyCard": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "baths": {
+            "title": "Baths",
+            "type": "integer"
+          },
+          "beds": {
+            "title": "Beds",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "price": {
+            "title": "Price",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "address",
+          "baths",
+          "beds",
+          "id",
+          "price"
+        ],
+        "title": "PropertyCard",
+        "type": "object"
+      },
+      "ResetResponse": {
+        "properties": {
+          "reset": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Reset",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reset",
+          "status"
+        ],
+        "title": "ResetResponse",
+        "type": "object"
+      },
+      "RootResponse": {
+        "properties": {
+          "docs": {
+            "title": "Docs",
+            "type": "string"
+          },
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "health": {
+            "title": "Health",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "reset": {
+            "title": "Reset",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "state_details": {
+            "title": "State Details",
+            "type": "string"
+          }
+        },
+        "required": [
+          "docs",
+          "environment",
+          "health",
+          "message",
+          "reset",
+          "state",
+          "state_details"
+        ],
+        "title": "RootResponse",
+        "type": "object"
+      },
+      "StateResponse": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/StateSnapshot"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "status"
+        ],
+        "title": "StateResponse",
+        "type": "object"
+      },
+      "StateSnapshot": {
+        "properties": {
+          "appointments": {
+            "title": "Appointments",
+            "type": "integer"
+          },
+          "ghl_actions": {
+            "title": "Ghl Actions",
+            "type": "integer"
+          },
+          "inventory_interactions": {
+            "title": "Inventory Interactions",
+            "type": "integer"
+          },
+          "inventory_leads": {
+            "title": "Inventory Leads",
+            "type": "integer"
+          },
+          "inventory_properties": {
+            "title": "Inventory Properties",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "appointments",
+          "ghl_actions",
+          "inventory_interactions",
+          "inventory_leads",
+          "inventory_properties"
+        ],
+        "title": "StateSnapshot",
+        "type": "object"
+      },
+      "SwipeResponse": {
+        "properties": {
+          "adjustments": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Adjustments",
+            "type": "array"
+          },
+          "high_intent": {
+            "title": "High Intent",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "trigger_sms": {
+            "title": "Trigger Sms",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "adjustments",
+          "high_intent",
+          "status",
+          "trigger_sms"
+        ],
+        "title": "SwipeResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VapiToolCallPayload": {
+        "properties": {
+          "function": {
+            "$ref": "#/components/schemas/VapiToolFunctionPayload"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "title": "VapiToolCallPayload",
+        "type": "object"
+      },
+      "VapiToolFunctionPayload": {
+        "properties": {
+          "arguments": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Arguments"
+          }
+        },
+        "title": "VapiToolFunctionPayload",
+        "type": "object"
+      },
+      "VapiToolPayload": {
+        "properties": {
+          "toolCall": {
+            "$ref": "#/components/schemas/VapiToolCallPayload"
+          }
+        },
+        "title": "VapiToolPayload",
+        "type": "object"
+      },
+      "VapiToolResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/VapiToolResult"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "VapiToolResponse",
+        "type": "object"
+      },
+      "VapiToolResult": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          },
+          "toolCallId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Toolcallid"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "VapiToolResult",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "GHL Real Estate AI API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Root",
+        "tags": [
+          "root"
+        ]
+      }
+    },
+    "/admin/reset": {
+      "post": {
+        "operationId": "reset_demo_state_admin_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Demo State",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/state": {
+      "get": {
+        "operationId": "get_demo_state_admin_state_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Demo State",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/state/details": {
+      "get": {
+        "operationId": "get_demo_state_details_admin_state_details_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailedStateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Demo State Details",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/ghl/fields": {
+      "get": {
+        "operationId": "get_ghl_fields_ghl_fields_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GHLFieldsResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GHLFieldsUnavailableResponse"
+                    }
+                  ],
+                  "title": "Response Get Ghl Fields Ghl Fields Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Ghl Fields",
+        "tags": [
+          "ghl"
+        ]
+      }
+    },
+    "/ghl/sync": {
+      "post": {
+        "operationId": "sync_ghl_ghl_sync_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GHLSyncResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "GoHighLevel sync failed"
+          }
+        },
+        "summary": "Sync Ghl",
+        "tags": [
+          "ghl"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/portal/deck": {
+      "get": {
+        "operationId": "get_smart_deck_portal_deck_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Smart Deck",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/portal/swipe": {
+      "post": {
+        "operationId": "log_swipe_portal_swipe_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Interaction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwipeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Log Swipe",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/reset": {
+      "post": {
+        "operationId": "reset_demo_state_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Demo State",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/state": {
+      "get": {
+        "operationId": "get_demo_state_state_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Demo State",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/state/details": {
+      "get": {
+        "operationId": "get_demo_state_details_state_details_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailedStateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Demo State Details",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/system/reset": {
+      "post": {
+        "operationId": "reset_demo_state_system_reset_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Demo State",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/system/state": {
+      "get": {
+        "operationId": "get_demo_state_system_state_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Demo State",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/system/state/details": {
+      "get": {
+        "operationId": "get_demo_state_details_system_state_details_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailedStateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Demo State Details",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/vapi/tools/book-tour": {
+      "post": {
+        "operationId": "vapi_book_tour_vapi_tools_book_tour_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VapiToolPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VapiToolResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vapi Book Tour",
+        "tags": [
+          "vapi"
+        ]
+      }
+    },
+    "/vapi/tools/check-availability": {
+      "post": {
+        "operationId": "vapi_check_availability_vapi_tools_check_availability_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VapiToolPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VapiToolResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vapi Check Availability",
+        "tags": [
+          "vapi"
+        ]
+      }
+    }
+  }
+}

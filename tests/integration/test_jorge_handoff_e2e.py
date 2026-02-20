@@ -22,7 +22,6 @@ from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     JorgeHandoffService,
 )
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────
 
 

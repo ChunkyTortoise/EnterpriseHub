@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -25,7 +26,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.vapi_voice_integration import (
-
     CallEventResult,
     SpeakerRole,
     TranscriptAnalysis,

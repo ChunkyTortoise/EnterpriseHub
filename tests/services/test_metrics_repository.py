@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for JorgeMetricsRepository.
@@ -15,7 +16,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.repositories.jorge_metrics_repository import (
-
     JorgeMetricsRepository,
 )
 

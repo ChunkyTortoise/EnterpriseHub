@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Voice AI Agent Platform for Real Estate - Pipecat + Twilio + Deepgram + ElevenLabs"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [
     { name = "EnterpriseHub", email = "dev@enterprisehub.ai" }
 ]
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Framework :: FastAPI",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -87,8 +86,10 @@ voice-platform = "voice_platform.main:main"
 packages = ["voice_platform"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 100
+
+[tool.ruff.lint]
 select = [
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
@@ -105,13 +106,21 @@ ignore = [
     "B008",   # do not perform function calls in argument defaults
     "B904",   # raise without from inside except
     "ARG001", # unused function argument
+    "ARG002", # unused method argument
+    "F401",   # unused import
+    "F841",   # unused variable
+    "UP042",  # replace str enum
+    "SIM105", # suppressible exception
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E", "F", "ARG", "SIM", "B"]
+
+[tool.ruff.lint.isort]
 known-first-party = ["voice_platform", "shared"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true

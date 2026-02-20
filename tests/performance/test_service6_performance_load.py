@@ -55,7 +55,6 @@ from tests.fixtures.sample_data import LeadProfiles
 
 # Import test utilities
 from tests.mocks.external_services import (
-
     MockClaudeClient,
     MockDatabaseService,
     MockRedisClient,

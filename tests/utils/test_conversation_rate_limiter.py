@@ -7,7 +7,6 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.utils.conversation_rate_limiter import (
-
     ConversationRateLimiter,
     RateLimitResult,
 )

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -31,7 +32,6 @@ from ghl_real_estate_ai.agents.customer_journey_orchestrator import (
     JourneyTemplateEngine,
 )
 from ghl_real_estate_ai.agents.property_intelligence_agent import (
-
     InvestmentAnalysisEngine,
     InvestmentStrategy,
     PropertyDataCollector,

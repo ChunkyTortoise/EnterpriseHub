@@ -1,6 +1,5 @@
 """Tests for rate limiter module."""
 
-import pytest
 from mcp_toolkit.framework.rate_limiter import RateLimiter, RateLimitConfig
 
 

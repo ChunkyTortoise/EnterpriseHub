@@ -50,6 +50,8 @@ from contextlib import asynccontextmanager
 
 from fastapi.responses import JSONResponse
 
+# Import GHL Integration router (Phase 1: Unified webhook infrastructure)
+from ghl_integration import ghl_router, initialize_ghl_integration, shutdown_ghl_integration
 from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, enterprise_auth_service
 from ghl_real_estate_ai.api.middleware import (
     RateLimitMiddleware,
@@ -87,7 +89,6 @@ from ghl_real_estate_ai.api.routes import (
     heygen_video,
     jorge_advanced,
     jorge_followup,
-    sdr,  # SDR Agent — autonomous outbound prospecting + sequences
     # Week 5-8 ROI Enhancement Routes
     langgraph_orchestration,
     lead_bot_management,  # NEW: Lead Bot Management API for sequence control
@@ -104,6 +105,7 @@ from ghl_real_estate_ai.api.routes import (
     rc_market_intelligence,
     reports,
     retell_webhook,  # Added Retell Webhook
+    sdr,  # SDR Agent — autonomous outbound prospecting + sequences
     security,  # NEW: Security Monitoring and Management API
     sentiment_analysis,
     sms_compliance,
@@ -115,9 +117,6 @@ from ghl_real_estate_ai.api.routes import (
     websocket_performance,  # WebSocket Performance Monitoring API
     websocket_routes,  # Real-time WebSocket routes
 )
-
-# Import GHL Integration router (Phase 1: Unified webhook infrastructure)
-from ghl_integration import ghl_router, initialize_ghl_integration, shutdown_ghl_integration
 
 # Import WebSocket and Socket.IO integration services
 from ghl_real_estate_ai.ghl_utils.config import settings
@@ -365,10 +364,10 @@ async def lifespan(app: FastAPI):
 
     abandonment_task_started = False
     try:
+        from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
         from ghl_real_estate_ai.services.jorge.abandonment_background_task import (
             start_abandonment_background_task,
         )
-        from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
 
         # Initialize GHL client for recovery messages
         if settings.ghl_api_key and settings.ghl_location_id:

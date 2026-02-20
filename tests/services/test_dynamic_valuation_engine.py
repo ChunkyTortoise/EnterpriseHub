@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -18,9 +19,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from ghl_real_estate_ai.services.rancho_cucamonga_market_service import MarketCondition, PropertyType
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
-
     DynamicValuationEngine,
     MarketComparable,
     ValuationComponents,
@@ -29,6 +28,7 @@ from ghl_real_estate_ai.services.dynamic_valuation_engine import (
     ValuationResult,
     get_dynamic_valuation_engine,
 )
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import MarketCondition, PropertyType
 
 
 class TestDynamicValuationEngine:

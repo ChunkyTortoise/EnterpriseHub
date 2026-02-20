@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Protocol
+from datetime import datetime
+from typing import Protocol
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
 from mcp_toolkit.servers.calendar.availability import AvailabilityFinder, TimeSlot, BusinessHours

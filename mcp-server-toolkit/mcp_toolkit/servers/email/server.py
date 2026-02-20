@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
-from typing import Any, Protocol
+from dataclasses import dataclass
+from typing import Protocol
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.email.template_engine import TemplateEngine, EmailTemplate
+from mcp_toolkit.servers.email.template_engine import TemplateEngine
 
 mcp = EnhancedMCP("email")
 

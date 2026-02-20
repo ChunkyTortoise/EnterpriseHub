@@ -12,20 +12,32 @@ import argparse
 import sys
 import time
 
-from benchmarks.bench_cache import (
-    run_cache_benchmark,
-    check_targets as check_cache,
-    print_results as print_cache,
+from benchmarks.bench_api_response import (
+    check_targets as check_api,
 )
-from benchmarks.bench_orchestration import (
-    run_orchestration_benchmark,
-    check_targets as check_orchestration,
-    print_results as print_orchestration,
+from benchmarks.bench_api_response import (
+    print_results as print_api,
 )
 from benchmarks.bench_api_response import (
     run_api_benchmark,
-    check_targets as check_api,
-    print_results as print_api,
+)
+from benchmarks.bench_cache import (
+    check_targets as check_cache,
+)
+from benchmarks.bench_cache import (
+    print_results as print_cache,
+)
+from benchmarks.bench_cache import (
+    run_cache_benchmark,
+)
+from benchmarks.bench_orchestration import (
+    check_targets as check_orchestration,
+)
+from benchmarks.bench_orchestration import (
+    print_results as print_orchestration,
+)
+from benchmarks.bench_orchestration import (
+    run_orchestration_benchmark,
 )
 
 

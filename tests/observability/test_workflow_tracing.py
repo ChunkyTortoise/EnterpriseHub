@@ -9,9 +9,10 @@ Validates:
 - No-op behavior when OTel is disabled
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from typing import Dict
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 from ghl_real_estate_ai.observability import workflow_tracing
 
@@ -351,7 +352,7 @@ class TestIntegration:
         """Test full workflow with real OTel spans."""
         from opentelemetry import trace
         from opentelemetry.sdk.trace import TracerProvider
-        from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
+        from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
         
         # Setup real tracer
         provider = TracerProvider()

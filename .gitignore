@@ -224,3 +224,6 @@ scripts/chrome_copy/
 
 # Local tracker artifacts
 .beads/issues.jsonl
+
+# Tenant credential files (secrets stored in Railway/env vars)
+data/tenants/

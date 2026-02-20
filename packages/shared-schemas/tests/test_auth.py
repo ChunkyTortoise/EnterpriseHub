@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+
 from shared_schemas.auth import APIKeyConfig, JWTClaims, Permission
 
 

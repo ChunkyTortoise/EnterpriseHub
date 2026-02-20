@@ -3,13 +3,15 @@ Services Portfolio - Professional Services Showcase
 Displays 31 services with filtering, pricing, and ROI models
 """
 
+from typing import Dict, List
+
 import streamlit as st
-from typing import List, Dict
+
 from ghl_real_estate_ai.streamlit_demo.data.services_data import (
-    SERVICES,
     CATEGORIES,
-    INDUSTRIES,
     DIFFERENTIATORS,
+    INDUSTRIES,
+    SERVICES,
 )
 
 

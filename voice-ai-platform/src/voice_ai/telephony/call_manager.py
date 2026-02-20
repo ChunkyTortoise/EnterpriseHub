@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from voice_ai.models.call import Call, CallDirection, CallStatus
@@ -75,7 +75,7 @@ class CallManager:
         call.status = new_status
 
         if new_status in (CallStatus.COMPLETED, CallStatus.FAILED, CallStatus.NO_ANSWER):
-            call.ended_at = datetime.now(timezone.utc)
+            call.ended_at = datetime.now(UTC)
             if call.created_at and call.ended_at:
                 call.duration_seconds = (call.ended_at - call.created_at).total_seconds()
 

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -16,7 +17,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.behavioral_trigger_engine import (
-
     BehavioralPattern,
     BehavioralSignal,
     BehavioralTriggerEngine,

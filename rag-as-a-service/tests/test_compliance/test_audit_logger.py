@@ -1,7 +1,7 @@
 """Tests for audit logging."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from rag_service.compliance.audit_logger import AuditLogger, AuditEntry
 

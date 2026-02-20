@@ -44,10 +44,10 @@ from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
+from ghl_real_estate_ai.services.hitl_gate import HITLGate
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
 from ghl_real_estate_ai.services.jorge.response_pipeline.factory import get_response_pipeline
 from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessingContext
-from ghl_real_estate_ai.services.hitl_gate import HITLGate
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient

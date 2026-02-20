@@ -10,6 +10,7 @@ from src.core.types import DocumentChunk, Metadata
 from src.vector_store.base import SearchOptions, VectorStoreConfig
 from src.vector_store.chroma_store import ChromaVectorStore
 
+
 @pytest.mark.integration
 
 

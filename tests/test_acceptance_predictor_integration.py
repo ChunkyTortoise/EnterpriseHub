@@ -8,13 +8,14 @@ Verifies:
 - Graceful fallback behavior
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot, JorgeFeatureConfig
+import pytest
+
+from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeFeatureConfig, JorgeSellerBot
 from ghl_real_estate_ai.services.jorge.acceptance_predictor_service import (
-    AcceptancePredictorService,
     AcceptancePrediction,
+    AcceptancePredictorService,
     OptimalPriceRange,
 )
 

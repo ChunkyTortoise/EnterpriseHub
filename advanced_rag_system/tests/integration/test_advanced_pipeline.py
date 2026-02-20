@@ -11,42 +11,42 @@ This module tests the complete Phase 3 Advanced RAG System integration including
 Target: 25-30 comprehensive integration tests
 """
 
-import pytest
 import asyncio
 import time
-from typing import List, Dict, Any, Optional
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
-from src.core.types import SearchResult, DocumentChunk, Metadata, QueryType as CoreQueryType
+import pytest
 from src.core.exceptions import RetrievalError
-
-# Query enhancement imports
-from src.retrieval.query import (
-    QueryExpander,
-    ExpansionConfig,
-    HyDEGenerator,
-    HyDEConfig,
-    MockLLMProvider,
-    QueryClassifier,
-    ClassifierConfig,
-    QueryType,
-    ClassificationResult,
-)
-
-# Retrieval imports
-from src.retrieval.hybrid import HybridSearcher, HybridSearchConfig
-from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
+from src.core.types import DocumentChunk, Metadata, SearchResult
+from src.core.types import QueryType as CoreQueryType
 
 # Re-ranking imports
 from src.reranking.base import (
     BaseReRanker,
+    MockReRanker,
     ReRankingConfig,
     ReRankingResult,
     ReRankingStrategy,
-    MockReRanker,
 )
+from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
 
+# Retrieval imports
+from src.retrieval.hybrid import HybridSearchConfig, HybridSearcher
+
+# Query enhancement imports
+from src.retrieval.query import (
+    ClassificationResult,
+    ClassifierConfig,
+    ExpansionConfig,
+    HyDEConfig,
+    HyDEGenerator,
+    MockLLMProvider,
+    QueryClassifier,
+    QueryExpander,
+    QueryType,
+)
 
 # ============================================================================
 # Fixtures

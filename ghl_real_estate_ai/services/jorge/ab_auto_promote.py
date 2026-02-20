@@ -500,8 +500,14 @@ class ABAutoPromoter:
             f"(variant={winning_variant}, traffic={self.CANARY_TRAFFIC_PERCENT}%)"
         )
 
-        # ROADMAP-075: Update traffic split in A/B service to route 20% to winner
-        # This will be implemented in a follow-up task to modify traffic allocation
+        # Route canary traffic percentage to the winning variant
+        try:
+            self.ab_service.update_traffic_split(
+                experiment_id,
+                {winning_variant: self.CANARY_TRAFFIC_PERCENT / 100.0},
+            )
+        except Exception as exc:
+            logger.warning(f"Failed to update traffic split for canary: {exc}")
 
     # ── Canary Monitoring & Rollout ───────────────────────────────────────
 
@@ -598,6 +604,9 @@ class ABAutoPromoter:
     ) -> bool:
         """Check if canary rollout shows any issues.
 
+        Compares canary-period conversion rate against pre-canary baseline.
+        A degradation > 20% triggers a rollback.
+
         Args:
             experiment_id: Experiment identifier.
             promoted_variant: Promoted variant.
@@ -606,10 +615,55 @@ class ABAutoPromoter:
         Returns:
             True if issues detected, False if healthy.
         """
-        # ROADMAP-075: Implement real canary health checks (error rates, conversion rates, latency)
-        # For now, assume healthy (no issues)
         logger.debug(f"Checking canary health for '{experiment_id}' (variant={promoted_variant})")
-        return False
+
+        try:
+            results = self.ab_service.get_experiment_results(experiment_id)
+            winner = next(
+                (v for v in results.variants if v.variant == promoted_variant), None
+            )
+            if winner is None:
+                logger.warning(f"Could not find variant '{promoted_variant}' in results")
+                return True  # Treat missing variant as unhealthy
+
+            # Compare current conversion rate to pre-canary snapshot
+            async with self.db_manager.get_connection() as conn:
+                query = text("""
+                    SELECT metrics_snapshot
+                    FROM ab_promotion_events
+                    WHERE experiment_id = :experiment_id
+                    AND canary_status = :status
+                    ORDER BY created_at DESC LIMIT 1
+                """)
+                result = await conn.execute(
+                    query,
+                    {"experiment_id": experiment_id, "status": CanaryStatus.CANARY},
+                )
+                row = result.fetchone()
+
+            if row and row[0]:
+                import json
+
+                snapshot = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+                baseline_variants = snapshot.get("variants", [])
+                baseline_winner = next(
+                    (v for v in baseline_variants if v["variant"] == promoted_variant),
+                    None,
+                )
+                if baseline_winner and baseline_winner["conversion_rate"] > 0:
+                    degradation = (
+                        1.0 - winner.conversion_rate / baseline_winner["conversion_rate"]
+                    )
+                    if degradation > 0.20:
+                        logger.warning(
+                            f"Canary degradation {degradation:.1%} for '{experiment_id}'"
+                        )
+                        return True
+
+            return False
+        except Exception as exc:
+            logger.warning(f"Canary health check failed for '{experiment_id}': {exc}")
+            return False
 
     async def _complete_promotion(
         self,
@@ -644,7 +698,15 @@ class ABAutoPromoter:
             )
             await conn.commit()
 
-        # ROADMAP-075: Update traffic split to 100% for winner
+        # Route 100% traffic to the winner
+        try:
+            self.ab_service.update_traffic_split(
+                experiment_id,
+                {promoted_variant: 1.0},
+            )
+        except Exception as exc:
+            logger.warning(f"Failed to update traffic split to 100%: {exc}")
+
         logger.info(
             f"Completed promotion for experiment '{experiment_id}' "
             f"(variant={promoted_variant}, traffic=100%)"
@@ -685,7 +747,12 @@ class ABAutoPromoter:
             )
             await conn.commit()
 
-        # ROADMAP-075: Restore previous traffic split on rollback
+        # Restore even traffic split on rollback
+        try:
+            self.ab_service.update_traffic_split(experiment_id, {})
+        except Exception as exc:
+            logger.warning(f"Failed to restore traffic split on rollback: {exc}")
+
         logger.warning(f"Rolled back promotion for experiment '{experiment_id}': {reason}")
 
     # ── Manual Rollback ───────────────────────────────────────────────────

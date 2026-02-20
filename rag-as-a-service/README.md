@@ -15,6 +15,20 @@ Multi-tenant RAG (Retrieval-Augmented Generation) platform with hybrid search, P
 - **Redis caching** for tenant routing
 - **Comprehensive test suite**: 35+ tests with 90%+ coverage
 
+## ROI at a Glance
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| **Test Suite** | 214 tests, 90%+ coverage | `pytest tests/ --cov` |
+| **Search Strategy** | Hybrid pgvector cosine + BM25 full-text with RRF fusion | Production architecture |
+| **Query Expansion** | HyDE + multi-query techniques | RAG engine pipeline |
+| **PII Protection** | Regex-based detection + optional Presidio integration | Compliance module |
+| **Billing** | Stripe metered per-query usage tracking | 3 tiers: Starter, Pro, Business |
+| **Multi-tenancy** | PostgreSQL schema-per-tenant isolation | Redis-cached tenant routing |
+| **Audit Trail** | Immutable audit logging for compliance | Built-in |
+
+---
+
 ## Architecture
 
 ```

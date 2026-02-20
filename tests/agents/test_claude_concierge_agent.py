@@ -9,16 +9,17 @@ Classes tested:
     AgentCapability        - Agent capability dataclass
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from ghl_real_estate_ai.agents.claude_concierge_agent import (
-    ClaudeConciergeAgent,
-    UserIntent,
-    PlatformContext,
-    UserSession,
     AgentCapability,
+    ClaudeConciergeAgent,
+    PlatformContext,
+    UserIntent,
+    UserSession,
 )
 
 pytestmark = pytest.mark.unit

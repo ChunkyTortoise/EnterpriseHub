@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Jorge tech debt items TD2-TD5.
@@ -28,7 +29,6 @@ from ghl_real_estate_ai.services.jorge.performance_tracker import (
     PerformanceTracker,
 )
 from ghl_real_estate_ai.services.jorge.telemetry import (
-
     _NoOpSpan,
     is_otel_available,
     optional_span,

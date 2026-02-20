@@ -1,5 +1,5 @@
 # Multi-stage build for security
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -14,7 +14,7 @@ COPY ghl_real_estate_ai/requirements_clean.txt .
 RUN pip install --no-cache-dir -r requirements_clean.txt
 
 # Runtime stage
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser

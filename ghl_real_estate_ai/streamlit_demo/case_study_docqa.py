@@ -3,8 +3,8 @@ DocQA Engine Case Study Page
 Case study for the DocQA Engine project - RAG Document Q&A Platform
 """
 
-import streamlit as st
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
 

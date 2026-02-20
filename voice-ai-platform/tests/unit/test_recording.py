@@ -5,9 +5,8 @@ from __future__ import annotations
 import pytest
 
 from voice_ai.telephony.recording import (
-    RecordingManager,
     TWO_PARTY_CONSENT_STATES,
-    CONSENT_PROMPT,
+    RecordingManager,
 )
 
 

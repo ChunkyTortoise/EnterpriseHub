@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Jorge Prompt Experiment Runner."""
@@ -12,7 +14,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import pytest
 
 from ghl_real_estate_ai.services.jorge.prompt_experiment_runner import (
-
     ExperimentResult,
     PromptExperiment,
     PromptExperimentRunner,

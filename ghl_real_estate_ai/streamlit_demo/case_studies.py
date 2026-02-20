@@ -3,8 +3,9 @@ Case Studies - Detailed implementation showcases
 EnterpriseHub and AgentForge success stories
 """
 
-import streamlit as st
 import plotly.graph_objects as go
+import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.data.case_studies_data import CASE_STUDIES
 
 

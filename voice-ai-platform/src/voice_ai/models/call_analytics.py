@@ -1,6 +1,7 @@
 """Analytics aggregation models (Pydantic, not SQLAlchemy — computed from Call data)."""
 
 from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 

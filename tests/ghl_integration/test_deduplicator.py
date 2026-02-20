@@ -2,10 +2,11 @@
 Test Event Deduplicator
 """
 
-import pytest
-import json
 import hashlib
-from unittest.mock import Mock, AsyncMock
+import json
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 from ghl_integration.deduplicator import EventDeduplicator, FuzzyDeduplicator
 

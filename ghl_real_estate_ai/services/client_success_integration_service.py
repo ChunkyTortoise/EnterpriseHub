@@ -20,13 +20,13 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from .ai_negotiation_partner import AINetworkingPartner
-from .rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from .cache_service import CacheService
 from .claude_assistant import ClaudeAssistant
 from .client_outcome_verification_service import get_client_outcome_verification_service
 from .client_success_scoring_service import MetricType, get_client_success_service
 from .ghl_client import GHLClient
 from .premium_service_justification_engine import get_premium_service_justification_engine
+from .rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from .transaction_intelligence_engine import TransactionIntelligenceEngine
 from .value_justification_calculator import get_value_justification_calculator
 

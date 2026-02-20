@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for the pricing objection engine.
@@ -9,12 +10,11 @@ template filling, edge cases, and state management.
 import pytest
 
 from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
-
+    RESPONSE_TEMPLATES,
     ObjectionDetection,
     ObjectionType,
     PricingObjectionEngine,
     ResponseGraduation,
-    RESPONSE_TEMPLATES,
     _SafeFormatDict,
 )
 

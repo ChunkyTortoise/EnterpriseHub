@@ -5,9 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import time
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Callable
 
 import jwt
 from fastapi import HTTPException, Request, Security

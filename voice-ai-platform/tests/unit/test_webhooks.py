@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from voice_ai.api.webhooks import TWILIO_STATUS_MAP, twilio_status_callback, stripe_webhook
+from voice_ai.api.webhooks import TWILIO_STATUS_MAP, stripe_webhook, twilio_status_callback
 
 
 class TestTwilioStatusMap:

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from devops_suite.monitoring.metrics import MetricsAggregator, PercentileResult
+from devops_suite.monitoring.metrics import MetricsAggregator
 
 
 @pytest.fixture

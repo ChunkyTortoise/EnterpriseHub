@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Phase 3: Cross-Bot Handoff — JorgeHandoffService."""
@@ -8,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
-
     EnrichedHandoffContext,
     HandoffDecision,
     JorgeHandoffService,

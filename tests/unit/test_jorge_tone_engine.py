@@ -139,7 +139,6 @@ class TestJorgeToneEngineInit:
         """Engine initializes with default profile."""
         from ghl_real_estate_ai.services.jorge.jorge_tone_engine import (
             JorgeToneEngine,
-            ToneProfile,
         )
 
         with patch(
@@ -147,8 +146,8 @@ class TestJorgeToneEngineInit:
         ):
             engine = JorgeToneEngine()
 
-            assert engine.profile.max_length == 160
-            assert engine.profile.allow_emojis is False
+            assert engine.tone_profile.max_length == 160
+            assert engine.tone_profile.allow_emojis is False
 
     def test_init_with_custom_profile(self):
         """Engine can use custom profile."""
@@ -162,9 +161,10 @@ class TestJorgeToneEngineInit:
         with patch(
             "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
         ):
-            engine = JorgeToneEngine(profile=custom_profile)
+            engine = JorgeToneEngine()
+            engine.tone_profile = custom_profile
 
-            assert engine.profile.max_length == 320
+            assert engine.tone_profile.max_length == 320
 
 
 class TestMessageValidation:

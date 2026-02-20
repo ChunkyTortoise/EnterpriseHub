@@ -16,12 +16,12 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
     PropertyListing,
     PropertyType,
     get_rancho_cucamonga_market_service,
 )
-from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 

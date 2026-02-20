@@ -9,7 +9,7 @@ Created: 2026-01-17
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
@@ -403,24 +403,66 @@ async def filter_golden_leads(
                 status_code=HTTP_400_BAD_REQUEST, detail="max_probability must be greater than min_probability"
             )
 
-        # This would typically query from a database or cache
-        # For now, return empty list since we don't have persistence layer
         logger.info(
             f"Golden lead filter request: tier={tier}, "
             f"probability={min_probability}-{max_probability}, "
             f"jorge_score>={min_jorge_score} (tenant: {tenant_id})"
         )
 
-        # ROADMAP-046: Implement Golden Lead Filtering from Storage
-        # Current: Returns empty array
-        # Required:
-        #   1. Query leads table with filters (temperature, budget, jorge_score)
-        #   2. Check Redis cache for hot leads first
-        #   3. Support pagination for large result sets
-        #   4. Sort by composite score (jorge_score + temperature + urgency)
-        # Dependencies: None
+        # ROADMAP-046: Scan Redis cache for golden lead scores
+        detector = get_detector_service()
+        cache = detector.cache
+        analysis_cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_since_analysis)
 
-        return []
+        results: List[GoldenLeadScoreResponse] = []
+        cache_pattern = f"golden_lead:{tenant_id}:*"
+
+        # Scan Redis keys matching tenant pattern
+        cached_keys: List[str] = []
+        try:
+            cached_keys = await cache.scan_keys(cache_pattern, count=limit * 2)
+        except AttributeError:
+            # Fallback: cache may not support scan_keys, try keys()
+            try:
+                cached_keys = await cache.keys(cache_pattern)
+            except Exception:
+                cached_keys = []
+        except Exception as e:
+            logger.debug(f"Redis scan fallback: {e}")
+
+        for key in cached_keys[:limit * 2]:
+            try:
+                cached_data = await cache.get(key)
+                if not cached_data:
+                    continue
+
+                score = detector._deserialize_golden_lead_score(cached_data)
+
+                # Apply filters
+                if tier and score.tier.value != tier:
+                    continue
+                if score.conversion_probability < min_probability:
+                    continue
+                if score.conversion_probability > max_probability:
+                    continue
+                if score.base_jorge_score < min_jorge_score:
+                    continue
+                if score.analysis_timestamp < analysis_cutoff:
+                    continue
+
+                results.append(convert_golden_lead_score_to_response(score))
+            except Exception as e:
+                logger.debug(f"Skipping cached lead {key}: {e}")
+                continue
+
+        # Sort by composite score (overall_score descending)
+        results.sort(key=lambda r: r.overall_score, reverse=True)
+
+        # Apply pagination limit
+        results = results[:limit]
+
+        logger.info(f"Golden lead filter returned {len(results)} results (tenant: {tenant_id})")
+        return results
 
     except Exception as e:
         logger.error(f"Golden lead filtering failed: {str(e)}")

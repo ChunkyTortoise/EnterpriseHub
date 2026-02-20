@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for HeyGen Video Personalization Service."""
@@ -8,7 +9,6 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.services.heygen_video_service import (
-
     HeyGenVideoService,
     VideoResult,
     VideoStatus,

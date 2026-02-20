@@ -15,7 +15,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────
 
 

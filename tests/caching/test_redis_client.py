@@ -28,7 +28,6 @@ except ImportError:
     REDIS_AVAILABLE = False
 
 from src.caching.redis_client import (
-
     ConnectionStats,
     RedisClient,
     RedisConfig,

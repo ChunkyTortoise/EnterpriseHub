@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -19,7 +20,6 @@ import pytest
 import pytest_asyncio
 
 from ghl_real_estate_ai.services.voice_ai_service import (
-
     VoiceAIService,
     VoiceAnalytics,
     VoiceInteraction,

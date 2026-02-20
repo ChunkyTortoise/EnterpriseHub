@@ -13,8 +13,8 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ghl_real_estate_ai.config.concierge_config_loader import (
     ConciergeClientConfig,
-    get_default_concierge_config,
     get_concierge_config,
+    get_default_concierge_config,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService

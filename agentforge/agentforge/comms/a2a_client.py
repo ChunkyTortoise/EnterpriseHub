@@ -16,7 +16,7 @@ import asyncio
 import json
 import urllib.error
 import urllib.request
-from typing import Any, Optional
+from typing import Any
 
 from .a2a_types import A2AMessage, A2AResponse, AgentCard, Task
 
@@ -29,7 +29,7 @@ class A2AClientError(Exception):
         code: Optional error code from A2A response.
     """
 
-    def __init__(self, message: str, code: Optional[int] = None) -> None:
+    def __init__(self, message: str, code: int | None = None) -> None:
         """Initialize the error.
 
         Args:
@@ -76,7 +76,7 @@ class A2AClient:
     """
 
     def __init__(
-        self, base_url: str, agent_card: Optional[AgentCard] = None
+        self, base_url: str, agent_card: AgentCard | None = None
     ) -> None:
         """Initialize the A2A client.
 
@@ -88,7 +88,7 @@ class A2AClient:
         self._agent_card = agent_card
 
     @property
-    def agent_card(self) -> Optional[AgentCard]:
+    def agent_card(self) -> AgentCard | None:
         """Get the discovered agent card.
 
         Returns:
@@ -227,7 +227,7 @@ class A2AClient:
 
     async def list_tasks(
         self,
-        status: Optional[str] = None,
+        status: str | None = None,
         limit: int = 100,
         timeout: float = 10.0,
     ) -> tuple[list[Task], int]:
@@ -328,7 +328,7 @@ class A2AClient:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
 
-        raise asyncio.TimeoutError(
+        raise TimeoutError(
             f"Task {task_id} did not complete within {max_wait} seconds"
         )
 

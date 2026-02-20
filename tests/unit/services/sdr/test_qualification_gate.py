@@ -4,9 +4,10 @@ Tests the FRS/PCS threshold logic, lead_type routing, and handoff_target selecti
 Uses mocked LeadIntentDecoder — pure gate logic, no external dependencies.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -14,11 +15,11 @@ pytestmark = pytest.mark.unit
 def _make_frs(total_score: float):
     """Build a minimal FinancialReadinessScore with the given total."""
     from ghl_real_estate_ai.models.lead_scoring import (
+        ConditionRealism,
         FinancialReadinessScore,
         MotivationSignals,
-        TimelineCommitment,
-        ConditionRealism,
         PriceResponsiveness,
+        TimelineCommitment,
     )
     return FinancialReadinessScore(
         total_score=total_score,

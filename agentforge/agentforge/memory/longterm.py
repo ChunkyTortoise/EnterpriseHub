@@ -10,11 +10,11 @@ Long-term memory is designed for:
 - Building persistent agent knowledge bases
 """
 
-from typing import Any, Awaitable, Callable, Optional, Union
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from agentforge.memory.base import MemoryProvider
 from agentforge.memory.vector_base import VectorEntry, VectorSearchResult, VectorStore
-
 
 # Type alias for embedding functions
 EmbeddingFunc = Callable[[str], Awaitable[list[float]]]
@@ -61,7 +61,7 @@ class LongTermMemory(MemoryProvider):
     def __init__(
         self,
         vector_store: VectorStore,
-        embedder: Optional[EmbeddingFunc] = None,
+        embedder: EmbeddingFunc | None = None,
         default_dimension: int = 1536,
     ) -> None:
         """Initialize long-term memory.
@@ -81,8 +81,8 @@ class LongTermMemory(MemoryProvider):
         self,
         key: str,
         value: Any,
-        metadata: Optional[dict[str, Any]] = None,
-        content: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        content: str | None = None,
     ) -> None:
         """Store a value with optional embedding.
 
@@ -96,7 +96,7 @@ class LongTermMemory(MemoryProvider):
             content: Optional text content to embed. If not provided and
                 value is a string, uses value as content.
         """
-        vector: Optional[list[float]] = None
+        vector: list[float] | None = None
         actual_content = content or (value if isinstance(value, str) else None)
 
         # Create embedding if we have content and an embedder
@@ -155,7 +155,7 @@ class LongTermMemory(MemoryProvider):
         self,
         query: str,
         top_k: int = 5,
-        filter_metadata: Optional[dict[str, Any]] = None,
+        filter_metadata: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """Semantic search over stored memories.
 
@@ -200,7 +200,7 @@ class LongTermMemory(MemoryProvider):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_metadata: Optional[dict[str, Any]] = None,
+        filter_metadata: dict[str, Any] | None = None,
     ) -> list[VectorSearchResult]:
         """Search directly with a vector (bypasses embedding).
 
@@ -291,7 +291,7 @@ class LongTermMemory(MemoryProvider):
             metadata = entry.get("metadata", {})
             content = entry.get("content") or (value if isinstance(value, str) else None)
 
-            vector: Optional[list[float]] = None
+            vector: list[float] | None = None
             if content and self.embedder:
                 try:
                     vector = await self.embedder(content)

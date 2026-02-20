@@ -9,7 +9,6 @@ from rag_service.billing.quota_service import (
     TIER_QUOTAS,
     QuotaEnforcementMiddleware,
     TierName,
-    TierQuota,
     check_quota_or_raise,
     get_tier_quota,
 )

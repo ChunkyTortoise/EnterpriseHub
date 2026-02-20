@@ -14,7 +14,7 @@ Features:
 - Horizontal scaling support
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from agentforge.memory.vector_base import VectorEntry, VectorSearchResult, VectorStore
 
@@ -57,10 +57,10 @@ class QdrantVectorStore(VectorStore):
 
     def __init__(
         self,
-        url: Optional[str] = None,
-        location: Optional[str] = None,
+        url: str | None = None,
+        location: str | None = None,
         collection_name: str = "agentforge",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         dimension: int = 1536,
         distance: str = "Cosine",
     ) -> None:
@@ -169,7 +169,7 @@ class QdrantVectorStore(VectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_metadata: Optional[dict[str, Any]] = None,
+        filter_metadata: dict[str, Any] | None = None,
     ) -> list[VectorSearchResult]:
         """Search for similar vectors in Qdrant.
 
@@ -181,7 +181,7 @@ class QdrantVectorStore(VectorStore):
         Returns:
             List of search results sorted by similarity.
         """
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         # Build filter if provided
         query_filter = None
@@ -240,7 +240,7 @@ class QdrantVectorStore(VectorStore):
         except Exception:
             return False
 
-    async def get(self, id: str) -> Optional[VectorEntry]:
+    async def get(self, id: str) -> VectorEntry | None:
         """Get an entry by ID.
 
         Args:
@@ -355,7 +355,6 @@ class QdrantVectorStore(VectorStore):
         Returns:
             List of all entry IDs.
         """
-        from qdrant_client.models import Filter
 
         # Scroll through all points
         all_ids = []

@@ -7,8 +7,8 @@ from typing import Any, Dict, List
 from ghl_real_estate_ai.agents.lead.cache import TTLLRUCache
 from ghl_real_estate_ai.agents.lead.config import ResponsePattern, SequenceOptimization
 from ghl_real_estate_ai.agents.lead.constants import (
-    DEFAULT_CHANNEL_PREFS,
     DEFAULT_BEST_CONTACT_TIMES,
+    DEFAULT_CHANNEL_PREFS,
 )
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

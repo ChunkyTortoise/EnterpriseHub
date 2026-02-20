@@ -9,12 +9,9 @@ from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
-from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
-from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
-    get_pricing_objection_engine,
-    ResponseGraduation
-)
 from ghl_real_estate_ai.prompts.objection_responses import get_variant_count
+from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
+from ghl_real_estate_ai.services.jorge.pricing_objection_engine import ResponseGraduation, get_pricing_objection_engine
 
 try:
     from ghl_real_estate_ai.repositories.jorge_metrics_repository import JorgeMetricsRepository

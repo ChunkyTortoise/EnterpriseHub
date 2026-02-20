@@ -9,12 +9,11 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.jorge.handoff_repository import (
-    RedisHandoffRepository,
     _HISTORY_TTL,
     _LOCK_TTL,
     _OUTCOME_TTL,
+    RedisHandoffRepository,
 )
-
 
 # ── Helpers ───────────────────────────────────────────────────────────
 

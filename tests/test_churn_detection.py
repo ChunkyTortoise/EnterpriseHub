@@ -6,15 +6,16 @@ including all 5 churn detection signals, weighted scoring,
 and recovery strategies.
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 from ghl_real_estate_ai.services.churn_detection_service import (
     ChurnDetectionService,
-    ChurnRiskLevel,
-    RecoveryStrategy,
     ChurnRiskAssessment,
+    ChurnRiskLevel,
     RecoveryAction,
+    RecoveryStrategy,
 )
 
 

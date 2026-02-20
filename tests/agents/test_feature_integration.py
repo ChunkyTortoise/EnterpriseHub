@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -24,7 +25,6 @@ from ghl_real_estate_ai.agents.jorge_seller_bot import (
     QualificationResult,
 )
 from ghl_real_estate_ai.config.feature_config import (
-
     AgentMeshConfig,
     FeatureConfig,
     MCPConfig,

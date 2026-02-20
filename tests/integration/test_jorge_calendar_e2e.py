@@ -12,10 +12,9 @@ pytestmark = pytest.mark.integration
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from ghl_real_estate_ai.services.jorge.calendar_booking_service import (
-    CalendarBookingService,
     FALLBACK_MESSAGE,
+    CalendarBookingService,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────
 

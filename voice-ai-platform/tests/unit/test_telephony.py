@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from voice_ai.models.call import Call, CallDirection, CallStatus
+from voice_ai.telephony.call_manager import VALID_TRANSITIONS, CallManager
 from voice_ai.telephony.twilio_handler import TwilioHandler
-from voice_ai.telephony.call_manager import CallManager, VALID_TRANSITIONS
-from voice_ai.models.call import Call, CallStatus, CallDirection
 
 
 class TestTwilioHandler:
@@ -56,8 +56,8 @@ class TestTwilioHandler:
 
     def test_decode_twilio_audio_converts_mulaw_to_pcm(self, handler):
         """Test that audio decoding converts mulaw 8kHz to linear16 16kHz."""
-        import base64
         import audioop
+        import base64
 
         # Create fake mulaw audio
         fake_pcm = b"\x00\x01" * 100  # 200 bytes of PCM
@@ -211,7 +211,7 @@ class TestCallManager:
             from_number="+15551234567",
             to_number="+15559876543",
             status=CallStatus.IN_PROGRESS,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         mock_result = MagicMock()

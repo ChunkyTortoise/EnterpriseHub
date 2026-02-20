@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.abandonment_detector import (
+    STAGE_THRESHOLDS,
     AbandonedContact,
     AbandonmentDetector,
     AbandonmentStage,
-    STAGE_THRESHOLDS,
 )
 
 

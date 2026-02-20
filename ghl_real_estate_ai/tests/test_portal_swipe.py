@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 
 from ghl_real_estate_ai.services.portal_swipe_manager import (
-
     FeedbackCategory,
     PortalSwipeManager,
     SwipeAction,

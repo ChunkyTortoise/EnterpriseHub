@@ -25,7 +25,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 import numpy as np
-
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.dense import DenseRetriever

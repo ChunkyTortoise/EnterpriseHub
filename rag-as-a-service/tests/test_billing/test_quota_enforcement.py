@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock
 
 from rag_service.billing.quota_service import (
     TierName,
-    TierQuota,
     TIER_QUOTAS,
     get_tier_quota,
     check_quota_or_raise,

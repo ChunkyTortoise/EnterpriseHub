@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import pytest
-
-from voice_ai.models.call import CallStatus, CallDirection
+from voice_ai.models.call import CallDirection, CallStatus
 from voice_ai.models.call_analytics import (
-    CallMetrics,
-    SentimentSummary,
-    CostBreakdown,
     CallAnalyticsResponse,
+    CallMetrics,
+    CostBreakdown,
+    SentimentSummary,
 )
 
 

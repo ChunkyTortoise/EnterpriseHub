@@ -15,10 +15,11 @@ Test Coverage:
 - Edge cases and error handling
 """
 
-import pytest
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
-from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
+
+from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
 
 pytestmark = pytest.mark.asyncio
 

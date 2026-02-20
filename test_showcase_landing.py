@@ -18,8 +18,8 @@ def test_imports():
     
     try:
         from ghl_real_estate_ai.streamlit_demo.components.primitives.metric import (
-            render_obsidian_metric,
             MetricConfig,
+            render_obsidian_metric,
         )
         print("✅ Metric components imported successfully")
     except ImportError as e:
@@ -28,8 +28,8 @@ def test_imports():
     
     try:
         from ghl_real_estate_ai.streamlit_demo.components.primitives.card import (
-            render_obsidian_card,
             CardConfig,
+            render_obsidian_card,
         )
         print("✅ Card components imported successfully")
     except ImportError as e:

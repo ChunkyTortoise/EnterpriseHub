@@ -8,7 +8,7 @@ For production workloads, consider using dedicated vector databases like
 Qdrant or ChromaDB (available as optional backends).
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from agentforge.memory.vector_base import VectorEntry, VectorSearchResult, VectorStore
 
@@ -67,8 +67,8 @@ class InMemoryVectorStore(VectorStore):
         self.dimension = dimension
         self._vectors: dict[str, list[float]] = {}
         self._metadata: dict[str, dict[str, Any]] = {}
-        self._content: dict[str, Optional[str]] = {}
-        self._created_at: dict[str, Optional[str]] = {}
+        self._content: dict[str, str | None] = {}
+        self._created_at: dict[str, str | None] = {}
 
     async def insert(self, entry: VectorEntry) -> str:
         """Insert a vector entry into the store.
@@ -97,7 +97,7 @@ class InMemoryVectorStore(VectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_metadata: Optional[dict[str, Any]] = None,
+        filter_metadata: dict[str, Any] | None = None,
     ) -> list[VectorSearchResult]:
         """Search for similar vectors using cosine similarity.
 
@@ -123,7 +123,7 @@ class InMemoryVectorStore(VectorStore):
         self,
         query_vector: list[float],
         top_k: int,
-        filter_metadata: Optional[dict[str, Any]],
+        filter_metadata: dict[str, Any] | None,
     ) -> list[VectorSearchResult]:
         """Search using numpy for efficient similarity computation."""
         import numpy as np
@@ -173,7 +173,7 @@ class InMemoryVectorStore(VectorStore):
         self,
         query_vector: list[float],
         top_k: int,
-        filter_metadata: Optional[dict[str, Any]],
+        filter_metadata: dict[str, Any] | None,
     ) -> list[VectorSearchResult]:
         """Search using pure Python (fallback when numpy unavailable)."""
 
@@ -235,7 +235,7 @@ class InMemoryVectorStore(VectorStore):
             return True
         return False
 
-    async def get(self, id: str) -> Optional[VectorEntry]:
+    async def get(self, id: str) -> VectorEntry | None:
         """Get an entry by ID.
 
         Args:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.web_scraping.scraper import WebScraper, ScrapedPage
+from mcp_toolkit.servers.web_scraping.scraper import WebScraper
 from mcp_toolkit.servers.web_scraping.extractor import (
     DataExtractor,
     LLMProvider,

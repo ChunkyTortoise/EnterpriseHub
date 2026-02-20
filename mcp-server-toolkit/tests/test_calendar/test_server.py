@@ -1,10 +1,10 @@
 """Tests for Calendar MCP server."""
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from mcp_toolkit.framework.testing import MCPTestClient
 from mcp_toolkit.servers.calendar.server import mcp as cal_mcp, configure, MockCalendarProvider
-from mcp_toolkit.servers.calendar.availability import AvailabilityFinder, TimeSlot, BusinessHours
+from mcp_toolkit.servers.calendar.availability import AvailabilityFinder, TimeSlot
 
 
 @pytest.fixture

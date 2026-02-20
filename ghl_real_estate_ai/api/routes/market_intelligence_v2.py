@@ -23,19 +23,23 @@ Usage:
     GET /api/v2/market-intelligence/neighborhoods?market_id=houston
 """
 
+import asyncio
+import json
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.services.market_sentiment_radar import get_market_sentiment_radar
 
 # ENHANCED: Import market registry and configuration schemas
 from ghl_real_estate_ai.markets import get_market_registry, get_market_service
 from ghl_real_estate_ai.markets.config_schemas import PropertyType
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.market_sentiment_radar import get_market_sentiment_radar
 
 logger = get_logger(__name__)
 
@@ -858,3 +862,181 @@ async def get_metrics_legacy(
     """
     logger.info(f"Legacy metrics endpoint called, routing to market: {market_id}")
     return await get_market_metrics(market_id, neighborhood, property_type)
+
+
+# ============================================================================
+# ROADMAP-047: AI-Powered Property Recommendations via Claude + SSE
+# ============================================================================
+
+
+class AIRecommendationRequest(BaseModel):
+    """Request for Claude-powered property recommendations."""
+    market_id: str = Field(..., description="Market identifier")
+    lead_id: str = Field(..., description="Lead identifier")
+    buyer_persona: Dict[str, Any] = Field(default_factory=dict, description="Buyer preferences and context")
+    budget_range: Optional[List[float]] = Field(None, description="[min_price, max_price]")
+    priorities: Optional[List[str]] = Field(None, description="Buyer priorities (schools, commute, etc.)")
+    max_recommendations: int = Field(5, description="Max recommendations to generate", ge=1, le=10)
+
+
+@router.post("/recommendations/ai-stream")
+async def stream_ai_recommendations(request: AIRecommendationRequest):
+    """
+    Generate AI-powered property recommendations using Claude, streamed via SSE.
+
+    Combines market data with buyer persona to produce personalized recommendations
+    with reasoning, delivered token-by-token through Server-Sent Events.
+    """
+    try:
+        # Validate market exists
+        registry = get_market_registry()
+        config = registry.get_market_config(request.market_id)
+        if not config:
+            raise HTTPException(404, f"Market '{request.market_id}' not found")
+
+        # Get market service and properties
+        market_service = get_market_service(request.market_id)
+        criteria = {}
+        if request.budget_range and len(request.budget_range) == 2:
+            criteria["min_price"] = request.budget_range[0]
+            criteria["max_price"] = request.budget_range[1]
+
+        properties = await market_service.search_properties(criteria, 20)
+        property_summaries = []
+        for prop in properties[:10]:
+            record = dict(getattr(prop, "__dict__", prop))
+            property_summaries.append({
+                "address": record.get("address", "Unknown"),
+                "price": record.get("price"),
+                "bedrooms": record.get("bedrooms"),
+                "bathrooms": record.get("bathrooms"),
+                "sqft": record.get("sqft"),
+                "neighborhood": record.get("neighborhood", ""),
+                "days_on_market": record.get("days_on_market"),
+            })
+
+        # Build the Claude prompt
+        prompt = _build_recommendation_prompt(
+            market_name=config.market_name,
+            buyer_persona=request.buyer_persona,
+            priorities=request.priorities or [],
+            properties=property_summaries,
+            max_recommendations=request.max_recommendations,
+        )
+
+        return StreamingResponse(
+            _stream_claude_recommendations(prompt, request.lead_id, request.market_id),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error starting AI recommendation stream: {e}")
+        raise HTTPException(500, f"Failed to generate recommendations: {str(e)}")
+
+
+def _build_recommendation_prompt(
+    market_name: str,
+    buyer_persona: Dict[str, Any],
+    priorities: List[str],
+    properties: List[Dict[str, Any]],
+    max_recommendations: int,
+) -> str:
+    """Build a structured prompt for Claude property recommendations."""
+    persona_text = json.dumps(buyer_persona, indent=2) if buyer_persona else "No specific preferences provided."
+    priorities_text = ", ".join(priorities) if priorities else "Not specified"
+    properties_text = json.dumps(properties, indent=2) if properties else "No properties available."
+
+    return f"""You are a real estate recommendation engine for the {market_name} market.
+
+Analyze the following buyer profile and available properties to provide {max_recommendations} personalized recommendations.
+
+## Buyer Profile
+{persona_text}
+
+## Buyer Priorities
+{priorities_text}
+
+## Available Properties
+{properties_text}
+
+## Instructions
+For each recommended property:
+1. Explain why it matches the buyer's needs
+2. Highlight key strengths and potential concerns
+3. Suggest a negotiation strategy based on days-on-market
+4. Rate the match on a 1-10 scale
+
+Format each recommendation as a numbered list. Be specific and actionable."""
+
+
+async def _stream_claude_recommendations(prompt: str, lead_id: str, market_id: str):
+    """Stream Claude API response as SSE events."""
+    try:
+        # Try to import anthropic for Claude API
+        try:
+            import anthropic
+            client = anthropic.AsyncAnthropic(
+                api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+            )
+        except (ImportError, Exception) as e:
+            logger.warning(f"Claude API unavailable: {e}, using fallback")
+            async for chunk in _fallback_recommendation_stream(prompt, lead_id, market_id):
+                yield chunk
+            return
+
+        if not os.getenv("ANTHROPIC_API_KEY"):
+            logger.info("No ANTHROPIC_API_KEY set, using fallback recommendations")
+            async for chunk in _fallback_recommendation_stream(prompt, lead_id, market_id):
+                yield chunk
+            return
+
+        # Stream from Claude API
+        yield f"data: {json.dumps({'type': 'start', 'lead_id': lead_id, 'market_id': market_id})}\n\n"
+
+        async with client.messages.stream(
+            model="claude-sonnet-4-20250514",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        ) as stream:
+            async for text in stream.text_stream:
+                yield f"data: {json.dumps({'type': 'content', 'text': text})}\n\n"
+
+        yield f"data: {json.dumps({'type': 'done', 'lead_id': lead_id})}\n\n"
+
+    except Exception as e:
+        logger.error(f"Claude streaming error: {e}")
+        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+
+async def _fallback_recommendation_stream(prompt: str, lead_id: str, market_id: str):
+    """Fallback when Claude API is unavailable — returns structured recommendations."""
+    yield f"data: {json.dumps({'type': 'start', 'lead_id': lead_id, 'market_id': market_id})}\n\n"
+
+    fallback_text = (
+        f"## Property Recommendations for {market_id}\n\n"
+        "Based on the available properties and buyer preferences, "
+        "here are the top recommendations:\n\n"
+        "1. **Best Overall Match** — The property closest to your budget and "
+        "priority criteria. Consider scheduling a showing this week.\n\n"
+        "2. **Best Value** — Slightly above average days on market, which "
+        "may indicate room for negotiation.\n\n"
+        "3. **Growth Potential** — Located in a neighborhood with strong "
+        "appreciation trends over the past 12 months.\n\n"
+        "*Note: For detailed AI-powered analysis, configure ANTHROPIC_API_KEY.*"
+    )
+
+    # Stream in chunks to simulate SSE behavior
+    chunk_size = 80
+    for i in range(0, len(fallback_text), chunk_size):
+        chunk = fallback_text[i:i + chunk_size]
+        yield f"data: {json.dumps({'type': 'content', 'text': chunk})}\n\n"
+        await asyncio.sleep(0.02)
+
+    yield f"data: {json.dumps({'type': 'done', 'lead_id': lead_id})}\n\n"

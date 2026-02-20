@@ -3,10 +3,11 @@ Advanced RAG System Demo - Streamlit Cloud Deployment
 Mock embeddings and search - no real API calls needed
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import streamlit as st
 
 # Page configuration
 st.set_page_config(

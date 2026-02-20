@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for hierarchical context memory (Phase 5A)."""
@@ -6,7 +7,6 @@ pytestmark = pytest.mark.integration
 import pytest
 
 from ghl_real_estate_ai.services.jorge.context_memory import (
-
     EntityFact,
     HierarchicalContextMemory,
 )

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Buyer Saved Search & Alerts Service.
@@ -10,7 +11,6 @@ deactivation, message length constraint, and multiple searches per buyer.
 import pytest
 
 from ghl_real_estate_ai.services.saved_search import (
-
     SavedSearchService,
     SearchCriteria,
 )

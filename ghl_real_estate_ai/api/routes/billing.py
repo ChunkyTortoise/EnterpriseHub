@@ -393,17 +393,110 @@ async def update_subscription(
             }
         )
 
+        # ROADMAP-009: Payment method listing + cancellation via DB + Stripe
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+
+        # Fetch current subscription from DB
+        async with db.get_connection() as conn:
+            current_row = await conn.fetchrow(
+                """
+                SELECT
+                    s.id, s.location_id, s.stripe_subscription_id,
+                    s.stripe_customer_id, s.tier, s.status, s.currency,
+                    s.current_period_start, s.current_period_end,
+                    s.usage_allowance, s.usage_current, s.overage_rate,
+                    s.base_price, s.trial_end, s.cancel_at_period_end,
+                    s.created_at, s.updated_at
+                FROM subscriptions s
+                WHERE s.id = $1
+                """,
+                subscription_id,
+            )
+
+        if not current_row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error_code": "subscription_not_found",
+                    "error_message": f"Subscription {subscription_id} not found",
+                    "error_type": "not_found",
+                    "recoverable": True,
+                },
+            )
+
+        current_sub = dict(current_row)
+
         # Handle tier change if requested
         if request.tier:
             subscription = await subscription_manager.handle_tier_change(
                 subscription_id, request.tier
             )
-        else:
-            # ROADMAP-009: Implement payment method and cancellation modifications
-            # Current: Only tier changes are handled
-            # Required: Add Stripe payment method updates and cancellation scheduling
-            # Status: Planned for Q2 2026
-            pass  # Placeholder for additional modification types
+            background_tasks.add_task(
+                _track_billing_event,
+                "subscription_modified",
+                {
+                    "subscription_id": subscription_id,
+                    "tier": request.tier.value,
+                    "modification_type": "tier_change",
+                },
+            )
+            return subscription
+
+        stripe_sub_id = current_sub["stripe_subscription_id"]
+
+        # Handle payment method update via Stripe
+        if request.payment_method_id:
+            stripe.PaymentMethod.attach(
+                request.payment_method_id,
+                customer=current_sub["stripe_customer_id"],
+            )
+            stripe.Customer.modify(
+                current_sub["stripe_customer_id"],
+                invoice_settings={"default_payment_method": request.payment_method_id},
+            )
+            logger.info(
+                f"Updated payment method for subscription {subscription_id}",
+                extra={"payment_method_id": request.payment_method_id},
+            )
+
+        # Handle cancellation scheduling
+        if request.cancel_at_period_end is not None:
+            stripe.Subscription.modify(
+                stripe_sub_id,
+                cancel_at_period_end=request.cancel_at_period_end,
+            )
+            async with db.get_connection() as conn:
+                await conn.execute(
+                    "UPDATE subscriptions SET cancel_at_period_end = $1, updated_at = NOW() WHERE id = $2",
+                    request.cancel_at_period_end,
+                    subscription_id,
+                )
+
+        # Refresh subscription state after modifications
+        async with db.get_connection() as conn:
+            updated_row = await conn.fetchrow(
+                """
+                SELECT
+                    s.id, s.location_id, s.stripe_subscription_id,
+                    s.stripe_customer_id, s.tier, s.status, s.currency,
+                    s.current_period_start, s.current_period_end,
+                    s.usage_allowance, s.usage_current, s.overage_rate,
+                    s.base_price, s.trial_end, s.cancel_at_period_end,
+                    s.created_at, s.updated_at
+                FROM subscriptions s
+                WHERE s.id = $1
+                """,
+                subscription_id,
+            )
+
+        sub = dict(updated_row)
+        usage_pct = (
+            (sub["usage_current"] / sub["usage_allowance"]) * 100
+            if sub["usage_allowance"] > 0
+            else 0.0
+        )
 
         # Track subscription modification event
         background_tasks.add_task(
@@ -412,29 +505,32 @@ async def update_subscription(
             {
                 "subscription_id": subscription_id,
                 "tier": request.tier.value if request.tier else None,
-                "modification_type": _get_modification_type(request)
-            }
+                "modification_type": _get_modification_type(request),
+            },
         )
 
         logger.info(f"Successfully updated subscription {subscription_id}")
 
-        # Return placeholder - replace with actual updated subscription
         return SubscriptionResponse(
-            id=subscription_id,
-            location_id="placeholder_location",
-            stripe_subscription_id="sub_placeholder",
-            stripe_customer_id="cus_placeholder",
-            tier=request.tier or SubscriptionTier.PROFESSIONAL,
-            status=SubscriptionStatus.ACTIVE,
-            current_period_start=datetime.now(),
-            current_period_end=datetime.now(),
-            usage_allowance=150,
-            usage_current=87,
-            usage_percentage=58.0,
-            overage_rate=1.50,
-            base_price=249.00,
-            next_invoice_date=datetime.now(),
-            created_at=datetime.now()
+            id=sub["id"],
+            location_id=sub["location_id"],
+            stripe_subscription_id=sub["stripe_subscription_id"],
+            stripe_customer_id=sub["stripe_customer_id"],
+            tier=SubscriptionTier(sub["tier"]),
+            status=SubscriptionStatus(sub["status"]),
+            currency=sub.get("currency", "usd"),
+            current_period_start=sub["current_period_start"],
+            current_period_end=sub["current_period_end"],
+            usage_allowance=sub["usage_allowance"],
+            usage_current=sub["usage_current"],
+            usage_percentage=round(usage_pct, 2),
+            overage_rate=sub["overage_rate"],
+            base_price=sub["base_price"],
+            trial_end=sub.get("trial_end"),
+            cancel_at_period_end=sub.get("cancel_at_period_end", False),
+            next_invoice_date=sub["current_period_end"],
+            created_at=sub["created_at"],
+            updated_at=sub.get("updated_at"),
         )
 
     except SubscriptionManagerError as e:
@@ -448,6 +544,8 @@ async def update_subscription(
                 "recoverable": True
             }
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error updating subscription {subscription_id}: {e}", exc_info=True)
         raise HTTPException(
@@ -534,7 +632,24 @@ async def cancel_subscription(
             )
         
         stripe_subscription_id = subscription_row["stripe_subscription_id"]
-        
+
+        # ROADMAP-010: Prevent double-cancel
+        if subscription_row["status"] == "canceled":
+            logger.warning(
+                f"Subscription {subscription_id} is already canceled",
+                extra={"subscription_id": subscription_id, "action": "double_cancel_blocked"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error_code": "subscription_already_canceled",
+                    "error_message": f"Subscription {subscription_id} is already canceled",
+                    "error_type": "conflict",
+                    "recoverable": False,
+                    "suggested_action": "No action needed — subscription is already canceled",
+                },
+            )
+
         # Validate we have a Stripe subscription ID to cancel
         if not stripe_subscription_id:
             logger.warning(
@@ -583,6 +698,20 @@ async def cancel_subscription(
                     "immediate": immediate
                 }
             )
+
+            # Update local subscription status
+            async with db.get_connection() as conn:
+                if immediate:
+                    await conn.execute(
+                        "UPDATE subscriptions SET status = 'canceled', updated_at = NOW() WHERE id = $1",
+                        subscription_id,
+                    )
+                else:
+                    await conn.execute(
+                        "UPDATE subscriptions SET cancel_at_period_end = TRUE, updated_at = NOW() WHERE id = $1",
+                        subscription_id,
+                    )
+
         except BillingServiceError as e:
             logger.error(
                 f"Stripe cancellation failed for subscription {subscription_id}",
@@ -627,6 +756,8 @@ async def cancel_subscription(
             "message": f"Subscription {'canceled immediately' if immediate else 'scheduled for cancellation at period end'}"
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error canceling subscription {subscription_id}: {e}", exc_info=True)
         raise HTTPException(
@@ -684,19 +815,32 @@ async def record_usage(
             max_delay=10.0,
         )
 
-        # ROADMAP-011: Store usage records in local database
-        # Current: Only recording in Stripe
-        # Required: Insert into usage_records table for analytics and audit
-        # Schema: subscription_id, stripe_usage_record_id, lead_id, contact_id, amount, tier, timestamp
-        #
-        # usage_record = await db.usage_records.insert({
-        #     "subscription_id": request.subscription_id,
-        #     "stripe_usage_record_id": stripe_usage_record.id,
-        #     "lead_id": request.lead_id,
-        #     "contact_id": request.contact_id,
-        #     "amount": request.amount,
-        #     "tier": request.tier
-        # })
+        # ROADMAP-011: Store usage records in local database for analytics and audit
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                """
+                INSERT INTO usage_records (
+                    subscription_id, stripe_usage_record_id, lead_id, contact_id,
+                    quantity, amount, tier, billing_period_start, billing_period_end
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """,
+                request.subscription_id,
+                stripe_usage_record.id,
+                request.lead_id,
+                request.contact_id,
+                1,
+                request.amount,
+                request.tier,
+                request.billing_period_start,
+                request.billing_period_end,
+            )
+            await conn.execute(
+                "UPDATE subscriptions SET usage_current = usage_current + 1 WHERE id = $1",
+                request.subscription_id,
+            )
 
         # Track usage event for analytics
         background_tasks.add_task(
@@ -1046,11 +1190,19 @@ async def get_billing_history(customer_id: str):
         else:
             period_start = period_end = datetime.now()
 
+        # ROADMAP-012: Resolve location_id from stripe_customers table
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            location_id_row = await conn.fetchrow(
+                "SELECT location_id FROM stripe_customers WHERE stripe_customer_id = $1",
+                customer_id,
+            )
+        resolved_location_id = location_id_row["location_id"] if location_id_row else customer_id
+
         billing_history = BillingHistoryResponse(
-            # ROADMAP-012: Get actual location_id from customer record
-            # Current: Using placeholder
-            # Required: Query customers table by stripe_customer_id
-            location_id="placeholder",
+            location_id=resolved_location_id,
             invoices=invoice_details,
             total_spent=total_spent,
             period_start=period_start,
@@ -1197,34 +1349,85 @@ async def get_revenue_analytics():
     try:
         logger.info("Calculating revenue analytics")
 
-        # ROADMAP-013: Calculate revenue from actual subscription data
-        # Current: Using tier distribution projections
-        # Required: Aggregate real subscription and usage data
-        # Note: Current implementation uses projected data based on $240K ARR target
-        # Status: Pending database integration (see ROADMAP-008, ROADMAP-011)
+        # ROADMAP-013: Calculate revenue from actual subscription + usage data
+        from ghl_real_estate_ai.services.database_service import get_database
 
-        # Calculate tier distribution
-        tier_distribution = await subscription_manager.get_tier_distribution()
+        db = await get_database()
+        async with db.get_connection() as conn:
+            # Active subscriptions with base_price for real MRR
+            mrr_row = await conn.fetchrow(
+                """
+                SELECT
+                    COALESCE(SUM(base_price), 0) AS mrr,
+                    COUNT(*) AS active_count,
+                    COUNT(*) FILTER (WHERE tier = 'enterprise') AS enterprise_count
+                FROM subscriptions
+                WHERE status = 'active'
+                """
+            )
 
-        # Calculate revenue metrics (placeholder calculations)
-        total_subscriptions = tier_distribution.total_subscriptions
-        monthly_revenue = (
-            tier_distribution.starter_count * 99 +
-            tier_distribution.professional_count * 249 +
-            tier_distribution.enterprise_count * 499
-        )
+            # Usage revenue from usage_records in the current calendar month
+            usage_row = await conn.fetchrow(
+                """
+                SELECT COALESCE(SUM(amount), 0) AS usage_revenue
+                FROM usage_records
+                WHERE billing_period_start >= date_trunc('month', NOW())
+                """
+            )
+
+            # Churn: subscriptions canceled in the last 30 days vs total at start
+            churn_row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) FILTER (WHERE status = 'canceled'
+                        AND updated_at >= NOW() - INTERVAL '30 days') AS churned,
+                    COUNT(*) AS total
+                FROM subscriptions
+                WHERE created_at < NOW() - INTERVAL '30 days'
+                """
+            )
+
+            # Upgrade rate: tier changes in the last 30 days
+            upgrade_row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) FILTER (WHERE updated_at >= NOW() - INTERVAL '30 days'
+                        AND tier IN ('professional', 'enterprise')) AS upgrades,
+                    COUNT(*) AS total
+                FROM subscriptions
+                WHERE status = 'active'
+                """
+            )
+
+        monthly_revenue = mrr_row["mrr"] if mrr_row else 0
+        total_subscriptions = mrr_row["active_count"] if mrr_row else 0
+        enterprise_count = mrr_row["enterprise_count"] if mrr_row else 0
+        usage_rev = usage_row["usage_revenue"] if usage_row else 0
+
         total_arr = monthly_revenue * 12
         average_arpu = monthly_revenue / total_subscriptions if total_subscriptions > 0 else 0
+
+        # Churn rate as percentage
+        churn_total = churn_row["total"] if churn_row and churn_row["total"] else 1
+        churn_rate = (churn_row["churned"] / churn_total * 100) if churn_row else 0.0
+
+        # Upgrade rate as percentage
+        upgrade_total = upgrade_row["total"] if upgrade_row and upgrade_row["total"] else 1
+        upgrade_rate = (upgrade_row["upgrades"] / upgrade_total * 100) if upgrade_row else 0.0
+
+        # Usage revenue as percentage of total
+        total_rev = float(monthly_revenue) + float(usage_rev)
+        usage_revenue_percentage = (float(usage_rev) / total_rev * 100) if total_rev > 0 else 0.0
 
         revenue_analytics = RevenueAnalytics(
             total_arr=total_arr,
             monthly_revenue=monthly_revenue,
             average_arpu=average_arpu,
-            churn_rate=2.5,  # Target: <3% monthly churn
-            upgrade_rate=15.0,  # Target: 15% monthly upgrade rate
-            usage_revenue_percentage=33.0,  # 33% from overages, 67% from subscriptions
-            top_tier_customers=tier_distribution.enterprise_count,
-            total_active_subscriptions=total_subscriptions
+            churn_rate=round(churn_rate, 2),
+            upgrade_rate=round(upgrade_rate, 2),
+            usage_revenue_percentage=round(usage_revenue_percentage, 2),
+            top_tier_customers=enterprise_count,
+            total_active_subscriptions=total_subscriptions,
         )
 
         logger.info(
@@ -1301,37 +1504,73 @@ async def get_tier_distribution():
 # ===================================================================
 
 async def _track_billing_event(event_type: str, data: Dict[str, Any]) -> None:
-    """Track billing events for analytics (background task)."""
+    """Track billing events for analytics (background task).
+
+    ROADMAP-014: Persists billing events to billing_analytics_events table
+    for downstream analytics (Segment, Mixpanel, or custom pipeline).
+    """
     try:
-        # ROADMAP-014: Integrate with analytics service
-        # Current: Logging only
-        # Required: Send to analytics pipeline (Segment, Mixpanel, or custom)
-        # Events: subscription_created, subscription_modified, subscription_canceled, payment_processed, usage_recorded
+        import json
+
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                """
+                INSERT INTO billing_analytics_events (event_type, event_data, created_at)
+                VALUES ($1, $2, NOW())
+                """,
+                event_type,
+                json.dumps(data, default=str),
+            )
+
         logger.info(
             f"Billing event tracked: {event_type}",
-            extra={"event_type": event_type, "data": data}
+            extra={"event_type": event_type, "data": data},
         )
     except Exception as e:
+        # Non-critical: log and continue — analytics loss should not break billing
         logger.error(f"Error tracking billing event {event_type}: {e}")
 
 
 async def _store_webhook_event(event_data: Dict[str, Any], processing_result: Dict[str, Any]) -> None:
-    """Store webhook event in database for audit trail (background task)."""
+    """Store webhook event in database for audit trail (background task).
+
+    ROADMAP-015: Persists inbound Stripe webhook events to billing_events table
+    for audit trail and replay capability.
+    """
     try:
-        # ROADMAP-015: Store webhook events in billing_events table
-        # Current: Logging only
-        # Required: Insert into billing_events table for audit trail and replay capability
-        # Schema: event_id, event_type, event_data, processing_result, processed_at, created_at
-        # Index: event_id (unique), event_type, created_at
+        import json
+
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                """
+                INSERT INTO billing_events (
+                    event_id, event_type, event_data, processing_result,
+                    processed_at, created_at
+                ) VALUES ($1, $2, $3, $4, NOW(), NOW())
+                ON CONFLICT (event_id) DO NOTHING
+                """,
+                event_data["id"],
+                event_data["type"],
+                json.dumps(event_data, default=str),
+                json.dumps(processing_result, default=str),
+            )
+
         logger.info(
             f"Webhook event stored: {event_data['id']}",
             extra={
                 "event_id": event_data["id"],
                 "event_type": event_data["type"],
-                "processed": processing_result["processed"]
-            }
+                "processed": processing_result["processed"],
+            },
         )
     except Exception as e:
+        # Non-critical: log and continue — audit loss should not break webhook processing
         logger.error(f"Error storing webhook event: {e}")
 
 

@@ -9,8 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ghl_real_estate_ai.services.celery_app import app
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.celery_app import app
 
 logger = get_logger(__name__)
 

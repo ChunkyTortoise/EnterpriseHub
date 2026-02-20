@@ -5,9 +5,10 @@ Tests the BuyerPersonaService for classifying buyers into persona types
 and providing personalized communication recommendations.
 """
 
-import pytest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.models.buyer_persona import (
     BuyerPersonaClassification,

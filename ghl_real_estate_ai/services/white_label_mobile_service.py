@@ -456,8 +456,31 @@ class WhiteLabelMobileService:
 
     async def _validate_branding_assets(self, branding: BrandingConfig):
         """Validate branding assets are accessible and properly formatted."""
-        # ROADMAP-074: Implement asset validation for white-label branding
-        pass
+        import re
+
+        # Validate hex colors
+        hex_pattern = re.compile(r"^#[0-9A-Fa-f]{6}$")
+        for field_name in ("primary_color", "secondary_color", "accent_color"):
+            value = getattr(branding, field_name, None)
+            if value and not hex_pattern.match(value):
+                raise ValueError(f"Invalid hex color for {field_name}: {value}")
+
+        # Validate app name is not empty
+        if not branding.app_name or not branding.app_name.strip():
+            raise ValueError("App name cannot be empty")
+
+        # Validate URLs if provided
+        url_pattern = re.compile(r"^https?://\S+$")
+        for field_name in ("logo_url", "icon_url", "splash_screen_url", "website_url"):
+            value = getattr(branding, field_name, None)
+            if value and not url_pattern.match(value):
+                raise ValueError(f"Invalid URL for {field_name}: {value}")
+
+        # Validate support email if provided
+        if branding.support_email:
+            email_pattern = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+            if not email_pattern.match(branding.support_email):
+                raise ValueError(f"Invalid support email: {branding.support_email}")
 
     async def _store_white_label_config(self, config: WhiteLabelConfig):
         """Store white-label configuration."""
@@ -482,13 +505,56 @@ class WhiteLabelMobileService:
 
     async def _generate_app_configs(self, config: WhiteLabelConfig):
         """Generate app configuration files for mobile builds."""
-        # ROADMAP-074: Implement app config generation for mobile builds
-        pass
+        docker_build_args = {
+            "APP_NAME": config.branding.app_name,
+            "PRIMARY_COLOR": config.branding.primary_color,
+            "SECONDARY_COLOR": config.branding.secondary_color,
+            "ACCENT_COLOR": config.branding.accent_color,
+            "AGENCY_ID": config.agency_id,
+            "TIER": config.tier.value,
+        }
+        if config.branding.logo_url:
+            docker_build_args["LOGO_URL"] = config.branding.logo_url
+
+        platform_configs = {}
+        for platform in config.platforms:
+            key = platform.value if platform != AppPlatform.BOTH else None
+            platforms = (
+                [AppPlatform.IOS, AppPlatform.ANDROID]
+                if platform == AppPlatform.BOTH
+                else [platform]
+            )
+            for p in platforms:
+                platform_configs[p.value] = {
+                    "bundle_id": f"com.{config.agency_id}.{config.branding.app_name.lower().replace(' ', '')}",
+                    "platform": p.value,
+                    "features": asdict(config.features),
+                }
+
+        result = {
+            "agency_id": config.agency_id,
+            "docker_build_args": docker_build_args,
+            "platform_configs": platform_configs,
+            "generated_at": datetime.utcnow().isoformat(),
+        }
+
+        cache_key = f"app_config:{config.agency_id}"
+        await self.cache.set(cache_key, result, ttl=86400)
+        return result
 
     async def _trigger_app_build(self, config: WhiteLabelConfig):
         """Trigger mobile app build process."""
-        # ROADMAP-074: Implement app build triggering via CI/CD
-        pass
+        app_configs = await self._generate_app_configs(config)
+        build_request = {
+            "agency_id": config.agency_id,
+            "platforms": [p.value for p in config.platforms],
+            "docker_build_args": app_configs["docker_build_args"],
+            "tier": config.tier.value,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+        build_id = await self._queue_app_build(build_request)
+        logger.info(f"Triggered app build {build_id} for agency {config.agency_id}")
+        return build_id
 
     def _generate_app_description(self, config: WhiteLabelConfig) -> str:
         """Generate app store description."""

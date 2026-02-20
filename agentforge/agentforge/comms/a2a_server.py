@@ -9,7 +9,8 @@ Provides:
 - Capability handler registration
 """
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from .a2a_types import (
     A2AErrorCode,
@@ -19,7 +20,6 @@ from .a2a_types import (
     Task,
     TaskStatus,
 )
-
 
 # Type alias for capability handlers
 CapabilityHandler = Callable[[dict[str, Any]], Any]
@@ -293,7 +293,7 @@ class A2AServer:
         """
         return self.agent_card.model_dump_json()
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str) -> Task | None:
         """Get a task by ID.
 
         Args:
@@ -305,7 +305,7 @@ class A2AServer:
         return self._tasks.get(task_id)
 
     def list_tasks(
-        self, status: Optional[TaskStatus] = None, limit: int = 100
+        self, status: TaskStatus | None = None, limit: int = 100
     ) -> list[Task]:
         """List tasks with optional filtering.
 

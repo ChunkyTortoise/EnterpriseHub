@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -30,7 +31,6 @@ from ghl_real_estate_ai.services.competitive_data_pipeline import (
     ThreatLevel,
 )
 from ghl_real_estate_ai.services.competitive_response_automation import (
-
     ApprovalLevel,
     CompetitiveResponseEngine,
     EmailMarketingExecutor,

@@ -3,9 +3,10 @@ Quote Request Form Component
 Professional service quote request form for portfolio showcase
 """
 
-import streamlit as st
-from datetime import datetime, timedelta
 import re
+from datetime import datetime, timedelta
+
+import streamlit as st
 
 
 def render_quote_request_form():

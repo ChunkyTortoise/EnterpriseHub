@@ -25,6 +25,7 @@ from ghl_real_estate_ai.models.bot_context_types import (
     LearnedAdjustments,
 )
 from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
+from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 from ghl_real_estate_ai.services.service_types import (
     BudgetRange,
     CMASummary,
@@ -32,7 +33,6 @@ from ghl_real_estate_ai.services.service_types import (
     HandoffOutcome,
     KeyInsights,
 )
-from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 
 # Import workflow tracing for cross-bot correlation
 try:
@@ -392,7 +392,7 @@ class JorgeHandoffService:
 
         try:
             import json
-            from datetime import datetime, timezone, timedelta
+            from datetime import datetime, timedelta, timezone
 
             # Retrieve contact to get custom fields
             contact = await self._ghl_client.get_contact(contact_id)

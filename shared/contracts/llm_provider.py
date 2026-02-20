@@ -21,8 +21,9 @@ Usage:
             ...
 """
 
-from typing import Protocol, AsyncIterator, Any, Literal
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Any, AsyncIterator, Literal, Protocol
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LLMMessage(BaseModel):

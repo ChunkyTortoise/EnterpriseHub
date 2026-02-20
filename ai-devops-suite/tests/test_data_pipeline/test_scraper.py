@@ -2,7 +2,7 @@
 
 import pytest
 
-from devops_suite.data_pipeline.scraper import RobotsPolicy, WebScraper
+from devops_suite.data_pipeline.scraper import WebScraper
 
 
 @pytest.fixture

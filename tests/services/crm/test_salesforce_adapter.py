@@ -10,7 +10,6 @@ import pytest
 
 from ghl_real_estate_ai.services.crm import CRMContact
 from ghl_real_estate_ai.services.crm.salesforce_adapter import (
-
     SalesforceAdapter,
     SalesforceError,
 )

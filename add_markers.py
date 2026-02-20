@@ -1,6 +1,7 @@
 import os
 import re
 
+
 def add_markers():
     test_files = []
     for root, dirs, files in os.walk('.'):

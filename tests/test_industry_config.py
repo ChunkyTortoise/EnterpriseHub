@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -26,7 +28,6 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.config.industry_config import (
-
     BotPersonality,
     HandoffConfig,
     IndustryConfig,

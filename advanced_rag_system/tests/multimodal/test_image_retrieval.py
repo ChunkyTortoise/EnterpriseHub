@@ -14,7 +14,6 @@ from unittest.mock import patch
 import pytest
 from src.core.exceptions import RetrievalError
 from src.multimodal.image_retriever import (
-
     ImageRetriever,
     ImageRetrieverConfig,
     MockCLIPEmbeddingProvider,

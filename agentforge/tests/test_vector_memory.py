@@ -9,11 +9,12 @@ This module tests:
 """
 
 import math
+
 import pytest
 
-from agentforge.memory.vector_base import VectorEntry, VectorSearchResult, VectorStore
-from agentforge.memory.vector_memory import InMemoryVectorStore
 from agentforge.memory.longterm import LongTermMemory
+from agentforge.memory.vector_base import VectorEntry, VectorSearchResult
+from agentforge.memory.vector_memory import InMemoryVectorStore
 
 
 # Helper functions
@@ -350,8 +351,8 @@ class TestLongTermMemory:
     async def test_store_without_embedder(self, store):
         """Test storing without embedder uses placeholder."""
         memory = LongTermMemory(
-            vector_store=store, 
-            embedder=None, 
+            vector_store=store,
+            embedder=None,
             default_dimension=10  # Match store dimension
         )
         await memory.store(key="test", value="content")

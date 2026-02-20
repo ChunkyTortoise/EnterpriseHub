@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from devops_suite.billing.tier_manager import TierManager, TierLimitExceeded, UsageCounter
+from devops_suite.billing.tier_manager import TierManager, TierLimitExceeded
 from devops_suite.config import Tier, TIER_LIMITS
 
 

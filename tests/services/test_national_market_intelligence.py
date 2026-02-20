@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -19,7 +20,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.national_market_intelligence import (
-
     CompetitiveAnalysis,
     MarketMetrics,
     MarketTrend,

@@ -1,7 +1,8 @@
 import os
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi import HTTPException
-from unittest.mock import MagicMock, patch, AsyncMock
 
 # Mock settings and logger
 mock_settings = MagicMock()

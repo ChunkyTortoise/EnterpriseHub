@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -21,7 +22,6 @@ from pydantic import ConfigDict
 
 import ghl_real_estate_ai.services.enterprise_tenant_service as ets_module
 from ghl_real_estate_ai.services.enterprise_tenant_service import (
-
     BrandingConfig,
     EnterpriseTenantService,
     FeatureFlags,

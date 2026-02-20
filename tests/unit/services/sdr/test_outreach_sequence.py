@@ -47,7 +47,7 @@ class TestSequenceStep:
 
     def test_next_step_progression(self):
         """SMS_1 → EMAIL_1 → SMS_2 → VOICEMAIL_1 progression."""
-        from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import get_next_step, SequenceStep
+        from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep, get_next_step
         assert get_next_step(SequenceStep.ENROLLED) == SequenceStep.SMS_1
         assert get_next_step(SequenceStep.SMS_1) == SequenceStep.EMAIL_1
         assert get_next_step(SequenceStep.EMAIL_1) == SequenceStep.SMS_2
@@ -58,7 +58,7 @@ class TestSequenceStep:
         assert get_next_step(SequenceStep.VOICEMAIL_2) == SequenceStep.NURTURE_PAUSE
 
     def test_terminal_step_returns_none(self):
-        from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import get_next_step, SequenceStep
+        from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep, get_next_step
         assert get_next_step(SequenceStep.QUALIFIED) is None
         assert get_next_step(SequenceStep.OPTED_OUT) is None
 

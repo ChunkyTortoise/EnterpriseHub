@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 #!/usr/bin/env python3
@@ -16,7 +17,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ghl_real_estate_ai.ml.behavioral_signal_processor import (
-
     BehavioralSignal,
     BehavioralSignalProcessor,
     EngagementPattern,

@@ -15,12 +15,13 @@ Test Coverage:
 - Performance tracking integration ✓
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock, patch, ANY
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+
+import pytest
+
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 from ghl_real_estate_ai.models.bot_context_types import BotMetadata
-
 
 pytestmark = pytest.mark.asyncio
 

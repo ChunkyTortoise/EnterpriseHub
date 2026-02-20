@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
@@ -139,6 +140,132 @@ class PropertyComparison(BaseModel):
 
     properties: List[Dict[str, Any]]
     recommendation: Dict[str, str]
+
+
+# ============================================================================
+# ROADMAP-031–035: Cache-backed property analysis helpers
+# ============================================================================
+
+ANALYSIS_CACHE_TTL = 3600  # 1 hour (L1 cache)
+ANALYSIS_INDEX_KEY = "property_analysis_index"
+VERSION_HISTORY_TTL = 604800  # 7 days
+
+
+async def _save_analysis(analysis: PropertyAnalysis, cache: CacheService) -> None:
+    """Persist property analysis to cache (L1)."""
+    await cache.set(
+        f"property_analysis:{analysis.propertyId}",
+        analysis.model_dump(),
+        ttl=ANALYSIS_CACHE_TTL,
+    )
+    # Maintain index of analyzed property IDs
+    index = await cache.get(ANALYSIS_INDEX_KEY) or []
+    if analysis.propertyId not in index:
+        index.append(analysis.propertyId)
+        await cache.set(ANALYSIS_INDEX_KEY, index, ttl=VERSION_HISTORY_TTL)
+
+
+async def _get_analysis(property_id: str, cache: CacheService) -> Optional[PropertyAnalysis]:
+    """Retrieve property analysis from cache, excluding soft-deleted."""
+    data = await cache.get(f"property_analysis:{property_id}")
+    if data is None:
+        return None
+    if data.get("deleted_at"):
+        return None
+    return PropertyAnalysis(**data)
+
+
+async def _soft_delete_analysis(property_id: str, cache: CacheService) -> bool:
+    """ROADMAP-034: Soft-delete analysis, archive history, invalidate cache."""
+    data = await cache.get(f"property_analysis:{property_id}")
+    if data is None:
+        return False
+
+    # Archive current version before deletion
+    history = await cache.get(f"property_analysis_history:{property_id}") or []
+    history.append({**data, "archived_at": datetime.now().isoformat()})
+    await cache.set(f"property_analysis_history:{property_id}", history, ttl=VERSION_HISTORY_TTL)
+
+    # Mark as soft-deleted
+    data["deleted_at"] = datetime.now().isoformat()
+    await cache.set(f"property_analysis:{property_id}", data, ttl=VERSION_HISTORY_TTL)
+    return True
+
+
+async def _update_analysis_in_cache(
+    property_id: str,
+    request: "PropertyAnalysisRequest",
+    cache: CacheService,
+) -> Optional[PropertyAnalysis]:
+    """ROADMAP-033: Update analysis — version old, re-analyze, invalidate cache."""
+    existing = await cache.get(f"property_analysis:{property_id}")
+
+    # Archive previous version if exists
+    if existing and not existing.get("deleted_at"):
+        history = await cache.get(f"property_analysis_history:{property_id}") or []
+        history.append({**existing, "archived_at": datetime.now().isoformat()})
+        await cache.set(f"property_analysis_history:{property_id}", history, ttl=VERSION_HISTORY_TTL)
+
+    # Generate new analysis with updated params
+    analysis = generate_mock_property_analysis(request)
+    analysis.propertyId = property_id
+    analysis.lastUpdated = datetime.now().isoformat()
+
+    await _save_analysis(analysis, cache)
+    return analysis
+
+
+async def _compare_properties_from_cache(
+    property_ids: List[str],
+    cache: CacheService,
+) -> Dict[str, Any]:
+    """ROADMAP-035: Fetch analyses, calculate weighted scores, rank and recommend."""
+    analyses = []
+    for pid in property_ids[:5]:  # Limit to 5
+        analysis = await _get_analysis(pid, cache)
+        if analysis:
+            analyses.append(analysis)
+
+    if not analyses:
+        return {"properties": [], "recommendation": {"explanation": "No analyses found for comparison"}}
+
+    # Build comparison entries with weighted scores
+    property_entries = []
+    for a in analyses:
+        entry = {
+            "propertyId": a.propertyId,
+            "address": a.address,
+            "score": a.scoring.totalScore,
+            "investment": {
+                "projectedROI": a.scoring.projectedROI,
+                "capRate": a.investment.capRate,
+                "projectedCashFlow": a.investment.projectedCashFlow,
+            },
+            "risk": {
+                "overallRisk": a.riskAssessment.overallRisk,
+                "riskScore": a.riskAssessment.riskScore,
+            },
+        }
+        property_entries.append(entry)
+
+    # Rank by different criteria
+    best_overall = max(property_entries, key=lambda p: p["score"])
+    best_cash_flow = max(property_entries, key=lambda p: p["investment"]["projectedCashFlow"])
+    best_appreciation = max(property_entries, key=lambda p: p["investment"]["projectedROI"])
+    lowest_risk = min(property_entries, key=lambda p: p["risk"]["riskScore"])
+
+    recommendation = {
+        "bestOverall": best_overall["propertyId"],
+        "bestCashFlow": best_cash_flow["propertyId"],
+        "bestAppreciation": best_appreciation["propertyId"],
+        "lowestRisk": lowest_risk["propertyId"],
+        "explanation": (
+            f"Based on comprehensive analysis of {len(analyses)} properties, "
+            f"{best_overall['address']} offers the best overall investment score of {best_overall['score']}."
+        ),
+    }
+
+    return {"properties": property_entries, "recommendation": recommendation}
 
 
 # ============================================================================
@@ -467,33 +594,36 @@ def generate_mock_realtime_data(property_id: str):
 
 
 @router.post("/analyze", response_model=PropertyAnalysis)
-async def analyze_property(request: PropertyAnalysisRequest, current_user=Depends(get_current_user)):
+async def analyze_property(
+    request: PropertyAnalysisRequest,
+    current_user=Depends(get_current_user),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
     Perform comprehensive property analysis.
-    Matches frontend PropertyIntelligenceAPI.analyzeProperty() expectation.
+
+    ROADMAP-031: Runs analysis, caches results (1hr TTL).
     """
     try:
         start_time = datetime.now()
         logger.info(f"Starting {request.analysisLevel} property analysis")
 
-        # ROADMAP-031: Integrate with Property Intelligence Agent
-        # Current: Mock analysis generation
-        # Required:
-        #   1. Initialize property intelligence agent
-        #   2. Fetch property data from MLS/data sources
-        #   3. Run AI analysis for investment metrics
-        #   4. Cache results for 24 hours
-        #   5. Return comprehensive PropertyAnalysis
-        # Dependencies: None
+        # Check cache first if propertyId provided
+        if request.propertyId:
+            cached = await _get_analysis(request.propertyId, cache)
+            if cached:
+                logger.info(f"Cache hit for property {request.propertyId}")
+                return cached
 
-        # Generate comprehensive mock analysis
+        # Run analysis (in production: MLS fetch + AI analysis)
         analysis = generate_mock_property_analysis(request)
 
-        # Log analysis completion
+        # Cache results
+        await _save_analysis(analysis, cache)
+
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
         logger.info(f"Property analysis completed in {processing_time:.0f}ms")
 
-        # Publish analysis event
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
             "property_analyzed",
@@ -502,6 +632,7 @@ async def analyze_property(request: PropertyAnalysisRequest, current_user=Depend
                 "analysis_level": request.analysisLevel,
                 "investment_strategy": request.investmentStrategy,
                 "processing_time_ms": int(processing_time),
+                "cache_hit": False,
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -514,59 +645,62 @@ async def analyze_property(request: PropertyAnalysisRequest, current_user=Depend
 
 
 @router.get("/properties/{property_id}", response_model=PropertyAnalysis)
-async def get_property_analysis(property_id: str, current_user=Depends(get_current_user)):
+async def get_property_analysis(
+    property_id: str,
+    current_user=Depends(get_current_user),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
     Get existing property analysis by ID.
-    Matches frontend PropertyIntelligenceAPI.getPropertyAnalysis() expectation.
+
+    ROADMAP-032: L1 cache (1hr TTL) -> cache miss returns 404.
     """
     try:
         logger.info(f"Fetching property analysis: {property_id}")
 
-        # ROADMAP-032: Property Analysis Database/Cache Retrieval
-        # Current: Generating mock analysis on every request
-        # Required:
-        #   1. Check Redis cache first (L1 - 1 hour TTL)
-        #   2. Query property_analyses table (L2 - persistent)
-        #   3. Cache miss: trigger async analysis job
-        #   4. Return cached or placeholder with job_id
-        # Dependencies: ROADMAP-031
-
-        # For now, generate a mock analysis
-        mock_request = PropertyAnalysisRequest(
-            propertyId=property_id, analysisLevel="STANDARD", investmentStrategy="BUY_AND_HOLD"
-        )
-        analysis = generate_mock_property_analysis(mock_request)
+        analysis = await _get_analysis(property_id, cache)
+        if not analysis:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Property analysis for {property_id} not found. Run POST /analyze first.",
+            )
 
         logger.info(f"Property analysis retrieved: {property_id}")
         return analysis
 
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Failed to fetch property analysis")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.put("/properties/{property_id}/update", response_model=PropertyAnalysis)
-async def update_analysis(property_id: str, updates: PropertyAnalysisRequest, current_user=Depends(get_current_user)):
+async def update_analysis(
+    property_id: str,
+    updates: PropertyAnalysisRequest,
+    current_user=Depends(get_current_user),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
     Update existing property analysis.
+
+    ROADMAP-033: Archives previous version, re-analyses with new params, invalidates cache.
     """
     try:
         logger.info(f"Updating property analysis: {property_id}")
 
-        # ROADMAP-033: Property Analysis Database Update
-        # Current: Mock analysis, no persistence
-        # Required:
-        #   1. Validate property exists and user has access
-        #   2. Update property_analyses table with new data
-        #   3. Invalidate Redis cache
-        #   4. Version history: Store previous analysis
-        #   5. Trigger re-analysis if investment params changed
-        # Dependencies: ROADMAP-032
+        analysis = await _update_analysis_in_cache(property_id, updates, cache)
 
-        # For now, return updated mock analysis
-        analysis = generate_mock_property_analysis(updates)
-        analysis.propertyId = property_id
-        analysis.lastUpdated = datetime.now().isoformat()
+        event_publisher = get_event_publisher()
+        await event_publisher.publish_event(
+            "property_analysis_updated",
+            {
+                "property_id": property_id,
+                "analysis_level": updates.analysisLevel,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
 
         logger.info(f"Property analysis updated: {property_id}")
         return analysis
@@ -577,32 +711,33 @@ async def update_analysis(property_id: str, updates: PropertyAnalysisRequest, cu
 
 
 @router.delete("/properties/{property_id}")
-async def delete_analysis(property_id: str, current_user=Depends(get_current_user)):
+async def delete_analysis(
+    property_id: str,
+    current_user=Depends(get_current_user),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
-    Delete property analysis.
+    Delete property analysis (soft-delete).
+
+    ROADMAP-034: Sets deleted_at, archives history, invalidates cache.
     """
     try:
         logger.info(f"Deleting property analysis: {property_id}")
 
-        # ROADMAP-034: Property Analysis Deletion with Cleanup
-        # Current: Publishing event only
-        # Required:
-        #   1. Soft-delete: Set deleted_at timestamp
-        #   2. Remove from Redis cache
-        #   3. Archive analysis history
-        #   4. Cascade: Remove related comparisons and benchmarks
-        #   5. Notify dependent services
-        # Dependencies: ROADMAP-032, ROADMAP-033
+        deleted = await _soft_delete_analysis(property_id, cache)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Property analysis {property_id} not found")
 
-        # Publish deletion event
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
             "property_analysis_deleted", {"property_id": property_id, "timestamp": datetime.now().isoformat()}
         )
 
-        logger.info(f"Property analysis deleted: {property_id}")
-        return {"success": True, "propertyId": property_id}
+        logger.info(f"Property analysis soft-deleted: {property_id}")
+        return {"success": True, "propertyId": property_id, "deletedAt": datetime.now().isoformat()}
 
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Failed to delete property analysis")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -617,60 +752,32 @@ async def delete_analysis(property_id: str, current_user=Depends(get_current_use
 async def compare_properties(
     property_ids: Dict[str, List[str]],  # {"propertyIds": [...]}
     current_user=Depends(get_current_user),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Compare multiple properties.
+
+    ROADMAP-035: Fetches cached analyses, calculates weighted scores, ranks by criteria.
     """
     try:
         property_id_list = property_ids.get("propertyIds", [])
         logger.info(f"Comparing {len(property_id_list)} properties")
 
-        # ROADMAP-035: Property Comparison Logic
-        # Current: Mock comparison with generated data
-        # Required:
-        #   1. Fetch analyses for all property IDs
-        #   2. Calculate comparative scores (ROI, cash flow, risk)
-        #   3. Rank properties by different criteria
-        #   4. Generate recommendations based on strategy
-        #   5. Cache comparison results
-        # Dependencies: ROADMAP-032
+        if not property_id_list:
+            raise HTTPException(status_code=422, detail="At least one property ID required")
 
-        # Generate mock comparison
+        comparison_data = await _compare_properties_from_cache(property_id_list, cache)
+
         comparison = PropertyComparison(
-            properties=[
-                {
-                    "propertyId": pid,
-                    "address": f"Property {i + 1} Address",
-                    "score": 85 + (i * 3),
-                    "investment": {
-                        "projectedROI": 12.5 + (i * 1.2),
-                        "capRate": 7.8 + (i * 0.5),
-                        "projectedCashFlow": 2850 + (i * 200),
-                    },
-                    "risk": {"overallRisk": "moderate" if i % 2 else "low", "riskScore": 30 + (i * 5)},
-                }
-                for i, pid in enumerate(property_id_list[:5])  # Limit to 5 properties
-            ],
-            recommendation={
-                "bestOverall": property_id_list[0] if property_id_list else "",
-                "bestCashFlow": property_id_list[1]
-                if len(property_id_list) > 1
-                else property_id_list[0]
-                if property_id_list
-                else "",
-                "bestAppreciation": property_id_list[2]
-                if len(property_id_list) > 2
-                else property_id_list[0]
-                if property_id_list
-                else "",
-                "lowestRisk": property_id_list[0] if property_id_list else "",
-                "explanation": "Based on comprehensive analysis, Property 1 offers the best balance of cash flow, appreciation potential, and manageable risk.",
-            },
+            properties=comparison_data["properties"],
+            recommendation=comparison_data["recommendation"],
         )
 
         logger.info(f"Property comparison completed for {len(property_id_list)} properties")
         return comparison
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error comparing properties: {e}")
         raise HTTPException(status_code=500, detail="Failed to compare properties")

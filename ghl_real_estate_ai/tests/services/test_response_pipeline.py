@@ -27,13 +27,13 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.pipeline import (
     ResponsePostProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-    AIDisclosureProcessor,
     DISCLOSURE_EN,
     DISCLOSURE_ES,
+    AIDisclosureProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.compliance_check import (
-    ComplianceCheckProcessor,
     _SAFE_FALLBACKS,
+    ComplianceCheckProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.conversation_repair import (
     ConversationRepairProcessor,
@@ -51,7 +51,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.tcpa_opt_out imp
     OPT_OUT_RESPONSE_ES,
     TCPAOptOutProcessor,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

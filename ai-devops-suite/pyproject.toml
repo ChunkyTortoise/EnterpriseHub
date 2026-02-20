@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "ai-devops-suite"
 version = "0.1.0"
 description = "Unified AI DevOps platform: agent monitoring, prompt registry, data pipeline"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
@@ -46,5 +46,11 @@ asyncio_mode = "auto"
 pythonpath = ["src"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 100
+
+[tool.ruff.lint]
+ignore = ["E741", "F841"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E", "F"]

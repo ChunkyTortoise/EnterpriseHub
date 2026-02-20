@@ -27,7 +27,24 @@
 ### Streamlit Demo (24 Pages)
 Interactive demos for all major features
 
-## 🚀 Quick Start
+## ROI at a Glance
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| **Test Suite** | 1,812 tests across 128 test files | `grep -rc "def test_" tests/` |
+| **Lead Qualification Time** | 45 min (manual) to <2 min (AI) | Production deployment measurement |
+| **API P95 /leads/qualify** | 1,225 ms | [BENCHMARKS.md](../BENCHMARKS.md) (1K iterations, seed=42) |
+| **API P95 /contacts/sync** | 340 ms | [BENCHMARKS.md](../BENCHMARKS.md) |
+| **LLM Cost per Qualification** | $0.032 | [PERFORMANCE_BENCHMARK_REPORT.md](../PERFORMANCE_BENCHMARK_REPORT.md) |
+| **Bot Response Cost (cached)** | $0.008 | 3-tier cache, 88.1% hit rate |
+| **Cache Hit Rate** | 88.1% overall (L1 59.1% + L2 20.5% + L3 8.5%) | [METRICS_CANONICAL.md](../METRICS_CANONICAL.md) |
+| **Cost Reduction** | 89% token savings | L1/L2/L3 cache architecture |
+| **Bot Coverage** | 3 bots (Lead, Buyer, Seller) with cross-bot handoff | 137+ bot-specific tests |
+| **Throughput** | 5,118 req/s at 100 concurrent users | Benchmark suite, 0% error rate |
+
+---
+
+## Quick Start
 
 ```bash
 # Install dependencies

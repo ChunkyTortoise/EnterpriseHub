@@ -5,12 +5,12 @@ Handles financial readiness scoring and affordability calculations.
 
 from typing import Dict, Optional
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
 from ghl_real_estate_ai.agents.buyer.utils import (
-    extract_budget_range,
     assess_financial_from_conversation,
+    extract_budget_range,
 )
+from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
 
 logger = get_logger(__name__)

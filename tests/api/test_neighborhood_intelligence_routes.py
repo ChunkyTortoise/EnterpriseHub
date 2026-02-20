@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -32,7 +33,6 @@ from ghl_real_estate_ai.api.routes.neighborhood_intelligence import router
 from ghl_real_estate_ai.ml.price_prediction_engine import PredictionTimeframe, PricePredictionResult
 from ghl_real_estate_ai.services.inventory_alert_system import AlertInstance, AlertSeverity, AlertStatus, AlertType
 from ghl_real_estate_ai.services.neighborhood_intelligence_service import (
-
     InvestmentGrade,
     MarketTrend,
     NeighborhoodMetrics,

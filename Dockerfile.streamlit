@@ -6,7 +6,7 @@
 # Optimized for Service 6 Lead Recovery & Nurture Engine demonstrations
 # ==============================================================================
 
-FROM python:3.11.8-slim-bullseye AS base
+FROM python:3.12.8-slim-bullseye AS base
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

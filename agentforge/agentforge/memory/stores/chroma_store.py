@@ -14,7 +14,7 @@ Features:
 - Metadata filtering
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from agentforge.memory.vector_base import VectorEntry, VectorSearchResult, VectorStore
 
@@ -53,9 +53,9 @@ class ChromaVectorStore(VectorStore):
 
     def __init__(
         self,
-        persist_directory: Optional[str] = None,
+        persist_directory: str | None = None,
         collection_name: str = "agentforge",
-        embedding_function: Optional[Any] = None,
+        embedding_function: Any | None = None,
     ) -> None:
         """Initialize ChromaDB vector store.
 
@@ -122,7 +122,7 @@ class ChromaVectorStore(VectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_metadata: Optional[dict[str, Any]] = None,
+        filter_metadata: dict[str, Any] | None = None,
     ) -> list[VectorSearchResult]:
         """Search for similar vectors in ChromaDB.
 
@@ -202,7 +202,7 @@ class ChromaVectorStore(VectorStore):
         except Exception:
             return False
 
-    async def get(self, id: str) -> Optional[VectorEntry]:
+    async def get(self, id: str) -> VectorEntry | None:
         """Get an entry by ID.
 
         Args:

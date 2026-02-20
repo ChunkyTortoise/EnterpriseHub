@@ -26,7 +26,7 @@ class TwilioHandler:
 
     def generate_stream_twiml(self, call_id: str) -> str:
         """Generate TwiML to connect an inbound call to our WebSocket pipeline."""
-        from twilio.twiml.voice_response import VoiceResponse, Connect
+        from twilio.twiml.voice_response import Connect, VoiceResponse
 
         response = VoiceResponse()
         connect = Connect()

@@ -16,7 +16,6 @@ from ghl_real_estate_ai.api.routes.lead_bot_management import (
 )
 from ghl_real_estate_ai.services.lead_sequence_state_service import LeadSequenceState, SequenceDay, SequenceStatus
 
-
 pytestmark = pytest.mark.asyncio
 
 

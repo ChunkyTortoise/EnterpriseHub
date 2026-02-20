@@ -13,8 +13,8 @@ Sync scenarios:
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
 from ghl_real_estate_ai.services.cache_service import CacheService

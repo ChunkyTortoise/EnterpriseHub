@@ -18,7 +18,6 @@ import pandas as pd
 import pytest
 from src.core.exceptions import RetrievalError
 from src.multimodal.structured_retriever import (
-
     StructuredQuery,
     StructuredRetriever,
     StructuredRetrieverConfig,

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -17,7 +18,6 @@ import pytest
 
 from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import UnifiedScoringResult
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import (
-
     EnhancedLeadIntelligence,
     get_enhanced_lead_intelligence,
 )

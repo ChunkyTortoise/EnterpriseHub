@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -13,7 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.sms_compliance_service import (
-
     OptOutReason,
     SMSComplianceService,
     SMSValidationResult,

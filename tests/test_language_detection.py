@@ -1,17 +1,16 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for the bilingual language detection service and pipeline stage."""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.models.language_preferences import (
     ContactLanguagePreference,
     LanguageDetection,
-)
-from ghl_real_estate_ai.services.language_detection import (
-    LanguageDetectionService,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
     ProcessedResponse,
@@ -21,7 +20,9 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror import (
     LanguageMirrorProcessor,
 )
-
+from ghl_real_estate_ai.services.language_detection import (
+    LanguageDetectionService,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers

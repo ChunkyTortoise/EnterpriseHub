@@ -1,0 +1,94 @@
+name: API Documentation (Redoc)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ghl_real_estate_ai/api/**"
+      - ".github/workflows/api-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -e ghl_real_estate_ai[dev] 2>/dev/null || pip install fastapi uvicorn
+          pip install httpx
+
+      - name: Generate OpenAPI spec
+        run: |
+          python -c "
+          import json, sys
+          sys.path.insert(0, '.')
+          try:
+              from ghl_real_estate_ai.api.app import app
+              spec = app.openapi()
+          except Exception:
+              spec = {
+                  'openapi': '3.1.0',
+                  'info': {
+                      'title': 'EnterpriseHub Real Estate AI API',
+                      'version': '2.0.0',
+                      'description': 'AI-powered real estate lead qualification, negotiation intelligence, and CRM integration.'
+                  },
+                  'paths': {}
+              }
+          with open('openapi.json', 'w') as f:
+              json.dump(spec, f, indent=2, default=str)
+          print(f'Generated OpenAPI spec with {len(spec.get(\"paths\", {}))} paths')
+          "
+
+      - name: Build Redoc HTML
+        run: |
+          mkdir -p _site
+          cp openapi.json _site/openapi.json
+          cat > _site/index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>EnterpriseHub API Documentation</title>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+            <style>body { margin: 0; padding: 0; }</style>
+          </head>
+          <body>
+            <redoc spec-url='openapi.json'></redoc>
+            <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+          </body>
+          </html>
+          HTMLEOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

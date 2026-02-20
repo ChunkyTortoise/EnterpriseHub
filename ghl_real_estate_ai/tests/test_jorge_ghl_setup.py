@@ -6,10 +6,10 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.ghl_utils.jorge_ghl_setup import (
+    CALENDAR_IDS,
     CUSTOM_FIELDS,
     JORGE_FIELDS,
     WORKFLOW_IDS,
-    CALENDAR_IDS,
     validate_ghl_config,
 )
 

@@ -1,8 +1,7 @@
 """Tests for caching module."""
 
 import asyncio
-import pytest
-from mcp_toolkit.framework.caching import InMemoryCache, CacheLayer
+from mcp_toolkit.framework.caching import CacheLayer
 
 
 class TestInMemoryCache:

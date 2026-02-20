@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from voice_ai.services.pii_detector import PIIDetector, PIIResult, HIGH_RISK_TYPES
+from voice_ai.services.pii_detector import PIIDetector
 
 
 @pytest.fixture

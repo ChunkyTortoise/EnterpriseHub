@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -24,7 +25,6 @@ os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_fake")
 import pytest
 
 from ghl_real_estate_ai.services.behavioral_trigger_detector import (
-
     BehavioralAnalysis,
     BehavioralTriggerDetector,
     DriftDirection,

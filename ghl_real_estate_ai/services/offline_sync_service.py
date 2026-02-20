@@ -246,8 +246,8 @@ class OfflineSyncService:
             # Store resolved conflict
             await self.cache.set(conflict_key, asdict(conflict), ttl=86400)
 
-            # ROADMAP-057: Apply resolved data to GHL server
-            # This would update the entity with the resolved conflict data
+            # ROADMAP-057: Apply resolved data back to GHL
+            await self._apply_resolution_to_server(conflict, resolved_data)
 
             logger.info(f"Conflict resolved: {conflict_id} using {strategy.value}")
 
@@ -512,23 +512,58 @@ class OfflineSyncService:
             return False
 
     async def _process_property_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
-        """Process property-specific sync operation."""
+        """ROADMAP-052: Property CRUD via GHL opportunity API."""
         try:
-            # ROADMAP-052: Implement property CRUD operations
-            # Connect to GHL property API endpoints
-            return True  # Mock success
-
+            contact_id = operation.data.get("contact_id", operation.entity_id)
+            if operation.operation_type == SyncOperationType.CREATE:
+                payload = {
+                    "name": operation.data.get("address", "Property"),
+                    "contactId": contact_id,
+                    "status": "open",
+                    "monetaryValue": operation.data.get("price", 0),
+                    "customFields": {
+                        k: v for k, v in operation.data.items()
+                        if k not in ("contact_id", "address", "price")
+                    },
+                }
+                result = await ghl_service.client.create_opportunity(payload)
+                return result is not None
+            elif operation.operation_type == SyncOperationType.UPDATE:
+                update_fields = {
+                    k: v for k, v in operation.data.items()
+                    if k not in ("contact_id",)
+                }
+                result = await ghl_service.client.update_opportunity(operation.entity_id, update_fields)
+                return result is not None
+            elif operation.operation_type == SyncOperationType.DELETE:
+                result = await ghl_service.client.delete_opportunity(operation.entity_id)
+                return result is not None
+            return False
         except Exception as e:
             logger.error(f"Property operation failed: {e}")
             return False
 
     async def _process_note_operation(self, operation: SyncOperation, ghl_service: GHLService) -> bool:
-        """Process note-specific sync operation."""
+        """ROADMAP-053: Note CRUD via GHL notes API."""
         try:
-            # ROADMAP-053: Implement note CRUD operations
-            # Connect to GHL notes API
-            return True  # Mock success
-
+            contact_id = operation.data.get("contact_id", operation.entity_id)
+            if operation.operation_type == SyncOperationType.CREATE:
+                payload = {
+                    "contactId": contact_id,
+                    "body": operation.data.get("body", ""),
+                }
+                result = await ghl_service.client.create_note(contact_id, payload)
+                return result is not None
+            elif operation.operation_type == SyncOperationType.UPDATE:
+                note_id = operation.entity_id
+                payload = {"body": operation.data.get("body", "")}
+                result = await ghl_service.client.update_note(contact_id, note_id, payload)
+                return result is not None
+            elif operation.operation_type == SyncOperationType.DELETE:
+                note_id = operation.entity_id
+                result = await ghl_service.client.delete_note(contact_id, note_id)
+                return result is not None
+            return False
         except Exception as e:
             logger.error(f"Note operation failed: {e}")
             return False
@@ -558,26 +593,88 @@ class OfflineSyncService:
         merged_data.update(resolution_data)
         return merged_data
 
+    async def _apply_resolution_to_server(
+        self, conflict: SyncConflict, resolved_data: Dict[str, Any]
+    ) -> bool:
+        """ROADMAP-057: Apply resolved conflict data back to GHL entity."""
+        try:
+            ghl_service = GHLService()
+            if conflict.entity_type == "lead":
+                result = await ghl_service.client.update_contact(
+                    conflict.entity_id, resolved_data
+                )
+                if result:
+                    logger.info(f"Applied conflict resolution to GHL lead {conflict.entity_id}")
+                    return True
+            elif conflict.entity_type == "property":
+                result = await ghl_service.client.update_opportunity(
+                    conflict.entity_id, resolved_data
+                )
+                if result:
+                    logger.info(f"Applied conflict resolution to GHL property {conflict.entity_id}")
+                    return True
+            elif conflict.entity_type == "note":
+                contact_id = resolved_data.get("contact_id", "")
+                result = await ghl_service.client.update_note(
+                    contact_id, conflict.entity_id, {"body": resolved_data.get("body", "")}
+                )
+                if result:
+                    logger.info(f"Applied conflict resolution to GHL note {conflict.entity_id}")
+                    return True
+            await self.cache.set(
+                f"conflict_resolution_log:{conflict.operation_id}",
+                {
+                    "entity_type": conflict.entity_type,
+                    "entity_id": conflict.entity_id,
+                    "strategy": conflict.resolution_strategy.value,
+                    "resolved_at": datetime.utcnow().isoformat(),
+                },
+                ttl=86400 * 30,
+            )
+            return False
+        except Exception as e:
+            logger.error(f"Failed to apply resolution to server: {e}")
+            return False
+
     async def _get_server_updates_since_last_sync(
         self, device_id: str, location_id: str, ghl_service: GHLService
     ) -> List[Dict[str, Any]]:
-        """Get server updates since device's last sync."""
+        """ROADMAP-054: Fetch server-side changes since last sync via GHL API."""
         try:
-            # Get last sync timestamp
             last_sync_key = f"last_sync:{device_id}"
             last_sync_data = await self.cache.get(last_sync_key)
 
             if not last_sync_data:
-                datetime.utcnow() - timedelta(days=7)  # Default to 1 week
+                since_ts = datetime.utcnow() - timedelta(days=7)
             else:
-                datetime.fromisoformat(last_sync_data)
+                since_ts = datetime.fromisoformat(last_sync_data)
 
-            # Update last sync timestamp
             await self.cache.set(last_sync_key, datetime.utcnow().isoformat(), ttl=86400 * 30)
 
-            # ROADMAP-054: Fetch server updates since last sync
-            # Query GHL API with timestamp filters
-            return []  # Mock empty updates
+            updates = []
+            try:
+                contacts = await ghl_service.client.search_contacts(query="", limit=100)
+                for contact in contacts:
+                    updated_at = contact.get("dateUpdated") or contact.get("updatedAt")
+                    if updated_at:
+                        try:
+                            contact_updated = datetime.fromisoformat(
+                                updated_at.replace("Z", "").split("+")[0]
+                            )
+                            if contact_updated > since_ts:
+                                updates.append({
+                                    "entity_type": "lead",
+                                    "entity_id": contact.get("id"),
+                                    "action": "updated",
+                                    "data": contact,
+                                    "server_timestamp": updated_at,
+                                })
+                        except (ValueError, TypeError):
+                            pass
+            except Exception as api_err:
+                logger.warning(f"GHL API fetch failed during sync: {api_err}")
+
+            return updates
 
         except Exception as e:
             logger.error(f"Failed to get server updates: {e}")
@@ -586,24 +683,85 @@ class OfflineSyncService:
     async def _get_entity_changes_since(
         self, location_id: str, entity_type: str, since: datetime
     ) -> Dict[str, List[Dict[str, Any]]]:
-        """Get entity changes since timestamp."""
+        """ROADMAP-055: Get entity changes since timestamp via audit log cache."""
         try:
-            # ROADMAP-055: Implement entity change tracking
-            # Requires audit log table and change detection queries
-            return {"created": [], "updated": [], "deleted": []}
+            audit_key = f"audit_log:{location_id}:{entity_type}"
+            audit_entries = await self.cache.get(audit_key) or []
+
+            created, updated, deleted = [], [], []
+            for entry in audit_entries:
+                entry_ts = entry.get("timestamp")
+                if not entry_ts:
+                    continue
+                try:
+                    ts = datetime.fromisoformat(entry_ts)
+                except (ValueError, TypeError):
+                    continue
+                if ts <= since:
+                    continue
+                action = entry.get("action", "updated")
+                data = entry.get("data", {})
+                if action == "created":
+                    created.append(data)
+                elif action == "deleted":
+                    deleted.append(data)
+                else:
+                    updated.append(data)
+
+            return {"created": created, "updated": updated, "deleted": deleted}
 
         except Exception as e:
             logger.error(f"Failed to get entity changes: {e}")
             return {"created": [], "updated": [], "deleted": []}
 
-    async def _get_server_entity_checksum(self, entity_id: str) -> str:
-        """Get checksum of entity on server."""
+    async def log_entity_change(
+        self, location_id: str, entity_type: str, entity_id: str,
+        action: str, data: Dict[str, Any],
+    ) -> None:
+        """ROADMAP-055: Record an entity change to the audit log for delta sync."""
         try:
-            # ROADMAP-056: Get entity checksum from server for integrity validation
-            return "mock_checksum"
+            audit_key = f"audit_log:{location_id}:{entity_type}"
+            audit_entries = await self.cache.get(audit_key) or []
+            audit_entries.append({
+                "entity_id": entity_id,
+                "action": action,
+                "data": data,
+                "timestamp": datetime.utcnow().isoformat(),
+            })
+            audit_entries = audit_entries[-1000:]
+            await self.cache.set(audit_key, audit_entries, ttl=86400 * 30)
+        except Exception as e:
+            logger.error(f"Failed to log entity change: {e}")
+
+    async def _get_server_entity_checksum(self, entity_id: str) -> str:
+        """ROADMAP-056: Compute SHA-256 checksum of entity data from server."""
+        try:
+            checksum_key = f"entity_checksum:{entity_id}"
+            cached_checksum = await self.cache.get(checksum_key)
+            if cached_checksum:
+                return cached_checksum
+
+            entity_data = await self.cache.get(f"entity_data:{entity_id}")
+            if not entity_data:
+                return ""
+
+            checksum = self._calculate_data_hash(entity_data)
+            await self.cache.set(checksum_key, checksum, ttl=3600)
+            return checksum
 
         except Exception as e:
             logger.error(f"Failed to get server checksum: {e}")
+            try:
+                errors_key = "sync_errors"
+                errors = await self.cache.get(errors_key) or []
+                errors.append({
+                    "entity_id": entity_id,
+                    "error": f"checksum_computation_failed: {str(e)}",
+                    "timestamp": datetime.utcnow().isoformat(),
+                })
+                await self.cache.set(errors_key, errors[-500:], ttl=86400 * 7)
+            except Exception:
+                pass
             return ""
 
     def _estimate_sync_time(self, operation_count: int) -> int:

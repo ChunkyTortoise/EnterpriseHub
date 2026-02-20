@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -20,7 +21,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 try:
-    from ghl_real_estate_ai.services.rancho_cucamonga_market_service import PropertyListing, PropertyType
     from ghl_real_estate_ai.services.property_alerts import (
         AlertCriteria,
         AlertPriority,
@@ -30,6 +30,7 @@ try:
         PropertyAlertSystem,
         get_property_alert_system,
     )
+    from ghl_real_estate_ai.services.rancho_cucamonga_market_service import PropertyListing, PropertyType
 except (ImportError, TypeError, AttributeError, Exception):
     pytest.skip("required imports unavailable", allow_module_level=True)
 

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for multi-property comparison service."""
@@ -6,7 +7,6 @@ pytestmark = pytest.mark.integration
 import pytest
 
 from ghl_real_estate_ai.services.property_comparison import (
-
     ComparisonMatrix,
     PropertyComparator,
     RankedProperty,

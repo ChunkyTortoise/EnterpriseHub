@@ -14,7 +14,7 @@ Provides:
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -140,8 +140,8 @@ class Task(BaseModel):
     agent_id: str = ""
     status: TaskStatus = TaskStatus.SUBMITTED
     input: dict[str, Any] = Field(default_factory=dict)
-    output: Optional[dict[str, Any]] = None
-    error: Optional[str] = None
+    output: dict[str, Any] | None = None
+    error: str | None = None
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -166,10 +166,10 @@ class TaskUpdate(BaseModel):
     """
 
     task_id: str
-    status: Optional[TaskStatus] = None
-    output: Optional[dict[str, Any]] = None
-    error: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = None
+    status: TaskStatus | None = None
+    output: dict[str, Any] | None = None
+    error: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class A2AMessage(BaseModel):
@@ -197,7 +197,7 @@ class A2AMessage(BaseModel):
     jsonrpc: str = "2.0"
     method: str
     params: dict[str, Any] = Field(default_factory=dict)
-    id: Optional[str] = None
+    id: str | None = None
 
 
 class A2AResponse(BaseModel):
@@ -229,9 +229,9 @@ class A2AResponse(BaseModel):
     """
 
     jsonrpc: str = "2.0"
-    result: Optional[Any] = None
-    error: Optional[dict[str, Any]] = None
-    id: Optional[str] = None
+    result: Any | None = None
+    error: dict[str, Any] | None = None
+    id: str | None = None
 
 
 # JSON-RPC 2.0 error codes

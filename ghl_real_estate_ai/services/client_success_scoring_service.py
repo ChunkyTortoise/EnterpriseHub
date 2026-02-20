@@ -26,10 +26,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from .analytics_service import AnalyticsService
-from .rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from .cache_service import CacheService
 from .claude_assistant import ClaudeAssistant
 from .ghl_client import GHLClient
+from .rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from .transaction_service import TransactionService
 
 logger = logging.getLogger(__name__)

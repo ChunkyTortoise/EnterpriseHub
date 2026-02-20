@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """Tests for the chatbot widget component.
 
 Uses unittest.mock.patch to replace the ``st`` reference inside the widget
@@ -11,7 +12,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from streamlit_cloud.components.chatbot_widget import (
-
     MOCK_RESPONSES,
     SCORE_TRIGGERS,
     ChatbotWidget,

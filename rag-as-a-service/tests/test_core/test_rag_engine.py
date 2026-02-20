@@ -1,7 +1,7 @@
 """Tests for RAG engine orchestration pipeline."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from rag_service.core.rag_engine import (
     RAGEngine,

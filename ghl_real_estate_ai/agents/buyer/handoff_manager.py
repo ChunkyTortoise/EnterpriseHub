@@ -3,8 +3,8 @@ Handoff context management module for buyer bot.
 Handles validation and population of handoff context from other bots.
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Optional, Any
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 

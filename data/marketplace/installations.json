@@ -620,6 +620,29 @@
         "company_name": "TestValue"
       },
       "installed_at": "2026-02-13T04:16:46.955737"
+    },
+    {
+      "installation_id": "b01a3eaa-e237-447f-8fc7-7fc838ca5b6b",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "cd6d7a18-9ea5-4e17-bec2-34caf42dbede",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-02-20T21:11:47.462124"
+    },
+    {
+      "installation_id": "6c20f506-41fe-4cf4-a004-b7033b134f53",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "c5fa9e62-aece-4476-9715-a98c416f6b57",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-02-20T21:11:47.481445"
     }
   ]
 }

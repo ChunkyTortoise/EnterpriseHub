@@ -3,8 +3,8 @@ Revenue-Sprint Case Study Page
 Case study for the Revenue-Sprint project - Marketing Attribution & Revenue Optimization
 """
 
-import streamlit as st
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
 

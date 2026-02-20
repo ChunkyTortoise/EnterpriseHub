@@ -4,7 +4,6 @@ import pytest
 from mcp_toolkit.servers.database_query.sql_generator import (
     SQLGenerator,
     MockLLMProvider,
-    DefaultLLMProvider,
 )
 from mcp_toolkit.servers.database_query.schema_inspector import (
     SchemaInspector,

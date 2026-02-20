@@ -7,12 +7,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.config import settings
-from ghl_real_estate_ai.services.ghl_client import GHLClient
-from ghl_real_estate_ai.services.event_publisher import EventPublisher
-from ghl_real_estate_ai.agents.buyer.exceptions import ERROR_ID_COMPLIANCE_VIOLATION
 from ghl_real_estate_ai.agents.buyer.constants import COMPLIANCE_SEVERITY_MAP
+from ghl_real_estate_ai.agents.buyer.exceptions import ERROR_ID_COMPLIANCE_VIOLATION
+from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.event_publisher import EventPublisher
+from ghl_real_estate_ai.services.ghl_client import GHLClient
 
 logger = get_logger(__name__)
 

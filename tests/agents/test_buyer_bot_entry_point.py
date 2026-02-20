@@ -6,10 +6,11 @@ Tests for JorgeBuyerBot.process_buyer_conversation() - the primary public API.
 Covers qualification workflows, financial readiness, property matching, and handoffs.
 """
 
-import pytest
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
-from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
+
+from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 
 pytestmark = pytest.mark.asyncio
 

@@ -2,19 +2,20 @@
 Test Buyer Bot Handlers
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
 
 from ghl_integration.handlers.buyer_handlers import (
+    _calculate_buyer_score,
+    _extract_buyer_preferences,
+    _extract_preferences_from_message,
+    _get_buyer_pipeline_ids,
+    _parse_budget,
+    get_handler,
     handle_buyer_inquiry,
     handle_buyer_response,
     handle_pipeline_change,
-    get_handler,
-    _extract_buyer_preferences,
-    _parse_budget,
-    _extract_preferences_from_message,
-    _calculate_buyer_score,
-    _get_buyer_pipeline_ids,
 )
 
 

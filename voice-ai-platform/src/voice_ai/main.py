@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -95,10 +95,10 @@ def create_app() -> FastAPI:
     register_error_handlers(app)
 
     # Register routers
-    from voice_ai.api.calls import router as calls_router
-    from voice_ai.api.transcripts import router as transcripts_router
     from voice_ai.api.agents import router as agents_router
     from voice_ai.api.analytics import router as analytics_router
+    from voice_ai.api.calls import router as calls_router
+    from voice_ai.api.transcripts import router as transcripts_router
     from voice_ai.api.webhooks import router as webhooks_router
 
     app.include_router(calls_router)

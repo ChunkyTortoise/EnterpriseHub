@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -21,12 +22,12 @@ import pytest
 
 try:
     from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
-        RanchoCucamongaMarketService,
-        RanchoCucamongaNeighborhood,
         MarketCondition,
         MarketMetrics,
         PropertyListing,
         PropertyType,
+        RanchoCucamongaMarketService,
+        RanchoCucamongaNeighborhood,
         get_rancho_cucamonga_market_service,
     )
 except (ImportError, TypeError, AttributeError):

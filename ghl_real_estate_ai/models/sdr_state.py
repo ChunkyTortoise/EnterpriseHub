@@ -8,6 +8,7 @@ LangGraph-compatible if the sequence is wired as a graph in a future phase.
 from __future__ import annotations
 
 from typing import List, Optional
+
 from typing_extensions import TypedDict
 
 

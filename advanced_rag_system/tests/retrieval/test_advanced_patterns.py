@@ -14,7 +14,6 @@ from uuid import uuid4
 import pytest
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.advanced import (
-
     CompressedDocument,
     # Contextual compression
     CompressionConfig,

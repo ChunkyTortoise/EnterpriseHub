@@ -18,13 +18,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant  # Optional dependency
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService, MarketCondition
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.dynamic_valuation_engine import (
     ValuationConfidence,
     ValuationResult,
     get_dynamic_valuation_engine,
 )
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import MarketCondition, RanchoCucamongaMarketService
 
 logger = get_logger(__name__)
 

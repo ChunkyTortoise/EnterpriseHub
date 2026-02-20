@@ -1,10 +1,12 @@
 import asyncio
-import time
-import os
 import json
+import os
 import shutil
+import time
 from pathlib import Path
+
 from ghl_real_estate_ai.services.memory_service import MemoryService
+
 
 async def benchmark():
     # Setup test data

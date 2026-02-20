@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import math
 from unittest.mock import AsyncMock
 
 import pytest
 
-from voice_ai.services.billing_service import BillingService, BillingTier, TIER_RATES
+from voice_ai.services.billing_service import BillingService, BillingTier
 
 
 class TestBillingTierRates:

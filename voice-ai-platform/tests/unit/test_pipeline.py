@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from voice_ai.pipeline.llm_processor import LLMProcessor
 from voice_ai.pipeline.stt_processor import DeepgramSTTProcessor, TranscriptResult
 from voice_ai.pipeline.tts_processor import ElevenLabsTTSProcessor
-from voice_ai.pipeline.llm_processor import LLMProcessor
-from voice_ai.pipeline.voice_pipeline import VoicePipeline, PipelineState
+from voice_ai.pipeline.voice_pipeline import PipelineState, VoicePipeline
 
 
 @pytest.fixture
