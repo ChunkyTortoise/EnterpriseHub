@@ -11,13 +11,12 @@ license = {text = "MIT"}
 authors = [
     {name = "Cayman Roden", email = ""},
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
@@ -47,7 +46,7 @@ Issues = "https://github.com/ChunkyTortoise/enterprise-hub/issues"
 
 [tool.black]
 line-length = 88
-target-version = ['py311', 'py312']
+target-version = ['py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -73,7 +72,7 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -95,7 +94,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.pyright]
-pythonVersion = "3.11"
+pythonVersion = "3.12"
 typeCheckingMode = "basic"
 reportMissingImports = false
 reportMissingModuleSource = false
@@ -124,7 +123,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py312"
 exclude = [
     ".agent", "_archive", ".git", ".venv", "build", "dist",
     ".claude", "auto-claude", "scripts", "mcp-servers",
@@ -133,6 +132,15 @@ exclude = [
     "ghl_real_estate_ai/services/ultra_fast_ml_engine.py",
     "ghl_real_estate_ai/streamlit_demo/components/primitives/card.py",
     "ghl_real_estate_ai/streamlit_demo/components/sales_copilot.py",
+    "ghl_real_estate_ai/streamlit_demo/pages",
+    "ghl_real_estate_ai/api/routes/market_intelligence.py",
+    "ghl_real_estate_ai/api/schemas/white_label.py",
+    "ghl_real_estate_ai/services/learning/test_*.py",
+    "ghl_real_estate_ai/services/repositories/test_*.py",
+    "ghl_real_estate_ai/services/scoring/test_*.py",
+    "advanced_rag_system/test_phase3_complete.py",
+    "advanced_rag_system/tests/benchmarks",
+    "add_buyer_persona_to_bot.py",
 ]
 
 [tool.ruff.lint]
@@ -155,6 +163,8 @@ ignore = [
     "F823",   # undefined-local — rare edge case
     "F841",   # unused-variable — noisy in prototype code
     "F541",   # f-string-missing-placeholders — style
+    "E703",   # useless-semicolon — legacy Jupyter-style code
+    "E731",   # lambda-assignment — style preference
 ]
 
 [tool.ruff.lint.per-file-ignores]

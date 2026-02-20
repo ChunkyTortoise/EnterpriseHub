@@ -20,7 +20,7 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import asyncpg
 from asyncpg import Pool
@@ -82,12 +82,80 @@ class ShardCluster:
         return [replica for replica in self.replicas if replica.status == ShardStatus.HEALTHY]
 
 
+class ShardRouter:
+    """Consistent hashing ring for location_id-based shard routing.
+
+    Uses virtual nodes (150 per shard) to ensure even key distribution.
+    Adding or removing a shard only remaps ~1/N of keys.
+    """
+
+    VIRTUAL_NODES = 150
+
+    def __init__(self, num_shards: int = 4):
+        self.num_shards = max(1, num_shards)
+        self._ring: List[tuple] = []  # sorted list of (hash_value, shard_id)
+        self._build_ring()
+
+    def _build_ring(self):
+        """Build the consistent hashing ring with virtual nodes."""
+        ring = []
+        for shard_id in range(self.num_shards):
+            for vnode in range(self.VIRTUAL_NODES):
+                key = f"shard-{shard_id}-vnode-{vnode}"
+                hash_val = int(hashlib.md5(key.encode("utf-8")).hexdigest(), 16)
+                ring.append((hash_val, shard_id))
+        ring.sort(key=lambda x: x[0])
+        self._ring = ring
+
+    def get_shard(self, key: str) -> int:
+        """Route a key to its shard using consistent hashing.
+
+        Args:
+            key: The routing key (e.g., location_id).
+
+        Returns:
+            Shard ID (0 to num_shards-1).
+        """
+        if not key:
+            return 0
+
+        hash_val = int(hashlib.md5(key.encode("utf-8")).hexdigest(), 16)
+
+        # Binary search for the first ring position >= hash_val
+        lo, hi = 0, len(self._ring)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if self._ring[mid][0] < hash_val:
+                lo = mid + 1
+            else:
+                hi = mid
+
+        # Wrap around if we're past the end of the ring
+        if lo >= len(self._ring):
+            lo = 0
+
+        return self._ring[lo][1]
+
+    def add_shard(self, shard_id: int):
+        """Add a new shard to the ring."""
+        for vnode in range(self.VIRTUAL_NODES):
+            key = f"shard-{shard_id}-vnode-{vnode}"
+            hash_val = int(hashlib.md5(key.encode("utf-8")).hexdigest(), 16)
+            self._ring.append((hash_val, shard_id))
+        self._ring.sort(key=lambda x: x[0])
+        self.num_shards = max(self.num_shards, shard_id + 1)
+
+    def remove_shard(self, shard_id: int):
+        """Remove a shard from the ring."""
+        self._ring = [(h, s) for h, s in self._ring if s != shard_id]
+
+
 class DatabaseShardingService:
     """
     Database Sharding Service for Horizontal Scaling
 
     Features:
-    - Automatic shard selection based on location_id
+    - Consistent hashing ring for shard selection
     - Master/replica routing for read/write operations
     - Connection pooling and health monitoring
     - Automatic failover and recovery
@@ -100,6 +168,9 @@ class DatabaseShardingService:
 
         # Shard configuration
         self._initialize_shard_configuration()
+
+        # Consistent hashing router
+        self._shard_router = ShardRouter(num_shards=max(1, len(self.shard_clusters)))
 
         # Health monitoring
         self._health_monitor_task = None
@@ -224,22 +295,15 @@ class DatabaseShardingService:
             raise
 
     def get_shard_id(self, location_id: str) -> int:
-        """
-        Determine shard ID based on location_id hash
+        """Determine shard ID using consistent hashing ring.
 
         Args:
             location_id: GHL location identifier
 
         Returns:
-            Shard ID (0-3 for 4-shard setup)
+            Shard ID (0-based)
         """
-        if not location_id:
-            # Default to shard 0 for null location_id
-            return 0
-
-        # Use MD5 hash for consistent shard selection
-        hash_value = hashlib.md5(location_id.encode("utf-8")).hexdigest()
-        return int(hash_value[:8], 16) % len(self.shard_clusters)
+        return self._shard_router.get_shard(location_id)
 
     async def get_read_connection(self, location_id: str) -> Pool:
         """
@@ -425,11 +489,60 @@ class DatabaseShardingService:
             logger.info(f"Location {location_id} already on target shard {target_shard_id}")
             return
 
-        logger.warning(
-            f"Data migration not yet implemented: {location_id} from shard {current_shard_id} to {target_shard_id}"
+        logger.info(
+            f"Migrating data for location {location_id} "
+            f"from shard {current_shard_id} to shard {target_shard_id}"
         )
-        # ROADMAP-080: Implement data migration logic between shards
-        raise NotImplementedError("Data migration between shards not yet implemented")
+
+        tables = ["leads", "contacts", "deals", "conversations", "lead_touchpoints"]
+        migrated_count = 0
+
+        try:
+            source_pool = await self.get_write_connection(location_id)
+            # For target, directly access the cluster
+            target_cluster = self.shard_clusters.get(target_shard_id)
+            if not target_cluster:
+                raise ValueError(f"Target shard {target_shard_id} not found")
+            target_pool_key = f"{target_cluster.master.shard_id}_{target_cluster.master.role.value}"
+            target_pool = self.connection_pools.get(target_pool_key)
+            if not target_pool:
+                raise ValueError(f"Target shard {target_shard_id} pool not available")
+
+            for table in tables:
+                async with source_pool.acquire() as src_conn:
+                    rows = await src_conn.fetch(
+                        f"SELECT * FROM {table} WHERE location_id = $1",
+                        location_id,
+                    )
+
+                if rows:
+                    async with target_pool.acquire() as tgt_conn:
+                        for row in rows:
+                            cols = list(row.keys())
+                            placeholders = ", ".join(f"${i+1}" for i in range(len(cols)))
+                            col_names = ", ".join(cols)
+                            await tgt_conn.execute(
+                                f"INSERT INTO {table} ({col_names}) VALUES ({placeholders}) "
+                                f"ON CONFLICT DO NOTHING",
+                                *[row[c] for c in cols],
+                            )
+                    migrated_count += len(rows)
+
+                    # Delete from source after successful copy
+                    async with source_pool.acquire() as src_conn:
+                        await src_conn.execute(
+                            f"DELETE FROM {table} WHERE location_id = $1",
+                            location_id,
+                        )
+
+            logger.info(
+                f"Migrated {migrated_count} rows for location {location_id} "
+                f"from shard {current_shard_id} to shard {target_shard_id}"
+            )
+
+        except Exception as e:
+            logger.error(f"Data migration failed for {location_id}: {e}")
+            raise
 
 
 # Global sharding service instance

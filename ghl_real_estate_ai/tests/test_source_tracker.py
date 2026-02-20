@@ -4,10 +4,11 @@ Tests for Lead Source Tracker
 Tests source tracking, conversion funnel monitoring, and metrics aggregation.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.source_tracker import (
     ConversionStage,

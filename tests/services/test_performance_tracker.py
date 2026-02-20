@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Jorge Performance Tracker Service.
@@ -13,7 +14,6 @@ import time
 import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-
     VALID_BOT_NAMES,
     WINDOWS,
     PerformanceTracker,

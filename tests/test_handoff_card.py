@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for warm handoff card generator.
@@ -18,12 +19,10 @@ from typing import Any, Dict, Optional
 import pytest
 
 from ghl_real_estate_ai.services.jorge.handoff_card_generator import (
-
     HandoffCard,
     HandoffCardGenerator,
     get_handoff_card_generator,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers — lightweight stub for EnrichedHandoffContext

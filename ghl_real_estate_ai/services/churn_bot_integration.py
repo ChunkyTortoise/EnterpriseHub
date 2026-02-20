@@ -8,11 +8,11 @@ to the Lead, Buyer, and Seller bots without modifying their core code.
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.churn_detection_service import (
     ChurnDetectionService,
     RecoveryStrategy,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

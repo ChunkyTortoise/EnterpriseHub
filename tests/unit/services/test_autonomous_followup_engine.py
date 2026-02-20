@@ -33,7 +33,6 @@ from ghl_real_estate_ai.services.autonomous_followup_engine import (
     TimingOptimizerAgent,
 )
 from tests.fixtures.comprehensive_agent_fixtures import (
-
     LeadProfileFactory,
     MockAgentInsightFactory,
     MockFollowUpRecommendationFactory,

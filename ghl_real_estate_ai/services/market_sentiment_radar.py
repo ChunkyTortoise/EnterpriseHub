@@ -77,113 +77,137 @@ class SentimentAlert:
     generated_at: datetime
 
 
-class MockTwitterSentimentSource(DataSourceInterface):
-    """Mock Twitter/X sentiment analysis - replace with real Twitter Academic API."""
+class PerplexityMarketNewsSource(DataSourceInterface):
+    """Perplexity API-powered local market news and sentiment analysis.
+
+    Queries Perplexity for real-time local market intelligence and parses
+    sentiment from the AI-generated response. Falls back to cached results
+    when the API is unavailable.
+    """
+
+    def __init__(self):
+        import os
+
+        self._api_key = os.getenv("PERPLEXITY_API_KEY", "")
+        self._api_url = "https://api.perplexity.ai/chat/completions"
+        self._cache = get_cache_service()
 
     async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
-        """Mock Twitter sentiment analysis."""
-        # Simulated sentiment signals
-        signals = []
+        """Query Perplexity for local market sentiment signals."""
+        cache_key = f"perplexity_sentiment:{location}:{timeframe_days}"
+        cached = await self._cache.get(cache_key)
+        if cached:
+            return [SentimentSignal(**s) for s in cached]
 
-        # Simulate some negative sentiment about traffic/development
-        if "rancho cucamonga" in location.lower() or "91" in location:
-            signals.append(
-                SentimentSignal(
-                    source="twitter",
-                    signal_type=SentimentTriggerType.INFRASTRUCTURE_CONCERN,
-                    location=location,
-                    sentiment_score=-45,
-                    confidence=0.82,
-                    raw_content="Traffic on I-10 getting worse every month... LA commute taking forever",
-                    detected_at=datetime.now() - timedelta(hours=2),
-                    urgency_multiplier=1.8,
-                )
+        if not self._api_key:
+            logger.debug("PERPLEXITY_API_KEY not set, skipping Perplexity source")
+            return []
+
+        try:
+            import aiohttp
+
+            prompt = (
+                f"Analyze the current real estate market sentiment in {location} "
+                f"over the past {timeframe_days} days. Focus on: "
+                f"1) Local economic stress (taxes, insurance, HOA) "
+                f"2) Infrastructure and development concerns "
+                f"3) Permit activity and neighborhood changes "
+                f"4) General buyer/seller confidence. "
+                f"For each issue found, rate sentiment from -100 (very negative) to +100 "
+                f"(very positive) and assign a confidence 0.0-1.0. "
+                f"Return JSON array: "
+                f'[{{"category": "economic_stress|infrastructure|permits|confidence", '
+                f'"sentiment": <int>, "confidence": <float>, "summary": "<str>"}}]'
             )
 
+            headers = {
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": "llama-3.1-sonar-small-128k-online",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 1024,
+                "temperature": 0.1,
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self._api_url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=15)
+                ) as resp:
+                    if resp.status != 200:
+                        logger.warning(f"Perplexity API returned {resp.status}")
+                        return []
+                    data = await resp.json()
+
+            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            signals = self._parse_perplexity_response(content, location)
+
+            # Cache for 2 hours
+            await self._cache.set(
+                cache_key,
+                [
+                    {
+                        "source": s.source,
+                        "signal_type": s.signal_type.value,
+                        "location": s.location,
+                        "sentiment_score": s.sentiment_score,
+                        "confidence": s.confidence,
+                        "raw_content": s.raw_content,
+                        "detected_at": s.detected_at.isoformat(),
+                        "urgency_multiplier": s.urgency_multiplier,
+                    }
+                    for s in signals
+                ],
+                ttl=7200,
+            )
+            logger.info(f"Perplexity returned {len(signals)} signals for {location}")
+            return signals
+
+        except Exception as e:
+            logger.warning(f"Perplexity API error for {location}: {e}")
+            return []
+
+    def _parse_perplexity_response(self, content: str, location: str) -> List[SentimentSignal]:
+        """Parse Perplexity JSON response into SentimentSignals."""
+        signals = []
+        category_map = {
+            "economic_stress": SentimentTriggerType.ECONOMIC_STRESS,
+            "infrastructure": SentimentTriggerType.INFRASTRUCTURE_CONCERN,
+            "permits": SentimentTriggerType.PERMIT_DISRUPTION,
+            "confidence": SentimentTriggerType.ECONOMIC_STRESS,
+        }
+
+        try:
+            # Extract JSON array from response
+            start = content.find("[")
+            end = content.rfind("]") + 1
+            if start < 0 or end <= start:
+                return signals
+            items = json.loads(content[start:end])
+        except (json.JSONDecodeError, ValueError):
+            logger.debug("Could not parse Perplexity response as JSON")
+            return signals
+
+        for item in items:
+            category = item.get("category", "confidence")
+            signal_type = category_map.get(category, SentimentTriggerType.ECONOMIC_STRESS)
+            sentiment = int(item.get("sentiment", 0))
+            confidence = float(item.get("confidence", 0.5))
+            summary = item.get("summary", "Market signal detected")
+
+            urgency = 1.0 + abs(sentiment) / 50.0  # Scale urgency with magnitude
+
             signals.append(
                 SentimentSignal(
-                    source="twitter",
-                    signal_type=SentimentTriggerType.NEIGHBORHOOD_DECLINE,
+                    source="perplexity",
+                    signal_type=signal_type,
                     location=location,
-                    sentiment_score=-23,
-                    confidence=0.67,
-                    raw_content="New apartment complex going up next door, there goes the neighborhood feel",
-                    detected_at=datetime.now() - timedelta(days=1),
-                    urgency_multiplier=1.2,
-                )
-            )
-
-        return signals
-
-
-class MockPermitDataSource(DataSourceInterface):
-    """Mock permit data source - replace with San Bernardino County/Riverside County APIs."""
-
-    async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
-        """Mock permit pressure analysis."""
-        signals = []
-
-        # Simulate permit activity creating neighborhood uncertainty
-        if "91737" in location or "east rancho" in location.lower():
-            signals.append(
-                SentimentSignal(
-                    source="permits",
-                    signal_type=SentimentTriggerType.PERMIT_DISRUPTION,
-                    location=location,
-                    sentiment_score=-60,
-                    confidence=0.95,
-                    raw_content="12 commercial permits filed on Haven Ave, traffic study required",
-                    detected_at=datetime.now() - timedelta(days=3),
-                    urgency_multiplier=3.2,  # High urgency - development pressure
-                )
-            )
-
-        return signals
-
-
-class MockNewsSource(DataSourceInterface):
-    """Mock local news sentiment - replace with NewsAPI + Rancho Cucamonga American-Statesman RSS."""
-
-    async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
-        """Mock news sentiment analysis."""
-        signals = []
-
-        # Simulate economic stress signals
-        signals.append(
-            SentimentSignal(
-                source="local_news",
-                signal_type=SentimentTriggerType.ECONOMIC_STRESS,
-                location=location,
-                sentiment_score=-35,
-                confidence=0.78,
-                raw_content="California homeowner insurance rates increase 15% due to wildfire risk",
-                detected_at=datetime.now() - timedelta(hours=6),
-                urgency_multiplier=2.1,
-            )
-        )
-
-        return signals
-
-
-class MockHOADataSource(DataSourceInterface):
-    """Mock HOA/community data - replace with public records + community portals."""
-
-    async def fetch_sentiment_data(self, location: str, timeframe_days: int = 30) -> List[SentimentSignal]:
-        """Mock HOA/community sentiment."""
-        signals = []
-
-        # Simulate HOA disputes and fees
-        if any(keyword in location.lower() for keyword in ["victoria", "terra vista", "91737", "91739"]):
-            signals.append(
-                SentimentSignal(
-                    source="hoa_records",
-                    signal_type=SentimentTriggerType.ECONOMIC_STRESS,
-                    location=location,
-                    sentiment_score=-42,
-                    confidence=0.89,
-                    raw_content="HOA special assessment approved: $6,200 per property for earthquake retrofitting",
-                    detected_at=datetime.now() - timedelta(days=2),
-                    urgency_multiplier=2.8,
+                    sentiment_score=sentiment,
+                    confidence=min(1.0, max(0.0, confidence)),
+                    raw_content=summary,
+                    detected_at=datetime.now(),
+                    urgency_multiplier=urgency,
                 )
             )
 
@@ -208,13 +232,10 @@ class MarketSentimentRadar:
         self.sentiment_engine = SentimentDriftEngine()  # Existing sentiment service
         self.claude = ClaudeAssistant()
 
-        # Initialize data sources (mix of real and mock for progressive rollout)
+        # Initialize data sources (real Perplexity API + existing real sources)
         self.data_sources: List[DataSourceInterface] = [
-            MockTwitterSentimentSource(),  # ROADMAP-076: Replace with real Twitter/X API
-            MockHOADataSource(),  # ROADMAP-076: Replace with real HOA/community data
+            PerplexityMarketNewsSource(),
         ]
-
-        # Note: Real data sources are added dynamically to avoid blocking initialization
 
         # Configuration
         self.cache_ttl = 3600  # 1 hour cache

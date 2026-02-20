@@ -6,11 +6,11 @@ Common fixtures for Lead Bot, Buyer Bot, and Seller Bot tests.
 Reduces duplication and ensures consistent test patterns.
 """
 
-import pytest
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
 
 # ==============================
 # Common Mock Data Fixtures
@@ -298,7 +298,8 @@ def isolated_config(monkeypatch):
     ~50-100ms overhead per test (YAML parse + dataclass instantiation).
     """
     import os
-    from ghl_real_estate_ai.config.jorge_config_loader import reload_config, get_config
+
+    from ghl_real_estate_ai.config.jorge_config_loader import get_config, reload_config
     
     # Save original env
     original_env = os.environ.get("DEPLOYMENT_ENV")

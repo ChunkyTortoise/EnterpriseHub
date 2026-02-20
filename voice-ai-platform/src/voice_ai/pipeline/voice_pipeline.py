@@ -5,13 +5,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Coroutine
+from typing import Any
 
+from voice_ai.pipeline.llm_processor import LLMProcessor
 from voice_ai.pipeline.stt_processor import DeepgramSTTProcessor, TranscriptResult
 from voice_ai.pipeline.tts_processor import ElevenLabsTTSProcessor
-from voice_ai.pipeline.llm_processor import LLMProcessor
 
 logger = logging.getLogger(__name__)
 

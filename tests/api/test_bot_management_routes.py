@@ -18,6 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+
 from ghl_real_estate_ai.api.routes import bot_management
 
 pytestmark = pytest.mark.unit

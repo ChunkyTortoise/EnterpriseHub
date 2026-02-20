@@ -17,6 +17,7 @@ from src.retrieval.query.classifier import (
 from src.retrieval.query.expansion import ExpansionConfig, QueryExpander
 from src.retrieval.query.hyde import HyDEConfig, HyDEGenerator, MockLLMProvider
 
+
 @pytest.mark.integration
 
 

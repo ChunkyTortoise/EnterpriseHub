@@ -14,7 +14,6 @@ import pytest
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.components.enterprise_intelligence_hub import (
-
     CompetitiveIntelligence,
     EnterpriseIntelligenceHub,
     ExecutiveKPI,

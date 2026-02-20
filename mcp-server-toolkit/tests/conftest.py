@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.framework.testing import MCPTestClient
 from mcp_toolkit.framework.caching import InMemoryCache, CacheLayer
 from mcp_toolkit.framework.rate_limiter import RateLimiter
 from mcp_toolkit.framework.telemetry import TelemetryProvider

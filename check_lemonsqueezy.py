@@ -1,6 +1,8 @@
 
 import asyncio
+
 from playwright.async_api import async_playwright
+
 
 async def check_status():
     email = "caymanroden@gmail.com"

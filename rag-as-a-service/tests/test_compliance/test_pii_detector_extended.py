@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from rag_service.compliance.pii_detector import PIIDetector, PIIEntity, PIIScanResult
+from rag_service.compliance.pii_detector import PIIDetector
 
 
 @pytest.fixture

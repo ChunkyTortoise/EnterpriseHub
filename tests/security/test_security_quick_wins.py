@@ -1,14 +1,16 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
-import os
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-from fastapi import FastAPI, HTTPException
-from fastapi.testclient import TestClient
-from fastapi.middleware.cors import CORSMiddleware
 import logging
+import os
+from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
+
+import pytest
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.testclient import TestClient
 
 # We will test the logic directly where possible to avoid complex app imports
 # that might trigger database initialization during collection.

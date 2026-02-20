@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime
 
 from shared_schemas.events import (
     DomainEvent,
-    TenantCreated,
     SubscriptionChanged,
+    TenantCreated,
     UsageLimitReached,
 )
 from shared_schemas.tenant import TenantTier

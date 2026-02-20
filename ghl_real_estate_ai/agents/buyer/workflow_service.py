@@ -6,11 +6,11 @@ Handles scheduling, follow-ups, and buyer persona classification.
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig, JorgeSellerConfig
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
-from ghl_real_estate_ai.services.event_publisher import EventPublisher
 from ghl_real_estate_ai.services.buyer_persona_service import BuyerPersonaService
+from ghl_real_estate_ai.services.event_publisher import EventPublisher
 from ghl_real_estate_ai.services.ghl_client import GHLClient
 
 logger = get_logger(__name__)

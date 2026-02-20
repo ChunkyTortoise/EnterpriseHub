@@ -5,6 +5,7 @@ This module contains tests for the composite lead scoring system.
 """
 
 import pytest
+
 from ghl_real_estate_ai.services.lead_scoring_v2 import (
     CompositeScore,
     LeadClassification,

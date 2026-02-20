@@ -10,9 +10,9 @@ Features:
 - Training material generation
 """
 import logging
-from typing import Any, Dict, List, Optional
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 try:
     from notebooklm import NotebookLMClient

@@ -15,6 +15,7 @@ from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.dense.dense_retriever_mock import MockDenseRetriever
 from src.vector_store.base import SearchOptions
 
+
 @pytest.mark.integration
 
 # ---------------------------------------------------------------------------

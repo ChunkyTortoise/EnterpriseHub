@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from devops_suite.monitoring.anomaly import AnomalyDetector, AnomalyResult
+from devops_suite.monitoring.anomaly import AnomalyDetector
 
 
 @pytest.fixture

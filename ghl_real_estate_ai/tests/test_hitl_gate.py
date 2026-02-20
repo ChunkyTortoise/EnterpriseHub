@@ -1,6 +1,7 @@
 """Tests for HITLGate -- High-Value Human-in-the-Loop protection."""
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 
 from ghl_real_estate_ai.services.hitl_gate import HITLGate
 

@@ -6,13 +6,13 @@ proper error handling, and logging.
 """
 from __future__ import annotations
 
-import logging
 import hashlib
+import logging
 from typing import Any, Dict, Optional
 
 import stripe
 
-from billing import PlanTier, get_plan_config, PaymentFailedError
+from billing import PaymentFailedError, PlanTier, get_plan_config
 
 logger = logging.getLogger(__name__)
 

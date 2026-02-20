@@ -3,13 +3,14 @@ EnterpriseHub BI Dashboard - Streamlit Cloud Deployment
 Mock data for demo purposes - no real DB connection needed
 """
 
-import streamlit as st
-import pandas as pd
+import hashlib
+from datetime import datetime, timedelta
+
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import hashlib
+import streamlit as st
 
 # Page configuration
 st.set_page_config(

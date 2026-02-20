@@ -24,6 +24,7 @@ from src.reranking.base import (
 from src.reranking.cohere_reranker import CohereConfig, CohereReRanker
 from src.reranking.cross_encoder import CrossEncoderReRanker
 
+
 @pytest.mark.integration
 
 # ============================================================================

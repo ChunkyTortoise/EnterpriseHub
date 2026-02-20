@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Jorge A/B Testing Service.
@@ -10,7 +11,6 @@ statistical significance analysis, and edge cases.
 import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_service import (
-
     ABTestingService,
     ExperimentResult,
 )

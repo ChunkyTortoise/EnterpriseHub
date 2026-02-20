@@ -13,7 +13,8 @@ def integrate_with_main_app():
     Add this to your app.py or main FastAPI application file:
     """
     from fastapi import FastAPI
-    from ghl_integration import initialize_ghl_integration, ghl_router
+
+    from ghl_integration import ghl_router, initialize_ghl_integration
     
     app = FastAPI()
     
@@ -40,8 +41,9 @@ def integrate_with_lead_bot():
     For lead_bot/main.py - if running as separate service
     """
     from fastapi import FastAPI
-    from ghl_integration.router import router as ghl_router
+
     from ghl_integration.integration import _register_lead_handlers
+    from ghl_integration.router import router as ghl_router
     
     app = FastAPI()
     
@@ -59,8 +61,9 @@ def integrate_with_seller_bot():
     For seller_bot/main.py - if running as separate service
     """
     from fastapi import FastAPI
-    from ghl_integration.router import router as ghl_router
+
     from ghl_integration.integration import _register_seller_handlers
+    from ghl_integration.router import router as ghl_router
     
     app = FastAPI()
     
@@ -77,8 +80,9 @@ def integrate_with_buyer_bot():
     For buyer_bot/main.py - if running as separate service
     """
     from fastapi import FastAPI
-    from ghl_integration.router import router as ghl_router
+
     from ghl_integration.integration import _register_buyer_handlers
+    from ghl_integration.router import router as ghl_router
     
     app = FastAPI()
     
@@ -99,8 +103,10 @@ def integrate_with_lifespan():
     Modern FastAPI approach using lifespan context manager
     """
     from contextlib import asynccontextmanager
+
     from fastapi import FastAPI
-    from ghl_integration import initialize_ghl_integration, shutdown_ghl_integration, ghl_router
+
+    from ghl_integration import ghl_router, initialize_ghl_integration, shutdown_ghl_integration
     
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -131,7 +137,7 @@ def check_environment():
     """
     Run this to verify environment is configured correctly
     """
-    from ghl_integration.integration import verify_environment, get_webhook_urls
+    from ghl_integration.integration import get_webhook_urls, verify_environment
     
     print("🔍 Checking GHL Integration Environment...\n")
     
@@ -176,6 +182,7 @@ async def test_webhook_locally():
     Test webhooks locally using the fixtures
     """
     import json
+
     import httpx
     
     # Load fixture

@@ -2,16 +2,17 @@
 Test Seller Bot Handlers
 """
 
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 
 from ghl_integration.handlers.seller_handlers import (
-    handle_seller_inquiry,
-    handle_listing_created,
-    handle_seller_response,
-    get_handler,
     _extract_address,
     _get_seller_pipeline_ids,
+    get_handler,
+    handle_listing_created,
+    handle_seller_inquiry,
+    handle_seller_response,
 )
 
 

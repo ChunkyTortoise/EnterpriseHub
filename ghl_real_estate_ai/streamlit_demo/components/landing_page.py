@@ -3,8 +3,10 @@ Outcome-First Landing Page for Real Estate AI & LLMOps Partner.
 Serving as the primary sales tool and showcase for EnterpriseHub (Jorge Bot).
 """
 
-import streamlit as st
 from pathlib import Path
+
+import streamlit as st
+
 
 def render_landing_page():
     """Render the high-conversion landing page."""

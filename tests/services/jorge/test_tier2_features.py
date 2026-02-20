@@ -11,7 +11,6 @@ import pytest
 from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 
-
 # ── Helpers ───────────────────────────────────────────────────────────
 
 def _make_state(message: str) -> dict:

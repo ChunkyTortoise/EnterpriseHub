@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
 from shared_schemas.billing import (
-    BillingInterval,
     InvoiceLine,
-    SubscriptionPlan,
     UsageEvent,
     UsageEventType,
-    UsageRecord,
 )
-from shared_schemas.tenant import TenantLimits, TenantTier
 
 
 class TestUsageEvent:

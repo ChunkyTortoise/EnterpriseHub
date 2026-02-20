@@ -1,8 +1,6 @@
 """Tests for authentication module."""
 
-import pytest
-import time
-from mcp_toolkit.framework.auth import APIKeyAuth, OAuthAuth, AuthResult
+from mcp_toolkit.framework.auth import APIKeyAuth
 
 
 class TestAPIKeyAuth:

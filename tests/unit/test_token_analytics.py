@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 pytestmark = pytest.mark.unit
 
 """Unit tests for the TokenAnalytics component.
@@ -13,7 +15,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.token_analytics import (
-
     TokenAnalytics,
     TokenUsageRecord,
     _generate_demo_data,

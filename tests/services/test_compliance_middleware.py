@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -26,7 +27,6 @@ import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 from ghl_real_estate_ai.services.compliance_middleware import (
-
     ComplianceMiddleware,
     ComplianceResult,
     ViolationCategory,

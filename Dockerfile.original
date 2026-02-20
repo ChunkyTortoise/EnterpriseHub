@@ -1,5 +1,5 @@
 # Use Python 3.11 to avoid onnxruntime/chromadb issues on newer Pythons/Silicon
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 

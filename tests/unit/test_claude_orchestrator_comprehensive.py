@@ -8,9 +8,10 @@ Tests for:
 """
 
 import json
-import pytest
 import time
 from typing import Any, Dict, Optional
+
+import pytest
 
 pytestmark = pytest.mark.unit
 

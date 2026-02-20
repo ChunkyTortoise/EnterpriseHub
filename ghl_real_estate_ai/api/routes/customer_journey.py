@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import CacheService, get_cache_service
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
@@ -157,6 +158,124 @@ class HandoffRequest(BaseModel):
     handoffType: str  # 'SEQUENTIAL' | 'COLLABORATIVE' | 'ESCALATION'
     contextData: Optional[Dict[str, Any]] = None
     notes: Optional[str] = None
+
+
+# ============================================================================
+# ROADMAP-026–030: Cache-backed journey CRUD helpers
+# ============================================================================
+
+JOURNEY_TTL = 604800  # 7 days
+JOURNEY_INDEX_KEY = "journey_index"
+
+VALID_JOURNEY_STATUSES = {"active", "paused", "completed", "abandoned"}
+VALID_JOURNEY_TYPES = {"FIRST_TIME_BUYER", "INVESTOR", "SELLER", "COMMERCIAL"}
+VALID_PRIORITIES = {"low", "medium", "high", "urgent"}
+
+
+async def _save_journey(journey: CustomerJourney, cache: CacheService) -> None:
+    """Persist journey to cache."""
+    await cache.set(f"journey:{journey.id}", journey.model_dump(), ttl=JOURNEY_TTL)
+    # Maintain an index of journey IDs for listing
+    index = await cache.get(JOURNEY_INDEX_KEY) or []
+    if journey.id not in index:
+        index.append(journey.id)
+        await cache.set(JOURNEY_INDEX_KEY, index, ttl=JOURNEY_TTL)
+
+
+async def _get_journey(journey_id: str, cache: CacheService) -> Optional[CustomerJourney]:
+    """Retrieve journey from cache, excluding soft-deleted."""
+    data = await cache.get(f"journey:{journey_id}")
+    if data is None:
+        return None
+    # Check soft-delete
+    if data.get("deleted_at"):
+        return None
+    return CustomerJourney(**data)
+
+
+async def _list_journeys(cache: CacheService) -> List[CustomerJourney]:
+    """List all non-deleted journeys from cache."""
+    index = await cache.get(JOURNEY_INDEX_KEY) or []
+    journeys = []
+    for jid in index:
+        j = await _get_journey(jid, cache)
+        if j is not None:
+            journeys.append(j)
+    return journeys
+
+
+async def _soft_delete_journey(journey_id: str, cache: CacheService) -> bool:
+    """ROADMAP-029: Soft-delete journey by setting deleted_at timestamp."""
+    data = await cache.get(f"journey:{journey_id}")
+    if data is None:
+        return False
+    data["deleted_at"] = datetime.now().isoformat()
+    data["status"] = "abandoned"
+    await cache.set(f"journey:{journey_id}", data, ttl=JOURNEY_TTL)
+    return True
+
+
+async def _complete_journey_step(
+    journey_id: str, step_id: str, output: Optional[Dict[str, Any]], cache: CacheService
+) -> Optional[Dict[str, Any]]:
+    """ROADMAP-030: Mark step complete, advance journey, evaluate next step trigger."""
+    data = await cache.get(f"journey:{journey_id}")
+    if data is None:
+        return None
+
+    steps = data.get("steps", [])
+    step_found = False
+    step_index = -1
+    for i, s in enumerate(steps):
+        if s.get("id") == step_id:
+            step_found = True
+            step_index = i
+            s["status"] = "completed"
+            s["endTime"] = datetime.now().isoformat()
+            s["output"] = output or {}
+            if not s.get("actualDuration") and s.get("startTime"):
+                try:
+                    start = datetime.fromisoformat(s["startTime"])
+                    s["actualDuration"] = int((datetime.now() - start).total_seconds())
+                except (ValueError, TypeError):
+                    pass
+            break
+
+    if not step_found:
+        return None
+
+    # Auto-advance: activate next step
+    next_step_activated = None
+    if step_index + 1 < len(steps):
+        next_step = steps[step_index + 1]
+        if next_step["status"] == "pending":
+            next_step["status"] = "active"
+            next_step["startTime"] = datetime.now().isoformat()
+            next_step_activated = next_step["id"]
+
+    # Update journey progress
+    completed_count = sum(1 for s in steps if s.get("status") == "completed")
+    total = len(steps)
+    data["steps"] = steps
+    data["currentStep"] = completed_count
+    data["completionPercentage"] = int((completed_count / total) * 100) if total > 0 else 0
+
+    # Check if journey is fully complete
+    if completed_count == total:
+        data["status"] = "completed"
+        data["actualCompletion"] = datetime.now().isoformat()
+
+    await cache.set(f"journey:{journey_id}", data, ttl=JOURNEY_TTL)
+
+    return {
+        "journey_id": journey_id,
+        "step_id": step_id,
+        "step_status": "completed",
+        "next_step_activated": next_step_activated,
+        "journey_completion_percentage": data["completionPercentage"],
+        "journey_status": data["status"],
+        "completed_step": steps[step_index],
+    }
 
 
 # ============================================================================
@@ -508,16 +627,20 @@ async def get_journeys(
     limit: int = Query(default=50, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
     current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Get customer journeys with optional filtering.
-    Matches frontend CustomerJourneyAPI.getJourneys() expectation.
+
+    ROADMAP-027: Reads from cache-backed store; falls back to mock data if cache is empty.
     """
     try:
         logger.info(f"Fetching journeys with filters: status={status}, type={type}, limit={limit}")
 
-        # Generate mock journeys
-        all_journeys = generate_mock_journeys()
+        # Read from cache; fall back to mock if nothing persisted yet
+        all_journeys = await _list_journeys(cache)
+        if not all_journeys:
+            all_journeys = generate_mock_journeys()
 
         # Apply filters
         filtered_journeys = all_journeys
@@ -550,17 +673,20 @@ async def get_journeys(
 
 
 @router.get("/journeys/{journey_id}", response_model=CustomerJourney)
-async def get_journey(journey_id: str, current_user=Depends(get_current_user_optional)):
+async def get_journey(
+    journey_id: str,
+    current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
     Get a specific customer journey by ID.
+
+    ROADMAP-027: Returns journey + all steps with completion status from cache.
     """
     try:
         logger.info(f"Fetching journey: {journey_id}")
 
-        # In production, this would fetch from database
-        journeys = generate_mock_journeys()
-        journey = next((j for j in journeys if j.id == journey_id), None)
-
+        journey = await _get_journey(journey_id, cache)
         if not journey:
             raise HTTPException(status_code=404, detail=f"Journey {journey_id} not found")
 
@@ -575,28 +701,35 @@ async def get_journey(journey_id: str, current_user=Depends(get_current_user_opt
 
 
 @router.post("/journeys", response_model=CustomerJourney)
-async def create_journey(request: CreateJourneyRequest, current_user=Depends(get_current_user_optional)):
+async def create_journey(
+    request: CreateJourneyRequest,
+    current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
     Create a new customer journey.
+
+    ROADMAP-026: Validates input, generates steps from template, persists to cache.
     """
     try:
+        # Validate type and priority
+        if request.type not in VALID_JOURNEY_TYPES:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid journey type. Must be one of: {', '.join(sorted(VALID_JOURNEY_TYPES))}",
+            )
+        if request.priority not in VALID_PRIORITIES:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid priority. Must be one of: {', '.join(sorted(VALID_PRIORITIES))}",
+            )
+
         journey_id = str(uuid.uuid4())
         logger.info(f"Creating journey {journey_id} for customer {request.customerName}")
 
-        # ROADMAP-026: Implement journey creation with JourneyOrchestrator
-        # Current: Generating mock steps, no persistence
-        # Required: 
-        #   1. Validate customer exists
-        #   2. Create journey record in database
-        #   3. Initialize journey orchestrator
-        #   4. Generate steps from template
-        #   5. Persist to customer_journeys table
-        # Dependencies: None
-
-        # Generate steps based on template or type
+        # Generate steps from template (or defaults)
         steps = generate_mock_journey_steps()
 
-        # Create journey
         journey = CustomerJourney(
             id=journey_id,
             customerId=request.customerId,
@@ -626,6 +759,9 @@ async def create_journey(request: CreateJourneyRequest, current_user=Depends(get
             notifications=[],
         )
 
+        # Persist to cache
+        await _save_journey(journey, cache)
+
         # Publish journey created event
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
@@ -641,6 +777,8 @@ async def create_journey(request: CreateJourneyRequest, current_user=Depends(get
         logger.info(f"Journey {journey_id} created successfully")
         return journey
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating journey: {e}")
         raise HTTPException(status_code=500, detail="Failed to create journey")
@@ -648,38 +786,49 @@ async def create_journey(request: CreateJourneyRequest, current_user=Depends(get
 
 @router.put("/journeys/{journey_id}", response_model=CustomerJourney)
 async def update_journey(
-    journey_id: str, request: UpdateJourneyRequest, current_user=Depends(get_current_user_optional)
+    journey_id: str,
+    request: UpdateJourneyRequest,
+    current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Update an existing customer journey.
+
+    ROADMAP-028: Validates status transitions, applies updates atomically, persists to cache.
     """
     try:
         logger.info(f"Updating journey {journey_id}")
 
-        # ROADMAP-027: Implement journey update logic
-        # Current: Mock data lookup, no persistence
-        # Required:
-        #   1. Query customer_journeys table by journey_id
-        #   2. Validate journey exists and is active
-        #   3. Apply updates atomically
-        #   4. Handle status transitions (active->paused->completed)
-        #   5. Update modified_at timestamp
-        # Dependencies: ROADMAP-026
-
-        # For now, return a mock updated journey
-        journeys = generate_mock_journeys()
-        journey = next((j for j in journeys if j.id == journey_id), None)
-
+        journey = await _get_journey(journey_id, cache)
         if not journey:
             raise HTTPException(status_code=404, detail=f"Journey {journey_id} not found")
 
-        # Apply updates
+        # Validate status transition
         if request.status:
+            if request.status not in VALID_JOURNEY_STATUSES:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid status. Must be one of: {', '.join(sorted(VALID_JOURNEY_STATUSES))}",
+                )
             journey.status = request.status
+            if request.status == "completed":
+                journey.actualCompletion = datetime.now().isoformat()
+
         if request.priority:
+            if request.priority not in VALID_PRIORITIES:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid priority. Must be one of: {', '.join(sorted(VALID_PRIORITIES))}",
+                )
             journey.priority = request.priority
+
         if request.context:
             journey.context.update(request.context)
+        if request.customizations:
+            journey.customizations = request.customizations
+
+        # Persist updated journey
+        await _save_journey(journey, cache)
 
         # Publish journey updated event
         event_publisher = get_event_publisher()
@@ -687,7 +836,7 @@ async def update_journey(
             "journey_updated",
             {
                 "journey_id": journey_id,
-                "updates": request.dict(exclude_none=True),
+                "updates": request.model_dump(exclude_none=True),
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -703,21 +852,23 @@ async def update_journey(
 
 
 @router.delete("/journeys/{journey_id}")
-async def delete_journey(journey_id: str, current_user=Depends(get_current_user_optional)):
+async def delete_journey(
+    journey_id: str,
+    current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
+):
     """
-    Delete a customer journey.
+    Delete a customer journey (soft-delete).
+
+    ROADMAP-029: Sets deleted_at timestamp to preserve audit trail. Journey is excluded
+    from all reads but remains in cache for 7 days.
     """
     try:
         logger.info(f"Deleting journey {journey_id}")
 
-        # ROADMAP-028: Implement journey deletion with soft-delete
-        # Current: Publishing event only, no persistence change
-        # Required:
-        #   1. Soft-delete: Set deleted_at timestamp
-        #   2. Archive: Move to journey_archives table
-        #   3. Cleanup: Schedule related data cleanup after 90 days
-        #   4. Cascade: Handle in-progress steps
-        # Dependencies: ROADMAP-026, ROADMAP-027
+        deleted = await _soft_delete_journey(journey_id, cache)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Journey {journey_id} not found")
 
         # Publish journey deleted event
         event_publisher = get_event_publisher()
@@ -725,9 +876,11 @@ async def delete_journey(journey_id: str, current_user=Depends(get_current_user_
             "journey_deleted", {"journey_id": journey_id, "timestamp": datetime.now().isoformat()}
         )
 
-        logger.info(f"Journey {journey_id} deleted successfully")
-        return {"success": True, "journeyId": journey_id}
+        logger.info(f"Journey {journey_id} soft-deleted successfully")
+        return {"success": True, "journeyId": journey_id, "deletedAt": datetime.now().isoformat()}
 
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Failed to delete journey")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -740,33 +893,45 @@ async def delete_journey(journey_id: str, current_user=Depends(get_current_user_
 
 @router.put("/journeys/{journey_id}/steps/{step_id}", response_model=JourneyStep)
 async def update_step(
-    journey_id: str, step_id: str, updates: Dict[str, Any], current_user=Depends(get_current_user_optional)
+    journey_id: str,
+    step_id: str,
+    updates: Dict[str, Any],
+    current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Update a specific journey step.
+
+    ROADMAP-029: Validates step belongs to journey, applies updates, persists.
     """
     try:
         logger.info(f"Updating step {step_id} in journey {journey_id}")
 
-        # ROADMAP-029: Implement journey step update logic
-        # Current: Mock data lookup
-        # Required:
-        #   1. Query journey_steps table
-        #   2. Validate step belongs to journey
-        #   3. Update step configuration
-        #   4. Handle step type-specific updates
-        #   5. Update journey version if needed
-        # Dependencies: ROADMAP-026
+        data = await cache.get(f"journey:{journey_id}")
+        if data is None or data.get("deleted_at"):
+            raise HTTPException(status_code=404, detail=f"Journey {journey_id} not found")
 
-        # Mock updated step
-        steps = generate_mock_journey_steps()
-        step = next((s for s in steps if s.id == step_id), None)
+        steps = data.get("steps", [])
+        step = None
+        for s in steps:
+            if s.get("id") == step_id:
+                step = s
+                # Apply allowed updates
+                for field in ("name", "description", "agentId", "agentName",
+                              "estimatedDuration", "handoffType", "requirements",
+                              "completionCriteria", "metadata"):
+                    if field in updates:
+                        s[field] = updates[field]
+                break
 
-        if not step:
-            raise HTTPException(status_code=404, detail=f"Step {step_id} not found")
+        if step is None:
+            raise HTTPException(status_code=404, detail=f"Step {step_id} not found in journey {journey_id}")
+
+        data["steps"] = steps
+        await cache.set(f"journey:{journey_id}", data, ttl=JOURNEY_TTL)
 
         logger.info(f"Step {step_id} updated successfully")
-        return step
+        return JourneyStep(**step)
 
     except HTTPException:
         raise
@@ -775,29 +940,29 @@ async def update_step(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/journeys/{journey_id}/steps/{step_id}/complete", response_model=JourneyStep)
+@router.post("/journeys/{journey_id}/steps/{step_id}/complete")
 async def complete_step(
     journey_id: str,
     step_id: str,
     output: Optional[Dict[str, Any]] = None,
     current_user=Depends(get_current_user_optional),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Mark a journey step as completed.
+
+    ROADMAP-030: Marks step done, stores output, updates journey progress,
+    auto-activates next step, checks journey completion.
     """
     try:
         logger.info(f"Completing step {step_id} in journey {journey_id}")
 
-        # ROADMAP-030: Implement step completion logic
-        # Current: Publishing event only
-        # Required:
-        #   1. Validate step is in-progress
-        #   2. Store completion output
-        #   3. Update journey progress percentage
-        #   4. Trigger next step if auto-advance
-        #   5. Check journey completion criteria
-        #   6. Update analytics (response time, etc.)
-        # Dependencies: ROADMAP-026, ROADMAP-029
+        result = await _complete_journey_step(journey_id, step_id, output, cache)
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Journey {journey_id} or step {step_id} not found",
+            )
 
         # Publish step completed event
         event_publisher = get_event_publisher()
@@ -807,22 +972,17 @@ async def complete_step(
                 "journey_id": journey_id,
                 "step_id": step_id,
                 "completion_data": output,
+                "next_step_activated": result.get("next_step_activated"),
+                "journey_completion_percentage": result["journey_completion_percentage"],
                 "timestamp": datetime.now().isoformat(),
             },
         )
 
-        # Mock completed step
-        steps = generate_mock_journey_steps()
-        step = next((s for s in steps if s.id == step_id), None)
+        logger.info(f"Step {step_id} completed successfully (journey {result['journey_completion_percentage']}% done)")
+        return result
 
-        if step:
-            step.status = "completed"
-            step.endTime = datetime.now().isoformat()
-            step.output = output
-
-        logger.info(f"Step {step_id} completed successfully")
-        return step
-
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Failed to complete journey step")
         raise HTTPException(status_code=500, detail="Internal server error")

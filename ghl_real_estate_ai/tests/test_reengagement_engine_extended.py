@@ -14,7 +14,6 @@ import pytest
 
 from ghl_real_estate_ai.api.schemas.ghl import MessageType
 from ghl_real_estate_ai.services.reengagement_engine import (
-
     ChurnReason,
     CLVEstimate,
     CLVTier,

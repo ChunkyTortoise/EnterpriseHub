@@ -1,0 +1,23 @@
+{
+  "active_market": "rancho_cucamonga",
+  "markets": {
+    "rancho_cucamonga": {
+      "display_name": "Rancho Cucamonga",
+      "city": "Rancho Cucamonga",
+      "state": "CA",
+      "zip_codes": ["91701", "91710", "91730", "91737", "91739", "91761", "91762", "91763", "91784", "91786"],
+      "neighborhoods": {
+        "luxury": ["Alta Loma", "Etiwanda", "Day Creek", "Victoria Gardens"],
+        "mid_market": ["Central Rancho Cucamonga", "Victoria Park"],
+        "entry_level": ["Ontario", "Fontana", "Upland"]
+      },
+      "market_dynamics": {
+        "avg_dom": 28,
+        "median_price": 750000,
+        "price_range_entry": [300000, 500000],
+        "price_range_mid": [500000, 1000000],
+        "price_range_luxury": [1000000, 5000000]
+      }
+    }
+  }
+}

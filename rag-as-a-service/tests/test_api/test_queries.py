@@ -1,9 +1,9 @@
 """Tests for query API endpoints."""
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 from rag_service.api.queries import router, QueryRequest, QueryResponse
 from rag_service.core.rag_engine import RAGResponse, SourceReference

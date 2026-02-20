@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -93,34 +92,33 @@ class LLMProcessor:
         messages = [{"role": t.role, "content": t.content} for t in self._history]
         full_response = ""
 
-        async with httpx.AsyncClient() as client:
-            async with client.stream(
-                "POST",
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": self.api_key,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
-                json={
-                    "model": self.model,
-                    "max_tokens": self.max_tokens,
-                    "stream": True,
-                    "system": self._system_prompt,
-                    "messages": messages,
-                },
-                timeout=30.0,
-            ) as resp:
-                resp.raise_for_status()
-                async for line in resp.aiter_lines():
-                    if line.startswith("data: "):
-                        import json
+        async with httpx.AsyncClient() as client, client.stream(
+            "POST",
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": self.api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": self.model,
+                "max_tokens": self.max_tokens,
+                "stream": True,
+                "system": self._system_prompt,
+                "messages": messages,
+            },
+            timeout=30.0,
+        ) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if line.startswith("data: "):
+                    import json
 
-                        event = json.loads(line[6:])
-                        if event.get("type") == "content_block_delta":
-                            text = event["delta"].get("text", "")
-                            if text:
-                                full_response += text
-                                yield text
+                    event = json.loads(line[6:])
+                    if event.get("type") == "content_block_delta":
+                        text = event["delta"].get("text", "")
+                        if text:
+                            full_response += text
+                            yield text
 
         self.add_turn("assistant", full_response)

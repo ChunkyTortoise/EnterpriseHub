@@ -142,7 +142,7 @@ async def run_test(
 
 async def main(args: argparse.Namespace) -> None:
     """Run all load test scenarios."""
-    print(f"RAG-as-a-Service Load Test")
+    print("RAG-as-a-Service Load Test")
     print(f"  Target:      {args.base_url}")
     print(f"  Concurrency: {args.concurrency}")
     print(f"  Duration:    {args.duration}s per test")

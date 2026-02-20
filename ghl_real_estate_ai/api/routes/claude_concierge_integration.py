@@ -691,16 +691,19 @@ async def dismiss_suggestion(
     """
     try:
         reason = dismiss_reason.get("reason", "User dismissed")
+        category = dismiss_reason.get("category", "unknown")
+        user_id = current_user.id if hasattr(current_user, "id") else "unknown"
         logger.info(f"Dismissing suggestion {suggestion_id}: {reason}")
 
-        # ROADMAP-045: Implement Suggestion Dismissal with Learning
-        # Current: Publishing event only
-        # Required:
-        #   1. Update suggestion status to 'dismissed' in database
-        #   2. Store dismissal reason for analytics
-        #   3. Machine learning: Adjust future suggestions based on patterns
-        #   4. Track dismissal rate by suggestion type
-        # Dependencies: None
+        # ROADMAP-045: Store dismissal in orchestrator's suggestion store
+        orchestrator = get_claude_concierge_orchestrator()
+        await orchestrator.store_suggestion(suggestion_id, {
+            "status": "dismissed",
+            "dismiss_reason": reason,
+            "dismiss_category": category,
+            "dismissed_by": user_id,
+            "dismissed_at": datetime.now().isoformat(),
+        })
 
         # Publish suggestion dismissed event
         event_publisher = get_event_publisher()
@@ -709,19 +712,47 @@ async def dismiss_suggestion(
             {
                 "suggestion_id": suggestion_id,
                 "reason": reason,
-                "user_id": current_user.id if hasattr(current_user, "id") else "unknown",
+                "category": category,
+                "user_id": user_id,
                 "timestamp": datetime.now().isoformat(),
             },
         )
 
-        # Track dismissal pattern for future confidence adjustment
-        suggestion_category = dismiss_reason.get("category", "unknown")
-        _dismissal_feedback.setdefault(suggestion_category, {"count": 0, "reasons": []})
-        _dismissal_feedback[suggestion_category]["count"] += 1
-        _dismissal_feedback[suggestion_category]["reasons"].append(reason[:100])
+        # Track dismissal pattern for ML confidence adjustment
+        _dismissal_feedback.setdefault(category, {"count": 0, "reasons": [], "applied": 0})
+        _dismissal_feedback[category]["count"] += 1
+        _dismissal_feedback[category]["reasons"].append(reason[:100])
+        # Keep only last 50 reasons per category to bound memory
+        if len(_dismissal_feedback[category]["reasons"]) > 50:
+            _dismissal_feedback[category]["reasons"] = _dismissal_feedback[category]["reasons"][-50:]
 
-        logger.info(f"Suggestion {suggestion_id} dismissed")
-        return {"success": True, "message": "Suggestion dismissed"}
+        # Calculate dismissal rate and adjust confidence threshold
+        cat_data = _dismissal_feedback[category]
+        total_interactions = cat_data["count"] + cat_data.get("applied", 0)
+        dismissal_rate = cat_data["count"] / total_interactions if total_interactions > 0 else 0.0
+
+        # ML signal: if dismissal rate > 70% for this category, lower confidence
+        confidence_adjustment = 0.0
+        if total_interactions >= 5 and dismissal_rate > 0.7:
+            confidence_adjustment = -0.1 * dismissal_rate
+        elif total_interactions >= 5 and dismissal_rate < 0.3:
+            confidence_adjustment = 0.05
+
+        logger.info(
+            f"Suggestion {suggestion_id} dismissed. Category '{category}' "
+            f"dismissal rate: {dismissal_rate:.0%} ({cat_data['count']}/{total_interactions})"
+        )
+
+        return {
+            "success": True,
+            "message": "Suggestion dismissed",
+            "feedback_stats": {
+                "category": category,
+                "dismissal_rate": round(dismissal_rate, 3),
+                "total_interactions": total_interactions,
+                "confidence_adjustment": round(confidence_adjustment, 3),
+            },
+        }
 
     except Exception:
         logger.exception("Failed to dismiss suggestion")

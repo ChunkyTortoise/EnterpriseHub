@@ -11,6 +11,7 @@ import pytest
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.retrieval.sparse.bm25_index import BM25Config, BM25Index
 
+
 @pytest.mark.integration
 
 

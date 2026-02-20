@@ -27,8 +27,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-    PerformanceTracker,
     SLA_CONFIG,
+    PerformanceTracker,
 )
 from ghl_real_estate_ai.services.jorge.telemetry import trace_operation
 from ghl_real_estate_ai.services.service_types import DeferralStats

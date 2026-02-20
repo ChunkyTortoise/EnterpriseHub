@@ -3,8 +3,8 @@ FastAPI V2 Main Application (Modular Agentic Powerhouse)
 This version implements the 'Elite Stack' as defined in the Jan 2026 roadmap.
 """
 
-import time
 import os
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -12,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ghl_real_estate_ai.api.routes import health
 from ghl_real_estate_ai.api.v2.routes import properties as properties_v2
-
 
 # CORS configuration - must not use wildcard with credentials
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")

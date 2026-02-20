@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.file_processing.parsers import FileParser, ParsedFile
-from mcp_toolkit.servers.file_processing.chunker import TextChunker, Chunk
+from mcp_toolkit.servers.file_processing.parsers import FileParser
+from mcp_toolkit.servers.file_processing.chunker import TextChunker
 
 mcp = EnhancedMCP("file-processing")
 

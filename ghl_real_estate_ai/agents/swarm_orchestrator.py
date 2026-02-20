@@ -18,11 +18,12 @@ Date: 2026-01-05
 
 import asyncio
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 
 class AgentRole(Enum):
@@ -74,6 +75,20 @@ class Agent:
     capabilities: List[str]
     tasks: List[Task] = field(default_factory=list)
     status: str = "idle"  # idle, working, completed, error
+
+
+@dataclass
+class SwarmResult:
+    """ROADMAP-051: Aggregated result from a swarm execution run."""
+
+    total_tasks: int = 0
+    completed_tasks: int = 0
+    failed_tasks: int = 0
+    blocked_tasks: int = 0
+    task_results: Dict[str, Any] = field(default_factory=dict)
+    task_errors: Dict[str, str] = field(default_factory=dict)
+    conflict_resolutions: List[str] = field(default_factory=list)
+    elapsed_seconds: float = 0.0
 
 
 from ghl_real_estate_ai.agent_system.hooks.governance import governance_auditor
@@ -152,15 +167,14 @@ class ConflictResolver:
 
     async def resolve(self, blackboard: SharedBlackboard) -> List[str]:
         """
-        Scans blackboard history for potential conflicts and resolves them.
+        ROADMAP-051: Scans blackboard for conflicts including semantic and value contradictions.
         Returns a list of resolution summaries.
         """
         history = blackboard.get_history()
-        # Find recent duplicate writes to same keys or related keys
-        recent_entries = history[-10:] if len(history) > 10 else history
+        recent_entries = history[-20:] if len(history) > 20 else history
 
-        # Simple heuristic: Check for multiple agents writing to the same key in a short window
-        key_map = {}
+        # Phase 1: Duplicate-key conflict
+        key_map: Dict[str, List[Dict]] = {}
         for entry in recent_entries:
             key = entry["key"]
             if key not in key_map:
@@ -170,17 +184,89 @@ class ConflictResolver:
         resolutions = []
         for key, entries in key_map.items():
             if len(set(e["agent"] for e in entries)) > 1:
-                # Potential conflict: Multiple agents writing to the same key
                 print(f"⚖️ Conflict detected on key '{key}' between {set(e['agent'] for e in entries)}")
-
                 resolution = await self._resolve_with_llm(key, entries)
                 blackboard.write(f"resolution_{key}", resolution, "ConflictResolver")
-
                 agents = list(set(e["agent"] for e in entries))
                 governance_auditor.log_conflict_resolution(agents, f"Multiple agents wrote to {key}", resolution)
                 resolutions.append(f"Resolved {key}: {resolution}")
 
+        # Phase 2: Semantic conflict — related keys with contradictory values
+        semantic_conflicts = self._detect_semantic_conflicts(recent_entries)
+        for conflict in semantic_conflicts:
+            resolution = await self._resolve_with_llm(conflict["topic"], conflict["entries"])
+            blackboard.write(f"resolution_semantic_{conflict['topic']}", resolution, "ConflictResolver")
+            resolutions.append(f"Semantic resolution ({conflict['topic']}): {resolution}")
+
+        # Phase 3: Value contradiction — numeric/boolean contradictions
+        contradiction_conflicts = self._detect_value_contradictions(recent_entries)
+        for conflict in contradiction_conflicts:
+            resolution = await self._resolve_with_llm(conflict["topic"], conflict["entries"])
+            blackboard.write(f"resolution_contradiction_{conflict['topic']}", resolution, "ConflictResolver")
+            resolutions.append(f"Contradiction resolution ({conflict['topic']}): {resolution}")
+
         return resolutions
+
+    def _detect_semantic_conflicts(self, entries: List[Dict]) -> List[Dict]:
+        """ROADMAP-051: Detect semantically related keys with potentially conflicting values."""
+        semantic_groups: Dict[str, List[Dict]] = {}
+        for entry in entries:
+            key = entry["key"]
+            prefix = key.rsplit("_", 1)[0] if "_" in key else key
+            if prefix not in semantic_groups:
+                semantic_groups[prefix] = []
+            semantic_groups[prefix].append(entry)
+
+        conflicts = []
+        for prefix, group_entries in semantic_groups.items():
+            if len(group_entries) < 2:
+                continue
+            agents = set(e["agent"] for e in group_entries)
+            if len(agents) > 1:
+                values = [str(e.get("value", ""))[:200] for e in group_entries]
+                if len(set(values)) > 1:
+                    conflicts.append({"topic": prefix, "entries": group_entries})
+        return conflicts
+
+    def _detect_value_contradictions(self, entries: List[Dict]) -> List[Dict]:
+        """ROADMAP-051: Detect boolean/numeric value contradictions across agents."""
+        contradictions = []
+        agent_values: Dict[str, Dict[str, Any]] = {}
+
+        for entry in entries:
+            agent = entry["agent"]
+            key = entry["key"]
+            value = entry.get("value")
+            if agent not in agent_values:
+                agent_values[agent] = {}
+            agent_values[agent][key] = value
+
+        all_agents = list(agent_values.keys())
+        for i in range(len(all_agents)):
+            for j in range(i + 1, len(all_agents)):
+                a1, a2 = all_agents[i], all_agents[j]
+                shared_keys = set(agent_values[a1].keys()) & set(agent_values[a2].keys())
+                for key in shared_keys:
+                    v1, v2 = agent_values[a1][key], agent_values[a2][key]
+                    if isinstance(v1, bool) and isinstance(v2, bool) and v1 != v2:
+                        contradictions.append({
+                            "topic": key,
+                            "entries": [
+                                {"key": key, "agent": a1, "value": v1},
+                                {"key": key, "agent": a2, "value": v2},
+                            ],
+                        })
+                    elif isinstance(v1, (int, float)) and isinstance(v2, (int, float)):
+                        avg = (abs(v1) + abs(v2)) / 2
+                        if avg > 0 and abs(v1 - v2) / avg > 0.5:
+                            contradictions.append({
+                                "topic": key,
+                                "entries": [
+                                    {"key": key, "agent": a1, "value": v1},
+                                    {"key": key, "agent": a2, "value": v2},
+                                ],
+                            })
+        return contradictions
 
     async def _resolve_with_llm(self, key: str, entries: List[Dict]) -> str:
         conflict_desc = "\n".join([f"- Agent {e['agent']}: {e['value']}" for e in entries])
@@ -282,8 +368,7 @@ class SwarmOrchestrator:
         task.status = TaskStatus.IN_PROGRESS
         task.started_at = datetime.now()
 
-    # ROADMAP-050: Connect agent capabilities to skill_registry.execute()
-    # Current: Skills found but tool execution needs implementation
+    # ROADMAP-050: Tool registry dispatch — skills resolved via skill_registry
         model_name = "gemini-2.0-flash" if complexity == "high" else self.llm.model
 
         context = self.blackboard.get_full_context()
@@ -799,12 +884,39 @@ class SwarmOrchestrator:
 
         print("\n" + "=" * 80 + "\n")
 
-    # ROADMAP-048: Implement actual task execution (currently returns empty list)
-    # See ROADMAP_API.md for full specification
+    # ROADMAP-048: Task execution engine with topological dispatch
     def generate_execution_plan(self) -> List[Dict]:
-        """Generate execution plan showing task order"""
-        # ... (keep existing implementation)
-        return []  # Placeholder as we are adding a new method below
+        """Generate execution plan showing task order via topological sort."""
+        visited: Set[str] = set()
+        order: List[str] = []
+
+        def _topo_visit(task_id: str) -> None:
+            if task_id in visited:
+                return
+            visited.add(task_id)
+            task = self.tasks.get(task_id)
+            if not task:
+                return
+            for dep_id in task.dependencies:
+                _topo_visit(dep_id)
+            order.append(task_id)
+
+        for tid in self.tasks:
+            _topo_visit(tid)
+
+        plan = []
+        for tid in order:
+            task = self.tasks[tid]
+            plan.append({
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "assigned_to": task.assigned_to.value,
+                "priority": task.priority,
+                "estimated_time": task.estimated_time,
+                "dependencies": task.dependencies,
+            })
+        return plan
 
     def _calculate_complexity(self) -> float:
         """
@@ -820,12 +932,15 @@ class SwarmOrchestrator:
         complexity = (context_score * 0.7) + (task_score * 0.3)
         return complexity
 
-    async def run_parallel_swarm(self):
+    async def run_parallel_swarm(self) -> SwarmResult:
         """
-        Executes the swarm tasks in parallel where dependencies allow.
-        Dynamically adjusts concurrency based on blackboard complexity.
+        ROADMAP-049: Executes the swarm tasks in parallel with dynamic concurrency.
+        Uses asyncio.Semaphore with configurable MAX_SWARM_CONCURRENCY env var.
+        Returns SwarmResult with per-task status and error capture.
         """
         print("\n🚀 Starting Parallel Swarm Execution (Adaptive Scaling)...")
+        env_max = int(os.environ.get("MAX_SWARM_CONCURRENCY", "5"))
+        all_resolutions: List[str] = []
 
         while len(self.completed_tasks) < len(self.tasks):
             ready_tasks = self.get_ready_tasks()
@@ -837,40 +952,48 @@ class SwarmOrchestrator:
                 break
 
             complexity = self._calculate_complexity()
-    # ROADMAP-049: Enable dynamic concurrency based on complexity
-    # Current: Hardcoded to 1 for free tier stability
-    # Target: max(1, int(5 * (1 - complexity)))
-            max_parallel = 1
-            tasks_to_run = ready_tasks[:max_parallel]
+            dynamic_max = max(1, int(env_max * (1 - complexity)))
+            semaphore = asyncio.Semaphore(dynamic_max)
+            tasks_to_run = ready_tasks[:dynamic_max]
 
             print(
-                f"📡 Dispatching {len(tasks_to_run)} parallel tasks (Complexity: {complexity:.2f}, Max Parallel: {max_parallel})..."
+                f"📡 Dispatching {len(tasks_to_run)} parallel tasks "
+                f"(Complexity: {complexity:.2f}, Max Parallel: {dynamic_max})..."
             )
 
-            # Execute selected tasks in parallel
-            await asyncio.gather(*(self.execute_task(t.id) for t in tasks_to_run))
+            async def _run_with_semaphore(task_id: str) -> None:
+                async with semaphore:
+                    await self.execute_task(task_id)
 
-            # Rate limit buffer - Free tier is very restrictive
-            await asyncio.sleep(10)
+            await asyncio.gather(*(_run_with_semaphore(t.id) for t in tasks_to_run))
+            await asyncio.sleep(2)
 
-                # ROADMAP-051: Expand conflict detection beyond duplicate key detection
-            # Current: Only checks for multiple agents writing to same key
-            # Target: Semantic conflict detection, value contradiction analysis
             resolutions = await self.conflict_resolver.resolve(self.blackboard)
             if resolutions:
+                all_resolutions.extend(resolutions)
                 print(f"⚖️ Autonomous Conflict Resolution applied: {len(resolutions)} keys resolved.")
 
         print("\n✨ Parallel Swarm Execution Finished.")
 
-        # Calculate ROI (Phase 7)
         swarm_stats = {
             "tasks_completed": len(self.completed_tasks),
-            "matches_found": self.blackboard.read("property_matches_count") or 0,  # Example key
+            "matches_found": self.blackboard.read("property_matches_count") or 0,
         }
         roi_results = roi_engine.calculate_swarm_roi(swarm_stats, agent_name="SwarmOrchestrator")
         print(f"💰 ROI Generated: ${roi_results['total_value_generated']}")
 
         self.print_status()
+
+        # ROADMAP-051: Aggregate into SwarmResult
+        return SwarmResult(
+            total_tasks=len(self.tasks),
+            completed_tasks=len([t for t in self.tasks.values() if t.status == TaskStatus.COMPLETED]),
+            failed_tasks=len([t for t in self.tasks.values() if t.status == TaskStatus.FAILED]),
+            blocked_tasks=len([t for t in self.tasks.values() if t.status == TaskStatus.BLOCKED]),
+            task_results={tid: t.result for tid, t in self.tasks.items() if t.result},
+            task_errors={tid: t.error for tid, t in self.tasks.items() if t.error},
+            conflict_resolutions=all_resolutions,
+        )
 
 
 def main():

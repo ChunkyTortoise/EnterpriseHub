@@ -9,13 +9,13 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.models.buyer_persona import (
     BuyerPersonaClassification,
     BuyerPersonaInsights,
     BuyerPersonaType,
 )
 from ghl_real_estate_ai.services.cache_service import get_cache_service
-from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 
 logger = logging.getLogger(__name__)
 

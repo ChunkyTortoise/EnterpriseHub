@@ -24,7 +24,6 @@ from ghl_real_estate_ai.services.jorge.calendar_booking_service import (
     CalendarBookingService,
 )
 
-
 # ==============================
 # Fixtures
 # ==============================

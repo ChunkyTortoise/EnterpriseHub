@@ -27,7 +27,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.compliance_guard import (
-
     ComplianceGuard,
     ComplianceStatus,
 )

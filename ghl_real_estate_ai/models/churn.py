@@ -9,13 +9,13 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
+    JSONB,
     Column,
     DateTime,
     Decimal,
     ForeignKey,
     Index,
     Integer,
-    JSONB,
     String,
     Text,
 )

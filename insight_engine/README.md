@@ -52,6 +52,19 @@ fig = style_obsidian_chart(fig)
 st.plotly_chart(fig)
 ```
 
+## ROI at a Glance
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| **Test Suite** | 11 API tests | `insight_engine/tests/test_insight_api.py` |
+| **API Endpoints** | 5 FastAPI endpoints + SSE streaming | [app.py](insight_engine/api/app.py) |
+| **Theme Components** | 10+ visual primitives (cards, metrics, badges, effects) | Obsidian Command design system |
+| **Design Tokens** | Full token system (colors, typography, spacing) | Programmatic dot-notation access |
+| **Chart Variants** | 4 card variants + 16 badge variants | Premium/glass/alert/default |
+| **Deployment** | Docker-ready with health endpoint | `docker build -t insight-engine-api ./insight_engine` |
+
+---
+
 ## Components
 
 ### Theme System

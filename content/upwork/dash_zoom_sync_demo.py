@@ -9,12 +9,11 @@ Run: pip install dash dash-bootstrap-components && python dash_zoom_sync_demo.py
 """
 
 import dash
+import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
 from dash import Input, Output, State, dcc, html
 from dash.exceptions import PreventUpdate
-
-import dash_bootstrap_components as dbc
 
 app = dash.Dash(
     __name__,

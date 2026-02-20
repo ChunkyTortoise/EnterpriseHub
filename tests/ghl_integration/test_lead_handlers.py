@@ -2,14 +2,15 @@
 Test Lead Bot Handlers
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
 
 from ghl_integration.handlers.lead_handlers import (
-    handle_new_lead,
+    get_handler,
     handle_lead_response,
     handle_lead_update,
-    get_handler,
+    handle_new_lead,
 )
 
 

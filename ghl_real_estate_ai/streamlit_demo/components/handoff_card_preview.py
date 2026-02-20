@@ -374,9 +374,19 @@ def _render_recent_tab(handoff_service: Optional[Any]) -> None:
         st.info("Displaying sample data. Connect handoff service for live data.")
         recent_handoffs = get_sample_handoff_data()
     else:
-        # ROADMAP-070: Query handoff service for recent handoffs
-        st.info("Live handoff data integration coming soon.")
-        recent_handoffs = get_sample_handoff_data()
+        # ROADMAP-070: Query live handoff data from service
+        try:
+            analytics = handoff_service.get_analytics_summary()
+            live_handoffs = analytics.get("recent_handoffs", [])
+            if live_handoffs:
+                recent_handoffs = live_handoffs
+            else:
+                st.info("No recent live handoffs. Showing sample data.")
+                recent_handoffs = get_sample_handoff_data()
+        except Exception as e:
+            logger.warning(f"Failed to fetch live handoff data: {e}")
+            st.warning("Could not fetch live data. Showing sample data.")
+            recent_handoffs = get_sample_handoff_data()
 
     if not recent_handoffs:
         st.info("No recent handoffs to display.")

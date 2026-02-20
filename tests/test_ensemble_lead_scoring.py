@@ -11,23 +11,24 @@ Tests:
 - Error handling
 """
 
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import numpy as np
 import pandas as pd
 import pytest
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
-from ghl_real_estate_ai.services.ensemble_lead_scoring import (
-    EnsembleLeadScoringService,
-    EnsembleMetrics,
-    LeadScorePrediction,
-    FeatureImportanceResult,
-    get_ensemble_lead_scoring_service,
-)
 from ghl_real_estate_ai.ml.seller_acceptance_features import (
     SellerAcceptanceFeatureExtractor,
     SellerAcceptanceFeatures,
+)
+from ghl_real_estate_ai.services.ensemble_lead_scoring import (
+    EnsembleLeadScoringService,
+    EnsembleMetrics,
+    FeatureImportanceResult,
+    LeadScorePrediction,
+    get_ensemble_lead_scoring_service,
 )
 
 
@@ -541,7 +542,6 @@ class TestIntegration:
 
 
 import json  # Import needed for caching test
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

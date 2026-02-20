@@ -4,11 +4,12 @@ Agent selection, chat interface, and handoff simulation
 Mock data - no real API calls needed
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-from datetime import datetime
 import time
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import streamlit as st
 
 # Page configuration
 st.set_page_config(

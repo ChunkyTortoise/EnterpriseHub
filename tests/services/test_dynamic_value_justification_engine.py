@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -40,7 +41,6 @@ from ghl_real_estate_ai.services.dynamic_value_justification_engine import (
     ValueTrackingStatus,
 )
 from ghl_real_estate_ai.services.value_communication_templates import (
-
     CommunicationStyle,
     MessageType,
     ValueCommunicationTemplates,

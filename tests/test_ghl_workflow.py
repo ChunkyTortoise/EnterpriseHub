@@ -5,9 +5,10 @@ Tests the auto-tagging, pipeline stage updates, and appointment synchronization
 functionality of the GHL workflow integration.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.ghl_workflow_service import (
     AppointmentDetails,

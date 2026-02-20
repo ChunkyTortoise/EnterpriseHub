@@ -10,9 +10,9 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory, MarketCondition, MarketLeverage
-from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.competitive_data_pipeline import get_competitive_data_pipeline
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService
 
 logger = logging.getLogger(__name__)
 

@@ -3,14 +3,15 @@
 Tests auto-generation of warm handoff cards during handoff execution.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
-    JorgeHandoffService,
-    HandoffDecision,
     EnrichedHandoffContext,
+    HandoffDecision,
+    JorgeHandoffService,
 )
 
 

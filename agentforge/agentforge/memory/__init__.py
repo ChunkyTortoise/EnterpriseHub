@@ -62,18 +62,20 @@ from agentforge.memory.checkpoint import (
     SQLiteCheckpointStore,
 )
 
+# Long-term memory
+from agentforge.memory.longterm import LongTermMemory
+
 # Persistent memory
 from agentforge.memory.persistent import (
     FileMemory,
     FileMemoryConfig,
+)
+from agentforge.memory.persistent import (
     InMemoryVectorStore as LegacyInMemoryVectorStore,
 )
 
 # Session memory
 from agentforge.memory.session import SessionMemory, SessionMemoryConfig
-
-# Working memory
-from agentforge.memory.working import WorkingMemory
 
 # Vector store base types
 from agentforge.memory.vector_base import (
@@ -85,8 +87,8 @@ from agentforge.memory.vector_base import (
 # In-memory vector store (new implementation)
 from agentforge.memory.vector_memory import InMemoryVectorStore
 
-# Long-term memory
-from agentforge.memory.longterm import LongTermMemory
+# Working memory
+from agentforge.memory.working import WorkingMemory
 
 __all__ = [
     # Base

@@ -53,18 +53,24 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for complete system design.
 
 ---
 
-## RAG Performance
+## ROI at a Glance
 
-| Metric | Value |
-|--------|-------|
-| Retrieval P95 | **< 200ms** |
-| Search Strategy | **Hybrid BM25 + Vector** |
-| Citation Accuracy | **89%** |
-| Embedding Models | OpenAI, Cohere, local |
+| Metric | Value | Source |
+|--------|-------|--------|
+| **Test Suite** | 1,016 tests across 42 test files | `grep -rc "def test_" tests/` |
+| **API Latency P95 Target** | <50 ms end-to-end | [BENCHMARKS.md](BENCHMARKS.md) |
+| **Retrieval P95** | <200 ms | RAG pipeline benchmark |
+| **Citation Accuracy** | 89% | Evaluation framework |
+| **Retrieval Strategy** | Hybrid BM25 + Dense + Cross-Encoder Rerank | Production architecture |
+| **Cost per Query** | <$0.01 average (target) | [BENCHMARKS.md](BENCHMARKS.md) |
+| **Cache Hit Rate Target** | >90% multi-layer | L1/L2 cache architecture |
+| **Token Efficiency** | 50% reduction via contextual compression | Query expansion + compression pipeline |
+| **Enterprise Tiers** | 3 (Starter $99/mo, Pro $499/mo, Enterprise custom) | [ENTERPRISE.md](ENTERPRISE.md) |
+| **Throughput Target** | 1,000+ req/min sustained | Benchmark targets |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 

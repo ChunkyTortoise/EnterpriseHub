@@ -16,7 +16,6 @@ from unittest.mock import patch
 import pytest
 
 
-
 def _otel_sdk_available() -> bool:
     """Check if the OTel SDK is importable with span capture support."""
     try:

@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 #!/usr/bin/env python3
@@ -356,8 +357,8 @@ def security_test_config():
 async def cleanup_test_data():
     """Automatically clean up test data after each test"""
     # Reset cache singleton before each test to avoid cross-loop lock errors
-    from ghl_real_estate_ai.services.cache_service import reset_cache_service
     from ghl_real_estate_ai.services.bi_websocket_server import reset_bi_websocket_manager
+    from ghl_real_estate_ai.services.cache_service import reset_cache_service
 
     reset_cache_service()
     reset_bi_websocket_manager()

@@ -8,9 +8,10 @@ Tests for:
 - evaluate_handoff() method comprehensive tests
 """
 
-import pytest
 import time
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     EnrichedHandoffContext,

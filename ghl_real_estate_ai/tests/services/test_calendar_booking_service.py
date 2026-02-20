@@ -13,7 +13,6 @@ from ghl_real_estate_ai.services.jorge.calendar_booking_service import (
     CalendarBookingService,
 )
 
-
 MOCK_SLOTS = [
     {"date": "2026-02-15", "start": "2026-02-15T09:00:00-08:00", "end": "2026-02-15T09:30:00-08:00"},
     {"date": "2026-02-15", "start": "2026-02-15T10:00:00-08:00", "end": "2026-02-15T10:30:00-08:00"},

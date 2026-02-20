@@ -1402,50 +1402,165 @@ class RevenueAttributionSystem:
             return 0.5
 
     async def _get_touchpoint_data(self, analysis_period: str) -> List[TouchpointEvent]:
-        """Get touchpoint data for analysis period (placeholder implementation)."""
-        # ROADMAP-077: Implement real touchpoint data retrieval from analytics database
-        sample_touchpoints = []
+        """Get touchpoint data for analysis period from analytics database.
 
-        # Generate sample touchpoint data
-        channels = [
-            MarketingChannel.ORGANIC_SEARCH,
-            MarketingChannel.PAID_SEARCH,
-            MarketingChannel.SOCIAL_MEDIA,
-            MarketingChannel.EMAIL_MARKETING,
-        ]
+        Queries the lead_touchpoints table joined with lead_sources for UTM
+        attribution. Falls back to minimal sample if DB is unavailable.
+        """
+        from ghl_real_estate_ai.services.database_service import get_database
 
-        for i in range(200):  # Sample 200 touchpoints
-            tp = TouchpointEvent(
-                touchpoint_id=f"tp_{i}",
-                lead_id=f"lead_{i % 50}",  # 50 unique leads
-                channel=channels[i % len(channels)],
-                touchpoint_type=TouchpointType.AWARENESS if i % 3 == 0 else TouchpointType.CONSIDERATION,
-                timestamp=datetime.now() - timedelta(days=i % 30),
-                cost=float(10 + (i % 100)),  # Varied costs
-                engagement_score=float(5 + (i % 10)),  # Engagement scores 5-15
+        try:
+            db = get_database()
+            # Parse period (e.g., "2026-Q1", "2026-02", "last_30_days")
+            period_days = self._parse_period_days(analysis_period)
+            cutoff = datetime.now() - timedelta(days=period_days)
+
+            rows = await db.fetch_all(
+                """
+                SELECT
+                    t.id AS touchpoint_id,
+                    t.lead_id,
+                    COALESCE(ls.utm_source, ls.channel, 'direct') AS channel,
+                    t.touchpoint_type,
+                    t.created_at AS timestamp,
+                    COALESCE(ls.cost, 0) AS cost,
+                    COALESCE(t.engagement_score, 5.0) AS engagement_score
+                FROM lead_touchpoints t
+                LEFT JOIN lead_sources ls ON t.lead_id = ls.lead_id
+                WHERE t.created_at >= :cutoff
+                ORDER BY t.created_at
+                """,
+                {"cutoff": cutoff},
             )
-            sample_touchpoints.append(tp)
 
-        return sample_touchpoints
-
-    async def _get_conversion_data(self, analysis_period: str) -> Dict[str, Any]:
-        """Get conversion data for analysis period (placeholder implementation)."""
-        # ROADMAP-077: Implement real conversion data retrieval from CRM/sales database
-        conversions = {}
-        for i in range(15):  # 15 conversions out of 50 leads
-            conversions[f"lead_{i}"] = {
-                "value": float(5000 + (i * 1000)),  # Conversion values $5k-20k
-                "conversion_date": datetime.now() - timedelta(days=i),
-                "conversion_type": "sale",
+            channel_map = {
+                "google": MarketingChannel.PAID_SEARCH,
+                "organic": MarketingChannel.ORGANIC_SEARCH,
+                "facebook": MarketingChannel.SOCIAL_MEDIA,
+                "instagram": MarketingChannel.SOCIAL_MEDIA,
+                "linkedin": MarketingChannel.SOCIAL_MEDIA,
+                "email": MarketingChannel.EMAIL_MARKETING,
+                "referral": MarketingChannel.REFERRAL,
+                "direct": MarketingChannel.DIRECT,
             }
 
-        return {
-            "conversions": conversions,
-            "conversion_rate": len(conversions) / 50,  # 30% conversion rate
-            "total_conversions": len(conversions),
-            "total_marketing_spend": 5000.0,
-            "analysis_period": analysis_period,
-        }
+            touchpoints = []
+            for row in rows:
+                raw_channel = str(row.get("channel", "direct")).lower()
+                channel = channel_map.get(raw_channel, MarketingChannel.DIRECT)
+                tp_type_raw = str(row.get("touchpoint_type", "awareness")).lower()
+                tp_type = TouchpointType.AWARENESS if "aware" in tp_type_raw else TouchpointType.CONSIDERATION
+
+                touchpoints.append(
+                    TouchpointEvent(
+                        touchpoint_id=str(row["touchpoint_id"]),
+                        lead_id=str(row["lead_id"]),
+                        channel=channel,
+                        touchpoint_type=tp_type,
+                        timestamp=row["timestamp"],
+                        cost=float(row.get("cost", 0)),
+                        engagement_score=float(row.get("engagement_score", 5.0)),
+                    )
+                )
+
+            logger.info(f"Retrieved {len(touchpoints)} touchpoints for period {analysis_period}")
+            return touchpoints
+
+        except Exception as e:
+            logger.warning(f"DB touchpoint query failed, using minimal data: {e}")
+            return []
+
+    def _parse_period_days(self, analysis_period: str) -> int:
+        """Convert analysis period string to number of days."""
+        if "last_" in analysis_period and "_days" in analysis_period:
+            try:
+                return int(analysis_period.replace("last_", "").replace("_days", ""))
+            except ValueError:
+                pass
+        if "Q" in analysis_period:
+            return 90
+        return 30
+
+    async def _get_conversion_data(self, analysis_period: str) -> Dict[str, Any]:
+        """Get conversion data from CRM/sales database.
+
+        Queries closed deals and traces them back to originating lead source
+        via UTM params in the lead_sources table.
+        """
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        try:
+            db = get_database()
+            period_days = self._parse_period_days(analysis_period)
+            cutoff = datetime.now() - timedelta(days=period_days)
+
+            deal_rows = await db.fetch_all(
+                """
+                SELECT
+                    d.lead_id,
+                    d.deal_value AS value,
+                    d.closed_at AS conversion_date,
+                    COALESCE(d.deal_type, 'sale') AS conversion_type
+                FROM deals d
+                WHERE d.status = 'won'
+                  AND d.closed_at >= :cutoff
+                ORDER BY d.closed_at
+                """,
+                {"cutoff": cutoff},
+            )
+
+            conversions = {}
+            for row in deal_rows:
+                lead_id = str(row["lead_id"])
+                conversions[lead_id] = {
+                    "value": float(row.get("value", 0)),
+                    "conversion_date": row["conversion_date"],
+                    "conversion_type": row.get("conversion_type", "sale"),
+                }
+
+            # Get total marketing spend for the period
+            spend_row = await db.fetch_one(
+                """
+                SELECT COALESCE(SUM(cost), 0) AS total_spend
+                FROM lead_sources
+                WHERE created_at >= :cutoff
+                """,
+                {"cutoff": cutoff},
+            )
+            total_spend = float(spend_row["total_spend"]) if spend_row else 0.0
+
+            # Get total leads for conversion rate
+            lead_count_row = await db.fetch_one(
+                """
+                SELECT COUNT(DISTINCT lead_id) AS total_leads
+                FROM lead_sources
+                WHERE created_at >= :cutoff
+                """,
+                {"cutoff": cutoff},
+            )
+            total_leads = int(lead_count_row["total_leads"]) if lead_count_row else 1
+
+            logger.info(
+                f"Retrieved {len(conversions)} conversions for period {analysis_period}"
+            )
+
+            return {
+                "conversions": conversions,
+                "conversion_rate": len(conversions) / max(total_leads, 1),
+                "total_conversions": len(conversions),
+                "total_marketing_spend": total_spend,
+                "analysis_period": analysis_period,
+            }
+
+        except Exception as e:
+            logger.warning(f"DB conversion query failed, using empty data: {e}")
+            return {
+                "conversions": {},
+                "conversion_rate": 0.0,
+                "total_conversions": 0,
+                "total_marketing_spend": 0.0,
+                "analysis_period": analysis_period,
+            }
 
     def _create_minimal_report(
         self, analysis_period: str, touchpoints: List[TouchpointEvent], conversion_data: Dict[str, Any]

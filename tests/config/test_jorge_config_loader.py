@@ -12,11 +12,13 @@ Coverage: Config structure, validation rules, environment behavior
 """
 
 import os
+
 import pytest
+
 from ghl_real_estate_ai.config.jorge_config_loader import (
+    JorgeBotsConfig,
     get_config,
     reload_config,
-    JorgeBotsConfig,
 )
 
 

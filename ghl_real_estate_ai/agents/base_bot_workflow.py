@@ -13,7 +13,7 @@ Task #18: Create BaseBotWorkflow shared base class (Enhanced)
 """
 
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from ghl_real_estate_ai.config.industry_config import IndustryConfig
@@ -55,10 +55,10 @@ class BaseBotWorkflow:
         """
         from ghl_real_estate_ai.config.industry_config import IndustryConfig
         from ghl_real_estate_ai.services.event_publisher import get_event_publisher
-        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
-        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
-        from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
         from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
+        from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+        from ghl_real_estate_ai.services.jorge.bot_metrics_collector import BotMetricsCollector
+        from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 
         # Core configuration
         self.tenant_id = tenant_id

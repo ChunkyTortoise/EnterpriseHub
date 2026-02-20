@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -24,7 +25,6 @@ from ghl_real_estate_ai.models.matching_models import (
     WalkabilityScore,
 )
 from ghl_real_estate_ai.services.personalized_narrative_engine import (
-
     NarrativeComponent,
     NarrativeLength,
     NarrativeStyle,

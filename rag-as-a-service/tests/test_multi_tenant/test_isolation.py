@@ -8,7 +8,6 @@ import pytest
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from httpx import ASGITransport, AsyncClient
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from rag_service.multi_tenant.isolation import TenantMiddleware, PUBLIC_PATHS
 from rag_service.multi_tenant.tenant_router import TenantRouter

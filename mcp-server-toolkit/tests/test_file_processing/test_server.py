@@ -5,7 +5,7 @@ import json
 import pytest
 from mcp_toolkit.framework.testing import MCPTestClient
 from mcp_toolkit.servers.file_processing.server import mcp as fp_mcp
-from mcp_toolkit.servers.file_processing.chunker import TextChunker, Chunk
+from mcp_toolkit.servers.file_processing.chunker import TextChunker
 
 
 @pytest.fixture
