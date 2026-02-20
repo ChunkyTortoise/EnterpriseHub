@@ -146,6 +146,17 @@ class ConversationManager:
 
         return context
 
+    async def get_conversation_history(self, contact_id: str, location_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Retrieve conversation history for a contact.
+
+        This helper keeps webhook bot routes stable while reusing the
+        single source of truth stored in conversation context.
+        """
+        context = await self.get_context(contact_id, location_id=location_id)
+        history = context.get("conversation_history", [])
+        return history if isinstance(history, list) else []
+
     async def update_context(
         self,
         contact_id: str,
