@@ -1368,7 +1368,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         sequence_data = state.get("sequence_state", {})
         sequence_day_val = state.get("sequence_day")
 
-        if sequence_day_val is not None:
+        if sequence_day_val is not None and sequence_day_val > 0:
             # Simulation/Direct mode: create temporary sequence state from sequence_day
             # Map numeric day to SequenceDay enum using validated helper
             day_enum = self._map_int_to_sequence_day(sequence_day_val)
@@ -1395,9 +1395,13 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         # Determine routing based on sequence day
         current_day = sequence_state.current_day
-        if sequence_day_val is not None:
-            # Override with validated int-to-enum mapping
+        if sequence_day_val is not None and sequence_day_val > 0:
+            # Override with validated int-to-enum mapping (0 = default, use service state)
             current_day = self._map_int_to_sequence_day(sequence_day_val)
+
+        # INITIAL state (sequence_day=0 / new contact) — treat as DAY_3 outreach
+        if current_day == SequenceDay.INITIAL:
+            current_day = SequenceDay.DAY_3
 
         if current_day == SequenceDay.DAY_3:
             logger.debug("determine_path - Routing to day_3")
