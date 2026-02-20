@@ -1,0 +1,56 @@
+# GHL Real Estate AI - Production Requirements (Railway deployment)
+# Minimal set: bot server + webhook handler only.
+# Heavy ML/analytics stack (chromadb, sentence-transformers, spacy, sklearn)
+# is NOT included — bots use Claude API, not local embeddings.
+
+# FastAPI + ASGI
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+
+# Anthropic Claude SDK
+anthropic==0.18.1
+
+# HTTP clients (GHL API calls, alerting webhooks)
+httpx==0.26.0
+requests==2.31.0
+aiohttp==3.9.3
+
+# Database (PostgreSQL + async)
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.25
+alembic==1.13.1
+
+# Redis cache
+redis==5.0.1
+
+# Bot state graphs (all 3 Jorge bots)
+langgraph==0.0.55
+
+# WebSocket / Socket.IO (real-time)
+python-socketio==5.11.0
+websockets==12.0
+websocket-client==1.6.4
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Utilities
+python-dotenv==1.0.1
+pytz==2023.4
+aiofiles==23.2.1
+bleach==6.1.0
+structlog==24.1.0
+
+# Scheduled tasks (digest_service 7am cron)
+APScheduler==3.10.4
+
+# Statistics (A/B testing, scoring)
+scipy==1.11.4
+numpy==1.26.3
+
+# Billing
+stripe==7.12.0
