@@ -11,6 +11,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
+from ghl_real_estate_ai.config.concierge_config_loader import (
+    ConciergeClientConfig,
+    get_default_concierge_config,
+    get_concierge_config,
+)
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.cache_service import get_cache_service
@@ -136,7 +141,10 @@ class ClaudeConciergeOrchestrator:
     """
 
     def __init__(
-        self, claude_orchestrator: Optional[ClaudeOrchestrator] = None, memory_service: Optional[MemoryService] = None
+        self,
+        claude_orchestrator: Optional[ClaudeOrchestrator] = None,
+        memory_service: Optional[MemoryService] = None,
+        client_config: Optional[ConciergeClientConfig] = None,
     ):
 
         # Core Services
@@ -152,10 +160,17 @@ class ClaudeConciergeOrchestrator:
         self.jorge_memory = JorgeMemorySystem(self.memory, self.cache)
         self.business_rules = JorgeBusinessRules()
 
+        # Default client config (used when no tenant_id is supplied to methods)
+        self._default_config: ConciergeClientConfig = client_config or get_default_concierge_config()
+
         # Platform State Tracking
-        self.context_cache = {}
-        self.session_contexts = {}  # session_id -> context history
-        self.generated_suggestions = {}  # suggestion_id -> suggestion_data
+        # session_contexts, context_cache, and generated_suggestions are now
+        # Redis-backed (see _session_key / store_suggestion / get_suggestion).
+        # These empty dicts are kept only as an in-process fallback when Redis
+        # is unavailable so that existing callers don't break.
+        self.context_cache: Dict = {}
+        self.session_contexts: Dict = {}   # fallback only — use _get_session_history()
+        self.generated_suggestions: Dict = {}  # fallback only — use store_suggestion()
 
         # Performance metrics
         self.metrics = {
@@ -337,12 +352,14 @@ class ClaudeConciergeOrchestrator:
                     "jorge_preferences": jorge_preferences,
                     "concierge_mode": mode.value,
                     "intelligence_scope": scope.value,
-                    "session_history": self.session_contexts.get(context.session_id, []),
+                    "session_history": await self._get_session_history(
+                        self._default_config.tenant_id, context.session_id
+                    ),
                 },
                 prompt=intelligence_prompt,
                 max_tokens=4000,
                 temperature=0.6,  # Balanced creativity for guidance
-                system_prompt=self._get_concierge_system_prompt(mode),
+                system_prompt=self._get_concierge_system_prompt(mode, self._default_config.tenant_id),
             )
 
             # Get Claude's intelligent analysis
@@ -367,7 +384,9 @@ class ClaudeConciergeOrchestrator:
             await self._track_concierge_analytics(context, mode, scope, structured_response)
 
             # Update session context for continuity
-            self._update_session_context(context.session_id, context, structured_response)
+            await self._update_session_context(
+                self._default_config.tenant_id, context.session_id, context, structured_response
+            )
 
             self.metrics["requests_processed"] += 1
             self.metrics["total_response_time_ms"] += structured_response.response_time_ms
@@ -538,13 +557,17 @@ class ClaudeConciergeOrchestrator:
             claude_response.content, context, ConciergeMode.PROACTIVE, IntelligenceScope.PLATFORM_WIDE
         )
 
-    async def apply_suggestion(self, suggestion_id: str) -> Dict[str, Any]:
+    async def apply_suggestion(self, suggestion_id: str, tenant_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Apply a stored proactive suggestion by triggering actual platform actions.
         Track 3: Real automation execution via GHL Service.
         """
         try:
-            suggestion = self.generated_suggestions.get(suggestion_id)
+            resolved_tenant = tenant_id or self._default_config.tenant_id
+            suggestion = await self.get_suggestion(suggestion_id, resolved_tenant)
+            # Fall back to in-process dict for backward compat with direct dict assignment
+            if suggestion is None:
+                suggestion = self.generated_suggestions.get(suggestion_id)
             if not suggestion:
                 logger.warning(f"Suggestion {suggestion_id} not found in cache")
                 return {"success": False, "error": "Suggestion not found or expired"}
@@ -735,7 +758,7 @@ class ClaudeConciergeOrchestrator:
             "avg_response_time_ms": int(avg_rt),
             "errors": self.metrics["errors"],
             "cache_hit_rate": round(cache_rate, 3),
-            "active_sessions": len(self.session_contexts),
+            "active_sessions": len(self.session_contexts),  # in-process fallback count
             "learning_events": self.metrics["learning_events"],
         }
 
@@ -844,25 +867,36 @@ class ClaudeConciergeOrchestrator:
 
         return "\n        ".join(intel_lines)
 
-    def _get_concierge_system_prompt(self, mode: ConciergeMode) -> str:
-        """Get mode-specific system prompt for the concierge."""
+    def _get_concierge_system_prompt(self, mode: ConciergeMode, tenant_id: Optional[str] = None) -> str:
+        """Build a domain-agnostic system prompt from the client config.
 
-        base_prompt = """
-        You are Claude, Jorge's omnipresent AI concierge for his real estate platform.
+        Template vars injected from ConciergeClientConfig:
+          {client_name}       — e.g. "Jorge Salas"
+          {business_model}    — revenue model description
+          {market_context}    — geographic / market focus
+          {client_style}      — communication style bullets
+          {available_agents}  — comma-separated agent names
+          {compliance_reqs}   — semicolon-separated compliance items
+        """
+        try:
+            cfg = get_concierge_config(tenant_id) if tenant_id else self._default_config
+        except FileNotFoundError:
+            cfg = self._default_config
+
+        base_prompt = f"""
+        You are Claude, {cfg.client_name}'s omnipresent AI concierge for their platform.
         You have complete knowledge of:
 
-        - Jorge's business model and 6% commission structure
-        - The bot ecosystem (Jorge Seller Bot, Lead Bot, Intent Decoder)
+        - Business model: {cfg.business_model}
+        - Available agents: {cfg.agent_summary}
         - GHL integration and workflow automation
-        - Real estate market dynamics and timing
+        - Market context: {cfg.market_context}
         - Lead qualification and conversion optimization
 
-        Jorge's Communication Style:
-        - Direct and results-focused
-        - Data-driven decision making
-        - High-energy, ambitious
-        - Values efficiency and automation
-        - Prefers actionable insights over theory
+        {cfg.client_name}'s Communication Style:
+        {cfg.client_style}
+
+        Compliance requirements: {cfg.compliance_summary}
 
         STRUCTURED OUTPUT REQUIREMENTS:
         Your response MUST include structured tags at the end of your conversational response to enable platform integration.
@@ -893,7 +927,7 @@ class ClaudeConciergeOrchestrator:
             <bot>jorge-seller-bot|lead-bot|intent-decoder</bot>
             <confidence>0.0-1.0</confidence>
             <reasoning>Why this bot is best for the current situation</reasoning>
-            <context>{"key": "value"}</context>
+            <context>{{"key": "value"}}</context>
         </handoff>
 
         <frs_score>0-100</frs_score>
@@ -913,7 +947,7 @@ class ClaudeConciergeOrchestrator:
 
             PROACTIVE MODE: Continuously monitor and suggest optimizations.
             - Be forward-thinking and opportunity-focused
-            - Identify patterns Jorge might miss
+            - Identify patterns the user might miss
             - Suggest automation improvements
             - Highlight time-sensitive opportunities
             """,
@@ -1335,25 +1369,83 @@ class ClaudeConciergeOrchestrator:
         except Exception as e:
             logger.warning(f"Analytics tracking failed: {e}")
 
-    def _update_session_context(self, session_id: str, context: PlatformContext, response: ConciergeResponse) -> None:
-        """Update session context for continuity."""
-        if session_id not in self.session_contexts:
-            self.session_contexts[session_id] = []
+    # ------------------------------------------------------------------
+    # Multi-tenant Redis-backed storage helpers
+    # Key convention: concierge:{tenant_id}:{resource}:{id}
+    # ------------------------------------------------------------------
 
-        # Add interaction to session history
+    def _session_key(self, tenant_id: str, session_id: str) -> str:
+        return f"concierge:{tenant_id}:session:{session_id}"
+
+    def _suggestion_key(self, tenant_id: str, suggestion_id: str) -> str:
+        return f"concierge:{tenant_id}:suggestion:{suggestion_id}"
+
+    async def _get_session_history(self, tenant_id: str, session_id: str) -> List[Dict]:
+        """Fetch session interaction history from Redis (TTL 3600s)."""
+        try:
+            raw = await self.cache.get(self._session_key(tenant_id, session_id))
+            if raw:
+                return json.loads(raw)
+        except Exception as e:
+            logger.warning(f"Session history read failed: {e}")
+        # Fallback to in-process dict
+        return self.session_contexts.get(session_id, [])
+
+    async def store_suggestion(self, suggestion_id: str, data: Dict, tenant_id: Optional[str] = None) -> None:
+        """Persist a suggestion to Redis (TTL 1800s) and the fallback dict."""
+        resolved = tenant_id or self._default_config.tenant_id
+        self.generated_suggestions[suggestion_id] = data  # in-process fallback
+        try:
+            await self.cache.set(
+                self._suggestion_key(resolved, suggestion_id),
+                json.dumps(data, default=str),
+                ttl=1800,
+            )
+        except Exception as e:
+            logger.warning(f"Suggestion store to Redis failed: {e}")
+
+    async def get_suggestion(self, suggestion_id: str, tenant_id: Optional[str] = None) -> Optional[Dict]:
+        """Retrieve a suggestion from Redis; returns None if missing or expired."""
+        resolved = tenant_id or self._default_config.tenant_id
+        try:
+            raw = await self.cache.get(self._suggestion_key(resolved, suggestion_id))
+            if raw:
+                return json.loads(raw)
+        except Exception as e:
+            logger.warning(f"Suggestion read from Redis failed: {e}")
+        return None
+
+    async def _update_session_context(
+        self, tenant_id: str, session_id: str, context: PlatformContext, response: ConciergeResponse
+    ) -> None:
+        """Append interaction to session history in Redis (TTL 3600s) and fallback dict."""
         interaction = {
             "timestamp": datetime.now().isoformat(),
             "page": context.current_page,
-            "primary_guidance": response.primary_guidance[:100],  # Truncate for storage
+            "primary_guidance": response.primary_guidance[:100],
             "urgency_level": response.urgency_level,
             "actions_count": len(response.immediate_actions),
         }
 
-        self.session_contexts[session_id].append(interaction)
+        # Keep in-process fallback dict up to date
+        history = self.session_contexts.setdefault(session_id, [])
+        history.append(interaction)
+        if len(history) > 10:
+            self.session_contexts[session_id] = history[-10:]
 
-        # Limit session history for memory management
-        if len(self.session_contexts[session_id]) > 10:
-            self.session_contexts[session_id] = self.session_contexts[session_id][-10:]
+        # Persist to Redis
+        try:
+            redis_history = await self._get_session_history(tenant_id, session_id)
+            redis_history.append(interaction)
+            if len(redis_history) > 10:
+                redis_history = redis_history[-10:]
+            await self.cache.set(
+                self._session_key(tenant_id, session_id),
+                json.dumps(redis_history, default=str),
+                ttl=3600,
+            )
+        except Exception as e:
+            logger.warning(f"Session context Redis write failed: {e}")
 
     def _generate_fallback_response(
         self, context: PlatformContext, mode: ConciergeMode, error_msg: str

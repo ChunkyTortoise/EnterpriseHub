@@ -404,12 +404,11 @@ async def send_message(request: ChatRequest, current_user=Depends(get_current_us
         suggestions = []
         for coord_suggestion in guidance.bot_coordination_suggestions:
             suggestion_id = str(uuid.uuid4())
-            # Store in orchestrator for later application
-            orchestrator.generated_suggestions[suggestion_id] = {
+            await orchestrator.store_suggestion(suggestion_id, {
                 **coord_suggestion,
                 "type": "optimization",
                 "title": coord_suggestion.get("suggestion", "Bot Optimization"),
-            }
+            })
 
             suggestions.append(
                 ProactiveSuggestion(
@@ -429,11 +428,11 @@ async def send_message(request: ChatRequest, current_user=Depends(get_current_us
         # Add risk alerts as suggestions too
         for alert in guidance.risk_alerts:
             suggestion_id = str(uuid.uuid4())
-            orchestrator.generated_suggestions[suggestion_id] = {
+            await orchestrator.store_suggestion(suggestion_id, {
                 **alert,
                 "type": "escalation",
                 "title": alert.get("description", "Risk Alert")[:50],
-            }
+            })
             suggestions.append(
                 ProactiveSuggestion(
                     id=suggestion_id,
@@ -580,11 +579,11 @@ async def get_proactive_suggestions(current_user=Depends(get_current_user_option
         suggestions = []
         for coord_suggestion in guidance.bot_coordination_suggestions:
             suggestion_id = str(uuid.uuid4())
-            orchestrator.generated_suggestions[suggestion_id] = {
+            await orchestrator.store_suggestion(suggestion_id, {
                 **coord_suggestion,
                 "type": "optimization",
                 "title": coord_suggestion.get("suggestion", "Bot Optimization"),
-            }
+            })
             suggestions.append(
                 ProactiveSuggestion(
                     id=suggestion_id,
@@ -603,11 +602,11 @@ async def get_proactive_suggestions(current_user=Depends(get_current_user_option
         # Add risk alerts as urgent suggestions
         for alert in guidance.risk_alerts:
             suggestion_id = str(uuid.uuid4())
-            orchestrator.generated_suggestions[suggestion_id] = {
+            await orchestrator.store_suggestion(suggestion_id, {
                 **alert,
                 "type": "escalation",
                 "title": alert.get("type", "Risk Alert"),
-            }
+            })
             suggestions.append(
                 ProactiveSuggestion(
                     id=suggestion_id,
