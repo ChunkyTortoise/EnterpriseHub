@@ -60,16 +60,103 @@ def _make_billing_client(billing_service=None, subscription_manager=None):
     mock_billing = billing_service or MagicMock()
     mock_sub_mgr = subscription_manager or MagicMock()
 
-    with (
-        patch("ghl_real_estate_ai.api.routes.billing.billing_service", mock_billing),
-        patch("ghl_real_estate_ai.api.routes.billing.subscription_manager", mock_sub_mgr),
-        patch("ghl_real_estate_ai.api.routes.billing.monitoring_service", MagicMock()),
-    ):
-        from ghl_real_estate_ai.api.routes.billing import router
+    from ghl_real_estate_ai.api.routes import billing as billing_module
 
-        test_app = FastAPI()
-        test_app.include_router(router)
-        return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
+    # Keep patched singletons active for the entire request lifecycle.
+    billing_module.billing_service = mock_billing
+    billing_module.subscription_manager = mock_sub_mgr
+    billing_module.monitoring_service = MagicMock()
+
+    test_app = FastAPI()
+    test_app.include_router(billing_module.router)
+    return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
+
+
+class _FakeConnection:
+    def __init__(self, row):
+        self._row = row
+
+    async def fetchrow(self, *_args, **_kwargs):
+        return self._row
+
+    async def execute(self, *_args, **_kwargs):
+        return "UPDATE 1"
+
+
+class _SequencedConnection:
+    def __init__(self, rows):
+        self._rows = list(rows)
+
+    async def fetchrow(self, *_args, **_kwargs):
+        if not self._rows:
+            return None
+        return self._rows.pop(0)
+
+    async def execute(self, *_args, **_kwargs):
+        return "UPDATE 1"
+
+
+class _FakeConnectionContext:
+    def __init__(self, row):
+        self._connection = _FakeConnection(row)
+
+    async def __aenter__(self):
+        return self._connection
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
+class _FakeDatabase:
+    def __init__(self, row):
+        self._row = row
+
+    def get_connection(self):
+        return _FakeConnectionContext(self._row)
+
+
+class _SequencedConnectionContext:
+    def __init__(self, rows):
+        self._connection = _SequencedConnection(rows)
+
+    async def __aenter__(self):
+        return self._connection
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
+class _SequencedDatabase:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def get_connection(self):
+        return _SequencedConnectionContext(self._rows)
+
+
+def _build_subscription_row(sub_id: int = 1):
+    now = datetime.now()
+    return {
+        "id": sub_id,
+        "location_id": "loc-123",
+        "stripe_subscription_id": "sub_test123",
+        "stripe_customer_id": "cus_test123",
+        "tier": "professional",
+        "status": "active",
+        "currency": "usd",
+        "current_period_start": now,
+        "current_period_end": now + timedelta(days=30),
+        "usage_allowance": 150,
+        "usage_current": 50,
+        "overage_rate": 1.50,
+        "base_price": 249.00,
+        "trial_end": None,
+        "cancel_at_period_end": False,
+        "created_at": now,
+        "updated_at": now,
+        "customer_email": "test@example.com",
+        "customer_name": "Test Customer",
+    }
 
 
 def _subscription_response_dict(sub_id: int = 1, tier: str = "professional"):
@@ -179,7 +266,13 @@ class TestGetSubscription:
     def test_get_subscription_returns_data(self):
         """Returns subscription data for valid ID."""
         client, _, _ = _make_billing_client()
-        resp = client.get("/billing/subscriptions/1")
+        mock_db = _FakeDatabase(_build_subscription_row(sub_id=1))
+
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.get("/billing/subscriptions/1")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -196,22 +289,44 @@ class TestCancelSubscription:
 
     def test_cancel_at_period_end(self):
         """Cancels subscription at period end."""
-        client, _, _ = _make_billing_client()
-        resp = client.delete("/billing/subscriptions/1")
+        mock_billing = MagicMock()
+        mock_billing.cancel_subscription = AsyncMock(
+            return_value={"id": "sub_test123", "status": "active", "cancel_at_period_end": True}
+        )
+        client, _, _ = _make_billing_client(billing_service=mock_billing)
+        mock_db = _FakeDatabase(_build_subscription_row(sub_id=1))
+
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.delete("/billing/subscriptions/1")
 
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
         assert data["immediate"] is False
+        mock_billing.cancel_subscription.assert_awaited_once_with("sub_test123", False)
 
     def test_cancel_immediately(self):
         """Cancels subscription immediately."""
-        client, _, _ = _make_billing_client()
-        resp = client.delete("/billing/subscriptions/1?immediate=true")
+        mock_billing = MagicMock()
+        mock_billing.cancel_subscription = AsyncMock(
+            return_value={"id": "sub_test123", "status": "canceled"}
+        )
+        client, _, _ = _make_billing_client(billing_service=mock_billing)
+        mock_db = _FakeDatabase(_build_subscription_row(sub_id=1))
+
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.delete("/billing/subscriptions/1?immediate=true")
 
         assert resp.status_code == 200
         data = resp.json()
         assert data["immediate"] is True
+        mock_billing.cancel_subscription.assert_awaited_once_with("sub_test123", True)
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +346,59 @@ class TestGetUsage:
         resp = client.get("/billing/usage/999")
 
         assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# PUT /billing/subscriptions/{subscription_id}
+# ---------------------------------------------------------------------------
+
+@skip_if_no_billing
+class TestUpdateSubscription:
+    """Tests for update subscription behavior changes."""
+
+    def test_update_subscription_no_changes_returns_400(self):
+        """Rejects update requests with no mutation payload."""
+        client, _, _ = _make_billing_client()
+        resp = client.put("/billing/subscriptions/1", json={})
+        assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# POST /billing/usage
+# ---------------------------------------------------------------------------
+
+@skip_if_no_billing
+class TestRecordUsage:
+    """Tests for usage persistence and response fields."""
+
+    def test_record_usage_persists_usage_row_and_returns_ids(self):
+        mock_billing = MagicMock()
+        mock_billing.add_usage_record = AsyncMock(return_value={"id": "usage_stripe_123"})
+        client, _, _ = _make_billing_client(billing_service=mock_billing)
+
+        mock_db = _FakeDatabase({"id": 42})
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.post(
+                "/billing/usage",
+                json={
+                    "subscription_id": 1,
+                    "lead_id": "lead-001",
+                    "contact_id": "contact-001",
+                    "amount": "19.99",
+                    "tier": "hot",
+                    "billing_period_start": datetime.now().isoformat(),
+                    "billing_period_end": (datetime.now() + timedelta(days=30)).isoformat(),
+                },
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["success"] is True
+        assert data["usage_record_id"] == 42
+        assert data["stripe_usage_record_id"] == "usage_stripe_123"
 
 
 # ---------------------------------------------------------------------------
@@ -326,6 +494,32 @@ class TestRevenueAnalytics:
         data = resp.json()
         assert "total_arr" in data
         assert "monthly_revenue" in data
+
+    def test_revenue_analytics_prefers_db_aggregates(self):
+        """Uses subscription + usage aggregate rows when DB is available."""
+        client, _, _ = _make_billing_client()
+        mock_db = _SequencedDatabase(
+            [
+                {
+                    "active_count": 3,
+                    "enterprise_count": 1,
+                    "recurring_monthly_revenue": 847.0,
+                    "canceled_count": 1,
+                },
+                {"monthly_usage_revenue": 53.0},
+            ]
+        )
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.get("/billing/analytics/revenue")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert float(data["monthly_revenue"]) == pytest.approx(900.0)
+        assert float(data["total_arr"]) == pytest.approx(10800.0)
+        assert data["total_active_subscriptions"] == 3
 
 
 # ---------------------------------------------------------------------------

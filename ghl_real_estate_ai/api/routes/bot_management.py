@@ -36,6 +36,11 @@ from ghl_real_estate_ai.models.bot_context_types import IntentSignals
 logger = get_logger(__name__)
 router = APIRouter(tags=["Bot Management"])
 
+def _model_to_dict(model: BaseModel) -> Dict[str, Any]:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()
+    return model.dict()
+
 
 # Pydantic Models for Request/Response
 class BotStatusResponse(BaseModel):
@@ -82,6 +87,7 @@ class HandoffRequest(BaseModel):
     target_bot: Literal["lead", "buyer", "seller"] = Field(default="lead", description="Target bot to handoff to")
     reason: str = Field(default="qualification_complete", description="Reason for handoff")
     confidence: float = Field(default=0.7, ge=0.0, le=1.0, description="Confidence score for handoff")
+    idempotency_key: Optional[str] = Field(default=None, description="Idempotency key for duplicate handoff suppression")
     conversation_history: Optional[List[Dict[str, str]]] = Field(default=None, description="Recent conversation messages")
     message: Optional[str] = Field(default=None, description="Current message for intent extraction")
 
@@ -1221,6 +1227,7 @@ async def trigger_jorge_handoff(
     lead_id: str,
     request: HandoffRequest,
     handoff_service: JorgeHandoffService = Depends(get_handoff_service),
+    cache: CacheService = Depends(get_cache_service),
 ):
     """
     Trigger handoff from Jorge Seller Bot to another bot (Lead/Buyer/Seller).
@@ -1246,6 +1253,13 @@ async def trigger_jorge_handoff(
         }
         target_bot = target_bot_map.get(request.target_bot, request.target_bot)
         source_bot = "seller"  # This endpoint is for handoff FROM seller bot
+
+        idempotency_key = request.idempotency_key or f"{lead_id}:{target_bot}:{request.reason}:{request.message or ''}"
+        cache_key = f"handoff:idempotency:{idempotency_key}"
+        cached_response = await cache.get(cache_key)
+        if cached_response:
+            logger.info(f"Returning idempotent handoff result for key {idempotency_key}")
+            return HandoffResponse(**cached_response)
         
         # Generate handoff ID
         handoff_id = f"handoff_{int(time.time())}_{lead_id[:8]}"
@@ -1273,22 +1287,44 @@ async def trigger_jorge_handoff(
             conversation_history=conversation_history,
             intent_signals=intent_signals,
         )
-        
-        # If no decision (threshold not met), return early with info
+
+        threshold = float(JorgeHandoffService.THRESHOLDS.get((source_bot, target_bot), 0.7))
         if decision is None:
-            logger.info(
-                f"Handoff evaluation: no decision for {lead_id} -> {target_bot}, "
-                f"confidence below threshold (need {JorgeHandoffService.THRESHOLDS.get((source_bot, target_bot), 0.7)})"
-            )
-            return HandoffResponse(
-                success=False,
-                handoff_id=handoff_id,
+            if request.confidence < threshold:
+                logger.info(
+                    f"Handoff evaluation: no decision for {lead_id} -> {target_bot}, "
+                    f"confidence below threshold (need {threshold})"
+                )
+                response = HandoffResponse(
+                    success=False,
+                    handoff_id=handoff_id,
+                    target_bot=target_bot,
+                    actions=[],
+                    blocked=True,
+                    block_reason="confidence_below_threshold",
+                    estimated_time_seconds=0,
+                )
+                await cache.set(cache_key, _model_to_dict(response), ttl=3600)
+                return response
+
+            # Manual API-triggered handoff fallback when explicit confidence is sufficient.
+            decision = HandoffDecision(
+                source_bot=source_bot,
                 target_bot=target_bot,
-                actions=[],
-                blocked=True,
-                block_reason="confidence_below_threshold",
-                estimated_time_seconds=0,
+                reason=request.reason,
+                confidence=request.confidence,
+                context={
+                    "contact_id": lead_id,
+                    "idempotency_key": idempotency_key,
+                    "manual_trigger": True,
+                    "conversation_turns": len(conversation_history),
+                },
             )
+        elif decision.target_bot != target_bot:
+            decision.target_bot = target_bot
+            decision.reason = request.reason or decision.reason
+            decision.context["target_override"] = True
+            decision.context["idempotency_key"] = idempotency_key
         
         # Step 2: Execute the handoff (adds/removes tags, records analytics)
         actions = await handoff_service.execute_handoff(
@@ -1311,8 +1347,22 @@ async def trigger_jorge_handoff(
             f"Jorge handoff {'completed' if handoff_executed else 'blocked'}: "
             f"{lead_id} -> {target_bot}, handoff_id: {handoff_id}, reason: {block_reason or 'executed'}"
         )
-        
-        return HandoffResponse(
+
+        handoff_service.record_outcome(
+            contact_id=lead_id,
+            source_bot=source_bot,
+            target_bot=target_bot,
+            outcome="successful" if handoff_executed else "failed",
+            metadata={
+                "reason": request.reason,
+                "confidence": decision.confidence,
+                "handoff_id": handoff_id,
+                "idempotency_key": idempotency_key,
+                "block_reason": block_reason,
+            },
+        )
+
+        response = HandoffResponse(
             success=handoff_executed,
             handoff_id=handoff_id,
             target_bot=target_bot,
@@ -1321,6 +1371,8 @@ async def trigger_jorge_handoff(
             block_reason=block_reason,
             estimated_time_seconds=30 if handoff_executed else 0,
         )
+        await cache.set(cache_key, _model_to_dict(response), ttl=3600)
+        return response
         
     except Exception as e:
         logger.error(f"Failed to trigger handoff: {e}")
