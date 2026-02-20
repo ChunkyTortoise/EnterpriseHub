@@ -54,6 +54,9 @@ class QualificationResult:
     response_content: str = ""
     qualification_summary: str = ""
 
+    # Offer pathway: "wholesale", "listing", or "unknown" (derived from Q2-Q4 answers)
+    offer_type: str = "unknown"
+
     # Enhancement metadata
     progressive_skills_applied: bool = False
     mesh_task_id: Optional[str] = None

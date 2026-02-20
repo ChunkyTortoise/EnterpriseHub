@@ -2,6 +2,7 @@
 Response generation and objection handling module for buyer bot.
 """
 
+import re
 from datetime import datetime, timezone
 from typing import Dict, Optional, Any
 
@@ -170,7 +171,8 @@ class ResponseGenerator:
 
             Tone style: {tone_variant}
 
-            Keep under 160 characters for SMS compliance.
+            Keep under 290 characters for SMS compliance (pipeline enforces 320 max).
+            No hyphens. No robotic phrasing. Short sentences.
             """
 
             # Enhance prompt with intelligence context if available (Phase 3.3)
@@ -184,11 +186,13 @@ class ResponseGenerator:
             import random
             fallback = random.choice([
                 "What are you looking for in your next home? I want to make sure we're on the same page.",
-                "What matters most to you in your next home — area, size, style?",
+                "What matters most to you in your next home? Area, size, style?",
                 "What's the most important thing on your wish list for your next place?",
             ])
+            content = response.get("content", fallback)
+            content = content.replace("-", " ")  # Jorge spec: no hyphens in SMS
             return {
-                "response_content": response.get("content", fallback),
+                "response_content": content,
                 "response_tone": "friendly_consultative",
                 "next_action": "send_response",
             }

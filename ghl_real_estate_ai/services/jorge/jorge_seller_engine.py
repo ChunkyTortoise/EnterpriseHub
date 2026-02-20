@@ -1293,6 +1293,16 @@ class JorgeSellerEngine:
             val = "30-45 Days Accepted" if seller_data["timeline_acceptable"] else "Timeline Conflict"
             actions.append({"type": "update_custom_field", "field": field_id, "value": val})
 
+        # Offer pathway (wholesale vs. listing) — derived, no extra question needed
+        offer_type = JorgeSellerConfig.classify_offer_type(
+            property_condition=seller_data.get("property_condition", ""),
+            seller_motivation=seller_data.get("motivation", ""),
+            timeline_urgency=seller_data.get("timeline_urgency", ""),
+        )
+        if offer_type != "unknown":
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id("offer_type") or "offer_type"
+            actions.append({"type": "update_custom_field", "field": field_id, "value": offer_type})
+
         return actions
 
     def _create_nurture_message(self, seller_data: Dict, temperature: str) -> str:
