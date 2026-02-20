@@ -167,3 +167,88 @@ class TestClassifyOfferType:
             seller_motivation="relocating",
         )
         assert result == "wholesale"
+
+
+# ── QBQ Discovery Loop Tests (Module 4) ────────────────────────────────
+
+
+class TestQBQDiscoveryLoop:
+    """Tests for QBQ (Question Behind the Question) discovery loop."""
+
+    def test_stall_detector_surface_objection_keywords(self):
+        """StallDetector should detect surface_objection keyword patterns."""
+        from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
+
+        assert "surface_objection" in StallDetector.STALL_KEYWORDS
+        assert any("zillow says" in k for k in StallDetector.STALL_KEYWORDS["surface_objection"])
+
+    def test_is_surface_objection_true_for_zestimate_stall(self):
+        from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
+
+        detector = StallDetector()
+        state = {
+            "lead_id": "test",
+            "stall_detected": True,
+            "detected_stall_type": "zestimate",
+            "conversation_history": [],
+        }
+        assert detector.is_surface_objection(state) is True
+
+    def test_is_surface_objection_true_for_surface_objection_type(self):
+        from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
+
+        detector = StallDetector()
+        state = {
+            "lead_id": "test",
+            "stall_detected": True,
+            "detected_stall_type": "surface_objection",
+            "conversation_history": [],
+        }
+        assert detector.is_surface_objection(state) is True
+
+    def test_is_surface_objection_false_when_no_stall(self):
+        from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
+
+        detector = StallDetector()
+        state = {
+            "lead_id": "test",
+            "stall_detected": False,
+            "detected_stall_type": None,
+            "conversation_history": [],
+        }
+        assert detector.is_surface_objection(state) is False
+
+    def test_seller_state_has_qbq_fields(self):
+        """JorgeSellerState TypedDict should include QBQ fields."""
+        from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
+
+        annotations = JorgeSellerState.__annotations__
+        assert "deep_motivation" in annotations
+        assert "qbq_attempted" in annotations
+
+    @pytest.mark.asyncio
+    async def test_qbq_loop_not_repeated_on_same_objection(self, mock_jorge_deps):
+        """When qbq_attempted=True, negotiation_discovery node should skip Voss call."""
+        bot = JorgeSellerBot()
+        state = {
+            "lead_id": "test_lead",
+            "lead_name": "Test",
+            "property_address": "123 Main St",
+            "conversation_history": [{"role": "user", "content": "My Zillow estimate is $800k"}],
+            "stall_detected": True,
+            "detected_stall_type": "zestimate",
+            "qbq_attempted": True,
+            "deep_motivation": "Retiring to Florida",
+        }
+        result = await bot._negotiation_discovery_node(state)
+        assert result.get("qbq_attempted") is True
+        assert result.get("deep_motivation") == "Retiring to Florida"
+
+    def test_stall_detector_friendly_response_for_surface_objection(self):
+        """StallDetector should have a friendly response for surface_objection."""
+        from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
+
+        detector = StallDetector()
+        response = detector.get_friendly_response("surface_objection")
+        assert response is not None
+        assert "price" in response.lower() or "feel right" in response.lower()

@@ -13,6 +13,7 @@ from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     HandoffDecision,
     JorgeHandoffService,
 )
+from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
 
 
 @pytest.fixture(autouse=True)
@@ -22,11 +23,13 @@ def reset_handoff_service():
     JorgeHandoffService._handoff_outcomes = {}
     JorgeHandoffService._active_handoffs = {}
     JorgeHandoffService.reset_analytics()
+    PerformanceTracker.reset()
     yield
     JorgeHandoffService._handoff_history = {}
     JorgeHandoffService._handoff_outcomes = {}
     JorgeHandoffService._active_handoffs = {}
     JorgeHandoffService.reset_analytics()
+    PerformanceTracker.reset()
 
 
 @pytest.fixture

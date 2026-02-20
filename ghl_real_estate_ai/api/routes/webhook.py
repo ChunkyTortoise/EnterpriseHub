@@ -46,6 +46,7 @@ from ghl_real_estate_ai.services.ghl_client import GHLClient
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
 from ghl_real_estate_ai.services.jorge.response_pipeline.factory import get_response_pipeline
 from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessingContext
+from ghl_real_estate_ai.services.hitl_gate import HITLGate
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
@@ -68,6 +69,7 @@ lead_source_tracker = LeadSourceTracker()
 attribution_analytics = AttributionAnalytics()
 subscription_manager = SubscriptionManager()
 handoff_service = JorgeHandoffService(analytics_service=analytics_service)
+hitl_gate = HITLGate()
 mls_client = MLSClient()
 
 # FastAPI dependency injection - using @lru_cache for singleton behavior
@@ -706,6 +708,33 @@ async def handle_ghl_webhook(
                         elif ha["type"] == "remove_tag":
                             actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
 
+            # --- HITL GATE: High-Value Human-in-the-Loop ---
+            property_value = seller_result.get("estimated_value") or seller_result.get("property_value")
+            if hitl_gate.evaluate(seller_result, property_value):
+                draft_msg = (
+                    f"DRAFT RESPONSE:\n{seller_result.get('response_content', final_seller_msg)}\n\n"
+                    f"FRS={seller_result.get('frs_score', 0):.0f} "
+                    f"PCS={seller_result.get('pcs_score', 0):.0f}"
+                )
+                background_tasks.add_task(
+                    current_ghl_client.post_internal_note,
+                    contact_id,
+                    draft_msg,
+                )
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="HITL-Review"))
+                seller_result["requires_human_approval"] = True
+
+                logger.info(
+                    f"HITL gate activated for seller {contact_id} — SMS suppressed, draft posted",
+                    extra={"contact_id": contact_id, "property_value": property_value},
+                )
+
+                return GHLWebhookResponse(
+                    success=True,
+                    message="[HITL] Draft posted for human review",
+                    actions=actions,
+                )
+
             logger.info(
                 f"Jorge seller processing completed for {contact_id}",
                 extra={
@@ -872,6 +901,33 @@ async def handle_ghl_webhook(
                             actions.append(GHLAction(type=ActionType.ADD_TAG, tag=ha["tag"]))
                         elif ha["type"] == "remove_tag":
                             actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=ha["tag"]))
+
+            # --- HITL GATE: High-Value Human-in-the-Loop ---
+            buyer_property_value = buyer_result.get("estimated_value") or buyer_result.get("property_value")
+            if hitl_gate.evaluate(buyer_result, buyer_property_value):
+                draft_msg = (
+                    f"DRAFT RESPONSE:\n{buyer_result.get('response_content', final_buyer_msg)}\n\n"
+                    f"Financial Readiness={buyer_result.get('financial_readiness', 0):.0f} "
+                    f"Buying Motivation={buyer_result.get('buying_motivation_score', 0):.0f}"
+                )
+                background_tasks.add_task(
+                    current_ghl_client.post_internal_note,
+                    contact_id,
+                    draft_msg,
+                )
+                actions.append(GHLAction(type=ActionType.ADD_TAG, tag="HITL-Review"))
+                buyer_result["requires_human_approval"] = True
+
+                logger.info(
+                    f"HITL gate activated for buyer {contact_id} — SMS suppressed, draft posted",
+                    extra={"contact_id": contact_id, "property_value": buyer_property_value},
+                )
+
+                return GHLWebhookResponse(
+                    success=True,
+                    message="[HITL] Draft posted for human review",
+                    actions=actions,
+                )
 
             logger.info(
                 f"Jorge buyer processing completed for {contact_id}",

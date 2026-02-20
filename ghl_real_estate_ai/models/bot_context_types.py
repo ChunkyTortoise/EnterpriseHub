@@ -76,6 +76,8 @@ class BuyerBotResponse(TypedDict, total=False):
     opt_out_detected: NotRequired[bool]  # True when TCPA opt-out triggered
     actions: NotRequired[list[dict[str, Any]]]  # GHL tag actions
     ab_test: NotRequired[dict[str, Any]]  # experiment_id + variant
+    requires_human_approval: NotRequired[bool]  # True when composite score > 90 or property > $1.2M
+    draft_note: NotRequired[str]  # Formatted draft for GHL internal note review
 
 
 class SellerBotResponse(TypedDict, total=False):
@@ -93,6 +95,8 @@ class SellerBotResponse(TypedDict, total=False):
     is_qualified: NotRequired[bool]
     next_action: NotRequired[str]
     ab_test: NotRequired[dict[str, Any]]  # experiment_id + variant
+    requires_human_approval: NotRequired[bool]  # True when composite score > 90 or property > $1.2M
+    draft_note: NotRequired[str]  # Formatted draft for GHL internal note review
 
 
 # ── Intent & Handoff Types ────────────────────────────────────────────
