@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.agents.claude_concierge_agent import get_claude_concierge
@@ -631,16 +631,20 @@ async def get_proactive_suggestions(current_user=Depends(get_current_user_option
 
 
 @router.post("/suggestions/{suggestion_id}/apply")
-async def apply_suggestion(suggestion_id: str, current_user=Depends(get_current_user_optional)):
+async def apply_suggestion(
+    suggestion_id: str,
+    tenant_id: str = Query(default="jorge", description="Tenant whose suggestion store to use"),
+    current_user=Depends(get_current_user_optional),
+):
     """
     Apply a proactive suggestion.
     Matches frontend ClaudeConciergeAPI.applySuggestion() expectation.
     """
     try:
-        logger.info(f"Applying suggestion: {suggestion_id}")
+        logger.info(f"Applying suggestion: {suggestion_id} for tenant: {tenant_id}")
 
         orchestrator = get_claude_concierge_orchestrator()
-        apply_result = await orchestrator.apply_suggestion(suggestion_id)
+        apply_result = await orchestrator.apply_suggestion(suggestion_id, tenant_id=tenant_id)
 
         if not apply_result.get("success"):
             raise HTTPException(status_code=400, detail=apply_result.get("error", "Failed to apply suggestion"))
