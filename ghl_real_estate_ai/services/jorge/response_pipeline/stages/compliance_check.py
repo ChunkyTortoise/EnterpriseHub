@@ -13,12 +13,12 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
 
 logger = logging.getLogger(__name__)
 
-# Safe fallback messages by bot mode
+# Safe fallback messages by bot mode (conversational, Jorge's voice)
 _SAFE_FALLBACKS = {
-    "seller": "Let's stick to the facts about your property. What price are you looking to get?",
-    "buyer": "I'd love to help you find your next home. What's most important to you in a property?",
-    "lead": "Thanks for reaching out! How can I help you today?",
-    "general": "I'd love to help you with your real estate needs. What can I assist you with today?",
+    "seller": "Tell me more about your home and what you're hoping to get for it.",
+    "buyer": "What matters most to you in your next home? I want to make sure we focus on the right things.",
+    "lead": "Hey! What can I help you with today?",
+    "general": "What's on your mind? I'm here to help with any real estate questions.",
 }
 
 

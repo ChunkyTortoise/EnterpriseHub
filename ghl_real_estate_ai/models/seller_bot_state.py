@@ -119,3 +119,7 @@ class JorgeSellerState(TypedDict):
     seller_listing_history: Optional[str]
     seller_decision_maker: Optional[str]
     seller_contact_method: Optional[str]
+
+    # QBQ (Question Behind the Question) loop fields
+    deep_motivation: Optional[str]  # e.g., "Retiring to Florida", "Avoiding Foreclosure"
+    qbq_attempted: bool  # Prevent repeated QBQ on same objection

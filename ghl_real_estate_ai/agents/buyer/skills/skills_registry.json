@@ -1,0 +1,10 @@
+{
+  "buyer_skills": {
+    "version": "1.0",
+    "skills": {
+      "InitialDiscoverySkill": "initial_discovery.md",
+      "PropertyMatchingSkill": "property_matching.md",
+      "ObjectionHandlingSkill": "objection_handling.md"
+    }
+  }
+}
