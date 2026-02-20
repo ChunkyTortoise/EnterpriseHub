@@ -7,7 +7,7 @@ with handoff service data structures.
 import io
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
 
 import pytest
 

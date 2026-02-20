@@ -17,8 +17,8 @@ from ghl_real_estate_ai.agents.base_bot_workflow import BaseBotWorkflow
 from ghl_real_estate_ai.agents.sdr.objection_handler import ObjectionHandler
 from ghl_real_estate_ai.services.sdr.cadence_scheduler import CadenceScheduler
 from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import (
-    OutreachSequenceEngine,
     OutreachRecord,
+    OutreachSequenceEngine,
     SequenceStep,
     is_terminal_step,
 )

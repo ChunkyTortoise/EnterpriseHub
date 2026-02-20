@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -9,7 +10,6 @@ Verifies the math behind the Professional Services Catalog ROI models.
 import pytest
 
 from utils.roi_logic import (
-
     calculate_automation_roi,
     calculate_data_roi,
     calculate_marketing_roi,

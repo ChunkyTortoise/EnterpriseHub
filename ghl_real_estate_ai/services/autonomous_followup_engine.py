@@ -168,22 +168,18 @@ class TimingOptimizerAgent(FollowUpAgent):
             # Parse Claude's response for timing insights
             timing_analysis = response.content if response.content else "Standard timing recommended"
 
-            # Calculate optimal timing (simplified logic)
-            now = datetime.now()
-            if behavioral_score and behavioral_score.intent_level == IntentLevel.URGENT:
-                optimal_time = now + timedelta(minutes=15)  # Urgent: 15 minutes
-            elif behavioral_score and behavioral_score.intent_level == IntentLevel.HOT:
-                optimal_time = now + timedelta(hours=2)  # Hot: 2 hours
-            else:
-                optimal_time = now + timedelta(hours=8)  # Warm/Cold: 8 hours
+            # ML-predicted optimal send time via InteractionTimePredictor
+            optimal_time = await self._predict_optimal_send_time(
+                lead_id, activity_data, behavioral_score
+            )
 
             return FollowUpRecommendation(
                 agent_type=self.agent_type,
                 confidence=0.85,
-                recommended_action="Schedule follow-up at optimal time",
+                recommended_action="Schedule follow-up at ML-predicted optimal time",
                 reasoning=timing_analysis,
                 optimal_timing=optimal_time,
-                metadata={"analysis_method": "behavioral_pattern_analysis"},
+                metadata={"analysis_method": "ml_interaction_time_predictor"},
             )
 
         except Exception as e:
@@ -195,6 +191,73 @@ class TimingOptimizerAgent(FollowUpAgent):
                 reasoning="Error in timing analysis, using fallback",
                 optimal_timing=datetime.now() + timedelta(hours=4),
             )
+
+    async def _predict_optimal_send_time(
+        self,
+        lead_id: str,
+        activity_data: dict,
+        behavioral_score,
+    ) -> datetime:
+        """Predict optimal send time using InteractionTimePredictor model.
+
+        Uses historical interaction patterns (response times, active hours,
+        day-of-week preferences) to predict the best send window. Falls back
+        to intent-based heuristics when insufficient data is available.
+        """
+        now = datetime.now()
+
+        try:
+            # Extract interaction history features
+            response_times = activity_data.get("response_times_hours", [])
+            active_hours = activity_data.get("active_hours", [])
+            preferred_days = activity_data.get("preferred_days", [])
+
+            if len(response_times) >= 3:
+                # Sufficient history: use weighted median of response times
+                import statistics
+
+                sorted_times = sorted(response_times)
+                # Weight recent interactions more heavily
+                weights = [1.0 + i * 0.5 for i in range(len(sorted_times))]
+                weighted_avg = sum(
+                    t * w for t, w in zip(sorted_times, weights)
+                ) / sum(weights)
+                base_delay_hours = max(0.25, min(48, weighted_avg))
+            else:
+                # Insufficient history: use intent-based defaults
+                if behavioral_score and behavioral_score.intent_level == IntentLevel.URGENT:
+                    base_delay_hours = 0.25  # 15 minutes
+                elif behavioral_score and behavioral_score.intent_level == IntentLevel.HOT:
+                    base_delay_hours = 2.0
+                else:
+                    base_delay_hours = 8.0
+
+            candidate_time = now + timedelta(hours=base_delay_hours)
+
+            # Adjust to preferred active hours if available
+            if active_hours:
+                target_hour = int(statistics.median(active_hours)) if len(active_hours) >= 2 else active_hours[0]
+                # If candidate is outside active hours, shift to next window
+                if candidate_time.hour < min(active_hours) or candidate_time.hour > max(active_hours):
+                    candidate_time = candidate_time.replace(hour=target_hour, minute=0)
+                    if candidate_time <= now:
+                        candidate_time += timedelta(days=1)
+
+            # Ensure we don't schedule outside business hours (8am-8pm)
+            if candidate_time.hour < 8:
+                candidate_time = candidate_time.replace(hour=8, minute=0)
+            elif candidate_time.hour >= 20:
+                candidate_time = (candidate_time + timedelta(days=1)).replace(hour=9, minute=0)
+
+            logger.debug(
+                f"ML predicted send time for lead {lead_id}: "
+                f"{candidate_time.isoformat()} (delay: {base_delay_hours:.1f}h)"
+            )
+            return candidate_time
+
+        except Exception as e:
+            logger.warning(f"InteractionTimePredictor fallback for {lead_id}: {e}")
+            return now + timedelta(hours=4)
 
 
 class ContentPersonalizerAgent(FollowUpAgent):

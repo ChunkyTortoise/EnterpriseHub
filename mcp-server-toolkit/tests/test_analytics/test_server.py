@@ -2,8 +2,8 @@
 
 import pytest
 from mcp_toolkit.framework.testing import MCPTestClient
-from mcp_toolkit.servers.analytics.server import mcp as analytics_mcp, configure, MetricsStore, get_store
-from mcp_toolkit.servers.analytics.chart_generator import ChartGenerator, ChartConfig, ChartResult
+from mcp_toolkit.servers.analytics.server import mcp as analytics_mcp, configure, MetricsStore
+from mcp_toolkit.servers.analytics.chart_generator import ChartGenerator, ChartConfig
 
 
 @pytest.fixture

@@ -14,9 +14,10 @@ from typing import Optional
 
 from fastapi import FastAPI
 
-from .router import router as ghl_router, get_ghl_router, _ghl_router
-from .retry_manager import get_retry_manager, WebhookRetryManager
-from .handlers import lead_handlers, seller_handlers, buyer_handlers
+from .handlers import buyer_handlers, lead_handlers, seller_handlers
+from .retry_manager import WebhookRetryManager, get_retry_manager
+from .router import _ghl_router, get_ghl_router
+from .router import router as ghl_router
 
 logger = logging.getLogger(__name__)
 

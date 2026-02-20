@@ -54,6 +54,16 @@ class TaskComplexity(Enum):
     HIGH_STAKES = "high_stakes"  # High-value seller negotiation
 
 
+class LLMTimeoutError(Exception):
+    """Raised when an LLM request times out."""
+    pass
+
+
+class LLMCircuitOpenError(Exception):
+    """Raised when the LLM circuit breaker is open (too many failures)."""
+    pass
+
+
 @dataclass
 class LLMResponse:
     """Standardized LLM response."""

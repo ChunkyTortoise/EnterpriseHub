@@ -2,9 +2,10 @@
 Test State Synchronization
 """
 
-import pytest
 from datetime import datetime, timezone
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from ghl_integration.state_sync import (
     GHLStateSynchronizer,

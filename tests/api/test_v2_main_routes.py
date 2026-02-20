@@ -8,8 +8,9 @@ Tests for:
 """
 
 import os
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 
 # Set required env vars before importing app (Gemini provider requires API key)

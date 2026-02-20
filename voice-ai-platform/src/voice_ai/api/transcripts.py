@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/calls", tags=["transcripts"])
@@ -27,8 +27,10 @@ async def get_transcript(call_id: str, request: Request) -> list[dict[str, Any]]
     if db is None:
         return []
 
-    from sqlalchemy import select
     import uuid
+
+    from sqlalchemy import select
+
     from voice_ai.models.call import CallTranscript
 
     result = await db.execute(

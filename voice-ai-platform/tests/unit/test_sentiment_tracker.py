@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from voice_ai.services.sentiment_tracker import SentimentTracker, SentimentScore
+from voice_ai.services.sentiment_tracker import SentimentTracker
 
 
 class TestSentimentAnalyze:

@@ -2,9 +2,10 @@ import asyncio
 import unittest
 from unittest.mock import MagicMock, patch
 
-from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeRequest, ClaudeTaskType
 from ghl_real_estate_ai.models.orchestrator_types import OrchestratorContext
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeRequest, ClaudeTaskType
 from ghl_real_estate_ai.services.skill_registry import SkillCategory
+
 
 class TestResearchIntegration(unittest.IsolatedAsyncioTestCase):
     """Test suite for Perplexity and NotebookLM integration."""

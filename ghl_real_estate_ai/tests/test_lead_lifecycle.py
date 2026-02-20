@@ -16,7 +16,6 @@ import pytest
 from ghl_real_estate_ai.services.lead_lifecycle import LeadLifecycleTracker
 
 
-
 @pytest.fixture
 def test_location_id():
     """Provide a test location ID."""

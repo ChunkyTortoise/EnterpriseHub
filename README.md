@@ -27,6 +27,31 @@
 
 ---
 
+## ROI at a Glance
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| **Total Test Suite** | 8,500+ tests across all repos | Portfolio-wide `def test_` count |
+| **GHL Real Estate AI Tests** | 1,812 tests (128 files) | `ghl_real_estate_ai/tests/` |
+| **Advanced RAG Tests** | 1,016 tests (42 files) | `advanced_rag_system/tests/` |
+| **RAG-as-a-Service Tests** | 214 tests, 90%+ coverage | `rag-as-a-service/tests/` |
+| **Lead Qualification P95** | 1,225 ms | [BENCHMARKS.md](BENCHMARKS.md) (1K iterations, seed=42) |
+| **API /health P95** | 1.97 ms | [BENCHMARKS.md](BENCHMARKS.md) |
+| **CRM Sync P95** | 340 ms | [BENCHMARKS.md](BENCHMARKS.md) |
+| **Orchestration Overhead P99** | 0.012 ms (target <200 ms) | [METRICS_CANONICAL.md](METRICS_CANONICAL.md) |
+| **Cache Hit Rate** | 88.1% (L1 59.1% + L2 20.5% + L3 8.5%) | 10K-operation benchmark, seed=42 |
+| **LLM Cost Reduction** | 89% via 3-tier caching | 93K to 7.8K tokens per workflow |
+| **Cost per Qualification** | $0.032 (target <$0.05) | [PERFORMANCE_BENCHMARK_REPORT.md](PERFORMANCE_BENCHMARK_REPORT.md) |
+| **Cost per Bot Response** | $0.008 cached / $0.022 uncached | Token + infra cost model |
+| **RAG Query Cost** | $0.045 (target <$0.10) | Cost analysis per operation |
+| **Throughput** | 5,118 req/s at 100 users, 0% error rate | Load test benchmark |
+| **Memory Under Load** | 294 MB (target <2 GB) | Resource efficiency test |
+| **Time-to-Qualify** | <2 min (from 45 min manual) | Production deployment |
+
+> All benchmark values from [METRICS_CANONICAL.md](METRICS_CANONICAL.md). Benchmarks use modeled latency distributions (log-normal, seed=42) measuring system overhead, not live LLM inference. See [Methodology](PERFORMANCE_BENCHMARK_REPORT.md#9-methodology) for details.
+
+---
+
 ## Business Impact
 
 | Metric | Value | Impact |
@@ -229,6 +254,45 @@ pip install -r requirements.txt
 
 # Demo mode — no API keys, no database, pre-populated dashboards
 make demo
+```
+
+## Deploy in 5 Minutes
+
+Full deployment with PostgreSQL, Redis, migrations, and demo data using Docker Compose.
+
+**Prerequisites:** Docker and Docker Compose.
+
+```bash
+git clone https://github.com/ChunkyTortoise/EnterpriseHub.git
+cd EnterpriseHub
+
+# One command does everything:
+#   1. Starts PostgreSQL 15 + Redis 7 containers
+#   2. Waits for Postgres health check (pg_isready)
+#   3. Runs Alembic database migrations
+#   4. Seeds demo data (scripts/seed_demo_environment.py)
+#   5. Starts all application containers
+./setup.sh
+```
+
+After setup completes:
+
+| Service | URL |
+|---------|-----|
+| Streamlit BI Dashboard | [http://localhost:8501](http://localhost:8501) |
+| FastAPI Backend | [http://localhost:8000](http://localhost:8000) (with `--profile api`) |
+| PostgreSQL | `localhost:5432` |
+| Redis | `localhost:6379` |
+
+```bash
+# Stop all services
+docker compose down
+
+# View logs
+docker compose logs -f
+
+# Run tests
+pytest --tb=short
 ```
 
 ## Portal API (Phase 1)

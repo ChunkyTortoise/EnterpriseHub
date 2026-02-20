@@ -20,7 +20,6 @@ from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
     ResponseGraduation,
 )
 
-
 # Response templates per objection TYPE per graduation level
 # Multiple variants per template for A/B testing
 OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[str]]] = {

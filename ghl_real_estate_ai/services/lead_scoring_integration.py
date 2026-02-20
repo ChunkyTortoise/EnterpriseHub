@@ -8,6 +8,11 @@ and ML ensemble lead scoring into the Lead, Buyer, and Seller bots.
 from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.ensemble_lead_scoring import (
+    EnsembleLeadScoringService,
+    LeadScorePrediction,
+    get_ensemble_lead_scoring_service,
+)
 from ghl_real_estate_ai.services.lead_scoring_v2 import (
     CompositeScore,
     LeadScoringServiceV2,
@@ -16,11 +21,6 @@ from ghl_real_estate_ai.services.sentiment_analysis_service import (
     ConversationSentiment,
     SentimentAnalysisService,
     SentimentType,
-)
-from ghl_real_estate_ai.services.ensemble_lead_scoring import (
-    EnsembleLeadScoringService,
-    LeadScorePrediction,
-    get_ensemble_lead_scoring_service,
 )
 
 logger = get_logger(__name__)

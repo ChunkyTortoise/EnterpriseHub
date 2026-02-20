@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from shared_schemas.tenant import TenantConfig, TenantLimits, TenantTier
+from shared_schemas.tenant import TenantLimits, TenantTier
 from shared_schemas.validators import get_default_limits, validate_tenant_limits
 
 

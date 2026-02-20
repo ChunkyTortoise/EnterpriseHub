@@ -4,7 +4,6 @@ import pytest
 from mcp_toolkit.servers.web_scraping.extractor import (
     DataExtractor,
     MockExtractorLLM,
-    ExtractionResult,
 )
 
 

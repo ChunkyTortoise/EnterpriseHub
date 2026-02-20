@@ -10,7 +10,6 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import (
-
     BuyerBudgetConfig,
 )
 

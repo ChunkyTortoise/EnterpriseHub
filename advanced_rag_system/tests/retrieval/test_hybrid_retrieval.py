@@ -17,7 +17,6 @@ from src.retrieval.hybrid.fusion import (
     normalize_scores,
 )
 from src.retrieval.hybrid.hybrid_searcher import (
-
     HybridSearchConfig,
     HybridSearcher,
 )

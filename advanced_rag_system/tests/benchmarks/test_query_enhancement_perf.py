@@ -13,7 +13,6 @@ import time
 
 import pytest
 from src.retrieval.query import (
-
     ExpansionConfig,
     HyDEConfig,
     HyDEGenerator,
@@ -22,8 +21,6 @@ from src.retrieval.query import (
     QueryExpander,
     QueryType,
 )
-
-
 
 # ============================================================================
 # Test Data

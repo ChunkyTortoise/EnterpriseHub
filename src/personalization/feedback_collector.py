@@ -24,8 +24,6 @@ from src.personalization.user_profile import (
     UserProfile,
 )
 
-
-
 logger = logging.getLogger(__name__)
 
 

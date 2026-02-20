@@ -17,6 +17,11 @@ A2A Protocol:
 # Legacy A2A support (backward compatible)
 from agentforge.comms.a2a import A2AProtocolSupport
 
+# A2A client and server
+from agentforge.comms.a2a_bridge import A2ABridge
+from agentforge.comms.a2a_client import A2AClient, A2AClientError
+from agentforge.comms.a2a_server import A2AServer
+
 # New comprehensive A2A types
 from agentforge.comms.a2a_types import (
     A2AErrorCode,
@@ -28,11 +33,6 @@ from agentforge.comms.a2a_types import (
     TaskStatus,
     TaskUpdate,
 )
-
-# A2A client and server
-from agentforge.comms.a2a_bridge import A2ABridge
-from agentforge.comms.a2a_client import A2AClient, A2AClientError
-from agentforge.comms.a2a_server import A2AServer
 
 # Message and patterns
 from agentforge.comms.message import MessageBus, MessageEnvelope

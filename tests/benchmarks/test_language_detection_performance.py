@@ -5,15 +5,15 @@ This test suite validates that language detection meets the <100ms latency targe
 for production use with Jorge Bot.
 """
 
-import pytest
 import time
 from typing import List, Tuple
+
+import pytest
 
 from ghl_real_estate_ai.services.language_detection import (
     LanguageDetectionService,
     get_language_detection_service,
 )
-
 
 pytestmark = pytest.mark.integration
 

@@ -20,11 +20,11 @@ def validate_data_layer():
     
     try:
         from ghl_real_estate_ai.streamlit_demo.data import (
-            SERVICES,
-            CATEGORIES,
-            INDUSTRIES,
-            DIFFERENTIATORS,
             CASE_STUDIES,
+            CATEGORIES,
+            DIFFERENTIATORS,
+            INDUSTRIES,
+            SERVICES,
         )
         print(f"✓ All data imports successful")
         print(f"  - Services: {len(SERVICES)} loaded")
@@ -98,8 +98,8 @@ def validate_navigation_integration():
     
     try:
         from ghl_real_estate_ai.streamlit_demo.navigation.hub_navigator import (
-            HUB_CATEGORIES,
             COUNSEL_MESSAGES,
+            HUB_CATEGORIES,
         )
         
         # Check Portfolio Showcase category exists

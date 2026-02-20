@@ -7,16 +7,16 @@ plan upgrades/downgrades, and quota enforcement.
 from __future__ import annotations
 
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
-import uuid
 
 from billing import (
+    PaymentFailedError,
     PlanTier,
     SubscriptionStatus,
     get_plan_config,
     get_plan_price,
-    PaymentFailedError,
 )
 from billing.stripe_client import get_stripe_client
 

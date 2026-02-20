@@ -221,8 +221,9 @@ class EnsembleLeadScoringService:
         """
         try:
             # Import ML libraries (lazy import for faster service startup)
+            import lightgbm as lgb
+            import xgboost as xgb
             from sklearn.linear_model import LogisticRegression
-            from sklearn.neural_network import MLPClassifier
             from sklearn.metrics import (
                 accuracy_score,
                 brier_score_loss,
@@ -232,9 +233,8 @@ class EnsembleLeadScoringService:
                 roc_auc_score,
             )
             from sklearn.model_selection import train_test_split
+            from sklearn.neural_network import MLPClassifier
             from sklearn.preprocessing import StandardScaler
-            import xgboost as xgb
-            import lightgbm as lgb
 
             logger.info(f"Starting ensemble training with {len(training_data)} samples")
 

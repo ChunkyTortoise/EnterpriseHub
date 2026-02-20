@@ -4,10 +4,11 @@ Tests for Source ROI Calculator
 Tests ROI calculations, optimization recommendations, and source comparisons.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from ghl_real_estate_ai.services.jorge.source_roi_calculator import (
     SourceROICalculator,

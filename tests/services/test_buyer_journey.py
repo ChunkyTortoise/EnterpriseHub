@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Buyer Journey Stage Tracking Service.
@@ -13,7 +15,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from ghl_real_estate_ai.services.buyer_journey import (
-
     STAGE_ACTIONS,
     STAGE_TAGS,
     BuyerJourneyTracker,

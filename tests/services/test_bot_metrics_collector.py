@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for BotMetricsCollector.
@@ -12,7 +13,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.bot_metrics_collector import (
-
     VALID_BOT_TYPES,
     BotMetricsCollector,
 )

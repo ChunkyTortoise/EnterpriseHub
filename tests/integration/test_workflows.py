@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Integration tests for complete workflow execution.
@@ -19,7 +20,6 @@ from utils.agent_handlers import AGENT_HANDLERS
 from utils.agent_registry import ALL_AGENTS
 from utils.exceptions import InvalidTickerError
 from utils.orchestrator import (
-
     AgentRegistry,
     AgentStatus,
     Orchestrator,

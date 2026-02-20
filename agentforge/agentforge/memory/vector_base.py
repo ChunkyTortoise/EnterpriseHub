@@ -12,7 +12,7 @@ The vector store architecture supports:
 
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -39,8 +39,8 @@ class VectorEntry(BaseModel):
     id: str
     vector: list[float]
     metadata: dict[str, Any] = Field(default_factory=dict)
-    content: Optional[str] = None
-    created_at: Optional[str] = Field(default_factory=_utc_now_iso)
+    content: str | None = None
+    created_at: str | None = Field(default_factory=_utc_now_iso)
 
 
 class VectorSearchResult(BaseModel):
@@ -59,7 +59,7 @@ class VectorSearchResult(BaseModel):
     id: str
     score: float
     metadata: dict[str, Any] = Field(default_factory=dict)
-    content: Optional[str] = None
+    content: str | None = None
 
 
 class VectorStore(ABC):
@@ -117,7 +117,7 @@ class VectorStore(ABC):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_metadata: Optional[dict[str, Any]] = None,
+        filter_metadata: dict[str, Any] | None = None,
     ) -> list[VectorSearchResult]:
         """Search for similar vectors.
 
@@ -145,7 +145,7 @@ class VectorStore(ABC):
         ...
 
     @abstractmethod
-    async def get(self, id: str) -> Optional[VectorEntry]:
+    async def get(self, id: str) -> VectorEntry | None:
         """Get an entry by ID.
 
         Args:

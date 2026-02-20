@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 pytestmark = pytest.mark.unit
 
 """Unit tests for the API documentation schemas and OpenAPI spec.
@@ -15,7 +17,6 @@ shap = pytest.importorskip("shap", reason="shap not installed")
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.schemas.api_docs import (
-
     OPENAPI_TAGS,
     BotStatusItem,
     BotStatusResponse,

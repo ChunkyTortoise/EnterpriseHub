@@ -10,7 +10,7 @@ Provides:
 - Capability mapping from agent tools
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from ..core.agent import AgentInput, AgentOutput, BaseAgent
 from .a2a_client import A2AClient
@@ -160,7 +160,7 @@ class A2ABridge:
     def create_server(
         agent: BaseAgent,
         base_url: str,
-        agent_card: Optional[AgentCard] = None,
+        agent_card: AgentCard | None = None,
     ) -> A2AServer:
         """Create an A2A server for an AgentForge agent.
 

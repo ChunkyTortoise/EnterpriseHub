@@ -28,6 +28,7 @@ def visualize_lead_bot_workflow(output_dir: Path) -> None:
     """Generate Mermaid diagram for Lead Bot workflow"""
     # Import only what we need for graph building
     from langgraph.graph import END, StateGraph
+
     from ghl_real_estate_ai.models.workflows import LeadFollowUpState
 
     logger.info("Generating Lead Bot workflow diagram...")
@@ -148,6 +149,7 @@ def visualize_lead_bot_workflow(output_dir: Path) -> None:
 def visualize_buyer_bot_workflow(output_dir: Path) -> None:
     """Generate Mermaid diagram for Buyer Bot workflow"""
     from langgraph.graph import END, StateGraph
+
     from ghl_real_estate_ai.models.buyer_bot_state import BuyerBotState
 
     logger.info("Generating Buyer Bot workflow diagram...")
@@ -204,6 +206,7 @@ def visualize_buyer_bot_workflow(output_dir: Path) -> None:
 def visualize_seller_bot_workflow(output_dir: Path) -> None:
     """Generate Mermaid diagram for Seller Bot workflow"""
     from langgraph.graph import END, StateGraph
+
     from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 
     logger.info("Generating Seller Bot workflow diagram...")

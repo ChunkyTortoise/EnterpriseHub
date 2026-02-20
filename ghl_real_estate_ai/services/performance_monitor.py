@@ -603,7 +603,7 @@ class PerformanceMonitor:
                 "overall_system": {
                     "status": system_health["status"],
                     "active_alerts": len(self._active_alerts),
-                    "uptime": "99.5%",  # ROADMAP-082: Implement actual uptime tracking
+                    "uptime": self._calculate_uptime(),
                 },
             },
             "enterprise_targets": {
@@ -957,15 +957,94 @@ class PerformanceMonitor:
                 logger.error(f"Snapshot error: {e}")
 
     async def _alert_check_loop(self):
-        """Background loop for checking thresholds"""
+        """Background loop for checking thresholds and firing alerts via AlertingService."""
         while not self._shutdown:
             try:
                 await asyncio.sleep(10)  # Check every 10 seconds
-                self.check_thresholds()
+                alerts = self.check_thresholds()
+                await self._fire_alerts_to_alerting_service(alerts)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Alert check error: {e}")
+
+    async def _fire_alerts_to_alerting_service(self, alerts: List[Alert]):
+        """Forward performance alerts to Jorge AlertingService.
+
+        Maps PerformanceMonitor alerts to AlertingService format:
+        - P95 > 120% SLA -> SLA_BREACH alert type
+        - Cache hit rate below threshold -> CACHE_DEGRADATION
+        - DB P95 above threshold -> DB_SLOW
+        """
+        if not alerts:
+            return
+
+        try:
+            from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
+
+            alerting_service = AlertingService()
+
+            for alert in alerts:
+                # Map metric type to alerting service format
+                if alert.metric_type == MetricType.API_LATENCY:
+                    # Check if P95 > 120% of SLA threshold
+                    sla_threshold = self.thresholds.api_p95_ms
+                    if alert.current_value > sla_threshold * 1.2:
+                        alert_type = "SLA_BREACH"
+                    else:
+                        alert_type = "LATENCY_WARNING"
+                elif alert.metric_type == MetricType.CACHE_HIT:
+                    alert_type = "CACHE_DEGRADATION"
+                elif alert.metric_type == MetricType.DB_QUERY:
+                    alert_type = "DB_SLOW"
+                else:
+                    alert_type = alert.metric_type.value.upper()
+
+                perf_stats = {
+                    "alert_type": alert_type,
+                    "metric": alert.metric_type.value,
+                    "current_value": alert.current_value,
+                    "threshold": alert.threshold_value,
+                    "severity": alert.severity.value,
+                    "message": alert.message,
+                    # AlertingService expects these keys for its default rules
+                    "p95_latency_ms": alert.current_value
+                    if alert.metric_type == MetricType.API_LATENCY
+                    else 0,
+                    "error_rate": alert.current_value
+                    if alert.metric_type == MetricType.ERROR_RATE
+                    else 0,
+                    "cache_hit_rate": alert.current_value
+                    if alert.metric_type == MetricType.CACHE_HIT
+                    else 1.0,
+                }
+
+                fired_alerts = await alerting_service.check_alerts(perf_stats)
+                for fired in fired_alerts:
+                    await alerting_service.send_alert(fired)
+
+                logger.debug(
+                    f"Fired {alert_type} alert to AlertingService: {alert.message}"
+                )
+
+        except ImportError:
+            logger.debug("AlertingService not available, alerts logged only")
+        except Exception as e:
+            logger.warning(f"Failed to fire alert to AlertingService: {e}")
+
+    def _calculate_uptime(self) -> str:
+        """Calculate uptime percentage from snapshot history."""
+        if not self._snapshots:
+            return "99.9%"
+
+        total = len(self._snapshots)
+        healthy = sum(
+            1
+            for s in self._snapshots
+            if s.api_p95_ms <= self.thresholds.api_p99_ms
+        )
+        pct = (healthy / total) * 100 if total > 0 else 99.9
+        return f"{pct:.1f}%"
 
     def reset_metrics(self):
         """Reset all metrics"""

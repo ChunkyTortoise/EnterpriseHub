@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for WS1: Bot Personality ABC, Registry, YAML Config, and Implementations."""
@@ -29,7 +31,6 @@ from ghl_real_estate_ai.agents.personalities.real_estate import (  # noqa: F401
     RealEstateSellerPersonality,
 )
 from ghl_real_estate_ai.agents.personality_config import (
-
     PersonalityConfig,
     YAMLBotPersonality,
 )

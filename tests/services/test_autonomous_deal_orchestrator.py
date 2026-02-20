@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -14,7 +15,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from ghl_real_estate_ai.services.autonomous_deal_orchestrator import (
-
     AutonomousDealOrchestrator,
     AutonomousTask,
     DocumentRequest,

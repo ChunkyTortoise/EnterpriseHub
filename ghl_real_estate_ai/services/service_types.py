@@ -9,7 +9,6 @@ Part of Spec 07: Type Safety - TypedDict Conversion
 
 from typing import Any, Dict, List, Optional, TypedDict
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Handoff Types
 # ─────────────────────────────────────────────────────────────────────────────

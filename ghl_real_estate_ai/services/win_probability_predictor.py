@@ -1,13 +1,18 @@
 """
 Win Probability Predictor
 
-ML-powered prediction of offer acceptance probability based on negotiation intelligence,
-market factors, and historical outcome patterns.
+ML-powered prediction of offer acceptance probability using scikit-learn
+logistic regression trained on the deals table. Falls back to rule-based
+model when insufficient training data is available.
+
+ROADMAP-081: scikit-learn pipeline with joblib serialization, target AUC > 0.70.
 """
 
 import logging
+import os
 from dataclasses import dataclass
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -23,6 +28,10 @@ from ghl_real_estate_ai.api.schemas.negotiation import (
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = logging.getLogger(__name__)
+
+MODEL_PATH = Path(
+    os.getenv("WIN_PROBABILITY_MODEL_PATH", "models/win_probability_lr.joblib")
+)
 
 
 @dataclass
@@ -64,14 +73,42 @@ class PredictionFeatures:
 
 class WinProbabilityPredictor:
     """
-    Predicts offer acceptance probability using rule-based models with plans
-    for future ML enhancement. Provides scenario analysis and factor importance.
+    Predicts offer acceptance probability using scikit-learn logistic regression.
+    Falls back to rule-based model when the trained model is unavailable.
     """
+
+    # Feature names in the order expected by the sklearn pipeline
+    ML_FEATURE_NAMES = [
+        "offer_to_list_ratio",
+        "days_on_market",
+        "price_reduction_count",
+        "total_price_reduction_pct",
+        "urgency_score",
+        "flexibility_score",
+        "emotional_attachment",
+        "financial_pressure",
+        "motivation_type_encoded",
+        "leverage_score",
+        "competitive_pressure",
+        "inventory_months",
+        "market_condition_encoded",
+        "seasonal_advantage",
+        "financing_strength",
+        "cash_offer",
+        "quick_close",
+        "pre_approved",
+        "property_uniqueness",
+        "price_positioning_encoded",
+        "comparable_sales_strength",
+    ]
 
     def __init__(self):
         self.cache_service = get_cache_service()
+        self._ml_model = None
+        self._ml_available = False
+        self._load_ml_model()
 
-        # Model coefficients (will be replaced with trained ML model)
+        # Fallback rule-based weights
         self.feature_weights = {
             "offer_to_list_ratio": 40.0,
             "urgency_score": 0.25,
@@ -83,6 +120,88 @@ class WinProbabilityPredictor:
             "competitive_pressure_factor": -0.08,
             "seasonal_advantage": 0.05,
         }
+
+    def _load_ml_model(self):
+        """Load trained scikit-learn model from joblib file."""
+        try:
+            import joblib
+
+            if MODEL_PATH.exists():
+                self._ml_model = joblib.load(MODEL_PATH)
+                self._ml_available = True
+                logger.info(f"Loaded ML win probability model from {MODEL_PATH}")
+            else:
+                logger.info(
+                    f"No ML model at {MODEL_PATH}, using rule-based fallback"
+                )
+        except Exception as e:
+            logger.warning(f"Failed to load ML model: {e}, using rule-based fallback")
+
+    @classmethod
+    def train_model(cls, deals_data: list[dict]) -> Optional[Any]:
+        """Train logistic regression on historical deals data.
+
+        Args:
+            deals_data: List of dicts with feature columns and 'won' boolean target.
+
+        Returns:
+            Trained sklearn Pipeline or None if insufficient data.
+        """
+        try:
+            import joblib
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.metrics import roc_auc_score
+            from sklearn.model_selection import cross_val_score
+            from sklearn.pipeline import Pipeline
+            from sklearn.preprocessing import StandardScaler
+
+            if len(deals_data) < 50:
+                logger.warning(
+                    f"Insufficient training data ({len(deals_data)} rows, need 50+)"
+                )
+                return None
+
+            feature_names = cls.ML_FEATURE_NAMES
+            X = np.array(
+                [[float(d.get(f, 0)) for f in feature_names] for d in deals_data]
+            )
+            y = np.array([1 if d.get("won", False) else 0 for d in deals_data])
+
+            pipeline = Pipeline([
+                ("scaler", StandardScaler()),
+                ("lr", LogisticRegression(
+                    max_iter=1000,
+                    C=1.0,
+                    class_weight="balanced",
+                    random_state=42,
+                )),
+            ])
+
+            # Cross-validated AUC
+            cv_scores = cross_val_score(pipeline, X, y, cv=5, scoring="roc_auc")
+            mean_auc = cv_scores.mean()
+            logger.info(f"Win probability model CV AUC: {mean_auc:.3f} (+/- {cv_scores.std():.3f})")
+
+            if mean_auc < 0.55:
+                logger.warning(f"Model AUC {mean_auc:.3f} too low, not saving")
+                return None
+
+            # Train final model on all data
+            pipeline.fit(X, y)
+
+            # Save model
+            MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+            joblib.dump(pipeline, MODEL_PATH)
+            logger.info(f"Saved win probability model to {MODEL_PATH} (AUC: {mean_auc:.3f})")
+
+            return pipeline
+
+        except ImportError:
+            logger.warning("scikit-learn not installed, cannot train model")
+            return None
+        except Exception as e:
+            logger.error(f"Model training failed: {e}")
+            return None
 
     async def predict_win_probability(
         self,
@@ -210,36 +329,52 @@ class WinProbabilityPredictor:
         return encoding.get(positioning, 2)
 
     async def _calculate_base_probability(self, features: PredictionFeatures) -> float:
-        """Calculate base win probability using rule-based model"""
+        """Calculate base win probability using ML model or rule-based fallback."""
 
-        # Start with baseline probability
+        # Try ML model first
+        if self._ml_available and self._ml_model is not None:
+            try:
+                feature_vector = np.array([[
+                    features.offer_to_list_ratio,
+                    features.days_on_market,
+                    features.price_reduction_count,
+                    features.total_price_reduction_pct,
+                    features.urgency_score,
+                    features.flexibility_score,
+                    features.emotional_attachment,
+                    features.financial_pressure,
+                    features.motivation_type_encoded,
+                    features.leverage_score,
+                    features.competitive_pressure,
+                    features.inventory_months,
+                    features.market_condition_encoded,
+                    features.seasonal_advantage,
+                    features.financing_strength,
+                    float(features.cash_offer),
+                    float(features.quick_close),
+                    float(features.pre_approved),
+                    features.property_uniqueness,
+                    features.price_positioning_encoded,
+                    features.comparable_sales_strength,
+                ]])
+
+                # predict_proba returns [[p_lose, p_win]]
+                prob = self._ml_model.predict_proba(feature_vector)[0][1] * 100
+                return max(5, min(95, prob))
+
+            except Exception as e:
+                logger.warning(f"ML prediction failed, falling back to rules: {e}")
+
+        # Rule-based fallback
         base_prob = 50.0
+        base_prob += self._calculate_offer_ratio_impact(features.offer_to_list_ratio)
+        base_prob += self._calculate_psychology_impact(features)
+        base_prob += self._calculate_market_impact(features)
+        base_prob += self._calculate_buyer_impact(features)
+        base_prob += self._calculate_property_impact(features)
+        base_prob += self._calculate_time_impact(features)
 
-        # Primary factor: Offer ratio
-        offer_ratio_impact = self._calculate_offer_ratio_impact(features.offer_to_list_ratio)
-        base_prob += offer_ratio_impact
-
-        # Psychology factors
-        psychology_impact = self._calculate_psychology_impact(features)
-        base_prob += psychology_impact
-
-        # Market factors
-        market_impact = self._calculate_market_impact(features)
-        base_prob += market_impact
-
-        # Buyer strength factors
-        buyer_impact = self._calculate_buyer_impact(features)
-        base_prob += buyer_impact
-
-        # Property factors
-        property_impact = self._calculate_property_impact(features)
-        base_prob += property_impact
-
-        # Time factors
-        time_impact = self._calculate_time_impact(features)
-        base_prob += time_impact
-
-        return max(5, min(95, base_prob))  # Cap between 5% and 95%
+        return max(5, min(95, base_prob))
 
     def _calculate_offer_ratio_impact(self, ratio: float) -> float:
         """Calculate impact of offer-to-list ratio on win probability"""

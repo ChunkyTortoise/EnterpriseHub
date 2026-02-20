@@ -41,7 +41,6 @@ from ghl_real_estate_ai.streamlit_demo.components.multi_market_analytics_view im
     load_market_performance_data,
 )
 from ghl_real_estate_ai.streamlit_demo.components.roi_calculator_component import (
-
     ChannelInvestment,
     InvestmentScenario,
     ROICalculation,

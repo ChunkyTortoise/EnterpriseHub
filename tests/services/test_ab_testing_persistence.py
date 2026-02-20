@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for ABTestingService write-through DB persistence.
@@ -12,7 +13,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from ghl_real_estate_ai.services.jorge.ab_testing_service import (
-
     ABTestingService,
 )
 

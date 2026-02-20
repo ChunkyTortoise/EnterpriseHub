@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for TourScheduler — property tour scheduling with GHL calendar integration."""
@@ -8,7 +9,6 @@ from datetime import datetime, timedelta
 import pytest
 
 from ghl_real_estate_ai.services.tour_scheduler import (
-
     BookingResult,
     TimeSlot,
     Tour,

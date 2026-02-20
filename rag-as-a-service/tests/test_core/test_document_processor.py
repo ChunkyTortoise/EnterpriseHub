@@ -7,7 +7,7 @@ import io
 
 import pytest
 
-from rag_service.core.document_processor import DocumentProcessor, TextChunk, ProcessedDocument
+from rag_service.core.document_processor import DocumentProcessor
 
 
 @pytest.fixture

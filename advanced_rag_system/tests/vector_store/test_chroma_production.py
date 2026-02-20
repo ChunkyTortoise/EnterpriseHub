@@ -10,7 +10,6 @@ from src.core.exceptions import NotFoundError, VectorStoreError
 from src.core.types import DocumentChunk, Metadata
 from src.vector_store.base import SearchOptions
 from src.vector_store.chroma_production import (
-
     BackupConfig,
     BackupManager,
     BackupType,

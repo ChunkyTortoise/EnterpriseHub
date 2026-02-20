@@ -12,12 +12,12 @@ from typing import Dict, List, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.churn_detection_service import (
     ChurnDetectionService,
     ChurnRiskLevel,
     RecoveryStrategy,
 )
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 

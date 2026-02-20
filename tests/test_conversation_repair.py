@@ -20,7 +20,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.conversation_rep
     _word_overlap_ratio,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

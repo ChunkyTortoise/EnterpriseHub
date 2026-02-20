@@ -1121,7 +1121,7 @@ class VoiceAIIntegration:
             # Transcription
             text=transcript,
             confidence=confidence,
-            language="en-US",  # ROADMAP-063: Auto-detect language
+            language=self._detect_language(transcript),  # ROADMAP-063: Auto-detected
             # Audio features
             volume_db=audio_features["volume_db"],
             pitch_hz=audio_features["pitch_hz"],
@@ -1210,6 +1210,196 @@ class VoiceAIIntegration:
         logger.info(f"Completed analysis for call {call_id}")
         return analysis
 
+    def _detect_language(self, transcript: str) -> str:
+        """ROADMAP-063: Auto-detect language from transcript text.
+
+        Uses character-set heuristics and common word frequency to identify
+        the language of the transcript. Falls back to en-US.
+        """
+        if not transcript or not transcript.strip():
+            return "en-US"
+
+        text_lower = transcript.lower()
+
+        # Spanish indicators
+        spanish_words = {"el", "la", "de", "en", "que", "los", "las", "por", "con", "una", "para", "como", "pero", "esta", "tiene"}
+        # French indicators
+        french_words = {"le", "la", "de", "les", "des", "une", "est", "que", "dans", "pour", "avec", "pas", "sur", "sont", "nous"}
+        # English indicators
+        english_words = {"the", "and", "is", "to", "a", "in", "that", "have", "for", "it", "with", "was", "are", "this", "from"}
+
+        words = set(text_lower.split())
+
+        en_hits = len(words & english_words)
+        es_hits = len(words & spanish_words)
+        fr_hits = len(words & french_words)
+
+        best = max(en_hits, es_hits, fr_hits)
+        if best == 0:
+            return "en-US"
+        if best == es_hits and es_hits > en_hits:
+            return "es-ES"
+        if best == fr_hits and fr_hits > en_hits:
+            return "fr-FR"
+        return "en-US"
+
+    def _detect_interruptions(self, segments: List[VoiceSegment]) -> int:
+        """ROADMAP-064: Detect speaker interruptions from segment overlap.
+
+        An interruption is detected when consecutive segments have different
+        speakers and the gap between them is <= 0.3 seconds (overlap or near-overlap).
+        """
+        interruption_count = 0
+        for i in range(1, len(segments)):
+            prev = segments[i - 1]
+            curr = segments[i]
+            if prev.speaker_id != curr.speaker_id:
+                gap = curr.start_time - prev.end_time
+                if gap <= 0.3:  # Overlap or very tight transition
+                    interruption_count += 1
+        return interruption_count
+
+    def _detect_silence_periods(self, segments: List[VoiceSegment], min_silence_sec: float = 2.0) -> List[Tuple[float, float]]:
+        """ROADMAP-065: Detect significant silence periods between segments.
+
+        Returns list of (start_time, duration) tuples for gaps longer than
+        min_silence_sec.
+        """
+        silence_periods: List[Tuple[float, float]] = []
+        for i in range(1, len(segments)):
+            gap_start = segments[i - 1].end_time
+            gap_end = segments[i].start_time
+            gap_duration = gap_end - gap_start
+            if gap_duration >= min_silence_sec:
+                silence_periods.append((gap_start, gap_duration))
+        return silence_periods
+
+    def _score_agent_performance(self, agent_segments: List[VoiceSegment], lead_segments: List[VoiceSegment]) -> Dict[str, float]:
+        """ROADMAP-066: NLP-based agent performance scoring.
+
+        Scores rapport, professionalism, and response quality by analyzing
+        the agent's language patterns and responsiveness to lead signals.
+        """
+        if not agent_segments:
+            return {"rapport": 0.0, "professionalism": 0.0, "response_quality": 0.0}
+
+        # Rapport: presence of empathetic / relationship-building language
+        rapport_phrases = ["understand", "great question", "appreciate", "help you", "let me",
+                           "tell me more", "that makes sense", "absolutely", "of course"]
+        rapport_hits = 0
+        for seg in agent_segments:
+            text_lower = seg.text.lower()
+            for phrase in rapport_phrases:
+                if phrase in text_lower:
+                    rapport_hits += 1
+
+        rapport_score = min(rapport_hits / max(len(agent_segments), 1) * 0.5 + 0.5, 1.0)
+
+        # Professionalism: absence of filler words, appropriate vocabulary
+        filler_words = ["um", "uh", "like", "you know", "basically", "actually"]
+        filler_count = 0
+        for seg in agent_segments:
+            text_lower = seg.text.lower()
+            for filler in filler_words:
+                filler_count += text_lower.count(filler)
+
+        filler_rate = filler_count / max(len(agent_segments), 1)
+        professionalism_score = max(1.0 - filler_rate * 0.15, 0.3)
+
+        # Response quality: does the agent address lead objections / questions?
+        lead_questions = [s for s in lead_segments if "?" in s.text]
+        lead_objection_count = sum(len(s.objection_signals) for s in lead_segments)
+
+        if lead_questions or lead_objection_count > 0:
+            # Check if agent segments following questions contain addressing language
+            address_phrases = ["answer", "address", "regarding", "about that", "here's", "let me explain"]
+            addressing = 0
+            for seg in agent_segments:
+                text_lower = seg.text.lower()
+                for phrase in address_phrases:
+                    if phrase in text_lower:
+                        addressing += 1
+                        break
+            total_concerns = len(lead_questions) + lead_objection_count
+            response_quality = min(addressing / max(total_concerns, 1) * 0.6 + 0.4, 1.0)
+        else:
+            response_quality = 0.75  # No concerns to address — neutral score
+
+        return {
+            "rapport": round(rapport_score, 2),
+            "professionalism": round(professionalism_score, 2),
+            "response_quality": round(response_quality, 2),
+        }
+
+    def _assess_audio_quality(self, segments: List[VoiceSegment]) -> float:
+        """ROADMAP-067: Assess audio quality from segment-level features.
+
+        Evaluates volume consistency, confidence levels, and hesitation markers
+        to produce a 0-1 audio quality score.
+        """
+        if not segments:
+            return 0.0
+
+        # Factor 1: Average transcription confidence (higher = better audio)
+        avg_confidence = float(np.mean([s.confidence for s in segments]))
+
+        # Factor 2: Volume consistency (low variance = better)
+        volumes = [s.volume_db for s in segments]
+        if len(volumes) > 1:
+            vol_std = float(np.std(volumes))
+            volume_consistency = max(1.0 - vol_std / 30.0, 0.0)  # Normalize: 30 dB std = 0
+        else:
+            volume_consistency = 0.7
+
+        # Factor 3: Very low volumes suggest poor audio capture
+        very_low_count = sum(1 for v in volumes if v < -60)
+        low_volume_penalty = very_low_count / max(len(volumes), 1)
+
+        quality = (avg_confidence * 0.5 + volume_consistency * 0.3 + (1.0 - low_volume_penalty) * 0.2)
+        return round(min(max(quality, 0.0), 1.0), 2)
+
+    def _detect_missed_opportunities(self, segments: List[VoiceSegment], agent_segments: List[VoiceSegment]) -> List[str]:
+        """ROADMAP-068: Detect missed opportunities from call segments.
+
+        Looks for lead buying signals, questions, and urgency cues that
+        the agent did not follow up on.
+        """
+        missed: List[str] = []
+        lead_segments = [s for s in segments if s.speaker_id == "lead"]
+
+        for i, lead_seg in enumerate(lead_segments):
+            # Find the next agent segment after this lead segment
+            next_agent = None
+            for seg in segments:
+                if seg.speaker_id == "agent" and seg.start_time > lead_seg.end_time:
+                    next_agent = seg
+                    break
+
+            # High interest not followed up with closing language
+            if lead_seg.interest_level > 0.7:
+                if next_agent:
+                    closing_words = ["schedule", "book", "tour", "viewing", "next step", "offer", "move forward"]
+                    has_closing = any(w in next_agent.text.lower() for w in closing_words)
+                    if not has_closing:
+                        missed.append(f"High interest signal at {lead_seg.start_time:.0f}s not met with closing attempt")
+                else:
+                    missed.append(f"High interest signal at {lead_seg.start_time:.0f}s — no agent follow-up")
+
+            # Urgency signals not amplified
+            if lead_seg.urgency_level > 0.6:
+                if next_agent:
+                    urgency_words = ["right away", "today", "immediately", "fast", "priority", "quickly"]
+                    has_urgency = any(w in next_agent.text.lower() for w in urgency_words)
+                    if not has_urgency:
+                        missed.append(f"Urgency signal at {lead_seg.start_time:.0f}s not matched with prompt action")
+
+            # Unanswered direct questions
+            if "?" in lead_seg.text and lead_seg.interest_level > 0.5:
+                if not next_agent:
+                    missed.append(f"Lead question at {lead_seg.start_time:.0f}s left unanswered")
+
+        return missed[:10]  # Cap at 10
+
     async def _generate_call_analysis(self, call_state: Dict) -> CallAnalysis:
         """Generate comprehensive call analysis from segments"""
 
@@ -1223,6 +1413,9 @@ class VoiceAIIntegration:
         # Separate lead and agent segments
         lead_segments = [s for s in segments if s.speaker_id == "lead"]
         agent_segments = [s for s in segments if s.speaker_id == "agent"]
+
+        # ROADMAP-066: Score agent performance
+        agent_scores = self._score_agent_performance(agent_segments, lead_segments)
 
         # Calculate talk time percentages
         lead_talk_time = sum(s.duration for s in lead_segments)
@@ -1272,8 +1465,8 @@ class VoiceAIIntegration:
             # Metrics
             lead_talk_time_percent=lead_talk_percent,
             agent_talk_time_percent=agent_talk_percent,
-            interruption_count=0,  # ROADMAP-064: Implement interruption detection
-            silence_periods=[],  # ROADMAP-065: Implement silence detection
+            interruption_count=self._detect_interruptions(segments),  # ROADMAP-064
+            silence_periods=self._detect_silence_periods(segments),  # ROADMAP-065
             # Lead analysis
             lead_sentiment_progression=lead_sentiment_progression,
             lead_engagement_score=lead_engagement,
@@ -1281,11 +1474,11 @@ class VoiceAIIntegration:
             lead_urgency_signals=lead_urgency,
             lead_objections=list(set(all_objections)),
             lead_questions=all_questions,
-            # Agent performance (simplified)
-            agent_rapport_score=0.75,  # ROADMAP-066: Implement agent analysis
-            agent_professionalism_score=0.80,
-            agent_response_quality=0.70,
-            missed_opportunities=[],  # ROADMAP-068: Implement missed opportunity detection
+            # Agent performance — ROADMAP-066 + ROADMAP-068
+            agent_rapport_score=agent_scores["rapport"],
+            agent_professionalism_score=agent_scores["professionalism"],
+            agent_response_quality=agent_scores["response_quality"],
+            missed_opportunities=self._detect_missed_opportunities(segments, agent_segments),
             coaching_recommendations=[p.message for p in call_state["coaching_prompts"]],
             # Predictions
             conversion_probability=conversion_prob,
@@ -1297,7 +1490,7 @@ class VoiceAIIntegration:
             },
             optimal_follow_up_timing=self._calculate_optimal_follow_up(lead_urgency),
             # Quality
-            audio_quality_score=0.85,  # ROADMAP-067: Implement audio quality assessment
+            audio_quality_score=self._assess_audio_quality(segments),  # ROADMAP-067
             technical_issues=[],
             # Insights
             key_moments=key_moments,

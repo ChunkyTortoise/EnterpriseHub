@@ -6,8 +6,9 @@ Run with: streamlit run src/voice_ai/dashboard/call_analytics_app.py
 from __future__ import annotations
 
 try:
-    import streamlit as st
     import datetime
+
+    import streamlit as st
 
     st.set_page_config(page_title="Voice AI Analytics", page_icon="📞", layout="wide")
     st.title("Voice AI Platform — Call Analytics")

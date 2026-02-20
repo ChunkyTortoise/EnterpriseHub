@@ -6,15 +6,15 @@ with distributed tracing.
 """
 
 from typing import Dict
+
 from ghl_real_estate_ai.observability.workflow_tracing import (
-    trace_workflow_node,
+    add_workflow_event,
     async_workflow_span,
     create_handoff_span,
-    add_workflow_event,
     get_trace_id,
     propagate_trace_context,
+    trace_workflow_node,
 )
-
 
 # ==============================================================================
 # Example 1: Basic Workflow Node Instrumentation
@@ -223,6 +223,7 @@ async def schedule_showing_with_error_handling(state: Dict) -> Dict:
 # ==============================================================================
 
 from ghl_real_estate_ai.observability.workflow_tracing import is_tracing_enabled
+
 
 async def performance_sensitive_operation(state: Dict) -> Dict:
     """Conditionally add detailed tracing only when enabled."""

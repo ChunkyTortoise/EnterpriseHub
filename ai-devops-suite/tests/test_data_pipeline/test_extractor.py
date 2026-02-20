@@ -10,7 +10,6 @@ import pytest
 from devops_suite.data_pipeline.extractor import (
     LLMExtractor,
     ExtractionSchema,
-    ExtractionResult,
 )
 
 

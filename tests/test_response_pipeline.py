@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for the response post-processing pipeline (Phase 1)."""
@@ -15,9 +16,9 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.pipeline import ResponsePostProcessor
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-    AIDisclosureProcessor,
     DISCLOSURE_EN,
     DISCLOSURE_ES,
+    AIDisclosureProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.compliance_check import (
     ComplianceCheckProcessor,
@@ -26,10 +27,8 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.sms_truncation i
     SMSTruncationProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.tcpa_opt_out import (
-
     TCPAOptOutProcessor,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -139,7 +138,7 @@ class TestTCPAOptOutProcessor:
         ctx = _make_context(user_message="cancelar", detected_language="es")
         resp = ProcessedResponse(message="bot reply", original_message="bot reply")
         result = await stage.process(resp, ctx)
-        assert "dado de baja" in result.message
+        assert "sin problema" in result.message.lower()
 
     @pytest.mark.asyncio
     async def test_no_opt_out_passes_through(self):
@@ -191,7 +190,7 @@ class TestComplianceCheckProcessor:
             original_message="It's a safe neighborhood with low crime.",
         )
         result = await stage.process(resp, ctx)
-        assert "facts about your property" in result.message
+        assert "tell me more about your home" in result.message.lower()
 
 
 # ---------------------------------------------------------------------------
@@ -306,8 +305,34 @@ class TestFullPipeline:
         assert "[Mensaje asistido por IA]" in result.message
 
     @pytest.mark.asyncio
-    async def test_pipeline_stage_log(self):
+    async def test_pipeline_stage_log(self, monkeypatch):
+        monkeypatch.delenv("CONVERSATION_REPAIR_ENABLED", raising=False)
         pipeline = create_default_pipeline()
         ctx = _make_context(contact_id="log_test_1", user_message="Hello")
         result = await pipeline.process("Reply", ctx)
         assert len(result.stage_log) == 5  # all 5 stages ran (incl. language_mirror)
+
+    def test_stage_order_repair_disabled(self, monkeypatch):
+        monkeypatch.delenv("CONVERSATION_REPAIR_ENABLED", raising=False)
+        pipeline = create_default_pipeline()
+        stage_names = [stage.name for stage in pipeline._stages]
+        assert stage_names == [
+            "language_mirror",
+            "tcpa_opt_out",
+            "compliance_check",
+            "ai_disclosure",
+            "sms_truncation",
+        ]
+
+    def test_stage_order_repair_enabled(self, monkeypatch):
+        monkeypatch.setenv("CONVERSATION_REPAIR_ENABLED", "true")
+        pipeline = create_default_pipeline()
+        stage_names = [stage.name for stage in pipeline._stages]
+        assert stage_names == [
+            "language_mirror",
+            "tcpa_opt_out",
+            "conversation_repair",
+            "compliance_check",
+            "ai_disclosure",
+            "sms_truncation",
+        ]

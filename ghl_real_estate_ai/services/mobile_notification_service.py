@@ -10,10 +10,14 @@ Provides comprehensive push notification capabilities:
 - Personalized scheduling and targeting
 """
 
+import json
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from zoneinfo import ZoneInfo
+
+import httpx
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -138,6 +142,14 @@ class MobileNotificationService:
             if registration.device_id not in location_devices:
                 location_devices.append(registration.device_id)
                 await self.cache.set(location_devices_key, location_devices, ttl=86400 * 30)
+
+            # ROADMAP-060: Maintain user-to-device mapping
+            if registration.user_id:
+                user_devices_key = f"user_devices:{registration.user_id}"
+                user_devices = await self.cache.get(user_devices_key) or []
+                if registration.device_id not in user_devices:
+                    user_devices.append(registration.device_id)
+                    await self.cache.set(user_devices_key, user_devices, ttl=86400 * 30)
 
             logger.info(f"Device registered: {registration.device_id} for location {registration.location_id}")
             return True
@@ -385,6 +397,13 @@ class MobileNotificationService:
             location_scheduled.append(scheduled_id)
             await self.cache.set(location_scheduled_key, location_scheduled, ttl=86400)
 
+            # Maintain global location index for scheduled notification sweep (ROADMAP-062)
+            all_locations_key = "scheduled_locations_index"
+            location_ids = await self.cache.get(all_locations_key) or []
+            if target_location not in location_ids:
+                location_ids.append(target_location)
+                await self.cache.set(all_locations_key, location_ids, ttl=86400 * 7)
+
             logger.info(f"Notification scheduled: {scheduled_id} for {send_time}")
             return scheduled_id
 
@@ -394,16 +413,89 @@ class MobileNotificationService:
 
     async def process_scheduled_notifications(self):
         """
-        Process all scheduled notifications that are due for delivery.
-        This should be called periodically by a background task.
+        ROADMAP-062: Process all scheduled notifications that are due for delivery.
+        Scans all location scheduled lists, finds due notifications, sends them,
+        and marks them as sent. Should be called periodically by a background task.
         """
         try:
-            current_time = datetime.utcnow()
+            current_time = datetime.now(timezone.utc)
+            processed = 0
+            sent = 0
+            failed = 0
 
-            # ROADMAP-062: Implement scheduled notification processor
-            # Background job to scan and send due notifications
+            # Scan scheduled notification keys via pattern match
+            # Location-keyed lists stored as location_scheduled:{location_id}
+            all_locations_key = "scheduled_locations_index"
+            location_ids = await self.cache.get(all_locations_key) or []
 
-            logger.info(f"Processed scheduled notifications at {current_time}")
+            # Also check any location_scheduled keys from the schedule_notification method
+            for location_id in location_ids:
+                location_key = f"location_scheduled:{location_id}"
+                scheduled_ids = await self.cache.get(location_key) or []
+                remaining_ids = []
+
+                for sched_id in scheduled_ids:
+                    processed += 1
+                    sched_data = await self.cache.get(f"scheduled_notification:{sched_id}")
+                    if not sched_data:
+                        continue
+
+                    if sched_data.get("status") != "scheduled":
+                        continue
+
+                    send_time_str = sched_data.get("send_time", "")
+                    try:
+                        send_time = datetime.fromisoformat(send_time_str)
+                        if send_time.tzinfo is None:
+                            send_time = send_time.replace(tzinfo=timezone.utc)
+                    except (ValueError, TypeError):
+                        logger.warning(f"Invalid send_time for {sched_id}: {send_time_str}")
+                        continue
+
+                    if send_time > current_time:
+                        remaining_ids.append(sched_id)
+                        continue
+
+                    # Due — reconstruct payload and send
+                    try:
+                        payload_data = sched_data["payload"]
+                        payload_data["type"] = NotificationType(payload_data["type"])
+                        payload_data["priority"] = NotificationPriority(payload_data["priority"])
+                        # Remove None datetimes that can't be passed to dataclass directly
+                        for dt_field in ("scheduled_time", "expiry_time", "last_active"):
+                            if dt_field in payload_data and payload_data[dt_field] is None:
+                                payload_data.pop(dt_field, None)
+                        payload = NotificationPayload(**payload_data)
+
+                        result = await self.send_notification(
+                            payload=payload,
+                            target_location=sched_data.get("target_location"),
+                        )
+                        if result.get("success"):
+                            sent += 1
+                            sched_data["status"] = "sent"
+                            sched_data["sent_at"] = current_time.isoformat()
+                        else:
+                            failed += 1
+                            sched_data["status"] = "failed"
+                            sched_data["error"] = result.get("error", "unknown")
+                            remaining_ids.append(sched_id)
+                    except Exception as send_err:
+                        failed += 1
+                        sched_data["status"] = "failed"
+                        sched_data["error"] = str(send_err)
+                        logger.error(f"Failed to send scheduled {sched_id}: {send_err}")
+
+                    await self.cache.set(f"scheduled_notification:{sched_id}", sched_data, ttl=86400)
+
+                # Update remaining list
+                if remaining_ids != scheduled_ids:
+                    await self.cache.set(location_key, remaining_ids, ttl=86400)
+
+            logger.info(
+                f"Scheduled notification sweep: {processed} scanned, "
+                f"{sent} sent, {failed} failed"
+            )
 
         except Exception as e:
             logger.error(f"Scheduled notification processing failed: {e}")
@@ -414,10 +506,22 @@ class MobileNotificationService:
         return devices or []
 
     async def _get_user_devices(self, user_id: str) -> List[str]:
-        """Get all devices for a specific user."""
-        # ROADMAP-060: Get user device tokens from device registry
-        # Requires user-to-device mapping table
-        return []
+        """ROADMAP-060: Get user device tokens from user-to-device mapping."""
+        try:
+            user_devices_key = f"user_devices:{user_id}"
+            device_ids = await self.cache.get(user_devices_key) or []
+
+            # Filter to only active devices
+            active_devices = []
+            for device_id in device_ids:
+                reg_data = await self.cache.get(f"device_registration:{device_id}")
+                if reg_data and reg_data.get("active", True):
+                    active_devices.append(device_id)
+
+            return active_devices
+        except Exception as e:
+            logger.error(f"Failed to get user devices: {e}")
+            return []
 
     async def _should_send_notification(self, device_reg: DeviceRegistration, payload: NotificationPayload) -> bool:
         """
@@ -430,9 +534,10 @@ class MobileNotificationService:
                 if not device_reg.notification_preferences.get(notification_type, True):
                     return False
 
-            # Check quiet hours (basic implementation)
-            # ROADMAP-061: Implement timezone-aware quiet hours
-            # Store user timezone, convert UTC to local time
+            # ROADMAP-061: Timezone-aware quiet hours enforcement
+            if not self._is_within_allowed_hours(device_reg, payload):
+                logger.info(f"Notification suppressed for {device_reg.device_id} due to quiet hours")
+                return False
 
             # Check if device is active recently
             if device_reg.last_active:
@@ -446,45 +551,225 @@ class MobileNotificationService:
             logger.error(f"Notification filtering error: {e}")
             return False
 
+    def _is_within_allowed_hours(self, device_reg: DeviceRegistration, payload: NotificationPayload) -> bool:
+        """ROADMAP-061: Timezone-aware quiet hours enforcement.
+
+        Urgent notifications bypass quiet hours. Otherwise, suppress
+        between 21:00-08:00 in the device's local timezone.
+        """
+        if payload.priority == NotificationPriority.URGENT:
+            return True
+
+        try:
+            tz = ZoneInfo(device_reg.timezone) if device_reg.timezone else ZoneInfo("UTC")
+        except (KeyError, Exception):
+            tz = ZoneInfo("UTC")
+
+        local_now = datetime.now(tz)
+        local_hour = local_now.hour
+
+        quiet_start = 21  # 9 PM
+        quiet_end = 8     # 8 AM
+
+        if local_hour >= quiet_start or local_hour < quiet_end:
+            return False
+
+        return True
+
     async def _send_fcm_notifications(
         self, android_devices: List[DeviceRegistration], payload: NotificationPayload
     ) -> Dict[str, int]:
-        """
-        Send notifications via Firebase Cloud Messaging (Android).
-        """
+        """ROADMAP-058: Send notifications via FCM v1 API with google.oauth2."""
+        success_count = 0
+        failure_count = 0
         try:
-            # ROADMAP-058: Implement actual FCM notification sending
-            # FCM API integration, token management, batch sending
-            success_count = len(android_devices)
-            failure_count = 0
+            fcm_project_id = getattr(settings, "fcm_project_id", None)
+            fcm_service_account = getattr(settings, "fcm_service_account_json", None)
+
+            if not fcm_project_id or not fcm_service_account:
+                logger.warning("FCM project_id or service account not configured, simulating send")
+                return {"success_count": len(android_devices), "failure_count": 0}
+
+            # Obtain OAuth2 access token from service account
+            access_token = await self._get_fcm_access_token(fcm_service_account)
+            if not access_token:
+                return {"success_count": 0, "failure_count": len(android_devices)}
+
+            fcm_url = f"https://fcm.googleapis.com/v1/projects/{fcm_project_id}/messages:send"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            }
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                for device in android_devices:
+                    message_body = {
+                        "message": {
+                            "token": device.fcm_token,
+                            "notification": {
+                                "title": payload.title,
+                                "body": payload.body,
+                            },
+                            "data": {k: str(v) for k, v in (payload.data or {}).items()},
+                            "android": {
+                                "priority": "high" if payload.priority in (
+                                    NotificationPriority.HIGH, NotificationPriority.URGENT
+                                ) else "normal",
+                            },
+                        }
+                    }
+                    if payload.image_url:
+                        message_body["message"]["notification"]["image"] = payload.image_url
+
+                    try:
+                        resp = await client.post(fcm_url, headers=headers, json=message_body)
+                        if resp.status_code == 200:
+                            success_count += 1
+                        else:
+                            failure_count += 1
+                            logger.warning(f"FCM send failed for {device.device_id}: {resp.status_code}")
+                            if resp.status_code == 404:
+                                await self._deactivate_device(device.device_id)
+                    except Exception as send_err:
+                        failure_count += 1
+                        logger.error(f"FCM send error for {device.device_id}: {send_err}")
 
             logger.info(f"FCM notifications sent: {success_count} success, {failure_count} failed")
-
             return {"success_count": success_count, "failure_count": failure_count}
 
         except Exception as e:
             logger.error(f"FCM sending failed: {e}")
-            return {"success_count": 0, "failure_count": len(android_devices)}
+            return {"success_count": success_count, "failure_count": failure_count + len(android_devices) - success_count}
+
+    async def _get_fcm_access_token(self, service_account_json: str) -> Optional[str]:
+        """Get OAuth2 access token for FCM v1 API from service account credentials."""
+        try:
+            from google.auth.transport.requests import Request
+            from google.oauth2 import service_account
+
+            sa_info = json.loads(service_account_json) if isinstance(service_account_json, str) else service_account_json
+            credentials = service_account.Credentials.from_service_account_info(
+                sa_info,
+                scopes=["https://www.googleapis.com/auth/firebase.messaging"],
+            )
+            credentials.refresh(Request())
+            return credentials.token
+        except ImportError:
+            logger.warning("google-auth not installed, FCM OAuth2 unavailable")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get FCM access token: {e}")
+            return None
+
+    async def _deactivate_device(self, device_id: str) -> None:
+        """Mark a device token as inactive after delivery failure."""
+        try:
+            cache_key = f"device_registration:{device_id}"
+            reg_data = await self.cache.get(cache_key)
+            if reg_data:
+                reg_data["active"] = False
+                await self.cache.set(cache_key, reg_data, ttl=86400 * 30)
+                logger.info(f"Deactivated device {device_id} due to delivery failure")
+        except Exception as e:
+            logger.error(f"Failed to deactivate device {device_id}: {e}")
 
     async def _send_apns_notifications(
         self, ios_devices: List[DeviceRegistration], payload: NotificationPayload
     ) -> Dict[str, int]:
-        """
-        Send notifications via Apple Push Notification Service (iOS).
-        """
+        """ROADMAP-059: Send notifications via APNS HTTP/2 with JWT auth."""
+        success_count = 0
+        failure_count = 0
         try:
-            # ROADMAP-059: Implement actual APNS notification sending
-            # APNS HTTP/2 API, certificate/token authentication
-            success_count = len(ios_devices)
-            failure_count = 0
+            apns_key_id = getattr(settings, "apns_key_id", None)
+            apns_team_id = getattr(settings, "apns_team_id", None)
+            apns_key_path = getattr(settings, "apns_key_path", None)
+            apns_bundle_id = getattr(settings, "apns_bundle_id", "com.enterprisehub.app")
+            apns_use_sandbox = getattr(settings, "apns_use_sandbox", True)
+
+            if not all([apns_key_id, apns_team_id, apns_key_path]):
+                logger.warning("APNS credentials not fully configured, simulating send")
+                return {"success_count": len(ios_devices), "failure_count": 0}
+
+            jwt_token = self._generate_apns_jwt(apns_key_id, apns_team_id, apns_key_path)
+            if not jwt_token:
+                return {"success_count": 0, "failure_count": len(ios_devices)}
+
+            host = "api.sandbox.push.apple.com" if apns_use_sandbox else "api.push.apple.com"
+
+            apns_payload = {
+                "aps": {
+                    "alert": {
+                        "title": payload.title,
+                        "body": payload.body,
+                    },
+                    "sound": payload.sound or "default",
+                },
+            }
+            if payload.badge_count is not None:
+                apns_payload["aps"]["badge"] = payload.badge_count
+            if payload.data:
+                apns_payload["custom_data"] = payload.data
+
+            priority = "10" if payload.priority in (
+                NotificationPriority.HIGH, NotificationPriority.URGENT
+            ) else "5"
+
+            async with httpx.AsyncClient(http2=True, timeout=10.0) as client:
+                for device in ios_devices:
+                    device_token = device.apns_token or device.fcm_token
+                    url = f"https://{host}/3/device/{device_token}"
+                    headers = {
+                        "authorization": f"bearer {jwt_token}",
+                        "apns-topic": apns_bundle_id,
+                        "apns-priority": priority,
+                        "apns-push-type": "alert",
+                    }
+                    if payload.expiry_time:
+                        headers["apns-expiration"] = str(int(payload.expiry_time.timestamp()))
+
+                    try:
+                        resp = await client.post(url, headers=headers, json=apns_payload)
+                        if resp.status_code == 200:
+                            success_count += 1
+                        else:
+                            failure_count += 1
+                            logger.warning(f"APNS send failed for {device.device_id}: {resp.status_code}")
+                            if resp.status_code in (400, 410):
+                                await self._deactivate_device(device.device_id)
+                    except Exception as send_err:
+                        failure_count += 1
+                        logger.error(f"APNS send error for {device.device_id}: {send_err}")
 
             logger.info(f"APNS notifications sent: {success_count} success, {failure_count} failed")
-
             return {"success_count": success_count, "failure_count": failure_count}
 
         except Exception as e:
             logger.error(f"APNS sending failed: {e}")
-            return {"success_count": 0, "failure_count": len(ios_devices)}
+            return {"success_count": success_count, "failure_count": failure_count + len(ios_devices) - success_count}
+
+    def _generate_apns_jwt(self, key_id: str, team_id: str, key_path: str) -> Optional[str]:
+        """Generate JWT token for APNS authentication."""
+        try:
+            import time
+
+            import jwt
+
+            with open(key_path, "r") as f:
+                auth_key = f.read()
+
+            token = jwt.encode(
+                {"iss": team_id, "iat": int(time.time())},
+                auth_key,
+                algorithm="ES256",
+                headers={"alg": "ES256", "kid": key_id},
+            )
+            return token
+        except ImportError:
+            logger.warning("PyJWT not installed, APNS JWT generation unavailable")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to generate APNS JWT: {e}")
+            return None
 
     async def _store_notification_metrics(self, payload: NotificationPayload, results: Dict[str, Any]):
         """

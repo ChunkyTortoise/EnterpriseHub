@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any, Protocol
 
 from mcp_toolkit.framework.base_server import EnhancedMCP

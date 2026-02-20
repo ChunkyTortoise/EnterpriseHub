@@ -1,5 +1,5 @@
 """Shared Pydantic models for multi-tenant infrastructure."""
 
-from shared.models.base import TenantBase, APIKeyBase, UsageRecord
+from shared.models.base import APIKeyBase, TenantBase, UsageRecord
 
 __all__ = ["TenantBase", "APIKeyBase", "UsageRecord"]

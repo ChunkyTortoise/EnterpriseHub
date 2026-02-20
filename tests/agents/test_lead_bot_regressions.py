@@ -8,7 +8,6 @@ import pytest
 
 from ghl_real_estate_ai.agents.lead_bot import LeadBotWorkflow
 
-
 pytestmark = pytest.mark.asyncio
 
 

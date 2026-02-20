@@ -17,9 +17,13 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.rancho_cucamonga_market_service import RanchoCucamongaMarketService, MarketCondition, PropertyType
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.property_matcher_ml import MLFeaturePipeline, PropertyMatcherML
+from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
+    MarketCondition,
+    PropertyType,
+    RanchoCucamongaMarketService,
+)
 
 logger = get_logger(__name__)
 

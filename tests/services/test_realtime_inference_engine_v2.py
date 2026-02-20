@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 #!/usr/bin/env python3
@@ -20,7 +21,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import (
-
     InferenceMode,
     InferenceRequest,
     InferenceResult,

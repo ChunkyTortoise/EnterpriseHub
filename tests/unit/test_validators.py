@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.unit
 
 """Unit tests for the validators module.
@@ -14,7 +15,6 @@ import pandas as pd
 import pytest
 
 from utils.validators import (
-
     ConfidenceScorer,
     Conflict,
     ContradictionDetector,

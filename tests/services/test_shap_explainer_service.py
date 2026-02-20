@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -29,7 +30,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
 from ghl_real_estate_ai.services.shap_explainer_service import (
-
     BusinessFeatureMapper,
     FeatureContext,
     SHAPExplainerService,

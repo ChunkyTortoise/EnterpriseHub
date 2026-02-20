@@ -27,7 +27,6 @@ except ImportError:
 from src.core.exceptions import RetrievalError
 from src.multimodal.structured_retriever import StructuredQuery
 from src.multimodal.unified_retriever import (
-
     QueryModality,
     UnifiedRetriever,
     UnifiedRetrieverConfig,

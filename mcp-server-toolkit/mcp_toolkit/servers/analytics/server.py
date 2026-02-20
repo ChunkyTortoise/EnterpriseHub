@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import math
 from dataclasses import dataclass, field
-from typing import Any
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
 from mcp_toolkit.servers.analytics.chart_generator import ChartGenerator, ChartConfig

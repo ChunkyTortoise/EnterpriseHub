@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
-from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator, ClaudeRequest, ClaudeTaskType
+from ghl_real_estate_ai.services.claude_orchestrator import ClaudeRequest, ClaudeTaskType, get_claude_orchestrator
 from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_event_publisher
 
 try:

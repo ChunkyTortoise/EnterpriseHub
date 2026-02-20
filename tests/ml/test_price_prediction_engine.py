@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """
@@ -25,7 +26,6 @@ import pandas as pd
 import pytest
 
 from ghl_real_estate_ai.ml.price_prediction_engine import (
-
     EnsemblePricePredictor,
     ModelMetrics,
     ModelType,

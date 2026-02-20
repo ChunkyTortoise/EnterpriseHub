@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for market trigger re-engagement service (Phase 5B)."""
@@ -6,7 +7,6 @@ pytestmark = pytest.mark.integration
 import pytest
 
 from ghl_real_estate_ai.services.jorge.market_trigger_service import (
-
     ContactWatchlist,
     MarketTriggerService,
     TriggerPriority,

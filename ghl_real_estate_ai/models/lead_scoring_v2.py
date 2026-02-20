@@ -9,12 +9,12 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
+    JSONB,
     Column,
     DateTime,
     Decimal,
     ForeignKey,
     Index,
-    JSONB,
     String,
 )
 from sqlalchemy.dialects.postgresql import UUID

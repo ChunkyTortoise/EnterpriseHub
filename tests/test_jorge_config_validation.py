@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Phase 2: Configurable GHL IDs — jorge_config.py validation."""
@@ -9,7 +10,6 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import (
-
     JorgeEnvironmentSettings,
     JorgeSellerConfig,
 )

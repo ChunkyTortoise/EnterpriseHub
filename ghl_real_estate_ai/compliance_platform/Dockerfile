@@ -1,7 +1,7 @@
 # Enterprise AI Compliance Platform
 # Production-grade Docker configuration
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Metadata
 LABEL maintainer="Enterprise AI Solutions"

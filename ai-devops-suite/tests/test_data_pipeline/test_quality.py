@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from devops_suite.data_pipeline.quality import DataQualityChecker, QualityReport
+from devops_suite.data_pipeline.quality import DataQualityChecker
 
 
 @pytest.fixture

@@ -2,16 +2,17 @@
 Test GHL Webhook Router
 """
 
-import pytest
 import json
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, AsyncMock
 
 from ghl_integration.router import (
     GHLWebhookRouter,
+    _ghl_router,
     get_ghl_router,
     router,
-    _ghl_router,
 )
 
 

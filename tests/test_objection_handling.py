@@ -3,9 +3,14 @@
 Tests multi-category objection detection, response generation, A/B testing,
 and database integration.
 """
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from ghl_real_estate_ai.prompts.objection_responses import (
+    get_response_template,
+    get_variant_count,
+)
 from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
     ObjectionCategory,
     ObjectionDetection,
@@ -13,10 +18,6 @@ from ghl_real_estate_ai.services.jorge.pricing_objection_engine import (
     ObjectionType,
     PricingObjectionEngine,
     ResponseGraduation,
-)
-from ghl_real_estate_ai.prompts.objection_responses import (
-    get_response_template,
-    get_variant_count,
 )
 
 

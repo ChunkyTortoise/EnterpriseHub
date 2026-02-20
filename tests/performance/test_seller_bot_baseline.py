@@ -12,7 +12,6 @@ import random
 import pytest
 
 from ghl_real_estate_ai.services.jorge.performance_tracker import (
-
     SLA_CONFIG,
     PerformanceTracker,
 )

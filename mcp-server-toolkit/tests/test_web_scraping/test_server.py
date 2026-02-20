@@ -1,7 +1,7 @@
 """Tests for web scraping MCP server."""
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock
 from mcp_toolkit.framework.testing import MCPTestClient
 from mcp_toolkit.servers.web_scraping import server as ws_server
 from mcp_toolkit.servers.web_scraping.scraper import WebScraper, ScrapedPage

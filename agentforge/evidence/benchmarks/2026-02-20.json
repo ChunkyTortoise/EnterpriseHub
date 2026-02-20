@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-02-20T18:54:21.496940+00:00",
+  "runs": 50,
+  "provider": "mock/mock-v1",
+  "metrics": {
+    "p50_ms": 0.1014,
+    "p95_ms": 0.1103,
+    "p99_ms": 0.3566,
+    "avg_ms": 0.1071,
+    "throughput_rps": 9333.87
+  },
+  "script_sha256": "96d383ef27028baa328d5e05da3964754f34a235f7edf134ee2d0b620394ea1b"
+}

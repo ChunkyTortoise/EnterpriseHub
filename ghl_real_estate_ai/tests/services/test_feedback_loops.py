@@ -11,13 +11,13 @@ import pytest
 
 from ghl_real_estate_ai.services.jorge.feedback_loops import (
     ABANDONMENT_SILENCE_SECONDS,
-    RECOVERY_MAX_ATTEMPTS,
-    AbandonmentRecord,
-    FeedbackLoopManager,
-    MIN_ROUTING_WEIGHT,
     MAX_ROUTING_WEIGHT,
+    MIN_ROUTING_WEIGHT,
+    RECOVERY_MAX_ATTEMPTS,
     WEIGHT_DECAY_FACTOR,
     WEIGHT_RECOVERY_FACTOR,
+    AbandonmentRecord,
+    FeedbackLoopManager,
 )
 
 

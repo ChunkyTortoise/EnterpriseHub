@@ -1,6 +1,7 @@
 """Tests for tenant schemas."""
 
 import pytest
+
 from shared_schemas.tenant import TenantConfig, TenantLimits, TenantTier
 
 

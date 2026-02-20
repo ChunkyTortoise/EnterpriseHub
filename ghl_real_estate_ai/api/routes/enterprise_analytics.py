@@ -33,6 +33,9 @@ Created: January 2026
 
 import asyncio
 from datetime import datetime, timedelta
+
+# Enterprise Analytics imports
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Path, Query
@@ -45,10 +48,6 @@ from ghl_real_estate_ai.analytics.customer_lifetime_analytics import (
     CustomerLifetimeAnalytics,
     CustomerSegment,
 )
-
-# Enterprise Analytics imports
-from functools import lru_cache
-
 from ghl_real_estate_ai.analytics.revenue_attribution_engine import (
     AttributionModel,
     RevenueAttributionEngine,

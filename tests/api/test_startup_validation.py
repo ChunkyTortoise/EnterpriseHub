@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 """Tests for Jorge Bot services startup validation and periodic alert stats.

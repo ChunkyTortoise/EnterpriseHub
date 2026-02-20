@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.integration
 
 from ghl_real_estate_ai.services import property_matcher as pm

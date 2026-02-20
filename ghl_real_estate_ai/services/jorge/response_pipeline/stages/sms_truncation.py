@@ -6,8 +6,8 @@ Post-truncation: sanitizes carrier spam triggers (excessive caps, spam words,
 URL shorteners) to improve deliverability.
 """
 
-import re
 import logging
+import re
 
 from ghl_real_estate_ai.services.jorge.response_pipeline.base import ResponseProcessorStage
 from ghl_real_estate_ai.services.jorge.response_pipeline.models import (

@@ -9,6 +9,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
+    JSONB,
     Boolean,
     Column,
     DateTime,
@@ -16,7 +17,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    JSONB,
     String,
     Text,
 )

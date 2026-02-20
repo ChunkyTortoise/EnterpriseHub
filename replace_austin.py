@@ -1,5 +1,6 @@
 import os
 
+
 def replace_in_file(file_path, search_text, replace_text):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:

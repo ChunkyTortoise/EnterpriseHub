@@ -18,8 +18,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from ...prediction.business_forecasting_engine import ForecastTimeframe, GrowthStrategy
-from ...prediction.business_forecasting_engine import BusinessForecastingEngine
+from ...prediction.business_forecasting_engine import BusinessForecastingEngine, ForecastTimeframe, GrowthStrategy
 from ...prediction.client_behavior_analyzer import ClientBehaviorAnalyzer
 from ...prediction.deal_success_predictor import DealStage, DealSuccessPredictor
 from ...prediction.jorge_prediction_engine import JorgePredictionEngine, PredictionContext, TimeFrame
@@ -544,24 +543,44 @@ async def prediction_updates_websocket(websocket: WebSocket):
 @router.websocket("/ws/market-alerts")
 async def market_alerts_websocket(websocket: WebSocket):
     """
-    WebSocket endpoint for real-time market alerts
+    WebSocket endpoint for real-time market alerts.
+
+    ROADMAP-006: Polls market data from DB and detects changes, replacing
+    the sleep-only placeholder with a real market data feed.
     """
     await ws_manager.connect(websocket, "market_alerts")
 
     try:
+        last_snapshot: Optional[Dict[str, Any]] = None
         while True:
-            # Monitor for market changes and send alerts
-            await asyncio.sleep(60)  # 1 minute
+            # ROADMAP-006: Fetch latest market data and detect changes
+            current_snapshot = await _fetch_market_snapshot()
+            changes = _detect_market_changes(last_snapshot, current_snapshot)
 
-            await websocket.send_json(
-                {
-                    "type": "market_alert_summary",
-                    "severity": "info",
-                    "message": "Market monitor heartbeat",
-                    "active_connections": ws_manager.get_connection_count(),
-                    "timestamp": datetime.now().isoformat(),
-                }
-            )
+            if changes:
+                await websocket.send_json(
+                    {
+                        "type": "market_alert",
+                        "severity": "warning" if len(changes) > 2 else "info",
+                        "changes": changes,
+                        "snapshot": current_snapshot,
+                        "active_connections": ws_manager.get_connection_count(),
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+            else:
+                await websocket.send_json(
+                    {
+                        "type": "market_alert_summary",
+                        "severity": "info",
+                        "message": "No market changes detected",
+                        "active_connections": ws_manager.get_connection_count(),
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            last_snapshot = current_snapshot
+            await asyncio.sleep(60)  # Poll every 60 seconds
 
     except WebSocketDisconnect:
         logger.info("Client disconnected from market alerts WebSocket")
@@ -571,17 +590,25 @@ async def market_alerts_websocket(websocket: WebSocket):
 # Background task for continuous prediction updates
 async def continuous_prediction_monitoring():
     """
-    Background task to continuously monitor and update predictions
+    Background task to continuously monitor and update predictions.
+
+    ROADMAP-007: Queries DB for recent market, client, deal, and business
+    data and broadcasts prediction summaries to connected WebSocket clients.
     """
     while True:
         try:
+            # ROADMAP-007: Gather real prediction data from DB
+            monitoring_data = await _gather_monitoring_data()
+
             health_status = await prediction_health_check()
+
             await ws_manager.broadcast_to_group(
                 "prediction_updates",
                 {
                     "type": "monitoring_tick",
                     "status": health_status.get("engine_status", "unknown"),
                     "websocket_connections": health_status.get("websocket_connections", 0),
+                    "monitoring": monitoring_data,
                     "timestamp": datetime.now().isoformat(),
                 },
             )
@@ -660,3 +687,125 @@ async def shutdown_prediction_services():
     await deal_predictor.cleanup()
     await business_forecaster.cleanup()
     logger.info("Prediction services cleaned up")
+
+
+# ===================================================================
+# ROADMAP-006 / ROADMAP-007 — Market monitoring + prediction helpers
+# ===================================================================
+
+async def _fetch_market_snapshot() -> Dict[str, Any]:
+    """ROADMAP-006: Fetch current market data snapshot from DB for change detection."""
+    try:
+        db = await get_database()
+        async with db.get_connection() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) AS active_deals,
+                    COALESCE(AVG(property_value), 0) AS avg_property_value,
+                    COALESCE(AVG(commission_rate), 0) AS avg_commission_rate,
+                    COUNT(*) FILTER (WHERE current_stage = 'closing') AS closing_deals,
+                    COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') AS new_deals_24h
+                FROM deals
+                WHERE current_stage != 'lost'
+                """
+            )
+        return dict(row) if row else {
+            "active_deals": 0,
+            "avg_property_value": 0,
+            "avg_commission_rate": 0,
+            "closing_deals": 0,
+            "new_deals_24h": 0,
+        }
+    except Exception as e:
+        logger.warning(f"Failed to fetch market snapshot: {e}")
+        return {
+            "active_deals": 0,
+            "avg_property_value": 0,
+            "avg_commission_rate": 0,
+            "closing_deals": 0,
+            "new_deals_24h": 0,
+        }
+
+
+def _detect_market_changes(
+    previous: Optional[Dict[str, Any]], current: Dict[str, Any]
+) -> List[Dict[str, str]]:
+    """ROADMAP-006: Compare snapshots and return list of detected changes."""
+    if previous is None:
+        return []
+
+    changes: List[Dict[str, str]] = []
+
+    # Detect significant property value shifts (> 5%)
+    prev_val = float(previous.get("avg_property_value", 0))
+    curr_val = float(current.get("avg_property_value", 0))
+    if prev_val > 0:
+        pct_change = abs(curr_val - prev_val) / prev_val * 100
+        if pct_change > 5:
+            direction = "increased" if curr_val > prev_val else "decreased"
+            changes.append({
+                "metric": "avg_property_value",
+                "description": f"Average property value {direction} by {pct_change:.1f}%",
+                "severity": "warning",
+            })
+
+    # Detect new deal surge (> 3 new deals in 24h)
+    new_deals = current.get("new_deals_24h", 0)
+    prev_deals = previous.get("new_deals_24h", 0)
+    if new_deals > 3 and new_deals > prev_deals:
+        changes.append({
+            "metric": "new_deals_24h",
+            "description": f"{new_deals} new deals in last 24h (up from {prev_deals})",
+            "severity": "info",
+        })
+
+    # Detect closing pipeline changes
+    closing = current.get("closing_deals", 0)
+    prev_closing = previous.get("closing_deals", 0)
+    if closing != prev_closing:
+        direction = "increased" if closing > prev_closing else "decreased"
+        changes.append({
+            "metric": "closing_deals",
+            "description": f"Closing pipeline {direction}: {prev_closing} -> {closing}",
+            "severity": "info",
+        })
+
+    return changes
+
+
+async def _gather_monitoring_data() -> Dict[str, Any]:
+    """ROADMAP-007: Gather monitoring data for market, client, deal, business predictions."""
+    try:
+        db = await get_database()
+        async with db.get_connection() as conn:
+            # Recent interaction volume
+            interaction_row = await conn.fetchrow(
+                """
+                SELECT COUNT(*) AS recent_interactions
+                FROM interaction_history
+                WHERE created_at >= NOW() - INTERVAL '15 minutes'
+                """
+            )
+
+            # Active deal pipeline summary
+            deal_row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) AS total_active,
+                    COUNT(*) FILTER (WHERE current_stage = 'listing') AS listing,
+                    COUNT(*) FILTER (WHERE current_stage = 'negotiation') AS negotiation,
+                    COUNT(*) FILTER (WHERE current_stage = 'closing') AS closing
+                FROM deals
+                WHERE current_stage NOT IN ('lost', 'closed')
+                """
+            )
+
+        return {
+            "recent_interactions": interaction_row["recent_interactions"] if interaction_row else 0,
+            "deal_pipeline": dict(deal_row) if deal_row else {},
+            "market_snapshot": await _fetch_market_snapshot(),
+        }
+    except Exception as e:
+        logger.warning(f"Failed to gather monitoring data: {e}")
+        return {"recent_interactions": 0, "deal_pipeline": {}, "market_snapshot": {}}

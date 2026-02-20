@@ -12,11 +12,11 @@ async def verify_imports():
     print("✓ Testing imports...")
     try:
         from voice_ai.main import create_app
-        from voice_ai.models.call import Call, CallStatus, CallDirection
         from voice_ai.models.agent_persona import AgentPersona
+        from voice_ai.models.call import Call, CallDirection, CallStatus
+        from voice_ai.pipeline.voice_pipeline import PipelineState, VoicePipeline
         from voice_ai.telephony.call_manager import CallManager
         from voice_ai.telephony.twilio_handler import TwilioHandler
-        from voice_ai.pipeline.voice_pipeline import VoicePipeline, PipelineState
         print("  ✓ All imports successful")
         return True
     except ImportError as e:
@@ -45,8 +45,9 @@ async def verify_models():
     print("✓ Testing models...")
     try:
         import uuid
-        from voice_ai.models.call import Call, CallStatus, CallDirection
+
         from voice_ai.models.agent_persona import AgentPersona
+        from voice_ai.models.call import Call, CallDirection, CallStatus
 
         # Create Call instance
         call = Call(

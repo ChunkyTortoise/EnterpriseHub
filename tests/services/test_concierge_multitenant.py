@@ -27,10 +27,9 @@ from ghl_real_estate_ai.config.concierge_config_loader import (
     get_default_concierge_config,
 )
 from ghl_real_estate_ai.services.claude_concierge_orchestrator import (
-    ConciergeMode,
     ClaudeConciergeOrchestrator,
+    ConciergeMode,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
