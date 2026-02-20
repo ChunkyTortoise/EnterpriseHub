@@ -289,13 +289,19 @@ class StrategySelector:
 
     def route_after_stall_detection(
         self, state: JorgeSellerState
-    ) -> Literal["defend_valuation", "select_strategy"]:
-        """Route to valuation defense if Zestimate stall detected with CMA data."""
+    ) -> Literal["defend_valuation", "negotiation_discovery", "select_strategy"]:
+        """Route to valuation defense, QBQ discovery, or strategy selection after stall."""
         if (
             state.get("detected_stall_type") == "zestimate"
             and state.get("cma_report") is not None
         ):
             return "defend_valuation"
+        # QBQ: Route surface objections to negotiation discovery (once per conversation)
+        if (
+            state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"]
+            and not state.get("qbq_attempted")
+        ):
+            return "negotiation_discovery"
         return "select_strategy"
 
     def route_after_objection(

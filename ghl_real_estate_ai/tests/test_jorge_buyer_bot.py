@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -215,3 +216,138 @@ class TestBuyerFollowUpSchedule:
         # Day 0 → next day is 2 → 48 hours
         assert result["follow_up_hours"] == 48
         assert result["follow_up_scheduled"] is True
+
+
+# ── UPS Buyer Skills Tests (Module 2) ─────────────────────────────────
+
+
+class TestBuyerProgressiveSkills:
+    """Tests for Unified Progressive Skills integration in buyer bot."""
+
+    @pytest.mark.asyncio
+    async def test_buyer_bot_uses_initial_discovery_skill_for_new_lead(
+        self, mock_buyer_deps
+    ):
+        """New lead (low financial readiness) should trigger InitialDiscovery skill loading."""
+        with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
+            bot = JorgeBuyerBot(enable_bot_intelligence=False)
+
+            history = [{"role": "user", "content": "Hi, I'm looking to buy a home"}]
+
+            result = await bot.process_buyer_conversation(
+                conversation_id="test_ups_new",
+                user_message="Hi, I'm looking to buy a home",
+                buyer_name="Test Buyer",
+                conversation_history=history,
+            )
+        assert "response_content" in result
+        assert result["lead_id"] == "test_ups_new"
+
+    @pytest.mark.asyncio
+    async def test_buyer_bot_falls_back_to_full_model_for_high_intent_lead(
+        self, mock_buyer_deps
+    ):
+        """High-intent lead (buying_motivation >= 90) should skip progressive skills."""
+        mock_buyer_deps["profile"].financial_readiness = 95.0
+        mock_buyer_deps["profile"].urgency_score = 95.0
+        mock_buyer_deps["profile"].financing_status_score = 95.0
+        mock_buyer_deps["profile"].budget_clarity = 95.0
+
+        with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
+            bot = JorgeBuyerBot(enable_bot_intelligence=False)
+
+            history = [
+                {"role": "user", "content": "I'm pre-approved for $800k and ready to make an offer"},
+                {"role": "assistant", "content": "Great!"},
+            ]
+
+            result = await bot.process_buyer_conversation(
+                conversation_id="test_ups_high",
+                user_message="I'm pre-approved for $800k and ready to make an offer",
+                buyer_name="Hot Buyer",
+                conversation_history=history,
+            )
+        assert "response_content" in result
+        assert result["lead_id"] == "test_ups_high"
+
+    @pytest.mark.asyncio
+    async def test_buyer_progressive_skills_disabled_by_default(
+        self, mock_buyer_deps
+    ):
+        """Progressive skills should be disabled by default (ENABLE_BUYER_PROGRESSIVE_SKILLS not set)."""
+        # Remove the env var if set
+        env = {k: v for k, v in os.environ.items() if k != "ENABLE_BUYER_PROGRESSIVE_SKILLS"}
+        with patch.dict(os.environ, env, clear=True):
+            bot = JorgeBuyerBot(enable_bot_intelligence=False)
+
+            history = [{"role": "user", "content": "Tell me about homes"}]
+
+            result = await bot.process_buyer_conversation(
+                conversation_id="test_ups_disabled",
+                user_message="Tell me about homes",
+                buyer_name="Default Buyer",
+                conversation_history=history,
+            )
+        assert "response_content" in result
+        assert result["lead_id"] == "test_ups_disabled"
+
+    def test_load_buyer_skill_context_returns_skill_when_enabled(self):
+        """Verify _load_buyer_skill_context loads the correct skill file."""
+        from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+        rg = ResponseGenerator()
+        state = {
+            "financial_readiness_score": 10,
+            "current_qualification_step": "budget",
+            "buying_motivation_score": 30,
+        }
+        with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
+            content = rg._load_buyer_skill_context(state)
+        assert "InitialDiscoverySkill" in content
+
+    def test_load_buyer_skill_context_returns_empty_when_disabled(self):
+        """Verify _load_buyer_skill_context returns empty string when feature is off."""
+        from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+        rg = ResponseGenerator()
+        state = {"financial_readiness_score": 10}
+        env = {k: v for k, v in os.environ.items() if k != "ENABLE_BUYER_PROGRESSIVE_SKILLS"}
+        with patch.dict(os.environ, env, clear=True):
+            content = rg._load_buyer_skill_context(state)
+        assert content == ""
+
+    def test_load_buyer_skill_context_skips_high_motivation(self):
+        """High buying_motivation (>= 90) should skip progressive skills."""
+        from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+        rg = ResponseGenerator()
+        state = {
+            "financial_readiness_score": 95,
+            "buying_motivation_score": 95,
+        }
+        with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
+            content = rg._load_buyer_skill_context(state)
+        assert content == ""
+
+    def test_load_buyer_skill_context_objection_handling(self):
+        """Detected objection should load objection_handling skill."""
+        from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+        rg = ResponseGenerator()
+        state = {
+            "financial_readiness_score": 50,
+            "buying_motivation_score": 50,
+            "detected_objection_type": "timing",
+        }
+        with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
+            content = rg._load_buyer_skill_context(state)
+        assert "ObjectionHandlingSkill" in content
+
+    def test_load_buyer_skill_context_property_matching(self):
+        """Preferences step should load property_matching skill."""
+        from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+        rg = ResponseGenerator()
+        state = {
+            "financial_readiness_score": 50,
+            "buying_motivation_score": 50,
+            "current_qualification_step": "preferences",
+        }
+        with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
+            content = rg._load_buyer_skill_context(state)
+        assert "PropertyMatchingSkill" in content

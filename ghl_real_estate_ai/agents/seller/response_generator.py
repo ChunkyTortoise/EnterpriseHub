@@ -238,6 +238,13 @@ class ResponseGenerator:
         if state.get("stall_detected") and state.get("detected_stall_type") in friendly_responses:
             prompt += f"\nSUGGESTED HELPFUL RESPONSE: {friendly_responses[state['detected_stall_type']]}"
 
+        # QBQ: Frame value in terms of seller's deep motivation
+        if state.get("deep_motivation"):
+            prompt += (
+                f"\nSELLER DEEP MOTIVATION: {state['deep_motivation']}"
+                f"\nAlways frame value in terms of this motivation."
+            )
+
         # Phase 2.2: Use objection response if available
         if state.get("objection_detected") and state.get("objection_response_text"):
             objection_response = state.get("objection_response_text")

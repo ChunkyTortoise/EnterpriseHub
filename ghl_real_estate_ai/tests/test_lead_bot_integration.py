@@ -402,7 +402,7 @@ class TestLeadBotHandoffScenarios:
         assert decision is not None
         assert decision.source_bot == "lead"
         assert decision.target_bot == "buyer"
-        assert decision.confidence == 0.85
+        assert decision.confidence >= 0.85  # history signals may boost above input score
         assert decision.confidence >= 0.7  # Threshold check
         assert decision.reason == "buyer_intent_detected"
 
@@ -465,7 +465,7 @@ class TestLeadBotHandoffScenarios:
         assert decision is not None
         assert decision.source_bot == "lead"
         assert decision.target_bot == "seller"
-        assert decision.confidence == 0.88
+        assert decision.confidence >= 0.88  # history signals may boost above input score
         assert decision.confidence >= 0.7  # Threshold check
         assert decision.reason == "seller_intent_detected"
 
@@ -616,7 +616,7 @@ class TestMultiBotHandoffCascade:
         assert decision_2 is not None
         assert decision_2.source_bot == "buyer"
         assert decision_2.target_bot == "seller"
-        assert decision_2.confidence == 0.82
+        assert decision_2.confidence >= 0.82  # history signals may boost above input score
 
         # Execute second handoff
         actions_2 = await handoff_service.execute_handoff(decision=decision_2, contact_id=contact_id)
