@@ -35,6 +35,8 @@ class UIRenderingService:
         self.market_context_service = market_context_service
 
     def initialize_state(self):
+        if st is None:
+            return  # Not running in a Streamlit context
         if "assistant_greeted" not in st.session_state:
             st.session_state.assistant_greeted = False
         if "claude_history" not in st.session_state:
