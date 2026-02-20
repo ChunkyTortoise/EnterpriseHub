@@ -372,8 +372,10 @@ async def create_repository_property_matcher(
     config_type = data_sources_config.get("type", "demo")
 
     if config_type == "demo":
+        import os as _os
         data_dir = data_sources_config.get(
-            "json_data_dir", "/Users/cave/enterprisehub/ghl_real_estate_ai/data/knowledge_base"
+            "json_data_dir",
+            _os.getenv("KNOWLEDGE_BASE_DIR", "./data/knowledge_base"),
         )
         data_service = await PropertyDataServiceFactory.create_demo_service(data_dir)
 
@@ -421,9 +423,10 @@ async def enhanced_generate_property_matches(
 
     # Use default demo configuration if not provided
     if data_sources_config is None:
+        import os as _os
         data_sources_config = {
             "type": "demo",
-            "json_data_dir": "/Users/cave/enterprisehub/ghl_real_estate_ai/data/knowledge_base",
+            "json_data_dir": _os.getenv("KNOWLEDGE_BASE_DIR", "./data/knowledge_base"),
         }
 
     try:

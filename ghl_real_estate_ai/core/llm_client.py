@@ -122,6 +122,11 @@ class LLMClient:
         self._client = None
         self._async_client = None
 
+        # Circuit breaker state
+        self._failure_count: int = 0
+        self._circuit_open: bool = False
+        self._circuit_threshold: int = 3
+
         # Initialize enhanced prompt caching
         self.enhanced_caching = None
         if ENHANCED_CACHING_AVAILABLE and ENABLE_ENHANCED_CACHING:
@@ -447,6 +452,12 @@ class LLMClient:
         """
         Generate a response from the LLM (Asynchronous) with Circuit Breaker Failover and Vision support.
         """
+        # Circuit breaker: fail fast if too many recent failures
+        if self._circuit_open:
+            raise LLMCircuitOpenError(
+                f"{self.provider.value} circuit breaker is open after {self._failure_count} failures"
+            )
+
         self._init_async_client()
         if not self._async_client and not failover:
             raise RuntimeError(f"{self.provider.value} async client not initialized")
@@ -773,9 +784,39 @@ class LLMClient:
                 )
 
         except Exception as e:
+            import asyncio as _asyncio
+
             logger.error(f"LLM Provider {self.provider.value} failed: {e}")
-            if failover and self.provider != LLMProvider.GEMINI and settings.google_api_key:
-                logger.warning(f"CIRCUIT BREAKER: Failing over to Gemini to preserve lead interaction.")
+
+            # Track timeout failures for circuit breaker
+            if isinstance(e, _asyncio.TimeoutError):
+                self._failure_count += 1
+                if self._failure_count >= self._circuit_threshold:
+                    self._circuit_open = True
+                    logger.warning(
+                        f"Circuit breaker OPEN for {self.provider.value} after {self._failure_count} timeouts"
+                    )
+                timeout_exc = LLMTimeoutError(str(e))
+
+                if failover and self.provider != LLMProvider.GEMINI and settings.google_api_key:
+                    logger.warning("CIRCUIT BREAKER: Failing over to Gemini to preserve lead interaction.")
+                    failover_client = LLMClient(provider="gemini")
+                    result = await failover_client.agenerate(
+                        prompt=prompt,
+                        system_prompt=system_prompt,
+                        history=history,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        response_schema=response_schema,
+                        tools=tools,
+                        failover=False,
+                        images=images,
+                        **kwargs,
+                    )
+                else:
+                    raise timeout_exc from e
+            elif failover and self.provider != LLMProvider.GEMINI and settings.google_api_key:
+                logger.warning("CIRCUIT BREAKER: Failing over to Gemini to preserve lead interaction.")
                 failover_client = LLMClient(provider="gemini")
                 result = await failover_client.agenerate(
                     prompt=prompt,
@@ -791,6 +832,10 @@ class LLMClient:
                 )
             else:
                 raise e
+
+        # Successful call — reset circuit breaker state
+        self._failure_count = 0
+        self._circuit_open = False
 
         # Hook: Post-Generation
         await hooks.atrigger(
