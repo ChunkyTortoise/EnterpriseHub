@@ -123,7 +123,50 @@ class JorgeSellerConfig:
         "bot_last_interaction": os.environ.get("CUSTOM_FIELD_BOT_LAST_INTERACTION", ""),
         "bot_qualification_score": os.environ.get("CUSTOM_FIELD_BOT_QUALIFICATION_SCORE", ""),
         "bot_active": os.environ.get("CUSTOM_FIELD_BOT_ACTIVE", ""),
+        # Offer pathway classification (derived from Q2-Q4)
+        "offer_type": os.environ.get("CUSTOM_FIELD_OFFER_TYPE", ""),
     }
+
+    @staticmethod
+    def classify_offer_type(
+        property_condition: str = "",
+        seller_motivation: str = "",
+        timeline_urgency: str = "",
+    ) -> str:
+        """Classify seller intent as 'wholesale', 'listing', or 'unknown'.
+
+        Derived from the 4 existing qualification answers — no 5th question needed.
+        Wholesale signals: distressed condition, inherited/divorce/foreclosure motivation,
+        or urgent timeline with poor condition.
+        Listing signals: move-in ready condition, standard relocation/upgrade motivation.
+        """
+        condition = (property_condition or "").lower()
+        motivation = (seller_motivation or "").lower()
+        timeline = (timeline_urgency or "").lower()
+
+        wholesale_condition = any(
+            kw in condition
+            for kw in ("fixer", "needs work", "work", "repair", "rough", "poor", "as-is", "distressed")
+        )
+        wholesale_motivation = any(
+            kw in motivation
+            for kw in ("inherited", "inherit", "divorce", "foreclosure", "behind", "distressed", "estate")
+        )
+        listing_condition = any(
+            kw in condition
+            for kw in ("move-in", "move in", "ready", "excellent", "good", "updated", "renovated", "remodeled")
+        )
+        listing_motivation = any(
+            kw in motivation
+            for kw in ("upsize", "upgrade", "downsize", "retire", "relocat", "new job", "family")
+        )
+
+        # Strong wholesale signals (condition is the most reliable indicator)
+        if wholesale_condition or wholesale_motivation:
+            return "wholesale"
+        if listing_condition or listing_motivation:
+            return "listing"
+        return "unknown"
 
     # ========== MESSAGE SETTINGS ==========
     # Jorge's friendly SMS requirements

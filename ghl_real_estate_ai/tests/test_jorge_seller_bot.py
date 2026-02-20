@@ -128,3 +128,42 @@ class TestToneEnginePersonalization:
         assert "John, based on" in msg
         # Mid-sentence "What" must stay capitalised (old .lower() broke this)
         assert "What time" in msg
+
+
+class TestClassifyOfferType:
+    """Offer pathway classification derived from existing 4-question answers."""
+
+    def test_fixer_upper_is_wholesale(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        assert JorgeSellerConfig.classify_offer_type(property_condition="needs work") == "wholesale"
+
+    def test_inherited_property_is_wholesale(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        assert JorgeSellerConfig.classify_offer_type(seller_motivation="inherited property from parents") == "wholesale"
+
+    def test_move_in_ready_is_listing(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        assert JorgeSellerConfig.classify_offer_type(property_condition="move-in ready") == "listing"
+
+    def test_relocation_is_listing(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        assert JorgeSellerConfig.classify_offer_type(seller_motivation="relocating for new job") == "listing"
+
+    def test_empty_inputs_return_unknown(self):
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        assert JorgeSellerConfig.classify_offer_type() == "unknown"
+
+    def test_condition_takes_priority_over_motivation(self):
+        """Fixer-upper condition overrides relocation motivation → wholesale."""
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
+
+        result = JorgeSellerConfig.classify_offer_type(
+            property_condition="fixer, needs significant repairs",
+            seller_motivation="relocating",
+        )
+        assert result == "wholesale"
