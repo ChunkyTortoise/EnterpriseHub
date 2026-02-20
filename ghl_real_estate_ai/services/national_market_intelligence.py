@@ -30,7 +30,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from ..ghl_utils.logger import get_logger
 from ..markets.national_registry import get_national_market_registry
 from ..services.cache_service import get_cache_service
-from ..services.claude_assistant import ClaudeAssistant
+# Lazy import — ClaudeAssistant pulls in heavy ML deps (sklearn, joblib) not
+# installed in the prod image. Import deferred to __init__ to avoid startup crash.
 
 logger = get_logger(__name__)
 
@@ -137,6 +138,8 @@ class NationalMarketIntelligence:
     def __init__(self):
         """Initialize national market intelligence service"""
         self.cache = get_cache_service()
+        # Lazy import to avoid pulling sklearn/joblib at module load time in prod
+        from ..services.claude_assistant import ClaudeAssistant  # noqa: PLC0415
         self.claude_assistant = ClaudeAssistant()
         self.national_registry = get_national_market_registry()
 
