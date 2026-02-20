@@ -1514,6 +1514,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 "timeline_urgency": result.get("timeline_urgency"),
                 "property_condition": result.get("property_condition"),
                 "price_expectation": result.get("price_expectation"),
+                "offer_type": result.get("offer_type", "unknown"),
                 "seller_liens": result.get("seller_liens"),
                 "seller_repairs": result.get("seller_repairs"),
                 "seller_listing_history": result.get("seller_listing_history"),
@@ -1670,6 +1671,14 @@ class JorgeSellerBot(BaseBotWorkflow):
         # Determine next actions
         next_actions = await self._determine_jorge_next_actions(qualification_analysis)
 
+        # Derive offer pathway from extracted qualification fields
+        from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig as _SellerCfg
+        offer_type = _SellerCfg.classify_offer_type(
+            property_condition=qualification_analysis.get("property_condition", ""),
+            seller_motivation=qualification_analysis.get("seller_motivation", ""),
+            timeline_urgency=qualification_analysis.get("timeline_urgency", ""),
+        )
+
         # Build comprehensive result
         return QualificationResult(
             lead_id=lead_data["lead_id"],
@@ -1685,6 +1694,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             cost_incurred=cost_incurred,
             response_content=qualification_analysis.get("response_content", ""),
             qualification_summary=qualification_analysis.get("qualification_summary", ""),
+            offer_type=offer_type,
             # Enhancement metadata
             progressive_skills_applied=self.config.enable_progressive_skills
             and qualification_analysis.get("qualification_method") == "progressive_skills",

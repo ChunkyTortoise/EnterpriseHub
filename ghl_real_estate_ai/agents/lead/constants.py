@@ -5,7 +5,7 @@ from typing import Dict, List
 
 # Workflow constants
 MAX_CONVERSATION_HISTORY = 50
-SMS_MAX_LENGTH = 160
+SMS_MAX_LENGTH = 320  # 2-segment SMS, matches pipeline SMSTruncationProcessor and DEPLOYMENT_CHECKLIST
 
 # Cache configuration
 CACHE_MAX_ENTRIES = 1000
