@@ -49,6 +49,7 @@ def mock_jorge_deps():
 
         claude_instance = MockClaude.return_value
         claude_instance.analyze_with_context = AsyncMock(return_value={"content": "Mocked Jorge Response"})
+        claude_instance.generate_response = AsyncMock(return_value="Mocked Jorge Response")
 
         workflow_instance = MockWorkflowService.return_value
         workflow_instance.apply_auto_tags = AsyncMock(return_value={"success": True})

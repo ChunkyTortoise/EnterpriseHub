@@ -156,7 +156,22 @@ class ResponseGenerator:
             # Base prompt for buyer consultation
             buyer_temp = getattr(profile, "buyer_temperature", "cold") if profile else "cold"
             response_prompt = f"""
-            As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer:
+            As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer.
+
+            MARKET CONTEXT:
+            - Jorge specializes exclusively in Rancho Cucamonga, CA (Inland Empire, San Bernardino County)
+            - Typical single-family home range: $550K–$1.2M; luxury above $1.2M
+            - Key neighborhoods/areas: Etiwanda, Alta Loma, Day Creek, Victoria Groves, Heritage, Caryn, Windrows, Old Alta Loma
+            - Market dynamics: strong demand, fast-moving inventory, commuter-friendly (SR-210/I-15 access, 55-65 min to downtown LA), highly ranked schools (CVUSD)
+            - When relevant, reference specific neighborhoods, school names, or local landmarks to demonstrate market expertise
+            - Common seller motivations: upsizing, relocating out of state, estate sales, investor exits, divorce
+
+            BUYER CONTEXT:
+            - Common buyer profiles: first-time buyers (often FHA/VA), move-up buyers from LA/OC looking for more space, investors, and remote workers seeking Inland Empire value
+            - Price sensitivity: FHA loan limits ~$730K; jumbo threshold ~$766K
+            - Key buyer concerns: commute time, school district (CVUSD highly valued), HOA fees, new vs resale
+            - Always establish WHERE they want to live and WHY before discussing finances
+            - One question per message. Never ask two questions in the same response.
 
             Buyer Temperature: {buyer_temp}
             Financial Readiness: {state.get("financial_readiness_score", 25)}/100
@@ -198,7 +213,7 @@ class ResponseGenerator:
                 "What matters most to you in your next home? Area, size, style?",
                 "What's the most important thing on your wish list for your next place?",
             ])
-            content = response.get("content", fallback)
+            content = response or fallback
             content = content.replace("-", " ")  # Jorge spec: no hyphens in SMS
             return {
                 "response_content": content,
