@@ -45,6 +45,9 @@ RUN mkdir -p data/knowledge_base data/memory data/analytics .chroma_db
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+# Make sibling packages (ghl_integration, etc.) importable as top-level modules
+# They live inside /app/ghl_real_estate_ai/ but are imported without the prefix
+ENV PYTHONPATH=/app/ghl_real_estate_ai
 
 # Expose FastAPI port (Railway overrides with $PORT)
 EXPOSE 8000
