@@ -14,8 +14,8 @@ anthropic==0.18.1
 # Vector Database & Embeddings (pinned for stability)
 chromadb==0.5.23
 sentence-transformers==2.3.1
-onnxruntime==1.16.3; sys_platform == 'linux' or (sys_platform == 'darwin' and platform_machine == 'x86_64')
-onnxruntime-silicon==1.16.3; sys_platform == 'darwin' and platform_machine == 'arm64'
+onnxruntime>=1.17.1; sys_platform == 'linux' or (sys_platform == 'darwin' and platform_machine == 'x86_64')
+onnxruntime>=1.17.1; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # HTTP Client (for GHL API calls)
 httpx==0.26.0
