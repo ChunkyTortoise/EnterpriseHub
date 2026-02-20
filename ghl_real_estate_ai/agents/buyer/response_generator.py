@@ -2,8 +2,10 @@
 Response generation and objection handling module for buyer bot.
 """
 
+import os
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Optional, Any
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -116,6 +118,9 @@ class ResponseGenerator:
             intelligence_context = state.get("intelligence_context")
             buyer_id = state.get("buyer_id", "unknown")
 
+            # UPS: Progressive skills integration (feature-flagged)
+            skill_context = self._load_buyer_skill_context(state)
+
             # Use A/B test variant from state (assigned in process_buyer_conversation)
             if not tone_variant:
                 tone_variant = state.get("tone_variant", "empathetic")
@@ -174,6 +179,10 @@ class ResponseGenerator:
             Keep under 290 characters for SMS compliance (pipeline enforces 320 max).
             No hyphens. No robotic phrasing. Short sentences.
             """
+
+            # UPS: Inject progressive skill guidance into prompt
+            if skill_context:
+                response_prompt += f"\n\nPROGRESSIVE SKILL GUIDANCE:\n{skill_context}"
 
             # Enhance prompt with intelligence context if available (Phase 3.3)
             if intelligence_context:
@@ -271,3 +280,52 @@ class ResponseGenerator:
         except Exception as e:
             logger.warning(f"Buyer prompt enhancement failed: {e}")
             return base_prompt
+
+    def _load_buyer_skill_context(self, state: BuyerBotState) -> str:
+        """
+        Load progressive skill content based on buyer's current qualification step.
+
+        Returns skill file content as a string to inject into the prompt,
+        or empty string if the feature is disabled or no skill applies.
+        """
+        enabled = os.getenv("ENABLE_BUYER_PROGRESSIVE_SKILLS", "false").lower() in (
+            "true", "1", "yes",
+        )
+        if not enabled:
+            return ""
+
+        buying_motivation = (
+            state.get("buying_motivation_score")
+            or state.get("financial_readiness_score", 0)
+            or 0
+        )
+
+        # High-intent leads skip progressive skills (full model handles them)
+        if buying_motivation >= 90:
+            return ""
+
+        # Determine which skill file to load based on current step
+        current_step = state.get("current_qualification_step", "")
+        frs = state.get("financial_readiness_score", 0) or 0
+
+        objection_history = state.get("objection_history") or []
+        detected_objection = state.get("detected_objection_type")
+
+        if detected_objection or objection_history:
+            skill_file = "objection_handling.md"
+        elif current_step == "preferences" or frs >= 30:
+            skill_file = "property_matching.md"
+        else:
+            skill_file = "initial_discovery.md"
+
+        # Resolve skill file path relative to this module
+        skills_dir = Path(__file__).parent / "skills"
+        skill_path = skills_dir / skill_file
+
+        try:
+            content = skill_path.read_text()
+            logger.info(f"Buyer progressive skill loaded: {skill_file}")
+            return content
+        except FileNotFoundError:
+            logger.warning(f"Buyer skill file not found: {skill_path}")
+            return ""
