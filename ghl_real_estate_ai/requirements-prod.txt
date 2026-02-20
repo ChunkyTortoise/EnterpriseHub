@@ -48,9 +48,14 @@ structlog==24.1.0
 # Scheduled tasks (digest_service 7am cron)
 APScheduler==3.10.4
 
-# Statistics (A/B testing, scoring)
+# Statistics (A/B testing, scoring) + ML models used at module level
 scipy==1.11.4
 numpy==1.26.3
+pandas==2.1.4
+scikit-learn==1.4.0
+
+# JWT auth (enterprise auth module uses PyJWT directly)
+PyJWT==2.8.0
 
 # Billing
 stripe==7.12.0
