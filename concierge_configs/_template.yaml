@@ -1,0 +1,73 @@
+# concierge_configs/_template.yaml
+# New client onboarding template for the Claude Concierge system.
+#
+# Instructions:
+#   1. Copy this file to concierge_configs/{tenant_id}.yaml
+#   2. Fill in all fields (remove the placeholder comments)
+#   3. tenant_id must match the filename (without .yaml)
+#   4. Call get_concierge_config("{tenant_id}") to load it
+
+# -----------------------------------------------------------------------
+# Identity
+# -----------------------------------------------------------------------
+domain: your_domain          # e.g. real_estate | dental | legal | hvac | saas
+client_name: Client Name     # Used in system prompts and logs
+
+# -----------------------------------------------------------------------
+# System Prompt Template Variables
+# These strings are injected verbatim into the AI system prompt.
+# -----------------------------------------------------------------------
+
+# How this client generates revenue. Be specific: transaction type, fee structure.
+business_model: >
+  Describe the revenue model here. E.g.: "15% management fee on monthly rent for
+  residential property management portfolios in the Dallas metro area."
+
+# Geographic or vertical market description. Include key data points.
+market_context: >
+  City, state. Key data: prices, growth rate, competition level, deal size.
+  Target timeline and volume expectations.
+
+# How this client prefers to communicate and make decisions.
+client_style: >
+  Professional / casual / technical preference. Decision-making style.
+  Level of detail expected. Any notable preferences.
+
+# -----------------------------------------------------------------------
+# Knowledge Engine
+# Feature areas exposed in the Concierge knowledge panel.
+# -----------------------------------------------------------------------
+platform_features:
+  primary_workflow:       # Replace key with your primary use-case name
+    - Feature A
+    - Feature B
+  automation:
+    - Bot or automation name
+  reporting:
+    - Report type
+
+# -----------------------------------------------------------------------
+# Compliance
+# -----------------------------------------------------------------------
+compliance_requirements:
+  - Applicable license or certification
+  - Relevant regulation or required disclosure
+
+# -----------------------------------------------------------------------
+# Agent Registry
+# Agents available in this client's deployment.
+# invoke_pattern: lowercase substring of agent name used for capability routing.
+# -----------------------------------------------------------------------
+agents:
+  - name: Primary Bot Name
+    agent_type: primary_function   # e.g. lead_nurture | seller_qualification | scheduler
+    capabilities: [capability_1, capability_2]
+    specializations: [specialization_1]
+    invoke_pattern: keyword        # e.g. "lead", "seller", "scheduler"
+
+  # Add additional agents below
+  # - name: Secondary Bot
+  #   agent_type: secondary_function
+  #   capabilities: [cap_a]
+  #   specializations: []
+  #   invoke_pattern: secondary_pattern
