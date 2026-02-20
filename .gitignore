@@ -221,3 +221,6 @@ multi_market_*.json
 .obsidian-vault/
 scripts/chrome_copy/
 .playwright_gumroad_session/
+
+# Local tracker artifacts
+.beads/issues.jsonl
