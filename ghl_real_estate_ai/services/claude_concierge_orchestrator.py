@@ -157,6 +157,15 @@ class ClaudeConciergeOrchestrator:
         self.session_contexts = {}  # session_id -> context history
         self.generated_suggestions = {}  # suggestion_id -> suggestion_data
 
+        # Performance metrics
+        self.metrics = {
+            "requests_processed": 0,
+            "total_response_time_ms": 0,
+            "errors": 0,
+            "cache_hits": 0,
+            "learning_events": 0,
+        }
+
         # Performance Optimization
         self.response_cache_ttl = 300  # 5 minutes for context-specific responses
         self.context_cache_ttl = 60  # 1 minute for platform context
@@ -311,6 +320,7 @@ class ClaudeConciergeOrchestrator:
             cached_response = await self._get_cached_response(cache_key)
             if cached_response:
                 logger.debug(f"Cache hit for contextual guidance: {context.current_page}")
+                self.metrics["cache_hits"] += 1
                 return cached_response
 
             # Get Jorge's learned preferences for this context
@@ -359,10 +369,14 @@ class ClaudeConciergeOrchestrator:
             # Update session context for continuity
             self._update_session_context(context.session_id, context, structured_response)
 
+            self.metrics["requests_processed"] += 1
+            self.metrics["total_response_time_ms"] += structured_response.response_time_ms
+
             return structured_response
 
         except Exception as e:
             logger.error(f"Error generating contextual guidance: {e}")
+            self.metrics["errors"] += 1
 
             # Fallback response to ensure platform reliability
             return self._generate_fallback_response(context, mode, str(e))
@@ -444,7 +458,7 @@ class ClaudeConciergeOrchestrator:
         """
 
         # Build coaching-specific prompt
-        f"""
+        coaching_prompt = f"""
         Jorge needs immediate coaching for this situation:
 
         Current Situation: {json.dumps(current_situation, indent=2)}
@@ -466,8 +480,15 @@ class ClaudeConciergeOrchestrator:
         Consider Jorge's learned preferences and past successful strategies.
         """
 
-        return await self.generate_contextual_guidance(
-            context=context, mode=ConciergeMode.REACTIVE, scope=IntelligenceScope.WORKFLOW
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.INTERVENTION_STRATEGY,
+            context={"platform_context": asdict(context), "current_situation": current_situation, "urgency": urgency},
+            prompt=coaching_prompt,
+            max_tokens=2000,
+        )
+        claude_response = await self.claude.process_request(request)
+        return await self._parse_concierge_response(
+            claude_response.content, context, ConciergeMode.REACTIVE, IntelligenceScope.WORKFLOW
         )
 
     async def orchestrate_bot_ecosystem(self, context: PlatformContext, desired_outcome: str) -> ConciergeResponse:
@@ -591,7 +612,7 @@ class ClaudeConciergeOrchestrator:
         """
 
         # Build field assistance prompt with location intelligence
-        f"""
+        field_prompt = f"""
         Jorge is in the field and needs mobile assistance:
 
         Current Location: {location_data.get("address", "Unknown")}
@@ -621,8 +642,15 @@ class ClaudeConciergeOrchestrator:
         Keep responses concise for mobile consumption.
         """
 
-        return await self.generate_contextual_guidance(
-            context=context, mode=ConciergeMode.FIELD_WORK, scope=IntelligenceScope.OPERATIONAL
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.INTERVENTION_STRATEGY,
+            context={"platform_context": asdict(context), "location_data": location_data},
+            prompt=field_prompt,
+            max_tokens=2000,
+        )
+        claude_response = await self.claude.process_request(request)
+        return await self._parse_concierge_response(
+            claude_response.content, context, ConciergeMode.FIELD_WORK, IntelligenceScope.OPERATIONAL
         )
 
     async def provide_client_presentation_support(
@@ -634,7 +662,7 @@ class ClaudeConciergeOrchestrator:
         """
 
         # Build presentation support prompt
-        f"""
+        presentation_prompt = f"""
         Jorge is presenting to a client and needs intelligent presentation support:
 
         Client Profile:
@@ -663,8 +691,15 @@ class ClaudeConciergeOrchestrator:
         6. Closing strategies appropriate for this client
         """
 
-        return await self.generate_contextual_guidance(
-            context=context, mode=ConciergeMode.PRESENTATION, scope=IntelligenceScope.STRATEGIC
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.INTERVENTION_STRATEGY,
+            context={"platform_context": asdict(context), "client_profile": client_profile, "presentation_context": presentation_context},
+            prompt=presentation_prompt,
+            max_tokens=3000,
+        )
+        claude_response = await self.claude.process_request(request)
+        return await self._parse_concierge_response(
+            claude_response.content, context, ConciergeMode.PRESENTATION, IntelligenceScope.STRATEGIC
         )
 
     # ========================================================================
@@ -678,13 +713,31 @@ class ClaudeConciergeOrchestrator:
         Learn from Jorge's decisions to improve future recommendations.
         This is a key part of the adaptive intelligence system.
         """
-        return await self.jorge_memory.learn_from_decision(decision, outcome, context)
+        result = await self.jorge_memory.learn_from_decision(decision, outcome, context)
+        if result:
+            self.metrics["learning_events"] += 1
+        return result
 
     async def predict_jorge_preference(self, situation: Dict[str, Any], context: PlatformContext) -> Dict[str, Any]:
         """
         Predict what Jorge would prefer in a given situation based on learned patterns.
         """
         return await self.jorge_memory.predict_jorge_preference(situation, context)
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return current performance metrics for wiring to /metrics endpoint."""
+        count = self.metrics["requests_processed"]
+        avg_rt = (self.metrics["total_response_time_ms"] / count) if count > 0 else 0
+        cache_total = count + self.metrics["cache_hits"]
+        cache_rate = (self.metrics["cache_hits"] / cache_total) if cache_total > 0 else 0.0
+        return {
+            "requests_processed": count,
+            "avg_response_time_ms": int(avg_rt),
+            "errors": self.metrics["errors"],
+            "cache_hit_rate": round(cache_rate, 3),
+            "active_sessions": len(self.session_contexts),
+            "learning_events": self.metrics["learning_events"],
+        }
 
     # ========================================================================
     # PRIVATE HELPER METHODS
@@ -1587,9 +1640,27 @@ class JorgePreferenceEngine:
         self.cache = cache_service
 
     async def update_preferences(self, pattern: Dict[str, Any]) -> bool:
-        """Update preference model with new pattern."""
-        # Implement preference learning logic
-        return True
+        """Update preference model with new decision pattern. Persists to Redis cache."""
+        try:
+            cache_key = "jorge_preferences:aggregate"
+            existing = await self.cache.get(cache_key) or {}
+
+            pattern_type = pattern.get("pattern_type", "general")
+            if pattern_type not in existing:
+                existing[pattern_type] = {"count": 0, "weight": 0.0, "last_updated": None}
+
+            entry = existing[pattern_type]
+            entry["count"] += 1
+            # Weighted average: new data 30%, older 70% (decay factor for recency)
+            new_confidence = pattern.get("confidence", 0.5)
+            entry["weight"] = 0.7 * entry["weight"] + 0.3 * new_confidence
+            entry["last_updated"] = datetime.now().isoformat()
+
+            await self.cache.set(cache_key, existing, ttl=86400)  # 24hr TTL
+            return True
+        except Exception:
+            logger.warning("Failed to update preferences; ignoring")
+            return False
 
     async def predict_preference(
         self, situation: Dict[str, Any], similar_situations: List[Dict[str, Any]], current_preferences: Dict[str, Any]
@@ -1620,14 +1691,13 @@ class PatternDetectionEngine:
     async def extract_pattern(
         self, decision: Dict[str, Any], outcome: Dict[str, Any], context: Optional[PlatformContext] = None
     ) -> Optional[Dict[str, Any]]:
-        """Extract patterns from decision-outcome pairs."""
-
-        # Analyze decision type
+        """Extract patterns from decision-outcome pairs (both success and failure)."""
         decision_type = decision.get("type", "general")
         outcome_success = outcome.get("success", False)
+        severity = outcome.get("severity", "medium")
 
         if outcome_success:
-            pattern = {
+            return {
                 "pattern_type": f"{decision_type}_success",
                 "decision_factors": list(decision.keys()),
                 "success_indicators": list(outcome.keys()),
@@ -1635,9 +1705,16 @@ class PatternDetectionEngine:
                 "context": context.current_page if context else "general",
                 "timestamp": datetime.now().isoformat(),
             }
-            return pattern
-
-        return None
+        else:
+            severity_weight = {"low": 0.4, "medium": 0.6, "high": 0.9}.get(severity, 0.6)
+            return {
+                "pattern_type": f"{decision_type}_failure",
+                "decision_factors": list(decision.keys()),
+                "failure_indicators": list(outcome.keys()),
+                "confidence": severity_weight,
+                "context": context.current_page if context else "general",
+                "timestamp": datetime.now().isoformat(),
+            }
 
 
 class JorgeBusinessRules:
@@ -1660,6 +1737,19 @@ class JorgeBusinessRules:
     def get_rule(self, rule_name: str) -> Any:
         """Get specific business rule value."""
         return self.rules.get(rule_name)
+
+    def get_workflow_id(self, bot_type: str) -> Optional[str]:
+        """Map bot type to GHL workflow ID from environment variables."""
+        import os
+        workflow_map = {
+            "hot_seller": os.getenv("HOT_SELLER_WORKFLOW_ID"),
+            "warm_seller": os.getenv("WARM_SELLER_WORKFLOW_ID"),
+            "hot_buyer": os.getenv("HOT_BUYER_WORKFLOW_ID"),
+            "warm_buyer": os.getenv("WARM_BUYER_WORKFLOW_ID"),
+            "notify_agent": os.getenv("NOTIFY_AGENT_WORKFLOW_ID"),
+            "manual_scheduling": os.getenv("MANUAL_SCHEDULING_WORKFLOW_ID"),
+        }
+        return workflow_map.get(bot_type)
 
 
 # ============================================================================
