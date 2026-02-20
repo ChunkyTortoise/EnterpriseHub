@@ -116,10 +116,19 @@ def render_claude_concierge_panel(hub_name: str):
         )
         if user_query:
             st.markdown(f"*Analyzing platform state for: '{user_query}'*")
-            # In a real app, this would call orchestrator.chat_with_concierge
-            st.markdown(
-                "Based on my coordination with the Lead and Seller bots, Sarah is highly qualified but waiting for a CMA. I recommend generating the CMA now."
-            )
+            try:
+                from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+
+                response = run_async(
+                    orchestrator.generate_live_guidance(
+                        current_page=st.session_state.get("current_page", "Dashboard"),
+                        mode=ConciergeMode.REACTIVE,
+                    )
+                )
+                st.markdown(response.primary_guidance)
+            except Exception as e:
+                st.warning(f"Could not get guidance: {e}")
+                st.markdown("Platform intelligence temporarily unavailable.")
 
 
 def render_concierge_coordination_card(hub_name: str):

@@ -25,6 +25,10 @@ Security Features:
 - Comprehensive audit logging for compliance
 """
 
+# ARCHIVED: This file is NOT registered in main.py (v1 dead code).
+# Kept for reference only. Active routes are in claude_concierge_integration.py.
+# Do not add functionality here.
+
 import asyncio
 import json
 import time
@@ -745,6 +749,7 @@ async def get_concierge_performance(
 # ============================================================================
 
 
+# TODO: SECURITY -- implement proper auth before activating these routes
 async def _validate_conversation_access(conversation_id: str, user: Dict) -> bool:
     """Validate that user has access to the specified conversation."""
     # In production, this would check database for user's conversation access
@@ -1019,6 +1024,7 @@ async def _execute_monitoring_action(
         raise
 
 
+# TODO: SECURITY -- implement proper auth before activating these routes
 async def _authenticate_websocket_connection(token: Optional[str]) -> Optional[Dict]:
     """Authenticate WebSocket connection using token."""
     if not token:

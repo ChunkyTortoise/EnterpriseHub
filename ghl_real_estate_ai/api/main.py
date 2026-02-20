@@ -646,7 +646,7 @@ def _verify_admin_api_key():
 def _setup_routers(app: FastAPI):
     """Initialize all routers for the application."""
     from ghl_real_estate_ai.api.jorge_alerting import router as jorge_alerting_router
-    from ghl_real_estate_ai.api.routes import claude_concierge, demo
+    from ghl_real_estate_ai.api.routes import demo
 
     admin_guard = _verify_admin_api_key()
 
@@ -658,7 +658,6 @@ def _setup_routers(app: FastAPI):
     app.include_router(bot_management.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(lead_bot_management.router)
     app.include_router(agent_ecosystem.router)
-    app.include_router(claude_concierge.router)
     app.include_router(claude_concierge_integration.router)
     app.include_router(customer_journey.router)
     app.include_router(property_intelligence.router)

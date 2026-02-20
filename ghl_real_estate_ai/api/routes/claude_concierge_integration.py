@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.agents.claude_concierge_agent import get_claude_concierge
@@ -24,6 +24,9 @@ from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/claude-concierge", tags=["claude-concierge-integration"])
+
+# In-memory dismissal tracking (Phase 3: migrate to Redis with tenant isolation)
+_dismissal_feedback: Dict[str, Dict] = {}
 
 # ============================================================================
 # HELPERS
@@ -108,6 +111,95 @@ class PlatformContext(BaseModel):
     marketConditions: Dict[str, Any] = Field(default_factory=dict)
     priorityActions: List[Dict[str, Any]] = Field(default_factory=list)
     pendingNotifications: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class ConciergeResponseModel(BaseModel):
+    """Full concierge response matching Track 2 format."""
+
+    content: str
+    primary_guidance: str
+    urgency_level: str
+    confidence_score: float
+    reasoning: Optional[str] = None
+    immediate_actions: List[Dict[str, Any]] = Field(default_factory=list)
+    background_tasks: List[Dict[str, Any]] = Field(default_factory=list)
+    follow_up_reminders: List[Dict[str, Any]] = Field(default_factory=list)
+    page_specific_tips: List[str] = Field(default_factory=list)
+    bot_coordination_suggestions: List[Dict[str, Any]] = Field(default_factory=list)
+    revenue_optimization_ideas: List[Dict[str, Any]] = Field(default_factory=list)
+    risk_alerts: List[Dict[str, Any]] = Field(default_factory=list)
+    opportunity_highlights: List[Dict[str, Any]] = Field(default_factory=list)
+    learning_insights: List[Dict[str, Any]] = Field(default_factory=list)
+    handoff_recommendation: Optional[Dict[str, Any]] = None
+    response_time_ms: int = 0
+    data_sources_used: List[str] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=datetime.now)
+
+
+class CoachingRequest(BaseModel):
+    """Request model for real-time coaching."""
+
+    conversation_id: str
+    current_situation: Dict[str, Any]
+    urgency: str = "medium"
+    platform_context: PlatformContext
+
+
+class BotHandoffRequest(BaseModel):
+    """Request model for bot orchestration."""
+
+    conversation_id: str
+    target_bot: str
+    reason: str
+    urgency: str = "scheduled"
+    platform_context: PlatformContext
+
+
+class FieldAssistanceRequest(BaseModel):
+    """Request model for mobile field assistance."""
+
+    location_data: Dict[str, Any]
+    platform_context: PlatformContext
+
+
+class PresentationSupportRequest(BaseModel):
+    """Request model for client presentation support."""
+
+    client_profile: Dict[str, Any]
+    presentation_context: Dict[str, Any]
+    platform_context: PlatformContext
+
+
+class LearningRequest(BaseModel):
+    """Request model for learning from decisions."""
+
+    decision: Dict[str, Any]
+    outcome: Dict[str, Any]
+    platform_context: PlatformContext
+
+
+def convert_concierge_response(response: Any) -> ConciergeResponseModel:
+    """Convert backend ConciergeResponse dataclass to API model."""
+    return ConciergeResponseModel(
+        content=response.primary_guidance,
+        primary_guidance=response.primary_guidance,
+        urgency_level=response.urgency_level,
+        confidence_score=response.confidence_score,
+        reasoning=response.reasoning,
+        immediate_actions=response.immediate_actions,
+        background_tasks=response.background_tasks,
+        follow_up_reminders=response.follow_up_reminders,
+        page_specific_tips=response.page_specific_tips,
+        bot_coordination_suggestions=response.bot_coordination_suggestions,
+        revenue_optimization_ideas=response.revenue_optimization_ideas,
+        risk_alerts=response.risk_alerts,
+        opportunity_highlights=response.opportunity_highlights,
+        learning_insights=response.learning_insights,
+        handoff_recommendation=response.handoff_recommendation,
+        response_time_ms=response.response_time_ms,
+        data_sources_used=response.data_sources_used,
+        generated_at=response.generated_at,
+    )
 
 
 class ChatRequest(BaseModel):
@@ -619,6 +711,12 @@ async def dismiss_suggestion(
             },
         )
 
+        # Track dismissal pattern for future confidence adjustment
+        suggestion_category = dismiss_reason.get("category", "unknown")
+        _dismissal_feedback.setdefault(suggestion_category, {"count": 0, "reasons": []})
+        _dismissal_feedback[suggestion_category]["count"] += 1
+        _dismissal_feedback[suggestion_category]["reasons"].append(reason[:100])
+
         logger.info(f"Suggestion {suggestion_id} dismissed")
         return {"success": True, "message": "Suggestion dismissed"}
 
@@ -841,3 +939,240 @@ async def get_context(session_id: str, current_user=Depends(get_current_user_opt
         logger.exception("Failed to fetch session context")
 
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ============================================================================
+# TRACK 2: COACHING, FIELD WORK, PRESENTATION, LEARNING ENDPOINTS
+# ============================================================================
+
+
+@router.post("/real-time-coaching", response_model=ConciergeResponseModel)
+async def provide_real_time_coaching(
+    request: CoachingRequest,
+    current_user=Depends(get_current_user_optional),
+):
+    """Provide real-time coaching for specific situations."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        platform_context = convert_to_backend_context(request.platform_context)
+        response = await orchestrator.provide_real_time_coaching(
+            current_situation=request.current_situation,
+            context=platform_context,
+            urgency=request.urgency,
+        )
+        return convert_concierge_response(response)
+    except Exception:
+        logger.exception("Error providing real-time coaching")
+        raise HTTPException(status_code=500, detail="Internal server error providing coaching")
+
+
+@router.post("/bot-coordination", response_model=ConciergeResponseModel)
+async def coordinate_bot_ecosystem(
+    request: BotHandoffRequest,
+    current_user=Depends(get_current_user_optional),
+):
+    """Coordinate the bot ecosystem for optimal outcomes."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        platform_context = convert_to_backend_context(request.platform_context)
+        response = await orchestrator.coordinate_bot_ecosystem(
+            context=platform_context,
+            desired_outcome=f"Handoff to {request.target_bot}: {request.reason}",
+        )
+        return convert_concierge_response(response)
+    except Exception:
+        logger.exception("Error in bot coordination")
+        raise HTTPException(status_code=500, detail="Internal server error in bot coordination")
+
+
+@router.post("/field-assistance", response_model=ConciergeResponseModel)
+async def generate_mobile_field_assistance(
+    request: FieldAssistanceRequest,
+    current_user=Depends(get_current_user_optional),
+):
+    """Generate mobile-specific field assistance for property visits."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        platform_context = convert_to_backend_context(request.platform_context)
+        response = await orchestrator.generate_mobile_field_assistance(
+            location_data=request.location_data,
+            context=platform_context,
+        )
+        return convert_concierge_response(response)
+    except Exception:
+        logger.exception("Error in field assistance")
+        raise HTTPException(status_code=500, detail="Internal server error in field assistance")
+
+
+@router.post("/presentation-support", response_model=ConciergeResponseModel)
+async def provide_client_presentation_support(
+    request: PresentationSupportRequest,
+    current_user=Depends(get_current_user_optional),
+):
+    """Provide intelligent support for client presentations."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        platform_context = convert_to_backend_context(request.platform_context)
+        response = await orchestrator.provide_client_presentation_support(
+            client_profile=request.client_profile,
+            presentation_context=request.presentation_context,
+            context=platform_context,
+        )
+        return convert_concierge_response(response)
+    except Exception:
+        logger.exception("Error in presentation support")
+        raise HTTPException(status_code=500, detail="Internal server error in presentation support")
+
+
+@router.post("/learn-decision")
+async def learn_from_user_decision(
+    request: LearningRequest,
+    background_tasks: BackgroundTasks,
+    current_user=Depends(get_current_user_optional),
+):
+    """Learn from Jorge's decisions to improve future recommendations."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        platform_context = convert_to_backend_context(request.platform_context)
+        background_tasks.add_task(
+            orchestrator.learn_from_user_decision, platform_context, request.decision, request.outcome
+        )
+        return {"status": "learning_queued", "message": "Decision learning queued for processing"}
+    except Exception:
+        logger.exception("Error queuing decision learning")
+        raise HTTPException(status_code=500, detail="Internal server error in learning system")
+
+
+@router.post("/predict-preference")
+async def predict_jorge_preference(
+    situation: Dict[str, Any],
+    request: PlatformContext,
+    current_user=Depends(get_current_user_optional),
+):
+    """Predict what Jorge would prefer in a given situation."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        platform_context = convert_to_backend_context(request)
+        prediction = await orchestrator.predict_jorge_preference(situation=situation, context=platform_context)
+        return {"prediction": prediction, "timestamp": datetime.now().isoformat()}
+    except Exception:
+        logger.exception("Error predicting preference")
+        raise HTTPException(status_code=500, detail="Internal server error in preference prediction")
+
+
+# ============================================================================
+# PLATFORM INTEGRATION: HEALTH, CAPABILITIES, METRICS, RESET, WEBSOCKET
+# ============================================================================
+
+
+@router.get("/health")
+async def health_check():
+    """Health check for the concierge service."""
+    try:
+        get_claude_concierge_orchestrator()
+        return {
+            "status": "healthy",
+            "service": "claude_concierge_omnipresent",
+            "version": "track_2",
+            "timestamp": datetime.now().isoformat(),
+            "features": {
+                "contextual_guidance": True,
+                "real_time_coaching": True,
+                "bot_coordination": True,
+                "field_assistance": True,
+                "presentation_support": True,
+                "jorge_memory_learning": True,
+                "omnipresent_monitoring": True,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        raise HTTPException(status_code=500, detail="Service unhealthy")
+
+
+@router.get("/capabilities")
+async def get_capabilities():
+    """Get available capabilities and configuration."""
+    return {
+        "concierge_modes": [mode.value for mode in ConciergeMode],
+        "intelligence_scopes": [scope.value for scope in IntelligenceScope],
+        "supported_bots": ["jorge-seller", "lead-bot", "intent-decoder"],
+        "coaching_types": ["response_optimization", "timing_adjustment", "strategy_pivot", "objection_handling", "temperature_escalation"],
+        "urgency_levels": ["low", "medium", "high", "urgent"],
+        "device_types": ["desktop", "mobile", "tablet"],
+        "connection_qualities": ["excellent", "good", "poor"],
+        "user_roles": ["agent", "executive", "client"],
+        "max_message_length": 1000,
+        "streaming_enabled": True,
+    }
+
+
+@router.get("/metrics")
+async def get_orchestrator_metrics(current_user=Depends(get_current_user_optional)):
+    """Get performance metrics -- wired to real orchestrator data."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        metrics = orchestrator.get_metrics()
+        metrics["timestamp"] = datetime.now().isoformat()
+        # Add agent-level metrics if available
+        try:
+            concierge = get_claude_concierge()
+            agent_status = await concierge.get_status()
+            agent_metrics = agent_status.get("performance_metrics", {})
+            metrics["agent_interactions"] = agent_metrics.get("interactions_handled", 0)
+            metrics["recommendations_generated"] = agent_metrics.get("recommendations_generated", 0)
+        except Exception:
+            pass  # Agent metrics are supplemental; don't fail the whole request
+        return metrics
+    except Exception:
+        logger.exception("Error getting metrics")
+        raise HTTPException(status_code=500, detail="Internal server error getting metrics")
+
+
+@router.post("/reset-session")
+async def reset_concierge_session(
+    session_id: str,
+    current_user=Depends(get_current_user_optional),
+):
+    """Reset a concierge session."""
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        orchestrator.session_contexts.pop(session_id, None)
+        return {"status": "session_reset", "session_id": session_id, "timestamp": datetime.now().isoformat()}
+    except Exception as e:
+        logger.error(f"Error resetting session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error resetting session")
+
+
+@router.websocket("/ws/{session_id}")
+async def websocket_concierge(websocket: WebSocket, session_id: str):
+    """WebSocket endpoint for real-time concierge communication."""
+    await websocket.accept()
+    logger.info(f"WebSocket connection established for session {session_id}")
+    try:
+        orchestrator = get_claude_concierge_orchestrator()
+        while True:
+            data = await websocket.receive_json()
+            message_type = data.get("type")
+            if message_type == "ping":
+                await websocket.send_json({"type": "pong", "timestamp": datetime.now().isoformat()})
+            elif message_type == "context_update":
+                await websocket.send_json({"type": "context_acknowledged", "timestamp": datetime.now().isoformat()})
+            elif message_type == "guidance_request":
+                await websocket.send_json({"type": "guidance_queued", "timestamp": datetime.now().isoformat()})
+            else:
+                await websocket.send_json({"type": "error", "message": f"Unknown message type: {message_type}"})
+    except WebSocketDisconnect:
+        logger.info(f"WebSocket disconnected for session {session_id}")
+    except Exception as e:
+        logger.error(f"WebSocket error for session {session_id}: {e}")
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
+
+@router.get("/suggestions/dismissal-stats")
+async def get_dismissal_stats(current_user=Depends(get_current_user_optional)):
+    """Get dismissal feedback statistics for debugging and Phase 3 integration."""
+    return {"dismissal_feedback": _dismissal_feedback, "timestamp": datetime.now().isoformat()}
