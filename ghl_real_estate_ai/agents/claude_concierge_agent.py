@@ -11,9 +11,10 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from ghl_real_estate_ai.agents.enhanced_bot_orchestrator import get_enhanced_bot_orchestrator
+from ghl_real_estate_ai.config.concierge_config_loader import ConciergeClientConfig
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.orchestrator_types import ConciergeSession as ConciergeSessionDict
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -101,13 +102,56 @@ class ConciergeRecommendation:
 
 
 class PlatformKnowledgeEngine:
-    """Comprehensive knowledge of the platform's capabilities."""
+    """Comprehensive knowledge of the platform's capabilities.
 
-    def __init__(self):
-        self.platform_features = self._load_platform_features()
-        self.agent_registry = self._load_agent_registry()
+    When a ConciergeClientConfig is provided the engine is populated from that
+    config (config-driven path). Without one it falls back to the hardcoded
+    Jorge defaults — preserving full backward compatibility.
+    """
+
+    def __init__(self, client_config: Optional[ConciergeClientConfig] = None):
+        if client_config is not None:
+            self.platform_features = self._features_from_config(client_config)
+            self.agent_registry = self._registry_from_config(client_config)
+        else:
+            self.platform_features = self._load_platform_features()
+            self.agent_registry = self._load_agent_registry()
         self.user_workflows = self._load_user_workflows()
         self.integration_points = self._load_integration_points()
+
+    @classmethod
+    def from_config(cls, client_config: ConciergeClientConfig) -> "PlatformKnowledgeEngine":
+        """Factory: build engine from a ConciergeClientConfig."""
+        return cls(client_config=client_config)
+
+    # ------------------------------------------------------------------
+    # Config-driven loaders
+    # ------------------------------------------------------------------
+
+    def _features_from_config(self, config: ConciergeClientConfig) -> Dict[str, Any]:
+        """Build platform_features from config YAML."""
+        return {
+            category: {
+                "features": features,
+                "workflows": [],
+                "integrations": [],
+            }
+            for category, features in config.platform_features.items()
+        }
+
+    def _registry_from_config(self, config: ConciergeClientConfig) -> Dict[str, AgentCapability]:
+        """Build agent_registry from config AgentDef list."""
+        registry: Dict[str, AgentCapability] = {}
+        for agent_def in config.available_agents:
+            key = agent_def.name.lower().replace(" ", "_")
+            registry[key] = AgentCapability(
+                agent_name=agent_def.name,
+                agent_type=agent_def.agent_type,
+                capabilities=agent_def.capabilities,
+                current_status="active",
+                specializations=agent_def.specializations,
+            )
+        return registry
 
     def _load_platform_features(self) -> Dict[str, Any]:
         """Load comprehensive platform feature knowledge."""
@@ -431,12 +475,45 @@ class ContextAwarenessEngine:
 
 
 class MultiAgentCoordinator:
-    """Coordinates interactions with all platform agents."""
+    """Coordinates interactions with all platform agents.
+
+    Agent routing uses a pluggable registry instead of a hardcoded if/elif chain.
+    Built-in Jorge agents are pre-registered; new clients call register_agent()
+    to add their own bots without modifying this class.
+    """
 
     def __init__(self, knowledge_engine: PlatformKnowledgeEngine):
         self.knowledge_engine = knowledge_engine
         self.bot_orchestrator = get_enhanced_bot_orchestrator()
         self.active_agent_tasks: Dict[str, Dict] = {}
+
+        # Built-in registry: list of (pattern, invoke_fn) pairs.
+        # Entries are checked in order; first match wins.
+        self._agent_registry: List[tuple] = [
+            ("adaptive_jorge", self._invoke_jorge_seller_bot),
+            ("seller", self._invoke_jorge_seller_bot),
+            ("buyer", self._invoke_jorge_buyer_bot),
+            ("jorge_buyer", self._invoke_jorge_buyer_bot),
+            ("predictive_lead", self._invoke_lead_bot),
+            ("lead", self._invoke_lead_bot),
+            ("realtime_intent", self._invoke_intent_decoder),
+            ("intent", self._invoke_intent_decoder),
+            ("orchestrator", self._invoke_bot_orchestrator),
+        ]
+        # Custom agents appended via register_agent(); they are tried BEFORE built-ins.
+        self._custom_registry: List[tuple] = []
+
+    def register_agent(self, pattern: str, invoke_fn: Callable) -> None:
+        """Register a custom agent invoke function matched by name pattern.
+
+        Registered agents take priority over built-in routing.
+
+        Args:
+            pattern: Lowercase substring matched against agent_name. First match wins.
+            invoke_fn: Async callable with signature
+                ``(agent_capability, request, context) -> Dict[str, Any]``.
+        """
+        self._custom_registry.insert(0, (pattern, invoke_fn))
 
     async def coordinate_agent_assistance(self, user_request: str, context: UserSession) -> Dict[str, Any]:
         """Coordinate multiple agents to fulfill user request."""
@@ -596,30 +673,20 @@ class MultiAgentCoordinator:
     async def _invoke_agent(
         self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict, is_supporting: bool = False
     ) -> Dict[str, Any]:
-        """Invoke a specific agent and return structured response."""
+        """Route to the correct agent invoke function via the pluggable registry.
 
+        Custom agents (registered via register_agent) are checked first, then
+        built-in Jorge agents, then the generic Claude fallback.
+        """
         agent_name = agent_capability.agent_name.lower().replace(" ", "_")
 
         try:
-            # Map agent registry names to actual bot instances
-            if "adaptive_jorge" in agent_name or "seller" in agent_name:
-                return await self._invoke_jorge_seller_bot(agent_capability, request, context)
+            for pattern, invoke_fn in self._custom_registry + self._agent_registry:
+                if pattern in agent_name:
+                    return await invoke_fn(agent_capability, request, context)
 
-            elif "buyer" in agent_name or "jorge_buyer" in agent_name:
-                return await self._invoke_jorge_buyer_bot(agent_capability, request, context)
-
-            elif "predictive_lead" in agent_name or "lead" in agent_name:
-                return await self._invoke_lead_bot(agent_capability, request, context)
-
-            elif "realtime_intent" in agent_name or "intent" in agent_name:
-                return await self._invoke_intent_decoder(agent_capability, request, context)
-
-            elif "orchestrator" in agent_name:
-                return await self._invoke_bot_orchestrator(agent_capability, request, context)
-
-            else:
-                # Generic Claude-powered agent for unimplemented agents
-                return await self._invoke_claude_generic_agent(agent_capability, request, context)
+            # No pattern matched — use generic Claude agent
+            return await self._invoke_claude_generic_agent(agent_capability, request, context)
 
         except Exception as e:
             logger.warning(f"Agent {agent_capability.agent_name} invocation failed: {e}")

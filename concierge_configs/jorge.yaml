@@ -1,0 +1,93 @@
+# concierge_configs/jorge.yaml
+# Jorge Salas — Real Estate AI Platform (Rancho Cucamonga, CA)
+# Reference implementation of ConciergeClientConfig.
+
+domain: real_estate
+client_name: Jorge Salas
+
+business_model: >
+  6% commission on residential home sales. Primary focus on seller qualification
+  and lead conversion. Revenue generated through listing agreements and buyer
+  representation in the Rancho Cucamonga market.
+
+market_context: >
+  Rancho Cucamonga, CA — Inland Empire submarket. Median home price $850K,
+  high demand and low inventory. Key neighborhoods: Alta Loma ($1.15M median),
+  Central RC ($850K), Etiwanda ($925K), Victoria Gardens ($750K).
+  Target closing timeline: 30-45 days.
+
+client_style: >
+  Direct and results-focused. Data-driven decision making. High-energy, ambitious.
+  Values efficiency and automation. Prefers actionable insights over theory.
+
+platform_features:
+  lead_management:
+    - Jorge Seller Bot (Adaptive)
+    - Predictive Lead Bot
+    - Real-time Intent Decoder
+    - Lead Intelligence Swarm
+    - Voss Negotiation Agent
+    - Temperature Prediction
+    - Behavioral Analytics
+    - Multi-channel Sequences
+    - Lead Scoring
+  bot_ecosystem:
+    - 40+ Specialized Agents
+    - Multi-agent Orchestration
+    - Swarm Intelligence
+    - Real-time Coordination
+    - Performance Monitoring
+    - Adaptive Learning
+  property_analysis:
+    - CMA Generator
+    - Property Intelligence
+    - Market Analysis
+    - Competitive Benchmarking
+    - Investment Analysis
+    - Pricing Intelligence
+  analytics_reporting:
+    - Revenue Attribution
+    - Performance Dashboards
+    - Predictive Analytics
+    - Lead Intelligence Reports
+    - Agent Performance Metrics
+
+compliance_requirements:
+  - California Department of Real Estate (DRE) licensing
+  - Equal Housing Opportunity Act
+  - California Fair Employment and Housing Act (FEHA)
+  - Natural Hazard Disclosure Statement required
+  - Transfer Disclosure Statement required
+  - CAN-SPAM for email sequences
+  - CCPA for data privacy
+
+agents:
+  - name: Adaptive Jorge Seller Bot
+    agent_type: seller_qualification
+    capabilities: [real_time_questioning, calendar_integration, stall_breaking]
+    specializations: [seller_qualification, confrontational_methodology]
+    invoke_pattern: seller
+
+  - name: Predictive Lead Bot
+    agent_type: lead_nurture
+    capabilities: [timing_optimization, personality_adaptation, multi_channel]
+    specializations: [behavioral_analysis, sequence_optimization]
+    invoke_pattern: lead
+
+  - name: Real-time Intent Decoder
+    agent_type: intent_analysis
+    capabilities: [streaming_analysis, semantic_understanding, forecasting]
+    specializations: [intent_scoring, conversation_analysis]
+    invoke_pattern: intent
+
+  - name: Jorge Buyer Bot
+    agent_type: buyer_qualification
+    capabilities: [property_matching, affordability_assessment, buyer_nurture]
+    specializations: [buyer_qualification, financial_readiness]
+    invoke_pattern: buyer
+
+  - name: Enhanced Bot Orchestrator
+    agent_type: orchestration
+    capabilities: [multi_bot_coordination, fallback_management, metrics_tracking]
+    specializations: [bot_coordination, performance_optimization]
+    invoke_pattern: orchestrator
