@@ -26,6 +26,10 @@ class StallDetector:
             "just looking", "just browsing", "exploring options",
             "kicking tires", "not ready yet", "window shopping", "just curious",
         ],
+        "surface_objection": [
+            "price is too low", "not worth it", "my neighbor got more",
+            "zillow says", "neighbor sold for",
+        ],
     }
 
     # Friendly response templates for detected stalls
@@ -36,6 +40,7 @@ class StallDetector:
         "agent": "Great you have someone! Happy to share comps from your area—could be useful for your agent too.",
         "price": "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing every time.",
         "timeline": "Makes sense. What's driving your timeline—market, a move, or something else?",
+        "surface_objection": "What would make this price feel right for your situation? I want to understand what matters most to you.",
     }
 
     def __init__(self, event_publisher: Optional[EventPublisher] = None):
@@ -74,6 +79,12 @@ class StallDetector:
             "stall_detected": detected_type is not None,
             "detected_stall_type": detected_type
         }
+
+    def is_surface_objection(self, state: JorgeSellerState) -> bool:
+        """Return True when a price/value objection is the likely surface for a deeper need."""
+        if not state.get("stall_detected"):
+            return False
+        return state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"]
 
     def get_friendly_response(self, stall_type: str) -> Optional[str]:
         """Get a friendly response template for a detected stall type."""

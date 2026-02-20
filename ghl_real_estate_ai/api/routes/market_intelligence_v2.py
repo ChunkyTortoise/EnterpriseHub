@@ -30,13 +30,12 @@ from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.market_sentiment_radar import get_market_sentiment_radar
 
 # ENHANCED: Import market registry and configuration schemas
-from ghl_real_estate_ai.markets import (
-    PropertyType,
-    get_market_registry,
-    get_market_service,
-)
+from ghl_real_estate_ai.markets import get_market_registry, get_market_service
+from ghl_real_estate_ai.markets.config_schemas import PropertyType
 
 logger = get_logger(__name__)
 
@@ -147,6 +146,21 @@ class PropertyRecommendationRequest(BaseModel):
     appeal_preferences: Optional[List[str]] = Field(None, description="Appeal preferences")
     commute_requirements: Optional[str] = Field(None, description="Commute preferences")
     timeline: Optional[str] = Field(None, description="Purchase timeline")
+
+
+class MarketSentimentRadarResponse(BaseModel):
+    market_id: str
+    market_name: str
+    location: str
+    timeframe_days: int
+    overall_sentiment: float
+    trend_direction: str
+    velocity: float
+    seller_motivation_index: float
+    optimal_outreach_window: str
+    confidence_score: float
+    key_signals: List[Dict[str, Any]]
+    last_updated: datetime
 
 
 # ============================================================================
@@ -550,6 +564,14 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
     Uses market specialization and employer data to provide personalized recommendations.
     """
     try:
+        cache = get_cache_service()
+        cache_key = f"market_recommendations:{request.market_id}:{request.lead_id}:{hash(str(request.model_dump()))}"
+        cached = await cache.get(cache_key)
+        if cached:
+            return cached
+
+        started_at = datetime.now()
+
         # Get market service via registry
         market_service = get_market_service(request.market_id)
 
@@ -576,23 +598,71 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
         # Get property recommendations
         properties = await market_service.search_properties(criteria, 20)
 
-        # ROADMAP-047: AI-Powered Property Recommendations
-        # Current: Returning basic search results
-        # Required:
-        #   1. Initialize market AI assistant for request.market_id
-        #   2. Generate personalized recommendations using Claude
-        #   3. Rank properties by lead preference match score
-        #   4. Add explanation for why each property is recommended
-        #   5. Cache recommendations for 1 hour
-        # Dependencies: None
+        min_budget = None
+        max_budget = None
+        if request.budget_range and len(request.budget_range) == 2:
+            min_budget, max_budget = request.budget_range
 
-        return {
+        preferred_neighborhoods = set(criteria.get("preferred_neighborhoods", []))
+        preferred_appeals = set(request.appeal_preferences or [])
+
+        ranked_recommendations = []
+        for property_obj in properties:
+            record = dict(getattr(property_obj, "__dict__", property_obj))
+            score = 0.0
+            reasons = []
+
+            price = record.get("price")
+            if isinstance(price, (int, float)) and min_budget is not None and max_budget is not None:
+                if min_budget <= price <= max_budget:
+                    score += 40
+                    reasons.append("Within budget range")
+                else:
+                    score += 10
+                    reasons.append("Outside budget range")
+
+            neighborhood = str(record.get("neighborhood", "")).strip()
+            if neighborhood and preferred_neighborhoods and neighborhood in preferred_neighborhoods:
+                score += 25
+                reasons.append(f"In preferred neighborhood ({neighborhood})")
+
+            property_appeals = set(record.get("appeal_tags", []) or [])
+            if preferred_appeals:
+                overlap = len(property_appeals.intersection(preferred_appeals))
+                if overlap:
+                    score += overlap * 8
+                    reasons.append(f"Matches {overlap} appeal preference(s)")
+
+            days_on_market = record.get("days_on_market")
+            if isinstance(days_on_market, (int, float)) and days_on_market <= 30:
+                score += 8
+                reasons.append("Fresh inventory")
+
+            if request.commute_requirements and record.get("commute_minutes") is not None:
+                score += 6
+                reasons.append("Commute profile available")
+
+            ranked_recommendations.append(
+                {
+                    **record,
+                    "match_score": round(min(score, 100.0), 2),
+                    "recommendation_reason": "; ".join(reasons) if reasons else "Baseline market match",
+                }
+            )
+
+        ranked_recommendations.sort(key=lambda item: item["match_score"], reverse=True)
+        response_payload = {
             "market_id": request.market_id,
             "lead_id": request.lead_id,
             "criteria": criteria,
-            "recommendations": [property.__dict__ for property in properties[:10]],
-            "total_found": len(properties),
+            "recommendations": ranked_recommendations[:10],
+            "total_found": len(ranked_recommendations),
+            "generated_at": datetime.now().isoformat(),
+            "latency_ms": int((datetime.now() - started_at).total_seconds() * 1000),
         }
+
+        await cache.set(cache_key, response_payload, ttl=3600)
+        return response_payload
 
     except ValueError as e:
         if "not found" in str(e):
@@ -602,6 +672,85 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
     except Exception as e:
         logger.error(f"Error getting recommendations for {request.market_id}/{request.lead_id}: {e}")
         raise HTTPException(500, f"Failed to get recommendations: {str(e)}")
+
+
+@router.get("/markets/{market_id}/sentiment/radar", response_model=MarketSentimentRadarResponse)
+async def get_market_sentiment_radar_profile(
+    market_id: str = Path(..., description="Market identifier"),
+    location: Optional[str] = Query(None, description="ZIP code or neighborhood override"),
+    timeframe_days: int = Query(30, ge=1, le=90, description="Analysis timeframe"),
+):
+    """Get market sentiment radar profile (ROADMAP-076 production route)."""
+    try:
+        registry = get_market_registry()
+        config = registry.get_market_config(market_id)
+        if not config:
+            raise HTTPException(404, f"Market '{market_id}' not found")
+
+        target_location = location or config.market_name
+        radar = await get_market_sentiment_radar()
+        profile = await radar.analyze_market_sentiment(target_location, timeframe_days)
+
+        return MarketSentimentRadarResponse(
+            market_id=market_id,
+            market_name=config.market_name,
+            location=profile.location,
+            timeframe_days=timeframe_days,
+            overall_sentiment=profile.overall_sentiment,
+            trend_direction=profile.trend_direction,
+            velocity=profile.velocity,
+            seller_motivation_index=profile.seller_motivation_index,
+            optimal_outreach_window=profile.optimal_outreach_window,
+            confidence_score=profile.confidence_score,
+            key_signals=[signal.to_dict() for signal in profile.key_signals],
+            last_updated=profile.last_updated,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving sentiment radar profile for {market_id}: {e}")
+        raise HTTPException(500, f"Failed to retrieve sentiment radar profile: {str(e)}")
+
+
+@router.get("/markets/{market_id}/sentiment/alerts")
+async def get_market_sentiment_alerts(
+    market_id: str = Path(..., description="Market identifier"),
+    locations: Optional[List[str]] = Query(None, description="Optional explicit list of locations"),
+):
+    """Get prioritized sentiment alerts for a market territory."""
+    try:
+        registry = get_market_registry()
+        config = registry.get_market_config(market_id)
+        if not config:
+            raise HTTPException(404, f"Market '{market_id}' not found")
+
+        radar = await get_market_sentiment_radar()
+        target_locations = locations or [config.market_name]
+        alerts = await radar.generate_sentiment_alerts(target_locations)
+        return {
+            "market_id": market_id,
+            "market_name": config.market_name,
+            "alerts": [
+                {
+                    "alert_id": alert.alert_id,
+                    "priority": alert.priority.value,
+                    "location": alert.location,
+                    "trigger_type": alert.trigger_type.value,
+                    "message": alert.message,
+                    "recommended_action": alert.recommended_action,
+                    "target_audience": alert.target_audience,
+                    "timing_window": alert.timing_window,
+                    "expected_lead_quality": alert.expected_lead_quality,
+                    "generated_at": alert.generated_at.isoformat(),
+                }
+                for alert in alerts
+            ],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving sentiment alerts for {market_id}: {e}")
+        raise HTTPException(500, f"Failed to retrieve sentiment alerts: {str(e)}")
 
 
 # ============================================================================

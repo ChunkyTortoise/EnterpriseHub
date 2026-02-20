@@ -43,6 +43,8 @@ from ghl_real_estate_ai.agents.seller import (
     ExecutiveService,
     ObjectionHandler,
 )
+from ghl_real_estate_ai.config.market_intelligence_loader import get_market_loader
+from ghl_real_estate_ai.agents.voss_negotiation_agent import VossNegotiationAgent
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.agents.seller_intent_decoder import SellerIntentDecoder
@@ -185,6 +187,7 @@ class JorgeSellerBot(BaseBotWorkflow):
         self.market_intelligence = get_market_intelligence()
         self.claude = ClaudeAssistant()
         self.seller_psychology_analyzer = get_seller_psychology_analyzer()
+        self.voss_agent = VossNegotiationAgent()
 
         # Progressive Skills components (optional)
         self.skills_manager = None
@@ -326,6 +329,7 @@ class JorgeSellerBot(BaseBotWorkflow):
         workflow.add_node("analyze_market_conditions", self._analyze_market_conditions_node)
 
         workflow.add_node("detect_stall", self._detect_stall_node)
+        workflow.add_node("negotiation_discovery", self._negotiation_discovery_node)
         workflow.add_node("defend_valuation", self._defend_valuation_node)
         workflow.add_node("prepare_listing", self._prepare_listing_node)
         workflow.add_node("select_strategy", self._select_strategy_node)
@@ -359,16 +363,18 @@ class JorgeSellerBot(BaseBotWorkflow):
         workflow.add_edge("provide_pricing_guidance", "analyze_market_conditions")
         workflow.add_edge("analyze_market_conditions", "detect_stall")
 
-        # Conditional routing from detect_stall
+        # Conditional routing from detect_stall (includes QBQ discovery)
         workflow.add_conditional_edges(
             "detect_stall",
             self._route_after_stall_detection,
             {
                 "defend_valuation": "defend_valuation",
+                "negotiation_discovery": "negotiation_discovery",
                 "select_strategy": "select_strategy",
             },
         )
         workflow.add_edge("defend_valuation", "select_strategy")
+        workflow.add_edge("negotiation_discovery", "select_strategy")
 
         # Routing based on next_action
         workflow.add_conditional_edges(
@@ -402,6 +408,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             workflow.add_node("gather_intelligence", self.gather_intelligence_context)
 
         workflow.add_node("detect_stall", self._detect_stall_node)
+        workflow.add_node("negotiation_discovery", self._negotiation_discovery_node)
         workflow.add_node("adaptive_strategy", self._adaptive_strategy_node)
         workflow.add_node("generate_adaptive_response", self._generate_adaptive_response_node)
         workflow.add_node("generate_executive_brief", self._generate_executive_brief_node)
@@ -419,7 +426,16 @@ class JorgeSellerBot(BaseBotWorkflow):
         else:
             workflow.add_edge("analyze_intent", "detect_stall")
 
-        workflow.add_edge("detect_stall", "adaptive_strategy")
+        # QBQ: Route surface objections to negotiation discovery before adaptive strategy
+        workflow.add_conditional_edges(
+            "detect_stall",
+            self._route_adaptive_after_stall,
+            {
+                "negotiation_discovery": "negotiation_discovery",
+                "adaptive_strategy": "adaptive_strategy",
+            },
+        )
+        workflow.add_edge("negotiation_discovery", "adaptive_strategy")
 
         # Conditional routing with adaptive logic
         workflow.add_conditional_edges(
@@ -518,6 +534,42 @@ class JorgeSellerBot(BaseBotWorkflow):
         """Delegate objection handling to ObjectionHandler."""
         return await self.objection_handler.handle_objection(state)
 
+    async def _negotiation_discovery_node(self, state: JorgeSellerState) -> JorgeSellerState:
+        """QBQ: Run Voss negotiation to uncover deep seller motivation behind price objection."""
+        # Skip if already attempted this conversation turn
+        if state.get("qbq_attempted"):
+            return state
+
+        try:
+            voss_result = await self.voss_agent.run_negotiation(
+                lead_id=state["lead_id"],
+                lead_name=state.get("lead_name", ""),
+                address=state.get("property_address", ""),
+                history=state.get("conversation_history", []),
+            )
+            deep_motivation = self._extract_deep_motivation(voss_result)
+            generated_response = voss_result.get("generated_response", state.get("response_content", ""))
+            return {
+                **state,
+                "qbq_attempted": True,
+                "deep_motivation": deep_motivation,
+                "response_content": generated_response,
+            }
+        except Exception as e:
+            logger.warning(f"QBQ discovery failed for {state['lead_id']}: {e}")
+            return {**state, "qbq_attempted": True}
+
+    def _extract_deep_motivation(self, voss_result: dict) -> Optional[str]:
+        """Extract deep motivation string from VossNegotiationAgent result."""
+        if not voss_result:
+            return None
+        return (
+            voss_result.get("deep_motivation")
+            or voss_result.get("motivation")
+            or voss_result.get("underlying_need")
+            or None
+        )
+
     async def _update_conversation_memory_node(self, state: JorgeSellerState) -> Dict:
         """Update conversation memory with new interaction."""
         conversation_id = f"jorge_{state['lead_id']}"
@@ -549,8 +601,8 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     def _route_after_stall_detection(
         self, state: JorgeSellerState
-    ) -> Literal["defend_valuation", "select_strategy"]:
-        """Route to valuation defense if Zestimate stall detected with CMA data."""
+    ) -> Literal["defend_valuation", "negotiation_discovery", "select_strategy"]:
+        """Route to valuation defense, QBQ discovery, or strategy selection after stall."""
         return self.strategy_selector.route_after_stall_detection(state)
 
     def _route_after_objection(
@@ -564,6 +616,17 @@ class JorgeSellerBot(BaseBotWorkflow):
     ) -> Literal["respond", "follow_up", "fast_track", "end"]:
         """Enhanced routing with fast-track capability."""
         return self.strategy_selector.route_adaptive_action(state)
+
+    def _route_adaptive_after_stall(
+        self, state: JorgeSellerState
+    ) -> Literal["negotiation_discovery", "adaptive_strategy"]:
+        """Route to QBQ discovery or adaptive strategy after stall detection."""
+        if (
+            state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"]
+            and not state.get("qbq_attempted")
+        ):
+            return "negotiation_discovery"
+        return "adaptive_strategy"
 
     # ================================
     # EXISTING METHODS (maintained for compatibility)
@@ -971,7 +1034,7 @@ class JorgeSellerBot(BaseBotWorkflow):
 
         start_time = time.time()
 
-        # Enhanced discovery context with Rancho Cucamonga market intelligence
+        # Enhanced discovery context with active market intelligence
         discovery_context = {
             "lead_name": lead_data.get("lead_name"),
             "last_message": lead_data.get("last_message", ""),
@@ -984,10 +1047,10 @@ class JorgeSellerBot(BaseBotWorkflow):
             "stall_history": lead_data.get("stall_count", 0),
         }
 
-        # Rancho Cucamonga market context injection (68% token reduction enhancement)
-        if self._is_rancho_cucamonga_property(lead_data.get("property_address")):
-            discovery_context["market_context"] = "rancho_cucamonga"
-            discovery_context["rancho_cucamonga_neighborhood"] = self._detect_rancho_cucamonga_neighborhood(
+        # Active market context injection (68% token reduction enhancement)
+        if self._is_supported_market_property(lead_data.get("property_address")):
+            discovery_context["market_context"] = get_market_loader().get_market_key()
+            discovery_context["market_neighborhood"] = self._detect_market_neighborhood(
                 lead_data.get("property_address")
             )
 
@@ -1057,48 +1120,42 @@ class JorgeSellerBot(BaseBotWorkflow):
             "seller_temperature": self._confidence_to_temperature(confidence),
             "execution_time": execution_time,
             "market_context": discovery_context.get("market_context"),
-            "rancho_cucamonga_neighborhood": discovery_context.get("rancho_cucamonga_neighborhood"),
+            "market_neighborhood": discovery_context.get("market_neighborhood"),
         }
 
-    def _is_rancho_cucamonga_property(self, address: Optional[str]) -> bool:
-        """Detect if property is in Rancho Cucamonga market for progressive skills enhancement."""
+    def _is_supported_market_property(self, address: Optional[str]) -> bool:
+        """Detect if property is in the active market for progressive skills enhancement."""
         if not address:
             return False
+        market = get_market_loader().get_active_market()
         address_lower = address.lower()
-        return any(
-            [
-                "rancho cucamonga" in address_lower,
-                "tx 78" in address_lower,
-                " atx" in address_lower,
-                "rancho cucamonga, ca" in address_lower,
-            ]
-        )
+        city = market.get("city", "").lower()
+        zip_codes = market.get("zip_codes", [])
+        return any([
+            city and city in address_lower,
+            any(z in address for z in zip_codes),
+        ])
 
-    def _detect_rancho_cucamonga_neighborhood(self, address: Optional[str]) -> Optional[str]:
-        """Extract Rancho Cucamonga neighborhood from address for market-specific skills."""
+    def _detect_market_neighborhood(self, address: Optional[str]) -> Optional[str]:
+        """Extract neighborhood from address using active market config."""
         if not address:
             return None
 
-        rancho_cucamonga_neighborhoods = {
-            "alta_loma": ["alta_loma", "west lake hills"],
-            "tarrytown": ["tarrytown"],
-            "mueller": ["mueller"],
-            "central_rc": ["central_rc", "west 6th", "rainey"],
-            "south_congress": ["soco", "south congress", "zilker"],
-            "east_rancho_cucamonga": ["east rancho_cucamonga", "cherrywood"],
-            "etiwanda": ["cedar park"],
-            "victoria_gardens": ["round rock"],
-            "day_creek": ["day_creek"],
-            "lakeway": ["lakeway"],
-            "bee_cave": ["bee cave"],
-        }
-
+        market = get_market_loader().get_active_market()
+        neighborhoods = market.get("neighborhoods", {})
         address_lower = address.lower()
-        for neighborhood, keywords in rancho_cucamonga_neighborhoods.items():
-            if any(keyword in address_lower for keyword in keywords):
-                return neighborhood
 
-        return "central_rancho_cucamonga"  # Default for Rancho Cucamonga addresses
+        # Build lookup from all neighborhood tiers
+        for tier, names in neighborhoods.items():
+            for name in names:
+                if name.lower() in address_lower:
+                    return name.lower().replace(" ", "_")
+
+        # Default to first mid-market neighborhood or generic
+        mid_market = neighborhoods.get("mid_market", [])
+        if mid_market:
+            return mid_market[0].lower().replace(" ", "_")
+        return "central"
 
     async def _execute_traditional_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Traditional full-context qualification"""
