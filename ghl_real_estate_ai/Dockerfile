@@ -15,11 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (better layer caching)
-COPY requirements.txt .
+COPY requirements-prod.txt .
 
-# Install Python dependencies
+# Install Python dependencies (prod-only: no heavy ML stack)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements-prod.txt
 
 # Production stage
 FROM python:3.12-slim
