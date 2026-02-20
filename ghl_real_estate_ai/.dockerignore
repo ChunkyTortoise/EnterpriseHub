@@ -74,3 +74,6 @@ tmp_rovodev_*
 *_backup.py
 *_original.py
 *.backup
+
+# Directories that shadow Python stdlib modules (cause circular import at startup)
+platform/
