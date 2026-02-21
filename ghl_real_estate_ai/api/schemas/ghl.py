@@ -114,7 +114,10 @@ class GHLWebhookEvent(BaseModel):
             data["contact"] = {
                 "contactId": data.get("contactId", ""),
                 "firstName": data.get("contactName", ""),
-                "tags": [],
+                # Propagate top-level tags (present in some GHL webhook formats)
+                # so the handler doesn't have to do a separate API fetch just to
+                # discover the contact's tags.
+                "tags": data.get("tags", []),
             }
 
         return data
