@@ -99,7 +99,7 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-unit-${{ matrix.python-version }}
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
   test-integration:
     name: Integration Tests
