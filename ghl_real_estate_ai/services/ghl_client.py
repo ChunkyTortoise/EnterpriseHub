@@ -220,11 +220,44 @@ class GHLClient:
             )
             raise
 
+    async def get_or_create_conversation_id(self, contact_id: str) -> Optional[str]:
+        """
+        Look up the conversationId for a contact.
+
+        GHL v2 /conversations/messages requires conversationId, not contactId.
+        This searches for an existing conversation and returns its ID.
+
+        Args:
+            contact_id: GHL contact ID
+
+        Returns:
+            conversationId string, or None if not found
+        """
+        try:
+            endpoint = f"{self.base_url}/conversations/search"
+            params = {"locationId": self.location_id, "contactId": contact_id, "limit": 1}
+            response = await self.http_client.get(endpoint, params=params, headers=self.headers, timeout=10.0)
+            response.raise_for_status()
+            data = response.json()
+            conversations = data.get("conversations", [])
+            if conversations:
+                conv_id = conversations[0].get("id")
+                logger.info(f"Found conversationId {conv_id} for contact {contact_id}")
+                return conv_id
+            logger.warning(f"No conversation found for contact {contact_id}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to look up conversationId for {contact_id}: {e}")
+            return None
+
     async def send_message(
         self, contact_id: str, message: str, channel: MessageType = MessageType.SMS
     ) -> Dict[str, Any]:
         """
         Send a message to a contact via SMS or email.
+
+        GHL v2 /conversations/messages requires conversationId (not contactId).
+        We look up the conversationId first, then send.
 
         Args:
             contact_id: GHL contact ID
@@ -244,14 +277,26 @@ class GHLClient:
             )
             return {"status": "mocked", "messageId": "mock_msg_123"}
 
+        # GHL v2 requires conversationId, not contactId
+        conversation_id = await self.get_or_create_conversation_id(contact_id)
+
         endpoint = f"{self.base_url}/conversations/messages"
 
-        payload = {
-            "type": channel.value,
-            "contactId": contact_id,
-            "locationId": self.location_id,
-            "message": message,
-        }
+        if conversation_id:
+            payload = {
+                "type": channel.value,
+                "conversationId": conversation_id,
+                "message": message,
+            }
+        else:
+            # Fallback: send with contactId (may fail for some GHL configs)
+            logger.warning(f"No conversationId found for {contact_id}, falling back to contactId payload")
+            payload = {
+                "type": channel.value,
+                "contactId": contact_id,
+                "locationId": self.location_id,
+                "message": message,
+            }
 
         max_retries = 3
         last_error = None
