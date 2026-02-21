@@ -30,6 +30,31 @@ class ResponseGenerator:
         self.sentiment_service = sentiment_service
         self.ab_testing = ab_testing
 
+    @staticmethod
+    def _extract_text_from_response(response: Any) -> str:
+        """Normalize buyer response payloads from different Claude client shapes."""
+        if response is None:
+            return ""
+        if isinstance(response, str):
+            return response
+        if isinstance(response, dict):
+            content = response.get("content")
+            if isinstance(content, str):
+                return content
+            if isinstance(content, dict):
+                nested = content.get("text") or content.get("content")
+                if isinstance(nested, str):
+                    return nested
+            for key in ("analysis", "response", "text", "message"):
+                value = response.get(key)
+                if isinstance(value, str):
+                    return value
+            return ""
+        content_attr = getattr(response, "content", None)
+        if isinstance(content_attr, str):
+            return content_attr
+        return str(response)
+
     async def handle_objections(self, state: BuyerBotState) -> Dict:
         """Handle detected buyer objections with appropriate strategies."""
         objection_type = state.get("detected_objection_type")
@@ -205,7 +230,8 @@ class ResponseGenerator:
                     response_prompt, intelligence_context, state
                 )
 
-            response = await self.claude.generate_response(response_prompt)
+            raw_response = await self.claude.generate_response(response_prompt)
+            response = self._extract_text_from_response(raw_response)
 
             import random
             fallback = random.choice([
