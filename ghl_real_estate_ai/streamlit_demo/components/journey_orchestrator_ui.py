@@ -3,7 +3,6 @@ Journey Orchestrator UI Component
 Renders the autonomous lead journey designed by Claude.
 """
 
-
 import streamlit as st
 
 from ghl_real_estate_ai.services.claude_journey_orchestrator import get_journey_orchestrator

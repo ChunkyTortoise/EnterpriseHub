@@ -28,8 +28,11 @@ _schedules: dict[UUID, ScheduleOut] = {}
 
 @router.post("", response_model=ScheduleOut)
 async def create_schedule(schedule: ScheduleCreate) -> ScheduleOut:
-    out = ScheduleOut(job_id=schedule.job_id, cron_expression=schedule.cron_expression,
-                      is_active=schedule.is_active)
+    out = ScheduleOut(
+        job_id=schedule.job_id,
+        cron_expression=schedule.cron_expression,
+        is_active=schedule.is_active,
+    )
     _schedules[out.id] = out
     return out
 

@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from devops_suite.data_pipeline.extractor import (
-    LLMExtractor,
     ExtractionSchema,
+    LLMExtractor,
 )
 
 
@@ -29,7 +29,9 @@ def mock_llm():
 class TestLLMExtractor:
     @pytest.mark.asyncio
     async def test_extract_parses_json_response(self, schema, mock_llm):
-        mock_llm.complete.return_value = json.dumps({"name": "John", "email": "john@test.com", "company": "Acme"})
+        mock_llm.complete.return_value = json.dumps(
+            {"name": "John", "email": "john@test.com", "company": "Acme"}
+        )
         extractor = LLMExtractor(llm_client=mock_llm)
 
         result = await extractor.extract("Some text about John", schema, "http://test.com")
@@ -41,7 +43,9 @@ class TestLLMExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_reports_missing_required_fields(self, schema, mock_llm):
-        mock_llm.complete.return_value = json.dumps({"name": "John", "email": None, "company": None})
+        mock_llm.complete.return_value = json.dumps(
+            {"name": "John", "email": None, "company": None}
+        )
         extractor = LLMExtractor(llm_client=mock_llm)
 
         result = await extractor.extract("text", schema)
@@ -51,7 +55,9 @@ class TestLLMExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_handles_code_block_response(self, schema, mock_llm):
-        mock_llm.complete.return_value = '```json\n{"name": "Jane", "email": "jane@test.com", "company": "Corp"}\n```'
+        mock_llm.complete.return_value = (
+            '```json\n{"name": "Jane", "email": "jane@test.com", "company": "Corp"}\n```'
+        )
         extractor = LLMExtractor(llm_client=mock_llm)
 
         result = await extractor.extract("text", schema)
@@ -74,12 +80,12 @@ class TestLLMExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_batch(self, schema, mock_llm):
-        mock_llm.complete.return_value = json.dumps({"name": "A", "email": "a@t.com", "company": "X"})
+        mock_llm.complete.return_value = json.dumps(
+            {"name": "A", "email": "a@t.com", "company": "X"}
+        )
         extractor = LLMExtractor(llm_client=mock_llm)
 
-        results = await extractor.extract_batch(
-            [("text1", "url1"), ("text2", "url2")], schema
-        )
+        results = await extractor.extract_batch([("text1", "url1"), ("text2", "url2")], schema)
 
         assert len(results) == 2
         assert results[0].source_url == "url1"

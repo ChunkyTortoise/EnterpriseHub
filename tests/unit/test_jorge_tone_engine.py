@@ -141,9 +141,7 @@ class TestJorgeToneEngineInit:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             engine = JorgeToneEngine()
 
             assert engine.tone_profile.max_length == 160
@@ -158,9 +156,7 @@ class TestJorgeToneEngineInit:
 
         custom_profile = ToneProfile(max_length=320)
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             engine = JorgeToneEngine()
             engine.tone_profile = custom_profile
 
@@ -177,9 +173,7 @@ class TestMessageValidation:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_validate_rejects_emojis(self, engine):
@@ -218,9 +212,7 @@ class TestMessageFormatting:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_format_removes_emojis(self, engine):
@@ -232,12 +224,12 @@ class TestMessageFormatting:
             # Emojis should be removed
             emoji_pattern = re.compile(
                 "["
-                "\U0001F600-\U0001F64F"  # emoticons
-                "\U0001F300-\U0001F5FF"  # symbols & pictographs
-                "\U0001F680-\U0001F6FF"  # transport & map symbols
-                "\U0001F1E0-\U0001F1FF"  # flags
-                "\U00002702-\U000027B0"
-                "\U000024C2-\U0001F251"
+                "\U0001f600-\U0001f64f"  # emoticons
+                "\U0001f300-\U0001f5ff"  # symbols & pictographs
+                "\U0001f680-\U0001f6ff"  # transport & map symbols
+                "\U0001f1e0-\U0001f1ff"  # flags
+                "\U00002702-\U000027b0"
+                "\U000024c2-\U0001f251"
                 "]+",
                 flags=re.UNICODE,
             )
@@ -270,9 +262,7 @@ class TestQualificationQuestions:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_generate_question_is_direct(self, engine):
@@ -293,12 +283,7 @@ class TestQualificationQuestions:
         if hasattr(engine, "generate_qualification_question"):
             question = engine.generate_qualification_question("motivation")
             emoji_pattern = re.compile(
-                "["
-                "\U0001F600-\U0001F64F"
-                "\U0001F300-\U0001F5FF"
-                "\U0001F680-\U0001F6FF"
-                "\U0001F1E0-\U0001F1FF"
-                "]+",
+                "[\U0001f600-\U0001f64f\U0001f300-\U0001f5ff\U0001f680-\U0001f6ff\U0001f1e0-\U0001f1ff]+",
                 flags=re.UNICODE,
             )
             assert not emoji_pattern.search(question)
@@ -314,17 +299,13 @@ class TestObjectionResponses:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_objection_response_is_professional(self, engine):
         """Objection responses maintain professionalism."""
         if hasattr(engine, "generate_objection_response"):
-            response = engine.generate_objection_response(
-                "Your commission is too high"
-            )
+            response = engine.generate_objection_response("Your commission is too high")
             # Should not be aggressive
             aggressive_words = ["stupid", "idiot", "wrong", "ridiculous"]
             assert not any(word in response.lower() for word in aggressive_words)
@@ -348,9 +329,7 @@ class TestNegotiationDriftDetection:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_detect_drift_from_messages(self, engine):
@@ -393,9 +372,7 @@ class TestLabelingTechnique:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_generate_label(self, engine):
@@ -426,9 +403,7 @@ class TestHandoffMessages:
             JorgeToneEngine,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.jorge_tone_engine.JorgeSellerConfig"):
             return JorgeToneEngine()
 
     def test_handoff_message_is_urgent(self, engine):
@@ -438,9 +413,7 @@ class TestHandoffMessages:
 
             # Should indicate urgency or importance
             urgency_indicators = ["call", "speak", "discuss", "soon", "available"]
-            assert any(
-                indicator in message.lower() for indicator in urgency_indicators
-            )
+            assert any(indicator in message.lower() for indicator in urgency_indicators)
 
     def test_handoff_message_within_limit(self, engine):
         """Handoff messages are within SMS limit."""

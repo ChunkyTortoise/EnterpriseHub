@@ -44,9 +44,7 @@ class JorgePrometheusExporter:
 
     def __init__(self, registry: Optional["CollectorRegistry"] = None):
         if not PROMETHEUS_AVAILABLE:
-            logger.warning(
-                "prometheus_client not installed -- JorgePrometheusExporter is a no-op"
-            )
+            logger.warning("prometheus_client not installed -- JorgePrometheusExporter is a no-op")
             self._enabled = False
             return
 
@@ -129,9 +127,7 @@ class JorgePrometheusExporter:
     def inc_handoff(self, source_bot: str, target_bot: str) -> None:
         """Increment handoff counter for a given route."""
         if self._enabled:
-            self.handoff_total.labels(
-                source_bot=source_bot, target_bot=target_bot
-            ).inc()
+            self.handoff_total.labels(source_bot=source_bot, target_bot=target_bot).inc()
 
     def inc_lead_temperature(self, temperature: str) -> None:
         """Increment lead temperature counter (hot, warm, cold)."""

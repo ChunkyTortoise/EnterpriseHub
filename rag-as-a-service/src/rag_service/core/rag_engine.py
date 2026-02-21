@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RAGResponse:
     """Complete RAG response with answer and sources."""
+
     answer: str
     sources: list[SourceReference]
     query: str
@@ -26,6 +27,7 @@ class RAGResponse:
 @dataclass
 class SourceReference:
     """Reference to a source chunk used in generating the answer."""
+
     chunk_id: str
     document_id: str
     content: str
@@ -131,16 +133,12 @@ class RAGEngine:
 
         return sorted(chunks, key=lambda c: c.score, reverse=True)
 
-    async def _generate_answer(
-        self, query: str, chunks: list[RetrievedChunk]
-    ) -> str:
+    async def _generate_answer(self, query: str, chunks: list[RetrievedChunk]) -> str:
         """Generate an answer from the retrieved chunks using LLM."""
         if not chunks:
             return "I couldn't find any relevant information to answer your question."
 
-        context = "\n\n".join(
-            f"[Source {i + 1}]: {c.content}" for i, c in enumerate(chunks)
-        )
+        context = "\n\n".join(f"[Source {i + 1}]: {c.content}" for i, c in enumerate(chunks))
 
         prompt = (
             f"Based on the following context, answer the question.\n\n"

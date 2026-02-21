@@ -1,9 +1,10 @@
 """Tests for hybrid retriever with vector + keyword search."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from rag_service.core.retriever import Retriever, RetrievedChunk
+import pytest
+
+from rag_service.core.retriever import RetrievedChunk, Retriever
 
 
 @pytest.fixture
@@ -231,9 +232,7 @@ class TestRetriever:
         term_doc_freqs = {"real": 50, "estate": 30, "market": 20, "prices": 40}
 
         # Act
-        score = Retriever.bm25_score(
-            query_terms, doc_terms, avg_doc_len, doc_count, term_doc_freqs
-        )
+        score = Retriever.bm25_score(query_terms, doc_terms, avg_doc_len, doc_count, term_doc_freqs)
 
         # Assert
         assert score > 0

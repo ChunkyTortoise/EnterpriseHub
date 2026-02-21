@@ -1,4 +1,5 @@
 """Multi-tenant document store with strict tenant isolation."""
+
 from __future__ import annotations
 
 import threading
@@ -29,9 +30,7 @@ class TenantDocumentStore:
 
     def _assert_tenant(self, tenant_id: str, doc: _Document) -> None:
         if doc.tenant_id != tenant_id:
-            raise TenantIsolationError(
-                f"Tenant '{tenant_id}' cannot access document owned by '{doc.tenant_id}'"
-            )
+            raise TenantIsolationError(f"Tenant '{tenant_id}' cannot access document owned by '{doc.tenant_id}'")
 
     def add_document(self, tenant_id: str, doc_id: str, content: str) -> None:
         with self._lock:

@@ -235,7 +235,10 @@ class TestHandoffManager:
         mgr = HandoffManager(current_bot_type="lead")
         mgr._last_handoff_time = time.monotonic()  # Just happened
         history = [
-            {"role": "user", "content": "I want to buy a home with a mortgage and I'm pre-approved"},
+            {
+                "role": "user",
+                "content": "I want to buy a home with a mortgage and I'm pre-approved",
+            },
         ]
         decision = mgr.evaluate_handoff(history)
         assert decision.should_handoff is False

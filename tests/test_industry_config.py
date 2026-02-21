@@ -141,24 +141,14 @@ class TestErrorHandling:
 
     def test_invalid_regex_in_handoff_patterns_raises(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(
-                "industry: test\n"
-                "handoff:\n"
-                "  buyer_intent_patterns:\n"
-                "    - '[invalid regex'\n"
-            )
+            f.write("industry: test\nhandoff:\n  buyer_intent_patterns:\n    - '[invalid regex'\n")
             f.flush()
             with pytest.raises(ValueError, match="Invalid handoff regex"):
                 IndustryConfig.from_yaml(f.name)
 
     def test_invalid_regex_in_intent_buyer_patterns_raises(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(
-                "industry: test\n"
-                "intents:\n"
-                "  buyer_patterns:\n"
-                "    - '(unclosed group'\n"
-            )
+            f.write("industry: test\nintents:\n  buyer_patterns:\n    - '(unclosed group'\n")
             f.flush()
             with pytest.raises(ValueError, match="Invalid regex pattern"):
                 IndustryConfig.from_yaml(f.name)

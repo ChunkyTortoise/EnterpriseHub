@@ -90,8 +90,13 @@ class ABTestingService:
 
         if control.samples < 2 or treatment.samples < 2:
             return SignificanceResult(
-                is_significant=False, p_value=1.0, z_score=0.0,
-                winner=None, control_mean=0.0, variant_mean=0.0, confidence=0.0,
+                is_significant=False,
+                p_value=1.0,
+                z_score=0.0,
+                winner=None,
+                control_mean=0.0,
+                variant_mean=0.0,
+                confidence=0.0,
             )
 
         c_mean = statistics.mean(control.metric_values)
@@ -102,14 +107,22 @@ class ABTestingService:
         se = math.sqrt(c_var / control.samples + t_var / treatment.samples)
         if se == 0:
             return SignificanceResult(
-                is_significant=False, p_value=1.0, z_score=0.0,
-                winner=None, control_mean=c_mean, variant_mean=t_mean, confidence=0.0,
+                is_significant=False,
+                p_value=1.0,
+                z_score=0.0,
+                winner=None,
+                control_mean=c_mean,
+                variant_mean=t_mean,
+                confidence=0.0,
             )
 
         z = (t_mean - c_mean) / se
         p_value = 2 * (1 - _norm_cdf(abs(z)))
         confidence = 1 - p_value
-        is_sig = confidence >= config.significance_threshold and min(control.samples, treatment.samples) >= config.min_samples
+        is_sig = (
+            confidence >= config.significance_threshold
+            and min(control.samples, treatment.samples) >= config.min_samples
+        )
 
         winner = None
         if is_sig:
@@ -120,8 +133,12 @@ class ABTestingService:
                 winner = treatment.name if t_mean > c_mean else control.name
 
         return SignificanceResult(
-            is_significant=is_sig, p_value=p_value, z_score=z,
-            winner=winner, control_mean=c_mean, variant_mean=t_mean,
+            is_significant=is_sig,
+            p_value=p_value,
+            z_score=z,
+            winner=winner,
+            control_mean=c_mean,
+            variant_mean=t_mean,
             confidence=confidence,
         )
 

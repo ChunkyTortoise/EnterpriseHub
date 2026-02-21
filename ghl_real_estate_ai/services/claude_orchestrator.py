@@ -266,7 +266,9 @@ class ClaudeOrchestrator:
 
     def _make_response_cache_key(self, request: ClaudeRequest) -> str:
         """Generate a cache key from the request content hash."""
-        key_parts = f"{request.task_type.value}:{request.prompt}:{json.dumps(request.context, sort_keys=True, default=str)}"
+        key_parts = (
+            f"{request.task_type.value}:{request.prompt}:{json.dumps(request.context, sort_keys=True, default=str)}"
+        )
         return f"resp:{hashlib.sha256(key_parts.encode()).hexdigest()[:16]}"
 
     def _get_cached_response(self, cache_key: str) -> Optional[ClaudeResponse]:

@@ -396,10 +396,7 @@ class GHLWorkflowService:
                 await self._log_appointment(appointment, ghl_appointment_id)
 
                 result.appointment_synced = True
-                logger.info(
-                    f"Synced appointment for contact {appointment.contact_id}: "
-                    f"{ghl_appointment_id}"
-                )
+                logger.info(f"Synced appointment for contact {appointment.contact_id}: {ghl_appointment_id}")
             else:
                 result.success = False
                 result.errors.append("Failed to create appointment in GHL")
@@ -439,8 +436,17 @@ class GHLWorkflowService:
 
         # Check for appointment keywords
         appointment_keywords = [
-            "schedule", "book", "appointment", "meeting", "call", "visit",
-            "showing", "tour", "available", "when can", "set up"
+            "schedule",
+            "book",
+            "appointment",
+            "meeting",
+            "call",
+            "visit",
+            "showing",
+            "tour",
+            "available",
+            "when can",
+            "set up",
         ]
 
         if not any(keyword in last_user_message.lower() for keyword in appointment_keywords):

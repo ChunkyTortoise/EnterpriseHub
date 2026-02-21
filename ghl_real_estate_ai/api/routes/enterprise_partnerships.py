@@ -196,11 +196,13 @@ async def initiate_sso_login(
     import os
     from urllib.parse import urlparse
 
-    allowed_ontario_millss = [d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()]
-    
+    allowed_ontario_millss = [
+        d.strip() for d in os.environ.get("ALLOWED_REDIRECT_DOMAINS", "http://localhost:3000").split(",") if d.strip()
+    ]
+
     # Requirement: redirect_uri MUST be present and have a valid netloc
     parsed_uri = urlparse(redirect_uri)
-    
+
     if not parsed_uri.netloc:
         logger.warning(f"SSO initiation blocked: Missing netloc in redirect URI {redirect_uri}")
         raise HTTPException(status_code=400, detail="Invalid redirect URI format")

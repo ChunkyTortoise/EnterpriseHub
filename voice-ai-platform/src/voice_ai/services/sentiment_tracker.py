@@ -10,15 +10,47 @@ logger = logging.getLogger(__name__)
 
 # Simple keyword-based sentiment (production would use a model)
 POSITIVE_WORDS = {
-    "great", "excellent", "perfect", "love", "amazing", "wonderful", "fantastic",
-    "happy", "interested", "excited", "yes", "absolutely", "definitely", "sure",
-    "thank", "thanks", "appreciate", "good", "nice",
+    "great",
+    "excellent",
+    "perfect",
+    "love",
+    "amazing",
+    "wonderful",
+    "fantastic",
+    "happy",
+    "interested",
+    "excited",
+    "yes",
+    "absolutely",
+    "definitely",
+    "sure",
+    "thank",
+    "thanks",
+    "appreciate",
+    "good",
+    "nice",
 }
 
 NEGATIVE_WORDS = {
-    "no", "not", "never", "bad", "terrible", "awful", "hate", "dislike",
-    "expensive", "overpriced", "waste", "scam", "frustrated", "angry",
-    "disappointed", "problem", "issue", "complaint", "worst",
+    "no",
+    "not",
+    "never",
+    "bad",
+    "terrible",
+    "awful",
+    "hate",
+    "dislike",
+    "expensive",
+    "overpriced",
+    "waste",
+    "scam",
+    "frustrated",
+    "angry",
+    "disappointed",
+    "problem",
+    "issue",
+    "complaint",
+    "worst",
 }
 
 

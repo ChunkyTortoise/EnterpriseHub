@@ -399,7 +399,9 @@ class WhiteLabelService:
 
         return integrations
 
-    async def configure_custom_ontario_mills(self, brand_id: str, ontario_mills: str, ssl_config: Dict[str, str]) -> bool:
+    async def configure_custom_ontario_mills(
+        self, brand_id: str, ontario_mills: str, ssl_config: Dict[str, str]
+    ) -> bool:
         """Configure custom ontario_mills for white-label deployment."""
 
         try:

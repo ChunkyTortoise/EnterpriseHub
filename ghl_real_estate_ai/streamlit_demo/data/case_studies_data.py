@@ -56,7 +56,11 @@ CASE_STUDIES = {
         },
         "outcomes": {
             "primary_metrics": [
-                {"metric": "Manual Review Time Reduction", "value": "87%", "detail": "From 20+ hrs/week to <3 hrs/week"},
+                {
+                    "metric": "Manual Review Time Reduction",
+                    "value": "87%",
+                    "detail": "From 20+ hrs/week to <3 hrs/week",
+                },
                 {"metric": "Annual Cost Savings", "value": "$240,000", "detail": "Labor + token cost optimization"},
                 {"metric": "Token Cost Reduction", "value": "89%", "detail": "Through intelligent caching"},
                 {"metric": "Cache Hit Rate", "value": "87%", "detail": "L1/L2/L3 combined performance"},

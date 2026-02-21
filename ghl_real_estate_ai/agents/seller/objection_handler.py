@@ -15,6 +15,7 @@ from ghl_real_estate_ai.services.jorge.pricing_objection_engine import ResponseG
 
 try:
     from ghl_real_estate_ai.repositories.jorge_metrics_repository import JorgeMetricsRepository
+
     REPO_AVAILABLE = True
 except ImportError:
     REPO_AVAILABLE = False
@@ -107,19 +108,23 @@ class ObjectionHandler:
                 market_data = {}
                 cma_report = state.get("cma_report")
                 if cma_report:
-                    market_data.update({
-                        "estimated_value": f"${cma_report.get('estimated_value', 0):,.0f}",
-                        "median_price": f"${cma_report.get('estimated_value', 0):,.0f}",
-                        "suggested_price": f"${cma_report.get('estimated_value', 0):,.0f}",
-                    })
+                    market_data.update(
+                        {
+                            "estimated_value": f"${cma_report.get('estimated_value', 0):,.0f}",
+                            "median_price": f"${cma_report.get('estimated_value', 0):,.0f}",
+                            "suggested_price": f"${cma_report.get('estimated_value', 0):,.0f}",
+                        }
+                    )
 
                 market_context = state.get("market_data", {})
                 if market_context:
-                    market_data.update({
-                        "avg_days_on_market": str(market_context.get("dom_average", 30)),
-                        "market_trend": market_context.get("price_trend", "stable"),
-                        "inventory_level": str(market_context.get("inventory_level", 1450)),
-                    })
+                    market_data.update(
+                        {
+                            "avg_days_on_market": str(market_context.get("dom_average", 30)),
+                            "market_trend": market_context.get("price_trend", "stable"),
+                            "inventory_level": str(market_context.get("inventory_level", 1450)),
+                        }
+                    )
 
                 # Generate objection response
                 response = engine.generate_response(
@@ -131,11 +136,13 @@ class ObjectionHandler:
 
                 if response:
                     objection_response_text = response.response_text
-                    objection_metadata.update({
-                        "graduation_level": response.graduation_level.value,
-                        "response_variant": variant_index,
-                        "next_graduation": response.next_graduation.value if response.next_graduation else None,
-                    })
+                    objection_metadata.update(
+                        {
+                            "graduation_level": response.graduation_level.value,
+                            "response_variant": variant_index,
+                            "next_graduation": response.next_graduation.value if response.next_graduation else None,
+                        }
+                    )
 
                     logger.info(
                         f"Objection response generated: {response.objection_category.value} "
@@ -167,7 +174,7 @@ class ObjectionHandler:
                         lead_id=state["lead_id"],
                         stage="objection_handled",
                         message=f"Objection handled: {response.objection_category.value} "
-                                f"({response.graduation_level.value} level, variant {variant_index})",
+                        f"({response.graduation_level.value} level, variant {variant_index})",
                     )
 
         except Exception as e:

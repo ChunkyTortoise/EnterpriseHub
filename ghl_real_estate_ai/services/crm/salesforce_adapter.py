@@ -102,7 +102,11 @@ class SalesforceAdapter(CRMProtocol):
         url = f"{self._base_url}/services/data/v59.0{path}"
         headers = await self._headers()
         resp = await self._http_client.request(
-            method, url, headers=headers, json=json_body, params=params,
+            method,
+            url,
+            headers=headers,
+            json=json_body,
+            params=params,
         )
         if resp.status_code == 401:
             # Token may have expired — clear cache and re-raise
@@ -157,7 +161,9 @@ class SalesforceAdapter(CRMProtocol):
         """Create a new contact in Salesforce."""
         payload = self._contact_to_salesforce(contact)
         resp = await self._request(
-            "POST", "/sobjects/Contact", json_body=payload,
+            "POST",
+            "/sobjects/Contact",
+            json_body=payload,
         )
         data = resp.json()
         sf_id = data.get("id", "")
@@ -174,9 +180,7 @@ class SalesforceAdapter(CRMProtocol):
         logger.info("Created Salesforce contact %s", sf_id)
         return created
 
-    async def update_contact(
-        self, contact_id: str, updates: dict[str, Any]
-    ) -> CRMContact:
+    async def update_contact(self, contact_id: str, updates: dict[str, Any]) -> CRMContact:
         """Update an existing Salesforce contact."""
         sf_key_map = {
             "first_name": "FirstName",
@@ -191,7 +195,9 @@ class SalesforceAdapter(CRMProtocol):
             payload[sf_key] = value
 
         await self._request(
-            "PATCH", f"/sobjects/Contact/{contact_id}", json_body=payload,
+            "PATCH",
+            f"/sobjects/Contact/{contact_id}",
+            json_body=payload,
         )
         # Salesforce PATCH returns 204 — fetch updated record
         resp = await self._request("GET", f"/sobjects/Contact/{contact_id}")
@@ -202,7 +208,8 @@ class SalesforceAdapter(CRMProtocol):
         """Retrieve a Salesforce contact by ID."""
         try:
             resp = await self._request(
-                "GET", f"/sobjects/Contact/{contact_id}",
+                "GET",
+                f"/sobjects/Contact/{contact_id}",
             )
         except SalesforceError as exc:
             if exc.status_code == 404:
@@ -212,7 +219,9 @@ class SalesforceAdapter(CRMProtocol):
         return self._salesforce_to_contact(data.get("Id", contact_id), data)
 
     async def search_contacts(
-        self, query: str, limit: int = 10,
+        self,
+        query: str,
+        limit: int = 10,
     ) -> list[CRMContact]:
         """Search Salesforce contacts using SOSL."""
         sosl = (
@@ -224,13 +233,14 @@ class SalesforceAdapter(CRMProtocol):
         data = resp.json()
         results: list[CRMContact] = []
         for record in data.get("searchRecords", []):
-            results.append(
-                self._salesforce_to_contact(record["Id"], record)
-            )
+            results.append(self._salesforce_to_contact(record["Id"], record))
         return results
 
     async def sync_lead(
-        self, contact: CRMContact, score: int, temperature: str,
+        self,
+        contact: CRMContact,
+        score: int,
+        temperature: str,
     ) -> bool:
         """Sync lead data with temperature scoring."""
         if not contact.id:

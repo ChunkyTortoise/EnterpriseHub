@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from httpx import ASGITransport, AsyncClient
 
-from rag_service.multi_tenant.isolation import TenantMiddleware, PUBLIC_PATHS
+from rag_service.multi_tenant.isolation import PUBLIC_PATHS, TenantMiddleware
 from rag_service.multi_tenant.tenant_router import TenantRouter
 
 
@@ -40,6 +40,7 @@ class TestTenantMiddleware:
         @app.exception_handler(Exception)
         async def handle_exc(request: Request, exc):
             from fastapi import HTTPException
+
             if isinstance(exc, HTTPException):
                 return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
             return JSONResponse(status_code=500, content={"detail": "Internal error"})
@@ -100,6 +101,7 @@ class TestTenantMiddleware:
     @pytest.mark.asyncio
     async def test_auth_path_skips_tenant(self, app, mock_router):
         """Paths starting with /api/v1/auth should skip tenant resolution."""
+
         @app.get("/api/v1/auth/login")
         async def login():
             return {"ok": True}

@@ -103,9 +103,7 @@ class TestSavedSearchService:
             assert m["id"] not in notified_ids
 
     @pytest.mark.asyncio
-    async def test_notify_buyer_sms_format(
-        self, service: SavedSearchService, default_criteria: SearchCriteria
-    ) -> None:
+    async def test_notify_buyer_sms_format(self, service: SavedSearchService, default_criteria: SearchCriteria) -> None:
         """Notification message is a non-empty string."""
         search = await service.create_search("buyer-1", default_criteria)
         matches = await service.check_new_matches(search.id, SAMPLE_LISTINGS)
@@ -118,9 +116,7 @@ class TestSavedSearchService:
             assert len(msg) > 0
 
     @pytest.mark.asyncio
-    async def test_deactivate_search(
-        self, service: SavedSearchService, default_criteria: SearchCriteria
-    ) -> None:
+    async def test_deactivate_search(self, service: SavedSearchService, default_criteria: SearchCriteria) -> None:
         """Deactivated search returns no matches."""
         search = await service.create_search("buyer-1", default_criteria)
         result = await service.deactivate_search(search.id)
@@ -140,14 +136,11 @@ class TestSavedSearchService:
 
         for msg in messages:
             assert len(msg) <= SavedSearchService.SMS_MAX_LENGTH, (
-                f"Message exceeds {SavedSearchService.SMS_MAX_LENGTH} chars: "
-                f"({len(msg)}) {msg!r}"
+                f"Message exceeds {SavedSearchService.SMS_MAX_LENGTH} chars: ({len(msg)}) {msg!r}"
             )
 
     @pytest.mark.asyncio
-    async def test_multiple_searches_per_buyer(
-        self, service: SavedSearchService
-    ) -> None:
+    async def test_multiple_searches_per_buyer(self, service: SavedSearchService) -> None:
         """Buyer can have multiple active searches."""
         criteria_a = SearchCriteria(budget_max=500_000, beds_min=2)
         criteria_b = SearchCriteria(budget_max=900_000, beds_min=4)

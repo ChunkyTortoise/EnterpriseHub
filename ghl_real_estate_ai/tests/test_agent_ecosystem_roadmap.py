@@ -142,9 +142,7 @@ class TestHandoffCoordination:
     @pytest.mark.asyncio
     async def test_handoff_to_offline_agent_fails(self, mock_cache):
         """Test handoff fails when target agent is offline."""
-        await _set_agent_state(
-            "buyer-bot", {"agent_id": "buyer-bot", "status": "offline"}, mock_cache
-        )
+        await _set_agent_state("buyer-bot", {"agent_id": "buyer-bot", "status": "offline"}, mock_cache)
 
         result = await _execute_handoff_with_coordination(
             from_agent="seller-bot",
@@ -159,9 +157,7 @@ class TestHandoffCoordination:
     @pytest.mark.asyncio
     async def test_handoff_to_paused_agent_fails(self, mock_cache):
         """Test handoff fails when target agent is paused."""
-        await _set_agent_state(
-            "lead-bot", {"agent_id": "lead-bot", "status": "paused"}, mock_cache
-        )
+        await _set_agent_state("lead-bot", {"agent_id": "lead-bot", "status": "paused"}, mock_cache)
 
         result = await _execute_handoff_with_coordination(
             from_agent="seller-bot",
@@ -176,9 +172,7 @@ class TestHandoffCoordination:
     @pytest.mark.asyncio
     async def test_handoff_to_restarting_agent_fails(self, mock_cache):
         """Test handoff fails when target agent is restarting."""
-        await _set_agent_state(
-            "buyer-bot", {"agent_id": "buyer-bot", "status": "restarting"}, mock_cache
-        )
+        await _set_agent_state("buyer-bot", {"agent_id": "buyer-bot", "status": "restarting"}, mock_cache)
 
         result = await _execute_handoff_with_coordination(
             from_agent="seller-bot",

@@ -12,8 +12,6 @@ from src.vector_store.chroma_store import ChromaVectorStore
 
 
 @pytest.mark.integration
-
-
 @pytest.fixture
 def temp_dir():
     """Create temporary directory for ChromaDB."""

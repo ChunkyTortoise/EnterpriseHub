@@ -1,4 +1,5 @@
 """Unit tests for the API cost tracker service."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,6 +13,7 @@ from ghl_real_estate_ai.services.jorge.cost_tracker import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_response(
     input_tokens=None,
@@ -35,6 +37,7 @@ def _make_response(
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_cost_calculation_input_only():
     """Input-only cost: 1M tokens * $3.00/MTok = $3.00."""
@@ -51,9 +54,9 @@ def test_cost_calculation_with_cache_read():
         cache_read_tokens=200_000,
     )
     expected = (
-        500_000 * 3.00 / 1_000_000   # $1.50
+        500_000 * 3.00 / 1_000_000  # $1.50
         + 100_000 * 15.00 / 1_000_000  # $1.50
-        + 200_000 * 0.30 / 1_000_000   # $0.06
+        + 200_000 * 0.30 / 1_000_000  # $0.06
     )
     assert cost == pytest.approx(expected)
 
@@ -82,7 +85,7 @@ async def test_record_usage_inserts_row():
     assert call_args[0][2] == "contact-1"
     assert call_args[0][3] == "seller"
     assert call_args[0][5] == 1000  # input_tokens
-    assert call_args[0][6] == 200   # output_tokens
+    assert call_args[0][6] == 200  # output_tokens
 
 
 @pytest.mark.unit

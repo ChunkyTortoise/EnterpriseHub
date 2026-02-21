@@ -174,9 +174,7 @@ async def bot_performance_websocket(
         logger.info(f"Bot Performance WebSocket connection for location: {location_id}")
 
         # Parse bot type filters
-        (
-            bot_types.split(",") if bot_types else ["jorge-seller", "jorge-buyer", "lead-bot", "intent-decoder"]
-        )
+        (bot_types.split(",") if bot_types else ["jorge-seller", "jorge-buyer", "lead-bot", "intent-decoder"])
 
         # Bot performance specific components
         bot_components = [

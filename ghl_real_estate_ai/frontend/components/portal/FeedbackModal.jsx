@@ -1,112 +1,57 @@
 import React from 'react';
-import { X, DollarSign, MapPin, Ruler, Home, Maximize2, Minimize2 } from 'lucide-react';
+import { DollarSign, Home, MapPin, Maximize2, Minimize2, Ruler, X } from 'lucide-react';
 
-/**
- * FeedbackModal Component
- * 
- * Captures WHY a lead passed on a property, turning a negative signal into actionable data.
- * This is the "Intelligence Layer" that makes the AI smarter over time.
- * 
- * Features:
- * - Mobile-first design with slide-up animation
- * - Icon-based buttons for quick feedback
- * - Maps to backend FeedbackCategory enum
- * - Optional text feedback field (can be added)
- */
+const reasons = [
+  { id: 'price_too_high', label: 'Price is high', icon: DollarSign },
+  { id: 'location', label: 'Location mismatch', icon: MapPin },
+  { id: 'size_too_small', label: 'Too small', icon: Minimize2 },
+  { id: 'size_too_large', label: 'Too large', icon: Maximize2 },
+  { id: 'style', label: 'Style mismatch', icon: Home },
+  { id: 'other', label: 'Other reason', icon: Ruler },
+];
+
 const FeedbackModal = ({ isOpen, onClose, onSubmit }) => {
   if (!isOpen) return null;
 
-  const reasons = [
-    { 
-      id: 'price_too_high', 
-      label: 'Too Expensive', 
-      icon: <DollarSign size={20} />,
-      color: 'hover:border-red-500 hover:bg-red-50'
-    },
-    { 
-      id: 'location', 
-      label: 'Bad Location', 
-      icon: <MapPin size={20} />,
-      color: 'hover:border-orange-500 hover:bg-orange-50'
-    },
-    { 
-      id: 'size_too_small', 
-      label: 'Too Small', 
-      icon: <Minimize2 size={20} />,
-      color: 'hover:border-blue-500 hover:bg-blue-50'
-    },
-    { 
-      id: 'size_too_large', 
-      label: 'Too Large', 
-      icon: <Maximize2 size={20} />,
-      color: 'hover:border-purple-500 hover:bg-purple-50'
-    },
-    { 
-      id: 'style', 
-      label: 'Wrong Style', 
-      icon: <Home size={20} />,
-      color: 'hover:border-green-500 hover:bg-green-50'
-    },
-    { 
-      id: 'other', 
-      label: 'Other', 
-      icon: <Ruler size={20} />,
-      color: 'hover:border-gray-500 hover:bg-gray-50'
-    },
-  ];
-
   return (
-    <div 
-      className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl p-6 animate-slide-up shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 bg-slate-950/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <section
+        className="lyrio-feedback-modal w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 animate-slide-up"
+        onClick={(event) => event.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-gray-900">
-            Why didn't you like it?
-          </h3>
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Close"
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="lyrio-heading text-xl text-slate-900">Improve your next matches</h3>
+          <button
+            onClick={onClose}
+            className="lyrio-close-btn portal-action-btn lyrio-focus rounded-full p-2 border lyrio-border-default"
+            aria-label="Close feedback modal"
           >
-            <X size={20} className="text-gray-600" />
+            <X size={18} />
           </button>
         </div>
-        
-        {/* Subtitle */}
-        <p className="text-sm text-gray-600 mb-4">
-          Your feedback helps us show you better matches
-        </p>
 
-        {/* Feedback Options Grid */}
+        <p className="lyrio-text-muted text-sm mb-4">Tell us why this property missed the mark.</p>
+
         <div className="grid grid-cols-2 gap-3">
-          {reasons.map((reason) => (
+          {reasons.map(({ id, label, icon: Icon }) => (
             <button
-              key={reason.id}
-              onClick={() => onSubmit(reason.id)}
-              className={`flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl transition-all active:scale-95 ${reason.color}`}
+              key={id}
+              onClick={() => onSubmit(id)}
+              className="lyrio-feedback-option lyrio-focus text-left rounded-xl p-3 border transition-all"
             >
-              <div className="mb-2 text-gray-600">{reason.icon}</div>
-              <span className="text-sm font-medium text-gray-700 text-center">
-                {reason.label}
-              </span>
+              <Icon size={16} className="lyrio-text-primary" />
+              <p className="mt-2 text-sm font-semibold text-slate-900">{label}</p>
             </button>
           ))}
         </div>
 
-        {/* Skip Option */}
         <button
           onClick={() => onSubmit(null)}
-          className="w-full mt-4 py-3 text-sm text-gray-500 hover:text-gray-700 font-medium"
+          className="lyrio-focus mt-4 w-full text-sm font-semibold rounded-xl py-3 border lyrio-border-default lyrio-text-muted"
         >
-          Skip feedback
+          Skip for now
         </button>
-      </div>
+      </section>
     </div>
   );
 };

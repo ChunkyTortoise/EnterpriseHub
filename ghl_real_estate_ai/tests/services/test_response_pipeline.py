@@ -56,6 +56,7 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.tcpa_opt_out imp
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_response(message: str = "Hello!", **ctx_kwargs) -> tuple:
     """Create a ProcessedResponse and ProcessingContext pair for testing."""
     ctx = ProcessingContext(**ctx_kwargs)
@@ -353,14 +354,17 @@ class TestComplianceCheckProcessor:
 
         mock_get_mw = MagicMock(return_value=mock_middleware)
 
-        with patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": MagicMock(
-                get_compliance_middleware=mock_get_mw,
-            ),
-            "ghl_real_estate_ai.services.compliance_guard": MagicMock(
-                ComplianceStatus=mock_status,
-            ),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "ghl_real_estate_ai.services.compliance_middleware": MagicMock(
+                    get_compliance_middleware=mock_get_mw,
+                ),
+                "ghl_real_estate_ai.services.compliance_guard": MagicMock(
+                    ComplianceStatus=mock_status,
+                ),
+            },
+        ):
             resp, ctx = _make_response(
                 message="No families allowed in this area",
                 bot_mode="buyer",
@@ -390,14 +394,17 @@ class TestComplianceCheckProcessor:
 
         mock_get_mw = MagicMock(return_value=mock_middleware)
 
-        with patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": MagicMock(
-                get_compliance_middleware=mock_get_mw,
-            ),
-            "ghl_real_estate_ai.services.compliance_guard": MagicMock(
-                ComplianceStatus=mock_status,
-            ),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "ghl_real_estate_ai.services.compliance_middleware": MagicMock(
+                    get_compliance_middleware=mock_get_mw,
+                ),
+                "ghl_real_estate_ai.services.compliance_guard": MagicMock(
+                    ComplianceStatus=mock_status,
+                ),
+            },
+        ):
             resp, ctx = _make_response(message="This neighborhood is quiet")
             result = await stage.process(resp, ctx)
 
@@ -410,9 +417,12 @@ class TestComplianceCheckProcessor:
         """If compliance_middleware not available, stage is skipped."""
         # The stage imports lazily inside process() with try/except ImportError.
         # Setting sys.modules entry to None causes ImportError on import.
-        with patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "ghl_real_estate_ai.services.compliance_middleware": None,
+            },
+        ):
             resp, ctx = _make_response(message="Hello")
             result = await stage.process(resp, ctx)
             assert result.message == "Hello"
@@ -547,9 +557,7 @@ class TestConversationRepairProcessor:
             result = await stage.process(resp, ctx)
 
         # After enough escalations, should see human escalation tag
-        has_escalation = any(
-            a.get("tag") == "Human-Escalation-Needed" for a in result.actions
-        )
+        has_escalation = any(a.get("tag") == "Human-Escalation-Needed" for a in result.actions)
         # The escalation happens when escalation_level >= 2 and repair_count >= 3
         # and a trigger is detected, mapping to NO_PROGRESS
         assert has_escalation or ctx.metadata.get("repair_trigger") == "no_progress"
@@ -643,12 +651,18 @@ class TestPipelineIntegration:
         mock_lang_service = MagicMock()
         mock_lang_service.detect = MagicMock(return_value=mock_detection)
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
-            return_value=mock_lang_service,
-        ), patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": None,
-        }):
+        with (
+            patch(
+                "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
+                return_value=mock_lang_service,
+            ),
+            patch.dict(
+                "sys.modules",
+                {
+                    "ghl_real_estate_ai.services.compliance_middleware": None,
+                },
+            ),
+        ):
             pipeline = create_default_pipeline()
             ctx = ProcessingContext(
                 contact_id="c_int_1",
@@ -718,12 +732,18 @@ class TestPipelineIntegration:
         # 300-char message + disclosure = over 320
         long_msg = "A" * 300
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
-            return_value=mock_lang_service,
-        ), patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": None,
-        }):
+        with (
+            patch(
+                "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
+                return_value=mock_lang_service,
+            ),
+            patch.dict(
+                "sys.modules",
+                {
+                    "ghl_real_estate_ai.services.compliance_middleware": None,
+                },
+            ),
+        ):
             pipeline = create_default_pipeline()
             ctx = ProcessingContext(
                 contact_id="c_int_4",
@@ -743,12 +763,18 @@ class TestPipelineIntegration:
 
         long_msg = "A" * 500
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
-            return_value=mock_lang_service,
-        ), patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": None,
-        }):
+        with (
+            patch(
+                "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
+                return_value=mock_lang_service,
+            ),
+            patch.dict(
+                "sys.modules",
+                {
+                    "ghl_real_estate_ai.services.compliance_middleware": None,
+                },
+            ),
+        ):
             pipeline = create_default_pipeline()
             ctx = ProcessingContext(
                 contact_id="c_int_5",
@@ -792,12 +818,18 @@ class TestPipelineIntegration:
         mock_lang_service = MagicMock()
         mock_lang_service.detect = MagicMock(return_value=mock_detection)
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
-            return_value=mock_lang_service,
-        ), patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.compliance_middleware": None,
-        }):
+        with (
+            patch(
+                "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service",
+                return_value=mock_lang_service,
+            ),
+            patch.dict(
+                "sys.modules",
+                {
+                    "ghl_real_estate_ai.services.compliance_middleware": None,
+                },
+            ),
+        ):
             pipeline = create_default_pipeline()
             ctx = ProcessingContext(
                 contact_id="c_log",

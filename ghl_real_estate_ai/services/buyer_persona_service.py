@@ -271,7 +271,7 @@ class BuyerPersonaService:
 
         # Primary Strategy: LLM Semantic Analysis
         llm_result = await self._classify_persona_llm(conversation_history, lead_data)
-        
+
         if llm_result and llm_result.persona_type != BuyerPersonaType.UNKNOWN and llm_result.confidence > 0.6:
             classification = llm_result
         else:
@@ -284,17 +284,13 @@ class BuyerPersonaService:
             confidence = persona_scores[primary_persona]
 
             # Get detected signals
-            detected_signals = self._get_detected_signals(
-                conversation_history, primary_persona
-            )
+            detected_signals = self._get_detected_signals(conversation_history, primary_persona)
 
             # Analyze behavioral signals
             behavioral_signals = self._analyze_behavioral_signals(conversation_history)
 
             # Classify indicators
-            primary_indicators, secondary_indicators = self._classify_indicators(
-                detected_signals, behavioral_signals
-            )
+            primary_indicators, secondary_indicators = self._classify_indicators(detected_signals, behavioral_signals)
 
             # Build classification result
             classification = BuyerPersonaClassification(
@@ -366,9 +362,9 @@ class BuyerPersonaService:
             content = response.content.strip()
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
-            
+
             data = json.loads(content)
-            
+
             persona_map = {
                 "first_time": BuyerPersonaType.FIRST_TIME,
                 "upsizer": BuyerPersonaType.UPSIZER,
@@ -377,9 +373,9 @@ class BuyerPersonaService:
                 "relocator": BuyerPersonaType.RELOCATOR,
                 "luxury": BuyerPersonaType.LUXURY,
             }
-            
+
             persona_type = persona_map.get(data.get("persona"), BuyerPersonaType.UNKNOWN)
-            
+
             return BuyerPersonaClassification(
                 persona_type=persona_type,
                 confidence=data.get("confidence", 0.0),
@@ -390,25 +386,20 @@ class BuyerPersonaService:
                     "emotional_engagement": data.get("behavioral_insights", {}).get("emotional_engagement", 0.0),
                 },
                 primary_indicators=data.get("signals", [])[:3],
-                secondary_indicators=[f"Reasoning: {data.get('reasoning', '')}"]
+                secondary_indicators=[f"Reasoning: {data.get('reasoning', '')}"],
             )
         except Exception as e:
             logger.error(f"Error in LLM persona classification: {e}")
             return None
 
-
         # Cache result for 1 hour (personas can change as conversation progresses)
         await self.cache_service.set(cache_key, classification.model_dump(), ttl=3600)
 
-        logger.info(
-            f"Buyer persona classified: {primary_persona.value} (confidence: {confidence:.2f})"
-        )
+        logger.info(f"Buyer persona classified: {primary_persona.value} (confidence: {confidence:.2f})")
 
         return classification
 
-    def _analyze_persona_signals(
-        self, conversation_history: List[Dict[str, Any]]
-    ) -> Dict[BuyerPersonaType, float]:
+    def _analyze_persona_signals(self, conversation_history: List[Dict[str, Any]]) -> Dict[BuyerPersonaType, float]:
         """
         Analyze conversation for persona signals and score each persona type.
 
@@ -418,11 +409,7 @@ class BuyerPersonaService:
         scores = {persona: 0.0 for persona in BuyerPersonaType}
 
         # Combine all user messages for analysis
-        user_messages = [
-            msg.get("content", "").lower()
-            for msg in conversation_history
-            if msg.get("role") == "user"
-        ]
+        user_messages = [msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user"]
         combined_text = " ".join(user_messages)
 
         # Score each persona based on keyword matches
@@ -462,11 +449,7 @@ class BuyerPersonaService:
         detected = []
 
         # Combine all user messages
-        user_messages = [
-            msg.get("content", "").lower()
-            for msg in conversation_history
-            if msg.get("role") == "user"
-        ]
+        user_messages = [msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user"]
         combined_text = " ".join(user_messages)
 
         # Check for keywords matching the persona
@@ -477,9 +460,7 @@ class BuyerPersonaService:
 
         return detected
 
-    def _analyze_behavioral_signals(
-        self, conversation_history: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+    def _analyze_behavioral_signals(self, conversation_history: List[Dict[str, Any]]) -> Dict[str, float]:
         """
         Analyze behavioral signals from conversation patterns.
 
@@ -494,11 +475,7 @@ class BuyerPersonaService:
             "feature_priority": 0.0,
         }
 
-        user_messages = [
-            msg.get("content", "")
-            for msg in conversation_history
-            if msg.get("role") == "user"
-        ]
+        user_messages = [msg.get("content", "") for msg in conversation_history if msg.get("role") == "user"]
 
         if not user_messages:
             return signals
@@ -513,32 +490,17 @@ class BuyerPersonaService:
 
         # Timeline urgency: look for urgency keywords
         urgency_keywords = ["asap", "soon", "urgent", "quickly", "immediately", "need to move"]
-        urgency_count = sum(
-            1
-            for msg in user_messages
-            for keyword in urgency_keywords
-            if keyword in msg.lower()
-        )
+        urgency_count = sum(1 for msg in user_messages for keyword in urgency_keywords if keyword in msg.lower())
         signals["timeline_urgency"] = min(urgency_count / len(user_messages), 1.0)
 
         # Budget openness: look for budget-related keywords
         budget_keywords = ["budget", "price", "afford", "can afford", "spend", "looking to spend"]
-        budget_count = sum(
-            1
-            for msg in user_messages
-            for keyword in budget_keywords
-            if keyword in msg.lower()
-        )
+        budget_count = sum(1 for msg in user_messages for keyword in budget_keywords if keyword in msg.lower())
         signals["budget_openness"] = min(budget_count / len(user_messages), 1.0)
 
         # Feature priority: look for feature-specific keywords
         feature_keywords = ["bedroom", "bathroom", "yard", "garage", "pool", "kitchen"]
-        feature_count = sum(
-            1
-            for msg in user_messages
-            for keyword in feature_keywords
-            if keyword in msg.lower()
-        )
+        feature_count = sum(1 for msg in user_messages for keyword in feature_keywords if keyword in msg.lower())
         signals["feature_priority"] = min(feature_count / len(user_messages), 1.0)
 
         return signals
@@ -576,16 +538,10 @@ class BuyerPersonaService:
             Cache key string
         """
         # Use last 3 user messages for cache key
-        user_messages = [
-            msg.get("content", "")[:50]
-            for msg in conversation_history[-6:]
-            if msg.get("role") == "user"
-        ]
+        user_messages = [msg.get("content", "")[:50] for msg in conversation_history[-6:] if msg.get("role") == "user"]
         return "|".join(user_messages)
 
-    async def get_persona_insights(
-        self, persona: BuyerPersonaType
-    ) -> BuyerPersonaInsights:
+    async def get_persona_insights(self, persona: BuyerPersonaType) -> BuyerPersonaInsights:
         """
         Get communication recommendations for a specific persona.
 

@@ -82,9 +82,7 @@ class A2AServer:
         self._handlers["tasks/list"] = self._handle_task_list
         self._handlers["agent/card"] = self._handle_agent_card
 
-    def register_capability_handler(
-        self, capability: str, handler: CapabilityHandler
-    ) -> None:
+    def register_capability_handler(self, capability: str, handler: CapabilityHandler) -> None:
         """Register a handler for a specific capability.
 
         Args:
@@ -304,9 +302,7 @@ class A2AServer:
         """
         return self._tasks.get(task_id)
 
-    def list_tasks(
-        self, status: TaskStatus | None = None, limit: int = 100
-    ) -> list[Task]:
+    def list_tasks(self, status: TaskStatus | None = None, limit: int = 100) -> list[Task]:
         """List tasks with optional filtering.
 
         Args:

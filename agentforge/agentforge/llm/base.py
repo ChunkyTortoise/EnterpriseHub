@@ -20,6 +20,7 @@ class LLMUsage(BaseModel):
         completion_tokens: Number of tokens in the completion.
         total_tokens: Total tokens used (prompt + completion).
     """
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -36,6 +37,7 @@ class LLMResponse(BaseModel):
         finish_reason: Reason for completion (stop, length, tool_calls, etc.).
         latency_ms: Time taken for the request in milliseconds.
     """
+
     content: str = ""
     model: str
     usage: LLMUsage = Field(default_factory=LLMUsage)
@@ -56,6 +58,7 @@ class LLMConfig(BaseModel):
         tools: List of tool schemas available for the model.
         tool_choice: Tool selection mode ("auto", "none", "required", or specific tool).
     """
+
     model: str
     temperature: float = 0.7
     max_tokens: int | None = None

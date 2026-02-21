@@ -384,9 +384,7 @@ async def generate_business_forecast(request: BusinessForecastRequest, current_u
         )
 
         expansion_territories = business_profile["expansion_territories"]
-        territory_analysis = await business_forecaster.analyze_territory_expansion(
-            expansion_territories
-        )
+        territory_analysis = await business_forecaster.analyze_territory_expansion(expansion_territories)
 
         business_opportunities = await business_forecaster.identify_business_opportunities(
             ["market_expansion", "service_enhancement", "technology_leverage"]
@@ -630,7 +628,7 @@ async def prediction_health_check():
         # Check all prediction engine components
         engine_status = "healthy"
         component_errors = []
-        
+
         # Verify prediction engines are initialized
         if not prediction_engine:
             component_errors.append("prediction_engine not initialized")
@@ -642,7 +640,7 @@ async def prediction_health_check():
             component_errors.append("deal_predictor not initialized")
         if not business_forecaster:
             component_errors.append("business_forecaster not initialized")
-        
+
         if component_errors:
             engine_status = "degraded"
             logger.warning(f"Prediction health check: {', '.join(component_errors)}")
@@ -693,6 +691,7 @@ async def shutdown_prediction_services():
 # ROADMAP-006 / ROADMAP-007 — Market monitoring + prediction helpers
 # ===================================================================
 
+
 async def _fetch_market_snapshot() -> Dict[str, Any]:
     """ROADMAP-006: Fetch current market data snapshot from DB for change detection."""
     try:
@@ -710,13 +709,17 @@ async def _fetch_market_snapshot() -> Dict[str, Any]:
                 WHERE current_stage != 'lost'
                 """
             )
-        return dict(row) if row else {
-            "active_deals": 0,
-            "avg_property_value": 0,
-            "avg_commission_rate": 0,
-            "closing_deals": 0,
-            "new_deals_24h": 0,
-        }
+        return (
+            dict(row)
+            if row
+            else {
+                "active_deals": 0,
+                "avg_property_value": 0,
+                "avg_commission_rate": 0,
+                "closing_deals": 0,
+                "new_deals_24h": 0,
+            }
+        )
     except Exception as e:
         logger.warning(f"Failed to fetch market snapshot: {e}")
         return {
@@ -728,9 +731,7 @@ async def _fetch_market_snapshot() -> Dict[str, Any]:
         }
 
 
-def _detect_market_changes(
-    previous: Optional[Dict[str, Any]], current: Dict[str, Any]
-) -> List[Dict[str, str]]:
+def _detect_market_changes(previous: Optional[Dict[str, Any]], current: Dict[str, Any]) -> List[Dict[str, str]]:
     """ROADMAP-006: Compare snapshots and return list of detected changes."""
     if previous is None:
         return []
@@ -744,32 +745,38 @@ def _detect_market_changes(
         pct_change = abs(curr_val - prev_val) / prev_val * 100
         if pct_change > 5:
             direction = "increased" if curr_val > prev_val else "decreased"
-            changes.append({
-                "metric": "avg_property_value",
-                "description": f"Average property value {direction} by {pct_change:.1f}%",
-                "severity": "warning",
-            })
+            changes.append(
+                {
+                    "metric": "avg_property_value",
+                    "description": f"Average property value {direction} by {pct_change:.1f}%",
+                    "severity": "warning",
+                }
+            )
 
     # Detect new deal surge (> 3 new deals in 24h)
     new_deals = current.get("new_deals_24h", 0)
     prev_deals = previous.get("new_deals_24h", 0)
     if new_deals > 3 and new_deals > prev_deals:
-        changes.append({
-            "metric": "new_deals_24h",
-            "description": f"{new_deals} new deals in last 24h (up from {prev_deals})",
-            "severity": "info",
-        })
+        changes.append(
+            {
+                "metric": "new_deals_24h",
+                "description": f"{new_deals} new deals in last 24h (up from {prev_deals})",
+                "severity": "info",
+            }
+        )
 
     # Detect closing pipeline changes
     closing = current.get("closing_deals", 0)
     prev_closing = previous.get("closing_deals", 0)
     if closing != prev_closing:
         direction = "increased" if closing > prev_closing else "decreased"
-        changes.append({
-            "metric": "closing_deals",
-            "description": f"Closing pipeline {direction}: {prev_closing} -> {closing}",
-            "severity": "info",
-        })
+        changes.append(
+            {
+                "metric": "closing_deals",
+                "description": f"Closing pipeline {direction}: {prev_closing} -> {closing}",
+                "severity": "info",
+            }
+        )
 
     return changes
 

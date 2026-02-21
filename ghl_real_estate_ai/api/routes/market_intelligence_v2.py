@@ -871,6 +871,7 @@ async def get_metrics_legacy(
 
 class AIRecommendationRequest(BaseModel):
     """Request for Claude-powered property recommendations."""
+
     market_id: str = Field(..., description="Market identifier")
     lead_id: str = Field(..., description="Lead identifier")
     buyer_persona: Dict[str, Any] = Field(default_factory=dict, description="Buyer preferences and context")
@@ -905,15 +906,17 @@ async def stream_ai_recommendations(request: AIRecommendationRequest):
         property_summaries = []
         for prop in properties[:10]:
             record = dict(getattr(prop, "__dict__", prop))
-            property_summaries.append({
-                "address": record.get("address", "Unknown"),
-                "price": record.get("price"),
-                "bedrooms": record.get("bedrooms"),
-                "bathrooms": record.get("bathrooms"),
-                "sqft": record.get("sqft"),
-                "neighborhood": record.get("neighborhood", ""),
-                "days_on_market": record.get("days_on_market"),
-            })
+            property_summaries.append(
+                {
+                    "address": record.get("address", "Unknown"),
+                    "price": record.get("price"),
+                    "bedrooms": record.get("bedrooms"),
+                    "bathrooms": record.get("bathrooms"),
+                    "sqft": record.get("sqft"),
+                    "neighborhood": record.get("neighborhood", ""),
+                    "days_on_market": record.get("days_on_market"),
+                }
+            )
 
         # Build the Claude prompt
         prompt = _build_recommendation_prompt(
@@ -982,6 +985,7 @@ async def _stream_claude_recommendations(prompt: str, lead_id: str, market_id: s
         # Try to import anthropic for Claude API
         try:
             import anthropic
+
             client = anthropic.AsyncAnthropic(
                 api_key=os.getenv("ANTHROPIC_API_KEY", ""),
             )
@@ -1035,7 +1039,7 @@ async def _fallback_recommendation_stream(prompt: str, lead_id: str, market_id: 
     # Stream in chunks to simulate SSE behavior
     chunk_size = 80
     for i in range(0, len(fallback_text), chunk_size):
-        chunk = fallback_text[i:i + chunk_size]
+        chunk = fallback_text[i : i + chunk_size]
         yield f"data: {json.dumps({'type': 'content', 'text': chunk})}\n\n"
         await asyncio.sleep(0.02)
 

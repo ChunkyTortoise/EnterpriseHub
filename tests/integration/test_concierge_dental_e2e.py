@@ -57,18 +57,21 @@ def jorge_config(loader) -> ConciergeClientConfig:
 
 
 def _make_orchestrator(config: ConciergeClientConfig) -> ClaudeConciergeOrchestrator:
-    with patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"), \
-         patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"), \
-         patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"), \
-         patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"), \
-         patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"), \
-         patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"):
+    with (
+        patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"),
+        patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"),
+        patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"),
+        patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"),
+        patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"),
+        patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"),
+    ):
         return ClaudeConciergeOrchestrator(client_config=config)
 
 
 # ---------------------------------------------------------------------------
 # 1. YAML loads without error
 # ---------------------------------------------------------------------------
+
 
 class TestDentalYamlLoading:
     def test_dental_yaml_loads_without_error(self, loader):
@@ -89,6 +92,7 @@ class TestDentalYamlLoading:
 # 2. PlatformKnowledgeEngine from dental config
 # ---------------------------------------------------------------------------
 
+
 class TestDentalKnowledgeEngine:
     def test_scheduling_in_platform_features(self, dental_config):
         engine = PlatformKnowledgeEngine.from_config(dental_config)
@@ -108,6 +112,7 @@ class TestDentalKnowledgeEngine:
 # ---------------------------------------------------------------------------
 # 3. System prompt — dental content present, Jorge absent
 # ---------------------------------------------------------------------------
+
 
 class TestDentalSystemPrompt:
     def test_prompt_contains_smilebright(self, dental_config):
@@ -135,11 +140,14 @@ class TestDentalSystemPrompt:
 # 4. Pluggable agent registry — scheduler pattern routing
 # ---------------------------------------------------------------------------
 
+
 class TestDentalAgentRegistry:
     @pytest.mark.asyncio
     async def test_custom_scheduler_agent_invoked_by_pattern(self, dental_config):
         engine = PlatformKnowledgeEngine.from_config(dental_config)
-        with patch("ghl_real_estate_ai.agents.claude_concierge_agent.get_enhanced_bot_orchestrator", return_value=MagicMock()):
+        with patch(
+            "ghl_real_estate_ai.agents.claude_concierge_agent.get_enhanced_bot_orchestrator", return_value=MagicMock()
+        ):
             coordinator = MultiAgentCoordinator(knowledge_engine=engine)
 
         mock_fn = AsyncMock(return_value={"agent": "scheduler", "response": "Slot booked!", "confidence": 0.95})
@@ -160,6 +168,7 @@ class TestDentalAgentRegistry:
 # 5. Session key isolation
 # ---------------------------------------------------------------------------
 
+
 class TestDentalSessionIsolation:
     def test_session_key_contains_dental(self, dental_config):
         orch = _make_orchestrator(dental_config)
@@ -178,6 +187,7 @@ class TestDentalSessionIsolation:
 # 6. Config caching
 # ---------------------------------------------------------------------------
 
+
 class TestDentalConfigCaching:
     def test_loader_caches_dental_config(self, loader):
         config_1 = loader.load("dental")
@@ -188,6 +198,7 @@ class TestDentalConfigCaching:
 # ---------------------------------------------------------------------------
 # 7. Compliance summary
 # ---------------------------------------------------------------------------
+
 
 class TestDentalCompliance:
     def test_compliance_summary_contains_hipaa(self, dental_config):

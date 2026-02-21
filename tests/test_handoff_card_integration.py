@@ -62,9 +62,7 @@ class TestHandoffCardIntegration:
     """Test integration of card generation with handoff service."""
 
     @pytest.mark.asyncio
-    async def test_execute_handoff_generates_card(
-        self, handoff_service, sample_handoff_decision
-    ):
+    async def test_execute_handoff_generates_card(self, handoff_service, sample_handoff_decision):
         """Test that execute_handoff auto-generates a card on successful handoff."""
         contact_id = "test_contact_123"
         location_id = "test_location_456"
@@ -110,9 +108,7 @@ class TestHandoffCardIntegration:
         assert card_metadata["generation_time_ms"] < 2000  # < 2 seconds
 
     @pytest.mark.asyncio
-    async def test_card_generation_with_ghl_contact_data(
-        self, handoff_service, sample_handoff_decision
-    ):
+    async def test_card_generation_with_ghl_contact_data(self, handoff_service, sample_handoff_decision):
         """Test that card generation uses GHL contact data when available."""
         contact_id = "test_contact_123"
 
@@ -144,9 +140,7 @@ class TestHandoffCardIntegration:
         assert card_action is not None
 
     @pytest.mark.asyncio
-    async def test_card_generation_handles_missing_ghl_data(
-        self, handoff_service, sample_handoff_decision
-    ):
+    async def test_card_generation_handles_missing_ghl_data(self, handoff_service, sample_handoff_decision):
         """Test that card generation works even if GHL data fetch fails."""
         contact_id = "test_contact_123"
 
@@ -171,9 +165,7 @@ class TestHandoffCardIntegration:
         assert card_action is not None
 
     @pytest.mark.asyncio
-    async def test_card_generation_failure_does_not_block_handoff(
-        self, handoff_service, sample_handoff_decision
-    ):
+    async def test_card_generation_failure_does_not_block_handoff(self, handoff_service, sample_handoff_decision):
         """Test that handoff succeeds even if card generation fails."""
         contact_id = "test_contact_123"
 
@@ -206,9 +198,7 @@ class TestHandoffCardIntegration:
         assert card_action is None
 
     @pytest.mark.asyncio
-    async def test_card_metadata_format(
-        self, handoff_service, sample_handoff_decision
-    ):
+    async def test_card_metadata_format(self, handoff_service, sample_handoff_decision):
         """Test that card metadata has the correct structure."""
         contact_id = "test_contact_123"
 
@@ -252,9 +242,7 @@ class TestCardGenerationPerformance:
     """Test performance aspects of card generation integration."""
 
     @pytest.mark.asyncio
-    async def test_card_generation_does_not_slow_handoff(
-        self, handoff_service, sample_handoff_decision
-    ):
+    async def test_card_generation_does_not_slow_handoff(self, handoff_service, sample_handoff_decision):
         """Test that card generation doesn't significantly slow handoff execution."""
         import time
 

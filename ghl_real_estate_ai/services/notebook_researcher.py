@@ -1,8 +1,8 @@
 """
 Notebook Researcher Service - NotebookLM-style grounded intelligence.
 
-Provides functionality similar to NotebookLM, allowing users to upload 
-multiple documents and perform grounded research across them using 
+Provides functionality similar to NotebookLM, allowing users to upload
+multiple documents and perform grounded research across them using
 Gemini's large context window.
 """
 
@@ -30,19 +30,14 @@ class NotebookResearcher:
         self.enabled = self.llm.is_available()
         if not self.enabled:
             logger.warning("NotebookResearcher disabled: GOOGLE_API_KEY not set")
-        
+
         # In-memory notebook state (for demo/session purposes)
         self.notebooks: Dict[str, Dict[str, Any]] = {}
 
     def create_notebook(self, name: str, description: Optional[str] = None) -> str:
         """Create a new research notebook."""
         notebook_id = f"nb_{os.urandom(4).hex()}"
-        self.notebooks[notebook_id] = {
-            "name": name,
-            "description": description,
-            "sources": [],
-            "cache_id": None
-        }
+        self.notebooks[notebook_id] = {"name": name, "description": description, "sources": [], "cache_id": None}
         logger.info(f"Created notebook: {name} ({notebook_id})")
         return notebook_id
 
@@ -50,11 +45,8 @@ class NotebookResearcher:
         """Add a document source to the notebook."""
         if notebook_id not in self.notebooks:
             raise ValueError(f"Notebook {notebook_id} not found")
-        
-        self.notebooks[notebook_id]["sources"].append({
-            "name": source_name,
-            "content": content
-        })
+
+        self.notebooks[notebook_id]["sources"].append({"name": source_name, "content": content})
         # Reset cache if content changed
         self.notebooks[notebook_id]["cache_id"] = None
         logger.info(f"Added source '{source_name}' to notebook {notebook_id}")
@@ -69,13 +61,13 @@ class NotebookResearcher:
 
         notebook = self.notebooks[notebook_id]
         sources = notebook["sources"]
-        
+
         if not sources:
             return "This notebook is empty. Please add sources first."
 
         # Aggregate all content
         full_content = "\n\n".join([f"--- SOURCE: {s['name']} ---\n{s['content']}" for s in sources])
-        
+
         system_prompt = (
             "You are an expert research assistant specialized in grounded analysis. "
             "Your answers must be strictly based on the provided source materials. "
@@ -88,9 +80,7 @@ class NotebookResearcher:
         if len(full_content) > 100000 and not notebook["cache_id"]:
             try:
                 cache_name = self.llm.create_context_cache(
-                    content=full_content,
-                    display_name=f"Notebook_{notebook['name']}",
-                    system_instruction=system_prompt
+                    content=full_content, display_name=f"Notebook_{notebook['name']}", system_instruction=system_prompt
                 )
                 notebook["cache_id"] = cache_name
                 logger.info(f"Cached notebook content: {cache_name}")
@@ -105,9 +95,16 @@ class NotebookResearcher:
                 system_prompt=system_prompt,
                 cached_content=notebook["cache_id"],
                 # If not cached, we pass history for grounding context
-                history=[{"role": "user", "content": f"Here are my source documents:\n\n{full_content}"},
-                         {"role": "assistant", "content": "I have received the documents and am ready to answer your questions based on them."}] if not notebook["cache_id"] else None,
-                max_tokens=4000
+                history=[
+                    {"role": "user", "content": f"Here are my source documents:\n\n{full_content}"},
+                    {
+                        "role": "assistant",
+                        "content": "I have received the documents and am ready to answer your questions based on them.",
+                    },
+                ]
+                if not notebook["cache_id"]
+                else None,
+                max_tokens=4000,
             )
             return response.content
         except Exception as e:

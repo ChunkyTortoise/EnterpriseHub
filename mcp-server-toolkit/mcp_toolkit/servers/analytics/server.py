@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass, field
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.analytics.chart_generator import ChartGenerator, ChartConfig
+from mcp_toolkit.servers.analytics.chart_generator import ChartConfig, ChartGenerator
 
 mcp = EnhancedMCP("analytics")
 
@@ -27,8 +27,12 @@ class MetricsStore:
     def __init__(self) -> None:
         self._metrics: list[MetricPoint] = []
 
-    def record(self, metric: str, value: float, timestamp: str = "", tags: dict | None = None) -> None:
-        self._metrics.append(MetricPoint(timestamp=timestamp, value=value, metric=metric, tags=tags or {}))
+    def record(
+        self, metric: str, value: float, timestamp: str = "", tags: dict | None = None
+    ) -> None:
+        self._metrics.append(
+            MetricPoint(timestamp=timestamp, value=value, metric=metric, tags=tags or {})
+        )
 
     def query(self, metric: str, limit: int = 100) -> list[MetricPoint]:
         return [m for m in self._metrics if m.metric == metric][:limit]

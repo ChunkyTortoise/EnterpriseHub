@@ -35,8 +35,6 @@ from src.multimodal.unified_retriever import (
 
 
 @pytest.mark.integration
-
-
 class TestQueryModality:
     """Tests for QueryModality enum."""
 

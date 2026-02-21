@@ -26,10 +26,10 @@ from ghl_real_estate_ai.models.base import Base
 class CompositeLeadScore(Base):
     """
     Tracks composite lead scores combining multiple signals.
-    
+
     The composite score is calculated as:
     (FRS x 0.40) + (PCS x 0.35) + (Sentiment x 0.15) + (Engagement x 0.10)
-    
+
     Attributes:
         id: Unique identifier
         contact_id: Reference to the contact
@@ -48,16 +48,11 @@ class CompositeLeadScore(Base):
         calculated_at: Timestamp when score was calculated
         created_at: Timestamp when record was created
     """
-    
+
     __tablename__ = "composite_lead_scores"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    contact_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("contacts.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     total_score = Column(Decimal(5, 2), nullable=False, index=True)
     classification = Column(String(50), nullable=False, index=True)
     confidence_level = Column(Decimal(5, 2), nullable=False)
@@ -72,10 +67,10 @@ class CompositeLeadScore(Base):
     scoring_weights = Column(JSONB, default=dict)
     calculated_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    
+
     # Relationships
     contact = relationship("Contact", back_populates="composite_scores")
-    
+
     def __repr__(self) -> str:
         return (
             f"<CompositeLeadScore(id={self.id}, "

@@ -65,9 +65,7 @@ class AbandonedContact:
             "location_id": self.location_id,
             "bot_type": self.bot_type,
             "last_contact_timestamp": self.last_contact_timestamp,
-            "last_contact_date": datetime.fromtimestamp(
-                self.last_contact_timestamp, tz=timezone.utc
-            ).isoformat(),
+            "last_contact_date": datetime.fromtimestamp(self.last_contact_timestamp, tz=timezone.utc).isoformat(),
             "silence_duration_hours": round(self.silence_duration_hours, 2),
             "silence_duration_days": round(self.silence_duration_days, 2),
             "current_stage": self.current_stage.value,
@@ -128,18 +126,14 @@ class AbandonmentDetector:
             # For now, we'll query the abandonment_events table to find contacts
             # that are due for recovery based on stage thresholds
             if self._db_pool:
-                abandoned_contacts = await self._query_abandoned_from_db(
-                    location_id, current_time, max_contacts
-                )
+                abandoned_contacts = await self._query_abandoned_from_db(location_id, current_time, max_contacts)
             else:
                 logger.warning("No database pool configured, skipping DB query")
 
         except Exception as exc:
             logger.error(f"Failed to detect abandoned contacts: {exc}")
 
-        logger.info(
-            f"Detected {len(abandoned_contacts)} abandoned contacts for location {location_id}"
-        )
+        logger.info(f"Detected {len(abandoned_contacts)} abandoned contacts for location {location_id}")
         return abandoned_contacts
 
     async def _query_abandoned_from_db(

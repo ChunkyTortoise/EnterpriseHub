@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PIIEntity:
     """Detected PII entity."""
+
     entity_type: str  # EMAIL, PHONE, SSN, CREDIT_CARD, etc.
     text: str
     start: int
@@ -22,6 +23,7 @@ class PIIEntity:
 @dataclass
 class PIIScanResult:
     """Result of PII scanning."""
+
     has_pii: bool
     entities: list[PIIEntity] = field(default_factory=list)
     redacted_text: str = ""
@@ -34,9 +36,7 @@ class PIIDetector:
     # Regex patterns for common PII types
     PATTERNS = {
         "EMAIL": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
-        "PHONE": re.compile(
-            r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
-        ),
+        "PHONE": re.compile(r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"),
         "SSN": re.compile(r"\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b"),
         "CREDIT_CARD": re.compile(r"\b(?:\d{4}[-.\s]?){3}\d{4}\b"),
         "IP_ADDRESS": re.compile(
@@ -53,6 +53,7 @@ class PIIDetector:
         if use_presidio:
             try:
                 from presidio_analyzer import AnalyzerEngine
+
                 self.analyzer = AnalyzerEngine()
             except ImportError:
                 logger.warning("Presidio not installed, falling back to regex PII detection")

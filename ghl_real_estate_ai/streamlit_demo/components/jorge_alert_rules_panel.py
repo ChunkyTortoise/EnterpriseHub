@@ -203,11 +203,6 @@ def render_jorge_alert_rules_panel() -> None:
             if new_active != is_active:
                 success = _toggle_rule(rule_name, new_active)
                 if success:
-                    st.success(
-                        f"Rule '{rule_name}' {'enabled' if new_active else 'disabled'}"
-                    )
+                    st.success(f"Rule '{rule_name}' {'enabled' if new_active else 'disabled'}")
                 else:
-                    st.warning(
-                        f"Could not update rule '{rule_name}' (API unreachable). "
-                        "Change will not persist."
-                    )
+                    st.warning(f"Could not update rule '{rule_name}' (API unreachable). Change will not persist.")

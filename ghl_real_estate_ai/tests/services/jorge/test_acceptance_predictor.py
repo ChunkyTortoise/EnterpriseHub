@@ -261,11 +261,7 @@ def test_extract_pcs_score(predictor_service, seller_state_hot):
 
 def test_extract_pcs_score_nested(predictor_service):
     """Test PCS extraction from nested intent_profile."""
-    state = {
-        "intent_profile": {
-            "pcs": {"total_score": 70.0}
-        }
-    }
+    state = {"intent_profile": {"pcs": {"total_score": 70.0}}}
     pcs = predictor_service._extract_pcs_score(state)
     assert pcs == 70.0
 

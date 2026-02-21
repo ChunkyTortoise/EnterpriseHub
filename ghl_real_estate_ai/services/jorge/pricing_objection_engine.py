@@ -14,6 +14,7 @@ Objection categories:
 Legacy pricing-specific objections (loss aversion, anchoring, etc.) are
 now mapped to the PRICING category for backward compatibility.
 """
+
 import logging
 import re
 from dataclasses import dataclass, field
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class ObjectionCategory(str, Enum):
     """High-level objection categories for Phase 2.2."""
+
     PRICING = "pricing"
     TIMING = "timing"
     COMPETITION = "competition"
@@ -35,6 +37,7 @@ class ObjectionCategory(str, Enum):
 
 class ObjectionType(str, Enum):
     """Specific objection types (legacy + new)."""
+
     # Legacy pricing objections (mapped to PRICING category)
     LOSS_AVERSION = "loss_aversion"
     ANCHORING = "anchoring"
@@ -53,8 +56,9 @@ class ObjectionType(str, Enum):
 
 class ResponseGraduation(str, Enum):
     """Graduated response levels, escalated in order."""
-    VALIDATE = "validate"       # Acknowledge the concern
-    DATA = "data"               # Present market data
+
+    VALIDATE = "validate"  # Acknowledge the concern
+    DATA = "data"  # Present market data
     SOCIAL_PROOF = "social_proof"  # Show comparable sales
     MARKET_TEST = "market_test"  # Propose a market test strategy
 
@@ -80,6 +84,7 @@ OBJECTION_CATEGORY_MAP: Dict[ObjectionType, ObjectionCategory] = {
 @dataclass
 class ObjectionDetection:
     """Result of objection detection."""
+
     detected: bool
     objection_type: Optional[ObjectionType] = None
     objection_category: Optional[ObjectionCategory] = None
@@ -91,6 +96,7 @@ class ObjectionDetection:
 @dataclass
 class ObjectionResponse:
     """Generated response to a detected objection."""
+
     objection_type: ObjectionType
     objection_category: ObjectionCategory
     graduation_level: ResponseGraduation
@@ -251,8 +257,7 @@ RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, str]] = {
     },
     ObjectionType.MARKET_DENIAL: {
         ResponseGraduation.VALIDATE: (
-            "I appreciate that perspective. Timing the market is something "
-            "every seller thinks about."
+            "I appreciate that perspective. Timing the market is something every seller thinks about."
         ),
         ResponseGraduation.DATA: (
             "Here's what the data shows for Rancho Cucamonga: {market_trend}. "
@@ -515,6 +520,7 @@ class PricingObjectionEngine:
         # Import here to avoid circular dependency
         try:
             from ghl_real_estate_ai.prompts.objection_responses import get_response_template
+
             template = get_response_template(obj_type, graduation_level, variant_index)
         except (ImportError, Exception) as e:
             logger.warning("Failed to import objection_responses, using legacy templates: %s", e)
@@ -567,6 +573,7 @@ class PricingObjectionEngine:
 
 class _SafeFormatDict(dict):
     """Dict that returns '{key}' for missing keys during str.format_map()."""
+
     def __missing__(self, key: str) -> str:
         return f"{{{key}}}"
 

@@ -107,9 +107,7 @@ class TestCRMProtocolMockAdapter:
             self._store[contact.id] = contact  # type: ignore[index]
             return contact
 
-        async def update_contact(
-            self, contact_id: str, updates: dict[str, Any]
-        ) -> CRMContact:
+        async def update_contact(self, contact_id: str, updates: dict[str, Any]) -> CRMContact:
             existing = self._store[contact_id]
             updated = existing.model_copy(update=updates)
             self._store[contact_id] = updated
@@ -118,26 +116,19 @@ class TestCRMProtocolMockAdapter:
         async def get_contact(self, contact_id: str) -> CRMContact | None:
             return self._store.get(contact_id)
 
-        async def search_contacts(
-            self, query: str, limit: int = 10
-        ) -> list[CRMContact]:
+        async def search_contacts(self, query: str, limit: int = 10) -> list[CRMContact]:
             results = [
                 c
                 for c in self._store.values()
-                if query.lower() in c.first_name.lower()
-                or query.lower() in c.last_name.lower()
+                if query.lower() in c.first_name.lower() or query.lower() in c.last_name.lower()
             ]
             return results[:limit]
 
-        async def sync_lead(
-            self, contact: CRMContact, score: int, temperature: str
-        ) -> bool:
+        async def sync_lead(self, contact: CRMContact, score: int, temperature: str) -> bool:
             if contact.id and contact.id in self._store:
                 existing = self._store[contact.id]
                 updated_tags = [*existing.tags, temperature]
-                self._store[contact.id] = existing.model_copy(
-                    update={"tags": updated_tags}
-                )
+                self._store[contact.id] = existing.model_copy(update={"tags": updated_tags})
                 return True
             return False
 
@@ -160,27 +151,22 @@ class TestCRMProtocolMockAdapter:
         contact = CRMContact(first_name="Old", last_name="Name")
         created = await adapter.create_contact(contact)
         updated = await adapter.update_contact(
-            created.id, {"first_name": "New"}  # type: ignore[arg-type]
+            created.id,
+            {"first_name": "New"},  # type: ignore[arg-type]
         )
         assert updated.first_name == "New"
 
     @pytest.mark.asyncio()
     async def test_search_contacts(self, adapter: _InMemoryAdapter):
-        await adapter.create_contact(
-            CRMContact(first_name="Alice", last_name="A")
-        )
-        await adapter.create_contact(
-            CRMContact(first_name="Bob", last_name="B")
-        )
+        await adapter.create_contact(CRMContact(first_name="Alice", last_name="A"))
+        await adapter.create_contact(CRMContact(first_name="Bob", last_name="B"))
         results = await adapter.search_contacts("alice")
         assert len(results) == 1
         assert results[0].first_name == "Alice"
 
     @pytest.mark.asyncio()
     async def test_sync_lead_applies_tag(self, adapter: _InMemoryAdapter):
-        created = await adapter.create_contact(
-            CRMContact(first_name="Lead", last_name="Test")
-        )
+        created = await adapter.create_contact(CRMContact(first_name="Lead", last_name="Test"))
         success = await adapter.sync_lead(created, score=85, temperature="Hot-Lead")
         assert success is True
         fetched = await adapter.get_contact(created.id)  # type: ignore[arg-type]

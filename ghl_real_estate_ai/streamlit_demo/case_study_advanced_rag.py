@@ -11,31 +11,31 @@ from plotly.subplots import make_subplots
 def render_advanced_rag_case_study():
     """Render the Advanced RAG case study page."""
     st.set_page_config(page_title="Advanced RAG Case Study", page_icon="🔍", layout="wide")
-    
+
     # Header
     st.markdown("# 🔍 Advanced RAG System Case Study")
     st.markdown("### Enterprise-Grade Hybrid Retrieval for Document Intelligence")
     st.markdown("---")
-    
+
     # Two-column layout
     col1, col2 = st.columns([2, 1])
-    
+
     with col1:
         render_main_content()
-    
+
     with col2:
         render_metrics_sidebar()
-    
+
     # Full-width sections
     st.markdown("---")
     render_technical_stack()
-    
+
     st.markdown("---")
     render_architecture()
-    
+
     st.markdown("---")
     render_testimonials()
-    
+
     st.markdown("---")
     render_cta()
 
@@ -52,7 +52,7 @@ def render_main_content():
     - **Knowledge Silos:** Information trapped in disconnected documents with no unified access
     - **Scalability Limits:** Existing search couldn't handle 1000+ concurrent queries
     """)
-    
+
     st.markdown("## Solution")
     st.markdown("""
     Built an enterprise-grade Advanced RAG System with hybrid retrieval architecture:
@@ -74,17 +74,17 @@ def render_main_content():
     - **Auto-Scaling:** Dynamic resource allocation based on query load
     - **Monitoring Dashboard:** Real-time latency, accuracy, and cost tracking
     """)
-    
+
     st.markdown("## Implementation Timeline")
-    
+
     timeline_data = {
         "Week 1": "Architecture & Pipeline Design",
         "Week 2-3": "Hybrid Retrieval Implementation",
         "Week 4": "Caching & Performance Optimization",
         "Week 5": "Production Deployment & Monitoring",
-        "Week 6": "Load Testing & Fine-tuning"
+        "Week 6": "Load Testing & Fine-tuning",
     }
-    
+
     for week, task in timeline_data.items():
         st.markdown(f"**{week}:** {task}")
 
@@ -93,7 +93,7 @@ def render_metrics_sidebar():
     """Render metrics sidebar with key outcomes."""
     st.markdown("### 📊 Key Metrics")
     st.markdown("---")
-    
+
     metrics = [
         ("85%", "Query Accuracy Improvement"),
         ("70%", "Faster Response (5-10min → <50ms)"),
@@ -102,16 +102,19 @@ def render_metrics_sidebar():
         ("30+", "Hours/Week Recovered"),
         ("90%+", "Retrieval Accuracy (Recall@10)"),
     ]
-    
+
     for value, label in metrics:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); 
                     padding: 1rem; border-radius: 12px; margin-bottom: 0.75rem; border: 1px solid rgba(99, 102, 241, 0.2);'>
             <div style='font-size: 2rem; font-weight: 800; color: #6366F1;'>{value}</div>
             <div style='font-size: 0.85rem; color: #64748B; font-weight: 500;'>{label}</div>
         </div>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     st.markdown("---")
     st.markdown("### 💰 Financial Impact")
     st.markdown("""
@@ -119,7 +122,7 @@ def render_metrics_sidebar():
     **Cost Reduction:** 40% operational savings  
     **Answer Relevance:** 4.2/5.0 average score
     """)
-    
+
     st.markdown("---")
     st.markdown("### 🔗 Links")
     st.markdown("""
@@ -132,7 +135,7 @@ def render_metrics_sidebar():
 def render_technical_stack():
     """Render technical stack section."""
     st.markdown("## Technical Stack")
-    
+
     tech_stack = {
         "Retrieval": ["BM25 (Whoosh)", "Dense Embeddings (OpenAI)", "RRF Fusion"],
         "Vector DB": ["ChromaDB", "HNSW Indexing", "Embedding Cache"],
@@ -140,9 +143,9 @@ def render_technical_stack():
         "Cache": ["Redis (L2)", "In-Memory (L1)", "PostgreSQL (L3)"],
         "Infrastructure": ["Docker", "Docker Compose", "Prometheus"],
     }
-    
+
     cols = st.columns(len(tech_stack))
-    
+
     for col, (category, technologies) in zip(cols, tech_stack.items()):
         with col:
             st.markdown(f"**{category}**")
@@ -153,7 +156,7 @@ def render_technical_stack():
 def render_architecture():
     """Render architecture diagram."""
     st.markdown("## Architecture")
-    
+
     st.markdown("""
     ```
     ┌─────────────────────────────────────────────────────────────────┐
@@ -199,7 +202,7 @@ def render_architecture():
     └───────────────────────────────────────────────────────────────────┘
     ```
     """)
-    
+
     st.markdown("""
     **Key Architectural Decisions:**
     
@@ -214,9 +217,9 @@ def render_architecture():
 def render_testimonials():
     """Render client testimonials section."""
     st.markdown("## Client Impact")
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.markdown("""
         > "We went from analysts spending 30+ hours per week digging through 
@@ -225,7 +228,7 @@ def render_testimonials():
         > 
         > **— Marketing Agency Director**
         """)
-    
+
     with col2:
         st.markdown("""
         > "The caching architecture is brilliant. 95% hit rate means we're 
@@ -238,34 +241,43 @@ def render_testimonials():
 def render_cta():
     """Render call-to-action section."""
     st.markdown("## Need Document Intelligence?")
-    
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
-        st.markdown("""
+        st.markdown(
+            """
         <div style='text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); border-radius: 16px; color: white;'>
             <div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;'>📊 View Demo</div>
             <div style='font-size: 0.9rem; opacity: 0.9;'>Try the RAG system</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         st.markdown("[Live Demo](https://github.com/ChunkyTortoise/docqa-engine)")
-    
+
     with col2:
-        st.markdown("""
+        st.markdown(
+            """
         <div style='text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 16px; color: white;'>
             <div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;'>💻 Source Code</div>
             <div style='font-size: 0.9rem; opacity: 0.9;'>Full implementation</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         st.markdown("[GitHub Repository](https://github.com/ChunkyTortoise/docqa-engine)")
-    
+
     with col3:
-        st.markdown("""
+        st.markdown(
+            """
         <div style='text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 16px; color: white;'>
             <div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;'>📧 Get in Touch</div>
             <div style='font-size: 0.9rem; opacity: 0.9;'>Discuss your RAG needs</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         st.markdown("realtorjorgesalas@gmail.com")
 
 

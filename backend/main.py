@@ -20,19 +20,21 @@ app.add_middleware(
 
 # --- Agent Nodes ---
 
+
 async def lead_intelligence_node(state: AgentState) -> Dict[str, Any]:
     """Analyzes lead intent and sentiment."""
     print(f"--- ANALYZING LEAD: {state['lead_id']} ---")
     # In a real implementation, this would call PydanticAI / LLM
-    last_message = state['messages'][-1].content
+    last_message = state["messages"][-1].content
     analysis = f"Processed intelligence for: {last_message}"
-    
+
     new_message = AgentMessage(role="assistant", content=analysis)
     return {
-        "messages": state['messages'] + [new_message],
+        "messages": state["messages"] + [new_message],
         "current_agent": "lead_intelligence",
-        "next_action": "respond"
+        "next_action": "respond",
     }
+
 
 # --- Workflow Definition ---
 
@@ -47,10 +49,12 @@ orchestrator = workflow.compile()
 
 # --- API Endpoints ---
 
+
 class QueryRequest(BaseModel):
     lead_id: str
     tenant_id: str
     message: str
+
 
 @app.post("/query")
 async def handle_query(request: QueryRequest):
@@ -62,19 +66,22 @@ async def handle_query(request: QueryRequest):
         "current_agent": "entry",
         "metadata": {},
         "next_action": None,
-        "errors": []
+        "errors": [],
     }
-    
+
     try:
         final_state = await orchestrator.ainvoke(initial_state)
         return final_state
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "engine": "LangGraph"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

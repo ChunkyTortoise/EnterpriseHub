@@ -73,9 +73,15 @@ def mock_buyer_deps():
 
         sentiment_instance = MockSentiment.return_value
         sentiment_instance.analyze_sentiment = AsyncMock(
-            return_value=SimpleNamespace(sentiment=SimpleNamespace(value="neutral"), confidence=0.8, escalation_required=SimpleNamespace(value="none"))
+            return_value=SimpleNamespace(
+                sentiment=SimpleNamespace(value="neutral"),
+                confidence=0.8,
+                escalation_required=SimpleNamespace(value="none"),
+            )
         )
-        sentiment_instance.get_response_tone_adjustment = MagicMock(return_value={"tone": "professional", "pace": "normal"})
+        sentiment_instance.get_response_tone_adjustment = MagicMock(
+            return_value={"tone": "professional", "pace": "normal"}
+        )
 
         persona_instance = MockPersonaService.return_value
         persona_instance.classify_buyer_type = AsyncMock(
@@ -192,6 +198,7 @@ class TestBuyerFollowUpSchedule:
 
     def test_next_followup_day_from_start(self):
         from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+
         service = BuyerWorkflowService()
         assert service._get_next_buyer_followup_day(0) == 2
         assert service._get_next_buyer_followup_day(2) == 5
@@ -199,17 +206,20 @@ class TestBuyerFollowUpSchedule:
 
     def test_next_followup_day_longterm(self):
         from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+
         service = BuyerWorkflowService()
         assert service._get_next_buyer_followup_day(30) == 44  # 30 + 14
 
     def test_next_followup_day_at_boundary(self):
         from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+
         service = BuyerWorkflowService()
         assert service._get_next_buyer_followup_day(29) is None  # At last active day, no more active days
 
     @pytest.mark.asyncio
     async def test_schedule_uses_day_based_timing(self):
         from ghl_real_estate_ai.agents.buyer.workflow_service import BuyerWorkflowService
+
         service = BuyerWorkflowService()
         state = {"financial_readiness_score": 25, "days_since_start": 0, "buyer_id": "test-buyer"}
         result = await service.schedule_next_action(state)
@@ -225,9 +235,7 @@ class TestBuyerProgressiveSkills:
     """Tests for Unified Progressive Skills integration in buyer bot."""
 
     @pytest.mark.asyncio
-    async def test_buyer_bot_uses_initial_discovery_skill_for_new_lead(
-        self, mock_buyer_deps
-    ):
+    async def test_buyer_bot_uses_initial_discovery_skill_for_new_lead(self, mock_buyer_deps):
         """New lead (low financial readiness) should trigger InitialDiscovery skill loading."""
         with patch.dict(os.environ, {"ENABLE_BUYER_PROGRESSIVE_SKILLS": "true"}):
             bot = JorgeBuyerBot(enable_bot_intelligence=False)
@@ -244,9 +252,7 @@ class TestBuyerProgressiveSkills:
         assert result["lead_id"] == "test_ups_new"
 
     @pytest.mark.asyncio
-    async def test_buyer_bot_falls_back_to_full_model_for_high_intent_lead(
-        self, mock_buyer_deps
-    ):
+    async def test_buyer_bot_falls_back_to_full_model_for_high_intent_lead(self, mock_buyer_deps):
         """High-intent lead (buying_motivation >= 90) should skip progressive skills."""
         mock_buyer_deps["profile"].financial_readiness = 95.0
         mock_buyer_deps["profile"].urgency_score = 95.0
@@ -271,9 +277,7 @@ class TestBuyerProgressiveSkills:
         assert result["lead_id"] == "test_ups_high"
 
     @pytest.mark.asyncio
-    async def test_buyer_progressive_skills_disabled_by_default(
-        self, mock_buyer_deps
-    ):
+    async def test_buyer_progressive_skills_disabled_by_default(self, mock_buyer_deps):
         """Progressive skills should be disabled by default (ENABLE_BUYER_PROGRESSIVE_SKILLS not set)."""
         # Remove the env var if set
         env = {k: v for k, v in os.environ.items() if k != "ENABLE_BUYER_PROGRESSIVE_SKILLS"}
@@ -294,6 +298,7 @@ class TestBuyerProgressiveSkills:
     def test_load_buyer_skill_context_returns_skill_when_enabled(self):
         """Verify _load_buyer_skill_context loads the correct skill file."""
         from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+
         rg = ResponseGenerator()
         state = {
             "financial_readiness_score": 10,
@@ -307,6 +312,7 @@ class TestBuyerProgressiveSkills:
     def test_load_buyer_skill_context_returns_empty_when_disabled(self):
         """Verify _load_buyer_skill_context returns empty string when feature is off."""
         from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+
         rg = ResponseGenerator()
         state = {"financial_readiness_score": 10}
         env = {k: v for k, v in os.environ.items() if k != "ENABLE_BUYER_PROGRESSIVE_SKILLS"}
@@ -317,6 +323,7 @@ class TestBuyerProgressiveSkills:
     def test_load_buyer_skill_context_skips_high_motivation(self):
         """High buying_motivation (>= 90) should skip progressive skills."""
         from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+
         rg = ResponseGenerator()
         state = {
             "financial_readiness_score": 95,
@@ -329,6 +336,7 @@ class TestBuyerProgressiveSkills:
     def test_load_buyer_skill_context_objection_handling(self):
         """Detected objection should load objection_handling skill."""
         from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+
         rg = ResponseGenerator()
         state = {
             "financial_readiness_score": 50,
@@ -342,6 +350,7 @@ class TestBuyerProgressiveSkills:
     def test_load_buyer_skill_context_property_matching(self):
         """Preferences step should load property_matching skill."""
         from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+
         rg = ResponseGenerator()
         state = {
             "financial_readiness_score": 50,

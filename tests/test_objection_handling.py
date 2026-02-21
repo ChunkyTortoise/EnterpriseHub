@@ -3,6 +3,7 @@
 Tests multi-category objection detection, response generation, A/B testing,
 and database integration.
 """
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -335,8 +336,7 @@ class TestObjectionAccuracyTarget:
 
         assert detection.detected, f"Failed to detect objection in: {message}"
         assert detection.objection_category == expected_category, (
-            f"Misclassified '{message}' as {detection.objection_category}, "
-            f"expected {expected_category}"
+            f"Misclassified '{message}' as {detection.objection_category}, expected {expected_category}"
         )
         assert detection.confidence >= 0.7, f"Low confidence for: {message}"
 

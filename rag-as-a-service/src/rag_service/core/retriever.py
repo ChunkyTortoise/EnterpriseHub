@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RetrievedChunk:
     """A retrieved chunk with relevance scores."""
+
     chunk_id: str
     document_id: str
     content: str

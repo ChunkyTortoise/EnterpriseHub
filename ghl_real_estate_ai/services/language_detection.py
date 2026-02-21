@@ -137,15 +137,11 @@ class LanguageDetectionService:
             logger.info("XLM-RoBERTa language detection model loaded")
         except Exception:
             self._load_failed = True
-            logger.warning(
-                "Failed to load XLM-RoBERTa model; using heuristic fallback"
-            )
+            logger.warning("Failed to load XLM-RoBERTa model; using heuristic fallback")
 
     # -- public API ------------------------------------------------------------
 
-    def detect(
-        self, text: str, contact_id: Optional[str] = None
-    ) -> LanguageDetection:
+    def detect(self, text: str, contact_id: Optional[str] = None) -> LanguageDetection:
         """Detect the language of *text*.
 
         Args:
@@ -169,16 +165,12 @@ class LanguageDetectionService:
         # Track per-contact preference when a contact_id is given
         if contact_id:
             if contact_id not in self._contact_prefs:
-                self._contact_prefs[contact_id] = ContactLanguagePreference(
-                    contact_id=contact_id
-                )
+                self._contact_prefs[contact_id] = ContactLanguagePreference(contact_id=contact_id)
             self._contact_prefs[contact_id].update(detection)
 
         return detection
 
-    def get_contact_preference(
-        self, contact_id: str
-    ) -> Optional[ContactLanguagePreference]:
+    def get_contact_preference(self, contact_id: str) -> Optional[ContactLanguagePreference]:
         """Retrieve accumulated language preference for a contact."""
         return self._contact_prefs.get(contact_id)
 
@@ -201,7 +193,8 @@ class LanguageDetectionService:
             # Only validate if confidence is not very high (< 0.9) or model prediction is suspicious
             should_validate = (
                 # Low confidence predictions should be validated
-                (confidence < 0.9) or
+                (confidence < 0.9)
+                or
                 # Medium confidence Italian/Portuguese should be validated (might be Spanish)
                 (language in ("it", "pt") and confidence < 0.95)
             )
@@ -215,7 +208,9 @@ class LanguageDetectionService:
                     if heuristic_result.confidence > 0.7 and confidence < 0.9:
                         logger.debug(
                             "Model predicted %s (%.2f) but heuristic suggests Spanish (%.2f); using es",
-                            language, confidence, heuristic_result.confidence
+                            language,
+                            confidence,
+                            heuristic_result.confidence,
                         )
                         language = "es"
                         confidence = max(confidence, heuristic_result.confidence)
@@ -224,7 +219,10 @@ class LanguageDetectionService:
                 elif language != heuristic_result.language and heuristic_result.confidence > 0.8 and confidence < 0.85:
                     logger.debug(
                         "Model predicted %s (%.2f) but heuristic strongly suggests %s (%.2f); using heuristic",
-                        language, confidence, heuristic_result.language, heuristic_result.confidence
+                        language,
+                        confidence,
+                        heuristic_result.language,
+                        heuristic_result.confidence,
                     )
                     language = heuristic_result.language
                     confidence = heuristic_result.confidence

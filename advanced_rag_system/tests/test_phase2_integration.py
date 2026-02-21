@@ -23,8 +23,6 @@ from src.retrieval import (
 
 
 @pytest.mark.integration
-
-
 class TestPhase2Integration:
     """Integration tests for Phase 2 hybrid retrieval system."""
 

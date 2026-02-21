@@ -106,7 +106,10 @@ async def demo_misunderstanding_scenario():
     conversation = [
         {"role": "bot", "content": "Let's discuss your DTI ratio and how it affects pre-approval."},
         {"role": "user", "content": "What's DTI? I don't understand"},
-        {"role": "bot", "content": "DTI is your debt-to-income ratio, calculated as monthly debt divided by gross income."},
+        {
+            "role": "bot",
+            "content": "DTI is your debt-to-income ratio, calculated as monthly debt divided by gross income.",
+        },
         {"role": "user", "content": "Huh? Can you explain that differently?"},
         {"role": "bot", "content": "Sure! It's the percentage of your income that goes toward debt payments."},
         {"role": "user", "content": "I'm still confused. What does this mean for me?"},
@@ -176,8 +179,14 @@ async def demo_healthy_conversation():
     conversation = [
         {"role": "bot", "content": "Hi! I'd love to help you find the perfect home. What's your budget range?"},
         {"role": "user", "content": "I'm looking for something around $500k, maybe $550k max."},
-        {"role": "bot", "content": "Great! That's a solid budget for this area. How many bedrooms are you looking for?"},
-        {"role": "user", "content": "We need at least 3 bedrooms, 4 would be ideal. We have two kids and need a home office."},
+        {
+            "role": "bot",
+            "content": "Great! That's a solid budget for this area. How many bedrooms are you looking for?",
+        },
+        {
+            "role": "user",
+            "content": "We need at least 3 bedrooms, 4 would be ideal. We have two kids and need a home office.",
+        },
         {"role": "bot", "content": "Perfect! I can definitely help with that. What neighborhoods are you considering?"},
         {"role": "user", "content": "We like the Rancho Cucamonga area, close to good schools."},
     ]

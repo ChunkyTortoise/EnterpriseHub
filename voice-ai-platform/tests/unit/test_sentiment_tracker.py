@@ -71,7 +71,7 @@ class TestSentimentTrackerAggregation:
     def test_average_across_multiple_segments(self):
         tracker = SentimentTracker()
         tracker.analyze("This is amazing and wonderful!")  # positive
-        tracker.analyze("What a terrible experience.")       # negative
+        tracker.analyze("What a terrible experience.")  # negative
         # Average should be somewhere in between
         avg = tracker.average_sentiment
         assert -1.0 <= avg <= 1.0

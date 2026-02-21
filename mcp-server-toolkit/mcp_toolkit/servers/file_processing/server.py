@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.file_processing.parsers import FileParser
 from mcp_toolkit.servers.file_processing.chunker import TextChunker
+from mcp_toolkit.servers.file_processing.parsers import FileParser
 
 mcp = EnhancedMCP("file-processing")
 
@@ -130,9 +130,11 @@ async def detect_file_type(filename: str) -> str:
     """
     file_type = _parser.detect_type(filename)
     supported = file_type != "unknown"
-    return json.dumps({
-        "filename": filename,
-        "file_type": file_type,
-        "supported": supported,
-        "extension": Path(filename).suffix.lower(),
-    })
+    return json.dumps(
+        {
+            "filename": filename,
+            "file_type": file_type,
+            "supported": supported,
+            "extension": Path(filename).suffix.lower(),
+        }
+    )

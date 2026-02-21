@@ -13,7 +13,7 @@ import pytest
 def test_secret_key():
     """
     Test secret key for JWT/token operations in tests.
-    
+
     Uses environment variable TEST_SECRET_KEY if set, otherwise provides
     a secure default for CI environments.
     """
@@ -24,7 +24,7 @@ def test_secret_key():
 def test_api_key():
     """
     Test API key for authentication tests.
-    
+
     Uses environment variable TEST_API_KEY if set, otherwise provides
     a secure default for CI environments.
     """
@@ -35,7 +35,7 @@ def test_api_key():
 def test_webhook_secret():
     """
     Test webhook secret for signature verification tests.
-    
+
     Uses environment variable TEST_WEBHOOK_SECRET if set, otherwise provides
     a secure default for CI environments.
     """

@@ -3,7 +3,6 @@ Agent ROI Dashboard - Lead-to-Close Attribution + Profitability
 Helps GHL agencies see the clear ROI on their AI bot investment.
 """
 
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go

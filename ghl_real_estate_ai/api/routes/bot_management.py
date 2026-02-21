@@ -36,6 +36,7 @@ from ghl_real_estate_ai.services.performance_monitor import PerformanceMonitor, 
 logger = get_logger(__name__)
 router = APIRouter(tags=["Bot Management"])
 
+
 def _model_to_dict(model: BaseModel) -> Dict[str, Any]:
     if hasattr(model, "model_dump"):
         return model.model_dump()
@@ -84,16 +85,22 @@ class IntentScoreResponse(BaseModel):
 
 class HandoffRequest(BaseModel):
     """Request model for triggering bot handoff."""
+
     target_bot: Literal["lead", "buyer", "seller"] = Field(default="lead", description="Target bot to handoff to")
     reason: str = Field(default="qualification_complete", description="Reason for handoff")
     confidence: float = Field(default=0.7, ge=0.0, le=1.0, description="Confidence score for handoff")
-    idempotency_key: Optional[str] = Field(default=None, description="Idempotency key for duplicate handoff suppression")
-    conversation_history: Optional[List[Dict[str, str]]] = Field(default=None, description="Recent conversation messages")
+    idempotency_key: Optional[str] = Field(
+        default=None, description="Idempotency key for duplicate handoff suppression"
+    )
+    conversation_history: Optional[List[Dict[str, str]]] = Field(
+        default=None, description="Recent conversation messages"
+    )
     message: Optional[str] = Field(default=None, description="Current message for intent extraction")
 
 
 class HandoffResponse(BaseModel):
     """Response model for handoff result."""
+
     success: bool
     handoff_id: str
     target_bot: str
@@ -106,6 +113,7 @@ class HandoffResponse(BaseModel):
 # ROADMAP-016: Question progress tracking model
 class QuestionProgress(BaseModel):
     """Tracks current question index and answers for a bot session."""
+
     lead_id: str
     conversation_id: str
     current_question_index: int = 0
@@ -118,6 +126,7 @@ class QuestionProgress(BaseModel):
 # ROADMAP-017: Stall detection result model
 class StallDetectionResult(BaseModel):
     """Result of stall detection analysis."""
+
     stall_detected: bool = False
     stall_type: Optional[str] = None
     stall_score: float = 0.0
@@ -128,6 +137,7 @@ class StallDetectionResult(BaseModel):
 # ROADMAP-018: Effectiveness score model
 class EffectivenessScore(BaseModel):
     """Confrontational effectiveness score for a bot session."""
+
     score: int
     completion_rate: float
     avg_response_latency_seconds: float
@@ -139,6 +149,7 @@ class EffectivenessScore(BaseModel):
 # ROADMAP-020: CoordinationEvent model for cross-bot event emission
 class CoordinationEvent(BaseModel):
     """Event emitted on handoff, stall, or qualification completion."""
+
     event_id: str
     event_type: Literal["handoff", "stall_detected", "qualification_complete", "session_timeout"]
     source_bot: str
@@ -193,7 +204,7 @@ _handoff_service: Optional[JorgeHandoffService] = None
 
 def get_handoff_service() -> JorgeHandoffService:
     """Get or create JorgeHandoffService singleton instance.
-    
+
     Uses module-level caching to ensure same instance is used across requests.
     The service is initialized with analytics_service=None for the API route,
     but can be wired with a repository in api/main.py.
@@ -230,9 +241,7 @@ async def health_check(
 
 # --- ENDPOINT 2: GET /api/bots ---
 @router.get("/bots", response_model=List[BotStatusResponse])
-async def list_available_bots(
-    cache: CacheService = Depends(get_cache_service)
-):
+async def list_available_bots(cache: CacheService = Depends(get_cache_service)):
     """
     List all available bots with real-time status metrics.
     Frontend: Dashboard bot status cards
@@ -276,8 +285,8 @@ async def list_available_bots(
 # --- ENDPOINT 3: POST /api/bots/{bot_id}/chat ---
 @router.post("/bots/{bot_id}/chat")
 async def stream_bot_conversation(
-    bot_id: str, 
-    request: ChatMessageRequest, 
+    bot_id: str,
+    request: ChatMessageRequest,
     background_tasks: BackgroundTasks,
     session_manager: ConversationSessionManager = Depends(get_session_manager),
     event_publisher: EventPublisher = Depends(get_event_publisher),
@@ -416,10 +425,7 @@ async def stream_bot_conversation(
 
 # --- ENDPOINT 4: GET /api/bots/{bot_id}/status ---
 @router.get("/bots/{bot_id}/status", response_model=BotStatusResponse)
-async def get_bot_status(
-    bot_id: str,
-    cache: CacheService = Depends(get_cache_service)
-):
+async def get_bot_status(bot_id: str, cache: CacheService = Depends(get_cache_service)):
     """
     Get individual bot health metrics.
     Frontend: Bot detail modals, health dashboard
@@ -502,8 +508,8 @@ async def start_jorge_qualification(
 # --- ENDPOINT 6: POST /api/lead-bot/{leadId}/schedule ---
 @router.post("/lead-bot/{leadId}/schedule")
 async def trigger_lead_bot_sequence(
-    leadId: str, 
-    request: ScheduleRequest, 
+    leadId: str,
+    request: ScheduleRequest,
     background_tasks: BackgroundTasks,
     lead_bot: LeadBotWorkflow = Depends(get_lead_bot),
     event_publisher: EventPublisher = Depends(get_event_publisher),
@@ -735,7 +741,9 @@ async def process_seller_message(
             response_content = getattr(result, "qualification_summary", "")
         if not response_content:
             # Fallback only if bot returned nothing
-            response_content = f"Thank you for reaching out about your property. I'd love to help you explore your options."
+            response_content = (
+                f"Thank you for reaching out about your property. I'd love to help you explore your options."
+            )
 
         # qualification_score is 0-100 scale (not 0.0-1.0)
         questions_answered = max(1, int(qualification_score / 20)) if qualification_score > 20 else 0
@@ -990,8 +998,7 @@ async def _detect_stall(
 
     if len(user_messages) >= 2:
         vague_count = sum(
-            1 for msg in user_messages[-3:]
-            if any(kw in msg for kw in STALL_VAGUE_KEYWORDS) or len(msg.split()) <= 2
+            1 for msg in user_messages[-3:] if any(kw in msg for kw in STALL_VAGUE_KEYWORDS) or len(msg.split()) <= 2
         )
         if vague_count >= 2:
             return StallDetectionResult(
@@ -1400,17 +1407,15 @@ async def get_jorge_qualification_progress(
         # ROADMAP-016: Retrieve persisted question progress
         progress = await _get_question_progress(lead_id, cache)
         current_question = progress.current_question_index + 1 if progress else 1
-        questions_answered = len(progress.answers) if progress else len(
-            [h for h in conversation_history if h.get("role") == "user"]
+        questions_answered = (
+            len(progress.answers) if progress else len([h for h in conversation_history if h.get("role") == "user"])
         )
 
         # ROADMAP-017: Run stall detection algorithm
         stall_result = await _detect_stall(lead_id, conversation_history, cache)
 
         # ROADMAP-018: Calculate effectiveness score
-        effectiveness = await _calculate_effectiveness_score(
-            lead_id, conversation_history, cache, stall_result
-        )
+        effectiveness = await _calculate_effectiveness_score(lead_id, conversation_history, cache, stall_result)
 
         # ROADMAP-020: Emit coordination event if stall detected
         if stall_result.stall_detected:
@@ -1533,13 +1538,13 @@ async def trigger_jorge_handoff(
 ):
     """
     Trigger handoff from Jorge Seller Bot to another bot (Lead/Buyer/Seller).
-    
+
     Implements proper handoff logic via JorgeHandoffService:
     - Circular prevention (30-min window)
     - Rate limiting (3/hr, 10/day)
     - Confidence threshold (0.7 default)
     - CoordinationEngine pattern for proper handoff coordination
-    
+
     Expected by frontend: jorge-seller-api.ts line 245
     """
     try:
@@ -1562,25 +1567,25 @@ async def trigger_jorge_handoff(
         if cached_response:
             logger.info(f"Returning idempotent handoff result for key {idempotency_key}")
             return HandoffResponse(**cached_response)
-        
+
         # Generate handoff ID
         handoff_id = f"handoff_{int(time.time())}_{lead_id[:8]}"
-        
+
         # Extract intent signals from message if provided
         intent_signals: IntentSignals = {
             "buyer_intent_score": 0.0,
             "seller_intent_score": 0.0,
             "detected_intent_phrases": [],
         }
-        
+
         if request.message:
             # Use the handoff service's intent signal extraction
             intent_signals = JorgeHandoffService.extract_intent_signals(request.message)
             logger.debug(f"Extracted intent signals from message: {intent_signals}")
-        
+
         # Also include any conversation history if provided
         conversation_history = request.conversation_history or []
-        
+
         # ROADMAP-019: Implement handoff logic with CoordinationEngine
         # Step 1: Evaluate if handoff should happen based on intent signals and thresholds
         decision = await handoff_service.evaluate_handoff(
@@ -1627,24 +1632,24 @@ async def trigger_jorge_handoff(
             decision.reason = request.reason or decision.reason
             decision.context["target_override"] = True
             decision.context["idempotency_key"] = idempotency_key
-        
+
         # Step 2: Execute the handoff (adds/removes tags, records analytics)
         actions = await handoff_service.execute_handoff(
             decision=decision,
             contact_id=lead_id,
             location_id="",  # Could be passed from request if needed
         )
-        
+
         # Check if handoff was executed or blocked
         handoff_executed = any(action.get("handoff_executed", True) for action in actions)
         block_reason = None
-        
+
         if not handoff_executed:
             for action in actions:
                 if not action.get("handoff_executed", True):
                     block_reason = action.get("reason", "unknown")
                     break
-        
+
         logger.info(
             f"Jorge handoff {'completed' if handoff_executed else 'blocked'}: "
             f"{lead_id} -> {target_bot}, handoff_id: {handoff_id}, reason: {block_reason or 'executed'}"

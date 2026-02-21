@@ -14,6 +14,7 @@ import numpy as np
 
 try:
     from textblob import TextBlob
+
     _TEXTBLOB_AVAILABLE = True
 except ImportError:
     TextBlob = None

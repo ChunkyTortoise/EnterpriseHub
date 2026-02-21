@@ -26,6 +26,7 @@ pytestmark = pytest.mark.unit
 # Helpers — create a bare ClaudeOrchestrator without running __init__
 # ---------------------------------------------------------------------------
 
+
 def _bare_orchestrator():
     """Create a ClaudeOrchestrator instance without triggering __init__.
 
@@ -304,10 +305,7 @@ class TestExtractListItems:
         assert items == []
 
     def test_section_stops_at_next_header(self, orch):
-        content = (
-            "Actions:\n1. First action\n2. Second action\n\n"
-            "## Other Section\n1. Unrelated item\n"
-        )
+        content = "Actions:\n1. First action\n2. Second action\n\n## Other Section\n1. Unrelated item\n"
         items = orch._extract_list_items(content, "Actions")
         assert all("Unrelated" not in item for item in items)
 
@@ -373,9 +371,7 @@ class TestParseConfidenceScore:
         assert result == 0.0
 
     def test_json_takes_priority_over_text(self, orch):
-        result = orch._parse_confidence_score(
-            "low confidence", {"confidence": 0.95}
-        )
+        result = orch._parse_confidence_score("low confidence", {"confidence": 0.95})
         assert result == 0.95
 
     def test_generic_confidence_word_returns_default(self, orch):

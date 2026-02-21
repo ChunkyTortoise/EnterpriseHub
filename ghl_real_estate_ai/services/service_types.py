@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 class BudgetRange(TypedDict, total=False):
     """Budget range for property search."""
+
     min: float
     max: float
     currency: str
@@ -23,6 +24,7 @@ class BudgetRange(TypedDict, total=False):
 
 class CMASummary(TypedDict, total=False):
     """Comparative Market Analysis summary."""
+
     estimated_value: float
     low_estimate: float
     high_estimate: float
@@ -32,6 +34,7 @@ class CMASummary(TypedDict, total=False):
 
 class KeyInsights(TypedDict, total=False):
     """Key insights from source bot for handoff."""
+
     qualification_score: float
     temperature: str
     urgency_level: str
@@ -41,6 +44,7 @@ class KeyInsights(TypedDict, total=False):
 
 class HandoffData(TypedDict, total=False):
     """Data passed during bot-to-bot handoff."""
+
     source_bot: str
     target_bot: str
     contact_id: str
@@ -55,6 +59,7 @@ class HandoffData(TypedDict, total=False):
 
 class HandoffActions(TypedDict, total=False):
     """GHL actions to execute a handoff."""
+
     action_type: str
     contact_id: str
     tags_to_add: List[str]
@@ -65,6 +70,7 @@ class HandoffActions(TypedDict, total=False):
 
 class HandoffOutcome(TypedDict, total=False):
     """Outcome record for a handoff."""
+
     route: str
     outcome: str  # "completed", "failed", "blocked"
     timestamp: float
@@ -78,6 +84,7 @@ class HandoffOutcome(TypedDict, total=False):
 
 class PerformanceStats(TypedDict, total=False):
     """Performance statistics for monitoring."""
+
     total_requests: int
     successful_requests: int
     failed_requests: int
@@ -90,6 +97,7 @@ class PerformanceStats(TypedDict, total=False):
 
 class BotMetricsSnapshot(TypedDict, total=False):
     """Snapshot of bot metrics at a point in time."""
+
     bot_type: str
     timestamp: float
     total_interactions: int
@@ -101,6 +109,7 @@ class BotMetricsSnapshot(TypedDict, total=False):
 
 class DeferralStats(TypedDict, total=False):
     """Statistics for deferred handoffs."""
+
     total_deferrals: int
     successful_retries: int
     failed_retries: int
@@ -114,6 +123,7 @@ class DeferralStats(TypedDict, total=False):
 
 class ExperimentVariant(TypedDict, total=False):
     """A/B test variant configuration."""
+
     variant_name: str
     description: str
     config: Dict[str, Any]
@@ -122,6 +132,7 @@ class ExperimentVariant(TypedDict, total=False):
 
 class ExperimentData(TypedDict, total=False):
     """A/B test experiment data."""
+
     experiment_name: str
     description: str
     status: str  # "draft", "running", "paused", "completed"
@@ -133,6 +144,7 @@ class ExperimentData(TypedDict, total=False):
 
 class VariantConfig(TypedDict, total=False):
     """Configuration for an experiment variant."""
+
     variant_name: str
     prompt_template: Optional[str]
     temperature: Optional[float]
@@ -142,6 +154,7 @@ class VariantConfig(TypedDict, total=False):
 
 class MetricsSnapshot(TypedDict, total=False):
     """Snapshot of metrics for experiment analysis."""
+
     variant_name: str
     sample_size: int
     conversion_rate: float
@@ -156,6 +169,7 @@ class MetricsSnapshot(TypedDict, total=False):
 
 class FollowUpConfig(TypedDict, total=False):
     """Configuration for follow-up sequences."""
+
     follow_up_type: str  # "qualification", "temperature", "behavioral"
     sequence_position: int
     delay_hours: int
@@ -166,6 +180,7 @@ class FollowUpConfig(TypedDict, total=False):
 
 class FollowUpResult(TypedDict, total=False):
     """Result of a follow-up action."""
+
     contact_id: str
     location_id: str
     success: bool
@@ -181,6 +196,7 @@ class FollowUpResult(TypedDict, total=False):
 
 class SellerData(TypedDict, total=False):
     """Seller information from GHL contact."""
+
     contact_id: str
     location_id: str
     name: str
@@ -196,6 +212,7 @@ class SellerData(TypedDict, total=False):
 
 class BuyerData(TypedDict, total=False):
     """Buyer information from GHL contact."""
+
     contact_id: str
     location_id: str
     name: str
@@ -213,6 +230,7 @@ class BuyerData(TypedDict, total=False):
 
 class LeadProfile(TypedDict, total=False):
     """Comprehensive lead profile."""
+
     lead_id: str
     contact_id: str
     location_id: str
@@ -234,6 +252,7 @@ class LeadProfile(TypedDict, total=False):
 
 class WebhookPayload(TypedDict, total=False):
     """Generic webhook payload structure."""
+
     webhook_id: str
     location_id: str
     contact_id: str
@@ -244,6 +263,7 @@ class WebhookPayload(TypedDict, total=False):
 
 class WebhookData(TypedDict, total=False):
     """Data extracted from webhook payloads."""
+
     contact_id: str
     location_id: str
     message: Optional[str]
@@ -259,6 +279,7 @@ class WebhookData(TypedDict, total=False):
 
 class MarketData(TypedDict, total=False):
     """Market information for analysis."""
+
     market_id: str
     location: str
     median_price: float
@@ -270,6 +291,7 @@ class MarketData(TypedDict, total=False):
 
 class PropertyData(TypedDict, total=False):
     """Property information for matching."""
+
     property_id: str
     address: str
     price: float
@@ -289,6 +311,7 @@ class PropertyData(TypedDict, total=False):
 
 class ROIData(TypedDict, total=False):
     """ROI calculation data."""
+
     source_name: str
     total_leads: int
     converted_leads: int
@@ -300,6 +323,7 @@ class ROIData(TypedDict, total=False):
 
 class AttributionResult(TypedDict, total=False):
     """Attribution analysis result."""
+
     lead_id: str
     source: str
     touchpoints: List[Dict[str, Any]]
@@ -314,6 +338,7 @@ class AttributionResult(TypedDict, total=False):
 
 class AlertData(TypedDict, total=False):
     """Alert data structure."""
+
     alert_id: str
     rule_name: str
     severity: str  # "critical", "warning", "info"
@@ -326,6 +351,7 @@ class AlertData(TypedDict, total=False):
 
 class AlertRule(TypedDict, total=False):
     """Alert rule configuration."""
+
     name: str
     condition: str  # JSON-encoded callable
     severity: str
@@ -340,6 +366,7 @@ class AlertRule(TypedDict, total=False):
 
 class AnalyticsSummary(TypedDict, total=False):
     """Summary of analytics data."""
+
     total_events: int
     unique_contacts: int
     time_range_start: str
@@ -349,6 +376,7 @@ class AnalyticsSummary(TypedDict, total=False):
 
 class TimeSeriesPoint(TypedDict, total=False):
     """Single point in a time series."""
+
     timestamp: str
     value: float
     metadata: Dict[str, Any]
@@ -361,6 +389,7 @@ class TimeSeriesPoint(TypedDict, total=False):
 
 class ServiceResponse(TypedDict, total=False):
     """Standard service response structure."""
+
     success: bool
     data: Optional[Dict[str, Any]]
     error: Optional[str]
@@ -369,6 +398,7 @@ class ServiceResponse(TypedDict, total=False):
 
 class ErrorDetails(TypedDict, total=False):
     """Error information structure."""
+
     code: str
     message: str
     field: Optional[str]

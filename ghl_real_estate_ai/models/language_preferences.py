@@ -25,9 +25,7 @@ class ContactLanguagePreference:
 
     def update(self, detection: LanguageDetection) -> None:
         """Update preference from a new detection."""
-        self.language_counts[detection.language] = (
-            self.language_counts.get(detection.language, 0) + 1
-        )
+        self.language_counts[detection.language] = self.language_counts.get(detection.language, 0) + 1
         self.total_messages += 1
         # Primary is most frequent
         self.primary_language = max(self.language_counts, key=self.language_counts.get)  # type: ignore[arg-type]

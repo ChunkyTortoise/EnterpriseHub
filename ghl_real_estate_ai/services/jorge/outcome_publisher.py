@@ -105,9 +105,7 @@ class OutcomePublisher:
                 self._write_timestamps.append(time.time())
 
         if success_count > 0:
-            logger.info(
-                f"Flushed {success_count}/{len(batch)} pending handoff outcomes"
-            )
+            logger.info(f"Flushed {success_count}/{len(batch)} pending handoff outcomes")
 
     async def publish_handoff_outcome(
         self,
@@ -137,10 +135,7 @@ class OutcomePublisher:
 
         valid_outcomes = {"successful", "failed", "reverted", "timeout"}
         if outcome not in valid_outcomes:
-            logger.error(
-                f"Cannot publish outcome: invalid outcome '{outcome}'. "
-                f"Expected one of {valid_outcomes}"
-            )
+            logger.error(f"Cannot publish outcome: invalid outcome '{outcome}'. Expected one of {valid_outcomes}")
             return False
 
         update = OutcomeUpdate(
@@ -159,8 +154,7 @@ class OutcomePublisher:
             self._pending_updates.append(update)
 
         logger.debug(
-            f"Queued handoff outcome for publication: {source_bot}->{target_bot} "
-            f"({outcome}) for contact {contact_id}"
+            f"Queued handoff outcome for publication: {source_bot}->{target_bot} ({outcome}) for contact {contact_id}"
         )
         return True
 
@@ -183,16 +177,13 @@ class OutcomePublisher:
 
             # Rate limit check: remove timestamps older than 60 seconds
             now = time.time()
-            self._write_timestamps = [
-                ts for ts in self._write_timestamps if now - ts < 60
-            ]
+            self._write_timestamps = [ts for ts in self._write_timestamps if now - ts < 60]
 
             # Calculate how many writes we can do
             available_capacity = self.MAX_WRITES_PER_MINUTE - len(self._write_timestamps)
             if available_capacity <= 0:
                 logger.warning(
-                    f"Rate limit reached: {len(self._write_timestamps)} writes "
-                    f"in last 60s. Deferring batch."
+                    f"Rate limit reached: {len(self._write_timestamps)} writes in last 60s. Deferring batch."
                 )
                 return
 
@@ -207,9 +198,7 @@ class OutcomePublisher:
                 self._write_timestamps.append(time.time())
 
         if success_count > 0:
-            logger.info(
-                f"Published {success_count}/{len(batch)} handoff outcomes to GHL"
-            )
+            logger.info(f"Published {success_count}/{len(batch)} handoff outcomes to GHL")
 
     async def _publish_single_outcome(self, update: OutcomeUpdate) -> bool:
         """Publish a single outcome update to GHL.
@@ -222,9 +211,7 @@ class OutcomePublisher:
         """
         try:
             # 1. Add outcome tag
-            tag = self._format_outcome_tag(
-                update.source_bot, update.target_bot, update.outcome
-            )
+            tag = self._format_outcome_tag(update.source_bot, update.target_bot, update.outcome)
             await self.ghl_client.add_tags(update.contact_id, [tag])
 
             # 2. Update custom fields
@@ -232,16 +219,10 @@ class OutcomePublisher:
                 self.CUSTOM_FIELD_IDS["last_handoff_source"]: update.source_bot,
                 self.CUSTOM_FIELD_IDS["last_handoff_target"]: update.target_bot,
                 self.CUSTOM_FIELD_IDS["last_handoff_outcome"]: update.outcome,
-                self.CUSTOM_FIELD_IDS["last_handoff_confidence"]: str(
-                    round(update.confidence, 2)
-                ),
-                self.CUSTOM_FIELD_IDS["last_handoff_timestamp"]: str(
-                    int(update.timestamp)
-                ),
+                self.CUSTOM_FIELD_IDS["last_handoff_confidence"]: str(round(update.confidence, 2)),
+                self.CUSTOM_FIELD_IDS["last_handoff_timestamp"]: str(int(update.timestamp)),
             }
-            await self.ghl_client.update_custom_fields_batch(
-                update.contact_id, custom_fields
-            )
+            await self.ghl_client.update_custom_fields_batch(update.contact_id, custom_fields)
 
             logger.info(
                 f"Published handoff outcome to GHL: {update.source_bot}->"

@@ -67,10 +67,7 @@ def get_provider(name: str = "openai", **kwargs: Any) -> LLMProvider:
     elif name == "openai":
         return OpenAICompatibleProvider(**kwargs)
     else:
-        raise ValueError(
-            f"Unknown provider: {name}. "
-            f"Supported providers: 'openai', 'litellm'"
-        )
+        raise ValueError(f"Unknown provider: {name}. Supported providers: 'openai', 'litellm'")
 
 
 __all__ = [

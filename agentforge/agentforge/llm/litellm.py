@@ -77,6 +77,7 @@ class LiteLLMProvider(LLMProvider):
         if self._litellm is None:
             try:
                 import litellm
+
                 self._litellm = litellm
             except ImportError as e:
                 raise ImportError(
@@ -168,14 +169,16 @@ class LiteLLMProvider(LLMProvider):
             if hasattr(choice.message, "tool_calls") and choice.message.tool_calls:
                 tool_calls = []
                 for tc in choice.message.tool_calls:
-                    tool_calls.append({
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments,
-                        },
-                    })
+                    tool_calls.append(
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments,
+                            },
+                        }
+                    )
 
             usage = LLMUsage(
                 prompt_tokens=response.usage.prompt_tokens,

@@ -1,4 +1,5 @@
 """Tests for MarketIntelligenceLoader."""
+
 import os
 from pathlib import Path
 

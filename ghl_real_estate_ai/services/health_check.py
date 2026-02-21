@@ -344,9 +344,7 @@ class HealthCheckService:
             headers = {"Authorization": f"Bearer {settings.GHL_ACCESS_TOKEN}", "Content-Type": "application/json"}
 
             # Test with locations endpoint (minimal data)
-            response = await self.http_client.get(
-                "https://services.leadconnectorhq.com/locations/", headers=headers
-            )
+            response = await self.http_client.get("https://services.leadconnectorhq.com/locations/", headers=headers)
 
             response_time = (time.time() - start_time) * 1000
 

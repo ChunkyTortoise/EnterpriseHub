@@ -8,7 +8,6 @@ Implements research recommendations for sophisticated BI capabilities.
 Author: Enhanced from research recommendations - January 2026
 """
 
-
 import numpy as np
 import pandas as pd
 import plotly.express as px

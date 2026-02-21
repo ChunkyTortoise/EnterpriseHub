@@ -45,7 +45,7 @@ class SDRReplyResult:
     """Result of SDRAgent.process_inbound_reply()."""
 
     contact_id: str
-    action_taken: str   # "opt_out" | "rebuttal_sent" | "sequence_advanced" | "gate_passed" | "no_action"
+    action_taken: str  # "opt_out" | "rebuttal_sent" | "sequence_advanced" | "gate_passed" | "no_action"
     gate_decision: Optional["GateDecision"] = None
     objection_type: Optional[str] = None
     handoff_triggered: bool = False
@@ -96,6 +96,7 @@ class SDRAgent(BaseBotWorkflow):
 
         # Intent decoder for qualification gate
         from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+
         self._intent_decoder = LeadIntentDecoder(ghl_client=ghl_client)
         self._gate = QualificationGate(intent_decoder=self._intent_decoder)
 
@@ -155,9 +156,7 @@ class SDRAgent(BaseBotWorkflow):
                         },
                     )
                 except Exception as exc:
-                    logger.error(
-                        f"[SDR] Enrollment failed contact={prospect.contact_id}: {exc}"
-                    )
+                    logger.error(f"[SDR] Enrollment failed contact={prospect.contact_id}: {exc}")
                     result.errors += 1
 
         except Exception as exc:
@@ -221,10 +220,7 @@ class SDRAgent(BaseBotWorkflow):
         if objection_result.should_pause:
             result.action_taken = "rebuttal_sent"
             # Phase 2: dispatch rebuttal via GHL; for now just log
-            logger.info(
-                f"[SDR] Nurture pause for contact={contact_id} "
-                f"objection={objection_result.objection_type}"
-            )
+            logger.info(f"[SDR] Nurture pause for contact={contact_id} objection={objection_result.objection_type}")
             return result
 
         if objection_result.objection_type is not None:
@@ -238,6 +234,7 @@ class SDRAgent(BaseBotWorkflow):
             ProspectProfile,
             ProspectSource,
         )
+
         dummy_profile = ProspectProfile(
             contact_id=contact_id,
             location_id=location_id,
@@ -275,6 +272,7 @@ class SDRAgent(BaseBotWorkflow):
             ProspectProfile,
             ProspectSource,
         )
+
         dummy_profile = ProspectProfile(
             contact_id=contact_id,
             location_id=location_id,
@@ -304,6 +302,7 @@ class SDRAgent(BaseBotWorkflow):
             from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
                 JorgeHandoffService,
             )
+
             handoff_service = JorgeHandoffService()
             await handoff_service.evaluate_handoff_from_profile(
                 current_bot="sdr",
@@ -324,13 +323,8 @@ class SDRAgent(BaseBotWorkflow):
                     "frs_score": gate_decision.frs_score,
                 },
             )
-            logger.info(
-                f"[SDR] Handoff triggered contact={contact_id} "
-                f"target={gate_decision.handoff_target}"
-            )
+            logger.info(f"[SDR] Handoff triggered contact={contact_id} target={gate_decision.handoff_target}")
             return True
         except Exception as exc:
-            logger.error(
-                f"[SDR] Handoff failed contact={contact_id}: {exc}", exc_info=True
-            )
+            logger.error(f"[SDR] Handoff failed contact={contact_id}: {exc}", exc_info=True)
             return False

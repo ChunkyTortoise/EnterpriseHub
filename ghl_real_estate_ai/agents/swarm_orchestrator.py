@@ -249,23 +249,27 @@ class ConflictResolver:
                 for key in shared_keys:
                     v1, v2 = agent_values[a1][key], agent_values[a2][key]
                     if isinstance(v1, bool) and isinstance(v2, bool) and v1 != v2:
-                        contradictions.append({
-                            "topic": key,
-                            "entries": [
-                                {"key": key, "agent": a1, "value": v1},
-                                {"key": key, "agent": a2, "value": v2},
-                            ],
-                        })
-                    elif isinstance(v1, (int, float)) and isinstance(v2, (int, float)):
-                        avg = (abs(v1) + abs(v2)) / 2
-                        if avg > 0 and abs(v1 - v2) / avg > 0.5:
-                            contradictions.append({
+                        contradictions.append(
+                            {
                                 "topic": key,
                                 "entries": [
                                     {"key": key, "agent": a1, "value": v1},
                                     {"key": key, "agent": a2, "value": v2},
                                 ],
-                            })
+                            }
+                        )
+                    elif isinstance(v1, (int, float)) and isinstance(v2, (int, float)):
+                        avg = (abs(v1) + abs(v2)) / 2
+                        if avg > 0 and abs(v1 - v2) / avg > 0.5:
+                            contradictions.append(
+                                {
+                                    "topic": key,
+                                    "entries": [
+                                        {"key": key, "agent": a1, "value": v1},
+                                        {"key": key, "agent": a2, "value": v2},
+                                    ],
+                                }
+                            )
         return contradictions
 
     async def _resolve_with_llm(self, key: str, entries: List[Dict]) -> str:
@@ -368,7 +372,7 @@ class SwarmOrchestrator:
         task.status = TaskStatus.IN_PROGRESS
         task.started_at = datetime.now()
 
-    # ROADMAP-050: Tool registry dispatch — skills resolved via skill_registry
+        # ROADMAP-050: Tool registry dispatch — skills resolved via skill_registry
         model_name = "gemini-2.0-flash" if complexity == "high" else self.llm.model
 
         context = self.blackboard.get_full_context()
@@ -907,15 +911,17 @@ class SwarmOrchestrator:
         plan = []
         for tid in order:
             task = self.tasks[tid]
-            plan.append({
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "assigned_to": task.assigned_to.value,
-                "priority": task.priority,
-                "estimated_time": task.estimated_time,
-                "dependencies": task.dependencies,
-            })
+            plan.append(
+                {
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.description,
+                    "assigned_to": task.assigned_to.value,
+                    "priority": task.priority,
+                    "estimated_time": task.estimated_time,
+                    "dependencies": task.dependencies,
+                }
+            )
         return plan
 
     def _calculate_complexity(self) -> float:

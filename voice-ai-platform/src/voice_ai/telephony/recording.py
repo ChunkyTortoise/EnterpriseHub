@@ -9,7 +9,17 @@ logger = logging.getLogger(__name__)
 
 # US states requiring two-party consent for call recording
 TWO_PARTY_CONSENT_STATES = {
-    "CA", "CT", "FL", "IL", "MD", "MA", "MI", "MT", "NH", "PA", "WA",
+    "CA",
+    "CT",
+    "FL",
+    "IL",
+    "MD",
+    "MA",
+    "MI",
+    "MT",
+    "NH",
+    "PA",
+    "WA",
 }
 
 CONSENT_PROMPT = (
@@ -69,9 +79,7 @@ class RecordingManager:
             return False
         return None
 
-    def get_opening_sequence(
-        self, direction: str, caller_state: str | None = None
-    ) -> list[str]:
+    def get_opening_sequence(self, direction: str, caller_state: str | None = None) -> list[str]:
         """Return the sequence of messages for the call opening.
 
         For outbound calls: AI disclosure + consent prompt (if needed)

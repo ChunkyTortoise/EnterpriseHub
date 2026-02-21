@@ -58,9 +58,7 @@ class LLMResponse(BaseModel):
 
     content: str
     model: str
-    usage: dict[str, int] = Field(
-        default_factory=lambda: {"prompt_tokens": 0, "completion_tokens": 0}
-    )
+    usage: dict[str, int] = Field(default_factory=lambda: {"prompt_tokens": 0, "completion_tokens": 0})
     latency_ms: float = 0.0
     finish_reason: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)

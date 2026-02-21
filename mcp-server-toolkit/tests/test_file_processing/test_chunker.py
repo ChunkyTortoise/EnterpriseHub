@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mcp_toolkit.servers.file_processing.chunker import TextChunker, Chunk
+from mcp_toolkit.servers.file_processing.chunker import Chunk, TextChunker
 
 
 @pytest.fixture
@@ -91,7 +91,9 @@ class TestParagraphStrategy:
 class TestMarkdownStrategy:
     def test_markdown_with_headings(self):
         c = TextChunker(chunk_size=100, chunk_overlap=0)
-        text = "# Section 1\n\nContent 1.\n\n## Section 2\n\nContent 2.\n\n# Section 3\n\nContent 3."
+        text = (
+            "# Section 1\n\nContent 1.\n\n## Section 2\n\nContent 2.\n\n# Section 3\n\nContent 3."
+        )
         chunks = c.chunk(text, strategy="markdown")
         assert len(chunks) >= 1
 

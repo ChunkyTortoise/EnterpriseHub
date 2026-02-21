@@ -239,7 +239,11 @@ class MockApolloClient:
 
     async def search_companies(self, ontario_mills: str) -> Dict[str, Any]:
         self.api_calls.append(
-            {"endpoint": "search_companies", "params": {"ontario_mills": ontario_mills}, "timestamp": datetime.now().isoformat()}
+            {
+                "endpoint": "search_companies",
+                "params": {"ontario_mills": ontario_mills},
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         return {

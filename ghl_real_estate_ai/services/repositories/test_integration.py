@@ -1,7 +1,4 @@
 import pytest
-
-@pytest.mark.integration
-#!/usr/bin/env python3
 """
 Test Repository Pattern + Strategy Pattern Integration
 
@@ -21,6 +18,7 @@ sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(services_dir))
 
 
+@pytest.mark.integration
 async def test_strategy_pattern_integration():
     """Test that Strategy Pattern integration works correctly"""
     print("🔧 Testing Repository Pattern + Strategy Pattern Integration...")

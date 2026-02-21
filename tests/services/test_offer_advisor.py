@@ -40,9 +40,7 @@ async def test_sellers_market_suggests_above_list(advisor, base_buyer):
     property_data = {"price": 500_000, "days_on_market": 5}
     market = {"market_type": "sellers"}
 
-    result = await advisor.analyze_offer_position(
-        property_data, base_buyer, market_conditions=market
-    )
+    result = await advisor.analyze_offer_position(property_data, base_buyer, market_conditions=market)
 
     assert isinstance(result, OfferStrategy)
     assert result.suggested_price > 500_000
@@ -55,9 +53,7 @@ async def test_buyers_market_suggests_below_list(advisor, base_buyer):
     property_data = {"price": 500_000, "days_on_market": 50}
     market = {"market_type": "buyers"}
 
-    result = await advisor.analyze_offer_position(
-        property_data, base_buyer, market_conditions=market
-    )
+    result = await advisor.analyze_offer_position(property_data, base_buyer, market_conditions=market)
 
     assert result.suggested_price < 500_000
     assert "below list" in result.price_rationale.lower()
@@ -69,14 +65,10 @@ async def test_high_dom_more_aggressive(advisor, base_buyer):
     market = {"market_type": "buyers"}
 
     prop_30 = {"price": 500_000, "days_on_market": 30}
-    result_30 = await advisor.analyze_offer_position(
-        prop_30, base_buyer, market_conditions=market
-    )
+    result_30 = await advisor.analyze_offer_position(prop_30, base_buyer, market_conditions=market)
 
     prop_70 = {"price": 500_000, "days_on_market": 70}
-    result_70 = await advisor.analyze_offer_position(
-        prop_70, base_buyer, market_conditions=market
-    )
+    result_70 = await advisor.analyze_offer_position(prop_70, base_buyer, market_conditions=market)
 
     # Higher DOM should produce a lower suggested price
     assert result_70.suggested_price < result_30.suggested_price
@@ -94,8 +86,7 @@ async def test_earnest_money_percentage(advisor, base_property, base_buyer):
             base_property, base_buyer, market_conditions={"market_type": market_type}
         )
         assert result.earnest_money_pct == expected_pct, (
-            f"Expected {expected_pct}% for {market_type} market, "
-            f"got {result.earnest_money_pct}%"
+            f"Expected {expected_pct}% for {market_type} market, got {result.earnest_money_pct}%"
         )
 
 
@@ -146,9 +137,7 @@ async def test_competitive_assessment(advisor, base_buyer):
     # Seller's market with cash buyer (strong offer: high price + few contingencies + high earnest)
     cash_buyer = {"financing_status": "cash", "budget_max": 600_000}
     prop = {"price": 500_000, "days_on_market": 5}
-    result = await advisor.analyze_offer_position(
-        prop, cash_buyer, market_conditions={"market_type": "sellers"}
-    )
+    result = await advisor.analyze_offer_position(prop, cash_buyer, market_conditions={"market_type": "sellers"})
     assert result.competitive_assessment == "strong"
 
     # Buyer's market offer (weak: low price, many contingencies, low earnest)

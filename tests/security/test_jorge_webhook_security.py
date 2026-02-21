@@ -37,12 +37,14 @@ def _get_test_app():
     from ghl_real_estate_ai.core import llm_client
 
     if not hasattr(llm_client, "LLMCircuitOpenError"):
+
         class LLMCircuitOpenError(Exception):
             pass
 
         llm_client.LLMCircuitOpenError = LLMCircuitOpenError
 
     if not hasattr(llm_client, "LLMTimeoutError"):
+
         class LLMTimeoutError(Exception):
             pass
 
@@ -408,7 +410,9 @@ class TestJorgeWebhookSecurity:
         results = []
 
         def make_request():
-            return client.post(self._webhook_path(client), json=jorge_webhook_payload, headers={"Content-Type": "application/json"})
+            return client.post(
+                self._webhook_path(client), json=jorge_webhook_payload, headers={"Content-Type": "application/json"}
+            )
 
         # Test 20 concurrent requests
         with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
@@ -449,7 +453,9 @@ class TestJorgeWebhookSecurity:
             mock_log = Mock()
             mock_logger.return_value = mock_log
 
-            client.post(self._webhook_path(client), json=jorge_webhook_payload, headers={"Content-Type": "application/json"})
+            client.post(
+                self._webhook_path(client), json=jorge_webhook_payload, headers={"Content-Type": "application/json"}
+            )
 
             # Check all log calls for PII
             all_log_calls = (

@@ -1,4 +1,3 @@
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -453,6 +452,7 @@ async def qualify_buyer_with_jorge_bot(buyer_id: str, buyer_name: str, conversat
             )
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).warning(f"Buyer qualification event publishing failed: {e}")
             pass  # Event publishing is optional
 

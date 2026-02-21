@@ -26,6 +26,7 @@ def mock_analytics():
 def handoff_service(mock_analytics):
     # Reset PerformanceTracker singleton so buyer-bot test state doesn't contaminate
     from ghl_real_estate_ai.services.jorge.performance_tracker import PerformanceTracker
+
     PerformanceTracker.reset()
     return JorgeHandoffService(analytics_service=mock_analytics)
 
@@ -195,6 +196,7 @@ class TestSellerBotConfig:
 
     def test_defaults(self):
         from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+
         config = SellerBotConfig()
         assert config.enable_cma_generation is True
         assert config.enable_market_intelligence is True
@@ -207,12 +209,14 @@ class TestSellerBotConfig:
 
     def test_from_environment_defaults(self):
         from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+
         config = SellerBotConfig.from_environment()
         assert config.enable_cma_generation is True
         assert config.listing_prep_qualification_threshold == 0.75
 
     def test_from_environment_overrides(self, monkeypatch):
         from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+
         monkeypatch.setenv("SELLER_ENABLE_CMA", "false")
         monkeypatch.setenv("SELLER_HOT_FRS_THRESHOLD", "80.0")
         config = SellerBotConfig.from_environment()
@@ -221,6 +225,7 @@ class TestSellerBotConfig:
 
     def test_feature_flags_independent(self):
         from ghl_real_estate_ai.ghl_utils.jorge_config import SellerBotConfig
+
         config = SellerBotConfig(
             enable_cma_generation=False,
             enable_listing_prep=True,

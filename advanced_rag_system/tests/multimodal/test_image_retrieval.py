@@ -21,8 +21,6 @@ from src.multimodal.image_retriever import (
 
 
 @pytest.mark.integration
-
-
 class TestMockCLIPEmbeddingProvider:
     """Tests for mock CLIP embedding provider."""
 

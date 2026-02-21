@@ -11,9 +11,10 @@ Create Date: 2026-02-16
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "002"
 down_revision: Union[str, None] = "001"
@@ -98,10 +99,7 @@ def upgrade() -> None:
     )
 
     # Add vector column for embeddings (1536 dimensions for OpenAI text-embedding-3-small)
-    op.execute(
-        f"ALTER TABLE {TEMPLATE_SCHEMA}.chunks "
-        f"ADD COLUMN embedding vector(1536)"
-    )
+    op.execute(f"ALTER TABLE {TEMPLATE_SCHEMA}.chunks ADD COLUMN embedding vector(1536)")
 
     # Query logs
     op.create_table(

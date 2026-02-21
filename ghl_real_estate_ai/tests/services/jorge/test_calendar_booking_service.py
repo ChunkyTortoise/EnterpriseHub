@@ -56,9 +56,7 @@ def mock_ghl_client():
     """Mock GHL client with calendar methods."""
     client = AsyncMock()
     client.get_free_slots = AsyncMock(return_value=MOCK_SLOTS)
-    client.create_appointment = AsyncMock(
-        return_value={"id": "appt_456", "status": "confirmed"}
-    )
+    client.create_appointment = AsyncMock(return_value={"id": "appt_456", "status": "confirmed"})
     return client
 
 
@@ -120,9 +118,7 @@ class TestSlotsFormatting:
 # ============================================================================
 class TestNoAvailability:
     @pytest.mark.asyncio
-    async def test_empty_slots_returns_fallback(
-        self, service_with_calendar, mock_ghl_client
-    ):
+    async def test_empty_slots_returns_fallback(self, service_with_calendar, mock_ghl_client):
         """When API returns zero slots, should return fallback message."""
         mock_ghl_client.get_free_slots.return_value = []
 
@@ -138,9 +134,7 @@ class TestNoAvailability:
 # ============================================================================
 class TestValidBookingFlow:
     @pytest.mark.asyncio
-    async def test_successful_booking_returns_confirmation(
-        self, service_with_calendar, mock_ghl_client
-    ):
+    async def test_successful_booking_returns_confirmation(self, service_with_calendar, mock_ghl_client):
         """Full flow: offer slots -> select slot 0 -> get confirmation."""
         # Step 1: Offer slots
         await service_with_calendar.offer_appointment_slots("contact_1")
@@ -196,9 +190,7 @@ class TestNoPendingOffer:
     async def test_booking_without_offer_returns_no_pending(self, service_with_calendar):
         """Attempting to book without first offering slots should fail with
         a helpful message."""
-        result = await service_with_calendar.book_appointment(
-            "unknown_contact", slot_index=0
-        )
+        result = await service_with_calendar.book_appointment("unknown_contact", slot_index=0)
 
         assert result["success"] is False
         assert result["appointment"] is None
@@ -210,9 +202,7 @@ class TestNoPendingOffer:
 # ============================================================================
 class TestAPIFailure:
     @pytest.mark.asyncio
-    async def test_create_appointment_returns_none_on_failure(
-        self, service_with_calendar, mock_ghl_client
-    ):
+    async def test_create_appointment_returns_none_on_failure(self, service_with_calendar, mock_ghl_client):
         """When GHL create_appointment returns None (API error),
         should fail gracefully with a retry-friendly message."""
         await service_with_calendar.offer_appointment_slots("contact_1")

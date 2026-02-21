@@ -1,4 +1,3 @@
-
 import asyncio
 
 from playwright.async_api import async_playwright
@@ -7,29 +6,29 @@ from playwright.async_api import async_playwright
 async def run():
     email = "caymanroden@gmail.com"
     print(f"Starting fresh signup attempt for {email}...")
-    
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         # Use a realistic user agent and window size
         context = await browser.new_context(
-            viewport={'width': 1280, 'height': 800},
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            viewport={"width": 1280, "height": 800},
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         )
         page = await context.new_page()
-        
+
         try:
             # 1. Home Page
             print("Step 1: Navigating to https://contra.com...")
             await page.goto("https://contra.com", wait_until="networkidle")
             await page.screenshot(path="debug_1_home.png")
-            
+
             # 2. Click Sign Up
             print("Step 2: Locating Sign Up button...")
             # Try finding the button by text specifically in the header
             signup_btn = page.get_by_role("button", name="Sign Up").first
             if not await signup_btn.is_visible():
-                 signup_btn = page.locator("button:has-text('Sign Up')").first
-            
+                signup_btn = page.locator("button:has-text('Sign Up')").first
+
             if await signup_btn.is_visible():
                 print("Clicking 'Sign Up'...")
                 await signup_btn.click()
@@ -50,7 +49,12 @@ async def run():
                 await continue_email.click()
                 await page.wait_for_timeout(2000)
 
-            selectors = ["input[type='email']", "input[name='email']", "input[placeholder*='email']", "input[aria-label*='email']"]
+            selectors = [
+                "input[type='email']",
+                "input[name='email']",
+                "input[placeholder*='email']",
+                "input[aria-label*='email']",
+            ]
             email_input = None
             for selector in selectors:
                 try:
@@ -68,14 +72,14 @@ async def run():
                 print("Email submitted.")
                 await page.wait_for_timeout(5000)
                 await page.screenshot(path="debug_4_final_state.png")
-                
+
                 content = await page.content()
                 if "code" in content.lower() or "verify" in content.lower() or "sent" in content.lower():
                     print("SUCCESS: Verification screen reached.")
                     # Look for the email mentioned on page to confirm
                     if email in content:
                         print(f"Confirmed: Code sent to {email}")
-                    
+
                     # Check for resend button
                     resend = page.get_by_text("Resend", exact=False)
                     if await resend.is_visible():
@@ -85,12 +89,13 @@ async def run():
                     print(f"URL: {page.url}")
             else:
                 print("FAILED: Could not find email input field.")
-                
+
         except Exception as e:
             print(f"ERROR: {e}")
             await page.screenshot(path="debug_error.png")
         finally:
             await browser.close()
+
 
 if __name__ == "__main__":
     asyncio.run(run())

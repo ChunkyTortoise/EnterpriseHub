@@ -89,9 +89,11 @@ def register_agent_type(name: str) -> Callable[[type], type]:
             ...
         ```
     """
+
     def decorator(cls: type) -> type:
         _agent_types[name] = cls
         return cls
+
     return decorator
 
 
@@ -104,9 +106,11 @@ def register_tool_type(name: str) -> Callable[[type], type]:
     Returns:
         Decorator function.
     """
+
     def decorator(cls: type) -> type:
         _tool_types[name] = cls
         return cls
+
     return decorator
 
 
@@ -119,9 +123,11 @@ def register_memory_backend(name: str) -> Callable[[type], type]:
     Returns:
         Decorator function.
     """
+
     def decorator(cls: type) -> type:
         _memory_backends[name] = cls
         return cls
+
     return decorator
 
 
@@ -134,9 +140,11 @@ def register_llm_provider(name: str) -> Callable[[type], type]:
     Returns:
         Decorator function.
     """
+
     def decorator(cls: type) -> type:
         _llm_providers[name] = cls
         return cls
+
     return decorator
 
 

@@ -21,8 +21,6 @@ from src.agents.tool_registry import ToolResult
 
 
 @pytest.mark.unit
-
-
 def _make_tool_result(
     tool_name="vector_search",
     success=True,

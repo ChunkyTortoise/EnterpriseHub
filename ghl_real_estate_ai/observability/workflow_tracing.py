@@ -219,9 +219,7 @@ def trace_workflow_node(bot_type: str, node_name: str):
                 # Extract contact ID from state
                 contact_id = state.get("lead_id") or state.get("contact_id")
 
-                async with async_workflow_span(
-                    bot_type, node_name, contact_id=contact_id
-                ) as span:
+                async with async_workflow_span(bot_type, node_name, contact_id=contact_id) as span:
                     # Add state metadata to span
                     if "current_step" in state:
                         span.set_attribute("workflow.current_step", state["current_step"])

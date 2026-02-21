@@ -210,9 +210,7 @@ def render_llmops_dashboard():
 
         health = perf_metrics.get("health", {})
         status = health.get("status", "unknown")
-        status_emoji = {"healthy": "OK", "warning": "WARN", "critical": "CRIT"}.get(
-            status, "?"
-        )
+        status_emoji = {"healthy": "OK", "warning": "WARN", "critical": "CRIT"}.get(status, "?")
         st.metric("System Health", status_emoji)
 
     # ------------------------------------------------------------------

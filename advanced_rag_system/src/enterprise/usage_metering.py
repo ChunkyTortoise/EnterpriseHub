@@ -1,4 +1,5 @@
 """Per-tenant usage tracking: query counts and token consumption."""
+
 from __future__ import annotations
 
 import threading

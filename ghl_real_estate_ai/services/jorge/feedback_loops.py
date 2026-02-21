@@ -47,11 +47,13 @@ class AbandonmentRecord:
 class RoutingWeights:
     """Dynamic routing weights per bot, adjusted by performance."""
 
-    weights: Dict[str, float] = field(default_factory=lambda: {
-        "lead_bot": 1.0,
-        "buyer_bot": 1.0,
-        "seller_bot": 1.0,
-    })
+    weights: Dict[str, float] = field(
+        default_factory=lambda: {
+            "lead_bot": 1.0,
+            "buyer_bot": 1.0,
+            "seller_bot": 1.0,
+        }
+    )
     last_updated: float = 0.0
 
 
@@ -133,7 +135,8 @@ class FeedbackLoopManager:
         active_count = sum(1 for a in adjustments.values() if a["effective"])
         logger.info(
             "Loop 1 (threshold adjustment): %d/%d routes have active learned adjustments",
-            active_count, len(routes),
+            active_count,
+            len(routes),
         )
 
         return {"status": "ok", "adjustments": adjustments}
@@ -299,18 +302,19 @@ class FeedbackLoopManager:
             if auto_deactivate:
                 self._ab_testing.deactivate_experiment(exp_id)
 
-            promoted.append({
-                "experiment_id": exp_id,
-                "winning_variant": candidate["winning_variant"],
-                "lift_percent": candidate["lift_percent"],
-                "p_value": candidate["p_value"],
-                "sample_size": candidate["sample_size"],
-                "auto_deactivated": auto_deactivate,
-            })
+            promoted.append(
+                {
+                    "experiment_id": exp_id,
+                    "winning_variant": candidate["winning_variant"],
+                    "lift_percent": candidate["lift_percent"],
+                    "p_value": candidate["p_value"],
+                    "sample_size": candidate["sample_size"],
+                    "auto_deactivated": auto_deactivate,
+                }
+            )
 
             logger.info(
-                "Loop 3 (A/B promotion): Experiment '%s' winner='%s' "
-                "lift=%.1f%% p=%.4f samples=%d",
+                "Loop 3 (A/B promotion): Experiment '%s' winner='%s' lift=%.1f%% p=%.4f samples=%d",
                 exp_id,
                 candidate["winning_variant"],
                 candidate["lift_percent"],
@@ -346,15 +350,17 @@ class FeedbackLoopManager:
 
         escalation_details = []
         for alert, level in escalations:
-            escalation_details.append({
-                "alert_id": alert.id,
-                "rule_name": alert.rule_name,
-                "severity": alert.severity,
-                "escalation_level": level.level,
-                "channels": level.channels,
-                "description": level.description,
-                "age_seconds": round(time.time() - alert.triggered_at, 1),
-            })
+            escalation_details.append(
+                {
+                    "alert_id": alert.id,
+                    "rule_name": alert.rule_name,
+                    "severity": alert.severity,
+                    "escalation_level": level.level,
+                    "channels": level.channels,
+                    "description": level.description,
+                    "age_seconds": round(time.time() - alert.triggered_at, 1),
+                }
+            )
 
             # Send to escalation channels
             for channel in level.channels:
@@ -412,6 +418,7 @@ class FeedbackLoopManager:
             # Check SLA compliance
             sla_breached = False
             from ghl_real_estate_ai.services.jorge.performance_tracker import SLA_CONFIG
+
             sla = SLA_CONFIG.get(bot_name, {}).get("process", {})
             p95_target = sla.get("p95_target", 2000)
 
@@ -429,15 +436,17 @@ class FeedbackLoopManager:
 
             if new_weight != old_weight:
                 self._routing_weights.weights[bot_name] = round(new_weight, 2)
-                adjustments.append({
-                    "bot_name": bot_name,
-                    "old_weight": old_weight,
-                    "new_weight": round(new_weight, 2),
-                    "reason": "sla_breach" if sla_breached else "recovery",
-                    "p95": stats["p95"],
-                    "p95_target": p95_target,
-                    "success_rate": stats["success_rate"],
-                })
+                adjustments.append(
+                    {
+                        "bot_name": bot_name,
+                        "old_weight": old_weight,
+                        "new_weight": round(new_weight, 2),
+                        "reason": "sla_breach" if sla_breached else "recovery",
+                        "p95": stats["p95"],
+                        "p95_target": p95_target,
+                        "success_rate": stats["success_rate"],
+                    }
+                )
 
         self._routing_weights.last_updated = time.time()
         self._loop_stats["routing_weight_adjustment"]["runs"] += 1

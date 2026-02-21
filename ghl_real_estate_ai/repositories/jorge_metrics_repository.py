@@ -348,12 +348,8 @@ class JorgeMetricsRepository:
                     "severity": r["severity"],
                     "message": r["message"],
                     "triggered_at": r["triggered_at"],
-                    "performance_stats": (
-                        json.loads(r["performance_stats"]) if r["performance_stats"] else None
-                    ),
-                    "channels_sent": (
-                        json.loads(r["channels_sent"]) if r["channels_sent"] else None
-                    ),
+                    "performance_stats": (json.loads(r["performance_stats"]) if r["performance_stats"] else None),
+                    "channels_sent": (json.loads(r["channels_sent"]) if r["channels_sent"] else None),
                     "acknowledged": r["acknowledged"],
                     "acknowledged_at": r["acknowledged_at"],
                     "acknowledged_by": r["acknowledged_by"],
@@ -472,9 +468,7 @@ class JorgeMetricsRepository:
                 {
                     "id": r["id"],
                     "name": r["name"],
-                    "condition_config": (
-                        json.loads(r["condition_config"]) if r["condition_config"] else {}
-                    ),
+                    "condition_config": (json.loads(r["condition_config"]) if r["condition_config"] else {}),
                     "severity": r["severity"],
                     "cooldown_seconds": r["cooldown_seconds"],
                     "channels": json.loads(r["channels"]) if r["channels"] else [],

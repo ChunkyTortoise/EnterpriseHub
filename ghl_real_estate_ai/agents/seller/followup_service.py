@@ -32,18 +32,14 @@ class FollowUpService:
 
         # Update bot status
         await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="execute_follow_up"
+            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="execute_follow_up"
         )
 
         logger.info(f"Executing follow-up for {state['lead_name']} (Attempt {follow_up_count})")
 
         stage = state.get("current_journey_stage", "qualification")
         template = self.FOLLOW_UP_SCRIPTS.get(
-            stage,
-            "Still interested in selling {address} or should I close the file?"
+            stage, "Still interested in selling {address} or should I close the file?"
         )
         follow_up_message = template.format(address=state.get("property_address", "your property"))
 
@@ -57,10 +53,7 @@ class FollowUpService:
 
         # Mark bot as completed for this cycle
         await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="completed",
-            current_step="follow_up_sent"
+            bot_type="jorge-seller", contact_id=state["lead_id"], status="completed", current_step="follow_up_sent"
         )
 
         # In prod, send via GHL

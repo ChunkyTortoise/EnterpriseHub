@@ -139,8 +139,18 @@ class SellerAcceptanceFeatureExtractor:
 
     # Seasonal factors by month (0=Jan, 11=Dec)
     SEASONAL_FACTORS = [
-        0.4, 0.5, 0.7, 0.85, 0.95, 1.0,  # Jan-Jun
-        1.0, 0.95, 0.85, 0.7, 0.5, 0.4   # Jul-Dec
+        0.4,
+        0.5,
+        0.7,
+        0.85,
+        0.95,
+        1.0,  # Jan-Jun
+        1.0,
+        0.95,
+        0.85,
+        0.7,
+        0.5,
+        0.4,  # Jul-Dec
     ]
 
     def __init__(self):
@@ -196,14 +206,10 @@ class SellerAcceptanceFeatureExtractor:
             self.total_extraction_time_ms += extraction_time
 
             if extraction_time > 500:
-                logger.warning(
-                    f"Feature extraction exceeded target: {extraction_time:.2f}ms "
-                    f"for seller {seller_id}"
-                )
+                logger.warning(f"Feature extraction exceeded target: {extraction_time:.2f}ms for seller {seller_id}")
 
             logger.info(
-                f"Extracted {len(features.feature_names())} features in {extraction_time:.2f}ms "
-                f"for seller {seller_id}"
+                f"Extracted {len(features.feature_names())} features in {extraction_time:.2f}ms for seller {seller_id}"
             )
 
             return features
@@ -226,9 +232,7 @@ class SellerAcceptanceFeatureExtractor:
         if psychology_profile:
             # Psychological Commitment Score (PCS)
             pcs = psychology_profile.get("psychological_commitment_score", 50.0)
-            features.psychological_commitment_score = self._normalize_feature(
-                pcs, min_val=0.0, max_val=100.0
-            )
+            features.psychological_commitment_score = self._normalize_feature(pcs, min_val=0.0, max_val=100.0)
 
             # Urgency Score
             urgency_map = {"low": 0.2, "medium": 0.5, "high": 0.8, "critical": 1.0}
@@ -279,16 +283,12 @@ class SellerAcceptanceFeatureExtractor:
 
         # List Price Ratio (list price / estimated market value)
         list_price = property_data.get("list_price", 0.0)
-        market_value = property_data.get("estimated_market_value") or market_data.get(
-            "estimated_value", list_price
-        )
+        market_value = property_data.get("estimated_market_value") or market_data.get("estimated_value", list_price)
 
         if market_value > 0:
             price_ratio = list_price / market_value
             # Normalize: 0.8 (20% under) to 1.2 (20% over) maps to [0, 1]
-            features.list_price_ratio = self._normalize_feature(
-                price_ratio, min_val=0.8, max_val=1.2, clip=True
-            )
+            features.list_price_ratio = self._normalize_feature(price_ratio, min_val=0.8, max_val=1.2, clip=True)
 
             # Overpricing penalty (0 if fairly priced, up to 1.0 if severely overpriced)
             if price_ratio > 1.0:
@@ -311,9 +311,7 @@ class SellerAcceptanceFeatureExtractor:
         if market_avg_dom > 0:
             dom_ratio = dom / market_avg_dom
             # Normalize: 0 to 3x market average
-            features.days_on_market_ratio = self._normalize_feature(
-                dom_ratio, min_val=0.0, max_val=3.0, clip=True
-            )
+            features.days_on_market_ratio = self._normalize_feature(dom_ratio, min_val=0.0, max_val=3.0, clip=True)
         else:
             features.missing_fields.append("market_avg_dom")
 
@@ -351,16 +349,12 @@ class SellerAcceptanceFeatureExtractor:
         # Absorption Rate (higher rate = hotter market)
         absorption_rate = market_data.get("absorption_rate", 0.15)  # Properties sold per month
         # Normalize: 0.05 (cold) to 0.3 (hot)
-        features.absorption_rate = self._normalize_feature(
-            absorption_rate, min_val=0.05, max_val=0.3, clip=True
-        )
+        features.absorption_rate = self._normalize_feature(absorption_rate, min_val=0.05, max_val=0.3, clip=True)
 
         # Price Trend Momentum
         price_trend = market_data.get("price_trend_pct", 0.0)  # Year-over-year %
         # Normalize: -10% (declining) to +15% (rising)
-        features.price_trend_momentum = self._normalize_feature(
-            price_trend, min_val=-10.0, max_val=15.0, clip=True
-        )
+        features.price_trend_momentum = self._normalize_feature(price_trend, min_val=-10.0, max_val=15.0, clip=True)
 
         # Seasonal Factor (based on current month)
         current_month = market_data.get("current_month", 5)  # 0=Jan, 11=Dec
@@ -388,9 +382,7 @@ class SellerAcceptanceFeatureExtractor:
         bath_score = 1.0 - abs(baths - 2.5) / 2.5
         sqft_score = 1.0 - abs(sqft - 2000) / 2000
 
-        features.property_appeal_score = max(
-            0.0, (bed_score + bath_score + sqft_score) / 3.0
-        )
+        features.property_appeal_score = max(0.0, (bed_score + bath_score + sqft_score) / 3.0)
 
         # Condition Score
         condition_map = {
@@ -425,9 +417,7 @@ class SellerAcceptanceFeatureExtractor:
         if comps:
             # Comp Count Confidence (more comps = higher confidence)
             comp_count = len(comps)
-            features.comp_count_confidence = self._normalize_feature(
-                comp_count, min_val=0.0, max_val=self.MAX_COMPS
-            )
+            features.comp_count_confidence = self._normalize_feature(comp_count, min_val=0.0, max_val=self.MAX_COMPS)
 
             # Comp Price Variance (lower variance = more predictable)
             comp_prices = [c.get("sale_price", 0) for c in comps if c.get("sale_price")]
@@ -437,9 +427,7 @@ class SellerAcceptanceFeatureExtractor:
                 cv = price_std / mean_price if mean_price > 0 else 0.0  # Coefficient of variation
                 # Normalize: 0 (no variance) to 0.3 (high variance)
                 # Invert so low variance = high score
-                features.comp_price_variance = 1.0 - self._normalize_feature(
-                    cv, min_val=0.0, max_val=0.3, clip=True
-                )
+                features.comp_price_variance = 1.0 - self._normalize_feature(cv, min_val=0.0, max_val=0.3, clip=True)
 
             # Comp Market Time (average DOM for comparable properties)
             comp_doms = [c.get("days_on_market", 30) for c in comps]
@@ -451,11 +439,13 @@ class SellerAcceptanceFeatureExtractor:
                     avg_comp_dom, min_val=0.0, max_val=self.MAX_DOM
                 )
         else:
-            features.missing_fields.extend([
-                "comp_count",
-                "comp_price_variance",
-                "comp_market_time",
-            ])
+            features.missing_fields.extend(
+                [
+                    "comp_count",
+                    "comp_price_variance",
+                    "comp_market_time",
+                ]
+            )
 
     def _normalize_feature(
         self,
@@ -487,11 +477,7 @@ class SellerAcceptanceFeatureExtractor:
 
     def get_statistics(self) -> Dict[str, float]:
         """Get extraction performance statistics."""
-        avg_time = (
-            self.total_extraction_time_ms / self.extraction_count
-            if self.extraction_count > 0
-            else 0.0
-        )
+        avg_time = self.total_extraction_time_ms / self.extraction_count if self.extraction_count > 0 else 0.0
 
         return {
             "total_extractions": self.extraction_count,

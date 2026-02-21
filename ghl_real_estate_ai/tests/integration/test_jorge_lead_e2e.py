@@ -46,17 +46,13 @@ def _mock_lead_deps():
     mock_ghost_engine = MagicMock()
     mock_ghost_engine.get_state = AsyncMock(return_value=None)
     mock_ghost_engine.update_state = AsyncMock()
-    mock_ghost_engine.process_lead_step = AsyncMock(
-        return_value={"content": "Mocked ghost response", "logic": "mock"}
-    )
+    mock_ghost_engine.process_lead_step = AsyncMock(return_value={"content": "Mocked ghost response", "logic": "mock"})
     mock_ghost_engine.get_stall_breaker = MagicMock(return_value="mock_stall_breaker")
 
     # Sequence service: all async
     mock_seq_service = MagicMock()
     mock_seq_service.get_state = AsyncMock(return_value=None)
-    mock_seq_service.create_sequence = AsyncMock(
-        side_effect=lambda lead_id, **kw: _make_sequence_state(lead_id)
-    )
+    mock_seq_service.create_sequence = AsyncMock(side_effect=lambda lead_id, **kw: _make_sequence_state(lead_id))
     mock_seq_service.update_state = AsyncMock()
     mock_seq_service.set_cma_generated = AsyncMock()
     mock_seq_service.mark_action_completed = AsyncMock()
@@ -139,9 +135,7 @@ def _mock_lead_deps():
 
         # CMA generator mock
         cma_instance = MockCMA.return_value
-        cma_instance.generate_report = AsyncMock(
-            return_value=MagicMock(zillow_variance_abs=5000, data={"mock": True})
-        )
+        cma_instance.generate_report = AsyncMock(return_value=MagicMock(zillow_variance_abs=5000, data={"mock": True}))
 
         # Performance tracker mock
         perf_instance = MockPerf.return_value
@@ -192,6 +186,7 @@ def _mock_lead_deps():
 # 1. New Lead Routing — incoming lead gets classified and routed
 # ---------------------------------------------------------------------------
 
+
 class TestNewLeadRouting:
     """Incoming leads are classified via intent decoder and routed through workflow."""
 
@@ -235,6 +230,7 @@ class TestNewLeadRouting:
 # 2. Ambiguous Lead — unclear intent gets appropriate follow-up
 # ---------------------------------------------------------------------------
 
+
 class TestAmbiguousLead:
     """Lead with unclear intent receives a nurturing or clarifying response."""
 
@@ -263,6 +259,7 @@ class TestAmbiguousLead:
 # ---------------------------------------------------------------------------
 # 3. Re-engagement — previously cold lead returns
 # ---------------------------------------------------------------------------
+
 
 class TestReEngagement:
     """A previously cold lead who returns is re-analyzed."""
@@ -296,6 +293,7 @@ class TestReEngagement:
 # ---------------------------------------------------------------------------
 # 4. Opt-Out Handling — lead says "stop" or "unsubscribe"
 # ---------------------------------------------------------------------------
+
 
 class TestLeadOptOut:
     """Opt-out messages processed without crashing.
@@ -339,6 +337,7 @@ class TestLeadOptOut:
 # 5. Lead-to-Seller Handoff — lead identified as seller gets transferred
 # ---------------------------------------------------------------------------
 
+
 class TestLeadToSellerHandoff:
     """Lead mentioning selling triggers handoff signals for seller bot."""
 
@@ -363,6 +362,7 @@ class TestLeadToSellerHandoff:
 # ---------------------------------------------------------------------------
 # 6. Lead-to-Buyer Handoff — lead identified as buyer gets transferred
 # ---------------------------------------------------------------------------
+
 
 class TestLeadToBuyerHandoff:
     """Lead mentioning buying triggers handoff signals for buyer bot."""
@@ -389,6 +389,7 @@ class TestLeadToBuyerHandoff:
 # ---------------------------------------------------------------------------
 # 7. Hot Lead Fast-Track — high-intent lead gets expedited routing
 # ---------------------------------------------------------------------------
+
 
 class TestHotLeadFastTrack:
     """High-intent lead classified HOT gets expedited through workflow."""
@@ -443,6 +444,7 @@ class TestHotLeadFastTrack:
 # 8. Cold Lead Nurture — low-intent lead enters drip sequence
 # ---------------------------------------------------------------------------
 
+
 class TestColdLeadNurture:
     """Low-intent lead is classified Cold and enters nurture path."""
 
@@ -490,6 +492,7 @@ class TestColdLeadNurture:
 # 9. Multi-Message Conversation — lead engages over multiple turns
 # ---------------------------------------------------------------------------
 
+
 class TestMultiMessageConversation:
     """Lead engages in a long multi-turn conversation."""
 
@@ -526,10 +529,7 @@ class TestMultiMessageConversation:
         """History exceeding MAX_CONVERSATION_HISTORY is pruned, no crash."""
         bot = LeadBotWorkflow(config=LeadBotConfig(jorge_handoff_enabled=False))
 
-        history = [
-            {"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"}
-            for i in range(60)
-        ]
+        history = [{"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"} for i in range(60)]
 
         result = await bot.process_lead_conversation(
             conversation_id="multi_msg_002",
@@ -545,6 +545,7 @@ class TestMultiMessageConversation:
 # ---------------------------------------------------------------------------
 # 10. Handoff Circular Prevention — prevent seller->lead->seller loops
 # ---------------------------------------------------------------------------
+
 
 class TestHandoffCircularPrevention:
     """Handoff signals should not cause circular routing loops."""
@@ -584,6 +585,7 @@ class TestHandoffCircularPrevention:
 # ---------------------------------------------------------------------------
 # Error Resilience
 # ---------------------------------------------------------------------------
+
 
 class TestLeadErrorResilience:
     """Bot handles edge cases gracefully without crashing."""

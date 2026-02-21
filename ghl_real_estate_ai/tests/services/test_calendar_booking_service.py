@@ -144,7 +144,6 @@ class TestBookAppointment:
         result = await service_with_calendar.book_appointment("contact_1", slot_index=0)
         assert result["success"] is False
 
-
     @pytest.mark.asyncio
     async def test_booking_fails_negative_slot_index(self, service_with_calendar):
         """Should fail gracefully when slot index is negative."""

@@ -28,8 +28,10 @@ DB_PATCH = "ghl_real_estate_ai.services.database_service.get_database"
 # Helpers: fake asyncpg rows and DB connection
 # ---------------------------------------------------------------------------
 
+
 class FakeRecord(dict):
     """Dict subclass that supports attribute-style access like asyncpg.Record."""
+
     pass
 
 
@@ -101,6 +103,7 @@ class FakeDB:
 # ROADMAP-008: get_subscription — real DB query
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_008_get_subscription_returns_db_data():
     """ROADMAP-008: get_subscription queries subscriptions table and returns real data."""
@@ -142,6 +145,7 @@ async def test_roadmap_008_get_subscription_not_found_raises_404():
 # ROADMAP-009: update_subscription — payment method + cancellation schedule
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_009_payment_method_update():
     """ROADMAP-009: update_subscription attaches payment method via Stripe and returns DB state."""
@@ -167,9 +171,7 @@ async def test_roadmap_009_payment_method_update():
 
     assert result.id == 1
     assert result.location_id == "loc_test_123"
-    mock_stripe.PaymentMethod.attach.assert_called_once_with(
-        "pm_new_card", customer="cus_stripe_xyz"
-    )
+    mock_stripe.PaymentMethod.attach.assert_called_once_with("pm_new_card", customer="cus_stripe_xyz")
     mock_stripe.Customer.modify.assert_called_once()
 
 
@@ -196,9 +198,7 @@ async def test_roadmap_009_cancel_at_period_end():
         result = await update_subscription(1, request, bg)
 
     assert result.id == 1
-    mock_stripe.Subscription.modify.assert_called_once_with(
-        "sub_stripe_abc", cancel_at_period_end=True
-    )
+    mock_stripe.Subscription.modify.assert_called_once_with("sub_stripe_abc", cancel_at_period_end=True)
     assert any("cancel_at_period_end" in q for q, _ in conn.executed)
 
 
@@ -226,6 +226,7 @@ async def test_roadmap_009_update_not_found():
 # ---------------------------------------------------------------------------
 # ROADMAP-010: cancel_subscription — double-cancel prevention
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_roadmap_010_double_cancel_returns_409():
@@ -299,6 +300,7 @@ async def test_roadmap_010_cancel_not_found_returns_404():
 # ROADMAP-011: record_usage — DB insert for usage records
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_011_usage_record_stored_in_db():
     """ROADMAP-011: record_usage inserts into usage_records + increments usage_current."""
@@ -350,13 +352,16 @@ async def test_roadmap_011_usage_record_stored_in_db():
 # ROADMAP-012: get_billing_history — location_id resolution
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_012_resolves_location_id_from_customers():
     """ROADMAP-012: get_billing_history resolves location_id from stripe_customers."""
-    customer_row = FakeRecord({
-        "location_id": "loc_resolved_456",
-        "stripe_customer_id": "cus_stripe_xyz",
-    })
+    customer_row = FakeRecord(
+        {
+            "location_id": "loc_resolved_456",
+            "stripe_customer_id": "cus_stripe_xyz",
+        }
+    )
     conn = FakeConn(fetchrow_result=customer_row)
     db = FakeDB(conn)
 
@@ -408,6 +413,7 @@ async def test_roadmap_012_fallback_when_no_customer_row():
 # ROADMAP-013: get_revenue_analytics — real DB queries
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_013_revenue_analytics_from_db():
     """ROADMAP-013: get_revenue_analytics calculates MRR, churn, ARPU from DB."""
@@ -446,7 +452,7 @@ async def test_roadmap_013_revenue_analytics_from_db():
     assert result.total_arr == Decimal("997.00") * 12
     assert result.total_active_subscriptions == 5
     assert result.top_tier_customers == 1
-    assert result.churn_rate == 5.0   # 1/20 * 100
+    assert result.churn_rate == 5.0  # 1/20 * 100
     assert result.upgrade_rate == 15.0  # 3/20 * 100
     assert call_count == 4  # 4 DB queries executed
 
@@ -454,6 +460,7 @@ async def test_roadmap_013_revenue_analytics_from_db():
 @pytest.mark.asyncio
 async def test_roadmap_013_revenue_analytics_zero_subscriptions():
     """ROADMAP-013: Handles zero active subscriptions gracefully."""
+
     async def _mock_fetchrow(query, *args):
         if "SUM(base_price)" in query:
             return FakeRecord({"mrr": Decimal("0"), "active_count": 0, "enterprise_count": 0})
@@ -482,6 +489,7 @@ async def test_roadmap_013_revenue_analytics_zero_subscriptions():
 # ---------------------------------------------------------------------------
 # ROADMAP-014: _track_billing_event — DB insert
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_roadmap_014_billing_event_stored_in_db():
@@ -512,6 +520,7 @@ async def test_roadmap_014_billing_event_db_error_does_not_raise():
 # ---------------------------------------------------------------------------
 # ROADMAP-015: _store_webhook_event — DB insert
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_roadmap_015_webhook_event_stored_in_db():

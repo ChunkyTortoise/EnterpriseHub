@@ -218,12 +218,7 @@ class ScoreDistributionAnalyzer:
                 margin_factor = 0.0
 
             # Combine factors
-            confidence = (
-                0.5 * base_confidence +
-                0.2 * spread_factor +
-                0.2 * gap_factor +
-                0.1 * margin_factor
-            )
+            confidence = 0.5 * base_confidence + 0.2 * spread_factor + 0.2 * gap_factor + 0.1 * margin_factor
         else:
             confidence = base_confidence
 
@@ -528,25 +523,25 @@ class RerankingPipeline:
 
             if not self.config.enable_multi_stage:
                 # Single-stage: just return the scored results
-                scored_results = scored_results[:self.config.final_top_k]
+                scored_results = scored_results[: self.config.final_top_k]
 
             else:
                 # Stage 2: Coarse re-ranking
                 stage_start = time.perf_counter()
-                coarse_candidates = scored_results[:self.config.coarse_top_k]
-                if coarse_candidates != scored_results[:len(coarse_candidates)]:
+                coarse_candidates = scored_results[: self.config.coarse_top_k]
+                if coarse_candidates != scored_results[: len(coarse_candidates)]:
                     coarse_result = await self._primary_reranker.rerank(query, coarse_candidates)
                     # Merge with non-candidates
-                    remaining = scored_results[len(coarse_candidates):]
+                    remaining = scored_results[len(coarse_candidates) :]
                     scored_results = coarse_result.results + remaining
                 self._stage_times["coarse"] = (time.perf_counter() - stage_start) * 1000
 
                 # Stage 3: Fine re-ranking
                 stage_start = time.perf_counter()
-                fine_candidates = scored_results[:self.config.fine_top_k]
-                if fine_candidates != scored_results[:len(fine_candidates)]:
+                fine_candidates = scored_results[: self.config.fine_top_k]
+                if fine_candidates != scored_results[: len(fine_candidates)]:
                     fine_result = await self._primary_reranker.rerank(query, fine_candidates)
-                    remaining = scored_results[len(fine_candidates):]
+                    remaining = scored_results[len(fine_candidates) :]
                     scored_results = fine_result.results + remaining
                 self._stage_times["fine"] = (time.perf_counter() - stage_start) * 1000
 
@@ -555,7 +550,7 @@ class RerankingPipeline:
                 scored_results = self._apply_confidence_scoring(scored_results)
 
             # Limit to final top-k
-            scored_results = scored_results[:self.config.final_top_k]
+            scored_results = scored_results[: self.config.final_top_k]
 
             # Update ranks
             for i, result in enumerate(scored_results, 1):
@@ -640,9 +635,7 @@ class RerankingPipeline:
         # Add confidence to each result
         scored_results = []
         for result in results:
-            confidence, level = self._distribution_analyzer.estimate_confidence(
-                result.score, distribution
-            )
+            confidence, level = self._distribution_analyzer.estimate_confidence(result.score, distribution)
             explanation = self._distribution_analyzer.generate_explanation(
                 result.score, confidence, level, distribution
             )

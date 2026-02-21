@@ -2,10 +2,12 @@
 
 import base64
 import json
+
 import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
-from mcp_toolkit.servers.file_processing.server import mcp as fp_mcp
 from mcp_toolkit.servers.file_processing.chunker import TextChunker
+from mcp_toolkit.servers.file_processing.server import mcp as fp_mcp
 
 
 @pytest.fixture
@@ -98,17 +100,13 @@ class TestChunkTextTool:
 
 class TestDetectFileTypeTool:
     async def test_detect_pdf(self, client):
-        result = await client.call_tool(
-            "detect_file_type", {"filename": "report.pdf"}
-        )
+        result = await client.call_tool("detect_file_type", {"filename": "report.pdf"})
         data = json.loads(result)
         assert data["file_type"] == "pdf"
         assert data["supported"] is True
 
     async def test_detect_unknown(self, client):
-        result = await client.call_tool(
-            "detect_file_type", {"filename": "image.bmp"}
-        )
+        result = await client.call_tool("detect_file_type", {"filename": "image.bmp"})
         data = json.loads(result)
         assert data["file_type"] == "unknown"
         assert data["supported"] is False
@@ -129,7 +127,9 @@ class TestTextChunker:
         assert len(chunks) >= 2
 
     def test_markdown_chunking(self):
-        text = "# Section 1\nContent one.\n\n# Section 2\nContent two.\n\n# Section 3\nContent three."
+        text = (
+            "# Section 1\nContent one.\n\n# Section 2\nContent two.\n\n# Section 3\nContent three."
+        )
         chunker = TextChunker(chunk_size=40)
         chunks = chunker.chunk(text, strategy="markdown")
         assert len(chunks) >= 2

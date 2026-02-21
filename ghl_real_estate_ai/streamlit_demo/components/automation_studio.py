@@ -385,7 +385,6 @@ def run_async(coro):
             if st.button("🪄 Claude: Optimize Persona", use_container_width=True, type="primary"):
                 with st.spinner("Claude is optimizing neural weights and persona instructions..."):
                     try:
-
                         # Build optimization context
                         opt_context = {
                             "persona_name": persona_name,

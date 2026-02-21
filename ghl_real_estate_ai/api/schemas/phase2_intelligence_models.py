@@ -853,7 +853,9 @@ class PreferenceLearningRequestAPI(BaseModel):
 
     # Source data (one of these based on source_type)
     conversation_data: Optional[List[Dict[str, Any]]] = Field(None, description="Conversation data for analysis")
-    conversation_analysis: Optional[ConversationInsights] = Field(None, description="Pre-analyzed conversation insights")
+    conversation_analysis: Optional[ConversationInsights] = Field(
+        None, description="Pre-analyzed conversation insights"
+    )
     property_id: Optional[str] = Field(None, description="Property ID for interaction learning")
     interaction_data: Optional[Dict[str, Any]] = Field(None, description="Property interaction data")
 

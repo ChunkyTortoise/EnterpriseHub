@@ -172,10 +172,10 @@ def test_report_pack_supports_json_output(tmp_path: Path) -> None:
         == 0
     )
 
-    assert "\"schema_status\": \"valid\"" in (reports_dir / "validate-runlog.json").read_text()
-    assert "\"runs_analyzed\": 3" in (reports_dir / "daily-errors.json").read_text()
-    assert "\"workflows_analyzed\": 2" in (reports_dir / "trends.json").read_text()
-    assert "\"runs_analyzed\": 3" in (reports_dir / "roi.json").read_text()
+    assert '"schema_status": "valid"' in (reports_dir / "validate-runlog.json").read_text()
+    assert '"runs_analyzed": 3' in (reports_dir / "daily-errors.json").read_text()
+    assert '"workflows_analyzed": 2' in (reports_dir / "trends.json").read_text()
+    assert '"runs_analyzed": 3' in (reports_dir / "roi.json").read_text()
 
 
 def test_handoff_bundle_is_atomic_on_write_failure(

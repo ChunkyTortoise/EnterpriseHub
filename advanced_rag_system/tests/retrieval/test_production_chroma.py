@@ -15,8 +15,6 @@ from src.vector_store.chroma_store import ChromaVectorStore
 
 
 @pytest.mark.integration
-
-
 class TestProductionChromaDB:
     """Test production ChromaDB integration."""
 

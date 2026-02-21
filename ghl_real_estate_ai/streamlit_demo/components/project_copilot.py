@@ -22,6 +22,7 @@ def render_welcome_walkthrough():
             companion_available = True
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"Welcome tour initialization error: {e}")
             companion = None
             companion_available = False
@@ -56,6 +57,7 @@ def render_welcome_walkthrough():
                         greeting_text = greeting
                     except Exception as e:
                         import logging
+
                         logging.getLogger(__name__).error(f"Tour greeting generation error: {e}")
                         pass
 
@@ -130,6 +132,7 @@ def render_project_copilot():
         companion_available = True
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).error(f"Project Copilot rendering error: {e}")
         companion = None
         companion_available = False
@@ -157,6 +160,7 @@ def render_project_copilot():
                         st.info(guidance)
                     except Exception as e:
                         import logging
+
                         logging.getLogger(__name__).debug(f"Copilot advice generation error: {e}")
                         st.info(
                             f"The {current_hub} is optimized for Phase 6 operations. Focus on your high-intent leads."

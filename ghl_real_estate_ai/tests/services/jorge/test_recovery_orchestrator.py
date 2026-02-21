@@ -63,9 +63,7 @@ class TestRecoveryOrchestration:
         assert result["total_attempted"] == 0
         assert result["successful"] == 0
 
-    async def test_orchestrate_recovery_single_contact(
-        self, orchestrator, mock_ghl_client, sample_abandoned_contact
-    ):
+    async def test_orchestrate_recovery_single_contact(self, orchestrator, mock_ghl_client, sample_abandoned_contact):
         """Test successful recovery for single contact."""
         mock_ghl_client.send_message.return_value = None
 
@@ -83,9 +81,7 @@ class TestRecoveryOrchestration:
         assert call_kwargs["contact_id"] == "c123"
         assert call_kwargs["channel"] == "sms"
 
-    async def test_orchestrate_recovery_multiple_contacts(
-        self, orchestrator, mock_ghl_client
-    ):
+    async def test_orchestrate_recovery_multiple_contacts(self, orchestrator, mock_ghl_client):
         """Test recovery for multiple contacts."""
         contacts = [
             AbandonedContact(
@@ -107,9 +103,7 @@ class TestRecoveryOrchestration:
         assert result["successful"] == 5
         assert mock_ghl_client.send_message.call_count == 5
 
-    async def test_orchestrate_recovery_with_failure(
-        self, orchestrator, mock_ghl_client, sample_abandoned_contact
-    ):
+    async def test_orchestrate_recovery_with_failure(self, orchestrator, mock_ghl_client, sample_abandoned_contact):
         """Test recovery with GHL client failure."""
         mock_ghl_client.send_message.side_effect = Exception("GHL API error")
 
@@ -124,9 +118,7 @@ class TestRecoveryOrchestration:
 class TestRecoveryMessageGeneration:
     """Test recovery message generation."""
 
-    async def test_generate_recovery_message_day3(
-        self, orchestrator, sample_abandoned_contact
-    ):
+    async def test_generate_recovery_message_day3(self, orchestrator, sample_abandoned_contact):
         """Test message generation for Day 3 stage."""
         sample_abandoned_contact.current_stage = AbandonmentStage.DAY_3
 
@@ -136,9 +128,7 @@ class TestRecoveryMessageGeneration:
         assert "John" in message or "there" in message  # Name fallback
         assert len(message) > 20  # Non-trivial recovery message generated
 
-    async def test_generate_recovery_message_day7(
-        self, orchestrator, sample_abandoned_contact
-    ):
+    async def test_generate_recovery_message_day7(self, orchestrator, sample_abandoned_contact):
         """Test message generation for Day 7 stage."""
         sample_abandoned_contact.current_stage = AbandonmentStage.DAY_7
 
@@ -147,9 +137,7 @@ class TestRecoveryMessageGeneration:
         assert message is not None
         assert len(message) > 50  # Substantial message
 
-    async def test_generate_recovery_message_day14(
-        self, orchestrator, sample_abandoned_contact
-    ):
+    async def test_generate_recovery_message_day14(self, orchestrator, sample_abandoned_contact):
         """Test message generation for Day 14 stage."""
         sample_abandoned_contact.current_stage = AbandonmentStage.DAY_14
 
@@ -157,9 +145,7 @@ class TestRecoveryMessageGeneration:
 
         assert message is not None
 
-    async def test_generate_recovery_message_day30(
-        self, orchestrator, sample_abandoned_contact
-    ):
+    async def test_generate_recovery_message_day30(self, orchestrator, sample_abandoned_contact):
         """Test message generation for Day 30 stage (Hail Mary)."""
         sample_abandoned_contact.current_stage = AbandonmentStage.DAY_30
 
@@ -167,9 +153,7 @@ class TestRecoveryMessageGeneration:
 
         assert message is not None
 
-    async def test_generate_recovery_message_missing_metadata(
-        self, orchestrator
-    ):
+    async def test_generate_recovery_message_missing_metadata(self, orchestrator):
         """Test message generation with minimal metadata."""
         contact = AbandonedContact(
             contact_id="c123",
@@ -193,29 +177,21 @@ class TestRecoveryMessageGeneration:
 class TestMarketTriggerIntegration:
     """Test market trigger integration in recovery messages."""
 
-    async def test_get_relevant_market_trigger_day3(
-        self, orchestrator, sample_abandoned_contact
-    ):
+    async def test_get_relevant_market_trigger_day3(self, orchestrator, sample_abandoned_contact):
         """Test market trigger retrieval for Day 3 (urgency stage)."""
         sample_abandoned_contact.current_stage = AbandonmentStage.DAY_3
 
-        trigger = await orchestrator._get_relevant_market_trigger(
-            sample_abandoned_contact
-        )
+        trigger = await orchestrator._get_relevant_market_trigger(sample_abandoned_contact)
 
         # Should attempt to generate rate change or price drop
         # Result may be None if no watchlist, but method should not error
         assert trigger is None or trigger is not None  # Valid either way
 
-    async def test_get_relevant_market_trigger_day30(
-        self, orchestrator, sample_abandoned_contact
-    ):
+    async def test_get_relevant_market_trigger_day30(self, orchestrator, sample_abandoned_contact):
         """Test market trigger retrieval for Day 30 (softer approach)."""
         sample_abandoned_contact.current_stage = AbandonmentStage.DAY_30
 
-        trigger = await orchestrator._get_relevant_market_trigger(
-            sample_abandoned_contact
-        )
+        trigger = await orchestrator._get_relevant_market_trigger(sample_abandoned_contact)
 
         # Should attempt neighborhood sales
         assert trigger is None or trigger is not None
@@ -235,18 +211,14 @@ class TestMarketTriggerIntegration:
 class TestRecoveryAttempt:
     """Test individual recovery attempts."""
 
-    async def test_attempt_recovery_success(
-        self, orchestrator, mock_ghl_client, sample_abandoned_contact
-    ):
+    async def test_attempt_recovery_success(self, orchestrator, mock_ghl_client, sample_abandoned_contact):
         """Test successful recovery attempt."""
         success = await orchestrator._attempt_recovery(sample_abandoned_contact)
 
         assert success is True
         mock_ghl_client.send_message.assert_called_once()
 
-    async def test_attempt_recovery_ghl_failure(
-        self, orchestrator, mock_ghl_client, sample_abandoned_contact
-    ):
+    async def test_attempt_recovery_ghl_failure(self, orchestrator, mock_ghl_client, sample_abandoned_contact):
         """Test recovery attempt with GHL API failure."""
         mock_ghl_client.send_message.side_effect = Exception("API error")
 

@@ -319,7 +319,9 @@ class TestJorgeBuyerBot:
         buyer_bot.workflow_service = AsyncMock()
         buyer_bot.churn_service = AsyncMock()
         buyer_bot.churn_service.assess_churn_risk = AsyncMock(
-            return_value=MagicMock(risk_score=0.1, risk_level=MagicMock(value="low"), recommended_action=MagicMock(value="monitor"))
+            return_value=MagicMock(
+                risk_score=0.1, risk_level=MagicMock(value="low"), recommended_action=MagicMock(value="monitor")
+            )
         )
         buyer_bot.performance_tracker = AsyncMock()
         buyer_bot.metrics_collector = MagicMock()
@@ -1365,10 +1367,7 @@ class TestBuyerBotOptOut:
         )
 
         assert result["opt_out_detected"] is True
-        assert any(
-            action.get("tag") == "AI-Off"
-            for action in result.get("actions", [])
-        )
+        assert any(action.get("tag") == "AI-Off" for action in result.get("actions", []))
 
     @pytest.mark.asyncio
     async def test_buyer_opt_out_sends_confirmation(self, mock_deps):
@@ -1389,14 +1388,16 @@ class TestBuyerBotOptOut:
         """A regular buyer message does NOT trigger opt-out."""
         bot = JorgeBuyerBot()
         # Mock the workflow to return a normal response
-        bot.workflow.ainvoke = AsyncMock(return_value={
-            "buyer_id": "buyer_normal",
-            "response_content": "Let me help you find a home!",
-            "financial_readiness_score": 50.0,
-            "buying_motivation_score": 50.0,
-            "matched_properties": [],
-            "current_qualification_step": "budget",
-        })
+        bot.workflow.ainvoke = AsyncMock(
+            return_value={
+                "buyer_id": "buyer_normal",
+                "response_content": "Let me help you find a home!",
+                "financial_readiness_score": 50.0,
+                "buying_motivation_score": 50.0,
+                "matched_properties": [],
+                "current_qualification_step": "budget",
+            }
+        )
         bot.event_publisher.publish_bot_status_update = AsyncMock()
         bot.event_publisher.publish_buyer_qualification_complete = AsyncMock()
 
@@ -1407,3 +1408,29 @@ class TestBuyerBotOptOut:
 
         assert result.get("opt_out_detected") is not True
         bot.workflow.ainvoke.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_buyer_empty_workflow_response_gets_fallback_sms(self, mock_deps):
+        """Workflow outputs with empty response_content should be made deliverable."""
+        bot = JorgeBuyerBot()
+        bot.workflow.ainvoke = AsyncMock(
+            return_value={
+                "buyer_id": "buyer_empty",
+                "response_content": "",
+                "next_action": "qualify_more",
+                "financial_readiness_score": 25.0,
+                "buying_motivation_score": 25.0,
+                "matched_properties": [],
+                "current_qualification_step": "budget",
+            }
+        )
+        bot.event_publisher.publish_bot_status_update = AsyncMock()
+        bot.event_publisher.publish_buyer_qualification_complete = AsyncMock()
+
+        result = await bot.process_buyer_conversation(
+            conversation_id="buyer_empty",
+            user_message="I am browsing for now",
+        )
+
+        assert result["response_content"]
+        assert "rancho cucamonga" in result["response_content"].lower()

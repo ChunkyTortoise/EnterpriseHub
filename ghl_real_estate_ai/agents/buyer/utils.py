@@ -12,13 +12,12 @@ logger = get_logger(__name__)
 
 
 async def extract_budget_range(
-    conversation_history: List[Dict],
-    budget_config: Optional[BuyerBudgetConfig] = None
+    conversation_history: List[Dict], budget_config: Optional[BuyerBudgetConfig] = None
 ) -> Optional[Dict[str, int]]:
     """Extract budget range from conversation history."""
     try:
         config = budget_config or BuyerBudgetConfig.from_environment()
-        
+
         # Look for dollar amounts in conversation
         conversation_text = " ".join(
             [msg.get("content", "") for msg in conversation_history if msg.get("role") == "user"]
@@ -43,10 +42,7 @@ async def extract_budget_range(
             return {"min": min(amounts), "max": max(amounts)}
         elif len(amounts) == 1:
             # Single amount - assume it's max budget
-            return {
-                "min": int(amounts[0] * config.BUDGET_SINGLE_AMOUNT_MIN_FACTOR),
-                "max": amounts[0]
-            }
+            return {"min": int(amounts[0] * config.BUDGET_SINGLE_AMOUNT_MIN_FACTOR), "max": amounts[0]}
 
         return None
 

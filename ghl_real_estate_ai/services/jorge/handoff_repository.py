@@ -109,14 +109,16 @@ class RedisHandoffRepository:
 
         route = f"{source_bot}->{target_bot}"
         key = self._key(_OUTCOME_KEY, route=route)
-        record = json.dumps({
-            "contact_id": contact_id,
-            "source_bot": source_bot,
-            "target_bot": target_bot,
-            "outcome": outcome,
-            "timestamp": timestamp,
-            "metadata": metadata or {},
-        })
+        record = json.dumps(
+            {
+                "contact_id": contact_id,
+                "source_bot": source_bot,
+                "target_bot": target_bot,
+                "outcome": outcome,
+                "timestamp": timestamp,
+                "metadata": metadata or {},
+            }
+        )
 
         try:
             pipe = self._redis.pipeline()

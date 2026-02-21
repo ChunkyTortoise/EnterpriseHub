@@ -48,7 +48,7 @@ class GHLAPIClient:
             "Version": "2021-07-28",
             "Content-Type": "application/json",
         }
-        
+
         # Connection pooling: max_connections=20, timeout=10s
         self.client = httpx.AsyncClient(
             headers=self.headers,
@@ -84,9 +84,7 @@ class GHLAPIClient:
         url = f"{self.BASE_URL}/{endpoint}"
 
         try:
-            response = await self.client.request(
-                method=method, url=url, json=data, params=params
-            )
+            response = await self.client.request(method=method, url=url, json=data, params=params)
 
             response.raise_for_status()
 
@@ -103,7 +101,7 @@ class GHLAPIClient:
                     error_data = e.response.json()
             except Exception:
                 pass
-                
+
             return {
                 "success": False,
                 "error": str(e),
@@ -187,7 +185,9 @@ class GHLAPIClient:
 
     # ========== OPPORTUNITIES ==========
 
-    async def get_opportunities(self, pipeline_id: Optional[str] = None, status: Optional[str] = None) -> GHLAPIResponse:
+    async def get_opportunities(
+        self, pipeline_id: Optional[str] = None, status: Optional[str] = None
+    ) -> GHLAPIResponse:
         """
         Get opportunities (deals) from GHL.
 

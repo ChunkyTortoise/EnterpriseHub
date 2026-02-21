@@ -1,4 +1,3 @@
-
 import asyncio
 import os
 import secrets
@@ -11,23 +10,23 @@ async def run():
     email = "caymanroden@gmail.com"
     # Generate a random password
     alphabet = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(secrets.choice(alphabet) for i in range(16))
-    
+    password = "".join(secrets.choice(alphabet) for i in range(16))
+
     print(f"Attempting signup for {email}...")
-    
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         )
         page = await context.new_page()
-        
+
         try:
             # 1. Navigate to home and find signup
             print("Navigating to https://contra.com...")
             await page.goto("https://contra.com", wait_until="networkidle", timeout=60000)
             await page.wait_for_timeout(3000)
-            
+
             # Find and click "Sign Up" button
             # Based on 404 page dump: <button type="button" variant="V2Primary" class="Buttonstyles__StyledButton-sc-w63a17-0 iRgQcN"><span class="ButtonContainerstyles__StyledButtonContainer-sc-e8rsx8-0 bvRzws"><span textstyle="text-base-medium" variant="V2Primary" class="Text-sc-1k5lnf-0 ButtonTextstyles__StyledButtonText-sc-1smg0pq-0 gDtfPS cUjFSt">Sign Up</span></span></button>
             signup_btn = page.get_by_role("button", name="Sign Up").first
@@ -71,11 +70,11 @@ async def run():
                     print("Could not find email entry point.")
                     await page.screenshot(path="contra_entry_fail.png")
                     return
-            
+
             # 3. Check what happens next (Password or OTP)
             await page.wait_for_timeout(3000)
             content = await page.content()
-            
+
             if "check your email" in content.lower() or "verify" in content.lower() or "code" in content.lower():
                 print("!!! Email verification (OTP/Link) required. Stopping.")
                 await page.screenshot(path="contra_verification_required.png")
@@ -84,7 +83,7 @@ async def run():
                 with open("contra_generated_password.txt", "w") as f:
                     f.write(password)
                 return
-            
+
             # 4. Look for password field if it exists
             password_input = await page.wait_for_selector("input[type='password']", timeout=5000)
             if password_input:
@@ -92,12 +91,12 @@ async def run():
                 await password_input.fill(password)
                 await page.keyboard.press("Enter")
                 await page.wait_for_timeout(3000)
-                
+
                 # Check for profile setup fields
                 print("Checking for profile setup fields...")
                 await page.screenshot(path="contra_after_password.png")
                 print("Screenshot saved: contra_after_password.png")
-                
+
                 with open("contra_generated_password.txt", "w") as f:
                     f.write(password)
                 print(f"Generated password saved to contra_generated_password.txt")
@@ -112,6 +111,7 @@ async def run():
             print("Screenshot saved: contra_signup_error.png")
         finally:
             await browser.close()
+
 
 if __name__ == "__main__":
     asyncio.run(run())

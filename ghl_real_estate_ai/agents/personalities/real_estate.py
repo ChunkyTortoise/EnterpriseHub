@@ -73,55 +73,86 @@ class RealEstateLeadPersonality(BotPersonality):
         return {
             "motivation": IntentMarkerSet(
                 high=[
-                    "must sell", "have to move", "already bought",
-                    "relocating for work", "divorce settlement",
+                    "must sell",
+                    "have to move",
+                    "already bought",
+                    "relocating for work",
+                    "divorce settlement",
                 ],
                 medium=[
-                    "want to upgrade", "downsizing", "empty nesters", "outgrown",
+                    "want to upgrade",
+                    "downsizing",
+                    "empty nesters",
+                    "outgrown",
                 ],
                 low=[
-                    "just seeing what it's worth", "curious about the market",
+                    "just seeing what it's worth",
+                    "curious about the market",
                     "no pressure",
                 ],
             ),
             "timeline": IntentMarkerSet(
                 high=[
-                    "need to sell now", "relocating", "divorce", "foreclosure",
-                    "job transfer", "asap",
+                    "need to sell now",
+                    "relocating",
+                    "divorce",
+                    "foreclosure",
+                    "job transfer",
+                    "asap",
                 ],
                 medium=[
-                    "want to sell", "thinking of selling", "this year",
+                    "want to sell",
+                    "thinking of selling",
+                    "this year",
                     "next few months",
                 ],
                 low=[
-                    "just curious", "no rush", "exploring options",
-                    "maybe someday", "testing the market",
+                    "just curious",
+                    "no rush",
+                    "exploring options",
+                    "maybe someday",
+                    "testing the market",
                 ],
             ),
             "condition": IntentMarkerSet(
                 high=[
-                    "needs work", "fixer", "dated", "old roof",
-                    "foundation issues", "major repairs",
+                    "needs work",
+                    "fixer",
+                    "dated",
+                    "old roof",
+                    "foundation issues",
+                    "major repairs",
                 ],
                 medium=[
-                    "some updates needed", "cosmetic fixes", "needs paint",
+                    "some updates needed",
+                    "cosmetic fixes",
+                    "needs paint",
                     "carpet replacement",
                 ],
                 low=[
-                    "move-in ready", "turnkey", "recently renovated",
-                    "just remodeled", "updated",
+                    "move-in ready",
+                    "turnkey",
+                    "recently renovated",
+                    "just remodeled",
+                    "updated",
                 ],
             ),
             "price": IntentMarkerSet(
                 high=[
-                    "flexible on price", "open to offers", "negotiable",
+                    "flexible on price",
+                    "open to offers",
+                    "negotiable",
                     "just want to sell",
                 ],
                 medium=[
-                    "reasonable offers", "close to asking", "within range",
+                    "reasonable offers",
+                    "close to asking",
+                    "within range",
                 ],
                 low=[
-                    "firm on price", "won't go below", "bottom line",
+                    "firm on price",
+                    "won't go below",
+                    "bottom line",
                     "non-negotiable",
                 ],
             ),
@@ -136,8 +167,11 @@ class RealEstateLeadPersonality(BotPersonality):
                 target_bot="buyer",
                 confidence_threshold=0.7,
                 trigger_phrases=[
-                    "i want to buy", "budget $", "pre-approval",
-                    "looking for a home", "house hunting",
+                    "i want to buy",
+                    "budget $",
+                    "pre-approval",
+                    "looking for a home",
+                    "house hunting",
                     "how much can i afford",
                 ],
                 description="Route to buyer bot for purchase-intent leads",
@@ -146,8 +180,11 @@ class RealEstateLeadPersonality(BotPersonality):
                 target_bot="seller",
                 confidence_threshold=0.7,
                 trigger_phrases=[
-                    "sell my house", "home worth", "cma",
-                    "what's my property worth", "list my home",
+                    "sell my house",
+                    "home worth",
+                    "cma",
+                    "what's my property worth",
+                    "list my home",
                     "thinking of selling",
                 ],
                 description="Route to seller bot for listing-intent leads",
@@ -187,26 +224,11 @@ class RealEstateLeadPersonality(BotPersonality):
 
     def get_tone_instructions(self) -> dict[str, str]:
         return {
-            "consultative": (
-                "Be helpful and supportive. Understand their concerns "
-                "and provide guidance."
-            ),
-            "educational": (
-                "Share knowledge patiently. Help them understand their "
-                "options without pressure."
-            ),
-            "understanding": (
-                "Show empathy and patience. Address their concerns with "
-                "care and expertise."
-            ),
-            "enthusiastic": (
-                "Share their excitement while staying professional. "
-                "Guide them toward success."
-            ),
-            "supportive": (
-                "Provide comfort and reassurance. Help them feel "
-                "confident in their decisions."
-            ),
+            "consultative": ("Be helpful and supportive. Understand their concerns and provide guidance."),
+            "educational": ("Share knowledge patiently. Help them understand their options without pressure."),
+            "understanding": ("Show empathy and patience. Address their concerns with care and expertise."),
+            "enthusiastic": ("Share their excitement while staying professional. Guide them toward success."),
+            "supportive": ("Provide comfort and reassurance. Help them feel confident in their decisions."),
             "direct": "Get to the point. Be clear and action-oriented.",
         }
 
@@ -224,32 +246,24 @@ class RealEstateLeadPersonality(BotPersonality):
     def get_stall_responses(self) -> dict[str, list[str]]:
         return {
             "thinking": [
-                "Totally get it -- big decision. What's the main thing "
-                "holding you back?",
-                "I completely understand you need time. What specific "
-                "questions can I help answer?",
+                "Totally get it -- big decision. What's the main thing holding you back?",
+                "I completely understand you need time. What specific questions can I help answer?",
             ],
             "get_back": [
                 "No rush! Has anything changed with your timeline?",
-                "Of course! Just want to make sure you have everything "
-                "you need when you're ready.",
+                "Of course! Just want to make sure you have everything you need when you're ready.",
             ],
             "zestimate": [
-                "Zillow can't walk through your house! Want me to pull "
-                "recent sales in your area?",
-                "Online estimates are a great starting point -- I'd love "
-                "to show you actual comparable sales.",
+                "Zillow can't walk through your house! Want me to pull recent sales in your area?",
+                "Online estimates are a great starting point -- I'd love to show you actual comparable sales.",
             ],
             "agent": [
-                "Great you have someone! Happy to share comps as a "
-                "second opinion if you'd like.",
-                "Wonderful! I can provide some complementary market "
-                "insights that might be useful.",
+                "Great you have someone! Happy to share comps as a second opinion if you'd like.",
+                "Wonderful! I can provide some complementary market insights that might be useful.",
             ],
             "price": [
                 "Pricing is tricky. Want me to pull recent sales nearby?",
-                "I understand price matters most. Let me show you what "
-                "similar homes have actually sold for.",
+                "I understand price matters most. Let me show you what similar homes have actually sold for.",
             ],
             "timeline": [
                 "Makes sense. What's driving your timeline?",
@@ -321,7 +335,8 @@ class RealEstateBuyerPersonality(BotPersonality):
                 target_bot="seller",
                 confidence_threshold=0.7,
                 trigger_phrases=[
-                    "sell my current home first", "need to list",
+                    "sell my current home first",
+                    "need to list",
                     "sell before buying",
                 ],
                 description="Buyer needs to sell first — route to seller bot",
@@ -373,12 +388,10 @@ class RealEstateBuyerPersonality(BotPersonality):
                 "Take your time! What questions can I answer for you?",
             ],
             "financing": [
-                "I can connect you with a great lender who makes the "
-                "process easy. Interested?",
+                "I can connect you with a great lender who makes the process easy. Interested?",
             ],
             "competition": [
-                "Happy to be a resource even if you're working with "
-                "someone else!",
+                "Happy to be a resource even if you're working with someone else!",
             ],
         }
 
@@ -422,25 +435,37 @@ class RealEstateSellerPersonality(BotPersonality):
         return {
             "motivation": IntentMarkerSet(
                 high=[
-                    "must sell", "have to move", "already bought",
-                    "relocating for work", "divorce settlement",
+                    "must sell",
+                    "have to move",
+                    "already bought",
+                    "relocating for work",
+                    "divorce settlement",
                 ],
                 medium=["want to upgrade", "downsizing", "empty nesters"],
                 low=["just seeing what it's worth", "curious about the market"],
             ),
             "timeline": IntentMarkerSet(
                 high=[
-                    "need to sell now", "relocating", "divorce",
-                    "foreclosure", "job transfer", "asap",
+                    "need to sell now",
+                    "relocating",
+                    "divorce",
+                    "foreclosure",
+                    "job transfer",
+                    "asap",
                 ],
                 medium=[
-                    "want to sell", "thinking of selling", "this year",
+                    "want to sell",
+                    "thinking of selling",
+                    "this year",
                 ],
                 low=["just curious", "no rush", "exploring options"],
             ),
             "condition": IntentMarkerSet(
                 high=[
-                    "needs work", "fixer", "dated", "old roof",
+                    "needs work",
+                    "fixer",
+                    "dated",
+                    "old roof",
                     "foundation issues",
                 ],
                 medium=["some updates needed", "cosmetic fixes", "needs paint"],
@@ -453,27 +478,39 @@ class RealEstateSellerPersonality(BotPersonality):
             ),
             "valuation": IntentMarkerSet(
                 high=[
-                    "know what it's worth", "had it appraised",
-                    "got a cma", "recent appraisal",
+                    "know what it's worth",
+                    "had it appraised",
+                    "got a cma",
+                    "recent appraisal",
                 ],
                 medium=[
-                    "zestimate says", "zillow shows", "online estimate",
+                    "zestimate says",
+                    "zillow shows",
+                    "online estimate",
                 ],
                 low=[
-                    "no idea what it's worth", "not sure of value",
+                    "no idea what it's worth",
+                    "not sure of value",
                     "what's my home worth",
                 ],
             ),
             "prep_readiness": IntentMarkerSet(
                 high=[
-                    "already staged", "house is ready", "cleared out",
-                    "decluttered", "ready to show",
+                    "already staged",
+                    "house is ready",
+                    "cleared out",
+                    "decluttered",
+                    "ready to show",
                 ],
                 medium=[
-                    "almost ready", "need to clean up", "finishing touches",
+                    "almost ready",
+                    "need to clean up",
+                    "finishing touches",
                 ],
                 low=[
-                    "haven't started", "lot of stuff", "not ready yet",
+                    "haven't started",
+                    "lot of stuff",
+                    "not ready yet",
                     "need to pack",
                 ],
             ),
@@ -488,7 +525,8 @@ class RealEstateSellerPersonality(BotPersonality):
                 target_bot="buyer",
                 confidence_threshold=0.7,
                 trigger_phrases=[
-                    "also looking to buy", "need a new home",
+                    "also looking to buy",
+                    "need a new home",
                     "buy after selling",
                 ],
                 description="Seller also needs buyer assistance",
@@ -528,19 +566,11 @@ class RealEstateSellerPersonality(BotPersonality):
 
     def get_tone_instructions(self) -> dict[str, str]:
         return {
-            "consultative": (
-                "Be helpful and supportive. Understand their concerns."
-            ),
+            "consultative": ("Be helpful and supportive. Understand their concerns."),
             "educational": "Share knowledge patiently without pressure.",
-            "understanding": (
-                "Show empathy and patience. Address concerns with care."
-            ),
-            "enthusiastic": (
-                "Share their excitement while staying professional."
-            ),
-            "supportive": (
-                "Provide comfort and reassurance about the process."
-            ),
+            "understanding": ("Show empathy and patience. Address concerns with care."),
+            "enthusiastic": ("Share their excitement while staying professional."),
+            "supportive": ("Provide comfort and reassurance about the process."),
             "direct": "Be clear and action-oriented.",
         }
 
@@ -557,23 +587,18 @@ class RealEstateSellerPersonality(BotPersonality):
     def get_stall_responses(self) -> dict[str, list[str]]:
         return {
             "thinking": [
-                "Totally get it -- big decision. What's the main thing "
-                "holding you back?",
-                "Taking time to think it through is smart! What aspects "
-                "would be most helpful to discuss?",
+                "Totally get it -- big decision. What's the main thing holding you back?",
+                "Taking time to think it through is smart! What aspects would be most helpful to discuss?",
             ],
             "get_back": [
                 "No rush! Has anything changed with your timeline?",
             ],
             "zestimate": [
-                "Zillow can't walk through your house! Want me to pull "
-                "recent sales?",
-                "Those online tools don't see your home's unique "
-                "features. Want a personalized analysis?",
+                "Zillow can't walk through your house! Want me to pull recent sales?",
+                "Those online tools don't see your home's unique features. Want a personalized analysis?",
             ],
             "agent": [
-                "Great you have someone! Happy to share comps as a "
-                "second opinion.",
+                "Great you have someone! Happy to share comps as a second opinion.",
                 "Wonderful! I can provide complementary information.",
             ],
             "price": [

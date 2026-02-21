@@ -30,8 +30,6 @@ class TestRuntimeAgent:
             llm="mock/mock-v1",
             tools=[calculate],
         )
-        out = await agent(
-            AgentInput(messages=[{"role": "user", "content": "What is 2+2?"}])
-        )
+        out = await agent(AgentInput(messages=[{"role": "user", "content": "What is 2+2?"}]))
         assert out.error is None
         assert "4" in (out.content or "")

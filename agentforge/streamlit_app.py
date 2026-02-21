@@ -8,6 +8,7 @@ Requirements:
 Run:
     streamlit run streamlit_app.py
 """
+
 import asyncio
 import time
 import uuid
@@ -28,7 +29,8 @@ st.set_page_config(
 )
 
 # ── Obsidian dark theme CSS ──────────────────────────────────────────────────
-st.markdown("""
+st.markdown(
+    """
 <style>
     .stApp { background-color: #0d1117; color: #e6edf3; }
     .main-header {
@@ -58,7 +60,9 @@ st.markdown("""
     }
     div[data-testid="stMetricValue"] { color: #58a6ff; font-size: 2rem; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -73,14 +77,18 @@ with st.sidebar:
     )
 
     st.divider()
-    st.markdown("""
+    st.markdown(
+        """
     <a href="https://gumroad.com/l/agentforge" class="gumroad-btn" target="_blank">
         🛒 Get AgentForge
     </a>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     st.caption("MIT licensed • PyPI published")
 
 # ── MOCK EXECUTION ENGINE ────────────────────────────────────────────────────
+
 
 def mock_agent_run(name: str, task: str, delay: float = 0.5) -> dict:
     """Simulate an agent executing a task."""
@@ -93,6 +101,7 @@ def mock_agent_run(name: str, task: str, delay: float = 0.5) -> dict:
         "latency_ms": int(delay * 1000) + 45,
         "timestamp": datetime.now().isoformat(),
     }
+
 
 def run_two_agent_chain(user_input: str) -> list[dict]:
     """Run a mock 2-agent chain: Planner → Executor."""
@@ -154,7 +163,7 @@ async def run_real_two_agent_chain(user_input: str, provider: str) -> tuple[list
     for idx, t in enumerate(traces):
         run_logs.append(
             {
-                "run_id": f"{run_id}-{idx+1}",
+                "run_id": f"{run_id}-{idx + 1}",
                 "workflow": "streamlit-live-demo",
                 "latency_ms": t["latency_ms"],
                 "tokens": t["tokens_used"],
@@ -165,6 +174,7 @@ async def run_real_two_agent_chain(user_input: str, provider: str) -> tuple[list
         )
 
     return traces, run_logs
+
 
 # ── PAGE: LIVE DEMO ──────────────────────────────────────────────────────────
 if "🚀 Live Demo" in page:
@@ -212,12 +222,15 @@ if "🚀 Live Demo" in page:
             trace_events = [result1, result2]
             run_logs = []
 
-        log_area.markdown(f"""
+        log_area.markdown(
+            f"""
         <div class="agent-card">
-        <b>PlannerAgent</b> ✓ — {result1['latency_ms']}ms | Tokens: {result1['tokens_used']}<br>
-        <b>ExecutorAgent</b> ✓ — {result2['latency_ms']}ms | Tokens: {result2['tokens_used']}
+        <b>PlannerAgent</b> ✓ — {result1["latency_ms"]}ms | Tokens: {result1["tokens_used"]}<br>
+        <b>ExecutorAgent</b> ✓ — {result2["latency_ms"]}ms | Tokens: {result2["tokens_used"]}
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         st.success("✅ Pipeline completed successfully")
 
@@ -243,13 +256,22 @@ elif "🔍 Trace Viewer" in page:
     sample_trace = [
         {"agent": "PlannerAgent", "start": 0, "end": 345, "status": "completed", "tokens": 284},
         {"agent": "ExecutorAgent", "start": 345, "end": 912, "status": "completed", "tokens": 531},
-        {"agent": "ValidatorAgent", "start": 912, "end": 1050, "status": "completed", "tokens": 112},
+        {
+            "agent": "ValidatorAgent",
+            "start": 912,
+            "end": 1050,
+            "status": "completed",
+            "tokens": 112,
+        },
     ]
 
     trace_data = st.session_state.get("last_trace", None)
     if trace_data:
         st.info("Showing trace from Live Demo. Run a new task there to refresh.")
-        df_trace = [{"agent": t["agent"], "latency_ms": t["latency_ms"], "tokens": t["tokens_used"]} for t in trace_data]
+        df_trace = [
+            {"agent": t["agent"], "latency_ms": t["latency_ms"], "tokens": t["tokens_used"]}
+            for t in trace_data
+        ]
     else:
         st.info("No live trace yet — showing sample 3-agent pipeline trace.")
         df_trace = sample_trace
@@ -261,27 +283,35 @@ elif "🔍 Trace Viewer" in page:
     if trace_data:
         cumulative = 0
         for i, t in enumerate(df_trace):
-            fig.add_trace(go.Bar(
-                x=[t["latency_ms"]], y=[t["agent"]],
-                base=[cumulative], orientation="h",
-                marker_color=colors[i % len(colors)],
-                name=t["agent"],
-                text=f"{t['latency_ms']}ms",
-                textposition="inside",
-            ))
+            fig.add_trace(
+                go.Bar(
+                    x=[t["latency_ms"]],
+                    y=[t["agent"]],
+                    base=[cumulative],
+                    orientation="h",
+                    marker_color=colors[i % len(colors)],
+                    name=t["agent"],
+                    text=f"{t['latency_ms']}ms",
+                    textposition="inside",
+                )
+            )
             cumulative += t["latency_ms"]
     else:
         cumulative = 0
         for i, t in enumerate(sample_trace):
             duration = t["end"] - t["start"]
-            fig.add_trace(go.Bar(
-                x=[duration], y=[t["agent"]],
-                base=[t["start"]], orientation="h",
-                marker_color=colors[i % len(colors)],
-                name=t["agent"],
-                text=f"{duration}ms",
-                textposition="inside",
-            ))
+            fig.add_trace(
+                go.Bar(
+                    x=[duration],
+                    y=[t["agent"]],
+                    base=[t["start"]],
+                    orientation="h",
+                    marker_color=colors[i % len(colors)],
+                    name=t["agent"],
+                    text=f"{duration}ms",
+                    textposition="inside",
+                )
+            )
 
     fig.update_layout(
         title="Agent Execution Timeline",
@@ -298,24 +328,30 @@ elif "🔍 Trace Viewer" in page:
 
     # DAG visualization using simple mermaid-style ASCII
     st.subheader("Pipeline DAG")
-    st.code("""
+    st.code(
+        """
 PlannerAgent ──(context)──► ExecutorAgent ──(output)──► ValidatorAgent
      │                            │                           │
      ▼                            ▼                           ▼
   Plan JSON               Execution Log              Validated Result
-    """, language="text")
+    """,
+        language="text",
+    )
 
     st.subheader("Agent Details")
     for i, t in enumerate(df_trace):
         agent_name = t.get("agent", "Unknown")
         tokens = t.get("tokens_used", t.get("tokens", 0))
         latency = t.get("latency_ms", t.get("end", 0) - t.get("start", 0))
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="agent-card">
         <b>{agent_name}</b><br>
         Tokens: {tokens} | Latency: {latency}ms | Status: ✅ completed
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 # ── PAGE: BENCHMARKS ─────────────────────────────────────────────────────────
 elif "📊 Benchmarks" in page:
@@ -337,12 +373,33 @@ elif "📊 Benchmarks" in page:
     latencies_langchain = [38, 55, 78, 115, 156, 189, 340, 710]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=percentiles, y=latencies_agentforge, name="AgentForge",
-                             line=dict(color="#58a6ff", width=3), mode="lines+markers"))
-    fig.add_trace(go.Scatter(x=percentiles, y=latencies_crewai, name="CrewAI",
-                             line=dict(color="#f78166", width=2, dash="dash"), mode="lines+markers"))
-    fig.add_trace(go.Scatter(x=percentiles, y=latencies_langchain, name="LangChain",
-                             line=dict(color="#bc8cff", width=2, dash="dot"), mode="lines+markers"))
+    fig.add_trace(
+        go.Scatter(
+            x=percentiles,
+            y=latencies_agentforge,
+            name="AgentForge",
+            line=dict(color="#58a6ff", width=3),
+            mode="lines+markers",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=percentiles,
+            y=latencies_crewai,
+            name="CrewAI",
+            line=dict(color="#f78166", width=2, dash="dash"),
+            mode="lines+markers",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=percentiles,
+            y=latencies_langchain,
+            name="LangChain",
+            line=dict(color="#bc8cff", width=2, dash="dot"),
+            mode="lines+markers",
+        )
+    )
 
     fig.update_layout(
         title="Pipeline Latency by Percentile (ms) — Framework Overhead Only",
@@ -361,21 +418,38 @@ elif "📊 Benchmarks" in page:
     with col_a:
         frameworks = ["AgentForge", "CrewAI", "LangChain", "AutoGPT"]
         deps = [0, 47, 112, 89]
-        fig2 = px.bar(x=frameworks, y=deps, color=deps,
-                      color_continuous_scale=[[0, "#3fb950"], [0.3, "#58a6ff"], [1, "#f78166"]],
-                      title="Dependency Count (fewer = better)")
-        fig2.update_layout(paper_bgcolor="#0d1117", plot_bgcolor="#161b22",
-                           font_color="#e6edf3", showlegend=False, height=300)
+        fig2 = px.bar(
+            x=frameworks,
+            y=deps,
+            color=deps,
+            color_continuous_scale=[[0, "#3fb950"], [0.3, "#58a6ff"], [1, "#f78166"]],
+            title="Dependency Count (fewer = better)",
+        )
+        fig2.update_layout(
+            paper_bgcolor="#0d1117",
+            plot_bgcolor="#161b22",
+            font_color="#e6edf3",
+            showlegend=False,
+            height=300,
+        )
         st.plotly_chart(fig2, use_container_width=True)
 
     with col_b:
         memory_mb = [8.2, 340, 520, 890]
-        fig3 = px.bar(x=frameworks, y=memory_mb,
-                      color=memory_mb,
-                      color_continuous_scale=[[0, "#3fb950"], [0.3, "#58a6ff"], [1, "#f78166"]],
-                      title="Base Memory Usage (MB, lower = better)")
-        fig3.update_layout(paper_bgcolor="#0d1117", plot_bgcolor="#161b22",
-                           font_color="#e6edf3", showlegend=False, height=300)
+        fig3 = px.bar(
+            x=frameworks,
+            y=memory_mb,
+            color=memory_mb,
+            color_continuous_scale=[[0, "#3fb950"], [0.3, "#58a6ff"], [1, "#f78166"]],
+            title="Base Memory Usage (MB, lower = better)",
+        )
+        fig3.update_layout(
+            paper_bgcolor="#0d1117",
+            plot_bgcolor="#161b22",
+            font_color="#e6edf3",
+            showlegend=False,
+            height=300,
+        )
         st.plotly_chart(fig3, use_container_width=True)
 
 # ── PAGE: COMPARE ────────────────────────────────────────────────────────────
@@ -404,32 +478,39 @@ elif "⚖️ Compare" in page:
 
     with col1:
         st.subheader("When to choose AgentForge")
-        st.markdown("""
+        st.markdown(
+            """
         <div class="success-card">
         ✅ <b>Production systems</b> where latency and memory matter<br>
         ✅ <b>MCP-first projects</b> using Claude's tool protocol<br>
         ✅ <b>Teams that value simplicity</b> — zero transitive dependencies<br>
         ✅ <b>Observable systems</b> — built-in trace viewer and benchmarks
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col2:
         st.subheader("When to choose alternatives")
-        st.markdown("""
+        st.markdown(
+            """
         <div class="feature-box">
         🔀 <b>CrewAI</b> — if your team prefers role-based agent abstractions<br>
         🔗 <b>LangChain</b> — if you need the broadest ecosystem of integrations<br>
         📊 <b>Haystack</b> — if you're building pure RAG/document pipelines<br>
         🌐 <b>LangGraph</b> — if you prefer graph-native state machines
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     st.divider()
     st.subheader("Quick Start Comparison")
 
     tab1, tab2, tab3 = st.tabs(["AgentForge", "CrewAI", "LangChain"])
     with tab1:
-        st.code("""
+        st.code(
+            """
 from agentforge import Agent, Pipeline
 
 planner = Agent(name="planner", role="Plan the task")
@@ -437,9 +518,12 @@ executor = Agent(name="executor", role="Execute the plan")
 
 pipeline = Pipeline([planner, executor])
 result = await pipeline.run("Analyze market trends")
-        """, language="python")
+        """,
+            language="python",
+        )
     with tab2:
-        st.code("""
+        st.code(
+            """
 from crewai import Agent, Task, Crew
 
 planner = Agent(role="Planner", goal="Plan tasks", backstory="...")
@@ -448,13 +532,18 @@ executor = Agent(role="Executor", goal="Execute", backstory="...")
 task = Task(description="Analyze market trends", agent=planner)
 crew = Crew(agents=[planner, executor], tasks=[task])
 result = crew.kickoff()
-        """, language="python")
+        """,
+            language="python",
+        )
     with tab3:
-        st.code("""
+        st.code(
+            """
 from langchain.agents import initialize_agent, Tool
 from langchain.llms import OpenAI
 
 tools = [Tool(name="search", func=search_fn, description="Search")]
 agent = initialize_agent(tools, OpenAI(), agent="zero-shot-react-description")
 result = agent.run("Analyze market trends")
-        """, language="python")
+        """,
+            language="python",
+        )

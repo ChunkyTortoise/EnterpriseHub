@@ -28,8 +28,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # HSTS only when behind HTTPS (check forwarded proto or scheme)
         scheme = request.headers.get("X-Forwarded-Proto", request.url.scheme)
         if scheme == "https":
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response

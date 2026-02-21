@@ -6,6 +6,7 @@ No API keys required — fully self-contained.
 Run:
     python examples/legal_research.py
 """
+
 import asyncio
 import json
 from dataclasses import dataclass, field
@@ -22,10 +23,26 @@ class AgentResult:
 
 
 MOCK_CASES = [
-    {"name": "Smith v. Jones (2024)", "topic": "negligence", "holding": "Duty of care extends to foreseeable third parties."},
-    {"name": "Acme Corp v. Widget Inc (2023)", "topic": "contract breach", "holding": "Liquidated damages clause upheld; actual damages not required."},
-    {"name": "State v. Martinez (2024)", "topic": "negligence", "holding": "Comparative fault applies when plaintiff contributed to harm."},
-    {"name": "Johnson v. City of Portland (2023)", "topic": "civil rights", "holding": "Qualified immunity denied where precedent clearly established."},
+    {
+        "name": "Smith v. Jones (2024)",
+        "topic": "negligence",
+        "holding": "Duty of care extends to foreseeable third parties.",
+    },
+    {
+        "name": "Acme Corp v. Widget Inc (2023)",
+        "topic": "contract breach",
+        "holding": "Liquidated damages clause upheld; actual damages not required.",
+    },
+    {
+        "name": "State v. Martinez (2024)",
+        "topic": "negligence",
+        "holding": "Comparative fault applies when plaintiff contributed to harm.",
+    },
+    {
+        "name": "Johnson v. City of Portland (2023)",
+        "topic": "civil rights",
+        "holding": "Qualified immunity denied where precedent clearly established.",
+    },
 ]
 
 
@@ -33,7 +50,9 @@ async def search_agent(query: str) -> AgentResult:
     """Search for relevant case law based on a legal query."""
     await asyncio.sleep(0.1)  # simulate latency
     keywords = query.lower().split()
-    matches = [c for c in MOCK_CASES if any(k in c["topic"] or k in c["name"].lower() for k in keywords)]
+    matches = [
+        c for c in MOCK_CASES if any(k in c["topic"] or k in c["name"].lower() for k in keywords)
+    ]
     if not matches:
         matches = MOCK_CASES[:2]
     return AgentResult(
@@ -49,7 +68,12 @@ async def summarize_agent(search_output: str, query: str) -> AgentResult:
     """Summarize case law findings into a legal brief."""
     await asyncio.sleep(0.1)
     cases = json.loads(search_output)
-    lines = [f"Legal Research Brief: {query}", f"Date: {datetime.now().strftime('%Y-%m-%d')}", f"Cases analyzed: {len(cases)}", ""]
+    lines = [
+        f"Legal Research Brief: {query}",
+        f"Date: {datetime.now().strftime('%Y-%m-%d')}",
+        f"Cases analyzed: {len(cases)}",
+        "",
+    ]
     for c in cases:
         lines.append(f"  - {c['name']}: {c['holding']}")
     lines.append("")
@@ -72,7 +96,9 @@ async def run_pipeline(query: str) -> None:
     # Step 1: Search
     print("[1/2] CaseSearchAgent: Searching case law...")
     search_result = await search_agent(query)
-    print(f"      Found {search_result.metadata['cases_found']} cases ({search_result.latency_ms}ms)\n")
+    print(
+        f"      Found {search_result.metadata['cases_found']} cases ({search_result.latency_ms}ms)\n"
+    )
 
     # Step 2: Summarize
     print("[2/2] SummaryAgent: Generating brief...")

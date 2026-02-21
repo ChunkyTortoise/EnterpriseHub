@@ -1,6 +1,7 @@
 """
 Handoff Manager for coordinating cross-bot handoffs.
 """
+
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from uuid import uuid4
 
@@ -119,6 +120,7 @@ class HandoffManager:
     def extract_handoff_signals(user_message: str) -> Dict[str, Any]:
         """Extract intent signals for cross-bot handoff detection."""
         from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
         return JorgeHandoffService.extract_intent_signals(user_message)
 
     @staticmethod

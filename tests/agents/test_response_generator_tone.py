@@ -69,7 +69,7 @@ class TestToneVariants:
         # Verify casual tone transformations
         assert "Hey John" in msg
         # "Any questions" is already casual - no need for "Got any questions" transformation
-        assert ("Any questions" in msg or "Got any questions" in msg)
+        assert "Any questions" in msg or "Got any questions" in msg
 
     def test_day3_message_with_empathetic_tone(self):
         """Test Day 3 message with empathetic tone (default)."""

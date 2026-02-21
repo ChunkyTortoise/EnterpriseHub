@@ -29,9 +29,7 @@ class CRMProtocol(ABC):
         """Create a new contact in the CRM."""
 
     @abstractmethod
-    async def update_contact(
-        self, contact_id: str, updates: dict[str, Any]
-    ) -> CRMContact:
+    async def update_contact(self, contact_id: str, updates: dict[str, Any]) -> CRMContact:
         """Update an existing contact."""
 
     @abstractmethod
@@ -39,13 +37,9 @@ class CRMProtocol(ABC):
         """Retrieve a contact by ID."""
 
     @abstractmethod
-    async def search_contacts(
-        self, query: str, limit: int = 10
-    ) -> list[CRMContact]:
+    async def search_contacts(self, query: str, limit: int = 10) -> list[CRMContact]:
         """Search contacts by query string."""
 
     @abstractmethod
-    async def sync_lead(
-        self, contact: CRMContact, score: int, temperature: str
-    ) -> bool:
+    async def sync_lead(self, contact: CRMContact, score: int, temperature: str) -> bool:
         """Sync lead data with temperature scoring."""

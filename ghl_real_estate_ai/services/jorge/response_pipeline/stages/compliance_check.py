@@ -57,9 +57,7 @@ class ComplianceCheckProcessor(ResponseProcessorStage):
         from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus
 
         if result.status == ComplianceStatus.BLOCKED:
-            response.message = _SAFE_FALLBACKS.get(
-                context.bot_mode, _SAFE_FALLBACKS["general"]
-            )
+            response.message = _SAFE_FALLBACKS.get(context.bot_mode, _SAFE_FALLBACKS["general"])
             response.action = ProcessingAction.BLOCK
             response.actions.append({"type": "add_tag", "tag": "Compliance-Alert"})
             response.compliance_flags.append(

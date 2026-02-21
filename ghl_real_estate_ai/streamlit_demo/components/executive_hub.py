@@ -628,7 +628,11 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
             "Rancho": [70, 85, 60, 75, 80, 55, 92, 65],
         }
 
-        current_market = "Rancho Cucamonga" if "Rancho Cucamonga" in st.session_state.get("selected_market", "Rancho Cucamonga") else "Rancho"
+        current_market = (
+            "Rancho Cucamonga"
+            if "Rancho Cucamonga" in st.session_state.get("selected_market", "Rancho Cucamonga")
+            else "Rancho"
+        )
 
         fig_market_radar = go.Figure()
         fig_market_radar.add_trace(
@@ -675,7 +679,9 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                             orchestrator.synthesize_report(
                                 metrics=report_data,
                                 report_type="executive_quarterly_projection",
-                                market_context={"location": st.session_state.get("selected_market", "Rancho Cucamonga")},
+                                market_context={
+                                    "location": st.session_state.get("selected_market", "Rancho Cucamonga")
+                                },
                             )
                         )
 
@@ -828,7 +834,9 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
                             st.markdown(f"**{target['area']} ({target['zip']})**")
                             st.caption(target["reason"])
 
-                if st.button("📊 Generate Orange County Market Entry Strategy", type="primary", use_container_width=True):
+                if st.button(
+                    "📊 Generate Orange County Market Entry Strategy", type="primary", use_container_width=True
+                ):
                     with st.spinner("Claude is drafting market entry scripts..."):
                         time.sleep(2)
                         st.success("Orange County Strategy Dossier Generated.")
@@ -838,7 +846,9 @@ def render_executive_hub(services, mock_data, sparkline, render_insight_card):
 
         st.markdown("---")
         st.markdown("#### 🔮 Geographic Migration Logic")
-        st.write("Claude is tracking lead migration patterns from Coastal California to the Inland Empire to predict future demand.")
+        st.write(
+            "Claude is tracking lead migration patterns from Coastal California to the Inland Empire to predict future demand."
+        )
         st.image(
             "https://img.freepik.com/free-vector/world-map-with-lines-connection_1017-14238.jpg?size=626&ext=jpg",
             caption="Simulated Migration Heatmap",

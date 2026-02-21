@@ -170,9 +170,7 @@ class TestAcceptancePredictorInit:
             AcceptancePredictor,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"):
             predictor = AcceptancePredictor()
 
             assert predictor is not None
@@ -184,9 +182,7 @@ class TestAcceptancePredictorInit:
             PredictionMode,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"):
             predictor = AcceptancePredictor(mode=PredictionMode.RULE_BASED)
 
             assert predictor.mode == PredictionMode.RULE_BASED
@@ -203,9 +199,7 @@ class TestRuleBasedPrediction:
             PredictionMode,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ) as mock_cache:
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service") as mock_cache:
             mock_cache.return_value = MagicMock()
             mock_cache.return_value.get = AsyncMock(return_value=None)
             mock_cache.return_value.set = AsyncMock()
@@ -265,10 +259,7 @@ class TestRuleBasedPrediction:
             result_high_dom = await predictor.predict(offer_data_high_dom)
 
             # Same offer should be more likely accepted with longer DOM
-            assert (
-                result_high_dom["acceptance_probability"]
-                >= result_low_dom["acceptance_probability"]
-            )
+            assert result_high_dom["acceptance_probability"] >= result_low_dom["acceptance_probability"]
 
     @pytest.mark.asyncio
     async def test_high_motivation_increases_acceptance(self, predictor):
@@ -291,10 +282,7 @@ class TestRuleBasedPrediction:
             result_low = await predictor.predict(offer_data_low_motivation)
             result_high = await predictor.predict(offer_data_high_motivation)
 
-            assert (
-                result_high["acceptance_probability"]
-                >= result_low["acceptance_probability"]
-            )
+            assert result_high["acceptance_probability"] >= result_low["acceptance_probability"]
 
 
 class TestXGBoostPrediction:
@@ -308,9 +296,7 @@ class TestXGBoostPrediction:
             PredictionMode,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ) as mock_cache:
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service") as mock_cache:
             mock_cache.return_value = MagicMock()
             mock_cache.return_value.get = AsyncMock(return_value=None)
             mock_cache.return_value.set = AsyncMock()
@@ -320,9 +306,7 @@ class TestXGBoostPrediction:
             # Mock the model if it exists
             if hasattr(predictor, "model"):
                 predictor.model = MagicMock()
-                predictor.model.predict_proba = MagicMock(
-                    return_value=np.array([[0.3, 0.7]])
-                )
+                predictor.model.predict_proba = MagicMock(return_value=np.array([[0.3, 0.7]]))
 
             return predictor
 
@@ -433,9 +417,7 @@ class TestFeatureImportanceExplanation:
             PredictionMode,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"):
             return AcceptancePredictor(mode=PredictionMode.RULE_BASED)
 
     @pytest.mark.asyncio
@@ -483,9 +465,7 @@ class TestOptimalPriceRecommendation:
             PredictionMode,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"):
             return AcceptancePredictor(mode=PredictionMode.RULE_BASED)
 
     @pytest.mark.asyncio
@@ -533,9 +513,7 @@ class TestModelMonitoring:
             PredictionMode,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"
-        ):
+        with patch("ghl_real_estate_ai.services.jorge.acceptance_predictor.get_cache_service"):
             return AcceptancePredictor(mode=PredictionMode.RULE_BASED)
 
     def test_get_model_metadata(self, predictor):
@@ -553,4 +531,3 @@ class TestModelMonitoring:
 
             if metrics:
                 assert isinstance(metrics, dict)
-

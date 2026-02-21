@@ -74,7 +74,7 @@ class EnterpriseAuthService:
         if not settings.jwt_secret_key:
             raise RuntimeError(
                 "JWT_SECRET_KEY environment variable must be set. "
-                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
             )
         self.jwt_secret = settings.jwt_secret_key
         self.jwt_algorithm = "HS256"
@@ -304,7 +304,9 @@ class EnterpriseAuthService:
         try:
             tenant_config = await self.get_tenant_by_ontario_mills(ontario_mills)
             if not tenant_config:
-                raise EnterpriseAuthError(f"No tenant configured for ontario_mills {ontario_mills}", error_code="TENANT_NOT_FOUND")
+                raise EnterpriseAuthError(
+                    f"No tenant configured for ontario_mills {ontario_mills}", error_code="TENANT_NOT_FOUND"
+                )
 
             tenant_id = tenant_config["tenant_id"]
             sso_provider = tenant_config["sso_provider"]
@@ -378,7 +380,9 @@ class EnterpriseAuthService:
 
             # Validate user belongs to tenant ontario_mills
             user_email = user_info.get("email")
-            if not user_email or not self._validate_user_ontario_mills(user_email, tenant_config["allowed_ontario_millss"]):
+            if not user_email or not self._validate_user_ontario_mills(
+                user_email, tenant_config["allowed_ontario_millss"]
+            ):
                 raise EnterpriseAuthError(
                     f"User email {user_email} not authorized for this tenant",
                     error_code="USER_DOMAIN_NOT_AUTHORIZED",

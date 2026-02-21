@@ -742,7 +742,9 @@ class TestA2AClientDiscover:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             card = await client.discover_agent()
 
         assert card.id == "remote-agent"
@@ -758,19 +760,25 @@ class TestA2AClientDiscover:
             hdrs=None,  # type: ignore[arg-type]
             fp=None,
         )
-        with patch(
-            "agentforge.comms.a2a_client.urllib.request.urlopen",
-            side_effect=http_err,
-        ), pytest.raises(A2AClientError, match="HTTP 404"):
+        with (
+            patch(
+                "agentforge.comms.a2a_client.urllib.request.urlopen",
+                side_effect=http_err,
+            ),
+            pytest.raises(A2AClientError, match="HTTP 404"),
+        ):
             await client.discover_agent()
 
     @pytest.mark.asyncio
     async def test_discover_agent_url_error(self, client: A2AClient) -> None:
         url_err = urllib.error.URLError("Connection refused")
-        with patch(
-            "agentforge.comms.a2a_client.urllib.request.urlopen",
-            side_effect=url_err,
-        ), pytest.raises(A2AClientError, match="Connection refused"):
+        with (
+            patch(
+                "agentforge.comms.a2a_client.urllib.request.urlopen",
+                side_effect=url_err,
+            ),
+            pytest.raises(A2AClientError, match="Connection refused"),
+        ):
             await client.discover_agent()
 
     @pytest.mark.asyncio
@@ -807,7 +815,9 @@ class TestA2AClientSendTask:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             task = await client.send_task("get_forecast", {"location": "NYC"})
 
         assert task.status == TaskStatus.COMPLETED
@@ -844,7 +854,9 @@ class TestA2AClientGetTask:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             task = await client.get_task("task-123")
 
         assert task.status == TaskStatus.WORKING
@@ -880,7 +892,9 @@ class TestA2AClientCancelTask:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             task = await client.cancel_task("task-to-cancel")
 
         assert task.status == TaskStatus.CANCELLED
@@ -902,7 +916,9 @@ class TestA2AClientListTasks:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             result_tasks, total = await client.list_tasks()
 
         assert len(result_tasks) == 3
@@ -920,7 +936,9 @@ class TestA2AClientListTasks:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             result_tasks, total = await client.list_tasks(status="completed", limit=10)
 
         assert result_tasks == []
@@ -932,16 +950,16 @@ class TestA2AClientGetAgentCard:
 
     @pytest.mark.asyncio
     async def test_get_agent_card_success(self, client: A2AClient) -> None:
-        card_data = AgentCard(
-            id="remote", name="Remote", description="desc"
-        ).model_dump()
+        card_data = AgentCard(id="remote", name="Remote", description="desc").model_dump()
         response_data = {"jsonrpc": "2.0", "result": card_data, "id": None}
         mock_response = MagicMock()
         mock_response.read.return_value = json.dumps(response_data).encode()
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             card = await client.get_agent_card()
 
         assert card.id == "remote"
@@ -962,10 +980,10 @@ class TestA2AClientPollTask:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
-            task = await client.poll_task_until_complete(
-                "task-1", poll_interval=0.01, max_wait=1.0
-            )
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
+            task = await client.poll_task_until_complete("task-1", poll_interval=0.01, max_wait=1.0)
 
         assert task.status == TaskStatus.COMPLETED
 
@@ -980,10 +998,10 @@ class TestA2AClientPollTask:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
-            task = await client.poll_task_until_complete(
-                "task-1", poll_interval=0.01, max_wait=1.0
-            )
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
+            task = await client.poll_task_until_complete("task-1", poll_interval=0.01, max_wait=1.0)
 
         assert task.status == TaskStatus.FAILED
 
@@ -1002,9 +1020,7 @@ class TestA2AClientPollTask:
             patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response),
             pytest.raises(asyncio.TimeoutError, match="did not complete"),
         ):
-            await client.poll_task_until_complete(
-                    "task-stuck", poll_interval=0.01, max_wait=0.05
-                )
+            await client.poll_task_until_complete("task-stuck", poll_interval=0.01, max_wait=0.05)
 
 
 class TestA2AClientSendMessage:
@@ -1073,7 +1089,9 @@ class TestA2AClientSendMessage:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             msg = A2AMessage(method="tasks/send", params={})
             resp = await client._send_message(msg)
 
@@ -1218,13 +1236,9 @@ class TestA2ABridgeCreateServer:
         custom_card = AgentCard(
             id="custom-id",
             name="CustomAgent",
-            capabilities=[
-                AgentCapability(name="custom_cap", description="Custom capability")
-            ],
+            capabilities=[AgentCapability(name="custom_cap", description="Custom capability")],
         )
-        server = A2ABridge.create_server(
-            agent, "https://example.com", agent_card=custom_card
-        )
+        server = A2ABridge.create_server(agent, "https://example.com", agent_card=custom_card)
 
         assert server.agent_card.name == "CustomAgent"
         assert "custom_cap" in server._task_handlers
@@ -1259,7 +1273,9 @@ class TestA2ABridgeCallRemoteAgent:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             result = await A2ABridge.call_remote_agent(
                 "https://remote.example.com",
                 "compute",
@@ -1285,10 +1301,10 @@ class TestA2ABridgeCallRemoteAgent:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
-            result = await A2ABridge.call_remote_agent(
-                "https://remote.example.com", "compute", {}
-            )
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
+            result = await A2ABridge.call_remote_agent("https://remote.example.com", "compute", {})
 
         assert result == {"error": "Something went wrong"}
 
@@ -1305,7 +1321,9 @@ class TestA2ABridgeCallRemoteAgent:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch("agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response):
+        with patch(
+            "agentforge.comms.a2a_client.urllib.request.urlopen", return_value=mock_response
+        ):
             result = await A2ABridge.call_remote_agent(
                 "https://remote.example.com", "long_task", {}
             )
@@ -1327,9 +1345,7 @@ class TestServerIntegration:
         card = AgentCard(
             id="lifecycle-agent",
             name="LifecycleAgent",
-            capabilities=[
-                AgentCapability(name="process", description="Process data")
-            ],
+            capabilities=[AgentCapability(name="process", description="Process data")],
         )
         server = A2AServer(card)
 
@@ -1378,7 +1394,7 @@ class TestServerIntegration:
         server = A2AServer(card)
 
         async def search_handler(data: dict[str, Any]) -> dict[str, Any]:
-            return {"results": [f"result for {data.get('q', '')}"] }
+            return {"results": [f"result for {data.get('q', '')}"]}
 
         async def analyze_handler(data: dict[str, Any]) -> dict[str, Any]:
             return {"analysis": "positive"}

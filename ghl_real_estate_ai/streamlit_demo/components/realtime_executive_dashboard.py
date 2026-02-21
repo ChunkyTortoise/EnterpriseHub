@@ -95,7 +95,13 @@ class RealTimeExecutiveDashboard:
                 "Ontario Mills": 28,
                 "Victoria Gardens": 15,
             },
-            price_trends={"Downtown": 5.2, "South Lamar": 7.8, "Fontana": 3.1, "East Rancho Cucamonga": 12.4, "Ontario Mills": 2.9},
+            price_trends={
+                "Downtown": 5.2,
+                "South Lamar": 7.8,
+                "Fontana": 3.1,
+                "East Rancho Cucamonga": 12.4,
+                "Ontario Mills": 2.9,
+            },
             inventory_levels={"Under $300K": 45, "$300K-$500K": 78, "$500K-$750K": 34, "$750K+": 12},
             competition_analysis={
                 "market_share": 15.7,

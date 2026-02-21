@@ -37,6 +37,7 @@ def _make_client():
 
     os.environ["ADMIN_API_KEY"] = "test-admin-key"
     from ghl_real_estate_ai.api.main import app
+
     if not hasattr(app, "dependency_overrides") or app.dependency_overrides is None:
         app.dependency_overrides = {}
 
@@ -134,6 +135,7 @@ def _mock_counters():
 # GET /api/bots/health
 # ---------------------------------------------------------------------------
 
+
 class TestBotHealth:
     """Tests for bot system health check."""
 
@@ -178,6 +180,7 @@ class TestBotHealth:
 # GET /api/bots
 # ---------------------------------------------------------------------------
 
+
 class TestListBots:
     """Tests for list available bots endpoint."""
 
@@ -214,6 +217,7 @@ class TestListBots:
 # ---------------------------------------------------------------------------
 # POST /api/bots/{bot_id}/chat
 # ---------------------------------------------------------------------------
+
 
 class TestBotChat:
     """Tests for the streaming chat endpoint."""
@@ -258,6 +262,7 @@ class TestBotChat:
 # GET /api/bots/{bot_id}/status
 # ---------------------------------------------------------------------------
 
+
 class TestBotStatus:
     """Tests for individual bot status endpoint."""
 
@@ -283,6 +288,7 @@ class TestBotStatus:
 # ---------------------------------------------------------------------------
 # POST /api/jorge-seller/start
 # ---------------------------------------------------------------------------
+
 
 class TestJorgeSellerStart:
     """Tests for starting Jorge qualification."""
@@ -334,6 +340,7 @@ class TestJorgeSellerStart:
 # POST /api/lead-bot/{leadId}/schedule
 # ---------------------------------------------------------------------------
 
+
 class TestLeadBotSchedule:
     """Tests for triggering lead bot sequence."""
 
@@ -373,6 +380,7 @@ class TestLeadBotSchedule:
 # ---------------------------------------------------------------------------
 # GET /api/intent-decoder/{leadId}/score
 # ---------------------------------------------------------------------------
+
 
 class TestIntentDecoderScore:
     """Tests for the intent scoring endpoint."""
@@ -429,6 +437,7 @@ class TestIntentDecoderScore:
 # ---------------------------------------------------------------------------
 # POST /api/jorge-seller/{lead_id}/handoff
 # ---------------------------------------------------------------------------
+
 
 class TestJorgeSellerHandoff:
     """Tests for Jorge handoff route idempotency and execution."""
@@ -488,6 +497,7 @@ class TestJorgeSellerHandoff:
 # ---------------------------------------------------------------------------
 # POST /api/jorge-seller/test
 # ---------------------------------------------------------------------------
+
 
 class TestJorgeSellerTestEndpoint:
     """Tests for the quick test endpoint."""

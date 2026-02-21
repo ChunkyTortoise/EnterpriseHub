@@ -24,8 +24,6 @@ from src.agents.tool_registry import (
 
 
 @pytest.mark.unit
-
-
 def _build_registry():
     registry = ToolRegistry()
     registry.register(VectorSearchTool())

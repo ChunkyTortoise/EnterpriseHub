@@ -98,12 +98,8 @@ class TestBuyerJourneyProgression:
             to_stage="pre_approval",
         )
 
-        mock_ghl.remove_tags.assert_called_once_with(
-            "buyer-002", ["Stage-Consideration"]
-        )
-        mock_ghl.add_tags.assert_called_once_with(
-            "buyer-002", ["Stage-Pre-Approval"]
-        )
+        mock_ghl.remove_tags.assert_called_once_with("buyer-002", ["Stage-Consideration"])
+        mock_ghl.add_tags.assert_called_once_with("buyer-002", ["Stage-Pre-Approval"])
 
 
 class TestBuyerJourneyActions:
@@ -115,6 +111,4 @@ class TestBuyerJourneyActions:
         for stage in JourneyStage:
             actions = tracker.get_stage_actions(stage)
             assert len(actions) > 0, f"Stage {stage.value} has no actions"
-            assert all(
-                isinstance(a, str) for a in actions
-            ), f"Stage {stage.value} has non-string actions"
+            assert all(isinstance(a, str) for a in actions), f"Stage {stage.value} has non-string actions"

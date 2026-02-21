@@ -93,8 +93,14 @@ class TestCRMContactSerialization:
         contact = CRMContact(first_name="Bob")
         data = contact.model_dump()
         expected_keys = {
-            "id", "first_name", "last_name", "email",
-            "phone", "source", "tags", "metadata",
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "source",
+            "tags",
+            "metadata",
         }
         assert set(data.keys()) == expected_keys
 
@@ -128,22 +134,16 @@ class TestCRMProtocolABC:
             async def create_contact(self, contact: CRMContact) -> CRMContact:
                 return contact
 
-            async def update_contact(
-                self, contact_id: str, updates: dict[str, Any]
-            ) -> CRMContact:
+            async def update_contact(self, contact_id: str, updates: dict[str, Any]) -> CRMContact:
                 return CRMContact(id=contact_id)
 
             async def get_contact(self, contact_id: str) -> CRMContact | None:
                 return None
 
-            async def search_contacts(
-                self, query: str, limit: int = 10
-            ) -> list[CRMContact]:
+            async def search_contacts(self, query: str, limit: int = 10) -> list[CRMContact]:
                 return []
 
-            async def sync_lead(
-                self, contact: CRMContact, score: int, temperature: str
-            ) -> bool:
+            async def sync_lead(self, contact: CRMContact, score: int, temperature: str) -> bool:
                 return True
 
         adapter = StubAdapter()

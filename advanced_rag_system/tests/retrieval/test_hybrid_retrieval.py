@@ -23,8 +23,6 @@ from src.retrieval.hybrid.hybrid_searcher import (
 
 
 @pytest.mark.unit
-
-
 class TestFusionAlgorithms:
     """Test suite for fusion algorithms."""
 

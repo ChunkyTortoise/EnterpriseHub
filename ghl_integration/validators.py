@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class WebhookValidator:
     """
     Webhook signature validator for GHL.
-    
+
     Supports multiple signature schemes:
     - HMAC-SHA256 (standard)
     - RSA-SHA256 (enterprise)
@@ -30,21 +30,17 @@ class WebhookValidator:
         self.skip_in_dev = os.getenv("GHL_SKIP_SIGNATURE_VERIFICATION", "false").lower() == "true"
 
     async def validate(
-        self,
-        payload: bytes,
-        signature: Optional[str],
-        headers: Dict[str, str],
-        scheme: str = "auto"
+        self, payload: bytes, signature: Optional[str], headers: Dict[str, str], scheme: str = "auto"
     ) -> bool:
         """
         Validate webhook signature.
-        
+
         Args:
             payload: Raw request body bytes
             signature: Signature from X-GHL-Signature header
             headers: All request headers
             scheme: 'hmac', 'rsa', or 'auto' to detect
-        
+
         Returns:
             True if signature is valid
         """
@@ -86,21 +82,14 @@ class WebhookValidator:
                 signature = signature[7:]
 
             # Compute expected signature
-            expected = hmac.new(
-                self.hmac_secret.encode("utf-8"),
-                payload,
-                hashlib.sha256
-            ).hexdigest()
+            expected = hmac.new(self.hmac_secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
             # Compare signatures
             is_valid = hmac.compare_digest(expected, signature)
-            
+
             if not is_valid:
-                logger.warning(
-                    f"HMAC validation failed: expected {expected[:16]}..., "
-                    f"got {signature[:16]}..."
-                )
-            
+                logger.warning(f"HMAC validation failed: expected {expected[:16]}..., got {signature[:16]}...")
+
             return is_valid
 
         except Exception as e:
@@ -118,39 +107,28 @@ class WebhookValidator:
             from cryptography.hazmat.primitives.asymmetric import padding
 
             # Load public key
-            public_key = serialization.load_pem_public_key(
-                self.rsa_public_key.encode()
-            )
+            public_key = serialization.load_pem_public_key(self.rsa_public_key.encode())
 
             # Decode base64 signature
             signature_bytes = base64.b64decode(signature)
 
             # Verify
-            public_key.verify(
-                signature_bytes,
-                payload,
-                padding.PKCS1v15(),
-                hashes.SHA256()
-            )
-            
+            public_key.verify(signature_bytes, payload, padding.PKCS1v15(), hashes.SHA256())
+
             return True
 
         except Exception as e:
             logger.error(f"RSA validation error: {e}")
             return False
 
-    async def validate_timestamp(
-        self,
-        timestamp: Optional[str],
-        max_age_seconds: int = 300
-    ) -> bool:
+    async def validate_timestamp(self, timestamp: Optional[str], max_age_seconds: int = 300) -> bool:
         """
         Validate webhook timestamp to prevent replay attacks.
-        
+
         Args:
             timestamp: ISO format timestamp from header
             max_age_seconds: Maximum allowed age (default 5 minutes)
-        
+
         Returns:
             True if timestamp is valid and recent
         """
@@ -163,21 +141,21 @@ class WebhookValidator:
             # Parse timestamp
             if timestamp.endswith("Z"):
                 timestamp = timestamp[:-1] + "+00:00"
-            
+
             event_time = datetime.fromisoformat(timestamp)
             now = datetime.now(timezone.utc)
-            
+
             # Calculate age
             age_seconds = (now - event_time).total_seconds()
-            
+
             if age_seconds > max_age_seconds:
                 logger.warning(f"Webhook too old: {age_seconds}s > {max_age_seconds}s")
                 return False
-            
+
             if age_seconds < -60:  # More than 1 minute in future
                 logger.warning(f"Webhook from future: {age_seconds}s")
                 return False
-            
+
             return True
 
         except Exception as e:
@@ -211,7 +189,7 @@ class MultiValidator:
     ) -> Dict[str, any]:
         """
         Perform full validation.
-        
+
         Returns:
             Dict with 'valid' bool and detailed results
         """
@@ -224,9 +202,7 @@ class MultiValidator:
         }
 
         # Validate signature
-        results["signature_valid"] = await self.signature_validator.validate(
-            payload, signature, headers
-        )
+        results["signature_valid"] = await self.signature_validator.validate(payload, signature, headers)
         if not results["signature_valid"]:
             results["errors"].append("Invalid signature")
 
@@ -245,11 +221,7 @@ class MultiValidator:
             results["source_valid"] = True  # Skip if not configured
 
         # Overall validity
-        results["valid"] = (
-            results["signature_valid"] and 
-            results["timestamp_valid"] and 
-            results["source_valid"]
-        )
+        results["valid"] = results["signature_valid"] and results["timestamp_valid"] and results["source_valid"]
 
         return results
 

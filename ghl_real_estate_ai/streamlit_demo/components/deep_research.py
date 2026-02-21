@@ -49,7 +49,9 @@ def render_deep_research_hub():
         st.subheader("Market Intelligence")
         col1, col2 = st.columns([2, 1])
         with col1:
-            market_query = st.text_input("Location", placeholder="Ex: Rancho Cucamonga, CA or Miami, FL", key="market_loc")
+            market_query = st.text_input(
+                "Location", placeholder="Ex: Rancho Cucamonga, CA or Miami, FL", key="market_loc"
+            )
         with col2:
             period = st.selectbox(
                 "Period", ["Current", "Last Quarter", "2025 Review", "2026 Forecast"], key="market_period"
@@ -129,7 +131,8 @@ def render_deep_research_hub():
         st.info("This mode uses Perplexity for real-time data and Claude for strategic architectural synthesis.")
 
         hybrid_topic = st.text_input(
-            "Strategic Research Topic", placeholder="Ex: Impact of Apple's expansion on North Rancho Cucamonga property values"
+            "Strategic Research Topic",
+            placeholder="Ex: Impact of Apple's expansion on North Rancho Cucamonga property values",
         )
 
         if st.button("🚀 Run Hybrid Analysis", type="primary"):

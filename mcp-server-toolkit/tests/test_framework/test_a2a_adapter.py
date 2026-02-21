@@ -17,10 +17,12 @@ from mcp_toolkit.framework.a2a_adapter import (
 def mock_server():
     server = MagicMock()
     server.name = "test-server"
-    server.list_tools = AsyncMock(return_value=[
-        MagicMock(name="query_db", description="Query the database"),
-        MagicMock(name="send_email", description="Send an email"),
-    ])
+    server.list_tools = AsyncMock(
+        return_value=[
+            MagicMock(name="query_db", description="Query the database"),
+            MagicMock(name="send_email", description="Send an email"),
+        ]
+    )
     server.call_tool = AsyncMock(return_value="Tool result text")
     return server
 
@@ -33,7 +35,9 @@ def adapter(mock_server):
 class TestA2AAgentCard:
     def test_to_dict(self):
         card = A2AAgentCard(
-            name="test", description="A test agent", url="https://test.com",
+            name="test",
+            description="A test agent",
+            url="https://test.com",
             skills=[{"id": "skill1", "name": "Skill 1"}],
         )
         d = card.to_dict()

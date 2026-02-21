@@ -12,8 +12,7 @@ from mcp_toolkit.servers.database_query.schema_inspector import DatabaseSchema
 class LLMProvider(Protocol):
     """Protocol for LLM providers used in SQL generation."""
 
-    async def generate(self, prompt: str) -> str:
-        ...
+    async def generate(self, prompt: str) -> str: ...
 
 
 class DefaultLLMProvider:

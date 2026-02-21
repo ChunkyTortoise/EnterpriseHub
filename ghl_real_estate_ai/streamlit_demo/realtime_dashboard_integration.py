@@ -209,7 +209,9 @@ def render_realtime_intelligence_dashboard():
             from ghl_real_estate_ai.streamlit_demo.components.whisper_dashboard import render_whisper_dashboard
 
             render_whisper_dashboard(
-                lead_id="tech_professional_sarah", lead_name="Sarah Chen", property_address="789 Pine Ave, Rancho Cucamonga, CA"
+                lead_id="tech_professional_sarah",
+                lead_name="Sarah Chen",
+                property_address="789 Pine Ave, Rancho Cucamonga, CA",
             )
 
     except ImportError as e:

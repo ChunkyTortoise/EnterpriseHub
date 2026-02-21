@@ -73,7 +73,9 @@ def render_lead_dashboard():
     col_pref, col_tags = st.columns(2)
     with col_pref:
         st.markdown("#### 🎯 CORE PARAMETERS")
-        prefs = st.session_state.get("extracted_data", {"budget": 850000, "location": "Rancho Cucamonga, CA", "beds": 3})
+        prefs = st.session_state.get(
+            "extracted_data", {"budget": 850000, "location": "Rancho Cucamonga, CA", "beds": 3}
+        )
         for key, value in prefs.items():
             st.markdown(
                 f"""\n            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">\n                <span style="color: #8B949E; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; font-family: 'Space Grotesk', sans-serif;">{key}</span>\n                <span style="color: #FFFFFF; font-weight: 600; font-size: 0.9rem; font-family: 'Inter', sans-serif;">{(f"${value:,}" if key == "budget" else value)}</span>\n            </div>\n            """,

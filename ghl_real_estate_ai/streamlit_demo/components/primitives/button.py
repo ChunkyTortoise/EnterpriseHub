@@ -110,13 +110,13 @@ def render_obsidian_button(
     st.markdown(
         f"""<style>
         div[data-testid="stButton"][key="{key}"] button {{
-            background: {variant['bg']};
-            color: {variant['color']};
-            border: {variant['border']};
-            padding: {size['padding']};
-            font-size: {size['font_size']};
-            border-radius: {size['radius']};
-            box-shadow: {variant['shadow']};
+            background: {variant["bg"]};
+            color: {variant["color"]};
+            border: {variant["border"]};
+            padding: {size["padding"]};
+            font-size: {size["font_size"]};
+            border-radius: {size["radius"]};
+            box-shadow: {variant["shadow"]};
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -125,7 +125,7 @@ def render_obsidian_button(
             {underline}
         }}
         div[data-testid="stButton"][key="{key}"] button:hover {{
-            background: {variant['hover_bg']};
+            background: {variant["hover_bg"]};
             transform: translateY(-1px);
         }}
         </style>""",

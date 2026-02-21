@@ -67,9 +67,7 @@ async def test_jorge_seller_bot_stall_breaking(mock_jorge_deps):
     """Test that the bot processes a stall message and returns a valid response."""
     bot = JorgeSellerBot()
 
-    history = [
-        {"role": "user", "content": "I need to think about it."}
-    ]
+    history = [{"role": "user", "content": "I need to think about it."}]
 
     result = await bot.process_seller_message(
         conversation_id="lead_123",

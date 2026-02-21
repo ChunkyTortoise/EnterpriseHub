@@ -58,9 +58,7 @@ class TenantRouter:
 
                 # Cache for 5 minutes
                 if self.redis:
-                    await self.redis.setex(
-                        f"tenant_route:{hashed}", 300, json.dumps(tenant_info)
-                    )
+                    await self.redis.setex(f"tenant_route:{hashed}", 300, json.dumps(tenant_info))
 
                 return tenant_info
 

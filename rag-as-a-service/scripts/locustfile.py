@@ -12,7 +12,6 @@ import os
 
 from locust import HttpUser, between, task
 
-
 API_KEY = os.environ.get("RAG_API_KEY", "")
 
 

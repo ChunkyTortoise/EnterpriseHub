@@ -1,10 +1,11 @@
 """Tests for RAG billing and usage tracking."""
 
-import pytest
 from unittest.mock import AsyncMock
 
-from rag_service.billing.stripe_service import RAGBillingService
+import pytest
 from shared_schemas import UsageEvent, UsageEventType
+
+from rag_service.billing.stripe_service import RAGBillingService
 
 
 @pytest.fixture
@@ -12,9 +13,7 @@ def mock_stripe_billing():
     """Mock Stripe billing service."""
     stripe = AsyncMock()
     stripe.report_usage = AsyncMock(return_value={"id": "evt_123", "status": "success"})
-    stripe.create_subscription = AsyncMock(
-        return_value={"id": "sub_123", "status": "active"}
-    )
+    stripe.create_subscription = AsyncMock(return_value={"id": "sub_123", "status": "active"})
     stripe.create_checkout_session = AsyncMock(
         return_value="https://checkout.stripe.com/session123"
     )
@@ -39,9 +38,7 @@ class TestRAGBillingService:
     async def test_report_query_usage(self, billing_service, mock_stripe_billing):
         """Test reporting RAG query usage to Stripe."""
         # Act
-        result = await billing_service.report_query_usage(
-            tenant_id="tenant-123", query_count=5
-        )
+        result = await billing_service.report_query_usage(tenant_id="tenant-123", query_count=5)
 
         # Assert
         assert result is not None
@@ -77,19 +74,13 @@ class TestRAGBillingService:
         # Assert
         assert result is None
 
-    async def test_report_usage_handles_stripe_error(
-        self, billing_service, mock_stripe_billing
-    ):
+    async def test_report_usage_handles_stripe_error(self, billing_service, mock_stripe_billing):
         """Test graceful handling of Stripe errors."""
         # Arrange
-        mock_stripe_billing.report_usage = AsyncMock(
-            side_effect=Exception("Stripe API error")
-        )
+        mock_stripe_billing.report_usage = AsyncMock(side_effect=Exception("Stripe API error"))
 
         # Act
-        result = await billing_service.report_query_usage(
-            tenant_id="tenant-123", query_count=1
-        )
+        result = await billing_service.report_query_usage(tenant_id="tenant-123", query_count=1)
 
         # Assert
         assert result is None  # Should not raise, returns None on error
@@ -97,9 +88,7 @@ class TestRAGBillingService:
     async def test_create_subscription_starter(self, billing_service, mock_stripe_billing):
         """Test creating a starter tier subscription."""
         # Act
-        result = await billing_service.create_subscription(
-            customer_id="cus_123", tier="starter"
-        )
+        result = await billing_service.create_subscription(customer_id="cus_123", tier="starter")
 
         # Assert
         assert result is not None
@@ -111,21 +100,15 @@ class TestRAGBillingService:
     async def test_create_subscription_pro(self, billing_service, mock_stripe_billing):
         """Test creating a pro tier subscription."""
         # Act
-        result = await billing_service.create_subscription(
-            customer_id="cus_456", tier="pro"
-        )
+        result = await billing_service.create_subscription(customer_id="cus_456", tier="pro")
 
         # Assert
-        mock_stripe_billing.create_subscription.assert_called_once_with(
-            "cus_456", "price_pro_rag"
-        )
+        mock_stripe_billing.create_subscription.assert_called_once_with("cus_456", "price_pro_rag")
 
     async def test_create_subscription_business(self, billing_service, mock_stripe_billing):
         """Test creating a business tier subscription."""
         # Act
-        result = await billing_service.create_subscription(
-            customer_id="cus_789", tier="business"
-        )
+        result = await billing_service.create_subscription(customer_id="cus_789", tier="business")
 
         # Assert
         mock_stripe_billing.create_subscription.assert_called_once_with(
@@ -136,9 +119,7 @@ class TestRAGBillingService:
         """Test creating subscription with invalid tier."""
         # Act & Assert
         with pytest.raises(ValueError, match="Unknown tier"):
-            await billing_service.create_subscription(
-                customer_id="cus_123", tier="invalid"
-            )
+            await billing_service.create_subscription(customer_id="cus_123", tier="invalid")
 
     async def test_create_subscription_without_stripe(self, billing_service_no_stripe):
         """Test creating subscription without Stripe returns None."""
@@ -199,9 +180,7 @@ class TestRAGBillingService:
         """Test checkout URL with invalid tier."""
         # Act & Assert
         with pytest.raises(ValueError, match="Unknown tier"):
-            await billing_service.get_checkout_url(
-                customer_id="cus_123", tier="enterprise"
-            )
+            await billing_service.get_checkout_url(customer_id="cus_123", tier="enterprise")
 
     async def test_get_checkout_url_without_stripe(self, billing_service_no_stripe):
         """Test checkout URL generation without Stripe."""
@@ -249,21 +228,15 @@ class TestBillingIntegration:
     async def test_subscription_lifecycle(self, billing_service, mock_stripe_billing):
         """Test complete subscription lifecycle."""
         # 1. Get checkout URL
-        checkout_url = await billing_service.get_checkout_url(
-            customer_id="cus_new", tier="pro"
-        )
+        checkout_url = await billing_service.get_checkout_url(customer_id="cus_new", tier="pro")
         assert checkout_url is not None
 
         # 2. Create subscription (after checkout)
-        subscription = await billing_service.create_subscription(
-            customer_id="cus_new", tier="pro"
-        )
+        subscription = await billing_service.create_subscription(customer_id="cus_new", tier="pro")
         assert subscription["status"] == "active"
 
         # 3. Report usage
-        usage = await billing_service.report_query_usage(
-            tenant_id="tenant-new", query_count=100
-        )
+        usage = await billing_service.report_query_usage(tenant_id="tenant-new", query_count=100)
         assert usage is not None
 
     async def test_tier_upgrade_workflow(self, billing_service, mock_stripe_billing):
@@ -272,9 +245,7 @@ class TestBillingIntegration:
         await billing_service.create_subscription(customer_id="cus_123", tier="starter")
 
         # Upgrade to pro
-        upgrade_url = await billing_service.get_checkout_url(
-            customer_id="cus_123", tier="pro"
-        )
+        upgrade_url = await billing_service.get_checkout_url(customer_id="cus_123", tier="pro")
 
         assert upgrade_url is not None
         # Should generate checkout for pro tier

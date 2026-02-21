@@ -18,21 +18,26 @@ from ghl_real_estate_ai.services.jorge.calendar_booking_service import (
 
 # ── Fixtures ──────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def mock_ghl_client():
     """GHL client mock with calendar methods."""
     client = AsyncMock()
-    client.get_free_slots = AsyncMock(return_value=[
-        {"start": "2026-03-01T10:00:00Z", "end": "2026-03-01T11:00:00Z"},
-        {"start": "2026-03-01T14:00:00Z", "end": "2026-03-01T15:00:00Z"},
-        {"start": "2026-03-02T09:00:00Z", "end": "2026-03-02T10:00:00Z"},
-    ])
-    client.create_appointment = AsyncMock(return_value={
-        "id": "apt_123",
-        "calendarId": "cal_abc",
-        "contactId": "contact_hot_seller",
-        "status": "confirmed",
-    })
+    client.get_free_slots = AsyncMock(
+        return_value=[
+            {"start": "2026-03-01T10:00:00Z", "end": "2026-03-01T11:00:00Z"},
+            {"start": "2026-03-01T14:00:00Z", "end": "2026-03-01T15:00:00Z"},
+            {"start": "2026-03-02T09:00:00Z", "end": "2026-03-02T10:00:00Z"},
+        ]
+    )
+    client.create_appointment = AsyncMock(
+        return_value={
+            "id": "apt_123",
+            "calendarId": "cal_abc",
+            "contactId": "contact_hot_seller",
+            "status": "confirmed",
+        }
+    )
     client.update_contact = AsyncMock(return_value=True)
     return client
 
@@ -51,6 +56,7 @@ def calendar_service_no_cal(mock_ghl_client):
     with patch.dict("os.environ", {}, clear=False):
         # Remove JORGE_CALENDAR_ID if it exists
         import os
+
         old = os.environ.pop("JORGE_CALENDAR_ID", None)
         svc = CalendarBookingService(ghl_client=mock_ghl_client)
         if old is not None:
@@ -59,6 +65,7 @@ def calendar_service_no_cal(mock_ghl_client):
 
 
 # ── Test Class ────────────────────────────────────────────────────────
+
 
 class TestJorgeCalendarE2E:
     """End-to-end calendar booking flow for HOT sellers."""

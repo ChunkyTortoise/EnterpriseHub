@@ -23,6 +23,7 @@ def httpx_mock():
     """Mock for httpx requests in scraper tests."""
     try:
         from pytest_httpx import HTTPXMock
+
         mock = HTTPXMock()
         yield mock
     except ImportError:

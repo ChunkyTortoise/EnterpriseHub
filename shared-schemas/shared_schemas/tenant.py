@@ -41,10 +41,18 @@ TIER_LIMITS: dict[TenantTier, TenantLimits] = {
         max_users=5, max_queries_per_day=1000, storage_gb=5.0, max_api_keys=3, rate_limit_rpm=60
     ),
     TenantTier.PRO: TenantLimits(
-        max_users=25, max_queries_per_day=50000, storage_gb=50.0, max_api_keys=10, rate_limit_rpm=300
+        max_users=25,
+        max_queries_per_day=50000,
+        storage_gb=50.0,
+        max_api_keys=10,
+        rate_limit_rpm=300,
     ),
     TenantTier.ENTERPRISE: TenantLimits(
-        max_users=999, max_queries_per_day=999999, storage_gb=500.0, max_api_keys=50, rate_limit_rpm=1000
+        max_users=999,
+        max_queries_per_day=999999,
+        storage_gb=500.0,
+        max_api_keys=50,
+        rate_limit_rpm=1000,
     ),
 }
 

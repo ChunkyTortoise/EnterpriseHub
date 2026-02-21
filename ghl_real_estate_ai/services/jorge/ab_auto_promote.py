@@ -154,8 +154,7 @@ class ABAutoPromoter:
         runtime_days = results.duration_hours / 24.0
         if runtime_days < self.MIN_RUNTIME_DAYS:
             logger.debug(
-                f"Experiment '{experiment_id}' runtime {runtime_days:.1f}d "
-                f"< {self.MIN_RUNTIME_DAYS}d, skipping"
+                f"Experiment '{experiment_id}' runtime {runtime_days:.1f}d < {self.MIN_RUNTIME_DAYS}d, skipping"
             )
             return None
 
@@ -170,8 +169,7 @@ class ABAutoPromoter:
         # Check statistical significance
         if not results.is_significant or results.p_value is None or results.p_value >= self.MIN_P_VALUE:
             logger.debug(
-                f"Experiment '{experiment_id}' not significant "
-                f"(p={results.p_value}, threshold={self.MIN_P_VALUE})"
+                f"Experiment '{experiment_id}' not significant (p={results.p_value}, threshold={self.MIN_P_VALUE})"
             )
             return None
 
@@ -196,10 +194,7 @@ class ABAutoPromoter:
             lift_percent = ((winner.conversion_rate - control.conversion_rate) / control.conversion_rate) * 100.0
 
         if lift_percent < self.MIN_LIFT_PERCENT:
-            logger.debug(
-                f"Experiment '{experiment_id}' lift {lift_percent:.1f}% "
-                f"< {self.MIN_LIFT_PERCENT}%, skipping"
-            )
+            logger.debug(f"Experiment '{experiment_id}' lift {lift_percent:.1f}% < {self.MIN_LIFT_PERCENT}%, skipping")
             return None
 
         # All criteria met!
@@ -300,8 +295,7 @@ class ABAutoPromoter:
         variant_names = [v.variant for v in results.variants]
         if winning_variant not in variant_names:
             raise ValueError(
-                f"Unknown variant '{winning_variant}' for experiment '{experiment_id}'. "
-                f"Valid variants: {variant_names}"
+                f"Unknown variant '{winning_variant}' for experiment '{experiment_id}'. Valid variants: {variant_names}"
             )
 
         # Get winner stats
@@ -565,23 +559,18 @@ class ABAutoPromoter:
                             "Canary rollout showed degraded metrics",
                         )
                         rollbacks.append(experiment_id)
-                        logger.warning(
-                            f"Rolled back experiment '{experiment_id}' due to canary issues"
-                        )
+                        logger.warning(f"Rolled back experiment '{experiment_id}' due to canary issues")
                     else:
                         # Complete promotion to 100%
                         await self._complete_promotion(promotion_id, experiment_id, promoted_variant)
                         promotions_completed.append(experiment_id)
                         logger.info(
-                            f"Completed full rollout for experiment '{experiment_id}' "
-                            f"(variant={promoted_variant})"
+                            f"Completed full rollout for experiment '{experiment_id}' (variant={promoted_variant})"
                         )
 
                 except Exception as exc:
                     errors.append({"experiment_id": experiment_id, "error": str(exc)})
-                    logger.error(
-                        f"Failed to process canary rollout for '{experiment_id}': {exc}"
-                    )
+                    logger.error(f"Failed to process canary rollout for '{experiment_id}': {exc}")
 
         except Exception as exc:
             logger.error(f"Failed to monitor canary rollouts: {exc}")
@@ -619,9 +608,7 @@ class ABAutoPromoter:
 
         try:
             results = self.ab_service.get_experiment_results(experiment_id)
-            winner = next(
-                (v for v in results.variants if v.variant == promoted_variant), None
-            )
+            winner = next((v for v in results.variants if v.variant == promoted_variant), None)
             if winner is None:
                 logger.warning(f"Could not find variant '{promoted_variant}' in results")
                 return True  # Treat missing variant as unhealthy
@@ -651,13 +638,9 @@ class ABAutoPromoter:
                     None,
                 )
                 if baseline_winner and baseline_winner["conversion_rate"] > 0:
-                    degradation = (
-                        1.0 - winner.conversion_rate / baseline_winner["conversion_rate"]
-                    )
+                    degradation = 1.0 - winner.conversion_rate / baseline_winner["conversion_rate"]
                     if degradation > 0.20:
-                        logger.warning(
-                            f"Canary degradation {degradation:.1%} for '{experiment_id}'"
-                        )
+                        logger.warning(f"Canary degradation {degradation:.1%} for '{experiment_id}'")
                         return True
 
             return False
@@ -707,10 +690,7 @@ class ABAutoPromoter:
         except Exception as exc:
             logger.warning(f"Failed to update traffic split to 100%: {exc}")
 
-        logger.info(
-            f"Completed promotion for experiment '{experiment_id}' "
-            f"(variant={promoted_variant}, traffic=100%)"
-        )
+        logger.info(f"Completed promotion for experiment '{experiment_id}' (variant={promoted_variant}, traffic=100%)")
 
     async def _rollback_promotion(
         self,
@@ -788,14 +768,12 @@ class ABAutoPromoter:
 
             if canary_status == CanaryStatus.COMPLETED:
                 raise ValueError(
-                    f"Cannot rollback promotion {promotion_id}: already completed "
-                    f"(experiment='{experiment_id}')"
+                    f"Cannot rollback promotion {promotion_id}: already completed (experiment='{experiment_id}')"
                 )
 
             if canary_status == CanaryStatus.ROLLED_BACK:
                 raise ValueError(
-                    f"Cannot rollback promotion {promotion_id}: already rolled back "
-                    f"(experiment='{experiment_id}')"
+                    f"Cannot rollback promotion {promotion_id}: already rolled back (experiment='{experiment_id}')"
                 )
 
         # Execute rollback

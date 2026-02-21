@@ -49,8 +49,11 @@ class TestCustomFieldEnvWiring:
     def test_missing_env_vars_return_empty(self):
         """Without env vars, fields gracefully return empty string."""
         # Ensure env vars are not set
-        env = {k: v for k, v in os.environ.items()
-               if k not in ("CUSTOM_FIELD_MORTGAGE_BALANCE", "CUSTOM_FIELD_REPAIR_ESTIMATE")}
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("CUSTOM_FIELD_MORTGAGE_BALANCE", "CUSTOM_FIELD_REPAIR_ESTIMATE")
+        }
         with patch.dict(os.environ, env, clear=True):
             mortgage = JorgeSellerConfig.get_ghl_custom_field_id("mortgage_balance")
             repair = JorgeSellerConfig.get_ghl_custom_field_id("repair_estimate")
@@ -152,12 +155,14 @@ class TestGHLFieldSync:
             "seller_temperature": "hot",
         }
 
-        with patch("ghl_real_estate_ai.ghl_utils.config.settings", mock_settings), \
-             patch("ghl_real_estate_ai.services.ghl_workflow_service.settings", mock_settings):
+        with (
+            patch("ghl_real_estate_ai.ghl_utils.config.settings", mock_settings),
+            patch("ghl_real_estate_ai.services.ghl_workflow_service.settings", mock_settings),
+        ):
             from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
+
             svc = GHLWorkflowService.__new__(GHLWorkflowService)
             svc.ghl_client = mock_ghl
-
 
             result = await svc.sync_contact_data("contact_123", bot_data)
 
@@ -196,12 +201,14 @@ class TestGHLFieldSync:
             "seller_repairs": "15000",
         }
 
-        with patch("ghl_real_estate_ai.ghl_utils.config.settings", mock_settings), \
-             patch("ghl_real_estate_ai.services.ghl_workflow_service.settings", mock_settings):
+        with (
+            patch("ghl_real_estate_ai.ghl_utils.config.settings", mock_settings),
+            patch("ghl_real_estate_ai.services.ghl_workflow_service.settings", mock_settings),
+        ):
             from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
+
             svc = GHLWorkflowService.__new__(GHLWorkflowService)
             svc.ghl_client = mock_ghl
-
 
             result = await svc.sync_contact_data("contact_123", bot_data)
 
@@ -232,12 +239,14 @@ class TestGHLFieldSync:
             "seller_repairs": "5000",
         }
 
-        with patch("ghl_real_estate_ai.ghl_utils.config.settings", mock_settings), \
-             patch("ghl_real_estate_ai.services.ghl_workflow_service.settings", mock_settings):
+        with (
+            patch("ghl_real_estate_ai.ghl_utils.config.settings", mock_settings),
+            patch("ghl_real_estate_ai.services.ghl_workflow_service.settings", mock_settings),
+        ):
             from ghl_real_estate_ai.services.ghl_workflow_service import GHLWorkflowService
+
             svc = GHLWorkflowService.__new__(GHLWorkflowService)
             svc.ghl_client = mock_ghl
-
 
             result = await svc.sync_contact_data("contact_123", bot_data)
 

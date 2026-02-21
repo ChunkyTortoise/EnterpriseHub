@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from rag_service.core.embedding_service import EmbeddingService, EmbeddingResult
+from rag_service.core.embedding_service import EmbeddingResult, EmbeddingService
 
 
 class TestLocalEmbeddings:
@@ -71,9 +71,7 @@ class TestBatching:
 
 class TestEmbeddingResult:
     def test_result_fields(self):
-        r = EmbeddingResult(
-            embeddings=[[0.1, 0.2]], model="test-model", token_count=5
-        )
+        r = EmbeddingResult(embeddings=[[0.1, 0.2]], model="test-model", token_count=5)
         assert r.model == "test-model"
         assert r.token_count == 5
         assert len(r.embeddings) == 1

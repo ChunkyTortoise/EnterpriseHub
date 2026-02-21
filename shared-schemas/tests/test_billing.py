@@ -1,8 +1,9 @@
 """Tests for billing schemas."""
 
-import pytest
-from uuid import uuid4
 from datetime import datetime, timezone
+from uuid import uuid4
+
+import pytest
 from pydantic import ValidationError
 
 from shared_schemas.billing import (
@@ -76,9 +77,7 @@ class TestSubscriptionPlan:
 
     def test_negative_price_rejected(self):
         with pytest.raises(ValidationError):
-            SubscriptionPlan(
-                name="Bad", stripe_price_id="p", tier="free", monthly_price_cents=-100
-            )
+            SubscriptionPlan(name="Bad", stripe_price_id="p", tier="free", monthly_price_cents=-100)
 
 
 class TestUsageRecord:

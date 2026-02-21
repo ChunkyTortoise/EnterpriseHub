@@ -205,18 +205,20 @@ class SourceTracker:
                 closed_deals = row["closed_deals"] or 0
                 conversion_rate = (closed_deals / total_contacts * 100) if total_contacts > 0 else 0.0
 
-                results.append({
-                    "source_name": row["source_name"],
-                    "total_contacts": total_contacts,
-                    "qualified_leads": row["qualified_leads"] or 0,
-                    "appointments": row["appointments"] or 0,
-                    "showings": row["showings"] or 0,
-                    "offers": row["offers"] or 0,
-                    "closed_deals": closed_deals,
-                    "conversion_rate": round(conversion_rate, 2),
-                    "total_revenue": float(row["total_revenue"] or 0),
-                    "avg_deal_value": float(row["avg_deal_value"] or 0),
-                })
+                results.append(
+                    {
+                        "source_name": row["source_name"],
+                        "total_contacts": total_contacts,
+                        "qualified_leads": row["qualified_leads"] or 0,
+                        "appointments": row["appointments"] or 0,
+                        "showings": row["showings"] or 0,
+                        "offers": row["offers"] or 0,
+                        "closed_deals": closed_deals,
+                        "conversion_rate": round(conversion_rate, 2),
+                        "total_revenue": float(row["total_revenue"] or 0),
+                        "avg_deal_value": float(row["avg_deal_value"] or 0),
+                    }
+                )
 
             if source_name and results:
                 return results[0]

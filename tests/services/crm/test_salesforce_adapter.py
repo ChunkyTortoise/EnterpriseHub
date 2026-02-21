@@ -62,21 +62,24 @@ class TestSalesforceAdapterInit:
 
     def test_instance_url_trailing_slash_stripped(self):
         a = SalesforceAdapter(
-            client_id="c", client_secret="s",
+            client_id="c",
+            client_secret="s",
             instance_url="https://na1.salesforce.com/",
         )
         assert a._instance_url == "https://na1.salesforce.com"
 
     def test_base_url_defaults_to_instance_url(self):
         a = SalesforceAdapter(
-            client_id="c", client_secret="s",
+            client_id="c",
+            client_secret="s",
             instance_url="https://na1.salesforce.com",
         )
         assert a._base_url == "https://na1.salesforce.com"
 
     def test_base_url_override(self):
         a = SalesforceAdapter(
-            client_id="c", client_secret="s",
+            client_id="c",
+            client_secret="s",
             instance_url="https://na1.salesforce.com",
             base_url="https://test.salesforce.com",
         )
@@ -84,7 +87,8 @@ class TestSalesforceAdapterInit:
 
     def test_initial_token_is_none(self):
         a = SalesforceAdapter(
-            client_id="c", client_secret="s",
+            client_id="c",
+            client_secret="s",
             instance_url="https://na1.salesforce.com",
         )
         assert a._access_token is None
@@ -100,13 +104,17 @@ class TestSalesforceAdapterInit:
 class TestSalesforceAuth:
     async def test_authenticate_fetches_new_token(self):
         adapter = SalesforceAdapter(
-            client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
             instance_url=INSTANCE_URL,
         )
-        mock_resp = _mock_response(200, {
-            "access_token": "new-token-abc",
-            "expires_in": 7200,
-        })
+        mock_resp = _mock_response(
+            200,
+            {
+                "access_token": "new-token-abc",
+                "expires_in": 7200,
+            },
+        )
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.post.return_value = mock_resp
@@ -127,16 +135,20 @@ class TestSalesforceAuth:
 
     async def test_authenticate_refreshes_expired_token(self):
         adapter = SalesforceAdapter(
-            client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
             instance_url=INSTANCE_URL,
         )
         adapter._access_token = "old-token"
         adapter._token_expires_at = time.monotonic() - 100  # Expired
 
-        mock_resp = _mock_response(200, {
-            "access_token": "refreshed-token",
-            "expires_in": 7200,
-        })
+        mock_resp = _mock_response(
+            200,
+            {
+                "access_token": "refreshed-token",
+                "expires_in": 7200,
+            },
+        )
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.post.return_value = mock_resp
@@ -150,7 +162,8 @@ class TestSalesforceAuth:
 
     async def test_authenticate_failure_raises(self):
         adapter = SalesforceAdapter(
-            client_id="bad", client_secret="bad",
+            client_id="bad",
+            client_secret="bad",
             instance_url=INSTANCE_URL,
         )
         mock_resp = _mock_response(401, text="Invalid credentials")
@@ -284,8 +297,10 @@ class TestSalesforceCreateContact:
         adapter._request = AsyncMock(return_value=resp)
 
         contact = CRMContact(
-            first_name="Jane", last_name="Doe",
-            tags=["VIP"], metadata={"k": "v"},
+            first_name="Jane",
+            last_name="Doe",
+            tags=["VIP"],
+            metadata={"k": "v"},
         )
         result = await adapter.create_contact(contact)
 
@@ -304,11 +319,14 @@ class TestSalesforceCreateContact:
 @pytest.mark.asyncio
 class TestSalesforceGetContact:
     async def test_get_contact_success(self, adapter: SalesforceAdapter):
-        resp = _mock_response(200, {
-            "Id": "sf-c2",
-            "FirstName": "Alice",
-            "Email": "alice@example.com",
-        })
+        resp = _mock_response(
+            200,
+            {
+                "Id": "sf-c2",
+                "FirstName": "Alice",
+                "Email": "alice@example.com",
+            },
+        )
         adapter._request = AsyncMock(return_value=resp)
 
         result = await adapter.get_contact("sf-c2")
@@ -338,16 +356,20 @@ class TestSalesforceUpdateContact:
     async def test_update_contact_maps_keys(self, adapter: SalesforceAdapter):
         # PATCH returns 204 (no content), then GET returns updated record
         patch_resp = _mock_response(204)
-        get_resp = _mock_response(200, {
-            "Id": "sf-c3",
-            "FirstName": "Updated",
-            "LastName": "",
-            "Email": "new@example.com",
-        })
+        get_resp = _mock_response(
+            200,
+            {
+                "Id": "sf-c3",
+                "FirstName": "Updated",
+                "LastName": "",
+                "Email": "new@example.com",
+            },
+        )
         adapter._request = AsyncMock(side_effect=[patch_resp, get_resp])
 
         result = await adapter.update_contact(
-            "sf-c3", {"first_name": "Updated", "email": "new@example.com"},
+            "sf-c3",
+            {"first_name": "Updated", "email": "new@example.com"},
         )
 
         # First call is PATCH, second is GET
@@ -374,12 +396,15 @@ class TestSalesforceUpdateContact:
 @pytest.mark.asyncio
 class TestSalesforceSearchContacts:
     async def test_search_returns_list(self, adapter: SalesforceAdapter):
-        resp = _mock_response(200, {
-            "searchRecords": [
-                {"Id": "s-1", "FirstName": "A", "LastName": ""},
-                {"Id": "s-2", "FirstName": "B", "LastName": ""},
-            ],
-        })
+        resp = _mock_response(
+            200,
+            {
+                "searchRecords": [
+                    {"Id": "s-1", "FirstName": "A", "LastName": ""},
+                    {"Id": "s-2", "FirstName": "B", "LastName": ""},
+                ],
+            },
+        )
         adapter._request = AsyncMock(return_value=resp)
 
         results = await adapter.search_contacts("test", limit=5)

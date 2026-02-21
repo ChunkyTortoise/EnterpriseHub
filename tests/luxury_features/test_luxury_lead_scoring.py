@@ -131,7 +131,9 @@ class TestNetWorthAnalysis:
         assert luxury_score >= 7.0
 
         # Non-luxury area
-        standard_score = luxury_scoring_engine._analyze_address_luxury_indicators("456 Regular St, Rancho Cucamonga, CA 91702")
+        standard_score = luxury_scoring_engine._analyze_address_luxury_indicators(
+            "456 Regular St, Rancho Cucamonga, CA 91702"
+        )
         assert standard_score < 5.0
 
     @pytest.mark.asyncio

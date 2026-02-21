@@ -23,9 +23,7 @@ class GHLSyncService:
         self._actions.append({"type": "tag", "contact_id": contact_id, "tag": tag})
 
     def update_contact_field(self, contact_id: str, field_id: str, value: Any) -> None:
-        self._actions.append(
-            {"type": "field_update", "contact_id": contact_id, "field_id": field_id, "value": value}
-        )
+        self._actions.append({"type": "field_update", "contact_id": contact_id, "field_id": field_id, "value": value})
 
     def trigger_match_webhook(self, contact_id: str, payload: Dict[str, Any]) -> bool:
         self._actions.append({"type": "match_webhook", "contact_id": contact_id, "payload": payload})

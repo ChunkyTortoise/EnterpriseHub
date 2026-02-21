@@ -106,4 +106,3 @@ class MockLLMProvider(LLMProvider):
         if not match:
             return text
         return match.group(1)
-

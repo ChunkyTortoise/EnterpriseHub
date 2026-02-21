@@ -183,20 +183,20 @@ class TestEnsembleTraining:
         )
 
         # Get best base model AUC
-        best_base_auc = max(
-            m.auc_roc for m in metrics.base_model_metrics
-        )
+        best_base_auc = max(m.auc_roc for m in metrics.base_model_metrics)
 
         # Ensemble should be at least as good as best base
         assert metrics.ensemble_auc_roc >= best_base_auc - 0.01  # Allow small margin
 
     def test_train_ensemble_insufficient_data(self, ensemble_service):
         """Test that training fails with insufficient data."""
-        insufficient_data = pd.DataFrame({
-            "feature1": [0.1, 0.2],
-            "feature2": [0.3, 0.4],
-            "converted": [0, 1],
-        })
+        insufficient_data = pd.DataFrame(
+            {
+                "feature1": [0.1, 0.2],
+                "feature2": [0.3, 0.4],
+                "converted": [0, 1],
+            }
+        )
 
         with pytest.raises(ValueError, match="Insufficient training data"):
             ensemble_service.train_ensemble(
@@ -416,16 +416,18 @@ class TestCaching:
         trained_service_with_cache.cache_service.set.assert_called_once()
 
         # Second call (cache hit)
-        cached_data = json.dumps({
-            "contact_id": "cache_test",
-            "predicted_score": pred1.predicted_score,
-            "confidence_interval": list(pred1.confidence_interval),
-            "predicted_class": pred1.predicted_class,
-            "model_agreement": pred1.model_agreement,
-            "feature_contributions": pred1.feature_contributions,
-            "prediction_timestamp": pred1.prediction_timestamp.isoformat(),
-            "model_version": pred1.model_version,
-        })
+        cached_data = json.dumps(
+            {
+                "contact_id": "cache_test",
+                "predicted_score": pred1.predicted_score,
+                "confidence_interval": list(pred1.confidence_interval),
+                "predicted_class": pred1.predicted_class,
+                "model_agreement": pred1.model_agreement,
+                "feature_contributions": pred1.feature_contributions,
+                "prediction_timestamp": pred1.prediction_timestamp.isoformat(),
+                "model_version": pred1.model_version,
+            }
+        )
         trained_service_with_cache.cache_service.get.side_effect = [cached_data]
 
         pred2 = await trained_service_with_cache.predict_lead_score(

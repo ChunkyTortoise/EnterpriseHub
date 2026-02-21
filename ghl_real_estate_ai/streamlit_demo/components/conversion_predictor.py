@@ -73,7 +73,9 @@ def render_conversion_predictor(services, selected_lead_name, analysis_result=No
                     lead_data = {
                         "id": lead_id,
                         "budget": lead_data_raw.get("extracted_preferences", {}).get("budget", 0),
-                        "location": lead_data_raw.get("extracted_preferences", {}).get("location", "Rancho Cucamonga, CA"),
+                        "location": lead_data_raw.get("extracted_preferences", {}).get(
+                            "location", "Rancho Cucamonga, CA"
+                        ),
                         "page_views": random_page_views(lead_id),
                         "email_opens": random_opens(lead_id),
                     }

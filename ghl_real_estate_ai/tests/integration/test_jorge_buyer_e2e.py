@@ -36,9 +36,7 @@ def _mock_buyer_deps():
         intent_instance.analyze_buyer = MagicMock(return_value=mock_profile)
 
         claude_instance = MockClaude.return_value
-        claude_instance.generate_response = AsyncMock(
-            return_value={"content": "Mocked Buyer Response"}
-        )
+        claude_instance.generate_response = AsyncMock(return_value={"content": "Mocked Buyer Response"})
 
         matcher_instance = MockMatcher.return_value
         matcher_instance.find_matches = AsyncMock(
@@ -75,6 +73,7 @@ def _mock_buyer_deps():
 # ---------------------------------------------------------------------------
 # Qualified Buyer: HOT
 # ---------------------------------------------------------------------------
+
 
 class TestBuyerQualifiedHot:
     """Pre-approved + urgent + clear preferences -> HOT qualification."""
@@ -135,6 +134,7 @@ class TestBuyerQualifiedHot:
 # Window Shopper: COLD
 # ---------------------------------------------------------------------------
 
+
 class TestBuyerWindowShopper:
     """Vague budget, no timeline -> COLD / unqualified."""
 
@@ -192,6 +192,7 @@ class TestBuyerWindowShopper:
 # Financial Assessment
 # ---------------------------------------------------------------------------
 
+
 class TestBuyerFinancialAssessment:
     """Budget parsing and affordability calculation."""
 
@@ -245,6 +246,7 @@ class TestBuyerFinancialAssessment:
 # Opt-Out (TCPA)
 # ---------------------------------------------------------------------------
 
+
 class TestBuyerOptOut:
     """TCPA opt-out phrases handled before any AI processing."""
 
@@ -297,6 +299,7 @@ class TestBuyerOptOut:
 # Handoff Signal Extraction
 # ---------------------------------------------------------------------------
 
+
 class TestBuyerHandoffSignals:
     """Buyer mentioning seller intent produces handoff signals."""
 
@@ -324,6 +327,7 @@ class TestBuyerHandoffSignals:
 # Error Resilience
 # ---------------------------------------------------------------------------
 
+
 class TestBuyerErrorResilience:
     """Bot handles edge cases gracefully."""
 
@@ -347,10 +351,7 @@ class TestBuyerErrorResilience:
         """Very long conversation history should not crash."""
         bot = JorgeBuyerBot()
 
-        history = [
-            {"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"}
-            for i in range(50)
-        ]
+        history = [{"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"} for i in range(50)]
 
         result = await bot.process_buyer_conversation(
             conversation_id="resilience_buyer_002",

@@ -4,6 +4,7 @@ Enhanced Workflow Nodes - Extended implementations for enhanced lead workflows.
 This module contains enhanced node implementations used in the enhanced Lead Bot workflow graphs.
 These are separated to keep the main workflow_nodes.py manageable.
 """
+
 import time
 from typing import Dict
 
@@ -50,9 +51,7 @@ class EnhancedWorkflowNodes:
                 )
 
                 intelligence_performance_ms = (time.time() - intelligence_start_time) * 1000
-                logger.info(
-                    f"Lead intelligence gathered for {state['lead_id']} in {intelligence_performance_ms:.1f}ms"
-                )
+                logger.info(f"Lead intelligence gathered for {state['lead_id']} in {intelligence_performance_ms:.1f}ms")
 
                 return {
                     "intelligence_context": intelligence_context,
@@ -177,8 +176,8 @@ class EnhancedWorkflowNodes:
 
         if intelligence_context:
             churn_risk = self._extract_churn_risk(intelligence_context)
-            getattr(intelligence_context, 'preferred_engagement_timing', None)
-            personalized_insights = getattr(intelligence_context, 'priority_insights', []) or []
+            getattr(intelligence_context, "preferred_engagement_timing", None)
+            personalized_insights = getattr(intelligence_context, "priority_insights", []) or []
 
         actual_day = optimization.day_3 if optimization else 3
         preferred_channel = (
@@ -297,7 +296,6 @@ class EnhancedWorkflowNodes:
         state.get("enhanced_optimization", state.get("sequence_optimization"))
         intelligence_context = state.get("intelligence_context")
         churn_risk = state.get("churn_risk_score", 0.5)
-
 
         # Determine final strategy
         final_strategy = "nurture"

@@ -84,8 +84,7 @@ class InMemoryVectorStore(VectorStore):
         """
         if len(entry.vector) != self.dimension:
             raise ValueError(
-                f"Vector dimension mismatch: got {len(entry.vector)}, "
-                f"expected {self.dimension}"
+                f"Vector dimension mismatch: got {len(entry.vector)}, expected {self.dimension}"
             )
         self._vectors[entry.id] = entry.vector
         self._metadata[entry.id] = entry.metadata.copy()

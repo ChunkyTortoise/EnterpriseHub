@@ -1,4 +1,5 @@
 """API key and JWT authentication for enterprise tier."""
+
 from __future__ import annotations
 
 import os
@@ -11,6 +12,7 @@ from fastapi.security import APIKeyHeader, HTTPBearer
 try:
     from jose import JWTError
     from jose import jwt as jose_jwt
+
     _JWT_AVAILABLE = True
 except ImportError:
     _JWT_AVAILABLE = False

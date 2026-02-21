@@ -50,6 +50,7 @@ class LoggingPlugin(AgentForgePlugin):
         Args:
             context: Plugin context for registration.
         """
+
         def log_handler(event_data: dict[str, Any]) -> None:
             """Handle logging for execution events.
 
@@ -107,6 +108,7 @@ class MetricsPlugin(AgentForgePlugin):
         Args:
             context: Plugin context for registration.
         """
+
         def metrics_handler(event_data: dict[str, Any]) -> None:
             """Handle metrics collection for execution events.
 
@@ -176,6 +178,7 @@ class TimingPlugin(AgentForgePlugin):
         Args:
             context: Plugin context for registration.
         """
+
         def timing_handler(event_data: dict[str, Any]) -> None:
             """Handle timing for execution events.
 

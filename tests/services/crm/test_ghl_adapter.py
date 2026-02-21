@@ -192,9 +192,7 @@ class TestGHLUpdateContact:
         )
         adapter._request = AsyncMock(return_value=resp)
 
-        result = await adapter.update_contact(
-            "c-3", {"first_name": "Updated", "email": "new@example.com"}
-        )
+        result = await adapter.update_contact("c-3", {"first_name": "Updated", "email": "new@example.com"})
 
         call_args = adapter._request.call_args
         assert call_args[0] == ("PUT", "/contacts/c-3")

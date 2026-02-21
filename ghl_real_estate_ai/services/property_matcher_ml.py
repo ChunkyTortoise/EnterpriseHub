@@ -217,7 +217,12 @@ class PropertyMatcherML:
             {
                 "id": "demo_prop_1",
                 "price": 750000,
-                "address": {"street": "123 Oak Street", "neighborhood": "Downtown", "city": "Rancho Cucamonga", "zip": "91730"},
+                "address": {
+                    "street": "123 Oak Street",
+                    "neighborhood": "Downtown",
+                    "city": "Rancho Cucamonga",
+                    "zip": "91730",
+                },
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "sqft": 2100,

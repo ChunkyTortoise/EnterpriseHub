@@ -23,6 +23,7 @@ router = APIRouter(tags=["Leads Management"])
 
 # --- DEPENDENCIES ---
 
+
 def get_memory_service() -> MemoryService:
     """Dependency to get MemoryService instance"""
     return MemoryService()
@@ -70,7 +71,7 @@ async def list_leads(
         async def format_lead_with_context(contact):
             contact_id = contact.get("id")
             context = contexts_map.get(contact_id)
-            
+
             score = 0
             temperature = "cold"
             pcs_score = 0
@@ -125,9 +126,7 @@ async def list_leads(
 # --- ENDPOINT 2: PATCH /api/leads/{lead_id}/status ---
 @router.patch("/leads/{lead_id}/status")
 async def update_lead_status(
-    lead_id: str, 
-    status_update: Dict[str, Any] = Body(...), 
-    ghl: GHLAPIClient = Depends(get_ghl_client)
+    lead_id: str, status_update: Dict[str, Any] = Body(...), ghl: GHLAPIClient = Depends(get_ghl_client)
 ):
     """
     Update lead status and metrics in GHL.
@@ -191,10 +190,10 @@ async def update_lead_status(
 # --- ENDPOINT 3: GET /api/leads/{lead_id}/property-matches ---
 @router.get("/leads/{lead_id}/property-matches")
 async def get_lead_property_matches(
-    lead_id: str, 
+    lead_id: str,
     limit: int = 5,
     memory_service: MemoryService = Depends(get_memory_service),
-    property_matcher: PropertyMatcher = Depends(get_property_matcher)
+    property_matcher: PropertyMatcher = Depends(get_property_matcher),
 ):
     """
     Get AI-ranked property matches for a lead.
@@ -238,9 +237,9 @@ async def get_lead_property_matches(
 # --- ENDPOINT 4: GET /api/conversations/{conversation_id}/messages ---
 @router.get("/conversations/{conversation_id}/messages")
 async def get_conversation_messages(
-    conversation_id: str, 
+    conversation_id: str,
     ghl: GHLAPIClient = Depends(get_ghl_client),
-    memory_service: MemoryService = Depends(get_memory_service)
+    memory_service: MemoryService = Depends(get_memory_service),
 ):
     """
     Fetch message history for a conversation.
@@ -292,10 +291,5 @@ def _map_ghl_status(ghl_type: str, tags: List[str] = None) -> str:
         return "Proposal"  # Map appointment to Proposal stage
 
     # Priority 2: Standard mapping
-    mapping = {
-        "lead": "New",
-        "customer": "Qualified",
-        "lost": "Closed",
-        "abandoned": "Lost"
-    }
+    mapping = {"lead": "New", "customer": "Qualified", "lost": "Closed", "abandoned": "Lost"}
     return mapping.get(ghl_type.lower(), "New")

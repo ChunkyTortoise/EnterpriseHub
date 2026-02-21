@@ -17,7 +17,6 @@ from src.vector_store.base import SearchOptions
 
 
 @pytest.mark.integration
-
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------

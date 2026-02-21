@@ -341,7 +341,6 @@ class EmailChannelProvider(ChannelProvider):
     async def send_message(self, message: Message, contact: CommunicationContact) -> Dict[str, Any]:
         """Send email message"""
         try:
-
             # Mock successful email sending
             return {"success": True, "provider_message_id": f"email_{uuid.uuid4()}", "status": "sent"}
 
@@ -414,7 +413,6 @@ class WhatsAppChannelProvider(ChannelProvider):
     async def send_message(self, message: Message, contact: CommunicationContact) -> Dict[str, Any]:
         """Send WhatsApp message"""
         try:
-
             # Mock successful WhatsApp sending
             return {"success": True, "provider_message_id": f"whatsapp_{uuid.uuid4()}", "status": "sent"}
 

@@ -42,8 +42,8 @@ class TelemetryProvider:
         if use_otel:
             try:
                 from opentelemetry import trace
-                from opentelemetry.sdk.trace import TracerProvider
                 from opentelemetry.sdk.resources import Resource
+                from opentelemetry.sdk.trace import TracerProvider
 
                 resource = Resource.create({"service.name": self._service_name})
                 provider = TracerProvider(resource=resource)
@@ -65,7 +65,9 @@ class TelemetryProvider:
         self._spans.clear()
 
     @asynccontextmanager
-    async def span(self, name: str, attributes: dict[str, Any] | None = None) -> AsyncIterator[SpanRecord]:
+    async def span(
+        self, name: str, attributes: dict[str, Any] | None = None
+    ) -> AsyncIterator[SpanRecord]:
         """Create a telemetry span for a tool invocation."""
         record = SpanRecord(
             name=name,
@@ -84,7 +86,9 @@ class TelemetryProvider:
             record.end_time = time.monotonic()
             self._spans.append(record)
 
-    def record_tool_call(self, tool_name: str, duration_ms: float, success: bool, **attrs: Any) -> None:
+    def record_tool_call(
+        self, tool_name: str, duration_ms: float, success: bool, **attrs: Any
+    ) -> None:
         """Record a completed tool call as a span."""
         now = time.monotonic()
         self._spans.append(

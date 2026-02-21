@@ -9,7 +9,6 @@ Provides comprehensive behavioral insights and analytics for leads including:
 - Urgency indicators
 """
 
-
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st

@@ -43,7 +43,9 @@ class TestJobScheduler:
 
     def test_add_job_with_metadata(self, scheduler):
         job = scheduler.add_job(
-            "job-1", "Test", "0 * * * *",
+            "job-1",
+            "Test",
+            "0 * * * *",
             metadata={"owner": "admin", "priority": "high"},
         )
         assert job.metadata["owner"] == "admin"

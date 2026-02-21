@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 class TimeSeriesDataPointDict(TypedDict, total=False):
     """TypedDict for time series data point."""
+
     date: str
     accuracy: float
     score_distribution: Dict[str, float]
@@ -21,6 +22,7 @@ class TimeSeriesDataPointDict(TypedDict, total=False):
 
 class AnalyticsSegmentFilter(TypedDict, total=False):
     """TypedDict for analytics segment filter."""
+
     source: Optional[str]
     lead_type: Optional[str]
     date_range: Optional[Dict[str, str]]  # {from: str, to: str}
@@ -30,6 +32,7 @@ class AnalyticsSegmentFilter(TypedDict, total=False):
 
 class DataPointMetadata(TypedDict, total=False):
     """TypedDict for time series data point metadata."""
+
     source: str
     campaign_id: Optional[str]
     agent_id: Optional[str]

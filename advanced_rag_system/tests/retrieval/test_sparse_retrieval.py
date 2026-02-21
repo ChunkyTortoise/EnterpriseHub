@@ -13,8 +13,6 @@ from src.retrieval.sparse.bm25_index import BM25Config, BM25Index
 
 
 @pytest.mark.integration
-
-
 class TestBM25Index:
     """Test suite for BM25Index implementation."""
 

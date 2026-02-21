@@ -52,7 +52,13 @@ class WarRoomService:
 
         # 1. Generate nodes (Properties with interest)
         nodes = []
-        addresses = ["123 Victoria Gardens Dr", "456 South Lake Blvd", "789 East 6th St", "101 Ontario Mills Way", "202 Congress Ave"]
+        addresses = [
+            "123 Victoria Gardens Dr",
+            "456 South Lake Blvd",
+            "789 East 6th St",
+            "101 Ontario Mills Way",
+            "202 Congress Ave",
+        ]
         for i, addr in enumerate(addresses):
             nodes.append(
                 MarketNode(

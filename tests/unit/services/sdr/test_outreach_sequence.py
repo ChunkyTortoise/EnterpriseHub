@@ -16,11 +16,13 @@ pytestmark = pytest.mark.unit
 # SequenceStep ordering
 # ---------------------------------------------------------------------------
 
+
 class TestSequenceStep:
     """Tests for SequenceStep enum ordering and terminal states."""
 
     def test_terminal_states_exist(self):
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep
+
         assert SequenceStep.QUALIFIED
         assert SequenceStep.BOOKED
         assert SequenceStep.DISQUALIFIED
@@ -28,19 +30,23 @@ class TestSequenceStep:
 
     def test_sequence_steps_have_expected_values(self):
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep
+
         assert SequenceStep.SMS_1.value == "sms_1"
         assert SequenceStep.EMAIL_1.value == "email_1"
         assert SequenceStep.NURTURE_PAUSE.value == "nurture_pause"
 
     def test_is_terminal_returns_true_for_terminal_states(self):
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep
+
         terminal = [SequenceStep.QUALIFIED, SequenceStep.BOOKED, SequenceStep.DISQUALIFIED, SequenceStep.OPTED_OUT]
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import is_terminal_step
+
         for step in terminal:
             assert is_terminal_step(step) is True
 
     def test_is_terminal_returns_false_for_active_steps(self):
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep, is_terminal_step
+
         active = [SequenceStep.SMS_1, SequenceStep.EMAIL_1, SequenceStep.NURTURE_PAUSE]
         for step in active:
             assert is_terminal_step(step) is False
@@ -48,6 +54,7 @@ class TestSequenceStep:
     def test_next_step_progression(self):
         """SMS_1 → EMAIL_1 → SMS_2 → VOICEMAIL_1 progression."""
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep, get_next_step
+
         assert get_next_step(SequenceStep.ENROLLED) == SequenceStep.SMS_1
         assert get_next_step(SequenceStep.SMS_1) == SequenceStep.EMAIL_1
         assert get_next_step(SequenceStep.EMAIL_1) == SequenceStep.SMS_2
@@ -59,6 +66,7 @@ class TestSequenceStep:
 
     def test_terminal_step_returns_none(self):
         from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import SequenceStep, get_next_step
+
         assert get_next_step(SequenceStep.QUALIFIED) is None
         assert get_next_step(SequenceStep.OPTED_OUT) is None
 
@@ -67,11 +75,13 @@ class TestSequenceStep:
 # ObjectionHandler
 # ---------------------------------------------------------------------------
 
+
 class TestObjectionHandler:
     """Tests for ObjectionHandler.classify_objection and should_opt_out."""
 
     def _handler(self):
         from ghl_real_estate_ai.agents.sdr.objection_handler import ObjectionHandler
+
         return ObjectionHandler(orchestrator=None)
 
     # ── classify_objection ───────────────────────────────────────────────

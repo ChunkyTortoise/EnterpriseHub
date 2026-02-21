@@ -515,7 +515,12 @@ class TestBusinessContinuityUnderChaos:
         test_scenarios = [
             {
                 "name": "High Intent Lead - Infrastructure Chaos",
-                "data": {"budget": "$600,000", "timeline": "immediate", "location": "Rancho Cucamonga", "financing": "cash"},
+                "data": {
+                    "budget": "$600,000",
+                    "timeline": "immediate",
+                    "location": "Rancho Cucamonga",
+                    "financing": "cash",
+                },
                 "expected_min_score": 4,
             },
             {

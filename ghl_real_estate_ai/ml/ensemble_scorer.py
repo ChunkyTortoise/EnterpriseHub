@@ -1,4 +1,5 @@
 """Ensemble lead scorer combining XGBoost + LightGBM with rule-based blending."""
+
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
@@ -79,9 +80,7 @@ class EnsembleLeadScorer:
         Returns:
             Dict of model_name -> training accuracy
         """
-        self._feature_names = feature_names or [
-            f"feature_{i}" for i in range(X.shape[1])
-        ]
+        self._feature_names = feature_names or [f"feature_{i}" for i in range(X.shape[1])]
         metrics = {}
 
         if XGBOOST_AVAILABLE:
@@ -147,9 +146,7 @@ class EnsembleLeadScorer:
                 try:
                     proba = model.predict_proba(features)[0]
                     # proba is [p_class_0, p_class_1]
-                    model_scores[name] = (
-                        float(proba[1]) if len(proba) > 1 else float(proba[0])
-                    )
+                    model_scores[name] = float(proba[1]) if len(proba) > 1 else float(proba[0])
                 except Exception as e:
                     logger.warning("Model %s prediction failed: %s", name, e)
 
@@ -171,8 +168,7 @@ class EnsembleLeadScorer:
                 if hasattr(model, "feature_importances_"):
                     imp = model.feature_importances_
                     importance = {
-                        self._feature_names[i]: float(imp[i])
-                        for i in range(min(len(imp), len(self._feature_names)))
+                        self._feature_names[i]: float(imp[i]) for i in range(min(len(imp), len(self._feature_names)))
                     }
                     break
 
@@ -210,9 +206,7 @@ class EnsembleLeadScorer:
             parts.append("Lower conversion probability")
 
         if importance:
-            top_features = sorted(
-                importance.items(), key=lambda x: x[1], reverse=True
-            )[:3]
+            top_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)[:3]
             feature_strs = [f"{name}" for name, _ in top_features]
             parts.append(f"Top signals: {', '.join(feature_strs)}")
 
@@ -242,9 +236,7 @@ class DriftDetector:
         """Set reference distribution for a feature."""
         self._reference_distributions[feature_name] = values.copy()
 
-    def check_drift(
-        self, feature_name: str, current_values: np.ndarray
-    ) -> Optional[DriftAlert]:
+    def check_drift(self, feature_name: str, current_values: np.ndarray) -> Optional[DriftAlert]:
         """Check if current values have drifted from reference.
 
         Uses Population Stability Index (PSI).
@@ -264,9 +256,7 @@ class DriftDetector:
         )
 
     @staticmethod
-    def _calculate_psi(
-        reference: np.ndarray, current: np.ndarray, bins: int = 10
-    ) -> float:
+    def _calculate_psi(reference: np.ndarray, current: np.ndarray, bins: int = 10) -> float:
         """Calculate Population Stability Index."""
         # Create bins from reference
         min_val = min(reference.min(), current.min())

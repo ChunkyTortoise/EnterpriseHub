@@ -49,7 +49,9 @@ class LeadBotAdapter:
             "How can I help you with your real estate needs today?"
         )
 
-    async def process_message(self, user_text: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def process_message(
+        self, user_text: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Process a user message through the lead bot logic.
 
         Returns a dict with response text and metadata (lead_score, handoff_signals, etc.).
@@ -65,7 +67,9 @@ class LeadBotAdapter:
             "bot_type": "lead",
         }
 
-    def extract_handoff_signals(self, conversation_history: list[dict[str, str]]) -> dict[str, float]:
+    def extract_handoff_signals(
+        self, conversation_history: list[dict[str, str]]
+    ) -> dict[str, float]:
         """Analyze conversation for handoff signals to buyer/seller bots.
 
         Returns confidence scores for each potential handoff target.

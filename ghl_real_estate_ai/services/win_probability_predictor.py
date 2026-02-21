@@ -29,9 +29,7 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = logging.getLogger(__name__)
 
-MODEL_PATH = Path(
-    os.getenv("WIN_PROBABILITY_MODEL_PATH", "models/win_probability_lr.joblib")
-)
+MODEL_PATH = Path(os.getenv("WIN_PROBABILITY_MODEL_PATH", "models/win_probability_lr.joblib"))
 
 
 @dataclass
@@ -131,9 +129,7 @@ class WinProbabilityPredictor:
                 self._ml_available = True
                 logger.info(f"Loaded ML win probability model from {MODEL_PATH}")
             else:
-                logger.info(
-                    f"No ML model at {MODEL_PATH}, using rule-based fallback"
-                )
+                logger.info(f"No ML model at {MODEL_PATH}, using rule-based fallback")
         except Exception as e:
             logger.warning(f"Failed to load ML model: {e}, using rule-based fallback")
 
@@ -156,26 +152,27 @@ class WinProbabilityPredictor:
             from sklearn.preprocessing import StandardScaler
 
             if len(deals_data) < 50:
-                logger.warning(
-                    f"Insufficient training data ({len(deals_data)} rows, need 50+)"
-                )
+                logger.warning(f"Insufficient training data ({len(deals_data)} rows, need 50+)")
                 return None
 
             feature_names = cls.ML_FEATURE_NAMES
-            X = np.array(
-                [[float(d.get(f, 0)) for f in feature_names] for d in deals_data]
-            )
+            X = np.array([[float(d.get(f, 0)) for f in feature_names] for d in deals_data])
             y = np.array([1 if d.get("won", False) else 0 for d in deals_data])
 
-            pipeline = Pipeline([
-                ("scaler", StandardScaler()),
-                ("lr", LogisticRegression(
-                    max_iter=1000,
-                    C=1.0,
-                    class_weight="balanced",
-                    random_state=42,
-                )),
-            ])
+            pipeline = Pipeline(
+                [
+                    ("scaler", StandardScaler()),
+                    (
+                        "lr",
+                        LogisticRegression(
+                            max_iter=1000,
+                            C=1.0,
+                            class_weight="balanced",
+                            random_state=42,
+                        ),
+                    ),
+                ]
+            )
 
             # Cross-validated AUC
             cv_scores = cross_val_score(pipeline, X, y, cv=5, scoring="roc_auc")
@@ -334,29 +331,33 @@ class WinProbabilityPredictor:
         # Try ML model first
         if self._ml_available and self._ml_model is not None:
             try:
-                feature_vector = np.array([[
-                    features.offer_to_list_ratio,
-                    features.days_on_market,
-                    features.price_reduction_count,
-                    features.total_price_reduction_pct,
-                    features.urgency_score,
-                    features.flexibility_score,
-                    features.emotional_attachment,
-                    features.financial_pressure,
-                    features.motivation_type_encoded,
-                    features.leverage_score,
-                    features.competitive_pressure,
-                    features.inventory_months,
-                    features.market_condition_encoded,
-                    features.seasonal_advantage,
-                    features.financing_strength,
-                    float(features.cash_offer),
-                    float(features.quick_close),
-                    float(features.pre_approved),
-                    features.property_uniqueness,
-                    features.price_positioning_encoded,
-                    features.comparable_sales_strength,
-                ]])
+                feature_vector = np.array(
+                    [
+                        [
+                            features.offer_to_list_ratio,
+                            features.days_on_market,
+                            features.price_reduction_count,
+                            features.total_price_reduction_pct,
+                            features.urgency_score,
+                            features.flexibility_score,
+                            features.emotional_attachment,
+                            features.financial_pressure,
+                            features.motivation_type_encoded,
+                            features.leverage_score,
+                            features.competitive_pressure,
+                            features.inventory_months,
+                            features.market_condition_encoded,
+                            features.seasonal_advantage,
+                            features.financing_strength,
+                            float(features.cash_offer),
+                            float(features.quick_close),
+                            float(features.pre_approved),
+                            features.property_uniqueness,
+                            features.price_positioning_encoded,
+                            features.comparable_sales_strength,
+                        ]
+                    ]
+                )
 
                 # predict_proba returns [[p_lose, p_win]]
                 prob = self._ml_model.predict_proba(feature_vector)[0][1] * 100

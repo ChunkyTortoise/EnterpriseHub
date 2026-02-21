@@ -94,9 +94,7 @@ class CallManager:
         """Get a call by Twilio SID."""
         from sqlalchemy import select
 
-        result = await self.db.execute(
-            select(Call).where(Call.twilio_call_sid == twilio_call_sid)
-        )
+        result = await self.db.execute(select(Call).where(Call.twilio_call_sid == twilio_call_sid))
         return result.scalar_one_or_none()
 
     async def list_calls(

@@ -81,9 +81,7 @@ async def test_crm_flagging_adds_tag():
         bot_type="seller",
     )
 
-    mock_ghl.add_tags.assert_awaited_once_with(
-        "seller_004", ["Compliance-Flagged"]
-    )
+    mock_ghl.add_tags.assert_awaited_once_with("seller_004", ["Compliance-Flagged"])
     assert "crm_flagged" in violation.actions_taken
 
 

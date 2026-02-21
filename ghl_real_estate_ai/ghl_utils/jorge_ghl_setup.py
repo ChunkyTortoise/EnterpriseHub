@@ -131,13 +131,15 @@ def validate_ghl_config() -> Dict:
     for env_var, ghl_type, bot, critical in CUSTOM_FIELDS:
         value = os.getenv(env_var, "")
         is_set = bool(value.strip())
-        results["fields"].append({
-            "env_var": env_var,
-            "ghl_type": ghl_type,
-            "bot": bot,
-            "critical": critical,
-            "status": "set" if is_set else "missing",
-        })
+        results["fields"].append(
+            {
+                "env_var": env_var,
+                "ghl_type": ghl_type,
+                "bot": bot,
+                "critical": critical,
+                "status": "set" if is_set else "missing",
+            }
+        )
         if critical and not is_set:
             critical_missing.append(env_var)
 
@@ -145,13 +147,15 @@ def validate_ghl_config() -> Dict:
     for env_var, display_name, ghl_type, bot, critical in JORGE_FIELDS:
         value = os.getenv(env_var, "")
         is_set = bool(value.strip())
-        results["fields"].append({
-            "env_var": env_var,
-            "ghl_type": ghl_type,
-            "bot": bot,
-            "critical": critical,
-            "status": "set" if is_set else "missing",
-        })
+        results["fields"].append(
+            {
+                "env_var": env_var,
+                "ghl_type": ghl_type,
+                "bot": bot,
+                "critical": critical,
+                "status": "set" if is_set else "missing",
+            }
+        )
         if critical and not is_set:
             critical_missing.append(env_var)
 
@@ -159,12 +163,14 @@ def validate_ghl_config() -> Dict:
     for env_var, bot, critical in WORKFLOW_IDS:
         value = os.getenv(env_var, "")
         is_set = bool(value.strip())
-        results["workflows"].append({
-            "env_var": env_var,
-            "bot": bot,
-            "critical": critical,
-            "status": "set" if is_set else "missing",
-        })
+        results["workflows"].append(
+            {
+                "env_var": env_var,
+                "bot": bot,
+                "critical": critical,
+                "status": "set" if is_set else "missing",
+            }
+        )
         if critical and not is_set:
             critical_missing.append(env_var)
 
@@ -172,12 +178,14 @@ def validate_ghl_config() -> Dict:
     for env_var, bot, critical in CALENDAR_IDS:
         value = os.getenv(env_var, "")
         is_set = bool(value.strip())
-        results["calendars"].append({
-            "env_var": env_var,
-            "bot": bot,
-            "critical": critical,
-            "status": "set" if is_set else "missing",
-        })
+        results["calendars"].append(
+            {
+                "env_var": env_var,
+                "bot": bot,
+                "critical": critical,
+                "status": "set" if is_set else "missing",
+            }
+        )
         if critical and not is_set:
             critical_missing.append(env_var)
 
@@ -229,8 +237,7 @@ def print_report(results: Dict) -> None:
 
     summary = results["summary"]
     print(f"\n{'=' * 70}")
-    print(f"  SUMMARY: {summary['set_count']}/{summary['total']} configured, "
-          f"{summary['missing_count']} missing")
+    print(f"  SUMMARY: {summary['set_count']}/{summary['total']} configured, {summary['missing_count']} missing")
     if summary["critical_missing"]:
         print(f"  CRITICAL MISSING ({len(summary['critical_missing'])}):")
         for var in summary["critical_missing"]:
@@ -265,8 +272,9 @@ class GHLSetupClient:
     def close(self) -> None:
         self.client.close()
 
-    def _request(self, method: str, endpoint: str, data: Optional[Dict] = None,
-                 params: Optional[Dict] = None) -> Dict[str, Any]:
+    def _request(
+        self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         url = f"{GHL_BASE_URL}/{endpoint}"
         try:
             response = self.client.request(method=method, url=url, json=data, params=params)
@@ -279,8 +287,7 @@ class GHLSetupClient:
                     error_data = e.response.json()
             except Exception:
                 pass
-            return {"success": False, "error": str(e), "status_code": e.response.status_code,
-                    "details": error_data}
+            return {"success": False, "error": str(e), "status_code": e.response.status_code, "details": error_data}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -318,9 +325,14 @@ class GHLSetupClient:
         return self._request("DELETE", f"contacts/{contact_id}")
 
     def health_check(self) -> Dict[str, Any]:
-        result = self._request("GET", "contacts", params={
-            "locationId": self.location_id, "limit": 1,
-        })
+        result = self._request(
+            "GET",
+            "contacts",
+            params={
+                "locationId": self.location_id,
+                "limit": 1,
+            },
+        )
         return {
             "healthy": result.get("success", False),
             "location_id": self.location_id,
@@ -573,8 +585,11 @@ def action_test(client: GHLSetupClient) -> int:
         # Test 2: List custom fields
         print("\n  --- Step 2: List Custom Fields ---")
         fields_result = client.get_custom_fields()
-        report("Fetch custom fields", fields_result.get("success", False),
-               f"{len(fields_result.get('data', {}).get('customFields', []))} fields")
+        report(
+            "Fetch custom fields",
+            fields_result.get("success", False),
+            f"{len(fields_result.get('data', {}).get('customFields', []))} fields",
+        )
 
         # Test 3: Create test contact
         print("\n  --- Step 3: Create Test Contact ---")
@@ -611,8 +626,7 @@ def action_test(client: GHLSetupClient) -> int:
                 "customFields": [{"id": f["id"], "value": f["field_value"]} for f in jorge_field_updates],
             }
             update_result = client.update_contact(test_contact_id, update_payload)
-            report("Update custom fields", update_result.get("success", False),
-                   f"{len(jorge_field_updates)} fields")
+            report("Update custom fields", update_result.get("success", False), f"{len(jorge_field_updates)} fields")
         else:
             report("Update custom fields", False, "No field IDs configured in .env")
 

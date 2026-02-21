@@ -28,7 +28,9 @@ class AlertRuleConfig:
     condition: AlertCondition
     threshold: float | None = None
     cooldown_seconds: int = 300
-    channels: list[NotificationChannel] = field(default_factory=lambda: [NotificationChannel.WEBHOOK])
+    channels: list[NotificationChannel] = field(
+        default_factory=lambda: [NotificationChannel.WEBHOOK]
+    )
     is_active: bool = True
 
 
@@ -65,8 +67,9 @@ class AlertManager:
     def get_active_rules(self) -> list[AlertRuleConfig]:
         return [r for r in self._rules.values() if r.is_active]
 
-    def evaluate(self, metric_name: str, value: float, is_anomaly: bool = False,
-                 severity: str = "warning") -> list[AlertEvent]:
+    def evaluate(
+        self, metric_name: str, value: float, is_anomaly: bool = False, severity: str = "warning"
+    ) -> list[AlertEvent]:
         now = time.time()
         events = []
         for rule in self._rules.values():
@@ -105,12 +108,14 @@ class AlertManager:
 
     def _dispatch(self, rule: AlertRuleConfig, event: AlertEvent) -> None:
         for channel in rule.channels:
-            self._notification_log.append({
-                "channel": channel.value,
-                "rule_id": rule.rule_id,
-                "event": event.message,
-                "timestamp": event.triggered_at,
-            })
+            self._notification_log.append(
+                {
+                    "channel": channel.value,
+                    "rule_id": rule.rule_id,
+                    "event": event.message,
+                    "timestamp": event.triggered_at,
+                }
+            )
 
     def get_history(self, limit: int = 100) -> list[AlertEvent]:
         return self._history[-limit:]

@@ -22,7 +22,7 @@ from typing_extensions import NotRequired
 
 class ConversationMessage(TypedDict, total=False):
     """A single message in a conversation history.
-    
+
     Used in conversation_history lists across all bots.
     """
 

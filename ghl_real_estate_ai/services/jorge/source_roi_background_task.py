@@ -113,9 +113,7 @@ async def start_source_roi_background_task(
 
         # Start background task
         _task_running = True
-        _source_roi_task = asyncio.create_task(
-            _source_roi_update_loop(source_tracker, interval_seconds)
-        )
+        _source_roi_task = asyncio.create_task(_source_roi_update_loop(source_tracker, interval_seconds))
 
         logger.info(f"✅ Source ROI background task started (interval: {interval_seconds}s)")
         return True

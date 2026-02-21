@@ -217,7 +217,11 @@ class TestSavePerformanceOperation:
         """save_performance_operation should not raise on DB failure."""
         mock_pool.execute.side_effect = Exception("disk full")
         await repo.save_performance_operation(
-            "lead_bot", "qualify", 1000.0, True, False,
+            "lead_bot",
+            "qualify",
+            1000.0,
+            True,
+            False,
         )
 
 

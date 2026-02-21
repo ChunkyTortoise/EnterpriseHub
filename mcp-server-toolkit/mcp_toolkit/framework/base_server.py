@@ -62,17 +62,13 @@ class EnhancedMCP(FastMCP):
                 cache_key = CacheLayer.make_key(func.__name__, args, kwargs)
                 cached = await self._cache.get(cache_key)
                 if cached is not None:
-                    self._telemetry.record_tool_call(
-                        func.__name__, 0.1, True, cache_hit=True
-                    )
+                    self._telemetry.record_tool_call(func.__name__, 0.1, True, cache_hit=True)
                     return cached
                 start = time.monotonic()
                 result = await func(*args, **kwargs)
                 duration_ms = (time.monotonic() - start) * 1000
                 await self._cache.set(cache_key, result, ttl=ttl)
-                self._telemetry.record_tool_call(
-                    func.__name__, duration_ms, True, cache_hit=False
-                )
+                self._telemetry.record_tool_call(func.__name__, duration_ms, True, cache_hit=False)
                 return result
 
             wrapper.__wrapped__ = func

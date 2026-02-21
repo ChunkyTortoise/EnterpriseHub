@@ -148,7 +148,9 @@ class PromptExperimentRunner:
 
         logger.info(
             "Created experiment '%s' with %d variants, metric='%s'",
-            name, len(variants), metric,
+            name,
+            len(variants),
+            metric,
         )
         return experiment
 
@@ -172,9 +174,7 @@ class PromptExperimentRunner:
         if experiment.status != "active":
             raise ValueError(f"Experiment '{experiment_name}' is not active")
 
-        digest = hashlib.sha256(
-            f"{contact_id}:{experiment_name}".encode()
-        ).hexdigest()
+        digest = hashlib.sha256(f"{contact_id}:{experiment_name}".encode()).hexdigest()
         bucket = int(digest[:8], 16) / 0xFFFFFFFF
 
         cumulative = 0.0
@@ -212,9 +212,7 @@ class PromptExperimentRunner:
         experiment = self._get_experiment(experiment_name)
         variant_names = {v.name for v in experiment.variants}
         if variant_name not in variant_names:
-            raise ValueError(
-                f"Unknown variant '{variant_name}' for experiment '{experiment_name}'"
-            )
+            raise ValueError(f"Unknown variant '{variant_name}' for experiment '{experiment_name}'")
 
         self._outcomes[experiment_name].append(
             _Outcome(
@@ -227,7 +225,10 @@ class PromptExperimentRunner:
         )
         logger.debug(
             "Recorded outcome for %s/%s: score=%.2f, success=%s",
-            experiment_name, variant_name, score, success,
+            experiment_name,
+            variant_name,
+            score,
+            success,
         )
 
     # ── Statistical Analysis ───────────────────────────────────────────
@@ -291,11 +292,7 @@ class PromptExperimentRunner:
         winner = None
         is_significant = False
 
-        if (
-            len(sorted_variants) >= 2
-            and sorted_variants[0].sample_size > 0
-            and sorted_variants[1].sample_size > 0
-        ):
+        if len(sorted_variants) >= 2 and sorted_variants[0].sample_size > 0 and sorted_variants[1].sample_size > 0:
             p_value = self._two_proportion_z_test(
                 sorted_variants[0].successes,
                 sorted_variants[0].sample_size,

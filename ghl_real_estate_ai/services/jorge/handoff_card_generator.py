@@ -1,7 +1,7 @@
 """Warm Handoff Card Generator
 
 Generates professional PDF qualification cards and structured text summaries
-for Jorge bot handoffs. Cards provide agents with a quick visual summary 
+for Jorge bot handoffs. Cards provide agents with a quick visual summary
 of lead qualification, including contact info, scores, and insights.
 
 Performance target: <2s generation time
@@ -27,6 +27,7 @@ try:
         Table,
         TableStyle,
     )
+
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -48,6 +49,7 @@ else:
     BRAND_SUCCESS = None
     BRAND_WARNING = None
     BRAND_DANGER = None
+
 
 @dataclass
 class HandoffCard:
@@ -82,9 +84,7 @@ class HandoffCard:
     priority_level: str = "normal"  # "urgent", "high", "normal", "low"
 
     # Metadata
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_ghl_note(self) -> str:
@@ -99,36 +99,31 @@ class HandoffCard:
         if self.conversation_summary:
             lines.append(f"Summary: {self.conversation_summary}")
             lines.append("")
-        
+
         if self.key_facts:
             lines.append("Key Facts:")
             for fact in self.key_facts:
                 lines.append(f"  - {fact}")
             lines.append("")
-            
+
         if self.unanswered_questions:
             lines.append("Open Questions:")
             for q in self.unanswered_questions:
                 lines.append(f"  - {q}")
             lines.append("")
-            
-        lines.append(
-            f"Qualification: {self.qualification_score:.0f}/100 | Temp: {self.temperature.upper()}"
-        )
+
+        lines.append(f"Qualification: {self.qualification_score:.0f}/100 | Temp: {self.temperature.upper()}")
         if self.budget_range:
-            lines.append(
-                f"Budget: ${self.budget_range.get('min', '?'):,} - "
-                f"${self.budget_range.get('max', '?'):,}"
-            )
+            lines.append(f"Budget: ${self.budget_range.get('min', '?'):,} - ${self.budget_range.get('max', '?'):,}")
         if self.property_address:
             lines.append(f"Property: {self.property_address}")
-            
+
         if self.timeline != "unknown":
             lines.append(f"Timeline: {self.timeline}")
-            
+
         if self.recommended_approach:
             lines.append(f"\n💡 Recommended Approach: {self.recommended_approach}")
-            
+
         lines.append(f"\nGenerated: {self.created_at}")
         return "\n".join(lines)
 
@@ -192,7 +187,7 @@ class HandoffCardGenerator:
         source_bot = handoff_data.get("source_bot", "unknown")
         target_bot = handoff_data.get("target_bot", "unknown")
         confidence = handoff_data.get("confidence", 0.0)
-        
+
         enriched = handoff_data.get("enriched_context")
         if hasattr(enriched, "__dataclass_fields__"):
             enriched_dict = asdict(enriched)
@@ -241,7 +236,7 @@ class HandoffCardGenerator:
         )
 
         story = []
-        
+
         # Header
         story.append(Paragraph("🤝 Warm Handoff Qualification Card", self.styles["CardHeader"]))
         story.append(Spacer(1, 0.2 * inch))
@@ -278,7 +273,7 @@ class HandoffCardGenerator:
         if card.budget_range:
             budget_str = f"${card.budget_range.get('min', 0):,} - ${card.budget_range.get('max', 0):,}"
             qual_data.append(["Budget:", budget_str])
-        
+
         story.append(self._build_table(qual_data))
         story.append(Spacer(1, 0.2 * inch))
 
@@ -323,11 +318,12 @@ class HandoffCardGenerator:
             parts.append("well-qualified")
         elif card.qualification_score > 40:
             parts.append("partially qualified")
-        
+
         if card.unanswered_questions:
             parts.append(f"address {len(card.unanswered_questions)} open questions")
-            
+
         return ". ".join(parts).capitalize() + "." if parts else "Follow standard qualification script."
+
 
 # Convenience function
 def generate_card(handoff_data: Dict[str, Any]) -> bytes:

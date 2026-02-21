@@ -6,7 +6,6 @@ Usage:
     python mcp_server.py
 """
 
-
 # Import skill modules to trigger @skill registration
 from ghl_real_estate_ai.agent_system.skills.base import registry
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

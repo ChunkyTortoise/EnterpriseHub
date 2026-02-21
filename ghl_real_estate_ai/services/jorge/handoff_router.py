@@ -191,11 +191,7 @@ class HandoffRouter:
             DeferralDecision with should_defer flag and detailed reason.
         """
         # Normalize bot name to match PerformanceTracker convention
-        tracker_bot_name = (
-            target_bot
-            if target_bot.endswith("_bot") or target_bot == "handoff"
-            else f"{target_bot}_bot"
-        )
+        tracker_bot_name = target_bot if target_bot.endswith("_bot") or target_bot == "handoff" else f"{target_bot}_bot"
         # Get performance stats for target bot
         stats = await self._tracker.get_bot_stats(tracker_bot_name, window)
 
@@ -226,10 +222,7 @@ class HandoffRouter:
             self._record_deferral(target_bot, "error_rate")
             return DeferralDecision(
                 should_defer=True,
-                reason=(
-                    f"Error rate {error_rate:.2%} exceeds threshold "
-                    f"{self.ERROR_RATE_DEFER_THRESHOLD:.2%}"
-                ),
+                reason=(f"Error rate {error_rate:.2%} exceeds threshold {self.ERROR_RATE_DEFER_THRESHOLD:.2%}"),
                 target_bot=target_bot,
                 p95_actual=p95_actual,
                 p95_target=sla_target,
@@ -254,10 +247,7 @@ class HandoffRouter:
             )
 
         # Warn if approaching thresholds but allow handoff
-        if (
-            error_rate > self.ERROR_RATE_WARN_THRESHOLD
-            or p95_percent_of_sla > self.P95_WARN_THRESHOLD
-        ):
+        if error_rate > self.ERROR_RATE_WARN_THRESHOLD or p95_percent_of_sla > self.P95_WARN_THRESHOLD:
             logger.warning(
                 f"Target bot {target_bot} approaching performance limits: "
                 f"P95={p95_actual:.1f}ms ({p95_percent_of_sla:.1%} of SLA), "
@@ -300,10 +290,7 @@ class HandoffRouter:
 
         # Check if contact already has deferred handoffs
         existing_deferrals = self._deferred_handoffs.get(contact_id, [])
-        retry_count = sum(
-            1 for d in existing_deferrals
-            if d.source_bot == source_bot and d.target_bot == target_bot
-        )
+        retry_count = sum(1 for d in existing_deferrals if d.source_bot == source_bot and d.target_bot == target_bot)
 
         # Check if max retries exceeded
         if retry_count >= self.MAX_RETRIES:
@@ -414,14 +401,16 @@ class HandoffRouter:
 
                 if not decision.should_defer:
                     # Performance improved, ready for retry
-                    ready_for_retry.append({
-                        "contact_id": contact_id,
-                        "source_bot": deferred.source_bot,
-                        "target_bot": deferred.target_bot,
-                        "deferred_at": deferred.deferred_at,
-                        "retry_count": deferred.retry_count,
-                        "recovery_reason": decision.reason,
-                    })
+                    ready_for_retry.append(
+                        {
+                            "contact_id": contact_id,
+                            "source_bot": deferred.source_bot,
+                            "target_bot": deferred.target_bot,
+                            "deferred_at": deferred.deferred_at,
+                            "retry_count": deferred.retry_count,
+                            "recovery_reason": decision.reason,
+                        }
+                    )
                     self._deferral_stats["auto_recoveries"] += 1
 
                     # Remove from deferred list

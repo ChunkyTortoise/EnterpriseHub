@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OfferStrategy:
     """Recommended offer strategy for a property."""
+
     suggested_price: float
     price_rationale: str
     contingencies: List[str] = field(default_factory=list)
@@ -58,9 +59,7 @@ class OfferAdvisor:
         timeline = self._recommend_timeline(market_type, buyer_profile)
 
         # Competitive assessment
-        assessment = self._assess_competitiveness(
-            suggested_price, list_price, contingencies, earnest_pct, market_type
-        )
+        assessment = self._assess_competitiveness(suggested_price, list_price, contingencies, earnest_pct, market_type)
 
         return OfferStrategy(
             suggested_price=suggested_price,
@@ -85,9 +84,7 @@ class OfferAdvisor:
             return "buyers"
         return "balanced"
 
-    def _calculate_suggested_price(
-        self, list_price: float, dom: int, market_type: str
-    ) -> float:
+    def _calculate_suggested_price(self, list_price: float, dom: int, market_type: str) -> float:
         """Calculate suggested offer price."""
         if list_price <= 0:
             return 0
@@ -107,28 +104,18 @@ class OfferAdvisor:
             # Balanced: at list
             return round(list_price, -3)
 
-    def _generate_rationale(
-        self, list_price: float, suggested: float, dom: int, market_type: str
-    ) -> str:
+    def _generate_rationale(self, list_price: float, suggested: float, dom: int, market_type: str) -> str:
         """Generate a human-readable price rationale."""
         if suggested > list_price:
             pct = ((suggested - list_price) / list_price) * 100
-            return (
-                f"Offering {pct:.0f}% above list price to remain competitive "
-                f"in this seller's market."
-            )
+            return f"Offering {pct:.0f}% above list price to remain competitive in this seller's market."
         elif suggested < list_price:
             pct = ((list_price - suggested) / list_price) * 100
             reason = f"Property has been on market {dom} days. " if dom > 30 else ""
-            return (
-                f"{reason}Offering {pct:.0f}% below list is reasonable "
-                f"in current buyer-favorable conditions."
-            )
+            return f"{reason}Offering {pct:.0f}% below list is reasonable in current buyer-favorable conditions."
         return "Offering at list price reflects fair market value in balanced conditions."
 
-    def _recommend_contingencies(
-        self, market_type: str, buyer_profile: Dict
-    ) -> List[str]:
+    def _recommend_contingencies(self, market_type: str, buyer_profile: Dict) -> List[str]:
         """Recommend contingencies based on market conditions."""
         if market_type == "sellers":
             # Fewer contingencies in seller's market
@@ -153,9 +140,7 @@ class OfferAdvisor:
             return 1.0  # Minimize risk
         return 2.0
 
-    def _recommend_escalation(
-        self, market_type: str, list_price: float, buyer_profile: Dict
-    ) -> Optional[Dict]:
+    def _recommend_escalation(self, market_type: str, list_price: float, buyer_profile: Dict) -> Optional[Dict]:
         """Recommend escalation clause for competitive situations."""
         if market_type != "sellers" or list_price <= 0:
             return None

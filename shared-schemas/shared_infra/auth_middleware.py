@@ -46,9 +46,7 @@ class AuthMiddleware:
         self.jwt_secret = jwt_secret
         self.jwt_algorithm = jwt_algorithm
 
-    async def verify_api_key(
-        self, api_key: str | None = Security(API_KEY_HEADER)
-    ) -> AuthContext:
+    async def verify_api_key(self, api_key: str | None = Security(API_KEY_HEADER)) -> AuthContext:
         """Verify an API key from X-API-Key header."""
         if not api_key:
             raise HTTPException(status_code=401, detail="Missing API key")

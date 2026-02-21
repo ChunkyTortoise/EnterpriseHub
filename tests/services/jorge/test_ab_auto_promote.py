@@ -95,9 +95,7 @@ def winning_experiment(ab_service):
             )
 
     # Set created_at to 8 days ago (meets runtime criterion)
-    ab_service._experiments["test_experiment"].created_at = (
-        datetime.utcnow() - timedelta(days=8)
-    ).timestamp()
+    ab_service._experiments["test_experiment"].created_at = (datetime.utcnow() - timedelta(days=8)).timestamp()
 
     return ab_service
 
@@ -162,9 +160,7 @@ async def test_check_experiments_skips_insufficient_runtime(ab_service, db_manag
             )
 
     # Set created_at to 5 days ago (insufficient)
-    ab_service._experiments["short_experiment"].created_at = (
-        datetime.utcnow() - timedelta(days=5)
-    ).timestamp()
+    ab_service._experiments["short_experiment"].created_at = (datetime.utcnow() - timedelta(days=5)).timestamp()
 
     # Mock database check
     conn = db_manager.get_connection.return_value.__aenter__.return_value
@@ -211,9 +207,7 @@ async def test_check_experiments_skips_insufficient_sample_size(ab_service, db_m
             )
 
     # Set created_at to 8 days ago
-    ab_service._experiments["small_experiment"].created_at = (
-        datetime.utcnow() - timedelta(days=8)
-    ).timestamp()
+    ab_service._experiments["small_experiment"].created_at = (datetime.utcnow() - timedelta(days=8)).timestamp()
 
     # Mock database check
     conn = db_manager.get_connection.return_value.__aenter__.return_value
@@ -260,9 +254,7 @@ async def test_check_experiments_skips_not_significant(ab_service, db_manager):
             )
 
     # Set created_at to 8 days ago
-    ab_service._experiments["no_winner"].created_at = (
-        datetime.utcnow() - timedelta(days=8)
-    ).timestamp()
+    ab_service._experiments["no_winner"].created_at = (datetime.utcnow() - timedelta(days=8)).timestamp()
 
     # Mock database check
     conn = db_manager.get_connection.return_value.__aenter__.return_value
@@ -309,9 +301,7 @@ async def test_check_experiments_skips_insufficient_lift(ab_service, db_manager)
             )
 
     # Set created_at to 8 days ago
-    ab_service._experiments["small_lift"].created_at = (
-        datetime.utcnow() - timedelta(days=8)
-    ).timestamp()
+    ab_service._experiments["small_lift"].created_at = (datetime.utcnow() - timedelta(days=8)).timestamp()
 
     # Mock database check
     conn = db_manager.get_connection.return_value.__aenter__.return_value
@@ -431,9 +421,7 @@ async def test_manual_rollback_succeeds(promoter, db_manager):
     # Mock database to return valid canary promotion
     conn = db_manager.get_connection.return_value.__aenter__.return_value
     conn.execute = AsyncMock(
-        return_value=MagicMock(
-            fetchone=lambda: ("test_experiment", "variant_a", CanaryStatus.CANARY)
-        )
+        return_value=MagicMock(fetchone=lambda: ("test_experiment", "variant_a", CanaryStatus.CANARY))
     )
     conn.commit = AsyncMock()
 
@@ -462,9 +450,7 @@ async def test_manual_rollback_rejects_completed_promotion(promoter, db_manager)
     # Mock database to return completed promotion
     conn = db_manager.get_connection.return_value.__aenter__.return_value
     conn.execute = AsyncMock(
-        return_value=MagicMock(
-            fetchone=lambda: ("test_experiment", "variant_a", CanaryStatus.COMPLETED)
-        )
+        return_value=MagicMock(fetchone=lambda: ("test_experiment", "variant_a", CanaryStatus.COMPLETED))
     )
 
     with pytest.raises(ValueError, match="Cannot rollback.*already completed"):
@@ -477,9 +463,7 @@ async def test_manual_rollback_rejects_already_rolled_back(promoter, db_manager)
     # Mock database to return rolled back promotion
     conn = db_manager.get_connection.return_value.__aenter__.return_value
     conn.execute = AsyncMock(
-        return_value=MagicMock(
-            fetchone=lambda: ("test_experiment", "variant_a", CanaryStatus.ROLLED_BACK)
-        )
+        return_value=MagicMock(fetchone=lambda: ("test_experiment", "variant_a", CanaryStatus.ROLLED_BACK))
     )
 
     with pytest.raises(ValueError, match="Cannot rollback.*already rolled back"):

@@ -617,7 +617,12 @@ class TestBusinessRuleCompliance:
         Business Impact: Ensures legal compliance and fair treatment
         """
         # GIVEN: Identical leads with different personal characteristics
-        base_lead_data = {"budget": "$500,000", "timeline": "within 6 months", "location": "Rancho Cucamonga", "bedrooms": "3"}
+        base_lead_data = {
+            "budget": "$500,000",
+            "timeline": "within 6 months",
+            "location": "Rancho Cucamonga",
+            "bedrooms": "3",
+        }
 
         # Personal characteristics that should NOT affect scoring
         personal_variations = [

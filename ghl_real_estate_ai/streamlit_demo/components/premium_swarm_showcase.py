@@ -103,6 +103,7 @@ class PremiumSwarmShowcase:
             return LeadIntelligenceSwarm()
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).debug(f"Failed to initialize LeadIntelligenceSwarm: {str(e)}")
             return None
 
@@ -163,7 +164,12 @@ class PremiumSwarmShowcase:
 
         self.demo_leads = {
             "Sarah Chen - Tech Executive": {
-                "demographics": {"age": 34, "income": 185000, "location": "Rancho Cucamonga, CA", "job": "VP Engineering"},
+                "demographics": {
+                    "age": 34,
+                    "income": 185000,
+                    "location": "Rancho Cucamonga, CA",
+                    "job": "VP Engineering",
+                },
                 "behavior": {"engagement_score": 87, "urgency": "High", "decision_style": "Data-Driven"},
                 "intent": {"timeline": "45 days", "budget": "850K-1.2M", "motivation": "Relocation"},
                 "risk_score": 15,  # Low risk

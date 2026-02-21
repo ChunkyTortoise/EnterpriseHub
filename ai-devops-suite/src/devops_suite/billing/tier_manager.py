@@ -24,9 +24,7 @@ class TierLimitExceeded(Exception):
         self.limit = limit
         self.current = current
         self.tier = tier
-        super().__init__(
-            f"Tier '{tier}' limit exceeded for {resource}: {current}/{limit}"
-        )
+        super().__init__(f"Tier '{tier}' limit exceeded for {resource}: {current}/{limit}")
 
 
 class TierManager:

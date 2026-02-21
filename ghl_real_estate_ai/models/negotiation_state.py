@@ -8,6 +8,7 @@ from typing import List, Optional, TypedDict
 
 class ConversationTurn(TypedDict, total=False):
     """TypedDict for a single conversation turn."""
+
     role: str  # "user" or "assistant"
     content: str
     timestamp: Optional[str]
@@ -15,6 +16,7 @@ class ConversationTurn(TypedDict, total=False):
 
 class NegotiationMetadata(TypedDict, total=False):
     """TypedDict for negotiation metadata."""
+
     negotiation_start_time: str
     last_response_time: str
     turn_count: int

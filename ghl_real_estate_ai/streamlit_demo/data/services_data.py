@@ -66,7 +66,6 @@ INDUSTRIES = [
 
 SERVICES: Dict[str, Dict] = {
     # ... [S01-S16 from original file preserved] ...
-    
     # INFRASTRUCTURE & MLOps (S17-S20) - NEW
     "S17": {
         "id": "S17",
@@ -84,7 +83,7 @@ SERVICES: Dict[str, Dict] = {
             "A/B testing framework",
             "Cost optimization engine (89% token reduction)",
             "Multi-model orchestration",
-            "Production monitoring with P95 <2s latency"
+            "Production monitoring with P95 <2s latency",
         ],
         "roi_model": {
             "typical_savings": "$50K-$150K annually",
@@ -110,7 +109,7 @@ SERVICES: Dict[str, Dict] = {
             "3-tier Redis caching (87% hit rate)",
             "OpenAPI documentation",
             "4,937 automated tests",
-            "CI/CD pipeline"
+            "CI/CD pipeline",
         ],
         "roi_model": {
             "typical_savings": "$40K-$120K annually",
@@ -136,7 +135,7 @@ SERVICES: Dict[str, Dict] = {
             "User authentication & RBAC",
             "Data migration & validation",
             "Real-time collaboration features",
-            "Training & documentation"
+            "Training & documentation",
         ],
         "roi_model": {
             "typical_savings": "$50K-$150K annually",
@@ -162,7 +161,7 @@ SERVICES: Dict[str, Dict] = {
             "Data validation pipeline",
             "Scheduled extraction jobs",
             "Export formats (CSV, JSON, API)",
-            "Monitoring dashboard"
+            "Monitoring dashboard",
         ],
         "roi_model": {
             "typical_savings": "$30K-$100K annually",
@@ -172,7 +171,6 @@ SERVICES: Dict[str, Dict] = {
         "proof": ["scrape-and-serve"],
         "status": "ready",
     },
-    
     # OPS & GOVERNANCE (S21-S24) - NEW
     "S21": {
         "id": "S21",
@@ -190,7 +188,7 @@ SERVICES: Dict[str, Dict] = {
             "Data leakage analysis",
             "PII handling & encryption review",
             "Compliance gap report (DRE, CCPA, GDPR)",
-            "Remediation roadmap with priorities"
+            "Remediation roadmap with priorities",
         ],
         "roi_model": {
             "typical_savings": "Prevents $100K-$1M in breach costs",
@@ -216,7 +214,7 @@ SERVICES: Dict[str, Dict] = {
             "3-tier caching implementation",
             "Load testing & benchmarking",
             "Cost reduction analysis (89% achieved)",
-            "P50/P95/P99 latency monitoring"
+            "P50/P95/P99 latency monitoring",
         ],
         "roi_model": {
             "typical_savings": "$50K-$200K annually",
@@ -242,7 +240,7 @@ SERVICES: Dict[str, Dict] = {
             "Runbooks & SOPs",
             "Training materials & videos",
             "Knowledge base & wiki",
-            "4,937 test documentation"
+            "4,937 test documentation",
         ],
         "roi_model": {
             "typical_savings": "$30K-$80K annually",
@@ -268,7 +266,7 @@ SERVICES: Dict[str, Dict] = {
             "Team mentoring & coaching",
             "Vendor evaluation & selection",
             "Architecture review board",
-            "Quarterly AI roadmaps"
+            "Quarterly AI roadmaps",
         ],
         "roi_model": {
             "typical_savings": "$200K-$500K vs full-time executive",

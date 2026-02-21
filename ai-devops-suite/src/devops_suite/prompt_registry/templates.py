@@ -24,12 +24,16 @@ class PromptTemplateManager:
         self._env = Environment()
         self._templates: dict[str, TemplateInfo] = {}
 
-    def register(self, template_id: str, name: str, content: str,
-                 description: str = "") -> TemplateInfo:
+    def register(
+        self, template_id: str, name: str, content: str, description: str = ""
+    ) -> TemplateInfo:
         variables = self.extract_variables(content)
         info = TemplateInfo(
-            template_id=template_id, name=name, content=content,
-            variables=variables, description=description,
+            template_id=template_id,
+            name=name,
+            content=content,
+            variables=variables,
+            description=description,
         )
         self._templates[template_id] = info
         return info

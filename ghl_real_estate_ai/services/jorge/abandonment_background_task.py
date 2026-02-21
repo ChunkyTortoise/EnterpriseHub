@@ -38,9 +38,7 @@ async def abandonment_detection_loop(
     detector = get_abandonment_detector(ghl_client=ghl_client, db_pool=db_pool)
     orchestrator = get_recovery_orchestrator(ghl_client=ghl_client)
 
-    logger.info(
-        f"Abandonment detection loop started (interval: {interval_seconds}s = {interval_seconds/3600:.1f}h)"
-    )
+    logger.info(f"Abandonment detection loop started (interval: {interval_seconds}s = {interval_seconds / 3600:.1f}h)")
     _is_running = True
 
     while _is_running:
@@ -70,21 +68,15 @@ async def abandonment_detection_loop(
                 # Orchestrate recovery
                 summary = await orchestrator.orchestrate_recovery(abandoned_contacts)
 
-                logger.info(
-                    f"Recovery batch complete: "
-                    f"{summary['successful']}/{summary['total_attempted']} successful"
-                )
+                logger.info(f"Recovery batch complete: {summary['successful']}/{summary['total_attempted']} successful")
 
                 # Mark recovery attempts in database
                 for contact in abandoned_contacts:
                     if any(
-                        c["contact_id"] == contact.contact_id
-                        and c["status"] == "success"
+                        c["contact_id"] == contact.contact_id and c["status"] == "success"
                         for c in summary.get("contacts_processed", [])
                     ):
-                        await detector.mark_recovery_attempted(
-                            contact.contact_id, contact.current_stage
-                        )
+                        await detector.mark_recovery_attempted(contact.contact_id, contact.current_stage)
 
             else:
                 logger.info("No abandoned contacts found in this scan")
@@ -100,9 +92,7 @@ async def abandonment_detection_loop(
     logger.info("Abandonment detection loop stopped")
 
 
-async def start_abandonment_background_task(
-    ghl_client, db_pool, interval_seconds: int = 4 * 3600
-) -> bool:
+async def start_abandonment_background_task(ghl_client, db_pool, interval_seconds: int = 4 * 3600) -> bool:
     """Start the abandonment detection background task.
 
     Args:
@@ -121,9 +111,7 @@ async def start_abandonment_background_task(
 
     try:
         _is_running = True
-        _background_task = asyncio.create_task(
-            abandonment_detection_loop(ghl_client, db_pool, interval_seconds)
-        )
+        _background_task = asyncio.create_task(abandonment_detection_loop(ghl_client, db_pool, interval_seconds))
         logger.info("✅ Abandonment detection background task started")
         return True
     except Exception as exc:

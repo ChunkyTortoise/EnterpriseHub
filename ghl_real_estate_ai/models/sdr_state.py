@@ -17,15 +17,15 @@ class OutreachState(TypedDict, total=False):
 
     contact_id: str
     location_id: str
-    current_step: str           # SequenceStep.value
-    enrolled_at: str            # ISO-8601 string for JSON-serializability
+    current_step: str  # SequenceStep.value
+    enrolled_at: str  # ISO-8601 string for JSON-serializability
     next_touch_at: Optional[str]
     reply_count: int
-    objections_hit: List[str]   # list of classified objection types hit so far
-    last_reply: Optional[str]   # most recent reply body (plain text, not encrypted)
+    objections_hit: List[str]  # list of classified objection types hit so far
+    last_reply: Optional[str]  # most recent reply body (plain text, not encrypted)
     frs_score: Optional[float]
     pcs_score: Optional[float]
-    lead_type: str              # "buyer" | "seller" | "unknown"
+    lead_type: str  # "buyer" | "seller" | "unknown"
     handoff_triggered: bool
     ab_variant: Optional[str]
     last_touch_channel: Optional[str]  # "sms" | "email" | "voicemail"

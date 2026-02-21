@@ -114,9 +114,7 @@ class TestBotPersonalityRegistry:
 
 class TestIntentMarkerSet:
     def test_score_high_match(self) -> None:
-        markers = IntentMarkerSet(
-            high=["must sell"], medium=["thinking"], low=["just curious"]
-        )
+        markers = IntentMarkerSet(high=["must sell"], medium=["thinking"], low=["just curious"])
         score = markers.score("I must sell my house")
         assert score > 40
 
@@ -131,9 +129,7 @@ class TestIntentMarkerSet:
         assert score == 25.0
 
     def test_score_clamped_to_0_100(self) -> None:
-        markers = IntentMarkerSet(
-            high=[], medium=[], low=["a", "b", "c", "d", "e"]
-        )
+        markers = IntentMarkerSet(high=[], medium=[], low=["a", "b", "c", "d", "e"])
         score = markers.score("a b c d e")
         assert score >= 0.0
         assert score <= 100.0
@@ -247,8 +243,12 @@ class TestRealEstatePersonality:
 
     def test_lead_scoring(self) -> None:
         scores = {
-            "motivation": 80, "timeline": 60, "condition": 50,
-            "price": 50, "valuation": 40, "prep_readiness": 30,
+            "motivation": 80,
+            "timeline": 60,
+            "condition": 50,
+            "price": 50,
+            "valuation": 40,
+            "prep_readiness": 30,
         }
         overall = self.lead.compute_overall_score(scores)
         assert 40 < overall < 80
@@ -320,8 +320,10 @@ class TestDentalPersonality:
 
     def test_dental_scoring(self) -> None:
         scores = {
-            "urgency": 90, "procedure_value": 70,
-            "insurance_status": 60, "motivation": 50,
+            "urgency": 90,
+            "procedure_value": 70,
+            "insurance_status": 60,
+            "motivation": 50,
         }
         overall = self.dental.compute_overall_score(scores)
         assert 50 < overall < 90
@@ -367,9 +369,7 @@ class TestPersonalityConfig:
             name="YAMLBot",
             role="Assistant",
             system_prompt_template="Hello {name}, you are a {role}.",
-            qualification_questions=[
-                {"text": "What do you need?", "category": "need", "priority": 1}
-            ],
+            qualification_questions=[{"text": "What do you need?", "category": "need", "priority": 1}],
             scoring_weights={"need": 0.5, "budget": 0.5},
             temperature_thresholds={"hot": 80, "warm": 50, "lukewarm": 20},
             journey_stages=["start", "middle", "end"],

@@ -42,7 +42,9 @@ class SellerBotAdapter:
             "Can you start by telling me a bit about your property and your timeline?"
         )
 
-    async def process_message(self, user_text: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def process_message(
+        self, user_text: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Process a seller message. In production, delegates to JorgeSellerBot."""
         return {
             "response": "",

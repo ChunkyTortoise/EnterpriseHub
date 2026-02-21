@@ -169,9 +169,7 @@ class TimingOptimizerAgent(FollowUpAgent):
             timing_analysis = response.content if response.content else "Standard timing recommended"
 
             # ML-predicted optimal send time via InteractionTimePredictor
-            optimal_time = await self._predict_optimal_send_time(
-                lead_id, activity_data, behavioral_score
-            )
+            optimal_time = await self._predict_optimal_send_time(lead_id, activity_data, behavioral_score)
 
             return FollowUpRecommendation(
                 agent_type=self.agent_type,
@@ -219,9 +217,7 @@ class TimingOptimizerAgent(FollowUpAgent):
                 sorted_times = sorted(response_times)
                 # Weight recent interactions more heavily
                 weights = [1.0 + i * 0.5 for i in range(len(sorted_times))]
-                weighted_avg = sum(
-                    t * w for t, w in zip(sorted_times, weights)
-                ) / sum(weights)
+                weighted_avg = sum(t * w for t, w in zip(sorted_times, weights)) / sum(weights)
                 base_delay_hours = max(0.25, min(48, weighted_avg))
             else:
                 # Insufficient history: use intent-based defaults

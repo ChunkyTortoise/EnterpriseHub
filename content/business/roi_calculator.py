@@ -169,8 +169,14 @@ st.divider()
 # Before / After comparison
 st.subheader("Before vs. After Comparison")
 
-response_reduction = ((current_response_time_min - 2) / current_response_time_min * 100) if current_response_time_min > 0 else 0
-conversion_improvement = ((new_conversion_rate - current_conversion_rate) / current_conversion_rate * 100) if current_conversion_rate > 0 else 0
+response_reduction = (
+    ((current_response_time_min - 2) / current_response_time_min * 100) if current_response_time_min > 0 else 0
+)
+conversion_improvement = (
+    ((new_conversion_rate - current_conversion_rate) / current_conversion_rate * 100)
+    if current_conversion_rate > 0
+    else 0
+)
 current_monthly_revenue = current_deals_per_month * avg_deal_value
 new_monthly_revenue = new_deals_per_month * avg_deal_value
 reduced_api_cost = current_monthly_api_cost * 0.11

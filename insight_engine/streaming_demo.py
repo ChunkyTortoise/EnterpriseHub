@@ -5,6 +5,7 @@ Shows real-time SSE consumption from the /dashboard/stream endpoint.
 Run: streamlit run streaming_demo.py
 Requires: uvicorn insight_engine.api.app:app running on port 8080
 """
+
 import json
 
 import httpx

@@ -11,14 +11,7 @@ COMPLIANCE_SEVERITY_MAP = {
 }
 
 # TCPA opt-out phrases — mirrors webhook.py for consistent compliance handling
-OPT_OUT_PHRASES = [
-    "stop",
-    "unsubscribe",
-    "not interested",
-    "opt out",
-    "remove me",
-    "cancel"
-]
+OPT_OUT_PHRASES = ["stop", "unsubscribe", "not interested", "opt out", "remove me", "cancel"]
 
 # Default limits
 MAX_CONVERSATION_HISTORY = 50

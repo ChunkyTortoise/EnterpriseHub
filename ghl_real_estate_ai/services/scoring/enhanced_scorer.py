@@ -48,7 +48,14 @@ class EnhancedPropertyScorer(PropertyScorer):
             "round rock",
         }
 
-        self.emerging_areas = {"east rancho_cucamonga", "haven city", "highland", "cherrywood", "govalle", "windsor park"}
+        self.emerging_areas = {
+            "east rancho_cucamonga",
+            "haven city",
+            "highland",
+            "cherrywood",
+            "govalle",
+            "windsor park",
+        }
 
         # Advanced scoring weights (15 factors)
         self.weights = {

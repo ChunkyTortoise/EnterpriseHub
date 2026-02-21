@@ -99,7 +99,9 @@ class LeadSequenceScheduler:
             self.scheduler.shutdown()
             logger.info("Lead sequence scheduler stopped")
 
-    async def schedule_sequence_start(self, lead_id: str, sequence_day: SequenceDay = SequenceDay.DAY_3, delay_minutes: int = 0) -> bool:
+    async def schedule_sequence_start(
+        self, lead_id: str, sequence_day: SequenceDay = SequenceDay.DAY_3, delay_minutes: int = 0
+    ) -> bool:
         """Schedule the start of a new lead sequence."""
         if not self.enabled:
             logger.warning("Cannot schedule - scheduler not enabled")

@@ -13,8 +13,6 @@ from src.embeddings.cache import (
 
 
 @pytest.mark.integration
-
-
 class TestMemoryCacheBackend:
     """Test cases for MemoryCacheBackend."""
 

@@ -146,7 +146,9 @@ class ConversationManager:
 
         return context
 
-    async def get_conversation_history(self, contact_id: str, location_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_conversation_history(
+        self, contact_id: str, location_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Retrieve conversation history for a contact.
 

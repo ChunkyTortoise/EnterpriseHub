@@ -24,7 +24,11 @@ async def main() -> None:
 
     result = await ExecutionEngine().execute(
         dag,
-        input=AgentInput(messages=[{"role": "user", "content": "Need business LLC formation and bookkeeping setup"}]),
+        input=AgentInput(
+            messages=[
+                {"role": "user", "content": "Need business LLC formation and bookkeeping setup"}
+            ]
+        ),
     )
     print(result.outputs["checklist"].content)
 

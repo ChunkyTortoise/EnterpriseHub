@@ -160,9 +160,7 @@ class TestSellerAcceptanceFeatureExtractor:
 
         # Verify all features are normalized [0, 1]
         for i, value in enumerate(vector):
-            assert 0.0 <= value <= 1.0, (
-                f"Feature {i} ({features.feature_names()[i]}) out of range: {value}"
-            )
+            assert 0.0 <= value <= 1.0, f"Feature {i} ({features.feature_names()[i]}) out of range: {value}"
 
         # Verify no missing fields when all data provided
         assert len(features.missing_fields) == 0
@@ -371,9 +369,7 @@ class TestSellerAcceptanceFeatureExtractor:
 
         extraction_time_ms = (time.perf_counter() - start_time) * 1000
 
-        assert extraction_time_ms < 500, (
-            f"Extraction took {extraction_time_ms:.2f}ms, exceeds 500ms target"
-        )
+        assert extraction_time_ms < 500, f"Extraction took {extraction_time_ms:.2f}ms, exceeds 500ms target"
 
         # Verify extraction time is recorded
         assert features.extraction_time_ms > 0
@@ -428,9 +424,7 @@ class TestSellerAcceptanceFeatureExtractor:
         # All features should still be normalized
         vector = features.to_feature_vector()
         for i, value in enumerate(vector):
-            assert 0.0 <= value <= 1.0, (
-                f"Feature {i} ({features.feature_names()[i]}) out of range: {value}"
-            )
+            assert 0.0 <= value <= 1.0, f"Feature {i} ({features.feature_names()[i]}) out of range: {value}"
 
     def test_urgency_level_mapping(self, extractor):
         """Test all urgency level mappings."""
@@ -496,8 +490,18 @@ class TestSellerAcceptanceFeatureExtractor:
     def test_seasonal_factors(self, extractor):
         """Test seasonal factor calculations for all months."""
         expected_factors = [
-            0.4, 0.5, 0.7, 0.85, 0.95, 1.0,  # Jan-Jun
-            1.0, 0.95, 0.85, 0.7, 0.5, 0.4   # Jul-Dec
+            0.4,
+            0.5,
+            0.7,
+            0.85,
+            0.95,
+            1.0,  # Jan-Jun
+            1.0,
+            0.95,
+            0.85,
+            0.7,
+            0.5,
+            0.4,  # Jul-Dec
         ]
 
         for month, expected_factor in enumerate(expected_factors):

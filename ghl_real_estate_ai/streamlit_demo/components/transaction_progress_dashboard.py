@@ -742,6 +742,7 @@ class TransactionProgressDashboard:
                 time_ago = self._time_ago(event_time)
             except Exception as e:
                 import logging
+
                 logging.getLogger(__name__).debug(f"Activity feed timestamp parsing error: {e}")
                 time_ago = "recently"
 

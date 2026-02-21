@@ -284,9 +284,7 @@ class TestEffectivenessScore:
         """Test effectiveness score is penalized when stall detected."""
         stall = StallDetectionResult(stall_detected=True, stall_type="vague_answers", stall_score=0.8)
 
-        result = await _calculate_effectiveness_score(
-            "lead-stall", stalled_conversation_history, mock_cache, stall
-        )
+        result = await _calculate_effectiveness_score("lead-stall", stalled_conversation_history, mock_cache, stall)
         # Score should be lower due to stall penalty
         assert result.score < 100
         assert result.breakdown["stall_penalty"] > 0

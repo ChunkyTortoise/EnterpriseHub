@@ -298,6 +298,7 @@ def render_biometric_heartbeat(urgency="normal"):
 def render_countdown_gauge(days_remaining, total_days=30):
     """Predictive 'Time-to-Close' circular gauge."""
     import math
+
     percentage = max(0, min(100, (days_remaining / total_days) * 100))
     circumference = 2 * math.pi * 45
     offset = circumference * (1 - (100 - percentage) / 100)

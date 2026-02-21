@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ExpandedQuery:
     """Result of query expansion."""
+
     original: str
     expansions: list[str]
     method: str  # "hyde", "multi_query", "none"
@@ -56,9 +57,7 @@ class QueryExpander:
         """Generate multiple reformulations of the query."""
         if self.llm_client:
             reformulations = await self.llm_client.generate(
-                prompt=(
-                    f"Generate 3 different ways to ask this question, one per line:\n{query}"
-                ),
+                prompt=(f"Generate 3 different ways to ask this question, one per line:\n{query}"),
                 max_tokens=200,
             )
             lines = [line.strip() for line in reformulations.strip().split("\n") if line.strip()]

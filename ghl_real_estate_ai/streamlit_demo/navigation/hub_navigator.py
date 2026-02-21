@@ -72,7 +72,7 @@ HUB_CATEGORIES = {
         "Revenue-Sprint Case Study",
         "Advanced RAG Case Study",
         "DocQA Engine Case Study",
-        "Request Quote"
+        "Request Quote",
     ],
 }
 

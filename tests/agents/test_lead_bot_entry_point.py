@@ -46,26 +46,30 @@ class TestProcessLeadConversation:
             ABTestingService=Mock(return_value=AsyncMock()),
         ):
             bot = LeadBotWorkflow()
-            
+
             # Mock the workflow graph
             bot.workflow = AsyncMock()
-            bot.workflow.ainvoke = AsyncMock(return_value={
-                "lead_id": "test_lead_123",
-                "response_content": "Thanks for reaching out! What brings you here today?",
-                "current_step": "qualify_intent",
-                "engagement_status": "active",
-                "lead_temperature": "warm",
-                "handoff_signals": {},
-            })
-            
+            bot.workflow.ainvoke = AsyncMock(
+                return_value={
+                    "lead_id": "test_lead_123",
+                    "response_content": "Thanks for reaching out! What brings you here today?",
+                    "current_step": "qualify_intent",
+                    "engagement_status": "active",
+                    "lead_temperature": "warm",
+                    "handoff_signals": {},
+                }
+            )
+
             # Mock external services
             bot.ghl_client = AsyncMock()
             bot.intent_decoder = AsyncMock()
-            bot.intent_decoder.analyze_lead_with_ghl = AsyncMock(return_value={
-                "lead_score": 70.0,
-                "temperature": "warm",
-            })
-            
+            bot.intent_decoder.analyze_lead_with_ghl = AsyncMock(
+                return_value={
+                    "lead_score": 70.0,
+                    "temperature": "warm",
+                }
+            )
+
             yield bot
 
     # ==================== Happy Path Tests ====================
@@ -80,7 +84,7 @@ class TestProcessLeadConversation:
 
         # Verify workflow was invoked
         mock_lead_bot.workflow.ainvoke.assert_called_once()
-        
+
         # Verify response structure
         assert result["lead_id"] == "test_lead_123"
         assert "response_content" in result
@@ -132,7 +136,7 @@ class TestProcessLeadConversation:
     async def test_metadata_propagation(self, mock_lead_bot, mock_lead_metadata):
         """Test that metadata is passed through to workflow."""
         metadata = BotMetadata(**mock_lead_metadata)
-        
+
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
             user_message="Hello",
@@ -202,7 +206,7 @@ class TestProcessLeadConversation:
         """Test that messages exceeding max length are truncated."""
         # Add extra characters to exceed limit
         oversized_message = max_length_message + "EXTRA"
-        
+
         await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
             user_message=oversized_message,
@@ -211,7 +215,7 @@ class TestProcessLeadConversation:
         call_args = mock_lead_bot.workflow.ainvoke.call_args
         state = call_args[0][0]
         processed_message = state["user_message"]
-        
+
         # Message should be truncated to 10,000 chars
         assert len(processed_message) == 10_000
         assert "EXTRA" not in processed_message
@@ -232,13 +236,15 @@ class TestProcessLeadConversation:
     async def test_voice_call_skip_qualification(self, mock_lead_bot):
         """Test that voice calls skip re-qualification."""
         # Mock voice call data in GHL
-        mock_lead_bot.ghl_client.get_contact = AsyncMock(return_value={
-            "id": "conv_123",
-            "customFields": {
-                "last_call_timestamp": datetime.utcnow().isoformat(),
-                "call_duration_seconds": "180",
+        mock_lead_bot.ghl_client.get_contact = AsyncMock(
+            return_value={
+                "id": "conv_123",
+                "customFields": {
+                    "last_call_timestamp": datetime.utcnow().isoformat(),
+                    "call_duration_seconds": "180",
+                },
             }
-        })
+        )
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -252,10 +258,7 @@ class TestProcessLeadConversation:
 
     async def test_no_voice_call_normal_qualification(self, mock_lead_bot):
         """Test that conversations without voice calls proceed normally."""
-        mock_lead_bot.ghl_client.get_contact = AsyncMock(return_value={
-            "id": "conv_123",
-            "customFields": {}
-        })
+        mock_lead_bot.ghl_client.get_contact = AsyncMock(return_value={"id": "conv_123", "customFields": {}})
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -268,14 +271,16 @@ class TestProcessLeadConversation:
     async def test_old_voice_call_does_not_skip(self, mock_lead_bot):
         """Test that old voice calls (>24h) don't trigger skip logic."""
         old_timestamp = (datetime.utcnow() - timedelta(hours=48)).isoformat()
-        
-        mock_lead_bot.ghl_client.get_contact = AsyncMock(return_value={
-            "id": "conv_123",
-            "customFields": {
-                "last_call_timestamp": old_timestamp,
-                "call_duration_seconds": "180",
+
+        mock_lead_bot.ghl_client.get_contact = AsyncMock(
+            return_value={
+                "id": "conv_123",
+                "customFields": {
+                    "last_call_timestamp": old_timestamp,
+                    "call_duration_seconds": "180",
+                },
             }
-        })
+        )
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -327,17 +332,19 @@ class TestProcessLeadConversation:
 
     async def test_buyer_handoff_signal_detection(self, mock_lead_bot):
         """Test detection of buyer handoff signals."""
-        mock_lead_bot.workflow.ainvoke = AsyncMock(return_value={
-            "lead_id": "conv_123",
-            "response_content": "Let me connect you with our buyer specialist",
-            "current_step": "handoff",
-            "engagement_status": "active",
-            "handoff_signals": {
-                "target_bot": "buyer",
-                "confidence": 0.85,
-                "reason": "buyer_intent_detected",
-            },
-        })
+        mock_lead_bot.workflow.ainvoke = AsyncMock(
+            return_value={
+                "lead_id": "conv_123",
+                "response_content": "Let me connect you with our buyer specialist",
+                "current_step": "handoff",
+                "engagement_status": "active",
+                "handoff_signals": {
+                    "target_bot": "buyer",
+                    "confidence": 0.85,
+                    "reason": "buyer_intent_detected",
+                },
+            }
+        )
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -350,17 +357,19 @@ class TestProcessLeadConversation:
 
     async def test_seller_handoff_signal_detection(self, mock_lead_bot):
         """Test detection of seller handoff signals."""
-        mock_lead_bot.workflow.ainvoke = AsyncMock(return_value={
-            "lead_id": "conv_123",
-            "response_content": "I can help you sell your home",
-            "current_step": "handoff",
-            "engagement_status": "active",
-            "handoff_signals": {
-                "target_bot": "seller",
-                "confidence": 0.90,
-                "reason": "seller_intent_detected",
-            },
-        })
+        mock_lead_bot.workflow.ainvoke = AsyncMock(
+            return_value={
+                "lead_id": "conv_123",
+                "response_content": "I can help you sell your home",
+                "current_step": "handoff",
+                "engagement_status": "active",
+                "handoff_signals": {
+                    "target_bot": "seller",
+                    "confidence": 0.90,
+                    "reason": "seller_intent_detected",
+                },
+            }
+        )
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -374,9 +383,7 @@ class TestProcessLeadConversation:
 
     async def test_workflow_exception_handling(self, mock_lead_bot):
         """Test that workflow exceptions are handled gracefully."""
-        mock_lead_bot.workflow.ainvoke = AsyncMock(
-            side_effect=Exception("Workflow processing error")
-        )
+        mock_lead_bot.workflow.ainvoke = AsyncMock(side_effect=Exception("Workflow processing error"))
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -388,9 +395,7 @@ class TestProcessLeadConversation:
 
     async def test_ghl_client_failure_doesnt_block(self, mock_lead_bot):
         """Test that GHL client failures don't block conversation."""
-        mock_lead_bot.ghl_client.get_contact = AsyncMock(
-            side_effect=Exception("GHL API timeout")
-        )
+        mock_lead_bot.ghl_client.get_contact = AsyncMock(side_effect=Exception("GHL API timeout"))
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -402,9 +407,7 @@ class TestProcessLeadConversation:
 
     async def test_intent_decoder_failure_fallback(self, mock_lead_bot):
         """Test fallback when intent decoder fails."""
-        mock_lead_bot.intent_decoder.analyze_lead_with_ghl = AsyncMock(
-            side_effect=Exception("Intent analysis error")
-        )
+        mock_lead_bot.intent_decoder.analyze_lead_with_ghl = AsyncMock(side_effect=Exception("Intent analysis error"))
 
         result = await mock_lead_bot.process_lead_conversation(
             conversation_id="conv_123",
@@ -443,7 +446,7 @@ class TestProcessLeadConversation:
     async def test_concurrent_requests_isolation(self, mock_lead_bot, concurrent_requests):
         """Test that concurrent requests are properly isolated."""
         import asyncio
-        
+
         tasks = [
             mock_lead_bot.process_lead_conversation(
                 conversation_id=req["conversation_id"],

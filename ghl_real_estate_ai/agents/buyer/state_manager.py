@@ -20,9 +20,7 @@ class StateManager:
     """Manages buyer bot state building and routing logic."""
 
     def __init__(
-        self,
-        budget_config: Optional[BuyerBudgetConfig] = None,
-        handoff_manager: Optional[HandoffManager] = None
+        self, budget_config: Optional[BuyerBudgetConfig] = None, handoff_manager: Optional[HandoffManager] = None
     ):
         self.budget_config = budget_config or BuyerBudgetConfig.from_environment()
         self.handoff_manager = handoff_manager or HandoffManager()
@@ -37,18 +35,14 @@ class StateManager:
         buyer_email: Optional[str] = None,
         metadata: Optional[BotMetadata] = None,
         tone_variant: str = "empathetic",
-        handoff_context: Optional[Any] = None
+        handoff_context: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """Build the initial state for the buyer workflow."""
         if conversation_history is None:
             conversation_history = []
 
         conversation_history.append(
-            {
-                "role": "user",
-                "content": user_message,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+            {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
         )
 
         # Prune to prevent unbounded memory growth
@@ -111,9 +105,7 @@ class StateManager:
             logger.error(f"Error routing buyer action: {str(e)}")
             return "respond"
 
-    def route_after_matching(
-        self, state: BuyerBotState
-    ) -> Literal["handle_objections", "respond", "schedule", "end"]:
+    def route_after_matching(self, state: BuyerBotState) -> Literal["handle_objections", "respond", "schedule", "end"]:
         """Route after property matching — check for objections first."""
         if state.get("objection_detected"):
             return "handle_objections"
@@ -121,10 +113,7 @@ class StateManager:
 
     def determine_qualification_status(self, state: BuyerBotState) -> Dict[str, Any]:
         """Determine the final qualification status from workflow state."""
-        is_qualified = (
-            state.get("financial_readiness_score", 0) >= 50 and 
-            state.get("buying_motivation_score", 0) >= 50
-        )
+        is_qualified = state.get("financial_readiness_score", 0) >= 50 and state.get("buying_motivation_score", 0) >= 50
 
         return {
             "is_qualified": is_qualified,

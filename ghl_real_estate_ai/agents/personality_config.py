@@ -83,9 +83,7 @@ class TemperatureConfig(BaseModel):
     lukewarm: float = 25.0
 
     def to_thresholds(self) -> TemperatureThresholds:
-        return TemperatureThresholds(
-            hot=self.hot, warm=self.warm, lukewarm=self.lukewarm
-        )
+        return TemperatureThresholds(hot=self.hot, warm=self.warm, lukewarm=self.lukewarm)
 
 
 # ── Root Personality Config ──────────────────────────────────────────────────
@@ -135,13 +133,9 @@ class PersonalityConfig(BaseModel):
     approach: str = ""
     core_values: list[str] = Field(default_factory=list)
     system_prompt_template: str = ""
-    qualification_questions: list[QualificationQuestionConfig] = Field(
-        default_factory=list
-    )
+    qualification_questions: list[QualificationQuestionConfig] = Field(default_factory=list)
     intent_signals: dict[str, IntentMarkerConfig] = Field(default_factory=dict)
-    temperature_thresholds: TemperatureConfig = Field(
-        default_factory=TemperatureConfig
-    )
+    temperature_thresholds: TemperatureConfig = Field(default_factory=TemperatureConfig)
     scoring_weights: dict[str, float] = Field(default_factory=dict)
     handoff_triggers: list[HandoffTriggerConfig] = Field(default_factory=list)
     tone_instructions: dict[str, str] = Field(default_factory=dict)
@@ -154,9 +148,7 @@ class PersonalityConfig(BaseModel):
         if v:
             total = sum(v.values())
             if abs(total - 1.0) > 0.01:
-                raise ValueError(
-                    f"scoring_weights must sum to 1.0, got {total:.3f}"
-                )
+                raise ValueError(f"scoring_weights must sum to 1.0, got {total:.3f}")
         return v
 
     @classmethod
@@ -206,14 +198,10 @@ class PersonalityConfig(BaseModel):
                     config=config_ref,
                 )
 
-        _ConfigBackedPersonality.__name__ = (
-            f"{self.industry.title()}{self.bot_type.title()}Personality"
-        )
+        _ConfigBackedPersonality.__name__ = f"{self.industry.title()}{self.bot_type.title()}Personality"
         _ConfigBackedPersonality.__qualname__ = _ConfigBackedPersonality.__name__
 
-        BotPersonalityRegistry.register(self.industry, self.bot_type)(
-            _ConfigBackedPersonality
-        )
+        BotPersonalityRegistry.register(self.industry, self.bot_type)(_ConfigBackedPersonality)
         return _ConfigBackedPersonality
 
 

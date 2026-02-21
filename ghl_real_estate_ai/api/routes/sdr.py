@@ -59,8 +59,7 @@ async def webhook_contact_reply(
         raise HTTPException(status_code=400, detail="Missing contact_id or location_id")
 
     logger.info(
-        f"[SDR] /webhook/reply contact={payload.contact_id} "
-        f"channel={payload.channel} location={payload.location_id}"
+        f"[SDR] /webhook/reply contact={payload.contact_id} channel={payload.channel} location={payload.location_id}"
     )
 
     background_tasks.add_task(
@@ -134,10 +133,7 @@ async def webhook_stage_change(
     if not payload.contact_id or not payload.location_id:
         raise HTTPException(status_code=400, detail="Missing contact_id or location_id")
 
-    logger.info(
-        f"[SDR] /webhook/stage-change contact={payload.contact_id} "
-        f"stage={payload.pipeline_stage_id}"
-    )
+    logger.info(f"[SDR] /webhook/stage-change contact={payload.contact_id} stage={payload.pipeline_stage_id}")
 
     background_tasks.add_task(
         _scheduler.process_webhook_trigger,
@@ -167,9 +163,7 @@ async def trigger_prospecting_cycle(
     Pulls prospects from GHL_PIPELINE + STALE_LEAD sources and enrolls them.
     Runs in background to avoid timeouts on large pipelines.
     """
-    logger.info(
-        f"[SDR] /prospects/source location={location_id} max_per_source={max_per_source}"
-    )
+    logger.info(f"[SDR] /prospects/source location={location_id} max_per_source={max_per_source}")
 
     background_tasks.add_task(
         _sdr_agent.run_prospecting_cycle,
@@ -190,10 +184,7 @@ async def enroll_prospects(
 
     Dispatches SMS_1 immediately for each contact.
     """
-    logger.info(
-        f"[SDR] /prospects/enroll count={len(request.contact_ids)} "
-        f"location={request.location_id}"
-    )
+    logger.info(f"[SDR] /prospects/enroll count={len(request.contact_ids)} location={request.location_id}")
 
     enrolled = []
     errors = []
@@ -281,9 +272,7 @@ async def process_batch(
     records; Phase 3 wires in DB queries via SDRPerformanceTracker.
     """
     start = time.monotonic()
-    logger.info(
-        f"[SDR] /sequences/process-batch size={batch_size} location={location_id}"
-    )
+    logger.info(f"[SDR] /sequences/process-batch size={batch_size} location={location_id}")
 
     # Phase 1: no DB, so no records to fetch — batch runs but processes nothing.
     # Phase 3 will query sdr_outreach_sequences WHERE next_touch_at <= now.

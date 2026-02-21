@@ -22,6 +22,7 @@ router = APIRouter()
 # Response models
 # ---------------------------------------------------------------------------
 
+
 class TenantSummary(BaseModel):
     tenant_id: str
     domain: str
@@ -66,17 +67,20 @@ class DeleteSessionResponse(BaseModel):
 # Routes
 # ---------------------------------------------------------------------------
 
+
 @router.get("/tenants", response_model=List[TenantSummary])
 async def list_tenants():
     """List all cached tenant configs."""
     results = []
     for tenant_id, cfg in _loader._cache.items():
-        results.append(TenantSummary(
-            tenant_id=cfg.tenant_id,
-            domain=cfg.domain,
-            client_name=cfg.client_name,
-            agent_count=len(cfg.available_agents),
-        ))
+        results.append(
+            TenantSummary(
+                tenant_id=cfg.tenant_id,
+                domain=cfg.domain,
+                client_name=cfg.client_name,
+                agent_count=len(cfg.available_agents),
+            )
+        )
     return results
 
 

@@ -327,7 +327,11 @@ class MarketTimingOpportunityEngine:
             logger.error(f"Error initializing market intelligence engine: {e}")
 
     async def generate_comprehensive_timing_recommendation(
-        self, lead_id: str, property_id: Optional[str] = None, market_area: str = "rancho_cucamonga", decision_type: str = "buy"
+        self,
+        lead_id: str,
+        property_id: Optional[str] = None,
+        market_area: str = "rancho_cucamonga",
+        decision_type: str = "buy",
     ) -> TimingRecommendation:
         """Generate comprehensive timing recommendation with full market intelligence."""
 

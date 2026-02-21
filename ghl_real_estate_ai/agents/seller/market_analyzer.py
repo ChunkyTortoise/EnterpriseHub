@@ -12,6 +12,7 @@ from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingServic
 
 try:
     from ghl_real_estate_ai.services.jorge.acceptance_predictor_service import get_acceptance_predictor_service
+
     ACCEPTANCE_PREDICTOR_AVAILABLE = True
 except ImportError:
     ACCEPTANCE_PREDICTOR_AVAILABLE = False
@@ -78,7 +79,10 @@ class MarketAnalyzer:
             variant = await self.ab_testing.assign_variant(
                 experiment_id="seller_ml_pricing_v1",
                 contact_id=contact_id,
-                metadata={"has_cma": True, "pcs_score": state.get("intent_profile", {}).get("pcs", {}).get("total_score", 0)},
+                metadata={
+                    "has_cma": True,
+                    "pcs_score": state.get("intent_profile", {}).get("pcs", {}).get("total_score", 0),
+                },
             )
 
             if variant == "control":
@@ -176,9 +180,7 @@ class MarketAnalyzer:
             lines.append("")
             lines.append(f"Your asking price of ${asking_price:,.0f}:")
             lines.append(f"   • Acceptance probability: {asking_prediction.acceptance_probability:.0%}")
-            lines.append(
-                f"   • Typical time to acceptance: {asking_prediction.estimated_days_to_acceptance} days"
-            )
+            lines.append(f"   • Typical time to acceptance: {asking_prediction.estimated_days_to_acceptance} days")
 
         # Show optimal pricing strategy
         lines.append("")

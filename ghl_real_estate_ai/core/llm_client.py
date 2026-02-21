@@ -56,11 +56,13 @@ class TaskComplexity(Enum):
 
 class LLMTimeoutError(Exception):
     """Raised when an LLM request times out."""
+
     pass
 
 
 class LLMCircuitOpenError(Exception):
     """Raised when the LLM circuit breaker is open (too many failures)."""
+
     pass
 
 

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MortgageReadiness:
     """Assessment of a buyer's mortgage readiness."""
+
     status: str  # "pre_approved", "pre_qualified", "needs_prequalification", "unknown"
     estimated_buying_power: Optional[float] = None
     recommended_action: str = ""
@@ -21,6 +22,7 @@ class MortgageReadiness:
 @dataclass
 class Referral:
     """A lender referral record."""
+
     referral_id: str
     buyer_id: str
     lender: str
@@ -45,13 +47,9 @@ class MortgageTracker:
             "you're serious. Want me to connect you with a trusted lender "
             "in the Rancho Cucamonga area?"
         ),
-        "in_progress": (
-            "Great that you're working on pre-approval! Have you heard "
-            "back from your lender yet?"
-        ),
+        "in_progress": ("Great that you're working on pre-approval! Have you heard back from your lender yet?"),
         "pre_approved": (
-            "Awesome, you're pre-approved! That puts you in a strong "
-            "position. Let's find your perfect home."
+            "Awesome, you're pre-approved! That puts you in a strong position. Let's find your perfect home."
         ),
     }
 
@@ -102,9 +100,7 @@ class MortgageTracker:
             lender_suggestions=self.DEFAULT_LENDERS,
         )
 
-    async def create_prequalification_referral(
-        self, buyer_id: str, lender: str
-    ) -> Referral:
+    async def create_prequalification_referral(self, buyer_id: str, lender: str) -> Referral:
         """Create a lender referral for a buyer."""
         referral_id = f"ref-{uuid.uuid4().hex[:8]}"
         referral = Referral(

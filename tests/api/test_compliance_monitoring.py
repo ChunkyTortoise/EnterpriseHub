@@ -109,8 +109,8 @@ def mock_privacy():
 
 # ===== ROADMAP-041: Compliance Violation Scanner =====
 
-class TestTCPAComplianceCheck:
 
+class TestTCPAComplianceCheck:
     async def test_no_violations_below_threshold(self, mock_audit):
         mock_audit.search_audit_records.side_effect = [
             [FakeAuditRecord()],
@@ -139,7 +139,6 @@ class TestTCPAComplianceCheck:
 
 
 class TestFairHousingCheck:
-
     async def test_clean_messages_no_violations(self, mock_audit):
         mock_audit.search_audit_records.return_value = [
             FakeAuditRecord(details={"content": "Great property at 123 Main St"})
@@ -159,19 +158,14 @@ class TestFairHousingCheck:
 
 
 class TestDRECheck:
-
     async def test_human_agent_no_violation(self, mock_audit):
-        mock_audit.search_audit_records.return_value = [
-            FakeAuditRecord(user_id="agent_john")
-        ]
+        mock_audit.search_audit_records.return_value = [FakeAuditRecord(user_id="agent_john")]
         with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit):
             violations = await _check_dre_compliance()
         assert len(violations) == 0
 
     async def test_bot_violation(self, mock_audit):
-        mock_audit.search_audit_records.return_value = [
-            FakeAuditRecord(user_id="bot_seller")
-        ]
+        mock_audit.search_audit_records.return_value = [FakeAuditRecord(user_id="bot_seller")]
         with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit):
             violations = await _check_dre_compliance()
         assert len(violations) >= 1
@@ -180,15 +174,17 @@ class TestDRECheck:
 
 # ===== ROADMAP-042: Security Anomaly Detection =====
 
-class TestSecurityAnomalies:
 
+class TestSecurityAnomalies:
     async def test_below_threshold_no_alert(self, mock_audit, mock_ws):
         mock_audit.search_audit_records.side_effect = [
             [FakeAuditRecord()] * 3,
             [],
         ]
-        with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit), \
-             patch("ghl_real_estate_ai.api.routes.compliance.ws_manager", mock_ws):
+        with (
+            patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit),
+            patch("ghl_real_estate_ai.api.routes.compliance.ws_manager", mock_ws),
+        ):
             await _scan_security_anomalies()
         mock_ws.broadcast_to_group.assert_not_called()
 
@@ -197,8 +193,10 @@ class TestSecurityAnomalies:
             [FakeAuditRecord()] * 10,
             [],
         ]
-        with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit), \
-             patch("ghl_real_estate_ai.api.routes.compliance.ws_manager", mock_ws):
+        with (
+            patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit),
+            patch("ghl_real_estate_ai.api.routes.compliance.ws_manager", mock_ws),
+        ):
             await _scan_security_anomalies()
         mock_ws.broadcast_to_group.assert_called_once()
         event = mock_ws.broadcast_to_group.call_args[0][1]["event"]
@@ -209,54 +207,66 @@ class TestSecurityAnomalies:
             [],
             [FakeAuditRecord()] * 60,
         ]
-        with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit), \
-             patch("ghl_real_estate_ai.api.routes.compliance.ws_manager", mock_ws):
+        with (
+            patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit),
+            patch("ghl_real_estate_ai.api.routes.compliance.ws_manager", mock_ws),
+        ):
             await _scan_security_anomalies()
         assert mock_audit.log_audit_event.call_count >= 1
 
 
 # ===== ROADMAP-043: Privacy Request Processing =====
 
-class TestPrivacyRequests:
 
+class TestPrivacyRequests:
     async def test_no_pending_requests(self, mock_audit, mock_privacy):
         mock_audit.search_audit_records.return_value = []
-        with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit), \
-             patch("ghl_real_estate_ai.api.routes.compliance.privacy_system", mock_privacy):
+        with (
+            patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit),
+            patch("ghl_real_estate_ai.api.routes.compliance.privacy_system", mock_privacy),
+        ):
             await _process_privacy_requests()
         mock_privacy.process_privacy_request.assert_not_called()
 
     async def test_deletion_request(self, mock_audit, mock_privacy):
         mock_audit.search_audit_records.return_value = [
-            FakeAuditRecord(details={
-                "request_type": "deletion",
-                "subject_identifiers": {"email": "test@example.com"},
-                "regulation": "gdpr",
-            })
+            FakeAuditRecord(
+                details={
+                    "request_type": "deletion",
+                    "subject_identifiers": {"email": "test@example.com"},
+                    "regulation": "gdpr",
+                }
+            )
         ]
-        with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit), \
-             patch("ghl_real_estate_ai.api.routes.compliance.privacy_system", mock_privacy):
+        with (
+            patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit),
+            patch("ghl_real_estate_ai.api.routes.compliance.privacy_system", mock_privacy),
+        ):
             await _process_privacy_requests()
         mock_privacy.process_privacy_request.assert_called_once()
 
     async def test_export_request(self, mock_audit, mock_privacy):
         mock_audit.search_audit_records.return_value = [
-            FakeAuditRecord(details={
-                "request_type": "export",
-                "subject_identifiers": {"email": "export@example.com"},
-                "regulation": "ccpa",
-            })
+            FakeAuditRecord(
+                details={
+                    "request_type": "export",
+                    "subject_identifiers": {"email": "export@example.com"},
+                    "regulation": "ccpa",
+                }
+            )
         ]
-        with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit), \
-             patch("ghl_real_estate_ai.api.routes.compliance.privacy_system", mock_privacy):
+        with (
+            patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit),
+            patch("ghl_real_estate_ai.api.routes.compliance.privacy_system", mock_privacy),
+        ):
             await _process_privacy_requests()
         mock_privacy.process_privacy_request.assert_called_once()
 
 
 # ===== ROADMAP-044: Audit Trail Archival =====
 
-class TestAuditArchival:
 
+class TestAuditArchival:
     async def test_no_old_records_nothing_archived(self, mock_audit):
         mock_audit.search_audit_records.return_value = []
         with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit):
@@ -273,9 +283,7 @@ class TestAuditArchival:
         assert mock_audit.log_audit_event.call_count >= 1
 
     async def test_multiple_records_archived(self, mock_audit):
-        mock_audit.search_audit_records.return_value = [
-            FakeAuditRecord(record_id=f"old_{i}") for i in range(3)
-        ]
+        mock_audit.search_audit_records.return_value = [FakeAuditRecord(record_id=f"old_{i}") for i in range(3)]
         with patch("ghl_real_estate_ai.api.routes.compliance.audit_system", mock_audit):
             await _aggregate_and_archive_audit_trail()
         assert mock_audit.create_compliance_document.call_count == 3

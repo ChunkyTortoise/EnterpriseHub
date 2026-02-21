@@ -41,6 +41,7 @@ try:
         get_trace_id,
         propagate_trace_context,
     )
+
     WORKFLOW_TRACING_AVAILABLE = True
 except ImportError:
     WORKFLOW_TRACING_AVAILABLE = False
@@ -51,6 +52,7 @@ try:
     from ghl_real_estate_ai.observability.prometheus_exporter import (
         get_prometheus_exporter,
     )
+
     _PROM_EXPORTER_AVAILABLE = True
 except ImportError:
     _PROM_EXPORTER_AVAILABLE = False
@@ -58,6 +60,7 @@ except ImportError:
 # Phase 3 Loop 3: GHL client for storing handoff context
 try:
     from ghl_real_estate_ai.services.ghl_client import GHLClient
+
     GHL_CLIENT_AVAILABLE = True
 except ImportError:
     GHL_CLIENT_AVAILABLE = False
@@ -217,6 +220,7 @@ class JorgeHandoffService:
         # Get handoff context field ID from settings if available
         try:
             from ghl_real_estate_ai.ghl_utils.config import settings
+
             self._handoff_context_field_id = getattr(settings, "CUSTOM_FIELD_HANDOFF_CONTEXT", "handoff_context")
         except ImportError:
             self._handoff_context_field_id = "handoff_context"
@@ -272,7 +276,7 @@ class JorgeHandoffService:
             from ghl_real_estate_ai.services.jorge.handoff_card_generator import HandoffCardGenerator
 
             generator = HandoffCardGenerator()
-            
+
             # Build handoff data for card generation
             handoff_data = {
                 "contact_id": contact_id,
@@ -309,10 +313,7 @@ class JorgeHandoffService:
             # Also generate PDF bytes for the convenience function if needed
             pdf_bytes = generator.generate_pdf(card)
 
-            logger.info(
-                f"Generated handoff card for {contact_id} "
-                f"({len(pdf_bytes)} bytes, {generation_time_ms:.1f}ms)"
-            )
+            logger.info(f"Generated handoff card for {contact_id} ({len(pdf_bytes)} bytes, {generation_time_ms:.1f}ms)")
 
             # Store metadata
             card_metadata = {
@@ -335,11 +336,7 @@ class JorgeHandoffService:
 
     # ── Phase 3 Loop 3: Handoff Context Storage ──────────────────────
 
-    async def _store_handoff_context(
-        self,
-        contact_id: str,
-        enriched_context: EnrichedHandoffContext
-    ) -> bool:
+    async def _store_handoff_context(self, contact_id: str, enriched_context: EnrichedHandoffContext) -> bool:
         """Store enriched handoff context in GHL custom field with 24h TTL.
 
         Args:
@@ -363,9 +360,7 @@ class JorgeHandoffService:
             # Store in GHL custom field (JSON-serialized)
             # Field name: handoff_context (or configurable ID)
             await self._ghl_client.update_custom_field(
-                contact_id=contact_id,
-                field_id=self._handoff_context_field_id,
-                value=json.dumps(context_dict)
+                contact_id=contact_id, field_id=self._handoff_context_field_id, value=json.dumps(context_dict)
             )
 
             logger.info(f"Stored handoff context for contact {contact_id} (TTL: 24h)")
@@ -375,10 +370,7 @@ class JorgeHandoffService:
             logger.error(f"Failed to store handoff context for {contact_id}: {e}")
             return False
 
-    async def retrieve_handoff_context(
-        self,
-        contact_id: str
-    ) -> Optional[EnrichedHandoffContext]:
+    async def retrieve_handoff_context(self, contact_id: str) -> Optional[EnrichedHandoffContext]:
         """Retrieve and validate handoff context from GHL custom field.
 
         Args:
@@ -401,8 +393,7 @@ class JorgeHandoffService:
 
             custom_fields = contact.get("customFields", [])
             handoff_field = next(
-                (field for field in custom_fields if field.get("id") == self._handoff_context_field_id),
-                None
+                (field for field in custom_fields if field.get("id") == self._handoff_context_field_id), None
             )
 
             if not handoff_field or not handoff_field.get("value"):
@@ -414,7 +405,7 @@ class JorgeHandoffService:
             # Validate timestamp (24h TTL)
             timestamp_str = context_dict.get("timestamp")
             if timestamp_str:
-                context_time = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                context_time = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
                 age = datetime.now(timezone.utc) - context_time
                 if age > timedelta(hours=24):
                     logger.info(f"Handoff context for {contact_id} is stale ({age.total_seconds() / 3600:.1f}h)")
@@ -507,12 +498,14 @@ class JorgeHandoffService:
                 if pair_key not in self._handoff_outcomes:
                     self._handoff_outcomes[pair_key] = []
 
-                self._handoff_outcomes[pair_key].append({
-                    "contact_id": row["contact_id"],
-                    "outcome": row["outcome"],
-                    "timestamp": row["timestamp"],
-                    "metadata": row.get("metadata") or {},
-                })
+                self._handoff_outcomes[pair_key].append(
+                    {
+                        "contact_id": row["contact_id"],
+                        "outcome": row["outcome"],
+                        "timestamp": row["timestamp"],
+                        "metadata": row.get("metadata") or {},
+                    }
+                )
                 loaded += 1
         except Exception as exc:
             logger.warning("Failed to load handoff outcomes from DB: %s", exc)
@@ -840,13 +833,15 @@ class JorgeHandoffService:
         records: List[Dict[str, Any]] = []
         for route, outcomes in cls._handoff_outcomes.items():
             for outcome in outcomes:
-                records.append({
-                    "route": route,
-                    "contact_id": outcome.get("contact_id", ""),
-                    "outcome": outcome["outcome"],
-                    "timestamp": outcome["timestamp"],
-                    "metadata": outcome.get("metadata", {}),
-                })
+                records.append(
+                    {
+                        "route": route,
+                        "contact_id": outcome.get("contact_id", ""),
+                        "outcome": outcome["outcome"],
+                        "timestamp": outcome["timestamp"],
+                        "metadata": outcome.get("metadata", {}),
+                    }
+                )
         logger.info("Exported %d handoff outcome records", len(records))
         return records
 
@@ -866,12 +861,14 @@ class JorgeHandoffService:
             route = record["route"]
             if route not in cls._handoff_outcomes:
                 cls._handoff_outcomes[route] = []
-            cls._handoff_outcomes[route].append({
-                "contact_id": record.get("contact_id", ""),
-                "outcome": record["outcome"],
-                "timestamp": record["timestamp"],
-                "metadata": record.get("metadata", {}),
-            })
+            cls._handoff_outcomes[route].append(
+                {
+                    "contact_id": record.get("contact_id", ""),
+                    "outcome": record["outcome"],
+                    "timestamp": record["timestamp"],
+                    "metadata": record.get("metadata", {}),
+                }
+            )
             imported += 1
         logger.info("Imported %d handoff outcome records", imported)
         return imported
@@ -976,6 +973,7 @@ class JorgeHandoffService:
 
         # Build enriched handoff context from intent profile
         from datetime import datetime, timezone
+
         enriched = EnrichedHandoffContext(
             source_qualification_score=intent_profile.frs.total_score,
             source_temperature=intent_profile.frs.classification.lower(),
@@ -1196,6 +1194,7 @@ class JorgeHandoffService:
 
         # Build enriched handoff context from intent signals
         from datetime import datetime, timezone
+
         enriched = EnrichedHandoffContext(
             source_qualification_score=intent_signals.get("qualification_score", 0.0),
             source_temperature=intent_signals.get("temperature", "cold"),
@@ -1269,9 +1268,7 @@ class JorgeHandoffService:
 
             # Check performance-based routing FIRST (before circular/rate checks)
             if self._handoff_router is not None:
-                deferral_decision = await self._handoff_router.should_defer_handoff(
-                    target_bot=decision.target_bot
-                )
+                deferral_decision = await self._handoff_router.should_defer_handoff(target_bot=decision.target_bot)
                 if deferral_decision.should_defer:
                     # Defer handoff and schedule retry
                     deferral_result = await self._handoff_router.defer_handoff(
@@ -1372,10 +1369,12 @@ class JorgeHandoffService:
                 location_id=location_id,
             )
             if card_metadata:
-                actions.append({
-                    "type": "handoff_card_generated",
-                    "card_metadata": card_metadata,
-                })
+                actions.append(
+                    {
+                        "type": "handoff_card_generated",
+                        "card_metadata": card_metadata,
+                    }
+                )
 
             return actions
         finally:
@@ -1526,9 +1525,7 @@ class JorgeHandoffService:
             except RuntimeError:
                 logger.debug("No event loop for handoff outcome GHL write-through")
             except Exception as e:
-                logger.warning(
-                    f"Failed to publish handoff outcome to GHL for contact {contact_id}: {e}"
-                )
+                logger.warning(f"Failed to publish handoff outcome to GHL for contact {contact_id}: {e}")
 
         logger.info(f"Recorded handoff outcome: {pair_key} for contact {contact_id} -> {outcome}")
 
@@ -1646,7 +1643,9 @@ class JorgeHandoffService:
         return signals
 
     @classmethod
-    def extract_intent_signals_from_history_cls(cls, conversation_history: list[ConversationMessage]) -> dict[str, float]:
+    def extract_intent_signals_from_history_cls(
+        cls, conversation_history: list[ConversationMessage]
+    ) -> dict[str, float]:
         """Backward-compatible classmethod wrapper for extract_intent_signals_from_history.
 
         Uses class-level patterns (no config). Prefer the instance method when

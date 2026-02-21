@@ -162,21 +162,11 @@ class ChatbotWidget:
         scores: QualificationScores = st.session_state["scores"]
 
         # Count keyword matches per category
-        hot_matches = sum(
-            1 for kw in SCORE_TRIGGERS["hot_keywords"] if kw in msg_lower
-        )
-        warm_matches = sum(
-            1 for kw in SCORE_TRIGGERS["warm_keywords"] if kw in msg_lower
-        )
-        financial_matches = sum(
-            1 for kw in SCORE_TRIGGERS["financial_keywords"] if kw in msg_lower
-        )
-        urgency_matches = sum(
-            1 for kw in SCORE_TRIGGERS["urgency_keywords"] if kw in msg_lower
-        )
-        motivation_matches = sum(
-            1 for kw in SCORE_TRIGGERS["motivation_keywords"] if kw in msg_lower
-        )
+        hot_matches = sum(1 for kw in SCORE_TRIGGERS["hot_keywords"] if kw in msg_lower)
+        warm_matches = sum(1 for kw in SCORE_TRIGGERS["warm_keywords"] if kw in msg_lower)
+        financial_matches = sum(1 for kw in SCORE_TRIGGERS["financial_keywords"] if kw in msg_lower)
+        urgency_matches = sum(1 for kw in SCORE_TRIGGERS["urgency_keywords"] if kw in msg_lower)
+        motivation_matches = sum(1 for kw in SCORE_TRIGGERS["motivation_keywords"] if kw in msg_lower)
 
         # Update scores (capped at 100 for lead_score, 1.0 for floats)
         if hot_matches:
@@ -184,14 +174,10 @@ class ChatbotWidget:
         if warm_matches:
             scores.lead_score = min(100, scores.lead_score + warm_matches * 8)
 
-        scores.financial_readiness = min(
-            1.0, scores.financial_readiness + financial_matches * 0.25
-        )
+        scores.financial_readiness = min(1.0, scores.financial_readiness + financial_matches * 0.25)
         scores.urgency = min(1.0, scores.urgency + urgency_matches * 0.3)
         scores.motivation = min(1.0, scores.motivation + motivation_matches * 0.25)
-        scores.engagement_level = min(
-            1.0, 0.1 * st.session_state["message_count"]
-        )
+        scores.engagement_level = min(1.0, 0.1 * st.session_state["message_count"])
 
         # Update temperature based on lead score
         if scores.lead_score >= 80:
@@ -254,7 +240,7 @@ class ChatbotWidget:
             "seller": "\U0001f4b0 Seller Bot",
         }
         default_label = "\U0001f3af Lead Bot"
-        bot_label = bot_labels.get(st.session_state['bot_type'], default_label)
+        bot_label = bot_labels.get(st.session_state["bot_type"], default_label)
         st.sidebar.markdown(f"**Active Bot:** {bot_label}")
 
     def render_chat(self) -> None:
@@ -267,9 +253,7 @@ class ChatbotWidget:
         # Chat input
         if prompt := st.chat_input("Type your message..."):
             # Add user message
-            st.session_state["messages"].append(
-                {"role": "user", "content": prompt}
-            )
+            st.session_state["messages"].append({"role": "user", "content": prompt})
             st.session_state["message_count"] += 1
 
             # Update qualification scores
@@ -281,9 +265,7 @@ class ChatbotWidget:
 
             # Get and display bot response
             response = self._get_mock_response()
-            st.session_state["messages"].append(
-                {"role": "assistant", "content": response}
-            )
+            st.session_state["messages"].append({"role": "assistant", "content": response})
             with st.chat_message("assistant"):
                 st.markdown(response)
 

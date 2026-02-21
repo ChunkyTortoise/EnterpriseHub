@@ -63,11 +63,7 @@ class RequestResponsePattern(CommunicationPattern):
         self._pending_requests: dict[str, asyncio.Future] = {}
 
     async def request(
-        self,
-        bus: MessageBus,
-        sender: str,
-        receiver: str,
-        payload: dict[str, Any]
+        self, bus: MessageBus, sender: str, receiver: str, payload: dict[str, Any]
     ) -> MessageEnvelope:
         """Send a request and wait for response.
 
@@ -148,7 +144,7 @@ class DelegationPattern(CommunicationPattern):
         sender: str,
         receiver: str,
         task: dict[str, Any],
-        context: dict[str, Any] | None = None
+        context: dict[str, Any] | None = None,
     ) -> None:
         """Delegate a task to another agent.
 
@@ -205,11 +201,7 @@ class PubSubPattern(CommunicationPattern):
     """
 
     async def publish_event(
-        self,
-        bus: MessageBus,
-        sender: str,
-        event_type: str,
-        data: dict[str, Any]
+        self, bus: MessageBus, sender: str, event_type: str, data: dict[str, Any]
     ) -> None:
         """Publish an event.
 
@@ -227,12 +219,7 @@ class PubSubPattern(CommunicationPattern):
         )
         await bus.publish(f"events.{event_type}", message)
 
-    def subscribe_to_event(
-        self,
-        bus: MessageBus,
-        event_type: str,
-        handler: Callable
-    ) -> None:
+    def subscribe_to_event(self, bus: MessageBus, event_type: str, handler: Callable) -> None:
         """Subscribe to an event type.
 
         Args:

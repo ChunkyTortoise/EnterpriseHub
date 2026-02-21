@@ -26,11 +26,11 @@ class GateDecision:
     passed: bool
     frs_score: float
     pcs_score: float
-    lead_type: str                      # "buyer" | "seller" | "ambiguous" | "unknown"
-    confidence: float                   # max(buyer_confidence, seller_confidence)
+    lead_type: str  # "buyer" | "seller" | "ambiguous" | "unknown"
+    confidence: float  # max(buyer_confidence, seller_confidence)
     intent_profile: "LeadIntentProfile"
-    handoff_target: Optional[str]       # "lead_bot" | "buyer_bot" | "seller_bot"
-    disqualify_reason: Optional[str]    # set when passed=False
+    handoff_target: Optional[str]  # "lead_bot" | "buyer_bot" | "seller_bot"
+    disqualify_reason: Optional[str]  # set when passed=False
 
 
 class QualificationGate:
@@ -97,10 +97,7 @@ class QualificationGate:
             )
 
         reason = _build_disqualify_reason(frs_score, confidence, self.FRS_THRESHOLD, self.CONF_THRESHOLD)
-        logger.info(
-            f"[SDR] Gate FAILED contact={contact_id} "
-            f"frs={frs_score:.1f} conf={confidence:.2f} reason={reason}"
-        )
+        logger.info(f"[SDR] Gate FAILED contact={contact_id} frs={frs_score:.1f} conf={confidence:.2f} reason={reason}")
         return GateDecision(
             passed=False,
             frs_score=frs_score,
@@ -113,9 +110,7 @@ class QualificationGate:
         )
 
     @staticmethod
-    def _select_handoff_target(
-        buyer_conf: float, seller_conf: float, lead_type: str
-    ) -> str:
+    def _select_handoff_target(buyer_conf: float, seller_conf: float, lead_type: str) -> str:
         """Select the Jorge bot to route to based on intent signals."""
         if buyer_conf >= QualificationGate.CONF_THRESHOLD and buyer_conf >= seller_conf:
             return "buyer_bot"
@@ -129,9 +124,7 @@ class QualificationGate:
         return "lead_bot"
 
 
-def _build_disqualify_reason(
-    frs_score: float, confidence: float, frs_threshold: float, conf_threshold: float
-) -> str:
+def _build_disqualify_reason(frs_score: float, confidence: float, frs_threshold: float, conf_threshold: float) -> str:
     parts = []
     if frs_score < frs_threshold:
         parts.append(f"FRS {frs_score:.1f} < {frs_threshold}")

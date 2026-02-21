@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 
@@ -41,7 +40,9 @@ def render_rlhf_loop():
 
         with col_right:
             st.markdown("**AI Proposed Match:**")
-            st.code("Address: 742 Evergreen Terrace\nPrice: $815k\nNote: Small yard, but across from Victoria Gardens Park")
+            st.code(
+                "Address: 742 Evergreen Terrace\nPrice: $815k\nNote: Small yard, but across from Victoria Gardens Park"
+            )
 
         st.markdown(
             "**AI Reasoning:** 'The proximity to the park compensates for the smaller private yard, offering superior dog-walking utility.'"

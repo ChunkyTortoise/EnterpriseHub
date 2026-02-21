@@ -61,8 +61,7 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
 
 # Graceful fallback when Claude API is unavailable (timeout / circuit breaker)
 LLM_FALLBACK_MSG = (
-    "I'm having a brief connection issue — I'll follow up with you shortly. "
-    "You can also reach Jorge directly."
+    "I'm having a brief connection issue — I'll follow up with you shortly. You can also reach Jorge directly."
 )
 
 # Initialize services for internal use and testing
@@ -250,7 +249,9 @@ def _select_slot_from_message(message: str, options: list[dict]) -> dict | None:
     return None
 
 
-async def _get_tenant_ghl_client(location_id: str, tenant_service: TenantService, ghl_client_default: GHLClient) -> GHLClient:
+async def _get_tenant_ghl_client(
+    location_id: str, tenant_service: TenantService, ghl_client_default: GHLClient
+) -> GHLClient:
     tenant_config = await tenant_service.get_tenant_config(location_id)
     if tenant_config and tenant_config.get("ghl_api_key"):
         return GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
@@ -260,8 +261,8 @@ async def _get_tenant_ghl_client(location_id: str, tenant_service: TenantService
 @router.post("/tag-webhook", response_model=GHLWebhookResponse)
 @verify_webhook("ghl")
 async def handle_ghl_tag_webhook(
-    request: Request, 
-    event: GHLTagWebhookEvent, 
+    request: Request,
+    event: GHLTagWebhookEvent,
     background_tasks: BackgroundTasks,
     conversation_manager: ConversationManager = Depends(_get_conversation_manager),
     tenant_service: TenantService = Depends(_get_tenant_service),
@@ -323,8 +324,8 @@ async def handle_ghl_tag_webhook(
 @router.post("/webhook", response_model=GHLWebhookResponse)
 @verify_webhook("ghl")
 async def handle_ghl_webhook(
-    request: Request, 
-    event: GHLWebhookEvent, 
+    request: Request,
+    event: GHLWebhookEvent,
     background_tasks: BackgroundTasks,
     conversation_manager: ConversationManager = Depends(_get_conversation_manager),
     ghl_client_default: GHLClient = Depends(_get_ghl_client_default),
@@ -410,8 +411,7 @@ async def handle_ghl_webhook(
                 event.contact.email = contact_data.get("email", "")
                 event.contact.tags = tags
             logger.info(
-                f"Fetched {len(tags)} tag(s) from GHL API for contact {contact_id} "
-                f"(not included in webhook payload)"
+                f"Fetched {len(tags)} tag(s) from GHL API for contact {contact_id} (not included in webhook payload)"
             )
         except Exception as _tag_fetch_err:
             logger.warning(
@@ -984,11 +984,13 @@ async def handle_ghl_webhook(
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
 
             if buyer_temp == "hot" and jorge_settings.hot_buyer_workflow_id:
-                actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW,
-                                         workflow_id=jorge_settings.hot_buyer_workflow_id))
+                actions.append(
+                    GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.hot_buyer_workflow_id)
+                )
             elif buyer_temp == "warm" and jorge_settings.warm_buyer_workflow_id:
-                actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW,
-                                         workflow_id=jorge_settings.warm_buyer_workflow_id))
+                actions.append(
+                    GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.warm_buyer_workflow_id)
+                )
 
             # Track buyer analytics
             background_tasks.add_task(
@@ -1118,7 +1120,7 @@ async def handle_ghl_webhook(
                 _handle_billing_usage,
                 contact_id,
                 location_id,
-                int(buyer_result.get("financial_readiness_score", 0) / 14), # Estimate question count
+                int(buyer_result.get("financial_readiness_score", 0) / 14),  # Estimate question count
                 buyer_result.get("extracted_preferences", {}),
                 buyer_temp,
                 subscription_manager,
@@ -1210,7 +1212,9 @@ async def handle_ghl_webhook(
 
                 # Check for Jorge handoff signals
                 handoff_triggered = False
-                handoff_signals = lead_result.get("jorge_handoff_recommended") or lead_result.get("jorge_handoff_eligible")
+                handoff_signals = lead_result.get("jorge_handoff_recommended") or lead_result.get(
+                    "jorge_handoff_eligible"
+                )
 
                 # Track lead analytics
                 background_tasks.add_task(
@@ -1227,7 +1231,9 @@ async def handle_ghl_webhook(
                 )
 
                 # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
-                final_lead_msg = lead_result.get("response_content", "Thanks for reaching out! How can I help you today?")
+                final_lead_msg = lead_result.get(
+                    "response_content", "Thanks for reaching out! How can I help you today?"
+                )
                 pipeline_context = ProcessingContext(
                     contact_id=contact_id,
                     bot_mode="lead",
@@ -1245,7 +1251,9 @@ async def handle_ghl_webhook(
                 )
 
                 if status == ComplianceStatus.BLOCKED:
-                    logger.warning(f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}")
+                    logger.warning(
+                        f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}"
+                    )
                     final_lead_msg = "Thanks for reaching out! How can I help you today?"
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
@@ -1362,9 +1370,9 @@ async def handle_ghl_webhook(
 
 
 async def prepare_ghl_actions(
-    extracted_data: dict, 
-    lead_score: int, 
-    event: GHLWebhookEvent, 
+    extracted_data: dict,
+    lead_score: int,
+    event: GHLWebhookEvent,
     source_attribution=None,
     lead_scorer: LeadScorer = Depends(_get_lead_scorer),
 ) -> list[GHLAction]:
@@ -1585,7 +1593,9 @@ class InitiateQualificationRequest(BaseModel):
 @router.post("/initiate-qualification")
 @verify_webhook("ghl")
 async def initiate_qualification(
-    request: Request, body: InitiateQualificationRequest, background_tasks: BackgroundTasks,
+    request: Request,
+    body: InitiateQualificationRequest,
+    background_tasks: BackgroundTasks,
     ghl_client_default: GHLClient = Depends(_get_ghl_client_default),
 ):
     """
@@ -1649,8 +1659,8 @@ async def health_check():
 
 
 async def _calculate_lead_pricing(
-    contact_id: str, 
-    location_id: str, 
+    contact_id: str,
+    location_id: str,
     context: dict,
     pricing_optimizer: DynamicPricingOptimizer,
     analytics_service: AnalyticsService,
@@ -1706,10 +1716,10 @@ async def _calculate_lead_pricing(
 
 
 async def _handle_billing_usage(
-    contact_id: str, 
-    location_id: str, 
-    lead_score: int, 
-    extracted_data: dict, 
+    contact_id: str,
+    location_id: str,
+    lead_score: int,
+    extracted_data: dict,
     classification: str,
     subscription_manager: SubscriptionManager,
     pricing_optimizer: DynamicPricingOptimizer,
@@ -1746,8 +1756,8 @@ async def _handle_billing_usage(
 
         # Calculate lead price using dynamic pricing
         pricing_result = await pricing_optimizer.calculate_lead_price(
-            contact_id=contact_id, 
-            location_id=location_id, 
+            contact_id=contact_id,
+            location_id=location_id,
             context={
                 "questions_answered": lead_score,
                 "extracted_data": extracted_data,

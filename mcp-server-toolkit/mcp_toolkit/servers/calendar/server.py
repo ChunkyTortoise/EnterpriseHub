@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Protocol
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.calendar.availability import AvailabilityFinder, TimeSlot, BusinessHours
+from mcp_toolkit.servers.calendar.availability import AvailabilityFinder, BusinessHours, TimeSlot
 
 mcp = EnhancedMCP("calendar")
 
@@ -26,14 +26,13 @@ class CalendarEvent:
 
 
 class CalendarProvider(Protocol):
-    async def list_events(self, start: datetime, end: datetime, calendar_id: str) -> list[CalendarEvent]:
-        ...
+    async def list_events(
+        self, start: datetime, end: datetime, calendar_id: str
+    ) -> list[CalendarEvent]: ...
 
-    async def create_event(self, event: CalendarEvent) -> CalendarEvent:
-        ...
+    async def create_event(self, event: CalendarEvent) -> CalendarEvent: ...
 
-    async def delete_event(self, event_id: str) -> bool:
-        ...
+    async def delete_event(self, event_id: str) -> bool: ...
 
 
 class MockCalendarProvider:
@@ -41,9 +40,12 @@ class MockCalendarProvider:
         self._events: dict[str, CalendarEvent] = {}
         self._counter = 0
 
-    async def list_events(self, start: datetime, end: datetime, calendar_id: str = "default") -> list[CalendarEvent]:
+    async def list_events(
+        self, start: datetime, end: datetime, calendar_id: str = "default"
+    ) -> list[CalendarEvent]:
         return [
-            e for e in self._events.values()
+            e
+            for e in self._events.values()
             if e.start >= start and e.end <= end and e.calendar_id == calendar_id
         ]
 
@@ -63,7 +65,9 @@ class MockCalendarProvider:
 _provider: CalendarProvider = MockCalendarProvider()
 
 
-def configure(provider: CalendarProvider | None = None, business_hours: BusinessHours | None = None) -> None:
+def configure(
+    provider: CalendarProvider | None = None, business_hours: BusinessHours | None = None
+) -> None:
     global _provider, _availability_finder
     if provider:
         _provider = provider
@@ -149,10 +153,7 @@ async def find_free_slots(
     end = datetime.fromisoformat(end_date)
     events = await _provider.list_events(start, end, calendar_id)
 
-    busy_slots = [
-        TimeSlot(start=e.start, end=e.end, calendar_id=e.calendar_id)
-        for e in events
-    ]
+    busy_slots = [TimeSlot(start=e.start, end=e.end, calendar_id=e.calendar_id) for e in events]
 
     free = _availability_finder.find_free_slots(start, end, busy_slots, duration_minutes)
 
@@ -161,7 +162,9 @@ async def find_free_slots(
 
     # Limit to first 20 slots
     display = free[:20]
-    lines = [f"**{len(free)} free {duration_minutes}-min slots found** (showing first {len(display)}):"]
+    lines = [
+        f"**{len(free)} free {duration_minutes}-min slots found** (showing first {len(display)}):"
+    ]
     for slot in display:
         lines.append(f"- {slot.start.strftime('%Y-%m-%d %H:%M')} - {slot.end.strftime('%H:%M')}")
     return "\n".join(lines)

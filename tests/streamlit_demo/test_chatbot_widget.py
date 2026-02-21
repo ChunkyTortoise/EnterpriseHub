@@ -187,9 +187,7 @@ class TestChatbotWidget:
 
     def test_reset_clears_state(self, mock_st):
         widget = ChatbotWidget()
-        mock_st.session_state["messages"] = [
-            {"role": "user", "content": "hi"}
-        ]
+        mock_st.session_state["messages"] = [{"role": "user", "content": "hi"}]
         mock_st.session_state["message_count"] = 5
         mock_st.session_state["scores"].lead_score = 80
         widget.reset()
@@ -201,8 +199,7 @@ class TestChatbotWidget:
         widget = ChatbotWidget()
         mock_st.session_state["message_count"] = 1
         widget._update_scores(
-            "pre-approved ready to buy schedule showing urgent "
-            "immediately offer this week cash buyer"
+            "pre-approved ready to buy schedule showing urgent immediately offer this week cash buyer"
         )
         scores = mock_st.session_state["scores"]
         assert scores.lead_score <= 100
@@ -223,9 +220,7 @@ class TestChatbotWidget:
         assert scores.temperature == "Cold" or scores.temperature == "Warm"
 
         # Push into hot range
-        widget._update_scores(
-            "pre-approved ready to buy schedule showing urgent immediately offer"
-        )
+        widget._update_scores("pre-approved ready to buy schedule showing urgent immediately offer")
         assert scores.temperature in ("Warm", "Hot")
 
     def test_engagement_level_from_message_count(self, mock_st):

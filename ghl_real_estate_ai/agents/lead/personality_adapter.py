@@ -1,6 +1,7 @@
 """
 Personality Adapter for adapting messaging based on lead personality and preferences.
 """
+
 from typing import Dict, List
 
 from ghl_real_estate_ai.agents.lead.config import ResponsePattern

@@ -226,8 +226,7 @@ class TestJorgeRevenuePlatformE2E:
 
             # STEP 3: Dynamic pricing calculation (pass extracted_preferences so lead_scorer can score properly)
             pricing_result = await pricing_optimizer.calculate_lead_price(
-                contact_id=contact_id, location_id=jorge_location_id,
-                context={"extracted_preferences": hot_lead_prefs}
+                contact_id=contact_id, location_id=jorge_location_id, context={"extracted_preferences": hot_lead_prefs}
             )
 
             # Validate pricing (base_price=$1, hot multiplier=3.5x, so final_price is modest but correct)
@@ -355,7 +354,9 @@ class TestJorgeRevenuePlatformE2E:
                 "contact_id": sample_hot_lead_webhook.contact_id,
                 "location_id": jorge_location_id,
                 # Pass extracted_preferences so lead_scorer can compute score >= 3 (hot tier)
-                "context": {"extracted_preferences": {"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP"}},
+                "context": {
+                    "extracted_preferences": {"budget": "$400k", "location": "Rancho Cucamonga", "timeline": "ASAP"}
+                },
             }
 
             pricing_response = client.post("/api/pricing/calculate", json=pricing_request)
@@ -680,12 +681,19 @@ class TestJorgeRevenuePlatformE2E:
 
             # STEP 2: Golden lead detection — use analyze_lead_intelligence with extracted_preferences
             # so golden_detector.lead_scorer returns jorge_score questions answered
-            hot_prefs = {"budget": "$350k", "location": "Rancho Cucamonga", "timeline": "2 months", "financing": "pre-approved"}
+            hot_prefs = {
+                "budget": "$350k",
+                "location": "Rancho Cucamonga",
+                "timeline": "2 months",
+                "financing": "pre-approved",
+            }
             # conversation_history must be list of dicts with "content" key
             detection_result = await golden_detector.analyze_lead_intelligence(
                 lead_data={
                     "contact_id": contact_id,
-                    "conversation_history": [{"content": "Looking for 3BR house, Budget $350k, pre-approved financing"}],
+                    "conversation_history": [
+                        {"content": "Looking for 3BR house, Budget $350k, pre-approved financing"}
+                    ],
                     "extracted_preferences": hot_prefs,
                 },
                 tenant_id=jorge_location_id,

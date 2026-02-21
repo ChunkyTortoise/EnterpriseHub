@@ -810,9 +810,7 @@ class ABTestingService:
             winner = sorted_variants[0]
             control = sorted_variants[1]
             if control.conversion_rate > 0:
-                lift_percent = (
-                    (winner.conversion_rate - control.conversion_rate) / control.conversion_rate
-                ) * 100.0
+                lift_percent = ((winner.conversion_rate - control.conversion_rate) / control.conversion_rate) * 100.0
 
         return {
             "experiment_id": results.experiment_id,

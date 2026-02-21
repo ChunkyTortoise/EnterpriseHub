@@ -1,6 +1,7 @@
 """Tests for database query MCP server end-to-end."""
 
 import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
 from mcp_toolkit.servers.database_query import server as db_server
 from mcp_toolkit.servers.database_query.sql_generator import MockLLMProvider
@@ -33,9 +34,7 @@ class TestQueryDatabaseTool:
         assert "```sql" in result
 
     async def test_explain_returns_sql(self, configured_server):
-        result = await configured_server.call_tool(
-            "explain_query", {"question": "How many users?"}
-        )
+        result = await configured_server.call_tool("explain_query", {"question": "How many users?"})
         assert "Generated SQL" in result
         assert "SELECT" in result
 

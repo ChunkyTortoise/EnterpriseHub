@@ -16,6 +16,7 @@ import pytest
 # Common Mock Data Fixtures
 # ==============================
 
+
 @pytest.fixture
 def mock_conversation_history() -> List[Dict[str, str]]:
     """Standard conversation history for testing."""
@@ -59,17 +60,20 @@ def mock_ghl_contact():
 # Service Mock Fixtures
 # ==============================
 
+
 @pytest.fixture
 def mock_ghl_client():
     """Mock GoHighLevel client."""
     client = AsyncMock()
-    client.get_contact = AsyncMock(return_value={
-        "id": "test_contact_123",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "john@example.com",
-        "phone": "+15555551234",
-    })
+    client.get_contact = AsyncMock(
+        return_value={
+            "id": "test_contact_123",
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john@example.com",
+            "phone": "+15555551234",
+        }
+    )
     client.send_message = AsyncMock()
     client.update_contact = AsyncMock()
     client.add_tag = AsyncMock()
@@ -80,10 +84,12 @@ def mock_ghl_client():
 def mock_claude_assistant():
     """Mock Claude assistant for response generation."""
     assistant = AsyncMock()
-    assistant.generate_response = AsyncMock(return_value={
-        "response": "I'd be happy to help you with that!",
-        "confidence": 0.85,
-    })
+    assistant.generate_response = AsyncMock(
+        return_value={
+            "response": "I'd be happy to help you with that!",
+            "confidence": 0.85,
+        }
+    )
     return assistant
 
 
@@ -112,11 +118,13 @@ def mock_performance_tracker():
     """Mock performance tracker."""
     tracker = AsyncMock()
     tracker.track_operation = AsyncMock()
-    tracker.get_metrics = AsyncMock(return_value={
-        "p50": 120.0,
-        "p95": 350.0,
-        "p99": 500.0,
-    })
+    tracker.get_metrics = AsyncMock(
+        return_value={
+            "p50": 120.0,
+            "p95": 350.0,
+            "p99": 500.0,
+        }
+    )
     return tracker
 
 
@@ -143,17 +151,20 @@ def mock_alerting_service():
 # Bot-Specific Fixtures
 # ==============================
 
+
 @pytest.fixture
 def mock_lead_intent_decoder():
     """Mock lead intent decoder."""
     decoder = AsyncMock()
-    decoder.analyze_lead_with_ghl = AsyncMock(return_value={
-        "lead_score": 75.0,
-        "temperature": "warm",
-        "confidence": 0.85,
-        "next_step": "qualify_timeline",
-        "key_signals": ["budget_mentioned", "pre_approval", "timeline_specific"],
-    })
+    decoder.analyze_lead_with_ghl = AsyncMock(
+        return_value={
+            "lead_score": 75.0,
+            "temperature": "warm",
+            "confidence": 0.85,
+            "next_step": "qualify_timeline",
+            "key_signals": ["budget_mentioned", "pre_approval", "timeline_specific"],
+        }
+    )
     return decoder
 
 
@@ -161,12 +172,14 @@ def mock_lead_intent_decoder():
 def mock_buyer_intent_decoder():
     """Mock buyer intent decoder."""
     decoder = AsyncMock()
-    decoder.analyze_buyer_with_ghl = AsyncMock(return_value={
-        "financial_readiness": 80.0,
-        "urgency_score": 70.0,
-        "buyer_temperature": "hot",
-        "next_qualification_step": "property_search",
-    })
+    decoder.analyze_buyer_with_ghl = AsyncMock(
+        return_value={
+            "financial_readiness": 80.0,
+            "urgency_score": 70.0,
+            "buyer_temperature": "hot",
+            "next_qualification_step": "property_search",
+        }
+    )
     return decoder
 
 
@@ -174,12 +187,14 @@ def mock_buyer_intent_decoder():
 def mock_seller_intent_decoder():
     """Mock seller intent decoder."""
     decoder = AsyncMock()
-    decoder.analyze_seller = AsyncMock(return_value={
-        "frs_score": 75.0,
-        "pcs_score": 65.0,
-        "seller_temperature": "warm",
-        "motivation_level": "high",
-    })
+    decoder.analyze_seller = AsyncMock(
+        return_value={
+            "frs_score": 75.0,
+            "pcs_score": 65.0,
+            "seller_temperature": "warm",
+            "motivation_level": "high",
+        }
+    )
     return decoder
 
 
@@ -187,14 +202,17 @@ def mock_seller_intent_decoder():
 # External Service Fixtures
 # ==============================
 
+
 @pytest.fixture
 def mock_retell_client():
     """Mock Retell AI client for voice calls."""
     client = AsyncMock()
-    client.create_call = AsyncMock(return_value={
-        "call_id": "call_123",
-        "status": "scheduled",
-    })
+    client.create_call = AsyncMock(
+        return_value={
+            "call_id": "call_123",
+            "status": "scheduled",
+        }
+    )
     return client
 
 
@@ -202,14 +220,18 @@ def mock_retell_client():
 def mock_lyrio_client():
     """Mock Lyrio client for calendar booking."""
     client = AsyncMock()
-    client.get_availability = AsyncMock(return_value=[
-        {"slot_id": "slot_1", "start_time": "2024-03-15T10:00:00Z"},
-        {"slot_id": "slot_2", "start_time": "2024-03-15T14:00:00Z"},
-    ])
-    client.book_appointment = AsyncMock(return_value={
-        "booking_id": "booking_123",
-        "confirmed": True,
-    })
+    client.get_availability = AsyncMock(
+        return_value=[
+            {"slot_id": "slot_1", "start_time": "2024-03-15T10:00:00Z"},
+            {"slot_id": "slot_2", "start_time": "2024-03-15T14:00:00Z"},
+        ]
+    )
+    client.book_appointment = AsyncMock(
+        return_value={
+            "booking_id": "booking_123",
+            "confirmed": True,
+        }
+    )
     return client
 
 
@@ -217,16 +239,19 @@ def mock_lyrio_client():
 def mock_property_matcher():
     """Mock property matcher service."""
     matcher = AsyncMock()
-    matcher.find_matching_properties = AsyncMock(return_value=[
-        {"id": "prop_1", "price": 385000, "bedrooms": 3},
-        {"id": "prop_2", "price": 395000, "bedrooms": 3},
-    ])
+    matcher.find_matching_properties = AsyncMock(
+        return_value=[
+            {"id": "prop_1", "price": 385000, "bedrooms": 3},
+            {"id": "prop_2", "price": 395000, "bedrooms": 3},
+        ]
+    )
     return matcher
 
 
 # ==============================
 # Edge Case Data Fixtures
 # ==============================
+
 
 @pytest.fixture
 def empty_conversation_history() -> List[Dict[str, str]]:
@@ -260,28 +285,28 @@ def malformed_conversation_history() -> List[Dict]:
 # Performance Testing Fixtures
 # ==============================
 
+
 @pytest.fixture
 def concurrent_requests():
     """Generate concurrent request scenarios."""
-    return [
-        {"conversation_id": f"conv_{i}", "message": f"Message {i}"}
-        for i in range(10)
-    ]
+    return [{"conversation_id": f"conv_{i}", "message": f"Message {i}"} for i in range(10)]
 
 
 # ==============================
 # Configuration Fixtures (Hybrid Isolation Strategy)
 # ==============================
 
+
 @pytest.fixture(scope="session")
 def session_config():
     """
     Load config once per test session (fast, shared state).
-    
+
     Use this for read-only tests that don't modify environment.
     ~5ms overhead per test run.
     """
     from ghl_real_estate_ai.config.jorge_config_loader import get_config
+
     return get_config()
 
 
@@ -289,23 +314,23 @@ def session_config():
 def isolated_config(monkeypatch):
     """
     Reload config for tests that modify environment (slower, full isolation).
-    
+
     Use this for:
     - Environment override tests
     - Config mutation tests
     - Tests requiring fresh config state
-    
+
     ~50-100ms overhead per test (YAML parse + dataclass instantiation).
     """
     import os
 
     from ghl_real_estate_ai.config.jorge_config_loader import get_config, reload_config
-    
+
     # Save original env
     original_env = os.environ.get("DEPLOYMENT_ENV")
-    
+
     yield get_config()
-    
+
     # Restore original env and reload
     if original_env:
         monkeypatch.setenv("DEPLOYMENT_ENV", original_env)
@@ -318,11 +343,12 @@ def isolated_config(monkeypatch):
 def mock_minimal_config():
     """
     Minimal config for unit tests without file I/O.
-    
+
     Uses dataclass defaults, no YAML parsing.
     Fastest option for pure unit tests.
     """
     from ghl_real_estate_ai.config.jorge_config_loader import JorgeBotsConfig
+
     return JorgeBotsConfig()
 
 

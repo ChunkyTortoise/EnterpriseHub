@@ -81,8 +81,10 @@ class TestAgentForgeContext:
     def test_register_tool(self) -> None:
         """Test registering a tool."""
         context = AgentForgeContext()
+
         def tool(x):
             return x * 2
+
         context.register_tool("double", tool)
         assert context.get_tool("double") == tool
         assert "double" in context.list_tools()
@@ -106,10 +108,13 @@ class TestAgentForgeContext:
     def test_register_hook(self) -> None:
         """Test registering hooks."""
         context = AgentForgeContext()
+
         def handler1(e):
             return None
+
         def handler2(e):
             return None
+
         context.register_hook("agent.execute", handler1)
         context.register_hook("agent.execute", handler2)
         context.register_hook("tool.execute", handler1)

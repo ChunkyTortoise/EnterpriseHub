@@ -139,9 +139,7 @@ class TestWatchlistManagement:
         assert stats["active_watchlists"] == 2
 
     def test_trigger_to_dict(self, service):
-        triggers = service.evaluate_price_drop(
-            area="Victoria", original_price=700_000, new_price=600_000
-        )
+        triggers = service.evaluate_price_drop(area="Victoria", original_price=700_000, new_price=600_000)
         assert len(triggers) > 0
         d = triggers[0].to_dict()
         assert d["trigger_type"] == "price_drop"

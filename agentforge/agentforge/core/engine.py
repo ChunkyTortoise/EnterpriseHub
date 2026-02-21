@@ -56,14 +56,13 @@ class ExecutionConfig(BaseModel):
         fail_fast: If True, cancel all pending nodes on first failure.
         max_concurrency: Optional limit on parallel node executions.
     """
+
     max_retries: int = Field(default=3, ge=0, description="Maximum retry attempts")
     retry_delay: float = Field(default=1.0, ge=0.0, description="Initial retry delay in seconds")
     timeout: float | None = Field(default=None, ge=0.0, description="Per-node timeout in seconds")
     fail_fast: bool = Field(default=False, description="Cancel on first failure")
     max_concurrency: int | None = Field(
-        default=None,
-        ge=1,
-        description="Maximum parallel executions"
+        default=None, ge=1, description="Maximum parallel executions"
     )
 
 
@@ -78,6 +77,7 @@ class ExecutionResult(BaseModel):
         total_tokens: Sum of tokens used across all nodes.
         total_cost: Estimated total cost in dollars.
     """
+
     outputs: dict[str, AgentOutput] = Field(default_factory=dict)
     status: dict[str, AgentStatus] = Field(default_factory=dict)
     errors: dict[str, str] = Field(default_factory=dict)
@@ -122,11 +122,7 @@ class ExecutionEngine:
         self._semaphore: asyncio.Semaphore | None = None
         self._cancelled = False
 
-    async def execute(
-        self,
-        dag: DAG,
-        input: AgentInput | None = None
-    ) -> ExecutionResult:
+    async def execute(self, dag: DAG, input: AgentInput | None = None) -> ExecutionResult:
         """Execute all nodes in the DAG respecting dependencies.
 
         Nodes are executed in parallel when their dependencies are satisfied.
@@ -176,14 +172,9 @@ class ExecutionEngine:
             # Calculate metrics
             execution_time = time.monotonic() - start_time
             total_tokens = sum(
-                out.usage.get("total_tokens", 0)
-                for out in outputs.values()
-                if out.usage
+                out.usage.get("total_tokens", 0) for out in outputs.values() if out.usage
             )
-            total_cost = sum(
-                out.metadata.get("cost", 0.0)
-                for out in outputs.values()
-            )
+            total_cost = sum(out.metadata.get("cost", 0.0) for out in outputs.values())
 
         return ExecutionResult(
             outputs=outputs,
@@ -222,8 +213,10 @@ class ExecutionEngine:
 
             # Execute batch in parallel
             batch_results = await asyncio.gather(
-                *[self._execute_node_safe(dag, node_id, input, outputs, status)
-                  for node_id in batch],
+                *[
+                    self._execute_node_safe(dag, node_id, input, outputs, status)
+                    for node_id in batch
+                ],
                 return_exceptions=True,
             )
 
@@ -402,10 +395,7 @@ class ExecutionEngine:
         return output
 
     async def execute_node(
-        self,
-        dag: DAG,
-        node_id: str,
-        context: dict[str, Any] | None = None
+        self, dag: DAG, node_id: str, context: dict[str, Any] | None = None
     ) -> AgentOutput:
         """Execute a single node from the DAG.
 
@@ -444,11 +434,7 @@ class ExecutionEngine:
         else:
             return await self._execute_with_retry(agent, input)
 
-    async def _execute_with_retry(
-        self,
-        agent: BaseAgent,
-        input: AgentInput
-    ) -> AgentOutput:
+    async def _execute_with_retry(self, agent: BaseAgent, input: AgentInput) -> AgentOutput:
         """Execute agent with exponential backoff retry.
 
         Retries on any exception up to max_retries times with exponential
@@ -477,12 +463,12 @@ class ExecutionEngine:
             except TimeoutError as e:
                 last_exception = e
                 if attempt < self.config.max_retries:
-                    delay = self.config.retry_delay * (2 ** attempt)
+                    delay = self.config.retry_delay * (2**attempt)
                     await asyncio.sleep(delay)
             except Exception as e:
                 last_exception = e
                 if attempt < self.config.max_retries:
-                    delay = self.config.retry_delay * (2 ** attempt)
+                    delay = self.config.retry_delay * (2**attempt)
                     await asyncio.sleep(delay)
 
         # All retries exhausted
@@ -493,11 +479,7 @@ class ExecutionEngine:
             cause=last_exception,
         )
 
-    async def _execute_with_timeout(
-        self,
-        agent: BaseAgent,
-        input: AgentInput
-    ) -> AgentOutput:
+    async def _execute_with_timeout(self, agent: BaseAgent, input: AgentInput) -> AgentOutput:
         """Execute agent with optional timeout.
 
         Args:

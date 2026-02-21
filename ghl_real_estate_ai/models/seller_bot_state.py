@@ -6,6 +6,7 @@ from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 
 class ConversationTurn(TypedDict, total=False):
     """TypedDict for a single conversation turn."""
+
     role: str  # "user" or "assistant"
     content: str
     timestamp: Optional[str]
@@ -13,6 +14,7 @@ class ConversationTurn(TypedDict, total=False):
 
 class CMAReport(TypedDict, total=False):
     """TypedDict for Comparative Market Analysis report."""
+
     estimated_value: float
     value_range_low: float
     value_range_high: float
@@ -24,6 +26,7 @@ class CMAReport(TypedDict, total=False):
 
 class MarketData(TypedDict, total=False):
     """TypedDict for market data."""
+
     avg_days_on_market: float
     median_sale_price: float
     price_per_sqft: float
@@ -34,6 +37,7 @@ class MarketData(TypedDict, total=False):
 
 class ComparableProperty(TypedDict, total=False):
     """TypedDict for comparable property summary."""
+
     property_id: str
     address: str
     sale_price: float
@@ -46,6 +50,7 @@ class ComparableProperty(TypedDict, total=False):
 
 class SellerPersona(TypedDict, total=False):
     """TypedDict for seller persona."""
+
     motivation_type: str  # "relocation", "upsizing", "downsizing", "financial", etc.
     urgency_level: str  # "high", "medium", "low"
     price_sensitivity: str  # "high", "medium", "low"

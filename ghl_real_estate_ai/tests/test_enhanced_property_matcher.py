@@ -49,7 +49,12 @@ class MockPropertyMatcher:
         return [
             {
                 "id": "prop_001",
-                "address": {"street": "123 Test St", "neighborhood": "Alta Loma", "city": "Rancho Cucamonga", "zip": "91737"},
+                "address": {
+                    "street": "123 Test St",
+                    "neighborhood": "Alta Loma",
+                    "city": "Rancho Cucamonga",
+                    "zip": "91737",
+                },
                 "price": 675000,
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -92,7 +97,12 @@ class MockPropertyMatcher:
             },
             {
                 "id": "prop_003",
-                "address": {"street": "789 Sample Dr", "neighborhood": "East Rancho Cucamonga", "city": "Rancho Cucamonga", "zip": "91739"},
+                "address": {
+                    "street": "789 Sample Dr",
+                    "neighborhood": "East Rancho Cucamonga",
+                    "city": "Rancho Cucamonga",
+                    "zip": "91739",
+                },
                 "price": 425000,
                 "bedrooms": 2,
                 "bathrooms": 2,

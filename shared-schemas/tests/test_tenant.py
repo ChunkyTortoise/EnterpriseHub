@@ -1,17 +1,18 @@
 """Tests for tenant schemas."""
 
-import pytest
 from uuid import UUID
+
+import pytest
 from pydantic import ValidationError
 
 from shared_schemas.tenant import (
+    TIER_LIMITS,
     TenantBase,
     TenantCreate,
     TenantLimits,
     TenantResponse,
     TenantStatus,
     TenantTier,
-    TIER_LIMITS,
 )
 
 

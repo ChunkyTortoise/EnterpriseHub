@@ -18,62 +18,50 @@ from ghl_real_estate_ai.streamlit_demo.data.services_data import (
 def render_services_portfolio():
     """Render the services portfolio page."""
     st.set_page_config(page_title="Services Portfolio", page_icon="💼", layout="wide")
-    
+
     # Header
     st.markdown("# 💼 Professional Services Portfolio")
     st.markdown("### Production-Grade AI Systems and Data Infrastructure That Generate Measurable Business Outcomes")
     st.markdown("---")
-    
+
     # Core differentiators banner
     render_differentiators()
-    
+
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     # Filters
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
-        category_filter = st.selectbox(
-            "Category",
-            ["All Categories"] + list(CATEGORIES.keys()),
-            key="category_filter"
-        )
-    
+        category_filter = st.selectbox("Category", ["All Categories"] + list(CATEGORIES.keys()), key="category_filter")
+
     with col2:
-        industry_filter = st.selectbox(
-            "Industry",
-            ["All Industries"] + INDUSTRIES,
-            key="industry_filter"
-        )
-    
+        industry_filter = st.selectbox("Industry", ["All Industries"] + INDUSTRIES, key="industry_filter")
+
     with col3:
         price_filter = st.selectbox(
             "Price Range",
             ["All Prices", "Under $2,000", "$2,000-$5,000", "$5,000-$10,000", "$10,000+"],
-            key="price_filter"
+            key="price_filter",
         )
-    
+
     with col4:
         timeline_filter = st.selectbox(
-            "Timeline",
-            ["All Timelines", "1-2 days", "3-5 days", "5-10 days", "10+ days"],
-            key="timeline_filter"
+            "Timeline", ["All Timelines", "1-2 days", "3-5 days", "5-10 days", "10+ days"], key="timeline_filter"
         )
-    
+
     st.markdown("---")
-    
+
     # Filter services
-    filtered_services = filter_services(
-        category_filter, industry_filter, price_filter, timeline_filter
-    )
-    
+    filtered_services = filter_services(category_filter, industry_filter, price_filter, timeline_filter)
+
     # Display service count
     st.markdown(f"### Showing {len(filtered_services)} Services")
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     # Display services in grid
     render_services_grid(filtered_services)
-    
+
     # Footer CTA
     st.markdown("---")
     render_footer_cta()
@@ -110,37 +98,37 @@ def render_differentiators():
             </div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
 
 def filter_services(category: str, industry: str, price: str, timeline: str) -> List[Dict]:
     """Filter services based on selected criteria."""
     filtered = []
-    
+
     for service_id, service in SERVICES.items():
         # Category filter
         if category != "All Categories" and service["category"] != category:
             continue
-        
+
         # Industry filter
         if industry != "All Industries" and industry not in service.get("industries", []):
             continue
-        
+
         # Price filter
         if price != "All Prices":
             price_range = service["price_range"]
             if not matches_price_filter(price_range, price):
                 continue
-        
+
         # Timeline filter
         if timeline != "All Timelines":
             service_timeline = service["timeline"]
             if not matches_timeline_filter(service_timeline, timeline):
                 continue
-        
+
         filtered.append(service)
-    
+
     return filtered
 
 
@@ -148,7 +136,7 @@ def matches_price_filter(price_range: str, price_filter: str) -> bool:
     """Check if price range matches filter."""
     # Extract min price from range (e.g., "$3,600-$5,200" -> 3600)
     min_price = int(price_range.split("-")[0].replace("$", "").replace(",", "").replace("/month", ""))
-    
+
     if price_filter == "Under $2,000":
         return min_price < 2000
     elif price_filter == "$2,000-$5,000":
@@ -157,7 +145,7 @@ def matches_price_filter(price_range: str, price_filter: str) -> bool:
         return 5000 <= min_price < 10000
     elif price_filter == "$10,000+":
         return min_price >= 10000
-    
+
     return True
 
 
@@ -169,7 +157,7 @@ def matches_timeline_filter(service_timeline: str, timeline_filter: str) -> bool
         max_days = int(parts[0].split("-")[1])
     else:
         max_days = int(parts[0])
-    
+
     if timeline_filter == "1-2 days":
         return max_days <= 2
     elif timeline_filter == "3-5 days":
@@ -178,7 +166,7 @@ def matches_timeline_filter(service_timeline: str, timeline_filter: str) -> bool
         return 5 <= max_days <= 10
     elif timeline_filter == "10+ days":
         return max_days >= 10
-    
+
     return True
 
 
@@ -187,7 +175,7 @@ def render_services_grid(services: List[Dict]):
     # Display 2 services per row
     for i in range(0, len(services), 2):
         cols = st.columns(2)
-        
+
         for j, col in enumerate(cols):
             if i + j < len(services):
                 with col:
@@ -205,9 +193,9 @@ def render_service_card(service: Dict):
         "Infrastructure & Operations": "#3B82F6",
         "Consulting & Advisory": "#EC4899",
     }
-    
+
     category_color = category_colors.get(service["category"], "#64748B")
-    
+
     st.markdown(
         f"""
         <div style='background: white; padding: 1.5rem; border-radius: 12px; 
@@ -244,29 +232,29 @@ def render_service_card(service: Dict):
             </div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-    
+
     # Expandable details
     with st.expander("View Details"):
         st.markdown("**Key Benefits:**")
         for benefit in service["key_benefits"]:
             st.markdown(f"- {benefit}")
-        
+
         st.markdown("**Industries:**")
         st.markdown(", ".join(service.get("industries", [])))
-        
+
         st.markdown("**Relevant Certifications:**")
         for cert in service.get("certifications", []):
             st.markdown(f"- {cert}")
-    
+
     # CTA buttons
     col1, col2 = st.columns(2)
     with col1:
         st.button("Request Quote", key=f"quote_{service['title']}", use_container_width=True)
     with col2:
         st.button("Schedule Consultation", key=f"consult_{service['title']}", use_container_width=True)
-    
+
     st.markdown("<br>", unsafe_allow_html=True)
 
 
@@ -301,7 +289,7 @@ def render_footer_cta():
             </div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
 

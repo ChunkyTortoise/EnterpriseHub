@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 class PropertyData(TypedDict, total=False):
     """TypedDict for property data in matching context."""
+
     property_id: str
     address: str
     city: str
@@ -31,6 +32,7 @@ class PropertyData(TypedDict, total=False):
 
 class SearchHistoryEntry(TypedDict, total=False):
     """TypedDict for search history entry."""
+
     timestamp: str
     search_params: Dict[str, Any]
     results_count: int
@@ -39,6 +41,7 @@ class SearchHistoryEntry(TypedDict, total=False):
 
 class MarketConditionsData(TypedDict, total=False):
     """TypedDict for market conditions data."""
+
     market_trend: str  # "hot", "warm", "cool", "cold"
     avg_days_on_market: float
     price_per_sqft_trend: float

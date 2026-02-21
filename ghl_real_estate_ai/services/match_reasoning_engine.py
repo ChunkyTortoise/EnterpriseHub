@@ -786,7 +786,12 @@ def demo_match_reasoning():
     }
 
     # Sample preferences
-    test_preferences = {"budget": 700000, "location": "Rancho Cucamonga", "bedrooms": 3, "property_type": "Single Family"}
+    test_preferences = {
+        "budget": 700000,
+        "location": "Rancho Cucamonga",
+        "bedrooms": 3,
+        "property_type": "Single Family",
+    }
 
     # Create mock score breakdown
     score_breakdown = MatchScoreBreakdown(

@@ -234,9 +234,9 @@ def render_hero_section() -> None:
 def render_key_metrics() -> None:
     """Render key metrics in a professional grid layout."""
     st.markdown('<h2 class="section-header">Key Metrics</h2>', unsafe_allow_html=True)
-    
+
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
         st.markdown(
             """
@@ -247,7 +247,7 @@ def render_key_metrics() -> None:
             """,
             unsafe_allow_html=True,
         )
-    
+
     with col2:
         st.markdown(
             """
@@ -258,7 +258,7 @@ def render_key_metrics() -> None:
             """,
             unsafe_allow_html=True,
         )
-    
+
     with col3:
         st.markdown(
             """
@@ -269,7 +269,7 @@ def render_key_metrics() -> None:
             """,
             unsafe_allow_html=True,
         )
-    
+
     with col4:
         st.markdown(
             """
@@ -285,9 +285,9 @@ def render_key_metrics() -> None:
 def render_case_study_highlights() -> None:
     """Render EnterpriseHub case study highlights."""
     st.markdown('<h2 class="section-header">Proven Results: EnterpriseHub Case Study</h2>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.markdown(
             """
@@ -303,7 +303,7 @@ def render_case_study_highlights() -> None:
             """,
             unsafe_allow_html=True,
         )
-        
+
         st.markdown(
             """
             <div class="service-category">
@@ -318,7 +318,7 @@ def render_case_study_highlights() -> None:
             """,
             unsafe_allow_html=True,
         )
-    
+
     with col2:
         st.markdown(
             """
@@ -334,7 +334,7 @@ def render_case_study_highlights() -> None:
             """,
             unsafe_allow_html=True,
         )
-        
+
         st.markdown(
             """
             <div class="service-category">
@@ -354,7 +354,7 @@ def render_case_study_highlights() -> None:
 def render_service_categories() -> None:
     """Render service category overview."""
     st.markdown('<h2 class="section-header" id="services">Service Categories</h2>', unsafe_allow_html=True)
-    
+
     services: List[Dict[str, str]] = [
         {
             "title": "🧠 AI & Machine Learning",
@@ -387,19 +387,19 @@ def render_service_categories() -> None:
             "count": "5 services",
         },
     ]
-    
+
     col1, col2 = st.columns(2)
-    
+
     for idx, service in enumerate(services):
         target_col = col1 if idx % 2 == 0 else col2
         with target_col:
             st.markdown(
                 f"""
                 <div class="service-category">
-                    <h4>{service['title']}</h4>
-                    <p>{service['description']}</p>
+                    <h4>{service["title"]}</h4>
+                    <p>{service["description"]}</p>
                     <p style="margin-top: 0.5rem; color: var(--primary-blue); font-weight: 600;">
-                        {service['count']}
+                        {service["count"]}
                     </p>
                 </div>
                 """,
@@ -427,9 +427,7 @@ def render_architecture_explorer() -> None:
         '<h2 class="section-header">Interactive Architecture Explorer</h2>',
         unsafe_allow_html=True,
     )
-    st.caption(
-        "Click any layer to inspect live health, key metrics, and source file paths."
-    )
+    st.caption("Click any layer to inspect live health, key metrics, and source file paths.")
 
     # --- Custom CSS for layer cards ---
     st.markdown(
@@ -579,8 +577,8 @@ def render_architecture_explorer() -> None:
             badge_cls = "layer-badge-ok" if health == "Operational" else "layer-badge-warn"
             st.markdown(
                 f"""
-                <div class="layer-card" style="border-left: 4px solid {layer['color']};">
-                    <strong style="color: {layer['color']};">{layer['name']}</strong>
+                <div class="layer-card" style="border-left: 4px solid {layer["color"]};">
+                    <strong style="color: {layer["color"]};">{layer["name"]}</strong>
                     <span class="layer-badge {badge_cls}">{health}</span>
                 </div>
                 """,
@@ -603,8 +601,7 @@ def render_architecture_explorer() -> None:
 
             st.markdown("**Key Metrics**")
             chips = "".join(
-                f'<span class="metric-chip"><strong>{k}:</strong> {v}</span>'
-                for k, v in layer["metrics"].items()
+                f'<span class="metric-chip"><strong>{k}:</strong> {v}</span>' for k, v in layer["metrics"].items()
             )
             st.markdown(
                 f'<div class="metric-row">{chips}</div>',
@@ -627,7 +624,7 @@ def render_architecture_explorer() -> None:
 def render_navigation_tabs() -> None:
     """Render navigation tabs to other showcase sections."""
     st.markdown('<h2 class="section-header">Explore the Platform</h2>', unsafe_allow_html=True)
-    
+
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
             "📜 Certifications",
@@ -637,11 +634,11 @@ def render_navigation_tabs() -> None:
             "📞 Contact & Demo",
         ]
     )
-    
+
     with tab1:
         st.markdown("### Professional Certifications Showcase")
         st.info("📜 View the complete certifications showcase page for detailed credential verification.")
-        
+
         cert_highlights: List[str] = [
             "**Google Cloud Professional** - Cloud Architect & Data Engineer",
             "**AWS Certified** - Solutions Architect & Developer",
@@ -649,18 +646,18 @@ def render_navigation_tabs() -> None:
             "**Machine Learning** - DeepLearning.AI Specializations",
             "**Data Engineering** - Apache Spark, Kafka, Airflow",
         ]
-        
+
         for cert in cert_highlights:
             st.markdown(f"- {cert}")
-        
+
         if st.button("🎓 View Full Certifications Page", key="cert_btn"):
             fire_ga4_event("navigation_click", {"target": "certifications"})
             st.info("Navigate to: `/showcase_certifications` (to be implemented)")
-    
+
     with tab2:
         st.markdown("### Service Portfolio Details")
         st.info("🛠️ Explore 31 specialized services across 6 categories with pricing and deliverables.")
-        
+
         st.markdown("""
         **Service Tiers:**
         - **Starter** - $2,500-$5,000 (1-2 week delivery)
@@ -668,15 +665,15 @@ def render_navigation_tabs() -> None:
         - **Enterprise** - $15,000-$50,000 (1-3 month delivery)
         - **Custom** - Quote-based (timeline varies)
         """)
-        
+
         if st.button("📋 View Services Portfolio", key="services_btn"):
             fire_ga4_event("navigation_click", {"target": "services"})
             st.info("Navigate to: `/showcase_services` (to be implemented)")
-    
+
     with tab3:
         st.markdown("### Case Studies & Results")
         st.info("📊 Deep-dive case studies with technical implementation details and quantified outcomes.")
-        
+
         case_studies: List[Dict[str, str]] = [
             {
                 "title": "EnterpriseHub Real Estate AI",
@@ -689,21 +686,21 @@ def render_navigation_tabs() -> None:
                 "tech": "Agent mesh, RAG pipeline, Redis caching",
             },
         ]
-        
+
         for cs in case_studies:
             st.markdown(f"**{cs['title']}**")
             st.markdown(f"- Result: {cs['result']}")
             st.markdown(f"- Tech Stack: {cs['tech']}")
             st.markdown("---")
-        
+
         if st.button("📈 View Case Studies", key="case_btn"):
             fire_ga4_event("navigation_click", {"target": "case_studies"})
             st.info("Navigate to: `/showcase_case_studies` (to be implemented)")
-    
+
     with tab4:
         st.markdown("### Screenshot Gallery")
         st.info("📸 Browse 80+ production screenshots showcasing dashboard UIs, analytics, and workflows.")
-        
+
         st.markdown("""
         **Gallery Categories:**
         - Executive Dashboards
@@ -713,22 +710,22 @@ def render_navigation_tabs() -> None:
         - API Integrations
         - Mobile Responsive Views
         """)
-        
+
         if st.button("🖼️ View Screenshot Gallery", key="gallery_btn"):
             fire_ga4_event("navigation_click", {"target": "gallery"})
             st.info("Navigate to: `/showcase_gallery` (to be implemented)")
-    
+
     with tab5:
         st.markdown("### Request Demo or Consultation")
-        
+
         with st.form("demo_request_form"):
             st.markdown("#### Contact Information")
-            
+
             col1, col2 = st.columns(2)
             with col1:
                 name = st.text_input("Full Name *", placeholder="John Doe")
                 email = st.text_input("Email Address *", placeholder="john@company.com")
-            
+
             with col2:
                 company = st.text_input("Company", placeholder="Acme Corp")
                 role = st.selectbox(
@@ -743,9 +740,9 @@ def render_navigation_tabs() -> None:
                         "Other",
                     ],
                 )
-            
+
             st.markdown("#### Project Details")
-            
+
             service_interest = st.multiselect(
                 "Services of Interest",
                 [
@@ -757,7 +754,7 @@ def render_navigation_tabs() -> None:
                     "Performance Engineering",
                 ],
             )
-            
+
             project_timeline = st.selectbox(
                 "Project Timeline",
                 [
@@ -769,7 +766,7 @@ def render_navigation_tabs() -> None:
                     "Just exploring",
                 ],
             )
-            
+
             budget_range = st.selectbox(
                 "Budget Range",
                 [
@@ -782,40 +779,45 @@ def render_navigation_tabs() -> None:
                     "Not sure yet",
                 ],
             )
-            
+
             message = st.text_area(
                 "Project Description",
                 placeholder="Tell us about your project, challenges, and goals...",
                 height=150,
             )
-            
+
             submit = st.form_submit_button("📨 Submit Demo Request", use_container_width=True)
-            
+
             if submit:
                 if not name or not email:
                     st.error("Please fill in required fields (Name and Email)")
                 else:
                     # ROADMAP-073: Track form submission with field completion percentage
                     total_fields = 7  # name, email, company, role, services, timeline, budget + message
-                    filled = sum([
-                        bool(name),
-                        bool(email),
-                        bool(company),
-                        role != "Select...",
-                        len(service_interest) > 0,
-                        project_timeline != "Select...",
-                        budget_range != "Select...",
-                        bool(message.strip()),
-                    ])
+                    filled = sum(
+                        [
+                            bool(name),
+                            bool(email),
+                            bool(company),
+                            role != "Select...",
+                            len(service_interest) > 0,
+                            project_timeline != "Select...",
+                            budget_range != "Select...",
+                            bool(message.strip()),
+                        ]
+                    )
                     completion_pct = round(filled / (total_fields + 1) * 100)  # +1 for message
 
-                    fire_ga4_event("form_submit", {
-                        "form_name": "demo_request",
-                        "field_completion_pct": completion_pct,
-                        "services_selected": len(service_interest),
-                        "has_budget": budget_range != "Select...",
-                        "has_timeline": project_timeline != "Select...",
-                    })
+                    fire_ga4_event(
+                        "form_submit",
+                        {
+                            "form_name": "demo_request",
+                            "field_completion_pct": completion_pct,
+                            "services_selected": len(service_interest),
+                            "has_budget": budget_range != "Select...",
+                            "has_timeline": project_timeline != "Select...",
+                        },
+                    )
 
                     st.success(
                         f"Thank you, {name}! Your demo request has been received. We'll contact you at {email} within 24 hours."
@@ -826,9 +828,9 @@ def render_navigation_tabs() -> None:
 def render_technical_highlights() -> None:
     """Render technical stack and achievements."""
     st.markdown('<h2 class="section-header">Technical Highlights</h2>', unsafe_allow_html=True)
-    
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         render_obsidian_metric(
             value="4,500+",
@@ -836,14 +838,14 @@ def render_technical_highlights() -> None:
             config=MetricConfig(variant="success", size="medium"),
             metric_icon="check-circle",
         )
-        
+
         render_obsidian_metric(
             value="<2s",
             label="P95 Latency",
             config=MetricConfig(variant="premium", size="medium"),
             metric_icon="gauge-high",
         )
-    
+
     with col2:
         render_obsidian_metric(
             value="99.9%",
@@ -851,14 +853,14 @@ def render_technical_highlights() -> None:
             config=MetricConfig(variant="success", size="medium"),
             metric_icon="server",
         )
-        
+
         render_obsidian_metric(
             value="140+",
             label="Microservices",
             config=MetricConfig(variant="default", size="medium"),
             metric_icon="network-wired",
         )
-    
+
     with col3:
         render_obsidian_metric(
             value="89%",
@@ -866,7 +868,7 @@ def render_technical_highlights() -> None:
             config=MetricConfig(variant="success", size="medium", trend="up"),
             metric_icon="dollar-sign",
         )
-        
+
         render_obsidian_metric(
             value="80+",
             label="Dashboard Components",
@@ -956,16 +958,16 @@ def main() -> None:
 
     # Load custom CSS
     load_custom_css()
-    
+
     # Render hero section
     render_hero_section()
-    
+
     # Key metrics grid
     render_key_metrics()
-    
+
     # Case study highlights
     render_case_study_highlights()
-    
+
     # Interactive Architecture Explorer
     render_architecture_explorer()
 
@@ -974,10 +976,10 @@ def main() -> None:
 
     # Technical highlights
     render_technical_highlights()
-    
+
     # Navigation tabs
     render_navigation_tabs()
-    
+
     # Footer
     render_footer()
 

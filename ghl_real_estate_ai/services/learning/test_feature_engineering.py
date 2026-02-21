@@ -1,7 +1,4 @@
 import pytest
-
-@pytest.mark.integration
-#!/usr/bin/env python3
 """
 Test Feature Engineering Pipeline
 
@@ -22,6 +19,7 @@ sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(services_dir))
 
 
+@pytest.mark.integration
 async def test_feature_engineering_pipeline():
     """Test the complete feature engineering pipeline"""
     print("🧠 Testing Feature Engineering Pipeline\n")

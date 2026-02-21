@@ -1,9 +1,10 @@
 """Tests for query expansion (HyDE and multi-query)."""
 
-import pytest
 from unittest.mock import AsyncMock
 
-from rag_service.core.query_expander import QueryExpander, ExpandedQuery
+import pytest
+
+from rag_service.core.query_expander import ExpandedQuery, QueryExpander
 
 
 @pytest.fixture
@@ -36,9 +37,7 @@ class TestQueryExpander:
         )
 
         # Act
-        result = await expander_with_llm.expand(
-            "What are real estate prices?", method="hyde"
-        )
+        result = await expander_with_llm.expand("What are real estate prices?", method="hyde")
 
         # Assert
         assert isinstance(result, ExpandedQuery)
@@ -48,9 +47,7 @@ class TestQueryExpander:
         assert "Real estate prices" in result.expansions[1]
         mock_llm_client.generate.assert_called_once()
 
-    async def test_multi_query_expansion_with_llm(
-        self, expander_with_llm, mock_llm_client
-    ):
+    async def test_multi_query_expansion_with_llm(self, expander_with_llm, mock_llm_client):
         """Test multi-query expansion using LLM."""
         # Arrange
         mock_llm_client.generate = AsyncMock(
@@ -72,9 +69,7 @@ class TestQueryExpander:
     async def test_hyde_fallback_without_llm(self, expander_without_llm):
         """Test HyDE expansion falls back to original query without LLM."""
         # Act
-        result = await expander_without_llm.expand(
-            "What are the prices?", method="hyde"
-        )
+        result = await expander_without_llm.expand("What are the prices?", method="hyde")
 
         # Assert
         assert result.method == "hyde"
@@ -131,9 +126,7 @@ class TestQueryExpander:
         # Should extract up to 3 reformulations
         assert len(result.expansions) <= 4  # Original + 3 reformulations
 
-    async def test_empty_llm_response_handling(
-        self, expander_with_llm, mock_llm_client
-    ):
+    async def test_empty_llm_response_handling(self, expander_with_llm, mock_llm_client):
         """Test handling of empty LLM responses."""
         # Arrange
         mock_llm_client.generate = AsyncMock(return_value="")

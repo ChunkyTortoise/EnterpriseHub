@@ -79,7 +79,9 @@ with st.sidebar:
 
         if selected_scenario == "Cold Lead Example":
             add_message("user", "Looking for a house in Rancho Cucamonga")
-            response, data = st.session_state.claude_service.generate_response("Looking for a house in Rancho Cucamonga", [], {})
+            response, data = st.session_state.claude_service.generate_response(
+                "Looking for a house in Rancho Cucamonga", [], {}
+            )
             add_message("assistant", response)
             update_extracted_data(data)
         elif selected_scenario == "Warm Lead Example":

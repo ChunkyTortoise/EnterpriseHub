@@ -61,7 +61,4 @@ class PIIRedactor:
             elif isinstance(value, dict):
                 cls._redact_dict(value)
             elif isinstance(value, list):
-                d[key] = [
-                    cls.redact_all(item) if isinstance(item, str) else item
-                    for item in value
-                ]
+                d[key] = [cls.redact_all(item) if isinstance(item, str) else item for item in value]

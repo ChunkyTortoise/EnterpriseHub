@@ -259,10 +259,7 @@ class EnsembleLeadScoringService:
                 X, y, test_size=test_size, random_state=random_state, stratify=y
             )
 
-            logger.info(
-                f"Split data: {len(X_train)} train, {len(X_test)} test "
-                f"(positive rate: {y_train.mean():.2%})"
-            )
+            logger.info(f"Split data: {len(X_train)} train, {len(X_test)} test (positive rate: {y_train.mean():.2%})")
 
             # =====================================================================
             # 1. Train XGBoost
@@ -299,8 +296,7 @@ class EnsembleLeadScoringService:
             )
 
             logger.info(
-                f"XGBoost trained: AUC={xgb_metrics.auc_roc:.4f}, "
-                f"Brier={xgb_metrics.brier_score:.4f} ({xgb_time:.2f}s)"
+                f"XGBoost trained: AUC={xgb_metrics.auc_roc:.4f}, Brier={xgb_metrics.brier_score:.4f} ({xgb_time:.2f}s)"
             )
 
             # =====================================================================
@@ -397,17 +393,21 @@ class EnsembleLeadScoringService:
             meta_start = datetime.utcnow()
 
             # Create meta-features (base model predictions on train set)
-            meta_X_train = np.column_stack([
-                self.xgboost_model.predict_proba(X_train)[:, 1],
-                self.lightgbm_model.predict_proba(X_train)[:, 1],
-                self.neural_net_model.predict_proba(self.scaler.transform(X_train))[:, 1],
-            ])
+            meta_X_train = np.column_stack(
+                [
+                    self.xgboost_model.predict_proba(X_train)[:, 1],
+                    self.lightgbm_model.predict_proba(X_train)[:, 1],
+                    self.neural_net_model.predict_proba(self.scaler.transform(X_train))[:, 1],
+                ]
+            )
 
-            meta_X_test = np.column_stack([
-                xgb_preds,
-                lgb_preds,
-                nn_preds,
-            ])
+            meta_X_test = np.column_stack(
+                [
+                    xgb_preds,
+                    lgb_preds,
+                    nn_preds,
+                ]
+            )
 
             # Train logistic regression meta-learner
             self.meta_learner = LogisticRegression(
@@ -633,13 +633,15 @@ class EnsembleLeadScoringService:
 
     def _models_loaded(self) -> bool:
         """Check if all models are loaded."""
-        return all([
-            self.xgboost_model is not None,
-            self.lightgbm_model is not None,
-            self.neural_net_model is not None,
-            self.meta_learner is not None,
-            self.scaler is not None,
-        ])
+        return all(
+            [
+                self.xgboost_model is not None,
+                self.lightgbm_model is not None,
+                self.neural_net_model is not None,
+                self.meta_learner is not None,
+                self.scaler is not None,
+            ]
+        )
 
     def _classify_lead(self, score: float) -> str:
         """Classify lead based on score."""
@@ -731,9 +733,7 @@ class EnsembleLeadScoringService:
             ensemble_recall=data["ensemble_recall"],
             ensemble_f1_score=data["ensemble_f1_score"],
             ensemble_brier_score=data["ensemble_brier_score"],
-            base_model_metrics=[
-                ModelPerformanceMetrics(**m) for m in data["base_model_metrics"]
-            ],
+            base_model_metrics=[ModelPerformanceMetrics(**m) for m in data["base_model_metrics"]],
             improvement_over_best_base=data["improvement_over_best_base"],
             training_samples=data["training_samples"],
             validation_samples=data["validation_samples"],
@@ -763,9 +763,7 @@ class EnsembleLeadScoringService:
 
         return None
 
-    async def _cache_prediction(
-        self, prediction: LeadScorePrediction, features: Optional[Dict[str, Any]]
-    ) -> None:
+    async def _cache_prediction(self, prediction: LeadScorePrediction, features: Optional[Dict[str, Any]]) -> None:
         """Cache prediction result."""
         if not self.cache_service:
             return
@@ -774,9 +772,7 @@ class EnsembleLeadScoringService:
             cache_key = self._generate_cache_key(prediction.contact_id, features)
             prediction_dict = self._serialize_prediction(prediction)
 
-            await self.cache_service.set(
-                cache_key, json.dumps(prediction_dict), ttl=self.CACHE_TTL_SECONDS
-            )
+            await self.cache_service.set(cache_key, json.dumps(prediction_dict), ttl=self.CACHE_TTL_SECONDS)
 
         except Exception as e:
             logger.warning(f"Cache storage failed: {e}")

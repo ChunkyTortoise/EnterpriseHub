@@ -158,8 +158,7 @@ class HierarchicalContextMemory:
         # Short-term: recent messages
         short_entries = self._short_term.get(contact_id, [])
         recent_messages = [
-            {"role": e.metadata.get("role", "unknown"), "content": e.content}
-            for e in short_entries[-max_recent:]
+            {"role": e.metadata.get("role", "unknown"), "content": e.content} for e in short_entries[-max_recent:]
         ]
 
         # Medium-term: conversation summaries

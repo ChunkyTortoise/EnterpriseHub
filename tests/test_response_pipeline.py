@@ -93,9 +93,7 @@ class TestAIDisclosureProcessor:
     async def test_skips_on_blocked(self):
         stage = AIDisclosureProcessor()
         ctx = _make_context()
-        resp = ProcessedResponse(
-            message="Safe fallback", original_message="Bad msg", action=ProcessingAction.BLOCK
-        )
+        resp = ProcessedResponse(message="Safe fallback", original_message="Bad msg", action=ProcessingAction.BLOCK)
         result = await stage.process(resp, ctx)
         assert "[AI-assisted message]" not in result.message
 

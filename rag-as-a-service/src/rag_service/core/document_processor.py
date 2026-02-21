@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TextChunk:
     """A chunk of text from a document."""
+
     content: str
     chunk_index: int
     metadata: dict = field(default_factory=dict)
@@ -22,6 +23,7 @@ class TextChunk:
 @dataclass
 class ProcessedDocument:
     """Result of document processing."""
+
     filename: str
     content_type: str
     raw_text: str

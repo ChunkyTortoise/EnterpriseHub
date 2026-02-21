@@ -1355,7 +1355,9 @@ class TestConversationPersistence:
 
             buyer_result = await buyer_bot.process_buyer_conversation(
                 conversation_id="transition_lead_001",
-                user_message=next((m["content"] for m in reversed(shared_history) if m.get("role") == "user"), "I'm looking to buy"),
+                user_message=next(
+                    (m["content"] for m in reversed(shared_history) if m.get("role") == "user"), "I'm looking to buy"
+                ),
                 buyer_name="Dual Intent Diana",
                 conversation_history=shared_history,
             )
@@ -1433,7 +1435,14 @@ class TestCrossBotCommunication:
             # Buyer bot processes the handed-off lead
             result = await buyer_bot.process_buyer_conversation(
                 conversation_id=handoff_context["lead_id"],
-                user_message=next((m["content"] for m in reversed(handoff_context["conversation_history"]) if m.get("role") == "user"), "I'm looking to buy"),
+                user_message=next(
+                    (
+                        m["content"]
+                        for m in reversed(handoff_context["conversation_history"])
+                        if m.get("role") == "user"
+                    ),
+                    "I'm looking to buy",
+                ),
                 buyer_name=handoff_context["lead_name"],
                 conversation_history=handoff_context["conversation_history"],
             )
@@ -1508,7 +1517,14 @@ class TestCrossBotCommunication:
 
             result = await seller_bot.process_seller_message(
                 conversation_id=handoff_context["lead_id"],
-                user_message=next((m["content"] for m in reversed(handoff_context["conversation_history"]) if m.get("role") == "user"), ""),
+                user_message=next(
+                    (
+                        m["content"]
+                        for m in reversed(handoff_context["conversation_history"])
+                        if m.get("role") == "user"
+                    ),
+                    "",
+                ),
                 seller_name=handoff_context["lead_name"],
                 conversation_history=handoff_context["conversation_history"][:-1],
             )
@@ -1574,7 +1590,9 @@ class TestCrossBotCommunication:
 
             seller_result = await seller_bot.process_seller_message(
                 conversation_id="intel_handoff_001",
-                user_message=next((m["content"] for m in reversed(conversation_history) if m.get("role") == "user"), ""),
+                user_message=next(
+                    (m["content"] for m in reversed(conversation_history) if m.get("role") == "user"), ""
+                ),
                 seller_name="Intel Ian",
                 conversation_history=conversation_history[:-1],
             )
@@ -1619,14 +1637,23 @@ class TestCrossBotCommunication:
             # Buyer bot receives the same conversation history (intelligence preserved)
             buyer_result = await buyer_bot.process_buyer_conversation(
                 conversation_id="intel_handoff_001",
-                user_message=next((m["content"] for m in reversed(seller_intelligence["conversation_history"]) if m.get("role") == "user"), "I'm looking to buy"),
+                user_message=next(
+                    (
+                        m["content"]
+                        for m in reversed(seller_intelligence["conversation_history"])
+                        if m.get("role") == "user"
+                    ),
+                    "I'm looking to buy",
+                ),
                 buyer_name="Intel Ian",
                 conversation_history=seller_intelligence["conversation_history"],
             )
 
         # Conversation history was preserved through handoff
         _call_kwargs = mock_buyer_decoder.analyze_buyer.call_args
-        _passed_history = _call_kwargs.kwargs.get("conversation_history") or (_call_kwargs[0][1] if len(_call_kwargs[0]) > 1 else None)
+        _passed_history = _call_kwargs.kwargs.get("conversation_history") or (
+            _call_kwargs[0][1] if len(_call_kwargs[0]) > 1 else None
+        )
         assert _passed_history is not None
 
         # Both bots produced results from the shared context

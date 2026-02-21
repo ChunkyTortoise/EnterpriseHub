@@ -50,8 +50,7 @@ SAMPLE_HISTORY = [
     {
         "role": "assistant",
         "content": (
-            "Excellent! Are you looking to move soon or within a few months? "
-            "Do you have a preferred neighborhood?"
+            "Excellent! Are you looking to move soon or within a few months? Do you have a preferred neighborhood?"
         ),
     },
 ]
@@ -322,10 +321,7 @@ class TestKeyFactsExtraction:
 
     def test_caps_at_five_facts(self):
         gen = HandoffCardGenerator()
-        history = [
-            {"role": "user", "content": f"Budget is ${i * 100}k, ready soon"}
-            for i in range(10)
-        ]
+        history = [{"role": "user", "content": f"Budget is ${i * 100}k, ready soon"} for i in range(10)]
         facts = gen._extract_key_facts(history)
         assert len(facts) <= 5
 

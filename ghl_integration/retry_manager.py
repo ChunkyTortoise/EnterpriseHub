@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class RetryStatus(Enum):
     """Retry status enumeration"""
+
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCESS = "success"
@@ -31,6 +32,7 @@ class RetryStatus(Enum):
 @dataclass
 class RetryEntry:
     """Represents a webhook retry entry"""
+
     event_id: str
     bot_type: str
     event_type: str
@@ -42,7 +44,7 @@ class RetryEntry:
     last_attempt_at: Optional[str] = None
     next_attempt_at: Optional[str] = None
     error_history: List[str] = None
-    
+
     def __post_init__(self):
         if self.error_history is None:
             self.error_history = []
@@ -51,12 +53,12 @@ class RetryEntry:
 class WebhookRetryManager:
     """
     Manages webhook retry logic and dead letter queue.
-    
+
     Strategy:
     - Immediate: 3 attempts with exponential backoff (1s, 2s, 4s)
     - Delayed: Re-queue to Redis for retry after 1min, 5min, 15min
     - Dead Letter: After all retries exhausted, store for manual review
-    
+
     Redis keys:
     - ghl:webhooks:retry:{event_id} - retry metadata
     - ghl:webhooks:retry:queue - sorted set for scheduled retries (score = timestamp)
@@ -66,10 +68,10 @@ class WebhookRetryManager:
 
     # Immediate retry delays (seconds)
     IMMEDIATE_DELAYS = [1, 2, 4]
-    
+
     # Delayed retry delays (minutes)
     DELAYED_DELAYS = [1, 5, 15]
-    
+
     MAX_TOTAL_ATTEMPTS = 6  # 3 immediate + 3 delayed
 
     def __init__(self):
@@ -105,15 +107,14 @@ class WebhookRetryManager:
     ) -> Dict[str, Any]:
         """
         Schedule a webhook for retry.
-        
+
         Returns:
             Dict with retry info including scheduled time
         """
         if not event_id:
             import hashlib
-            event_id = hashlib.md5(
-                json.dumps(payload, sort_keys=True).encode()
-            ).hexdigest()
+
+            event_id = hashlib.md5(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
         # Check if already at max attempts
         if attempt >= self.MAX_TOTAL_ATTEMPTS:
@@ -162,8 +163,7 @@ class WebhookRetryManager:
         await self._add_to_retry_queue(event_id, score)
 
         logger.info(
-            f"Scheduled retry {entry.attempt}/{entry.max_attempts} "
-            f"for {bot_type}/{event_type} at {next_attempt}"
+            f"Scheduled retry {entry.attempt}/{entry.max_attempts} for {bot_type}/{event_type} at {next_attempt}"
         )
 
         return {
@@ -211,7 +211,7 @@ class WebhookRetryManager:
                         event_id=event_id,
                         attempt=0,
                     )
-            
+
             return {"error": "Event not found in DLQ"}
 
         except Exception as e:
@@ -223,7 +223,7 @@ class WebhookRetryManager:
         try:
             retry_queue_size = await self.cache.zcard("ghl:webhooks:retry:queue")
             dlq_size = await self.cache.llen("ghl:webhooks:dlq")
-            
+
             return {
                 "retry_queue_size": retry_queue_size,
                 "dlq_size": dlq_size,
@@ -281,55 +281,53 @@ class WebhookRetryManager:
             "final_error": final_error,
             "sent_to_dlq_at": datetime.utcnow().isoformat(),
         }
-        
+
         # Add to DLQ (left push for newest first)
         await self.cache.lpush("ghl:webhooks:dlq", json.dumps(dlq_entry))
-        
+
         # Trim DLQ to max 1000 entries
         await self.cache.ltrim("ghl:webhooks:dlq", 0, 999)
-        
+
         # Clean up retry entry
         await self.cache.delete(f"ghl:webhooks:retry:{event_id}")
         await self.cache.zrem("ghl:webhooks:retry:queue", event_id)
-        
-        logger.warning(
-            f"Event {event_id} ({bot_type}/{event_type}) sent to DLQ: {final_error}"
-        )
+
+        logger.warning(f"Event {event_id} ({bot_type}/{event_type}) sent to DLQ: {final_error}")
 
     async def _retry_worker_loop(self):
         """Background worker to process scheduled retries"""
         logger.info("Retry worker started")
-        
+
         while not self._shutdown:
             try:
                 # Get due retries
                 due_events = await self._get_due_retries(limit=5)
-                
+
                 if due_events:
                     logger.info(f"Processing {len(due_events)} due retries")
-                    
+
                     for event_id in due_events:
                         if self._shutdown:
                             break
-                        
+
                         # Skip if already processing
                         if event_id in self.processing:
                             continue
-                        
+
                         self.processing.add(event_id)
-                        
+
                         try:
                             # Get retry entry
                             entry = await self._get_retry_entry(event_id)
                             if not entry:
                                 continue
-                            
+
                             # Remove from queue temporarily
                             await self.cache.zrem("ghl:webhooks:retry:queue", event_id)
-                            
+
                             # Attempt retry
                             success = await self._attempt_retry(entry)
-                            
+
                             if success:
                                 await self.record_success(event_id)
                             else:
@@ -342,22 +340,22 @@ class WebhookRetryManager:
                                     attempt=entry.attempt,
                                     error=f"Retry attempt {entry.attempt} failed",
                                 )
-                        
+
                         except Exception as e:
                             logger.error(f"Retry processing error for {event_id}: {e}")
-                        
+
                         finally:
                             self.processing.discard(event_id)
-                
+
                 # Wait before next check
                 await asyncio.sleep(5)
-                
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Retry worker error: {e}")
                 await asyncio.sleep(10)
-        
+
         logger.info("Retry worker stopped")
 
     async def _attempt_retry(self, entry: RetryEntry) -> bool:
@@ -368,15 +366,15 @@ class WebhookRetryManager:
             if not handler:
                 logger.error(f"No handler found for {entry.bot_type}/{entry.event_type}")
                 return False
-            
+
             # Call handler
             result = await handler(entry.payload)
-            
+
             # Check result
             if isinstance(result, dict):
                 return result.get("success", False)
             return True
-        
+
         except Exception as e:
             logger.error(f"Retry attempt failed: {e}")
             return False
@@ -393,7 +391,7 @@ class WebhookRetryManager:
                 from .handlers.buyer_handlers import get_handler
             else:
                 return None
-            
+
             return get_handler(event_type)
         except Exception as e:
             logger.error(f"Failed to get handler: {e}")

@@ -49,12 +49,20 @@ class TestAlertManager:
 
     def test_get_active_rules(self, alert_manager):
         rule1 = AlertRuleConfig(
-            rule_id="r1", name="R1", metric_name="latency",
-            condition=AlertCondition.GREATER_THAN, threshold=50.0, is_active=True,
+            rule_id="r1",
+            name="R1",
+            metric_name="latency",
+            condition=AlertCondition.GREATER_THAN,
+            threshold=50.0,
+            is_active=True,
         )
         rule2 = AlertRuleConfig(
-            rule_id="r2", name="R2", metric_name="cost",
-            condition=AlertCondition.GREATER_THAN, threshold=1.0, is_active=False,
+            rule_id="r2",
+            name="R2",
+            metric_name="cost",
+            condition=AlertCondition.GREATER_THAN,
+            threshold=1.0,
+            is_active=False,
         )
         alert_manager.add_rule(rule1)
         alert_manager.add_rule(rule2)
@@ -190,12 +198,18 @@ class TestAlertManager:
 
     def test_multiple_rules_same_metric(self, alert_manager):
         rule1 = AlertRuleConfig(
-            rule_id="r1", name="R1", metric_name="latency",
-            condition=AlertCondition.GREATER_THAN, threshold=100.0,
+            rule_id="r1",
+            name="R1",
+            metric_name="latency",
+            condition=AlertCondition.GREATER_THAN,
+            threshold=100.0,
         )
         rule2 = AlertRuleConfig(
-            rule_id="r2", name="R2", metric_name="latency",
-            condition=AlertCondition.GREATER_THAN, threshold=200.0,
+            rule_id="r2",
+            name="R2",
+            metric_name="latency",
+            condition=AlertCondition.GREATER_THAN,
+            threshold=200.0,
         )
         alert_manager.add_rule(rule1)
         alert_manager.add_rule(rule2)

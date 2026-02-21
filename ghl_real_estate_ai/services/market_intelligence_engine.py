@@ -341,7 +341,9 @@ class MarketIntelligenceEngine:
             logger.error(f"Lead density heatmap generation failed: {e} (took {processing_time_ms:.1f}ms)")
             raise RuntimeError(f"Failed to generate lead density heatmap: {str(e)}")
 
-    async def calculate_market_metrics(self, region: str = "rancho_cucamonga_tx", time_range_days: int = 30) -> Dict[str, Any]:
+    async def calculate_market_metrics(
+        self, region: str = "rancho_cucamonga_tx", time_range_days: int = 30
+    ) -> Dict[str, Any]:
         """
         Calculate comprehensive market intelligence metrics with parallel processing.
 

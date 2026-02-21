@@ -1433,16 +1433,16 @@ def glassmorphic_card(
         {
         f'''<a href="{cta_url}" style="
             display: inline-block;
-            background-color: {THEME['primary']};
+            background-color: {THEME["primary"]};
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.2s;
-        " onmouseover="this.style.backgroundColor='{THEME['primary_dark']}';
+        " onmouseover="this.style.backgroundColor='{THEME["primary_dark"]}';
                        this.style.transform='translateY(-2px)';"
-           onmouseout="this.style.backgroundColor='{THEME['primary']}';
+           onmouseout="this.style.backgroundColor='{THEME["primary"]}';
                       this.style.transform='translateY(0)';">
             {cta_text} →
         </a>'''

@@ -64,9 +64,7 @@ class VoicePipeline:
     _tts_task: asyncio.Task[Any] | None = field(default=None, repr=False)
     _metrics: PipelineMetrics = field(default_factory=PipelineMetrics, repr=False)
 
-    def on_audio_output(
-        self, callback: Callable[[bytes], Coroutine[Any, Any, None]]
-    ) -> None:
+    def on_audio_output(self, callback: Callable[[bytes], Coroutine[Any, Any, None]]) -> None:
         """Register callback for outgoing audio (to send back to caller)."""
         self._audio_output_callback = callback
 
@@ -118,9 +116,7 @@ class VoicePipeline:
         stt_done = time.monotonic()
 
         # Generate LLM response and stream to TTS
-        self._tts_task = asyncio.create_task(
-            self._generate_and_speak(result.text, stt_done)
-        )
+        self._tts_task = asyncio.create_task(self._generate_and_speak(result.text, stt_done))
 
     async def _generate_and_speak(self, user_text: str, stt_done_time: float) -> None:
         """Generate LLM response and stream it through TTS."""

@@ -449,7 +449,9 @@ async def demo_message(req: DemoMessageRequest) -> DemoMessageResponse:
 
 
 @app.post("/v1/demo/scenario/{scenario_name}", response_model=ScenarioResponse)
-async def run_scenario(scenario_name: str, tenant_id: str = "tenant-alpha", user_id: str = "demo-user") -> ScenarioResponse:
+async def run_scenario(
+    scenario_name: str, tenant_id: str = "tenant-alpha", user_id: str = "demo-user"
+) -> ScenarioResponse:
     if scenario_name not in {"kialash", "chase"}:
         raise HTTPException(status_code=404, detail="Scenario not found")
 

@@ -1008,24 +1008,16 @@ class PerformanceMonitor:
                     "severity": alert.severity.value,
                     "message": alert.message,
                     # AlertingService expects these keys for its default rules
-                    "p95_latency_ms": alert.current_value
-                    if alert.metric_type == MetricType.API_LATENCY
-                    else 0,
-                    "error_rate": alert.current_value
-                    if alert.metric_type == MetricType.ERROR_RATE
-                    else 0,
-                    "cache_hit_rate": alert.current_value
-                    if alert.metric_type == MetricType.CACHE_HIT
-                    else 1.0,
+                    "p95_latency_ms": alert.current_value if alert.metric_type == MetricType.API_LATENCY else 0,
+                    "error_rate": alert.current_value if alert.metric_type == MetricType.ERROR_RATE else 0,
+                    "cache_hit_rate": alert.current_value if alert.metric_type == MetricType.CACHE_HIT else 1.0,
                 }
 
                 fired_alerts = await alerting_service.check_alerts(perf_stats)
                 for fired in fired_alerts:
                     await alerting_service.send_alert(fired)
 
-                logger.debug(
-                    f"Fired {alert_type} alert to AlertingService: {alert.message}"
-                )
+                logger.debug(f"Fired {alert_type} alert to AlertingService: {alert.message}")
 
         except ImportError:
             logger.debug("AlertingService not available, alerts logged only")
@@ -1038,11 +1030,7 @@ class PerformanceMonitor:
             return "99.9%"
 
         total = len(self._snapshots)
-        healthy = sum(
-            1
-            for s in self._snapshots
-            if s.api_p95_ms <= self.thresholds.api_p99_ms
-        )
+        healthy = sum(1 for s in self._snapshots if s.api_p95_ms <= self.thresholds.api_p99_ms)
         pct = (healthy / total) * 100 if total > 0 else 99.9
         return f"{pct:.1f}%"
 

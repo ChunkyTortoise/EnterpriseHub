@@ -306,11 +306,14 @@ async def lifespan(app: FastAPI):
                 metrics_collector.set_repository(jorge_repository)
                 alerting_service.set_repository(jorge_repository)
 
-                logger.info("✅ Repository wired into Jorge services (PerformanceTracker, BotMetricsCollector, AlertingService)")
+                logger.info(
+                    "✅ Repository wired into Jorge services (PerformanceTracker, BotMetricsCollector, AlertingService)"
+                )
 
                 # Wire repository into JorgeHandoffService (module-level instance)
                 try:
                     from ghl_real_estate_ai.api.routes.webhook import handoff_service
+
                     handoff_service.set_repository(jorge_repository)
                     logger.info("✅ Repository wired into JorgeHandoffService")
 
@@ -480,6 +483,7 @@ async def lifespan(app: FastAPI):
             from ghl_real_estate_ai.services.jorge.abandonment_background_task import (
                 stop_abandonment_background_task,
             )
+
             await stop_abandonment_background_task()
             logger.info("Lead Abandonment Recovery background task stopped")
         except Exception as e:
@@ -491,6 +495,7 @@ async def lifespan(app: FastAPI):
             from ghl_real_estate_ai.services.jorge.source_roi_background_task import (
                 stop_source_roi_background_task,
             )
+
             await stop_source_roi_background_task()
             logger.info("Lead Source ROI Analytics background task stopped")
         except Exception as e:
@@ -765,6 +770,7 @@ def _setup_routers(app: FastAPI):
 
     # Concierge Admin (multi-tenant management + hot-reload)
     from ghl_real_estate_ai.api.routes.concierge_admin import router as concierge_admin_router
+
     app.include_router(concierge_admin_router, prefix="/admin/concierge", tags=["Concierge Admin"])
 
     # GHL Unified Webhook Integration (Phase 1: Lead/Seller/Buyer bot handlers)
@@ -993,10 +999,7 @@ if os.getenv("ENVIRONMENT") == "production":
         os.getenv("FRONTEND_URL", ""),
     ]
     # Remove empty strings and localhost
-    ALLOWED_ORIGINS = [
-        origin for origin in ALLOWED_ORIGINS 
-        if origin and not origin.startswith("http://localhost")
-    ]
+    ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if origin and not origin.startswith("http://localhost")]
 else:
     # Development/Staging: Allow localhost but NOT wildcard
     ALLOWED_ORIGINS = [

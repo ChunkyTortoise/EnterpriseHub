@@ -6,6 +6,7 @@ from ghl_real_estate_ai.models.lead_scoring import BuyerIntentProfile
 
 class ConversationTurn(TypedDict, total=False):
     """TypedDict for a single conversation turn."""
+
     role: str  # "user" or "assistant"
     content: str
     timestamp: Optional[str]
@@ -13,6 +14,7 @@ class ConversationTurn(TypedDict, total=False):
 
 class PropertyPreference(TypedDict, total=False):
     """TypedDict for property preferences."""
+
     property_type: str  # "single_family", "condo", "townhouse", etc.
     bedrooms_min: int
     bedrooms_max: int
@@ -25,6 +27,7 @@ class PropertyPreference(TypedDict, total=False):
 
 class AffordabilityAnalysis(TypedDict, total=False):
     """TypedDict for affordability analysis."""
+
     monthly_payment: float
     down_payment: float
     total_cost: float
@@ -35,6 +38,7 @@ class AffordabilityAnalysis(TypedDict, total=False):
 
 class MortgageDetails(TypedDict, total=False):
     """TypedDict for mortgage details."""
+
     rate: float
     term: int  # years
     type: str  # "fixed", "arm", "fha", "va"
@@ -44,6 +48,7 @@ class MortgageDetails(TypedDict, total=False):
 
 class ObjectionEntry(TypedDict, total=False):
     """TypedDict for objection history entry."""
+
     objection_type: str
     timestamp: str
     resolved: bool
@@ -52,6 +57,7 @@ class ObjectionEntry(TypedDict, total=False):
 
 class MatchedProperty(TypedDict, total=False):
     """TypedDict for matched property summary."""
+
     property_id: str
     address: str
     price: float

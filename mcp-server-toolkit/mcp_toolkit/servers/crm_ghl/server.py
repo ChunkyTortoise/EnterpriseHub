@@ -15,23 +15,17 @@ _field_mapper = GHLFieldMapper()
 class GHLClient(Protocol):
     """Protocol for GoHighLevel API client."""
 
-    async def search_contacts(self, query: str, limit: int, filters: dict | None) -> list[dict]:
-        ...
+    async def search_contacts(self, query: str, limit: int, filters: dict | None) -> list[dict]: ...
 
-    async def create_contact(self, **kwargs: Any) -> dict:
-        ...
+    async def create_contact(self, **kwargs: Any) -> dict: ...
 
-    async def update_contact(self, contact_id: str, **kwargs: Any) -> dict:
-        ...
+    async def update_contact(self, contact_id: str, **kwargs: Any) -> dict: ...
 
-    async def get_contact(self, contact_id: str) -> dict:
-        ...
+    async def get_contact(self, contact_id: str) -> dict: ...
 
-    async def get_pipeline_summary(self, pipeline_id: str | None) -> dict:
-        ...
+    async def get_pipeline_summary(self, pipeline_id: str | None) -> dict: ...
 
-    async def create_opportunity(self, **kwargs: Any) -> dict:
-        ...
+    async def create_opportunity(self, **kwargs: Any) -> dict: ...
 
 
 class MockGHLClient:
@@ -42,7 +36,9 @@ class MockGHLClient:
         self._opportunities: list[dict] = []
         self._counter = 0
 
-    async def search_contacts(self, query: str, limit: int = 20, filters: dict | None = None) -> list[dict]:
+    async def search_contacts(
+        self, query: str, limit: int = 20, filters: dict | None = None
+    ) -> list[dict]:
         results = []
         for c in self._contacts.values():
             q = query.lower()

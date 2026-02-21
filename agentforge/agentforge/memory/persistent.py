@@ -22,6 +22,7 @@ class FileMemoryConfig(BaseModel):
         autosave: Whether to automatically save after each modification.
         create_dirs: Whether to create parent directories if they don't exist.
     """
+
     path: str = "memory.json"
     autosave: bool = True
     create_dirs: bool = True
@@ -67,7 +68,7 @@ class FileMemory(MemoryProvider):
         """Load data from the JSON file."""
         if os.path.exists(self.config.path):
             try:
-                with open(self.config.path, encoding='utf-8') as f:
+                with open(self.config.path, encoding="utf-8") as f:
                     data = json.load(f)
                     self._data = {k: MemoryEntry(**v) for k, v in data.items()}
             except (json.JSONDecodeError, KeyError, TypeError):
@@ -82,7 +83,7 @@ class FileMemory(MemoryProvider):
         # Write to temp file first for atomicity
         temp_path = f"{self.config.path}.tmp"
         try:
-            with open(temp_path, 'w', encoding='utf-8') as f:
+            with open(temp_path, "w", encoding="utf-8") as f:
                 json.dump(
                     {k: v.model_dump() for k, v in self._data.items()},
                     f,
@@ -336,8 +337,7 @@ class InMemoryVectorStore(MemoryProvider):
             import numpy as np
         except ImportError as e:
             raise ImportError(
-                "numpy is required for vector search. "
-                "Install with: pip install numpy"
+                "numpy is required for vector search. Install with: pip install numpy"
             ) from e
 
         if not self._embeddings:

@@ -38,6 +38,7 @@ from ghl_real_estate_ai.models.base import Base
 # PII encryption helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_fernet() -> Fernet:
     key = os.getenv("SDR_FERNET_KEY", "")
     if not key:
@@ -67,14 +68,13 @@ def decrypt_pii(value: Optional[str]) -> Optional[str]:
 # ORM models
 # ---------------------------------------------------------------------------
 
+
 class SDRProspect(Base):
     """One row per contact enrolled in the SDR system."""
 
     __tablename__ = "sdr_prospects"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
     contact_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     location_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     source: Mapped[str] = mapped_column(String(32), nullable=False)  # ProspectSource.value
@@ -83,9 +83,7 @@ class SDRProspect(Base):
     pcs_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     enrolled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     last_scored_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     sequences: Mapped[List["SDROutreachSequence"]] = relationship(
         "SDROutreachSequence", back_populates="prospect", cascade="all, delete-orphan"
@@ -99,24 +97,16 @@ class SDROutreachSequence(Base):
 
     __tablename__ = "sdr_outreach_sequences"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4())
-    )
-    prospect_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("sdr_prospects.id"), nullable=False
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    prospect_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("sdr_prospects.id"), nullable=False)
     contact_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     location_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     current_step: Mapped[str] = mapped_column(String(32), nullable=False)  # SequenceStep.value
     ab_variant: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    next_touch_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True, index=True
-    )
+    next_touch_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
     enrolled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     reply_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), nullable=True
-    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     prospect: Mapped["SDRProspect"] = relationship("SDRProspect", back_populates="sequences")
     touches: Mapped[List["SDROutreachTouch"]] = relationship(
@@ -129,9 +119,7 @@ class SDROutreachTouch(Base):
 
     __tablename__ = "sdr_outreach_touches"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
     sequence_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), ForeignKey("sdr_outreach_sequences.id"), nullable=False
     )
@@ -141,13 +129,9 @@ class SDROutreachTouch(Base):
     message_body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     replied_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    _reply_body_encrypted: Mapped[Optional[str]] = mapped_column(
-        "reply_body", Text, nullable=True
-    )
+    _reply_body_encrypted: Mapped[Optional[str]] = mapped_column("reply_body", Text, nullable=True)
 
-    sequence: Mapped["SDROutreachSequence"] = relationship(
-        "SDROutreachSequence", back_populates="touches"
-    )
+    sequence: Mapped["SDROutreachSequence"] = relationship("SDROutreachSequence", back_populates="touches")
 
     @property
     def reply_body(self) -> Optional[str]:
@@ -163,18 +147,14 @@ class SDRObjectionLog(Base):
 
     __tablename__ = "sdr_objection_logs"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
     contact_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     objection_type: Mapped[str] = mapped_column(String(64), nullable=False)
     _raw_message_encrypted: Mapped[str] = mapped_column("raw_message", Text, nullable=False)
     rebuttal_used: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     outcome: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     # "sequence_continued" | "opted_out" | "qualified" | "paused"
-    logged_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    logged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     @property
     def raw_message(self) -> str:
@@ -188,6 +168,7 @@ class SDRObjectionLog(Base):
 # ---------------------------------------------------------------------------
 # Pydantic API schemas
 # ---------------------------------------------------------------------------
+
 
 class SDRWebhookPayload(BaseModel):
     """Payload from GHL webhook triggers."""

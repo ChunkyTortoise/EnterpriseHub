@@ -47,6 +47,7 @@ class ChartGenerator:
     def _check_matplotlib() -> bool:
         try:
             import matplotlib
+
             return True
         except ImportError:
             return False
@@ -68,7 +69,9 @@ class ChartGenerator:
         data_keys = [k for k in data if k != "labels"]
 
         if not labels or not data_keys:
-            return ChartResult(error="No data to chart. Need 'labels' and at least one data series.")
+            return ChartResult(
+                error="No data to chart. Need 'labels' and at least one data series."
+            )
 
         if self._matplotlib_available:
             return self._generate_matplotlib(data, labels, data_keys, config)
@@ -83,6 +86,7 @@ class ChartGenerator:
     ) -> ChartResult:
         try:
             import matplotlib
+
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
 

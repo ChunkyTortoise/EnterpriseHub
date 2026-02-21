@@ -165,7 +165,7 @@ class CitationGenerator:
         citations = []
 
         # Score each result and generate citation
-        for rank, result in enumerate(results[:self.max_citations], 1):
+        for rank, result in enumerate(results[: self.max_citations], 1):
             # Calculate relevance
             relevance = self._calculate_relevance(result, query)
 
@@ -291,9 +291,7 @@ class RelationshipDetector:
     def _compile_patterns(self) -> None:
         """Compile regex patterns."""
         for rel_type, patterns in self.RELATIONSHIP_PATTERNS.items():
-            self._compiled_patterns[rel_type] = [
-                re.compile(p, re.I) for p in patterns
-            ]
+            self._compiled_patterns[rel_type] = [re.compile(p, re.I) for p in patterns]
 
     def detect_relationships(
         self,
@@ -574,18 +572,14 @@ class GraphRAGEngine:
 
                 # Detect relationships if enabled
                 if self.config.enable_relationship_detection:
-                    relationships = self._relationship_detector.detect_relationships(
-                        entities, chunk.content
-                    )
+                    relationships = self._relationship_detector.detect_relationships(entities, chunk.content)
                     for source, target, rel_type in relationships:
                         # Find node IDs
                         source_id = self._knowledge_graph._node_index.get(source.lower())
                         target_id = self._knowledge_graph._node_index.get(target.lower())
 
                         if source_id and target_id:
-                            self._knowledge_graph.add_edge(
-                                source_id, target_id, rel_type
-                            )
+                            self._knowledge_graph.add_edge(source_id, target_id, rel_type)
 
         except Exception as e:
             raise RetrievalError(
@@ -671,24 +665,26 @@ class GraphRAGEngine:
         }
 
         for node in nodes:
-            context["entities"].append({
-                "id": node.id,
-                "type": node.entity_type,
-                "name": node.name,
-                "confidence": node.confidence,
-            })
-
-            # Get neighbors
-            neighbors = self._knowledge_graph.get_neighbors(
-                node.id, self.config.graph_depth
+            context["entities"].append(
+                {
+                    "id": node.id,
+                    "type": node.entity_type,
+                    "name": node.name,
+                    "confidence": node.confidence,
+                }
             )
 
+            # Get neighbors
+            neighbors = self._knowledge_graph.get_neighbors(node.id, self.config.graph_depth)
+
             for neighbor in neighbors:
-                context["relationships"].append({
-                    "from": node.name,
-                    "to": neighbor.name,
-                    "type": "related_to",
-                })
+                context["relationships"].append(
+                    {
+                        "from": node.name,
+                        "to": neighbor.name,
+                        "type": "related_to",
+                    }
+                )
 
         return context
 

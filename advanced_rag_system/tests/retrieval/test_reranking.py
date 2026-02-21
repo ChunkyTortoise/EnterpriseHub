@@ -26,7 +26,6 @@ from src.reranking.cross_encoder import CrossEncoderReRanker
 
 
 @pytest.mark.integration
-
 # ============================================================================
 # Fixtures
 # ============================================================================

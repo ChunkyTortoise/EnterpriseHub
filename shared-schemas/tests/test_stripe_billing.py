@@ -1,10 +1,11 @@
 """Tests for Stripe billing service (mocked)."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from shared_schemas.billing import UsageEvent, UsageEventType
+import pytest
+
 from shared_infra.stripe_billing import StripeBillingService
+from shared_schemas.billing import UsageEvent, UsageEventType
 
 
 @pytest.fixture
@@ -28,9 +29,7 @@ class TestCreateCustomer:
     @patch("shared_infra.stripe_billing.stripe")
     async def test_create_customer_with_metadata(self, mock_stripe, billing_service):
         mock_stripe.Customer.create.return_value = {"id": "cus_test"}
-        await billing_service.create_customer(
-            "test@example.com", "Test", metadata={"tier": "pro"}
-        )
+        await billing_service.create_customer("test@example.com", "Test", metadata={"tier": "pro"})
         mock_stripe.Customer.create.assert_called_once_with(
             email="test@example.com", name="Test", metadata={"tier": "pro"}
         )
@@ -51,9 +50,7 @@ class TestReportUsage:
     @patch("shared_infra.stripe_billing.stripe")
     async def test_report_usage(self, mock_stripe, billing_service):
         mock_stripe.billing.MeterEvent.create.return_value = {"identifier": "evt_test"}
-        event = UsageEvent(
-            tenant_id="cus_test", event_type=UsageEventType.RAG_QUERY, quantity=5.0
-        )
+        event = UsageEvent(tenant_id="cus_test", event_type=UsageEventType.RAG_QUERY, quantity=5.0)
         result = await billing_service.report_usage(event)
         assert result["identifier"] == "evt_test"
         mock_stripe.billing.MeterEvent.create.assert_called_once()

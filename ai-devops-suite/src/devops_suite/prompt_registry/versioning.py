@@ -88,12 +88,14 @@ class PromptVersionManager:
         if not v1 or not v2:
             return None
 
-        diff_lines = list(difflib.unified_diff(
-            v1.content.splitlines(keepends=True),
-            v2.content.splitlines(keepends=True),
-            fromfile=f"v{from_v}",
-            tofile=f"v{to_v}",
-        ))
+        diff_lines = list(
+            difflib.unified_diff(
+                v1.content.splitlines(keepends=True),
+                v2.content.splitlines(keepends=True),
+                fromfile=f"v{from_v}",
+                tofile=f"v{to_v}",
+            )
+        )
         added = sum(1 for l in diff_lines if l.startswith("+") and not l.startswith("+++"))
         removed = sum(1 for l in diff_lines if l.startswith("-") and not l.startswith("---"))
 
@@ -129,4 +131,5 @@ class PromptVersionManager:
 def _extract_variables(content: str) -> list[str]:
     """Extract Jinja2-style variables from prompt content."""
     import re
+
     return sorted(set(re.findall(r"\{\{\s*(\w+)\s*\}\}", content)))

@@ -10,6 +10,7 @@ Usage:
     python -m ghl_real_estate_ai.utils.workflow_visualizer --bot buyer
     python -m ghl_real_estate_ai.utils.workflow_visualizer --bot seller
 """
+
 import os
 from pathlib import Path
 from typing import Literal
@@ -253,7 +254,14 @@ def visualize_seller_bot_workflow(output_dir: Path) -> None:
     )
 
     # Intermediate routing
-    for node in ["handle_objection", "generate_cma", "provide_pricing_guidance", "analyze_market_conditions", "defend_valuation", "prepare_listing"]:
+    for node in [
+        "handle_objection",
+        "generate_cma",
+        "provide_pricing_guidance",
+        "analyze_market_conditions",
+        "defend_valuation",
+        "prepare_listing",
+    ]:
         workflow_standard.add_edge(node, "select_strategy")
 
     workflow_standard.add_edge("select_strategy", "generate_jorge_response")
@@ -316,16 +324,16 @@ def generate_workflow_diagrams(bot: BotType | None = None) -> None:
     """Generate workflow diagrams for specified bot(s)"""
     output_dir = Path(__file__).parent.parent.parent / "docs" / "workflows"
     output_dir.mkdir(exist_ok=True)
-    
+
     if bot is None or bot == "lead":
         visualize_lead_bot_workflow(output_dir)
-    
+
     if bot is None or bot == "buyer":
         visualize_buyer_bot_workflow(output_dir)
-    
+
     if bot is None or bot == "seller":
         visualize_seller_bot_workflow(output_dir)
-    
+
     logger.info(f"\n✅ Workflow diagrams generated in {output_dir}")
     logger.info("\nTo view diagrams:")
     logger.info("  - Use Mermaid Live Editor: https://mermaid.live")
@@ -335,7 +343,7 @@ def generate_workflow_diagrams(bot: BotType | None = None) -> None:
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Generate LangGraph workflow diagrams")
     parser.add_argument(
         "--bot",
@@ -347,8 +355,8 @@ if __name__ == "__main__":
         action="store_true",
         help="Generate diagrams for all bots",
     )
-    
+
     args = parser.parse_args()
-    
+
     bot_filter = None if args.all else args.bot
     generate_workflow_diagrams(bot_filter)

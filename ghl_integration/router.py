@@ -41,6 +41,7 @@ BOT_TYPE_MAP = {
 
 class GHLWebhookPayload(BaseModel):
     """Standard GHL webhook payload structure"""
+
     event: str
     version: str = "v2"
     timestamp: datetime
@@ -50,6 +51,7 @@ class GHLWebhookPayload(BaseModel):
 
 class WebhookResponse(BaseModel):
     """Standard webhook response"""
+
     success: bool
     event_id: str
     message: str
@@ -59,7 +61,7 @@ class WebhookResponse(BaseModel):
 class GHLWebhookRouter:
     """
     Unified router for GHL webhooks.
-    
+
     Flow:
     1. Validate signature (RSA/HMAC)
     2. Deduplicate (event_id check)
@@ -92,15 +94,11 @@ class GHLWebhookRouter:
         logger.info(f"Registered handler: {bot_type}/{event_type}")
 
     async def validate_signature(
-        self,
-        payload: bytes,
-        signature: Optional[str],
-        headers: Dict[str, str],
-        webhook_secret: Optional[str] = None
+        self, payload: bytes, signature: Optional[str], headers: Dict[str, str], webhook_secret: Optional[str] = None
     ) -> bool:
         """
         Validate GHL webhook signature.
-        
+
         Supports:
         - HMAC-SHA256 signature verification
         - RSA signature verification (for enterprise)
@@ -119,21 +117,17 @@ class GHLWebhookRouter:
 
         try:
             # HMAC-SHA256 verification
-            expected_signature = hmac.new(
-                secret.encode(),
-                payload,
-                hashlib.sha256
-            ).hexdigest()
+            expected_signature = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
 
             # Support both hex and base64 encoded signatures
             if signature.startswith("sha256="):
                 signature = signature[7:]  # Remove 'sha256=' prefix
 
             is_valid = hmac.compare_digest(expected_signature, signature)
-            
+
             if not is_valid:
                 logger.warning(f"Signature mismatch: expected {expected_signature[:16]}... got {signature[:16]}...")
-            
+
             return is_valid
 
         except Exception as e:
@@ -146,7 +140,7 @@ class GHLWebhookRouter:
         24-hour TTL for deduplication window.
         """
         dedup_key = f"ghl:webhook:dedup:{event_id}"
-        
+
         try:
             # Check if we've seen this event before
             exists = await self.cache.get(dedup_key)
@@ -163,20 +157,15 @@ class GHLWebhookRouter:
             # Allow event through on deduplication failure
             return False
 
-    async def route_event(
-        self,
-        bot_type: str,
-        event_type: str,
-        payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def route_event(self, bot_type: str, event_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
         Route event to appropriate handler.
-        
+
         Args:
             bot_type: lead | seller | buyer
             event_type: Internal event type (e.g., 'contact.create')
             payload: Event payload data
-        
+
         Returns:
             Handler result or error info
         """
@@ -225,9 +214,7 @@ class GHLWebhookRouter:
         # Update rolling average
         current_avg = self.processing_metrics["avg_processing_time_ms"]
         n = self.processing_metrics["events_received"]
-        self.processing_metrics["avg_processing_time_ms"] = (
-            (current_avg * (n - 1) + processing_time_ms) / n
-        )
+        self.processing_metrics["avg_processing_time_ms"] = (current_avg * (n - 1) + processing_time_ms) / n
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get current processing metrics"""
@@ -250,22 +237,23 @@ async def handle_ghl_webhook(
 ):
     """
     Unified GHL webhook entry point.
-    
+
     Args:
         bot_type: lead | seller | buyer
         event_type: new-lead | seller-inquiry | buyer-inquiry | response | etc.
     """
     import time
+
     start_time = time.time()
 
     try:
         # Get raw body for signature verification
         body = await request.body()
-        
+
         # Validate signature
         signature = request.headers.get("X-GHL-Signature") or request.headers.get("x-ghl-signature")
         headers = dict(request.headers)
-        
+
         is_valid = await _ghl_router.validate_signature(body, signature, headers)
         if not is_valid:
             raise HTTPException(status_code=401, detail="Invalid webhook signature")
@@ -273,6 +261,7 @@ async def handle_ghl_webhook(
         # Parse payload
         try:
             import json
+
             payload = json.loads(body)
         except json.JSONDecodeError as e:
             raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
@@ -297,7 +286,7 @@ async def handle_ghl_webhook(
         result = await _ghl_router.route_event(bot_type, event_type, payload)
 
         processing_time = (time.time() - start_time) * 1000
-        
+
         # Update metrics
         await _ghl_router.update_metrics(processing_time, result.get("success", False))
 
@@ -305,13 +294,11 @@ async def handle_ghl_webhook(
             # Schedule retry in background
             if result.get("retry_eligible"):
                 from .retry_manager import get_retry_manager
+
                 retry_manager = get_retry_manager()
                 await retry_manager.schedule_retry(bot_type, event_type, payload, event_id)
 
-            raise HTTPException(
-                status_code=500,
-                detail=result.get("error", "Handler processing failed")
-            )
+            raise HTTPException(status_code=500, detail=result.get("error", "Handler processing failed"))
 
         return WebhookResponse(
             success=True,
@@ -325,11 +312,8 @@ async def handle_ghl_webhook(
     except Exception as e:
         logger.error(f"Webhook processing error: {e}")
         processing_time = (time.time() - start_time) * 1000
-        
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal processing error: {str(e)}"
-        )
+
+        raise HTTPException(status_code=500, detail=f"Internal processing error: {str(e)}")
 
 
 @router.get("/health")

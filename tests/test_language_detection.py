@@ -257,13 +257,10 @@ class TestLanguageMirrorProcessor:
         resp = _make_response()
 
         with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages"
-            ".language_mirror.get_language_detection_service"
+            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service"
         ) as mock_get_service:
             mock_service = MagicMock()
-            mock_service.detect.return_value = LanguageDetection(
-                language="es", confidence=0.95
-            )
+            mock_service.detect.return_value = LanguageDetection(language="es", confidence=0.95)
             mock_get_service.return_value = mock_service
 
             result = await stage.process(resp, ctx)
@@ -279,13 +276,10 @@ class TestLanguageMirrorProcessor:
         resp = _make_response("Original bot reply")
 
         with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages"
-            ".language_mirror.get_language_detection_service"
+            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service"
         ) as mock_get_service:
             mock_service = MagicMock()
-            mock_service.detect.return_value = LanguageDetection(
-                language="en", confidence=0.98
-            )
+            mock_service.detect.return_value = LanguageDetection(language="en", confidence=0.98)
             mock_get_service.return_value = mock_service
 
             result = await stage.process(resp, ctx)
@@ -305,8 +299,7 @@ class TestLanguageMirrorProcessor:
         resp = _make_response()
 
         with patch(
-            "ghl_real_estate_ai.services.jorge.response_pipeline.stages"
-            ".language_mirror.get_language_detection_service"
+            "ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror.get_language_detection_service"
         ) as mock_get_service:
             mock_service = MagicMock()
             mock_service.detect.return_value = LanguageDetection(

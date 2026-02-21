@@ -93,9 +93,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
     op.create_index("ix_personas_tenant_id", "agent_personas", ["tenant_id"])
-    op.create_index(
-        "ix_personas_tenant_active", "agent_personas", ["tenant_id", "is_active"]
-    )
+    op.create_index("ix_personas_tenant_active", "agent_personas", ["tenant_id", "is_active"])
 
 
 def downgrade() -> None:

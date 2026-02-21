@@ -74,7 +74,9 @@ class TestUpdateContactEmptyFields:
         assert result is True
         call_args = client._make_request.call_args
         # _make_request is called as (method, endpoint, data=payload)
-        payload = call_args[1].get("data") if "data" in call_args[1] else call_args[0][2] if len(call_args[0]) > 2 else {}
+        payload = (
+            call_args[1].get("data") if "data" in call_args[1] else call_args[0][2] if len(call_args[0]) > 2 else {}
+        )
         # All fields were empty/None, so customFields should not be in payload
         assert "customFields" not in payload
 

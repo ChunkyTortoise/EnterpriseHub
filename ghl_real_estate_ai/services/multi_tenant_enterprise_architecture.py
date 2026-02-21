@@ -738,7 +738,7 @@ class MultiTenantEnterpriseArchitecture:
         schema_name = f"tenant_{tenant.tenant_id.replace('-', '_')}"
 
         # Validate schema name to prevent SQL injection in DDL statements
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', schema_name):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", schema_name):
             raise ValueError(f"Invalid schema name derived from tenant_id: {tenant.tenant_id!r}")
 
         async with self.database_service.get_connection() as conn:

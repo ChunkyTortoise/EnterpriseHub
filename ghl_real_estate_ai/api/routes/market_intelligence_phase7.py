@@ -40,21 +40,22 @@ def _get_market_intelligence_automation() -> EnhancedMarketIntelligenceAutomatio
     # Note: Using a synchronous wrapper because lru_cache doesn't support async
     # The actual initialization happens via a factory
     from ghl_real_estate_ai.intelligence.market_intelligence_automation import EnhancedMarketIntelligenceAutomation
+
     return EnhancedMarketIntelligenceAutomation()
 
 
 async def get_market_intelligence(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(_get_market_intelligence_automation)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(_get_market_intelligence_automation),
 ) -> EnhancedMarketIntelligenceAutomation:
     """Get market intelligence automation instance via DI"""
-    if not hasattr(automation, 'initialized') or not automation.initialized:
+    if not hasattr(automation, "initialized") or not automation.initialized:
         await automation.initialize()
     return automation
 
 
 @router.get("/dashboard-data")
 async def get_market_intelligence_dashboard(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get comprehensive market intelligence dashboard data
@@ -82,10 +83,10 @@ async def get_market_intelligence_dashboard(
 
 @router.get("/market-trends")
 async def get_current_market_trends(
-    severity_filter: Optional[str] = None, 
-    market_area: Optional[str] = None, 
+    severity_filter: Optional[str] = None,
+    market_area: Optional[str] = None,
     limit: Optional[int] = 20,
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get current market trends with optional filtering
@@ -142,7 +143,7 @@ async def get_current_market_trends(
 
 @router.get("/competitive-analysis")
 async def get_competitive_positioning(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get competitive positioning analysis and alerts
@@ -197,10 +198,10 @@ async def get_competitive_positioning(
 
 @router.get("/market-opportunities")
 async def get_market_opportunities(
-    opportunity_type: Optional[str] = None, 
-    min_value: Optional[float] = None, 
+    opportunity_type: Optional[str] = None,
+    min_value: Optional[float] = None,
     time_sensitivity: Optional[str] = None,
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get identified market opportunities with filtering
@@ -268,7 +269,7 @@ async def get_market_opportunities(
 
 @router.get("/strategic-insights")
 async def get_strategic_insights(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get AI-generated strategic market insights
@@ -297,7 +298,7 @@ async def get_strategic_insights(
 @router.post("/start-monitoring")
 async def start_automated_monitoring(
     background_tasks: BackgroundTasks,
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Start automated market intelligence monitoring
@@ -329,9 +330,7 @@ async def start_automated_monitoring(
 
 
 @router.get("/stream/market-alerts")
-async def stream_market_alerts(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
-):
+async def stream_market_alerts(automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)):
     """
     Stream real-time market intelligence alerts
 
@@ -388,7 +387,7 @@ async def stream_market_alerts(
 
 @router.get("/market-health-score")
 async def get_market_health_score(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get comprehensive market health score and metrics
@@ -458,7 +457,7 @@ async def get_market_health_score(
 
 @router.get("/jorge-performance-summary")
 async def get_jorge_performance_summary(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """
     Get Jorge's performance summary in current market conditions
@@ -526,7 +525,7 @@ async def get_jorge_performance_summary(
 # Health check endpoint
 @router.get("/health")
 async def market_intelligence_health(
-    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)
+    automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
     """Health check for Phase 7 market intelligence system"""
     try:
@@ -545,4 +544,3 @@ async def market_intelligence_health(
 
     except Exception as e:
         return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
-

@@ -1,16 +1,18 @@
 """Tests for Analytics MCP server."""
 
 import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
-from mcp_toolkit.servers.analytics.server import mcp as analytics_mcp, configure, MetricsStore
-from mcp_toolkit.servers.analytics.chart_generator import ChartGenerator, ChartConfig
+from mcp_toolkit.servers.analytics.chart_generator import ChartConfig, ChartGenerator
+from mcp_toolkit.servers.analytics.server import MetricsStore, configure
+from mcp_toolkit.servers.analytics.server import mcp as analytics_mcp
 
 
 @pytest.fixture
 def store():
     s = MetricsStore()
     for i in range(10):
-        s.record("response_time", 100 + i * 10, timestamp=f"2026-02-{16+i//5}T{10+i}:00:00")
+        s.record("response_time", 100 + i * 10, timestamp=f"2026-02-{16 + i // 5}T{10 + i}:00:00")
     s.record("response_time", 900, timestamp="2026-02-17T12:00:00")  # anomaly
     s.record("error_rate", 0.02, timestamp="2026-02-16T10:00:00")
     s.record("error_rate", 0.03, timestamp="2026-02-16T11:00:00")
@@ -25,51 +27,46 @@ def client(store):
 
 class TestQueryMetrics:
     async def test_query_avg(self, client):
-        result = await client.call_tool("query_metrics", {
-            "metric": "response_time", "aggregation": "avg"
-        })
+        result = await client.call_tool(
+            "query_metrics", {"metric": "response_time", "aggregation": "avg"}
+        )
         assert "response_time" in result
         assert "avg" in result
 
     async def test_query_sum(self, client):
-        result = await client.call_tool("query_metrics", {
-            "metric": "response_time", "aggregation": "sum"
-        })
+        result = await client.call_tool(
+            "query_metrics", {"metric": "response_time", "aggregation": "sum"}
+        )
         assert "sum" in result
 
     async def test_query_raw(self, client):
-        result = await client.call_tool("query_metrics", {
-            "metric": "response_time", "aggregation": "none"
-        })
+        result = await client.call_tool(
+            "query_metrics", {"metric": "response_time", "aggregation": "none"}
+        )
         assert "data points" in result
 
     async def test_query_no_data(self, client):
-        result = await client.call_tool("query_metrics", {
-            "metric": "nonexistent"
-        })
+        result = await client.call_tool("query_metrics", {"metric": "nonexistent"})
         assert "nonexistent" in result or "No data" in result or "0.00" in result
 
 
 class TestDetectAnomalies:
     async def test_detect_finds_anomaly(self, client):
-        result = await client.call_tool("detect_anomalies", {
-            "metric": "response_time"
-        })
+        result = await client.call_tool("detect_anomalies", {"metric": "response_time"})
         assert "anomal" in result.lower()
         assert "900" in result
 
     async def test_no_anomalies_in_clean_data(self, client):
-        result = await client.call_tool("detect_anomalies", {
-            "metric": "error_rate"
-        })
+        result = await client.call_tool("detect_anomalies", {"metric": "error_rate"})
         assert "No anomalies" in result
 
 
 class TestGenerateChart:
     async def test_generate_chart(self, client):
-        result = await client.call_tool("generate_chart", {
-            "metric": "response_time", "chart_type": "bar", "title": "Response Times"
-        })
+        result = await client.call_tool(
+            "generate_chart",
+            {"metric": "response_time", "chart_type": "bar", "title": "Response Times"},
+        )
         assert "Chart generated" in result or "data points" in result
 
     async def test_chart_no_data(self, client):
@@ -79,9 +76,7 @@ class TestGenerateChart:
 
 class TestRecordMetric:
     async def test_record_new_metric(self, client):
-        result = await client.call_tool("record_metric", {
-            "metric": "cpu_usage", "value": 75.5
-        })
+        result = await client.call_tool("record_metric", {"metric": "cpu_usage", "value": 75.5})
         assert "Recorded" in result
         assert "cpu_usage" in result
 

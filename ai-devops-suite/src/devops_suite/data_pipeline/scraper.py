@@ -54,8 +54,13 @@ class WebScraper:
             policy = await self._check_robots(url, client)
             if not policy.allowed:
                 return ScrapeResult(
-                    url=url, status_code=403, html="", text="",
-                    title=None, links=[], elapsed_ms=0,
+                    url=url,
+                    status_code=403,
+                    html="",
+                    text="",
+                    title=None,
+                    links=[],
+                    elapsed_ms=0,
                     error="Blocked by robots.txt",
                 )
 
@@ -88,8 +93,13 @@ class WebScraper:
             )
         except httpx.HTTPError as e:
             return ScrapeResult(
-                url=url, status_code=0, html="", text="",
-                title=None, links=[], elapsed_ms=0,
+                url=url,
+                status_code=0,
+                html="",
+                text="",
+                title=None,
+                links=[],
+                elapsed_ms=0,
                 error=str(e),
             )
         finally:
@@ -113,7 +123,9 @@ class WebScraper:
         if elapsed < interval:
             await asyncio.sleep(interval - elapsed)
 
-    async def _check_robots(self, url: str, client: httpx.AsyncClient | None = None) -> RobotsPolicy:
+    async def _check_robots(
+        self, url: str, client: httpx.AsyncClient | None = None
+    ) -> RobotsPolicy:
         parsed = urlparse(url)
         robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
 

@@ -15,6 +15,7 @@ from .icon import icon
 @dataclass
 class MetricConfig:
     """Type-safe metric configuration."""
+
     variant: Literal["default", "success", "warning", "error", "premium"] = "default"
     trend: Literal["up", "down", "neutral", "none"] = "none"
     trend_color: Optional[str] = None
@@ -53,11 +54,36 @@ def render_obsidian_metric(
     }
 
     variant_colors = {
-        "default": {"value": theme.TOKENS["colors"]["text"]["primary"], "background": theme.TOKENS["colors"]["background"]["card"], "border": "rgba(255, 255, 255, 0.05)", "glow": None},
-        "success": {"value": "#10B981", "background": "rgba(16, 185, 129, 0.05)", "border": "rgba(16, 185, 129, 0.2)", "glow": "rgba(16, 185, 129, 0.3)"},
-        "warning": {"value": "#F59E0B", "background": "rgba(245, 158, 11, 0.05)", "border": "rgba(245, 158, 11, 0.2)", "glow": "rgba(245, 158, 11, 0.3)"},
-        "error": {"value": "#EF4444", "background": "rgba(239, 68, 68, 0.05)", "border": "rgba(239, 68, 68, 0.2)", "glow": "rgba(239, 68, 68, 0.3)"},
-        "premium": {"value": "#6366F1", "background": "rgba(99, 102, 241, 0.08)", "border": "rgba(99, 102, 241, 0.25)", "glow": "rgba(99, 102, 241, 0.4)"},
+        "default": {
+            "value": theme.TOKENS["colors"]["text"]["primary"],
+            "background": theme.TOKENS["colors"]["background"]["card"],
+            "border": "rgba(255, 255, 255, 0.05)",
+            "glow": None,
+        },
+        "success": {
+            "value": "#10B981",
+            "background": "rgba(16, 185, 129, 0.05)",
+            "border": "rgba(16, 185, 129, 0.2)",
+            "glow": "rgba(16, 185, 129, 0.3)",
+        },
+        "warning": {
+            "value": "#F59E0B",
+            "background": "rgba(245, 158, 11, 0.05)",
+            "border": "rgba(245, 158, 11, 0.2)",
+            "glow": "rgba(245, 158, 11, 0.3)",
+        },
+        "error": {
+            "value": "#EF4444",
+            "background": "rgba(239, 68, 68, 0.05)",
+            "border": "rgba(239, 68, 68, 0.2)",
+            "glow": "rgba(239, 68, 68, 0.3)",
+        },
+        "premium": {
+            "value": "#6366F1",
+            "background": "rgba(99, 102, 241, 0.08)",
+            "border": "rgba(99, 102, 241, 0.25)",
+            "glow": "rgba(99, 102, 241, 0.4)",
+        },
     }
 
     trend_indicators = {
@@ -71,9 +97,17 @@ def render_obsidian_metric(
     colors = variant_colors[config.variant]
     trend_config = trend_indicators[config.trend]
 
-    glow_style = f"box-shadow: 0 0 25px {colors['glow']}, {theme.TOKENS['shadow']['obsidian']};" if config.glow_effect and colors["glow"] else f"box-shadow: {theme.TOKENS['shadow']['obsidian']};"
+    glow_style = (
+        f"box-shadow: 0 0 25px {colors['glow']}, {theme.TOKENS['shadow']['obsidian']};"
+        if config.glow_effect and colors["glow"]
+        else f"box-shadow: {theme.TOKENS['shadow']['obsidian']};"
+    )
 
-    metric_icon_html = f'<div style="margin-bottom: 0.5rem;">{icon(metric_icon, color=colors["value"], size=size_config["icon_size"])}</div>' if metric_icon else ""
+    metric_icon_html = (
+        f'<div style="margin-bottom: 0.5rem;">{icon(metric_icon, color=colors["value"], size=size_config["icon_size"])}</div>'
+        if metric_icon
+        else ""
+    )
 
     trend_html = ""
     if config.trend != "none" and trend_config["icon"]:
@@ -84,7 +118,8 @@ def render_obsidian_metric(
     if config.show_comparison and comparison_value:
         comparison_html = f'<div style="color: {theme.TOKENS["colors"]["text"]["tertiary"]}; font-size: 0.75rem; font-weight: 500; margin-top: 0.5rem; font-family: {theme.TOKENS["typography"]["family"]["mono"]};">{comparison_value}</div>'
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="obsidian-metric {config.variant}" style="
         background: {colors["background"]};
         border: 1px solid {colors["border"]};
@@ -100,7 +135,9 @@ def render_obsidian_metric(
         {trend_html}
         {comparison_html}
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 __all__ = ["render_obsidian_metric", "MetricConfig"]

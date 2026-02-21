@@ -25,7 +25,9 @@ class ElevenLabsTTSProcessor:
         from elevenlabs.client import AsyncElevenLabs
 
         self._client = AsyncElevenLabs(api_key=self.api_key)
-        logger.info("ElevenLabs TTS client initialized (voice=%s, model=%s)", self.voice_id, self.model_id)
+        logger.info(
+            "ElevenLabs TTS client initialized (voice=%s, model=%s)", self.voice_id, self.model_id
+        )
 
     async def synthesize(self, text: str) -> AsyncIterator[bytes]:
         """Convert text to speech, yielding audio chunks."""

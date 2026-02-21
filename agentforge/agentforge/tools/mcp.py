@@ -267,9 +267,7 @@ class MCPToolAdapter:
             )
 
         self._connected = True
-        logger.info(
-            f"Connected to MCP server: {self.config.get_server_identifier()}"
-        )
+        logger.info(f"Connected to MCP server: {self.config.get_server_identifier()}")
 
     async def _connect_stdio(self) -> None:
         """Connect via stdio transport.
@@ -384,10 +382,7 @@ class MCPToolAdapter:
                 self._tools[tool.name] = tool
                 tools.append(tool)
 
-            logger.info(
-                f"Discovered {len(tools)} tools from "
-                f"{self.config.get_server_identifier()}"
-            )
+            logger.info(f"Discovered {len(tools)} tools from {self.config.get_server_identifier()}")
             return tools
 
         except Exception as e:
@@ -483,10 +478,7 @@ class MCPToolAdapter:
             self._write_stream = None
             self._connected = False
 
-            logger.info(
-                f"Disconnected from MCP server: "
-                f"{self.config.get_server_identifier()}"
-            )
+            logger.info(f"Disconnected from MCP server: {self.config.get_server_identifier()}")
 
         except Exception as e:
             logger.warning(f"Error during disconnect: {e}")
@@ -544,6 +536,7 @@ class MCPToolRegistry:
         """Initialize the MCP tool registry."""
         # Import here to avoid circular imports
         from agentforge.tools.registry import ToolRegistry
+
         self._registry = ToolRegistry()
         self._adapters: list[MCPToolAdapter] = []
 
@@ -872,9 +865,7 @@ class AgentWrapperTool(BaseTool):
         from agentforge.tools.base import ToolExecutionError
 
         try:
-            input_data = AgentInput(
-                messages=[{"role": "user", "content": kwargs.get("input", "")}]
-            )
+            input_data = AgentInput(messages=[{"role": "user", "content": kwargs.get("input", "")}])
             result = await self._agent.execute(input_data)
             return result.content
         except Exception as e:
@@ -1019,9 +1010,7 @@ class MCPServerExporter:
 
         # Create a wrapper that calls the agent
         async def agent_tool(**kwargs: Any) -> Any:
-            input_data = AgentInput(
-                messages=[{"role": "user", "content": str(kwargs)}]
-            )
+            input_data = AgentInput(messages=[{"role": "user", "content": str(kwargs)}])
             result = await agent.execute(input_data)
             return result.content
 
@@ -1039,6 +1028,7 @@ class MCPServerExporter:
         Args:
             tool: The tool to register.
         """
+
         async def tool_wrapper(**kwargs: Any) -> Any:
             return await tool.execute(**kwargs)
 
@@ -1114,18 +1104,22 @@ class MCPServerExporter:
         tools: list[dict[str, Any]] = []
 
         for name, _agent in self._agents.items():
-            tools.append({
-                "name": name,
-                "description": f"Execute the {name} agent",
-                "type": "agent",
-            })
+            tools.append(
+                {
+                    "name": name,
+                    "description": f"Execute the {name} agent",
+                    "type": "agent",
+                }
+            )
 
         for name, tool in self._tools.items():
-            tools.append({
-                "name": name,
-                "description": tool.description,
-                "type": "tool",
-            })
+            tools.append(
+                {
+                    "name": name,
+                    "description": tool.description,
+                    "type": "tool",
+                }
+            )
 
         return tools
 
@@ -1193,10 +1187,10 @@ def create_mcp_server(
     """
     exporter = MCPServerExporter(name=name, version=version)
 
-    for agent in (agents or []):
+    for agent in agents or []:
         exporter.register_agent(agent)
 
-    for tool in (tools or []):
+    for tool in tools or []:
         exporter.register_tool(tool)
 
     return exporter

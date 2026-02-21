@@ -139,8 +139,7 @@ class QdrantVectorStore(VectorStore):
 
         if len(entry.vector) != self.dimension:
             raise ValueError(
-                f"Vector dimension mismatch: got {len(entry.vector)}, "
-                f"expected {self.dimension}"
+                f"Vector dimension mismatch: got {len(entry.vector)}, expected {self.dimension}"
             )
 
         # Build payload with metadata and content

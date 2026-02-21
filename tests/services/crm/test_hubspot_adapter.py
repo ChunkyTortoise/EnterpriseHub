@@ -140,9 +140,7 @@ class TestHubSpotCreateContact:
         )
         adapter._request = AsyncMock(return_value=resp)
 
-        contact = CRMContact(
-            first_name="Jane", last_name="Doe", tags=["VIP"], metadata={"k": "v"}
-        )
+        contact = CRMContact(first_name="Jane", last_name="Doe", tags=["VIP"], metadata={"k": "v"})
         result = await adapter.create_contact(contact)
 
         adapter._request.assert_awaited_once()
@@ -177,9 +175,7 @@ class TestHubSpotGetContact:
         assert result.email == "alice@example.com"
 
     async def test_get_contact_not_found_returns_none(self, adapter: HubSpotAdapter):
-        adapter._request = AsyncMock(
-            side_effect=HubSpotError(404, "Resource not found")
-        )
+        adapter._request = AsyncMock(side_effect=HubSpotError(404, "Resource not found"))
         result = await adapter.get_contact("missing-id")
         assert result is None
 
@@ -202,9 +198,7 @@ class TestHubSpotUpdateContact:
         )
         adapter._request = AsyncMock(return_value=resp)
 
-        result = await adapter.update_contact(
-            "hs-c3", {"first_name": "Updated", "email": "new@example.com"}
-        )
+        result = await adapter.update_contact("hs-c3", {"first_name": "Updated", "email": "new@example.com"})
 
         call_args = adapter._request.call_args
         assert call_args[0] == ("PATCH", "/crm/v3/objects/contacts/hs-c3")
@@ -275,9 +269,7 @@ class TestHubSpotSyncLead:
         result = await adapter.sync_lead(contact, score=50, temperature="Warm-Lead")
         assert result is False
 
-    async def test_sync_lead_empty_string_id_returns_false(
-        self, adapter: HubSpotAdapter
-    ):
+    async def test_sync_lead_empty_string_id_returns_false(self, adapter: HubSpotAdapter):
         contact = CRMContact(id="")
         result = await adapter.sync_lead(contact, score=50, temperature="Warm-Lead")
         assert result is False
@@ -307,9 +299,7 @@ class TestHubSpotDeleteContact:
         assert call_args[0] == ("DELETE", "/crm/v3/objects/contacts/del-1")
 
     async def test_delete_returns_false_on_404(self, adapter: HubSpotAdapter):
-        adapter._request = AsyncMock(
-            side_effect=HubSpotError(404, "Resource not found")
-        )
+        adapter._request = AsyncMock(side_effect=HubSpotError(404, "Resource not found"))
         result = await adapter.delete_contact("missing")
         assert result is False
 

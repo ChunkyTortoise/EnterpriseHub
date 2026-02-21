@@ -50,7 +50,9 @@ def mock_config():
 @pytest.fixture
 def buyer_memory(mock_cache, mock_config):
     """Create BuyerConversationMemory instance with mocks."""
-    with patch("ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_cache_service", return_value=mock_cache):
+    with patch(
+        "ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_cache_service", return_value=mock_cache
+    ):
         with patch("ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_config", return_value=mock_config):
             memory = BuyerConversationMemory()
             return memory
@@ -177,10 +179,7 @@ class TestBuyerConversationMemory:
 
         # Create large conversation history (> 5KB threshold)
         large_state = {
-            "conversation_history": [
-                {"role": "user", "content": f"Message {i}" * 50}
-                for i in range(100)
-            ],
+            "conversation_history": [{"role": "user", "content": f"Message {i}" * 50} for i in range(100)],
             "financial_readiness_score": 85.0,
         }
 
@@ -196,7 +195,7 @@ class TestBuyerConversationMemory:
         # Verify data can be decompressed
         compressed_bytes = bytes.fromhex(storage_data["data"])
         decompressed = gzip.decompress(compressed_bytes)
-        json_data = decompressed.decode('utf-8')
+        json_data = decompressed.decode("utf-8")
         parsed = json.loads(json_data)
 
         assert len(parsed["conversation_history"]) > 0
@@ -212,7 +211,7 @@ class TestBuyerConversationMemory:
             "financial_readiness_score": 85.0,
             "state_version": "1.0",
         }
-        json_bytes = json.dumps(state_data).encode('utf-8')
+        json_bytes = json.dumps(state_data).encode("utf-8")
         compressed_bytes = gzip.compress(json_bytes)
 
         storage_data = {
@@ -251,10 +250,7 @@ class TestBuyerConversationMemory:
         buyer_memory.max_history_messages = 10
 
         # Create state with 50 messages
-        large_history = [
-            {"role": "user", "content": f"Message {i}"}
-            for i in range(50)
-        ]
+        large_history = [{"role": "user", "content": f"Message {i}"} for i in range(50)]
         sample_state["conversation_history"] = large_history
 
         prepared_state = buyer_memory._prepare_state_for_storage(sample_state)
@@ -445,8 +441,12 @@ class TestConversationMemoryIntegration:
         """Test graceful handling when memory is disabled."""
         mock_config.buyer_bot.conversation_memory.enabled = False
 
-        with patch("ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_cache_service", return_value=mock_cache):
-            with patch("ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_config", return_value=mock_config):
+        with patch(
+            "ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_cache_service", return_value=mock_cache
+        ):
+            with patch(
+                "ghl_real_estate_ai.services.jorge.buyer_conversation_memory.get_config", return_value=mock_config
+            ):
                 memory = BuyerConversationMemory()
 
                 # Save should be skipped

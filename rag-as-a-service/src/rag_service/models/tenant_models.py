@@ -66,7 +66,8 @@ class DocumentChunk(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     document_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey(f"{TENANT_SCHEMA}.documents.id", ondelete="CASCADE"),
+        UUID(as_uuid=True),
+        ForeignKey(f"{TENANT_SCHEMA}.documents.id", ondelete="CASCADE"),
         nullable=False,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)

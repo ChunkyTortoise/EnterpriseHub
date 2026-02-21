@@ -42,8 +42,9 @@ class TestConfigLoading:
         reload_config()
         config2 = get_config()
         # Values should match, but instance refreshed
-        assert config1.shared.performance.sla_response_time_seconds == \
-               config2.shared.performance.sla_response_time_seconds
+        assert (
+            config1.shared.performance.sla_response_time_seconds == config2.shared.performance.sla_response_time_seconds
+        )
 
 
 class TestConfigValidation:
@@ -99,8 +100,7 @@ class TestConfigValidation:
         """Sequence days should be sorted ascending."""
         config = get_config()
         valid_days = config.lead_bot.sequence.valid_days
-        assert valid_days == sorted(valid_days), \
-            f"Sequence days not sorted: {valid_days}"
+        assert valid_days == sorted(valid_days), f"Sequence days not sorted: {valid_days}"
 
     def test_ab_testing_variants_non_empty(self):
         """A/B testing should have at least one variant."""
@@ -110,8 +110,7 @@ class TestConfigValidation:
 
         # Default should be in variants
         default = config.shared.ab_testing.response_tone.default
-        assert default in variants, \
-            f"Default variant '{default}' not in variants {variants}"
+        assert default in variants, f"Default variant '{default}' not in variants {variants}"
 
 
 class TestEnvironmentOverrides:
@@ -163,19 +162,17 @@ class TestBotSpecificConfig:
         config = get_config()
         afford = config.buyer_bot.affordability
 
-        assert 0.0 < afford.default_dti_ratio <= 1.0, \
-            f"Invalid DTI ratio: {afford.default_dti_ratio}"
-        assert 0.0 < afford.default_down_payment_percent <= 1.0, \
+        assert 0.0 < afford.default_dti_ratio <= 1.0, f"Invalid DTI ratio: {afford.default_dti_ratio}"
+        assert 0.0 < afford.default_down_payment_percent <= 1.0, (
             f"Invalid down payment: {afford.default_down_payment_percent}"
-        assert afford.default_interest_rate > 0.0, \
-            f"Invalid interest rate: {afford.default_interest_rate}"
+        )
+        assert afford.default_interest_rate > 0.0, f"Invalid interest rate: {afford.default_interest_rate}"
 
     def test_seller_bot_commission_rate(self):
         """Seller bot commission rate should be valid."""
         config = get_config()
         rate = config.seller_bot.commission_settings["default_rate"]
-        assert 0.0 < rate <= 0.20, \
-            f"Commission rate {rate} outside valid range (0.0-0.20)"
+        assert 0.0 < rate <= 0.20, f"Commission rate {rate} outside valid range (0.0-0.20)"
 
     def test_frs_pcs_weights_valid(self):
         """FRS and PCS scoring weights should be valid."""
@@ -184,14 +181,12 @@ class TestBotSpecificConfig:
         # FRS weights
         frs_weights = config.seller_bot.scoring.frs_weights
         for key, weight in frs_weights.items():
-            assert 0.0 <= weight <= 1.0, \
-                f"Invalid FRS weight for {key}: {weight}"
+            assert 0.0 <= weight <= 1.0, f"Invalid FRS weight for {key}: {weight}"
 
         # PCS weights
         pcs_weights = config.seller_bot.scoring.pcs_weights
         for key, weight in pcs_weights.items():
-            assert 0.0 <= weight <= 1.0, \
-                f"Invalid PCS weight for {key}: {weight}"
+            assert 0.0 <= weight <= 1.0, f"Invalid PCS weight for {key}: {weight}"
 
 
 class TestCircuitBreakerConfig:
@@ -204,8 +199,7 @@ class TestCircuitBreakerConfig:
 
         assert cb.failure_threshold > 0, "Failure threshold must be positive"
         assert cb.recovery_timeout > 0, "Recovery timeout must be positive"
-        assert 0.0 <= cb.error_rate_threshold <= 1.0, \
-            "Error rate threshold must be 0.0-1.0"
+        assert 0.0 <= cb.error_rate_threshold <= 1.0, "Error rate threshold must be 0.0-1.0"
 
     def test_service_specific_overrides(self):
         """Service-specific circuit breaker settings should override defaults."""
@@ -226,8 +220,7 @@ class TestOpenTelemetryConfig:
         """OpenTelemetry sampling rate should be 0.0-1.0."""
         config = get_config()
         sampling_rate = config.opentelemetry.sampling_rate
-        assert 0.0 <= sampling_rate <= 1.0, \
-            f"Invalid sampling rate: {sampling_rate}"
+        assert 0.0 <= sampling_rate <= 1.0, f"Invalid sampling rate: {sampling_rate}"
 
     def test_otel_enabled_in_production(self, monkeypatch):
         """OpenTelemetry should be enabled in production."""
@@ -245,14 +238,15 @@ class TestConfigLifecycle:
         """Verify reload_config() updates cached config."""
         config1 = get_config()
         original_sla = config1.shared.performance.sla_response_time_seconds
-        
+
         reload_config()
         config2 = get_config()
-        
+
         # Values should match (config unchanged)
-        assert config2.shared.performance.sla_response_time_seconds == original_sla, \
+        assert config2.shared.performance.sla_response_time_seconds == original_sla, (
             "SLA value changed after reload without environment change"
-        
+        )
+
         # Reload mechanism should work (config refreshed)
         # Note: After reload, get_config() returns the new singleton instance
         # This verifies the reload mechanism functions correctly

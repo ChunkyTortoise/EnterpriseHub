@@ -28,7 +28,7 @@ from ghl_real_estate_ai.models.base import Base
 class ChurnRiskAssessment(Base):
     """
     Tracks churn risk assessments for contacts.
-    
+
     Attributes:
         id: Unique identifier
         contact_id: Reference to the contact
@@ -41,16 +41,11 @@ class ChurnRiskAssessment(Base):
         assessed_at: Timestamp when assessment was performed
         created_at: Timestamp when record was created
     """
-    
+
     __tablename__ = "churn_risk_assessments"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    contact_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("contacts.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     risk_score = Column(Decimal(5, 2), nullable=False)
     risk_level = Column(String(50), nullable=False, index=True)
     signals = Column(JSONB, nullable=False)
@@ -59,11 +54,11 @@ class ChurnRiskAssessment(Base):
     recommended_action = Column(String(100), nullable=True)
     assessed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    
+
     # Relationships
     contact = relationship("Contact", back_populates="churn_assessments")
     recovery_actions = relationship("RecoveryAction", back_populates="assessment", cascade="all, delete-orphan")
-    
+
     def __repr__(self) -> str:
         return (
             f"<ChurnRiskAssessment(id={self.id}, "
@@ -76,7 +71,7 @@ class ChurnRiskAssessment(Base):
 class RecoveryAction(Base):
     """
     Tracks recovery actions scheduled and executed for at-risk contacts.
-    
+
     Attributes:
         id: Unique identifier
         contact_id: Reference to the contact
@@ -92,20 +87,13 @@ class RecoveryAction(Base):
         ghl_message_id: GHL message ID if sent via GHL
         created_at: Timestamp when record was created
     """
-    
+
     __tablename__ = "recovery_actions"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    contact_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("contacts.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     assessment_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("churn_risk_assessments.id", ondelete="CASCADE"),
-        nullable=False
+        UUID(as_uuid=True), ForeignKey("churn_risk_assessments.id", ondelete="CASCADE"), nullable=False
     )
     strategy = Column(String(100), nullable=False)
     message_template = Column(Text, nullable=False)
@@ -117,12 +105,12 @@ class RecoveryAction(Base):
     result = Column(Text, nullable=True)
     ghl_message_id = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    
+
     # Relationships
     contact = relationship("Contact", back_populates="recovery_actions")
     assessment = relationship("ChurnRiskAssessment", back_populates="recovery_actions")
     outcomes = relationship("RecoveryOutcome", back_populates="action", cascade="all, delete-orphan")
-    
+
     def __repr__(self) -> str:
         return (
             f"<RecoveryAction(id={self.id}, "
@@ -135,7 +123,7 @@ class RecoveryAction(Base):
 class RecoveryOutcome(Base):
     """
     Tracks outcomes of recovery actions.
-    
+
     Attributes:
         id: Unique identifier
         recovery_action_id: Reference to the recovery action
@@ -145,37 +133,25 @@ class RecoveryOutcome(Base):
         next_action: Recommended next action
         outcome_at: Timestamp when outcome was recorded
     """
-    
+
     __tablename__ = "recovery_outcomes"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     recovery_action_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("recovery_actions.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        UUID(as_uuid=True), ForeignKey("recovery_actions.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    contact_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("contacts.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     outcome = Column(String(50), nullable=False, index=True)
     response_time_hours = Column(Decimal(10, 2), nullable=True)
     next_action = Column(String(100), nullable=True)
     outcome_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    
+
     # Relationships
     action = relationship("RecoveryAction", back_populates="outcomes")
     contact = relationship("Contact", back_populates="recovery_outcomes")
-    
+
     def __repr__(self) -> str:
-        return (
-            f"<RecoveryOutcome(id={self.id}, "
-            f"action_id={self.recovery_action_id}, "
-            f"outcome={self.outcome})>"
-        )
+        return f"<RecoveryOutcome(id={self.id}, action_id={self.recovery_action_id}, outcome={self.outcome})>"
 
 
 # Create indexes for better query performance

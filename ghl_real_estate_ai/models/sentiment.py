@@ -29,7 +29,7 @@ from ghl_real_estate_ai.models.base import Base
 class ConversationSentiment(Base):
     """
     Tracks sentiment analysis for individual messages in a conversation.
-    
+
     Attributes:
         id: Unique identifier
         conversation_id: Reference to the conversation
@@ -41,15 +41,12 @@ class ConversationSentiment(Base):
         escalation_level: Escalation level triggered (none, monitor, human_handoff, critical)
         created_at: Timestamp when sentiment was analyzed
     """
-    
+
     __tablename__ = "conversation_sentiments"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     conversation_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True
     )
     message_index = Column(Integer, nullable=False)
     sentiment = Column(String(50), nullable=False, index=True)
@@ -58,22 +55,18 @@ class ConversationSentiment(Base):
     key_phrases = Column(JSONB, default=list)
     escalation_level = Column(String(50), default="none", index=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    
+
     # Relationships
     conversation = relationship("Conversation", back_populates="sentiments")
-    
+
     def __repr__(self) -> str:
-        return (
-            f"<ConversationSentiment(id={self.id}, "
-            f"sentiment={self.sentiment}, "
-            f"confidence={self.confidence})>"
-        )
+        return f"<ConversationSentiment(id={self.id}, sentiment={self.sentiment}, confidence={self.confidence})>"
 
 
 class SentimentEscalation(Base):
     """
     Tracks sentiment escalation events that require human intervention.
-    
+
     Attributes:
         id: Unique identifier
         conversation_id: Reference to the conversation
@@ -87,21 +80,12 @@ class SentimentEscalation(Base):
         resolved_by: Who resolved the escalation (agent name or system)
         created_at: Timestamp when escalation was triggered
     """
-    
+
     __tablename__ = "sentiment_escalations"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    conversation_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False
-    )
-    contact_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("contacts.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     escalation_level = Column(String(50), nullable=False, index=True)
     sentiment = Column(String(50), nullable=False)
     intensity = Column(Decimal(3, 2), nullable=False)
@@ -110,11 +94,11 @@ class SentimentEscalation(Base):
     resolved_at = Column(DateTime(timezone=True), nullable=True)
     resolved_by = Column(String(100), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    
+
     # Relationships
     conversation = relationship("Conversation", back_populates="escalations")
     contact = relationship("Contact", back_populates="sentiment_escalations")
-    
+
     def __repr__(self) -> str:
         return (
             f"<SentimentEscalation(id={self.id}, "

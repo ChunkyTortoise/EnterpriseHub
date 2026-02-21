@@ -11,6 +11,7 @@ Each objection category has response templates at 4 graduation levels:
 Each template supports multiple variants for A/B testing to optimize
 resolution rates across different seller personalities and objection types.
 """
+
 from enum import Enum
 from typing import Dict, List
 
@@ -46,7 +47,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Let's start with a 90-day listing agreement. If you're not seeing the results and activity I promise, you can cancel after the first 30 days. I'm confident you'll see the value.",
         ],
     },
-
     # ========== TIMING CATEGORY ==========
     ObjectionType.TIMING_NOT_READY: {
         ResponseGraduation.VALIDATE: [
@@ -70,7 +70,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Let me put together a custom timeline based on your ideal move date. We'll work backward from when you want to be in your new place, and I'll show you exactly when we need to list to hit that target.",
         ],
     },
-
     # ========== COMPETITION CATEGORY ==========
     ObjectionType.COMPETITION_SHOPPING: {
         ResponseGraduation.VALIDATE: [
@@ -94,7 +93,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "I'll make this easy for you. Here's a side-by-side comparison checklist you can use when evaluating agents. I'm confident that when you compare what each agent offers, I'll come out on top.",
         ],
     },
-
     # ========== TRUST CATEGORY ==========
     ObjectionType.TRUST_CREDIBILITY: {
         ResponseGraduation.VALIDATE: [
@@ -118,7 +116,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Let me earn your trust with results. I'll provide a detailed competitive market analysis, a custom marketing plan, and staging recommendations—all for free. If you're not impressed, there's no obligation to move forward.",
         ],
     },
-
     # ========== AUTHORITY CATEGORY ==========
     ObjectionType.AUTHORITY_DECISION_MAKER: {
         ResponseGraduation.VALIDATE: [
@@ -142,7 +139,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Why don't we do a quick video call with your {partner_relation}? I can walk through the key points in 15-20 minutes, answer their questions, and we can decide together if it makes sense to proceed.",
         ],
     },
-
     # ========== VALUE CATEGORY ==========
     ObjectionType.VALUE_PROPOSITION: {
         ResponseGraduation.VALIDATE: [
@@ -166,7 +162,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "I'll provide a detailed service agreement that outlines everything included—no surprises, no hidden costs. You'll know exactly what you're getting and what results to expect.",
         ],
     },
-
     # ========== LEGACY PRICING OBJECTIONS (from original engine) ==========
     # These remain for backward compatibility
     ObjectionType.LOSS_AVERSION: {
@@ -183,7 +178,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Here's what I'd suggest: let's price at {suggested_price} for 14 days as a market test. If we get strong showing activity and offers, we know we're in the right range. If not, we can adjust. No long-term commitment.",
         ],
     },
-
     ObjectionType.ANCHORING: {
         ResponseGraduation.VALIDATE: [
             "Those online estimates are a great starting point for research! It's smart to come prepared with that information.",
@@ -198,7 +192,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Let's do this: I'll prepare a detailed CMA using actual closed sales in the last 90 days within a mile of your property. We can compare that side-by-side with the online estimate and find the right price together.",
         ],
     },
-
     ObjectionType.NEIGHBOR_COMP: {
         ResponseGraduation.VALIDATE: [
             "That's a great reference point! Knowing what nearby homes sold for is exactly the kind of research that helps.",
@@ -213,7 +206,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "I'd suggest we list at {suggested_price} and see how the market responds in the first two weeks. Buyer activity will tell us exactly where we stand relative to your neighbor's sale.",
         ],
     },
-
     ObjectionType.MARKET_DENIAL: {
         ResponseGraduation.VALIDATE: [
             "I appreciate that perspective. Timing the market is something every seller thinks about.",
@@ -228,7 +220,6 @@ OBJECTION_RESPONSE_TEMPLATES: Dict[ObjectionType, Dict[ResponseGraduation, List[
             "Here's an option: let's get your home market-ready now and list at a strong price. If we don't get the right offer in 30 days, we can reassess. You'll have real market data instead of predictions.",
         ],
     },
-
     ObjectionType.IMPROVEMENT_OVERVALUE: {
         ResponseGraduation.VALIDATE: [
             "Those improvements clearly show you've taken great care of your home! A remodeled {improvement_type} is definitely a selling point.",

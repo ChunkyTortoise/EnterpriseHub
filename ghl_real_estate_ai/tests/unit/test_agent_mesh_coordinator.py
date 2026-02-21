@@ -39,6 +39,7 @@ for _p in _mock_patches:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_agent(
     agent_id: str = "agent-1",
     name: str = "test_agent",
@@ -112,6 +113,7 @@ def coordinator():
 # Dataclass / Enum tests
 # ---------------------------------------------------------------------------
 
+
 class TestAgentMetrics:
     def test_success_rate_no_tasks(self):
         m = AgentMetrics()
@@ -173,6 +175,7 @@ class TestAgentTask:
 # Registration tests
 # ---------------------------------------------------------------------------
 
+
 class TestRegisterAgent:
     @pytest.mark.asyncio
     async def test_register_valid_agent(self, coordinator):
@@ -192,6 +195,7 @@ class TestRegisterAgent:
 # ---------------------------------------------------------------------------
 # Task submission tests
 # ---------------------------------------------------------------------------
+
 
 class TestSubmitTask:
     @pytest.mark.asyncio
@@ -230,6 +234,7 @@ class TestSubmitTask:
 # ---------------------------------------------------------------------------
 # Routing tests
 # ---------------------------------------------------------------------------
+
 
 class TestRouting:
     @pytest.mark.asyncio
@@ -286,6 +291,7 @@ class TestRouting:
 # Agent scoring tests
 # ---------------------------------------------------------------------------
 
+
 class TestAgentScoring:
     @pytest.mark.asyncio
     async def test_emergency_priority_boost(self, coordinator):
@@ -313,6 +319,7 @@ class TestAgentScoring:
 # ---------------------------------------------------------------------------
 # Task assignment and execution tests
 # ---------------------------------------------------------------------------
+
 
 class TestAssignment:
     @pytest.mark.asyncio
@@ -356,6 +363,7 @@ class TestAssignment:
 # Task failure handling tests
 # ---------------------------------------------------------------------------
 
+
 class TestTaskFailure:
     @pytest.mark.asyncio
     async def test_handle_task_failure_moves_to_completed(self, coordinator):
@@ -389,6 +397,7 @@ class TestTaskFailure:
 # Emergency shutdown tests
 # ---------------------------------------------------------------------------
 
+
 class TestEmergencyShutdown:
     @pytest.mark.asyncio
     async def test_emergency_shutdown_cancels_tasks(self, coordinator):
@@ -406,6 +415,7 @@ class TestEmergencyShutdown:
 # ---------------------------------------------------------------------------
 # Mesh status tests
 # ---------------------------------------------------------------------------
+
 
 class TestMeshStatus:
     @pytest.mark.asyncio
@@ -428,6 +438,7 @@ class TestMeshStatus:
 # Agent details tests
 # ---------------------------------------------------------------------------
 
+
 class TestAgentDetails:
     @pytest.mark.asyncio
     async def test_get_agent_details_not_found(self, coordinator):
@@ -448,6 +459,7 @@ class TestAgentDetails:
 # Health check tests
 # ---------------------------------------------------------------------------
 
+
 class TestHealthCheck:
     @pytest.mark.asyncio
     async def test_health_check_healthy(self, coordinator):
@@ -466,6 +478,7 @@ class TestHealthCheck:
 # ---------------------------------------------------------------------------
 # Metrics update tests
 # ---------------------------------------------------------------------------
+
 
 class TestMetricsUpdate:
     @pytest.mark.asyncio
@@ -489,6 +502,7 @@ class TestMetricsUpdate:
 # ---------------------------------------------------------------------------
 # Budget / governance tests
 # ---------------------------------------------------------------------------
+
 
 class TestGovernance:
     @pytest.mark.asyncio

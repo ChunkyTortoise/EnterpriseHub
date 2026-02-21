@@ -60,6 +60,7 @@ class TestWebScraper:
     @pytest.mark.asyncio
     async def test_scrape_network_error(self, scraper, httpx_mock):
         import httpx
+
         httpx_mock.add_exception(httpx.ConnectError("Connection failed"))
 
         result = await scraper.scrape("https://example.com/")
@@ -69,9 +70,15 @@ class TestWebScraper:
 
     @pytest.mark.asyncio
     async def test_scrape_batch(self, scraper, httpx_mock):
-        httpx_mock.add_response(url="https://example.com/1", text="<html><title>Page 1</title></html>")
-        httpx_mock.add_response(url="https://example.com/2", text="<html><title>Page 2</title></html>")
-        httpx_mock.add_response(url="https://example.com/3", text="<html><title>Page 3</title></html>")
+        httpx_mock.add_response(
+            url="https://example.com/1", text="<html><title>Page 1</title></html>"
+        )
+        httpx_mock.add_response(
+            url="https://example.com/2", text="<html><title>Page 2</title></html>"
+        )
+        httpx_mock.add_response(
+            url="https://example.com/3", text="<html><title>Page 3</title></html>"
+        )
 
         urls = ["https://example.com/1", "https://example.com/2", "https://example.com/3"]
         results = await scraper.scrape_batch(urls)
@@ -84,6 +91,7 @@ class TestWebScraper:
     @pytest.mark.asyncio
     async def test_rate_limiting(self, scraper, httpx_mock):
         import time
+
         httpx_mock.add_response(url="https://example.com/", text="<html></html>")
 
         scraper.rate_limit = 2.0  # 2 requests per second

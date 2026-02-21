@@ -23,7 +23,9 @@ def _parse_tool_arguments(tool_call: VapiToolCallPayload) -> Dict[str, Any]:
 
 
 @router.post("/check-availability", response_model=VapiToolResponse)
-async def vapi_check_availability(payload: VapiToolPayload, services: Services = Depends(get_services)) -> VapiToolResponse:
+async def vapi_check_availability(
+    payload: VapiToolPayload, services: Services = Depends(get_services)
+) -> VapiToolResponse:
     tool_call = payload.toolCall
     args = _parse_tool_arguments(tool_call)
     date_query = args.get("date")

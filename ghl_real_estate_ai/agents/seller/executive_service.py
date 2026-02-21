@@ -13,6 +13,7 @@ from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_even
 
 try:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
+
     GHL_CLIENT_AVAILABLE = True
 except ImportError:
     GHL_CLIENT_AVAILABLE = False
@@ -50,11 +51,11 @@ class ExecutiveService:
                 "scores": {
                     "composite": composite_score,
                     "frs": state.get("intent_profile").frs.total_score if state.get("intent_profile") else 0,
-                    "pcs": state.get("psychological_commitment", 0)
+                    "pcs": state.get("psychological_commitment", 0),
                 },
                 "property_address": state.get("property_address"),
                 "cma_summary": state.get("cma_report", {}).get("estimated_value"),
-                "conversation_history": state.get("conversation_history", [])[-10:]  # Last 10 turns
+                "conversation_history": state.get("conversation_history", [])[-10:],  # Last 10 turns
             }
 
             # Generate brief via Orchestrator
@@ -62,7 +63,7 @@ class ExecutiveService:
                 ClaudeRequest(
                     task_type=ClaudeTaskType.EXECUTIVE_BRIEFING,
                     context=context,
-                    prompt=f"Generate a one-page executive brief for Jorge regarding seller {lead_id}. Highlight property value, motivation, and recommended next steps."
+                    prompt=f"Generate a one-page executive brief for Jorge regarding seller {lead_id}. Highlight property value, motivation, and recommended next steps.",
                 )
             )
 
@@ -71,17 +72,14 @@ class ExecutiveService:
             # Sync brief to GHL as a note
             if GHL_CLIENT_AVAILABLE and EnhancedGHLClient:
                 async with EnhancedGHLClient() as ghl:
-                    await ghl.add_contact_note(
-                        contact_id=lead_id,
-                        body=f"--- EXECUTIVE BRIEF ---\n{brief_content}"
-                    )
+                    await ghl.add_contact_note(contact_id=lead_id, body=f"--- EXECUTIVE BRIEF ---\n{brief_content}")
 
             logger.info(f"Executive brief generated and synced for seller {lead_id}")
 
             return {
                 "executive_brief": brief_content,
                 "executive_brief_generated": True,
-                "current_journey_stage": "handoff_ready"
+                "current_journey_stage": "handoff_ready",
             }
 
         except Exception as e:

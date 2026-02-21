@@ -1,13 +1,7 @@
-/**
- * Example App.jsx
- * 
- * Complete working example of the Portal Swipe interface.
- * Copy this file to your React project and customize as needed.
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import SwipeDeck from '../components/portal/SwipeDeck';
-import { mockProperties, mockLead } from '../utils/mockData';
+import { mockLead, mockProperties } from '../utils/mockData';
+import '../styles/lyrio-theme.css';
 
 function App() {
   const [properties, setProperties] = useState([]);
@@ -15,53 +9,31 @@ function App() {
   const [lead, setLead] = useState(null);
 
   useEffect(() => {
-    // Simulate fetching data
-    // In production, replace with real API calls
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setProperties(mockProperties);
       setLead(mockLead);
       setLoading(false);
     }, 500);
+    return () => clearTimeout(timer);
   }, []);
-
-  const handleComplete = () => {
-    console.log('All properties reviewed!');
-    // Redirect to next step or show completion screen
-    alert('🎉 You\'ve reviewed all available properties! We\'ll send you new listings as they arrive.');
-  };
-
-  const handleError = (error) => {
-    console.error('Swipe error:', error);
-    // Show error message to user
-    alert('Something went wrong. Please refresh the page and try again.');
-  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading properties...</p>
-        </div>
+      <div className="lyrio-portal-shell min-h-screen flex items-center justify-center">
+        <p className="lyrio-heading text-xl">Preparing your personalized deck...</p>
       </div>
     );
   }
 
   if (!lead || properties.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🏠</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            No Properties Available
-          </h2>
-          <p className="text-gray-600 mb-6">
-            We're searching for homes that match your preferences.
+      <div className="lyrio-portal-shell min-h-screen flex items-center justify-center p-4">
+        <div className="rounded-2xl border p-6 text-center" style={{ borderColor: 'var(--lyr-color-border)', background: 'var(--lyr-color-surface)' }}>
+          <h2 className="lyrio-heading text-2xl m-0">No listings available</h2>
+          <p className="text-sm mt-2 mb-4" style={{ color: 'var(--lyr-color-text-muted)' }}>
+            We are still matching inventory to your preferences.
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-colors"
-          >
+          <button className="lyrio-focus rounded-xl px-4 py-2 text-sm font-semibold border" style={{ borderColor: 'var(--lyr-color-border)' }} onClick={() => window.location.reload()}>
             Refresh
           </button>
         </div>
@@ -70,43 +42,23 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm py-4 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Find Your Dream Home
-            </h1>
-            <p className="text-sm text-gray-600">
-              Swipe right to like, left to pass
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Welcome back,</p>
-            <p className="font-semibold text-gray-900">{lead.name}</p>
-          </div>
-        </div>
+    <div className="lyrio-portal-shell min-h-screen px-4 py-6">
+      <header className="max-w-5xl mx-auto mb-6">
+        <h1 className="lyrio-heading text-3xl m-0">Lyrio Buyer Portal</h1>
+        <p className="text-sm m-0" style={{ color: 'var(--lyr-color-text-muted)' }}>
+          Welcome back, {lead.name}. Swipe to refine your daily match feed.
+        </p>
       </header>
-
-      {/* Main Content */}
-      <main className="flex items-center justify-center py-8 px-4">
-        <SwipeDeck 
+      <main className="max-w-5xl mx-auto">
+        <SwipeDeck
           properties={properties}
           leadId={lead.id}
           locationId={lead.location_id}
           apiBaseUrl={process.env.REACT_APP_API_URL || '/api'}
-          onComplete={handleComplete}
-          onError={handleError}
+          onComplete={() => alert('You are all caught up. We will notify you when new matches arrive.')}
+          onError={(error) => alert(error?.message || 'Something went wrong during swipe sync.')}
         />
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t py-4 px-6 mt-8">
-        <div className="max-w-7xl mx-auto text-center text-sm text-gray-600">
-          <p>Having trouble? <a href="/support" className="text-blue-600 hover:underline">Contact Support</a></p>
-        </div>
-      </footer>
     </div>
   );
 }

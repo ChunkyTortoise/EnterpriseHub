@@ -26,6 +26,7 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_config(tenant_id: str = "jorge", domain: str = "real_estate") -> ConciergeClientConfig:
     return ConciergeClientConfig(
         tenant_id=tenant_id,
@@ -64,7 +65,7 @@ def _patched_client(cache_dict=None, cache_service=None, loader_overrides=None):
             setattr(mock_loader, attr, val)
 
     mock_cache = cache_service or AsyncMock()
-    if not hasattr(mock_cache.delete, '_mock_name'):
+    if not hasattr(mock_cache.delete, "_mock_name"):
         mock_cache.delete = AsyncMock(return_value=True)
 
     with (
@@ -82,6 +83,7 @@ def _patched_client(cache_dict=None, cache_service=None, loader_overrides=None):
 # ---------------------------------------------------------------------------
 # GET /tenants -- list all cached tenants
 # ---------------------------------------------------------------------------
+
 
 class TestListTenants:
     def test_list_empty(self):
@@ -120,6 +122,7 @@ class TestListTenants:
 # GET /tenants/{tenant_id} -- full config
 # ---------------------------------------------------------------------------
 
+
 class TestGetTenant:
     def test_get_existing_tenant(self):
         cfg = _make_config("jorge")
@@ -151,6 +154,7 @@ class TestGetTenant:
 # ---------------------------------------------------------------------------
 # POST /tenants/{tenant_id}/reload -- hot-reload
 # ---------------------------------------------------------------------------
+
 
 class TestReloadTenant:
     def test_reload_success(self):
@@ -184,6 +188,7 @@ class TestReloadTenant:
 # DELETE /sessions/{tenant_id}/{session_id} -- delete session
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteSession:
     def test_delete_existing_session(self):
         mock_cache = AsyncMock()
@@ -212,6 +217,7 @@ class TestDeleteSession:
 # Response shape validation
 # ---------------------------------------------------------------------------
 
+
 class TestResponseShapes:
     def test_tenant_summary_shape(self):
         cfg = _make_config("jorge")
@@ -226,9 +232,16 @@ class TestResponseShapes:
             resp = client.get("/admin/concierge/tenants/jorge")
             data = resp.json()
             expected_keys = {
-                "tenant_id", "domain", "client_name", "business_model",
-                "market_context", "client_style", "agent_count", "agents",
-                "compliance_requirements", "platform_features",
+                "tenant_id",
+                "domain",
+                "client_name",
+                "business_model",
+                "market_context",
+                "client_style",
+                "agent_count",
+                "agents",
+                "compliance_requirements",
+                "platform_features",
             }
             assert set(data.keys()) == expected_keys
 

@@ -55,6 +55,7 @@ skip_if_no_billing = pytest.mark.skipif(
 # Standalone test app with billing router
 # ---------------------------------------------------------------------------
 
+
 def _make_billing_client(billing_service=None, subscription_manager=None):
     """Create a TestClient with just the billing router, deps mocked."""
     mock_billing = billing_service or MagicMock()
@@ -190,6 +191,7 @@ def _subscription_response_dict(sub_id: int = 1, tier: str = "professional"):
 # POST /billing/subscriptions — Create subscription
 # ---------------------------------------------------------------------------
 
+
 @skip_if_no_billing
 class TestCreateSubscription:
     """Tests for subscription creation endpoint."""
@@ -259,6 +261,7 @@ class TestCreateSubscription:
 # GET /billing/subscriptions/{subscription_id}
 # ---------------------------------------------------------------------------
 
+
 @skip_if_no_billing
 class TestGetSubscription:
     """Tests for subscription retrieval endpoint."""
@@ -282,6 +285,7 @@ class TestGetSubscription:
 # ---------------------------------------------------------------------------
 # DELETE /billing/subscriptions/{subscription_id}
 # ---------------------------------------------------------------------------
+
 
 @skip_if_no_billing
 class TestCancelSubscription:
@@ -311,9 +315,7 @@ class TestCancelSubscription:
     def test_cancel_immediately(self):
         """Cancels subscription immediately."""
         mock_billing = MagicMock()
-        mock_billing.cancel_subscription = AsyncMock(
-            return_value={"id": "sub_test123", "status": "canceled"}
-        )
+        mock_billing.cancel_subscription = AsyncMock(return_value={"id": "sub_test123", "status": "canceled"})
         client, _, _ = _make_billing_client(billing_service=mock_billing)
         mock_db = _FakeDatabase(_build_subscription_row(sub_id=1))
 
@@ -332,6 +334,7 @@ class TestCancelSubscription:
 # ---------------------------------------------------------------------------
 # GET /billing/usage/{subscription_id}
 # ---------------------------------------------------------------------------
+
 
 @skip_if_no_billing
 class TestGetUsage:
@@ -352,6 +355,7 @@ class TestGetUsage:
 # PUT /billing/subscriptions/{subscription_id}
 # ---------------------------------------------------------------------------
 
+
 @skip_if_no_billing
 class TestUpdateSubscription:
     """Tests for update subscription behavior changes."""
@@ -366,6 +370,7 @@ class TestUpdateSubscription:
 # ---------------------------------------------------------------------------
 # POST /billing/usage
 # ---------------------------------------------------------------------------
+
 
 @skip_if_no_billing
 class TestRecordUsage:
@@ -404,6 +409,7 @@ class TestRecordUsage:
 # ---------------------------------------------------------------------------
 # POST /billing/webhooks/stripe — Stripe webhook
 # ---------------------------------------------------------------------------
+
 
 @skip_if_no_billing
 class TestStripeWebhook:
@@ -472,6 +478,7 @@ class TestStripeWebhook:
 # GET /billing/analytics/revenue
 # ---------------------------------------------------------------------------
 
+
 @skip_if_no_billing
 class TestRevenueAnalytics:
     """Tests for revenue analytics endpoint."""
@@ -525,6 +532,7 @@ class TestRevenueAnalytics:
 # ---------------------------------------------------------------------------
 # GET /billing/analytics/tiers
 # ---------------------------------------------------------------------------
+
 
 @skip_if_no_billing
 class TestTierDistribution:

@@ -213,7 +213,24 @@ class QueryAnalyzer:
 
     def _calculate_keyword_ratio(self, query: str) -> float:
         """Calculate ratio of content words vs stopwords."""
-        stopwords = {"the", "a", "an", "is", "are", "was", "were", "in", "on", "at", "to", "for", "of", "and", "or", "but"}
+        stopwords = {
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "and",
+            "or",
+            "but",
+        }
         words = query.split()
         if not words:
             return 0.0
@@ -345,9 +362,10 @@ class DiversityEnhancer:
 
     def _calculate_similarity(self, text1: str, text2: str) -> float:
         """Calculate simple text similarity using character n-grams."""
+
         # Use character 3-grams for similarity
         def get_ngrams(text: str) -> Set[str]:
-            return set(text[i:i+3] for i in range(len(text)-2))
+            return set(text[i : i + 3] for i in range(len(text) - 2))
 
         ngrams1 = get_ngrams(text1)
         ngrams2 = get_ngrams(text2)
@@ -422,10 +440,7 @@ class ScoreCalibrator:
         sorted_scores = sorted(scores)
         n = len(sorted_scores)
 
-        return [
-            sorted_scores.index(s) / (n - 1) if n > 1 else 0.5
-            for s in scores
-        ]
+        return [sorted_scores.index(s) / (n - 1) if n > 1 else 0.5 for s in scores]
 
 
 class EnhancedHybridSearcher:
@@ -608,8 +623,7 @@ class EnhancedHybridSearcher:
                     # Run BM25 search in executor
                     loop = asyncio.get_running_loop()
                     bm25_results = await loop.run_in_executor(
-                        None,
-                        lambda: self.bm25_index.search(expanded_query, self.config.top_k_sparse)
+                        None, lambda: self.bm25_index.search(expanded_query, self.config.top_k_sparse)
                     )
                     all_bm25_results.extend(bm25_results)
             bm25_time = (time.perf_counter() - bm25_start) * 1000
@@ -617,9 +631,7 @@ class EnhancedHybridSearcher:
             vector_start = time.perf_counter()
             if self.dense_retriever:
                 for expanded_query in expanded_queries:
-                    vector_results = await self.dense_retriever.search(
-                        expanded_query, self.config.top_k_dense
-                    )
+                    vector_results = await self.dense_retriever.search(expanded_query, self.config.top_k_dense)
                     all_vector_results.extend(vector_results)
             vector_time = (time.perf_counter() - vector_start) * 1000
 
@@ -643,16 +655,10 @@ class EnhancedHybridSearcher:
 
             # Phase 8: Diversity Enhancement (if enabled)
             if self.config.use_diversity_enhancement:
-                fused_results = self._diversity_enhancer.enhance(
-                    fused_results,
-                    min(top_k * 2, len(fused_results))
-                )
+                fused_results = self._diversity_enhancer.enhance(fused_results, min(top_k * 2, len(fused_results)))
 
             # Phase 9: Apply threshold and limit
-            fused_results = [
-                r for r in fused_results
-                if r.score >= self.config.min_score_threshold
-            ][:top_k]
+            fused_results = [r for r in fused_results if r.score >= self.config.min_score_threshold][:top_k]
 
             # Update ranks
             for i, result in enumerate(fused_results, 1):
@@ -825,10 +831,7 @@ class EnhancedHybridSearcher:
             vector_score = vector_result.score if vector_result else 0.0
 
             # Apply weights
-            final_score = (
-                weights.bm25_weight * bm25_score +
-                weights.vector_weight * vector_score
-            )
+            final_score = weights.bm25_weight * bm25_score + weights.vector_weight * vector_score
 
             # Use whichever result we have for chunk data
             source = bm25_result or vector_result
@@ -841,7 +844,7 @@ class EnhancedHybridSearcher:
                     rank=0,  # Will be updated after sorting
                     distance=1.0 - final_score,
                     explanation=f"weighted: bm25={bm25_score:.3f}*w{weights.bm25_weight}, "
-                                f"vector={vector_score:.3f}*w{weights.vector_weight}",
+                    f"vector={vector_score:.3f}*w{weights.vector_weight}",
                 )
             )
 

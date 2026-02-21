@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import pytest
-from fastapi import HTTPException
 from unittest.mock import AsyncMock
 
+import pytest
+from fastapi import HTTPException
+
 from rag_service.billing.quota_service import (
-    TierName,
     TIER_QUOTAS,
-    get_tier_quota,
+    TierName,
     check_quota_or_raise,
+    get_tier_quota,
 )
 
 

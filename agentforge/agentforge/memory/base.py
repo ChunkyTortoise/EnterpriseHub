@@ -29,6 +29,7 @@ class MemoryEntry(BaseModel):
         created_at: Timestamp when the entry was created.
         updated_at: Timestamp when the entry was last modified.
     """
+
     key: str
     value: Any
     metadata: dict[str, Any] | None = None
@@ -46,6 +47,7 @@ class SearchResult(BaseModel):
         entry: The matched memory entry.
         score: Relevance score (0.0 to 1.0, where 1.0 is exact match).
     """
+
     entry: MemoryEntry
     score: float = 1.0
 

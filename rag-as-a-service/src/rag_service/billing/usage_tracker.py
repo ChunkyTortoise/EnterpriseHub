@@ -20,6 +20,7 @@ TIER_LIMITS = {
 @dataclass
 class UsageStats:
     """Current usage statistics for a tenant."""
+
     tenant_id: str
     queries_this_month: int = 0
     storage_bytes: int = 0

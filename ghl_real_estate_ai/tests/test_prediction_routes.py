@@ -26,8 +26,10 @@ import pytest
 # Helpers: fake asyncpg rows and DB connection
 # ---------------------------------------------------------------------------
 
+
 class FakeRecord(dict):
     """Dict subclass that supports attribute-style access like asyncpg.Record."""
+
     pass
 
 
@@ -130,23 +132,28 @@ def _import_prediction_helpers():
 # ROADMAP-001: _fetch_client_interaction_history — DB wiring
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_001_interaction_history_from_db():
     """ROADMAP-001: _fetch_client_interaction_history queries interaction_history table."""
     now = datetime.now()
     rows = [
-        FakeRecord({
-            "interaction_type": "sms",
-            "content": "Hello, interested in listing",
-            "metadata": {"source": "ghl"},
-            "created_at": now - timedelta(days=5),
-        }),
-        FakeRecord({
-            "interaction_type": "email",
-            "content": "Follow-up on CMA",
-            "metadata": {"source": "manual"},
-            "created_at": now - timedelta(days=2),
-        }),
+        FakeRecord(
+            {
+                "interaction_type": "sms",
+                "content": "Hello, interested in listing",
+                "metadata": {"source": "ghl"},
+                "created_at": now - timedelta(days=5),
+            }
+        ),
+        FakeRecord(
+            {
+                "interaction_type": "email",
+                "content": "Follow-up on CMA",
+                "metadata": {"source": "manual"},
+                "created_at": now - timedelta(days=2),
+            }
+        ),
     ]
     conn = FakeConnection(fetch_result=rows)
     db = FakeDatabase(conn)
@@ -183,16 +190,19 @@ async def test_roadmap_001_interaction_history_db_error_returns_empty():
 # ROADMAP-002: _fetch_deal_data — DB wiring
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_002_deal_data_from_db():
     """ROADMAP-002: _fetch_deal_data queries deals table and returns real data."""
-    deal_row = FakeRecord({
-        "deal_id": "deal_100",
-        "property_value": 750000.0,
-        "offer_amount": 725000.0,
-        "commission_rate": 0.05,
-        "current_stage": "negotiation",
-    })
+    deal_row = FakeRecord(
+        {
+            "deal_id": "deal_100",
+            "property_value": 750000.0,
+            "offer_amount": 725000.0,
+            "commission_rate": 0.05,
+            "current_stage": "negotiation",
+        }
+    )
     conn = FakeConnection(fetchrow_result=deal_row)
     db = FakeDatabase(conn)
 
@@ -244,14 +254,17 @@ async def test_roadmap_002_deal_data_db_error_returns_fallback():
 # ROADMAP-003/004/005: _fetch_business_profile — target markets, team, expansion
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_003_004_005_business_profile_from_db():
     """ROADMAP-003/004/005: Reads target_markets, team_size, expansion_territories from user_settings."""
-    profile_row = FakeRecord({
-        "target_markets": ["Austin", "Denver", "Portland"],
-        "team_size": 12,
-        "expansion_territories": ["Tampa", "Charlotte"],
-    })
+    profile_row = FakeRecord(
+        {
+            "target_markets": ["Austin", "Denver", "Portland"],
+            "team_size": 12,
+            "expansion_territories": ["Tampa", "Charlotte"],
+        }
+    )
     conn = FakeConnection(fetchrow_result=profile_row)
     db = FakeDatabase(conn)
 
@@ -273,11 +286,13 @@ async def test_roadmap_003_004_005_business_profile_from_db():
 @pytest.mark.asyncio
 async def test_roadmap_003_target_markets_csv_string_parsed():
     """ROADMAP-003: CSV string target_markets is parsed into list."""
-    profile_row = FakeRecord({
-        "target_markets": "Boston, Philadelphia, Baltimore",
-        "team_size": 5,
-        "expansion_territories": "Newark, Hartford",
-    })
+    profile_row = FakeRecord(
+        {
+            "target_markets": "Boston, Philadelphia, Baltimore",
+            "team_size": 5,
+            "expansion_territories": "Newark, Hartford",
+        }
+    )
     conn = FakeConnection(fetchrow_result=profile_row)
     db = FakeDatabase(conn)
 
@@ -323,6 +338,7 @@ async def test_roadmap_003_004_005_db_error_returns_defaults():
 # Utility: _normalize_string_list
 # ---------------------------------------------------------------------------
 
+
 def test_normalize_string_list_with_list():
     """_normalize_string_list passes through list values."""
     mod = _import_prediction_helpers()
@@ -347,16 +363,19 @@ def test_normalize_string_list_empty_falls_back():
 # ROADMAP-006: _fetch_market_snapshot + _detect_market_changes
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_006_fetch_market_snapshot_from_db():
     """ROADMAP-006: _fetch_market_snapshot queries deals table."""
-    snapshot_row = FakeRecord({
-        "active_deals": 15,
-        "avg_property_value": 650000.0,
-        "avg_commission_rate": 0.05,
-        "closing_deals": 3,
-        "new_deals_24h": 5,
-    })
+    snapshot_row = FakeRecord(
+        {
+            "active_deals": 15,
+            "avg_property_value": 650000.0,
+            "avg_commission_rate": 0.05,
+            "closing_deals": 3,
+            "new_deals_24h": 5,
+        }
+    )
     conn = FakeConnection(fetchrow_result=snapshot_row)
     db = FakeDatabase(conn)
 
@@ -421,6 +440,7 @@ def test_roadmap_006_detect_closing_pipeline_change():
 # ROADMAP-007: _gather_monitoring_data
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_roadmap_007_gather_monitoring_data_from_db():
     """ROADMAP-007: _gather_monitoring_data queries interaction_history + deals."""
@@ -435,13 +455,15 @@ async def test_roadmap_007_gather_monitoring_data_from_db():
             return FakeRecord({"total_active": 20, "listing": 8, "negotiation": 7, "closing": 5})
         # _fetch_market_snapshot inner query
         if "deals" in query and "avg_property_value" in query:
-            return FakeRecord({
-                "active_deals": 20,
-                "avg_property_value": 600000,
-                "avg_commission_rate": 0.05,
-                "closing_deals": 5,
-                "new_deals_24h": 3,
-            })
+            return FakeRecord(
+                {
+                    "active_deals": 20,
+                    "avg_property_value": 600000,
+                    "avg_commission_rate": 0.05,
+                    "closing_deals": 5,
+                    "new_deals_24h": 3,
+                }
+            )
         return None
 
     conn = FakeConnection()

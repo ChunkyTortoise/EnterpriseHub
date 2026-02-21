@@ -73,7 +73,13 @@ class TestAdvancedChurnRecoveryDashboard:
 
         for market in markets:
             assert isinstance(market, MarketMetrics)
-            assert market.name in ["Rancho Cucamonga Metro", "San Antonio", "Houston West", "Dallas North", "Fort Worth"]
+            assert market.name in [
+                "Rancho Cucamonga Metro",
+                "San Antonio",
+                "Houston West",
+                "Dallas North",
+                "Fort Worth",
+            ]
             assert 0 <= market.churn_rate <= 1
             assert 0 <= market.recovery_rate <= 1
             assert market.active_campaigns >= 0

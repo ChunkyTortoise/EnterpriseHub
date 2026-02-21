@@ -38,6 +38,7 @@ mcp = FastMCP("RealEstateAPI")
 # Data Models
 # =============================================================================
 
+
 class PropertyType(str, Enum):
     SINGLE_FAMILY = "SINGLE_FAMILY"
     CONDO = "CONDO"
@@ -57,6 +58,7 @@ class ListingStatus(str, Enum):
 @dataclass
 class PropertyDetails:
     """Complete property information"""
+
     mls_id: str
     address: str
     city: str
@@ -82,6 +84,7 @@ class PropertyDetails:
 @dataclass
 class ComparableSale:
     """Comparable sale data for CMA"""
+
     address: str
     city: str
     state: str
@@ -99,6 +102,7 @@ class ComparableSale:
 @dataclass
 class MarketTrends:
     """Market statistics for a zip code"""
+
     zip_code: str
     median_list_price: float
     median_sale_price: float
@@ -116,6 +120,7 @@ class MarketTrends:
 @dataclass
 class SchoolData:
     """School information for an address"""
+
     school_name: str
     school_type: str  # elementary, middle, high
     rating: int  # 1-10
@@ -128,6 +133,7 @@ class SchoolData:
 @dataclass
 class PropertyValuation:
     """AI-powered property valuation"""
+
     address: str
     estimated_value: float
     confidence_range_low: float
@@ -143,6 +149,7 @@ class PropertyValuation:
 # API Clients (Mock implementations - replace with actual API calls)
 # =============================================================================
 
+
 class ZillowClient:
     """Client for Zillow API integration"""
 
@@ -151,7 +158,7 @@ class ZillowClient:
         self.base_url = "https://api.bridgedataoutput.com/api/v2"
         if not self.api_key:
             logger.warning("ZILLOW_API_KEY is not set; Zillow API calls will fail")
-    
+
     async def get_property_details(self, mls_id: str) -> Optional[PropertyDetails]:
         """Fetch property data from Zillow"""
         # Mock implementation - replace with actual API call
@@ -176,9 +183,9 @@ class ZillowClient:
             features=["Pool", "Updated Kitchen", "Hardwood Floors", "Solar Panels"],
             photos=["https://example.com/photo1.jpg"],
             source="Zillow",
-            last_updated=datetime.now().isoformat()
+            last_updated=datetime.now().isoformat(),
         )
-    
+
     async def get_market_trends(self, zip_code: str) -> Optional[MarketTrends]:
         """Fetch market trends from Zillow"""
         # Mock implementation - replace with actual API call
@@ -194,7 +201,7 @@ class ZillowClient:
             months_of_supply=2.3,
             sold_vs_list_pct=98.5,
             trend_direction="up",
-            data_sources=["Zillow"]
+            data_sources=["Zillow"],
         )
 
 
@@ -206,7 +213,7 @@ class RedfinClient:
         self.base_url = "https://api.redfin.com/public"
         if not self.api_key:
             logger.warning("REDFIN_API_KEY is not set; Redfin API calls will fail")
-    
+
     async def get_comparables(self, address: str, limit: int = 5) -> List[ComparableSale]:
         """Fetch comparable sales from Redfin"""
         # Mock implementation - replace with actual API call
@@ -223,7 +230,7 @@ class RedfinClient:
                 square_feet=2150,
                 price_per_sqft=295.35,
                 distance_miles=0.3,
-                source="Redfin"
+                source="Redfin",
             ),
             ComparableSale(
                 address="130 Maple Avenue",
@@ -237,10 +244,10 @@ class RedfinClient:
                 square_feet=2300,
                 price_per_sqft=286.96,
                 distance_miles=0.5,
-                source="Redfin"
+                source="Redfin",
             ),
         ]
-    
+
     async def get_property_details(self, mls_id: str) -> Optional[PropertyDetails]:
         """Fetch property data from Redfin"""
         return PropertyDetails(
@@ -263,7 +270,7 @@ class RedfinClient:
             features=["Smart Home", "EV Charger", "Garden"],
             photos=["https://example.com/photo2.jpg"],
             source="Redfin",
-            last_updated=datetime.now().isoformat()
+            last_updated=datetime.now().isoformat(),
         )
 
 
@@ -275,12 +282,12 @@ class MLSClient:
         self.base_url = "https://api.bridgedataoutput.com/api/v2"
         if not self.api_key:
             logger.warning("MLS_API_KEY is not set; MLS API calls will fail")
-    
+
     async def get_listings(self, zip_code: str, status: ListingStatus = ListingStatus.ACTIVE) -> List[PropertyDetails]:
         """Fetch MLS listings"""
         # Mock implementation - replace with actual API call
         return []
-    
+
     async def get_property_details(self, mls_id: str) -> Optional[PropertyDetails]:
         """Fetch detailed property data from MLS"""
         # Mock implementation - replace with actual API call
@@ -304,7 +311,7 @@ class MLSClient:
             features=["Chef's Kitchen", "Home Theater", "3-Car Garage"],
             photos=["https://example.com/photo3.jpg"],
             source="MLS",
-            last_updated=datetime.now().isoformat()
+            last_updated=datetime.now().isoformat(),
         )
 
 
@@ -318,7 +325,7 @@ class SchoolClient:
             logger.warning("GREAT_SCHOOLS_API_KEY is not set; school data calls will fail")
         if not self.niche_key:
             logger.warning("NICHES_API_KEY is not set; Niche API calls will fail")
-    
+
     async def get_schools(self, address: str) -> List[SchoolData]:
         """Fetch school data for an address"""
         # Mock implementation - replace with actual API call
@@ -330,7 +337,7 @@ class SchoolClient:
                 distance_miles=1.2,
                 enrollment=2500,
                 student_teacher_ratio=22.5,
-                api_source="GreatSchools"
+                api_source="GreatSchools",
             ),
             SchoolData(
                 school_name="Ethan A. Cushing Middle School",
@@ -339,7 +346,7 @@ class SchoolClient:
                 distance_miles=0.8,
                 enrollment=1200,
                 student_teacher_ratio=18.0,
-                api_source="GreatSchools"
+                api_source="GreatSchools",
             ),
             SchoolData(
                 school_name="Victoria Elementary School",
@@ -348,7 +355,7 @@ class SchoolClient:
                 distance_miles=0.4,
                 enrollment=650,
                 student_teacher_ratio=20.0,
-                api_source="Niche"
+                api_source="Niche",
             ),
         ]
 
@@ -367,21 +374,22 @@ school_client = SchoolClient()
 # MCP Tools
 # =============================================================================
 
+
 @mcp.tool()
 async def get_property_details(mls_id: str, source: str = "auto") -> str:
     """
     Fetch property details from Zillow, Redfin, or MLS.
-    
+
     Args:
         mls_id: The MLS ID or property ID
         source: Data source - "auto", "zillow", "redfin", or "mls"
-    
+
     Returns:
         JSON string containing property details
     """
     try:
         property_data = None
-        
+
         if source == "auto":
             # Try all sources in order of reliability
             try:
@@ -401,11 +409,11 @@ async def get_property_details(mls_id: str, source: str = "auto") -> str:
             property_data = await redfin_client.get_property_details(mls_id)
         elif source.lower() == "mls":
             property_data = await mls_client.get_property_details(mls_id)
-        
+
         if property_data:
             return json.dumps(asdict(property_data), indent=2, default=str)
         return json.dumps({"error": "Property not found", "mls_id": mls_id})
-    
+
     except Exception as e:
         return json.dumps({"error": str(e), "mls_id": mls_id})
 
@@ -414,11 +422,11 @@ async def get_property_details(mls_id: str, source: str = "auto") -> str:
 async def get_market_comparables(address: str, limit: int = 5) -> str:
     """
     Get comparable sales data for a property.
-    
+
     Args:
         address: Property address
         limit: Maximum number of comparables to return (default: 5)
-    
+
     Returns:
         JSON string containing comparable sales
     """
@@ -426,7 +434,7 @@ async def get_market_comparables(address: str, limit: int = 5) -> str:
         comparables = await redfin_client.get_comparables(address, limit=limit)
         result = [asdict(comp) for comp in comparables]
         return json.dumps(result, indent=2, default=str)
-    
+
     except Exception as e:
         return json.dumps({"error": str(e), "address": address})
 
@@ -435,28 +443,28 @@ async def get_market_comparables(address: str, limit: int = 5) -> str:
 async def get_market_trends(zip_code: str, source: str = "auto") -> str:
     """
     Fetch neighborhood market statistics and trends.
-    
+
     Args:
         zip_code: ZIP code for market data
         source: Data source - "auto", "zillow", or "redfin"
-    
+
     Returns:
         JSON string containing market trends
     """
     try:
         market_data = None
-        
+
         if source == "auto" or source.lower() == "zillow":
             market_data = await zillow_client.get_market_trends(zip_code)
-        
+
         if not market_data and (source == "auto" or source.lower() == "redfin"):
             # Could add Redfin market trends here
             pass
-        
+
         if market_data:
             return json.dumps(asdict(market_data), indent=2, default=str)
         return json.dumps({"error": "Market data not available", "zip_code": zip_code})
-    
+
     except Exception as e:
         return json.dumps({"error": str(e), "zip_code": zip_code})
 
@@ -465,10 +473,10 @@ async def get_market_trends(zip_code: str, source: str = "auto") -> str:
 async def get_school_districts(address: str) -> str:
     """
     Get school ratings and information for a property address.
-    
+
     Args:
         address: Property address
-    
+
     Returns:
         JSON string containing school data
     """
@@ -476,7 +484,7 @@ async def get_school_districts(address: str) -> str:
         schools = await school_client.get_schools(address)
         result = [asdict(school) for school in schools]
         return json.dumps(result, indent=2, default=str)
-    
+
     except Exception as e:
         return json.dumps({"error": str(e), "address": address})
 
@@ -485,31 +493,31 @@ async def get_school_districts(address: str) -> str:
 async def estimate_property_value(address: str, comparables_limit: int = 10) -> str:
     """
     AI-powered property valuation combining data from multiple sources.
-    
+
     Args:
         address: Property address
         comparables_limit: Number of comparables to use for valuation
-    
+
     Returns:
         JSON string containing property valuation
     """
     try:
         # Get comparables from Redfin
         comparables = await redfin_client.get_comparables(address, limit=comparables_limit)
-        
+
         if not comparables:
             return json.dumps({"error": "No comparables available for valuation"})
-        
+
         # Calculate valuation
         prices = [comp.sale_price for comp in comparables]
         sqft_prices = [comp.price_per_sqft for comp in comparables]
-        
+
         avg_price = sum(prices) / len(prices)
         avg_sqft_price = sum(sqft_prices) / len(sqft_prices)
-        
+
         # Get property details for address (simplified)
         # In production, would need to geocode address first
-        
+
         valuation = PropertyValuation(
             address=address,
             estimated_value=avg_price,
@@ -522,13 +530,13 @@ async def estimate_property_value(address: str, comparables_limit: int = 10) -> 
                 "avg_comparable_price": avg_price,
                 "avg_price_per_sqft": avg_sqft_price,
                 "comparables_used": len(comparables),
-                "data_sources": list(set([c.source for c in comparables]))
+                "data_sources": list(set([c.source for c in comparables])),
             },
-            last_updated=datetime.now().isoformat()
+            last_updated=datetime.now().isoformat(),
         )
-        
+
         return json.dumps(asdict(valuation), indent=2, default=str)
-    
+
     except Exception as e:
         return json.dumps({"error": str(e), "address": address})
 
@@ -543,11 +551,11 @@ async def search_properties(
     max_bedrooms: Optional[int] = None,
     property_type: Optional[PropertyType] = None,
     status: ListingStatus = ListingStatus.ACTIVE,
-    limit: int = 20
+    limit: int = 20,
 ) -> str:
     """
     Search for properties with flexible filters.
-    
+
     Args:
         zip_code: Filter by ZIP code
         city: Filter by city
@@ -558,7 +566,7 @@ async def search_properties(
         property_type: Type of property
         status: Listing status
         limit: Maximum results to return
-    
+
     Returns:
         JSON string containing matching properties
     """
@@ -566,24 +574,28 @@ async def search_properties(
         # In production, this would query MLS/Redfin/Zillow
         # Mock response for demonstration
         results = []
-        
+
         # This is a placeholder - actual implementation would query APIs
-        return json.dumps({
-            "results": results,
-            "total": len(results),
-            "filters_applied": {
-                "zip_code": zip_code,
-                "city": city,
-                "min_price": min_price,
-                "max_price": max_price,
-                "min_bedrooms": min_bedrooms,
-                "max_bedrooms": max_bedrooms,
-                "property_type": property_type,
-                "status": status,
-                "limit": limit
-            }
-        }, indent=2, default=str)
-    
+        return json.dumps(
+            {
+                "results": results,
+                "total": len(results),
+                "filters_applied": {
+                    "zip_code": zip_code,
+                    "city": city,
+                    "min_price": min_price,
+                    "max_price": max_price,
+                    "min_bedrooms": min_bedrooms,
+                    "max_bedrooms": max_bedrooms,
+                    "property_type": property_type,
+                    "status": status,
+                    "limit": limit,
+                },
+            },
+            indent=2,
+            default=str,
+        )
+
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -592,31 +604,33 @@ async def search_properties(
 # MCP Resources
 # =============================================================================
 
+
 @mcp.resource("realestate://markets")
 async def get_supported_markets() -> str:
     """Get list of supported real estate markets"""
-    return json.dumps({
-        "markets": [
-            {"name": "Rancho Cucamonga", "state": "CA", "zip_codes": ["91730", "91739"]},
-            {"name": "Ontario", "state": "CA", "zip_codes": ["91761", "91762"]},
-            {"name": "Fontana", "state": "CA", "zip_codes": ["92335", "92336"]},
-            {"name": "Rialto", "state": "CA", "zip_codes": ["92376", "92377"]},
-        ],
-        "data_sources": ["Zillow", "Redfin", "MLS"]
-    })
+    return json.dumps(
+        {
+            "markets": [
+                {"name": "Rancho Cucamonga", "state": "CA", "zip_codes": ["91730", "91739"]},
+                {"name": "Ontario", "state": "CA", "zip_codes": ["91761", "91762"]},
+                {"name": "Fontana", "state": "CA", "zip_codes": ["92335", "92336"]},
+                {"name": "Rialto", "state": "CA", "zip_codes": ["92376", "92377"]},
+            ],
+            "data_sources": ["Zillow", "Redfin", "MLS"],
+        }
+    )
 
 
 @mcp.resource("realestate://property-types")
 async def get_property_types() -> str:
     """Get list of property types"""
-    return json.dumps({
-        "property_types": [pt.value for pt in PropertyType]
-    })
+    return json.dumps({"property_types": [pt.value for pt in PropertyType]})
 
 
 # =============================================================================
 # MCP Prompts
 # =============================================================================
+
 
 @mcp.prompt()
 def analyze_market_for_investment() -> str:
@@ -664,14 +678,15 @@ def generate_cma_report() -> str:
 
 if __name__ == "__main__":
     import sys
+
     # Allow running directly for testing
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         import asyncio
-        
+
         async def test():
             result = await get_property_details("ML81234567", "auto")
             print(result)
-        
+
         asyncio.run(test())
     else:
         mcp.run()

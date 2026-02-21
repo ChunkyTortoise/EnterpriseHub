@@ -22,9 +22,14 @@ from dataclasses import dataclass, field
 
 # Task types the orchestrator classifies incoming requests into.
 _TASK_TYPES = [
-    "lead_qualification", "buyer_intent", "seller_intent",
-    "general_inquiry", "scheduling", "property_search",
-    "price_negotiation", "document_request",
+    "lead_qualification",
+    "buyer_intent",
+    "seller_intent",
+    "general_inquiry",
+    "scheduling",
+    "property_search",
+    "price_negotiation",
+    "document_request",
 ]
 
 # Model options selected based on task complexity.
@@ -69,7 +74,7 @@ _RESPONSE_TEMPLATES = [
     # JSON in markdown fence
     '```json\n{"intent": "sell", "confidence": 0.85, "entities": ["condo"]}\n```',
     # Plain text needing extraction
-    'The lead is interested in buying a 4-bedroom house with a budget of $650k.',
+    "The lead is interested in buying a 4-bedroom house with a budget of $650k.",
     # JSON with trailing text
     '{"intent": "inquiry", "confidence": 0.78}\nAdditional notes here.',
     # Nested structure
@@ -110,6 +115,7 @@ def _phase_parse(raw_response: str) -> dict:
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class PhaseResult:
@@ -182,13 +188,14 @@ def _make_payload(rng: random.Random) -> dict:
         "message": msg,
         "contact_id": f"contact_{rng.randint(1000, 9999)}",
         "channel": rng.choice(["sms", "web_chat", "email"]),
-        "timestamp": f"2026-02-09T{rng.randint(0,23):02d}:{rng.randint(0,59):02d}:00Z",
+        "timestamp": f"2026-02-09T{rng.randint(0, 23):02d}:{rng.randint(0, 59):02d}:00Z",
     }
 
 
 # ---------------------------------------------------------------------------
 # Main benchmark
 # ---------------------------------------------------------------------------
+
 
 def run_orchestration_benchmark(
     iterations: int = 1_000,
@@ -212,27 +219,19 @@ def run_orchestration_benchmark(
         # Phase 1: routing
         start = time.perf_counter_ns()
         _phase_route(payload)
-        phases["routing"].latencies_ms.append(
-            (time.perf_counter_ns() - start) / 1_000_000
-        )
+        phases["routing"].latencies_ms.append((time.perf_counter_ns() - start) / 1_000_000)
 
         # Phase 2: cache key generation
         start = time.perf_counter_ns()
         _phase_cache_key(payload)
-        phases["cache_key"].latencies_ms.append(
-            (time.perf_counter_ns() - start) / 1_000_000
-        )
+        phases["cache_key"].latencies_ms.append((time.perf_counter_ns() - start) / 1_000_000)
 
         # Phase 3: response parsing
         start = time.perf_counter_ns()
         _phase_parse(raw_response)
-        phases["parsing"].latencies_ms.append(
-            (time.perf_counter_ns() - start) / 1_000_000
-        )
+        phases["parsing"].latencies_ms.append((time.perf_counter_ns() - start) / 1_000_000)
 
-        total_latencies.append(
-            (time.perf_counter_ns() - total_start) / 1_000_000
-        )
+        total_latencies.append((time.perf_counter_ns() - total_start) / 1_000_000)
 
     return OrchestrationBenchmarkResult(
         phases=phases,
@@ -282,8 +281,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Orchestration overhead benchmark")
-    parser.add_argument("--iterations", type=int, default=1_000,
-                        help="Number of iterations (default: 1000)")
+    parser.add_argument("--iterations", type=int, default=1_000, help="Number of iterations (default: 1000)")
     args = parser.parse_args()
 
     result = run_orchestration_benchmark(iterations=args.iterations)

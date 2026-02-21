@@ -219,9 +219,7 @@ class InteractiveChatbotDemo:
             bot_type = st.selectbox(
                 "Select Bot",
                 BOT_TYPES,
-                index=BOT_TYPES.index(
-                    self._session.get("chatbot_bot_type", BOT_TYPES[0])
-                ),
+                index=BOT_TYPES.index(self._session.get("chatbot_bot_type", BOT_TYPES[0])),
                 key="chatbot_bot_selector",
             )
             if bot_type != self._session["chatbot_bot_type"]:

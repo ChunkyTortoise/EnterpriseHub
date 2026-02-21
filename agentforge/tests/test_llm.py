@@ -31,6 +31,7 @@ from agentforge.llm.litellm import LiteLLMProvider
 # Test Models
 # =============================================================================
 
+
 class TestLLMUsage:
     """Tests for LLMUsage model."""
 
@@ -54,11 +55,13 @@ class TestLLMUsage:
 
     def test_from_dict(self):
         """Test creating from dictionary."""
-        usage = LLMUsage(**{
-            "prompt_tokens": 200,
-            "completion_tokens": 100,
-            "total_tokens": 300,
-        })
+        usage = LLMUsage(
+            **{
+                "prompt_tokens": 200,
+                "completion_tokens": 100,
+                "total_tokens": 300,
+            }
+        )
         assert usage.prompt_tokens == 200
 
 
@@ -105,7 +108,9 @@ class TestLLMConfig:
         config1 = LLMConfig(model="gpt-4o", tool_choice="auto")
         assert config1.tool_choice == "auto"
 
-        config2 = LLMConfig(model="gpt-4o", tool_choice={"type": "function", "function": {"name": "test"}})
+        config2 = LLMConfig(
+            model="gpt-4o", tool_choice={"type": "function", "function": {"name": "test"}}
+        )
         assert isinstance(config2.tool_choice, dict)
 
 
@@ -132,11 +137,13 @@ class TestLLMResponse:
             content="Hello, world!",
             model="gpt-4o",
             usage=LLMUsage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
-            tool_calls=[{
-                "id": "call_123",
-                "type": "function",
-                "function": {"name": "test", "arguments": "{}"},
-            }],
+            tool_calls=[
+                {
+                    "id": "call_123",
+                    "type": "function",
+                    "function": {"name": "test", "arguments": "{}"},
+                }
+            ],
             finish_reason="stop",
             latency_ms=150.5,
         )
@@ -150,6 +157,7 @@ class TestLLMResponse:
 # =============================================================================
 # Test MockLLMProvider
 # =============================================================================
+
 
 class MockLLMProvider(LLMProvider):
     """Mock LLM provider for testing purposes.
@@ -184,11 +192,13 @@ class MockLLMProvider(LLMProvider):
     ) -> LLMResponse:
         """Return a mock response."""
         self.call_count += 1
-        self.call_history.append({
-            "messages": messages,
-            "config": config,
-            "kwargs": kwargs,
-        })
+        self.call_history.append(
+            {
+                "messages": messages,
+                "config": config,
+                "kwargs": kwargs,
+            }
+        )
 
         response_content = self.responses[(self.call_count - 1) % len(self.responses)]
 
@@ -284,6 +294,7 @@ class TestMockLLMProvider:
 # Test OpenAICompatibleProvider
 # =============================================================================
 
+
 class TestOpenAICompatibleProvider:
     """Tests for OpenAICompatibleProvider."""
 
@@ -367,10 +378,12 @@ class TestOpenAICompatibleProvider:
 
         # Mock the _make_request method
         mock_response = {
-            "choices": [{
-                "message": {"content": "Hello!"},
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "message": {"content": "Hello!"},
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": 10,
                 "completion_tokens": 5,
@@ -400,20 +413,24 @@ class TestOpenAICompatibleProvider:
         provider = OpenAICompatibleProvider(model="gpt-4o")
 
         mock_response = {
-            "choices": [{
-                "message": {
-                    "content": None,  # Content can be None when tool_calls present
-                    "tool_calls": [{
-                        "id": "call_123",
-                        "type": "function",
-                        "function": {
-                            "name": "get_weather",
-                            "arguments": '{"location": "SF"}',
-                        },
-                    }],
-                },
-                "finish_reason": "tool_calls",
-            }],
+            "choices": [
+                {
+                    "message": {
+                        "content": None,  # Content can be None when tool_calls present
+                        "tool_calls": [
+                            {
+                                "id": "call_123",
+                                "type": "function",
+                                "function": {
+                                    "name": "get_weather",
+                                    "arguments": '{"location": "SF"}',
+                                },
+                            }
+                        ],
+                    },
+                    "finish_reason": "tool_calls",
+                }
+            ],
             "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
             "model": "gpt-4o",
         }
@@ -450,6 +467,7 @@ class TestOpenAICompatibleProvider:
 # =============================================================================
 # Test LiteLLMProvider
 # =============================================================================
+
 
 class TestLiteLLMProvider:
     """Tests for LiteLLMProvider."""
@@ -537,6 +555,7 @@ class TestLiteLLMProvider:
 # Test Factory Function
 # =============================================================================
 
+
 class TestGetProvider:
     """Tests for get_provider factory function."""
 
@@ -573,6 +592,7 @@ class TestGetProvider:
 # Test LLMError
 # =============================================================================
 
+
 class TestLLMError:
     """Tests for LLMError exception."""
 
@@ -603,6 +623,7 @@ class TestLLMError:
 # =============================================================================
 # Integration Tests
 # =============================================================================
+
 
 class TestProviderIntegration:
     """Integration tests for provider functionality."""

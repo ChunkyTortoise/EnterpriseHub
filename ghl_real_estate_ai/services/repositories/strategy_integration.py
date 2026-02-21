@@ -373,6 +373,7 @@ async def create_repository_property_matcher(
 
     if config_type == "demo":
         import os as _os
+
         data_dir = data_sources_config.get(
             "json_data_dir",
             _os.getenv("KNOWLEDGE_BASE_DIR", "./data/knowledge_base"),
@@ -424,6 +425,7 @@ async def enhanced_generate_property_matches(
     # Use default demo configuration if not provided
     if data_sources_config is None:
         import os as _os
+
         data_sources_config = {
             "type": "demo",
             "json_data_dir": _os.getenv("KNOWLEDGE_BASE_DIR", "./data/knowledge_base"),

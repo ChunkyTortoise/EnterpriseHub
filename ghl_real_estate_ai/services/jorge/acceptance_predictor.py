@@ -350,8 +350,7 @@ class AcceptancePredictorService:
         confidence = prediction.confidence_level.value
 
         explanation_text = (
-            f"Predicted acceptance probability: {prob_pct:.1f}% ({confidence} confidence)\n\n"
-            f"Key factors:\n"
+            f"Predicted acceptance probability: {prob_pct:.1f}% ({confidence} confidence)\n\nKey factors:\n"
         )
 
         for i, factor in enumerate(prediction.key_factors, 1):
@@ -359,8 +358,7 @@ class AcceptancePredictorService:
 
         explanation_text += f"\nRecommended offer: ${prediction.recommended_offer:,.0f}\n"
         explanation_text += (
-            f"Optimal range: ${prediction.optimal_price_range[0]:,.0f} - "
-            f"${prediction.optimal_price_range[1]:,.0f}"
+            f"Optimal range: ${prediction.optimal_price_range[0]:,.0f} - ${prediction.optimal_price_range[1]:,.0f}"
         )
 
         return {
@@ -389,16 +387,12 @@ class AcceptancePredictorService:
 
         # Check if model has sufficient training data
         if self.metadata.training_samples < self.MIN_TRAINING_SAMPLES:
-            logger.info(
-                f"Insufficient training samples ({self.metadata.training_samples}), using rule-based"
-            )
+            logger.info(f"Insufficient training samples ({self.metadata.training_samples}), using rule-based")
             return PredictionMode.RULE_BASED
 
         # Check model performance thresholds
         if self.metadata.validation_auc < 0.70:
-            logger.warning(
-                f"Model AUC below threshold ({self.metadata.validation_auc:.3f}), using rule-based"
-            )
+            logger.warning(f"Model AUC below threshold ({self.metadata.validation_auc:.3f}), using rule-based")
             return PredictionMode.RULE_BASED
 
         return PredictionMode.XGBOOST_MODEL
@@ -480,9 +474,7 @@ class AcceptancePredictorService:
         )
 
         # Key factors
-        key_factors = self._generate_key_factors(
-            price_ratio, pcs_score, motivation_strength, timeline_urgency
-        )
+        key_factors = self._generate_key_factors(price_ratio, pcs_score, motivation_strength, timeline_urgency)
 
         # Data sufficiency
         data_sufficiency = self._assess_data_sufficiency(seller_state)
@@ -548,9 +540,7 @@ class AcceptancePredictorService:
             return None
 
         value = (
-            seller_state.get("estimated_value")
-            or seller_state.get("property_value")
-            or seller_state.get("zestimate")
+            seller_state.get("estimated_value") or seller_state.get("property_value") or seller_state.get("zestimate")
         )
 
         return float(value) if value else None
@@ -560,10 +550,9 @@ class AcceptancePredictorService:
         if not seller_state:
             return 50.0
 
-        motivation = (
-            seller_state.get("seller_intent_profile", {}).get("motivation_strength")
-            or seller_state.get("intent_profile", {}).get("frs", {}).get("motivation", {}).get("score")
-        )
+        motivation = seller_state.get("seller_intent_profile", {}).get("motivation_strength") or seller_state.get(
+            "intent_profile", {}
+        ).get("frs", {}).get("motivation", {}).get("score")
 
         return float(motivation) if motivation else 50.0
 
@@ -572,16 +561,13 @@ class AcceptancePredictorService:
         if not seller_state:
             return 50.0
 
-        timeline = (
-            seller_state.get("seller_intent_profile", {}).get("listing_urgency")
-            or seller_state.get("intent_profile", {}).get("frs", {}).get("timeline", {}).get("score")
-        )
+        timeline = seller_state.get("seller_intent_profile", {}).get("listing_urgency") or seller_state.get(
+            "intent_profile", {}
+        ).get("frs", {}).get("timeline", {}).get("score")
 
         return float(timeline) if timeline else 50.0
 
-    def _classify_confidence(
-        self, probability: float, seller_state: Optional[Dict[str, Any]]
-    ) -> ConfidenceLevel:
+    def _classify_confidence(self, probability: float, seller_state: Optional[Dict[str, Any]]) -> ConfidenceLevel:
         """Classify confidence level based on probability and data availability."""
         # Low confidence if insufficient data
         if not seller_state or self._assess_data_sufficiency(seller_state) == "insufficient":
@@ -595,9 +581,7 @@ class AcceptancePredictorService:
         else:
             return ConfidenceLevel.LOW
 
-    def _calculate_optimal_range(
-        self, reference_price: float, current_probability: float
-    ) -> Tuple[float, float]:
+    def _calculate_optimal_range(self, reference_price: float, current_probability: float) -> Tuple[float, float]:
         """Calculate optimal price range based on reference price and current probability."""
         # Target 70-85% acceptance probability range
         # Higher offer → higher acceptance probability
@@ -650,9 +634,7 @@ class AcceptancePredictorService:
 
         return importances
 
-    def _generate_key_factors(
-        self, price_ratio: float, pcs: float, motivation: float, timeline: float
-    ) -> List[str]:
+    def _generate_key_factors(self, price_ratio: float, pcs: float, motivation: float, timeline: float) -> List[str]:
         """Generate human-readable key factors."""
         factors = []
 
@@ -718,9 +700,7 @@ class AcceptancePredictorService:
         else:
             return 0.40
 
-    async def _get_cached_prediction(
-        self, seller_id: str, offer_price: float
-    ) -> Optional[AcceptancePrediction]:
+    async def _get_cached_prediction(self, seller_id: str, offer_price: float) -> Optional[AcceptancePrediction]:
         """Retrieve cached prediction if available."""
         if not self.cache_service:
             return None
@@ -750,9 +730,7 @@ class AcceptancePredictorService:
         try:
             # Serialize prediction to JSON
             prediction_dict = self._serialize_prediction(prediction)
-            await self.cache_service.set(
-                cache_key, json.dumps(prediction_dict), ttl=self.CACHE_TTL_SECONDS
-            )
+            await self.cache_service.set(cache_key, json.dumps(prediction_dict), ttl=self.CACHE_TTL_SECONDS)
         except Exception as e:
             logger.warning(f"Cache storage failed: {e}")
 
@@ -795,9 +773,7 @@ class AcceptancePredictorService:
             optimal_price_range=tuple(data["optimal_price_range"]),
             recommended_offer=data["recommended_offer"],
             expected_value=data["expected_value"],
-            feature_importances=[
-                FeatureImportance(**fi) for fi in data["feature_importances"]
-            ],
+            feature_importances=[FeatureImportance(**fi) for fi in data["feature_importances"]],
             key_factors=data["key_factors"],
             prediction_timestamp=datetime.fromisoformat(data["prediction_timestamp"]),
             model_version=data["model_version"],

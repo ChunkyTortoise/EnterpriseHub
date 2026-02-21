@@ -38,7 +38,10 @@ def test_sentiment_radar_success():
 
     with (
         patch("ghl_real_estate_ai.api.routes.market_intelligence_v2.get_market_registry", return_value=registry),
-        patch("ghl_real_estate_ai.api.routes.market_intelligence_v2.get_market_sentiment_radar", AsyncMock(return_value=radar)),
+        patch(
+            "ghl_real_estate_ai.api.routes.market_intelligence_v2.get_market_sentiment_radar",
+            AsyncMock(return_value=radar),
+        ),
     ):
         resp = client.get("/api/v2/market-intelligence/markets/rancho_cucamonga/sentiment/radar?timeframe_days=21")
 
@@ -73,7 +76,10 @@ def test_sentiment_alerts_success():
 
     with (
         patch("ghl_real_estate_ai.api.routes.market_intelligence_v2.get_market_registry", return_value=registry),
-        patch("ghl_real_estate_ai.api.routes.market_intelligence_v2.get_market_sentiment_radar", AsyncMock(return_value=radar)),
+        patch(
+            "ghl_real_estate_ai.api.routes.market_intelligence_v2.get_market_sentiment_radar",
+            AsyncMock(return_value=radar),
+        ),
     ):
         resp = client.get("/api/v2/market-intelligence/markets/rancho_cucamonga/sentiment/alerts")
 

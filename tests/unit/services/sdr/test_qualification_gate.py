@@ -21,6 +21,7 @@ def _make_frs(total_score: float):
         PriceResponsiveness,
         TimelineCommitment,
     )
+
     return FinancialReadinessScore(
         total_score=total_score,
         motivation=MotivationSignals(score=70, category="High Intent"),
@@ -34,6 +35,7 @@ def _make_frs(total_score: float):
 def _make_pcs(total_score: float = 65.0):
     """Build a minimal PsychologicalCommitmentScore."""
     from ghl_real_estate_ai.models.lead_scoring import PsychologicalCommitmentScore
+
     return PsychologicalCommitmentScore(
         total_score=total_score,
         response_velocity_score=65,
@@ -53,6 +55,7 @@ def _make_intent_profile(
 ):
     """Build a LeadIntentProfile with controllable FRS + intent confidence."""
     from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
+
     return LeadIntentProfile(
         lead_id=lead_id,
         frs=_make_frs(frs_score),
@@ -67,6 +70,7 @@ def _make_intent_profile(
 def _make_prospect_profile(lead_type: str = "buyer"):
     """Build a minimal ProspectProfile for gate evaluation."""
     from ghl_real_estate_ai.services.sdr.prospect_sourcer import ProspectProfile, ProspectSource
+
     return ProspectProfile(
         contact_id="test-001",
         location_id="loc-001",
@@ -86,6 +90,7 @@ class TestQualificationGate:
     def _make_gate(self, profile):
         """Create a QualificationGate with a mocked decoder returning the given profile."""
         from ghl_real_estate_ai.services.sdr.qualification_gate import QualificationGate
+
         mock_decoder = MagicMock()
         mock_decoder.analyze_lead.return_value = profile
         return QualificationGate(intent_decoder=mock_decoder)
@@ -131,9 +136,7 @@ class TestQualificationGate:
 
     def test_handoff_target_lead_bot_when_ambiguous(self):
         """Both confidences below threshold → handoff_target = lead_bot."""
-        profile = _make_intent_profile(
-            frs_score=65.0, buyer_confidence=0.5, seller_confidence=0.5, lead_type="unknown"
-        )
+        profile = _make_intent_profile(frs_score=65.0, buyer_confidence=0.5, seller_confidence=0.5, lead_type="unknown")
         gate = self._make_gate(profile)
         decision = gate.evaluate("test-001", self._history(), _make_prospect_profile("unknown"))
         assert decision.handoff_target == "lead_bot"
@@ -164,9 +167,7 @@ class TestQualificationGate:
 
     def test_fails_confidence_below_threshold(self):
         """High FRS but both confidences below 0.70 should fail."""
-        profile = _make_intent_profile(
-            frs_score=80.0, buyer_confidence=0.5, seller_confidence=0.3
-        )
+        profile = _make_intent_profile(frs_score=80.0, buyer_confidence=0.5, seller_confidence=0.3)
         gate = self._make_gate(profile)
         decision = gate.evaluate("test-001", self._history(), _make_prospect_profile())
         assert decision.passed is False
@@ -186,6 +187,7 @@ class TestQualificationGate:
         """Gate must call analyze_lead with (contact_id, conversation_history)."""
         profile = _make_intent_profile(frs_score=70.0, buyer_confidence=0.8)
         from ghl_real_estate_ai.services.sdr.qualification_gate import QualificationGate
+
         mock_decoder = MagicMock()
         mock_decoder.analyze_lead.return_value = profile
         gate = QualificationGate(intent_decoder=mock_decoder)

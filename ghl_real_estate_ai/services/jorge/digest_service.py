@@ -1,4 +1,5 @@
 """Daily email digest -- collects Lyrio stats and emails Jorge at 7am PT."""
+
 from __future__ import annotations
 
 import asyncio
@@ -65,9 +66,7 @@ class DigestService:
             from ghl_real_estate_ai.services.jorge.cost_tracker import CostTracker
 
             cost_tracker = CostTracker()
-            stats.api_cost_usd = await cost_tracker.get_month_total(
-                stats.date.year, stats.date.month
-            )
+            stats.api_cost_usd = await cost_tracker.get_month_total(stats.date.year, stats.date.month)
         except Exception as exc:
             stats.errors.append(f"API cost fetch failed: {exc}")
 
@@ -79,18 +78,12 @@ class DigestService:
 
         errors_html = ""
         if stats.errors:
-            error_items = "".join(
-                f"<li style='color:#b91c1c;'>{e}</li>" for e in stats.errors
-            )
+            error_items = "".join(f"<li style='color:#b91c1c;'>{e}</li>" for e in stats.errors)
             errors_html = f"<ul style='margin:0;padding-left:20px;'>{error_items}</ul>"
         else:
             errors_html = "<p style='color:#15803d;margin:0;'>No collection errors.</p>"
 
-        cost_line = (
-            f"${stats.api_cost_usd:.2f}"
-            if stats.api_cost_usd is not None
-            else "N/A"
-        )
+        cost_line = f"${stats.api_cost_usd:.2f}" if stats.api_cost_usd is not None else "N/A"
 
         html = f"""\
 <html>
@@ -185,9 +178,7 @@ class DigestService:
             """Sync wrapper so APScheduler can invoke the async send."""
             loop = asyncio.new_event_loop()
             try:
-                loop.run_until_complete(
-                    self.send_digest(recipient_email, date.today())
-                )
+                loop.run_until_complete(self.send_digest(recipient_email, date.today()))
             finally:
                 loop.close()
 
@@ -204,6 +195,4 @@ class DigestService:
             replace_existing=True,
         )
 
-        logger.info(
-            "Scheduled daily digest for %s at 7:00 AM PT", recipient_email
-        )
+        logger.info("Scheduled daily digest for %s at 7:00 AM PT", recipient_email)

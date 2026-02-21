@@ -72,9 +72,7 @@ class TestPublishHandoffOutcome:
         )
 
         assert result is True
-        mock_ghl_client.add_tags.assert_called_once_with(
-            "test_contact_1", ["Handoff-Lead-to-Buyer-Successful"]
-        )
+        mock_ghl_client.add_tags.assert_called_once_with("test_contact_1", ["Handoff-Lead-to-Buyer-Successful"])
 
         expected_fields = {
             "handoff_source": "lead",
@@ -242,9 +240,7 @@ class TestBatchProcessing:
         await publisher._process_batch()
 
         # Old timestamps should be removed
-        recent_timestamps = [
-            ts for ts in publisher._write_timestamps if time.time() - ts < 60
-        ]
+        recent_timestamps = [ts for ts in publisher._write_timestamps if time.time() - ts < 60]
         assert len(recent_timestamps) == 1
 
     @pytest.mark.asyncio
@@ -295,10 +291,7 @@ class TestPublisherStats:
 
         stats = publisher.get_stats()
         assert stats["writes_last_minute"] == 10
-        assert (
-            stats["rate_limit_capacity"]
-            == publisher.MAX_WRITES_PER_MINUTE - 10
-        )
+        assert stats["rate_limit_capacity"] == publisher.MAX_WRITES_PER_MINUTE - 10
 
 
 class TestOutcomeUpdate:

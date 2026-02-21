@@ -58,11 +58,7 @@ class TestLanguageDetectionPerformance:
         assert latency_ms < 100, f"Single detection took {latency_ms:.1f}ms, target is <100ms"
         assert result.language == "en"
 
-    def test_batch_detection_latency(
-        self,
-        service: LanguageDetectionService,
-        test_messages: List[Tuple[str, str]]
-    ):
+    def test_batch_detection_latency(self, service: LanguageDetectionService, test_messages: List[Tuple[str, str]]):
         """Test average latency across batch of messages."""
         latencies = []
 
@@ -72,9 +68,7 @@ class TestLanguageDetectionPerformance:
             latency_ms = (time.perf_counter() - start) * 1000
             latencies.append(latency_ms)
 
-            assert result.language == expected_lang, (
-                f"Expected {expected_lang}, got {result.language} for: {message}"
-            )
+            assert result.language == expected_lang, f"Expected {expected_lang}, got {result.language} for: {message}"
 
         avg_latency = sum(latencies) / len(latencies)
         max_latency = max(latencies)
@@ -86,9 +80,7 @@ class TestLanguageDetectionPerformance:
         print(f"  P95: {p95_latency:.1f}ms")
 
         # P95 should be under 100ms
-        assert p95_latency < 100, (
-            f"P95 latency {p95_latency:.1f}ms exceeds 100ms target"
-        )
+        assert p95_latency < 100, f"P95 latency {p95_latency:.1f}ms exceeds 100ms target"
 
     def test_accuracy_spanish_real_estate(self, service: LanguageDetectionService):
         """Test accuracy for Spanish real estate phrases (>95% target)."""
@@ -114,9 +106,7 @@ class TestLanguageDetectionPerformance:
         accuracy = (correct / len(spanish_tests)) * 100
         print(f"\nSpanish Accuracy: {accuracy:.1f}%")
 
-        assert accuracy >= 95.0, (
-            f"Spanish accuracy {accuracy:.1f}% below 95% target"
-        )
+        assert accuracy >= 95.0, f"Spanish accuracy {accuracy:.1f}% below 95% target"
 
     def test_accuracy_english_real_estate(self, service: LanguageDetectionService):
         """Test accuracy for English real estate phrases (>95% target)."""
@@ -142,16 +132,11 @@ class TestLanguageDetectionPerformance:
         accuracy = (correct / len(english_tests)) * 100
         print(f"\nEnglish Accuracy: {accuracy:.1f}%")
 
-        assert accuracy >= 95.0, (
-            f"English accuracy {accuracy:.1f}% below 95% target"
-        )
+        assert accuracy >= 95.0, f"English accuracy {accuracy:.1f}% below 95% target"
 
     def test_code_switching_detection(self, service: LanguageDetectionService):
         """Test detection of Spanish/English code-switching."""
-        code_switching_text = (
-            "Hello, I'm interested in buying. "
-            "Pero necesito ayuda con el financiamiento."
-        )
+        code_switching_text = "Hello, I'm interested in buying. Pero necesito ayuda con el financiamiento."
 
         result = service.detect(code_switching_text)
 

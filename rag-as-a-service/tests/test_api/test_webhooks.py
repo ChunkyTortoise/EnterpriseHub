@@ -59,7 +59,7 @@ class TestStripeWebhook:
     @pytest.mark.asyncio
     async def test_handles_subscription_deleted(self):
         mock_request = AsyncMock()
-        mock_request.body.return_value = b'{}'
+        mock_request.body.return_value = b"{}"
         mock_request.headers = {"stripe-signature": "valid"}
 
         fake_event = {
@@ -77,4 +77,5 @@ class TestStripeWebhook:
 def stripe_sig_error():
     """Helper to create a Stripe signature verification error."""
     import stripe
+
     return stripe.SignatureVerificationError("bad sig", "header")

@@ -24,7 +24,7 @@ class ResponseGenerator:
         self,
         claude: Optional[ClaudeAssistant] = None,
         sentiment_service: Optional[SentimentAnalysisService] = None,
-        ab_testing: Optional[ABTestingService] = None
+        ab_testing: Optional[ABTestingService] = None,
     ):
         self.claude = claude or ClaudeAssistant()
         self.sentiment_service = sentiment_service
@@ -100,10 +100,13 @@ class ResponseGenerator:
             },
         }
 
-        strategy = objection_strategies.get(objection_type, {
-            "approach": "Address concern with empathy and helpful information",
-            "talking_points": ["I understand your concern. Let's work through this together."],
-        })
+        strategy = objection_strategies.get(
+            objection_type,
+            {
+                "approach": "Address concern with empathy and helpful information",
+                "talking_points": ["I understand your concern. Let's work through this together."],
+            },
+        )
 
         # Enrich budget_shock with affordability data if available
         if objection_type == "budget_shock" and state.get("affordability_analysis"):
@@ -128,11 +131,7 @@ class ResponseGenerator:
             "current_qualification_step": "objection_handling",
         }
 
-    async def generate_buyer_response(
-        self,
-        state: BuyerBotState,
-        tone_variant: Optional[str] = None
-    ) -> Dict:
+    async def generate_buyer_response(self, state: BuyerBotState, tone_variant: Optional[str] = None) -> Dict:
         """
         Generate strategic buyer response based on qualification and property matches.
         Enhanced with Phase 3.3 intelligence context for consultative recommendations.
@@ -155,19 +154,24 @@ class ResponseGenerator:
             if self.sentiment_service:
                 try:
                     last_user_msg = next(
-                        (msg.get("content", "") for msg in reversed(state.get("conversation_history", [])) 
-                         if msg.get("role") == "user"), 
-                        ""
+                        (
+                            msg.get("content", "")
+                            for msg in reversed(state.get("conversation_history", []))
+                            if msg.get("role") == "user"
+                        ),
+                        "",
                     )
                     if last_user_msg:
                         sentiment_result = await self.sentiment_service.analyze_sentiment(last_user_msg)
-                        tone_adjustment = self.sentiment_service.get_response_tone_adjustment(sentiment_result.sentiment)
-                        
+                        tone_adjustment = self.sentiment_service.get_response_tone_adjustment(
+                            sentiment_result.sentiment
+                        )
+
                         sentiment_context = f"""
             SENTIMENT ANALYSIS (Phase 1.5):
             - Detected Sentiment: {sentiment_result.sentiment.value.upper()} (Confidence: {sentiment_result.confidence:.2f})
-            - Suggested Tone: {tone_adjustment.get('tone', 'professional')}
-            - Pacing: {tone_adjustment.get('pace', 'normal')}
+            - Suggested Tone: {tone_adjustment.get("tone", "professional")}
+            - Pacing: {tone_adjustment.get("pace", "normal")}
             """
                         # Check for escalation
                         if sentiment_result.escalation_required.value != "none":
@@ -234,11 +238,14 @@ class ResponseGenerator:
             response = self._extract_text_from_response(raw_response)
 
             import random
-            fallback = random.choice([
-                "What are you looking for in your next home? I want to make sure we're on the same page.",
-                "What matters most to you in your next home? Area, size, style?",
-                "What's the most important thing on your wish list for your next place?",
-            ])
+
+            fallback = random.choice(
+                [
+                    "What are you looking for in your next home? I want to make sure we're on the same page.",
+                    "What matters most to you in your next home? Area, size, style?",
+                    "What's the most important thing on your wish list for your next place?",
+                ]
+            )
             content = response or fallback
             content = content.replace("-", " ")  # Jorge spec: no hyphens in SMS
             return {
@@ -250,21 +257,21 @@ class ResponseGenerator:
         except Exception as e:
             logger.error(f"Error generating buyer response for {state.get('buyer_id')}: {str(e)}")
             import random
+
             return {
-                "response_content": random.choice([
-                    "What area are you looking in? I can check what's available right now.",
-                    "What matters most to you in your next home? Let's start there.",
-                    "To find you the best matches, what price range works for your situation?",
-                ]),
+                "response_content": random.choice(
+                    [
+                        "What area are you looking in? I can check what's available right now.",
+                        "What matters most to you in your next home? Let's start there.",
+                        "To find you the best matches, what price range works for your situation?",
+                    ]
+                ),
                 "response_tone": "friendly_supportive",
                 "next_action": "send_response",
             }
 
     def _enhance_buyer_prompt_with_intelligence(
-        self,
-        base_prompt: str,
-        intelligence_context: Any,
-        state: BuyerBotState
+        self, base_prompt: str, intelligence_context: Any, state: BuyerBotState
     ) -> str:
         """
         Enhance Claude prompt with buyer intelligence context for consultative responses.
@@ -273,7 +280,7 @@ class ResponseGenerator:
             enhanced_prompt = base_prompt
 
             # Add property intelligence if available
-            if hasattr(intelligence_context, 'property_intelligence'):
+            if hasattr(intelligence_context, "property_intelligence"):
                 property_intel = intelligence_context.property_intelligence
                 if property_intel.match_count > 0:
                     enhanced_prompt += f"\n\nPROPERTY INTELLIGENCE:"
@@ -283,7 +290,7 @@ class ResponseGenerator:
                         enhanced_prompt += f"\n- Match reasoning: {property_intel.behavioral_reasoning}"
 
             # Add conversation intelligence insights for buyer consultation
-            if hasattr(intelligence_context, 'conversation_intelligence'):
+            if hasattr(intelligence_context, "conversation_intelligence"):
                 conversation_intel = intelligence_context.conversation_intelligence
                 if conversation_intel.objections_detected:
                     enhanced_prompt += f"\n\nBUYER CONCERNS DETECTED:"
@@ -299,11 +306,13 @@ class ResponseGenerator:
                             enhanced_prompt += f"\n  Consultative approach: {suggestions[0]}"
 
             # Add preference intelligence insights for personalization
-            if hasattr(intelligence_context, 'preference_intelligence'):
+            if hasattr(intelligence_context, "preference_intelligence"):
                 preference_intel = intelligence_context.preference_intelligence
                 if preference_intel.profile_completeness > 0.3:
                     enhanced_prompt += f"\n\nBUYER PREFERENCE INTELLIGENCE:"
-                    enhanced_prompt += f"\n- Preference profile completeness: {preference_intel.profile_completeness:.0%}"
+                    enhanced_prompt += (
+                        f"\n- Preference profile completeness: {preference_intel.profile_completeness:.0%}"
+                    )
 
                     # Add learned preferences for better consultation
                     if hasattr(preference_intel, "learned_preferences") and preference_intel.learned_preferences:
@@ -330,16 +339,14 @@ class ResponseGenerator:
         or empty string if the feature is disabled or no skill applies.
         """
         enabled = os.getenv("ENABLE_BUYER_PROGRESSIVE_SKILLS", "false").lower() in (
-            "true", "1", "yes",
+            "true",
+            "1",
+            "yes",
         )
         if not enabled:
             return ""
 
-        buying_motivation = (
-            state.get("buying_motivation_score")
-            or state.get("financial_readiness_score", 0)
-            or 0
-        )
+        buying_motivation = state.get("buying_motivation_score") or state.get("financial_readiness_score", 0) or 0
 
         # High-intent leads skip progressive skills (full model handles them)
         if buying_motivation >= 90:

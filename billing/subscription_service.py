@@ -4,6 +4,7 @@ Subscription service for managing billing lifecycle in EnterpriseHub.
 Provides business logic for subscription management,
 plan upgrades/downgrades, and quota enforcement.
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,24 +27,24 @@ logger = logging.getLogger(__name__)
 class SubscriptionService:
     """
     Service for managing subscriptions and billing operations.
-    
+
     Coordinates between local database state and Stripe,
     handling plan changes, cancellations, and quota management.
     """
-    
+
     TRIAL_DAYS = 14
     GRACE_PERIOD_HOURS = 48
-    
+
     def __init__(self, db_connection=None) -> None:
         """
         Initialize subscription service.
-        
+
         Args:
             db_connection: Database connection pool or session factory
         """
         self.stripe = get_stripe_client()
         self.db = db_connection
-    
+
     async def create_subscription(
         self,
         location_id: str,
@@ -56,7 +57,7 @@ class SubscriptionService:
     ) -> Dict[str, Any]:
         """
         Create a new subscription for a location/tenant.
-        
+
         Args:
             location_id: Location/tenant ID
             plan_tier: Plan tier (starter, professional, enterprise)
@@ -65,20 +66,20 @@ class SubscriptionService:
             payment_method_id: Stripe payment method ID
             billing_interval: "month" or "year"
             trial_days: Override default trial period
-            
+
         Returns:
             Created subscription record
         """
         trial_days = trial_days or self.TRIAL_DAYS
-        
+
         # Check if location already has an active subscription
         existing = await self._get_active_subscription(location_id)
         if existing:
             raise ValueError(f"Location {location_id} already has an active subscription")
-        
+
         # Get plan config
         plan_config = get_plan_config(plan_tier)
-        
+
         # Create Stripe customer
         stripe_customer = await self.stripe.create_customer(
             email=email,
@@ -86,7 +87,7 @@ class SubscriptionService:
             location_id=location_id,
         )
         stripe_customer_id = stripe_customer["id"]
-        
+
         # Create Stripe subscription
         try:
             stripe_sub = await self.stripe.create_subscription(
@@ -100,11 +101,11 @@ class SubscriptionService:
             # If payment fails, still create subscription in incomplete state
             logger.warning(f"Payment failed for location {location_id}, creating incomplete subscription")
             stripe_sub = {"id": None, "status": "incomplete"}
-        
+
         # Create local subscription record
         now = datetime.now(timezone.utc)
         subscription_id = str(uuid.uuid4())
-        
+
         subscription = {
             "id": subscription_id,
             "location_id": location_id,
@@ -122,13 +123,13 @@ class SubscriptionService:
             "created_at": now,
             "updated_at": now,
         }
-        
+
         # Save to database
         await self._save_subscription(subscription)
-        
+
         logger.info(f"Created subscription for location {location_id}: {plan_tier.value}")
         return subscription
-    
+
     async def upgrade_subscription(
         self,
         location_id: str,
@@ -137,24 +138,24 @@ class SubscriptionService:
     ) -> Dict[str, Any]:
         """
         Upgrade a location to a higher plan tier.
-        
+
         Stripe handles proration automatically.
         """
         subscription = await self._get_active_subscription(location_id)
         if not subscription:
             raise ValueError(f"No active subscription found for location {location_id}")
-        
+
         current_tier = PlanTier(subscription["tier"])
-        
+
         # Validate upgrade (can't downgrade here)
         plan_order = [PlanTier.STARTER, PlanTier.PROFESSIONAL, PlanTier.ENTERPRISE]
         if plan_order.index(new_plan_tier) <= plan_order.index(current_tier):
             raise ValueError(f"Cannot upgrade from {current_tier.value} to {new_plan_tier.value}")
-        
+
         # Get new plan config
         plan_config = get_plan_config(new_plan_tier)
         interval = billing_interval or subscription["billing_interval"]
-        
+
         # Update Stripe subscription
         if subscription.get("stripe_subscription_id"):
             try:
@@ -166,18 +167,18 @@ class SubscriptionService:
             except PaymentFailedError as e:
                 logger.error(f"Failed to upgrade subscription in Stripe: {e}")
                 raise
-        
+
         # Update local record
         subscription["tier"] = new_plan_tier.value
         subscription["billing_interval"] = interval
         subscription["usage_allowance"] = plan_config.get("lead_quota", 100)
         subscription["updated_at"] = datetime.now(timezone.utc)
-        
+
         await self._save_subscription(subscription)
-        
+
         logger.info(f"Upgraded location {location_id} to {new_plan_tier.value}")
         return subscription
-    
+
     async def downgrade_subscription(
         self,
         location_id: str,
@@ -186,23 +187,23 @@ class SubscriptionService:
     ) -> Dict[str, Any]:
         """
         Downgrade a location to a lower plan tier.
-        
+
         Changes take effect at the end of the current billing period.
         """
         subscription = await self._get_active_subscription(location_id)
         if not subscription:
             raise ValueError(f"No active subscription found for location {location_id}")
-        
+
         current_tier = PlanTier(subscription["tier"])
-        
+
         # Validate downgrade
         plan_order = [PlanTier.STARTER, PlanTier.PROFESSIONAL, PlanTier.ENTERPRISE]
         if plan_order.index(new_plan_tier) >= plan_order.index(current_tier):
             raise ValueError(f"Cannot downgrade from {current_tier.value} to {new_plan_tier.value}")
-        
+
         # For downgrades, schedule the change at period end
         interval = billing_interval or subscription["billing_interval"]
-        
+
         # Update Stripe subscription
         if subscription.get("stripe_subscription_id"):
             try:
@@ -214,13 +215,13 @@ class SubscriptionService:
             except PaymentFailedError as e:
                 logger.error(f"Failed to schedule downgrade in Stripe: {e}")
                 raise
-        
+
         # Note: We don't immediately update the local record for downgrades
         # The webhook will update it when the change takes effect
-        
+
         logger.info(f"Scheduled downgrade for location {location_id} to {new_plan_tier.value}")
         return subscription
-    
+
     async def cancel_subscription(
         self,
         location_id: str,
@@ -228,7 +229,7 @@ class SubscriptionService:
     ) -> Dict[str, Any]:
         """
         Cancel a location's subscription.
-        
+
         Args:
             location_id: Location ID
             immediately: If True, cancel immediately. Otherwise, cancel at period end.
@@ -236,7 +237,7 @@ class SubscriptionService:
         subscription = await self._get_active_subscription(location_id)
         if not subscription:
             raise ValueError(f"No active subscription found for location {location_id}")
-        
+
         # Cancel in Stripe
         if subscription.get("stripe_subscription_id"):
             try:
@@ -247,7 +248,7 @@ class SubscriptionService:
             except PaymentFailedError as e:
                 logger.error(f"Failed to cancel subscription in Stripe: {e}")
                 raise
-        
+
         # Update local record
         now = datetime.now(timezone.utc)
         if immediately:
@@ -257,13 +258,13 @@ class SubscriptionService:
         else:
             subscription["cancel_at_period_end"] = True
             # Status stays "active" until period end
-        
+
         subscription["updated_at"] = now
         await self._save_subscription(subscription)
-        
+
         logger.info(f"Canceled subscription for location {location_id} (immediately={immediately})")
         return subscription
-    
+
     async def reactivate_subscription(self, location_id: str) -> Dict[str, Any]:
         """
         Reactivate a subscription that was set to cancel at period end.
@@ -271,10 +272,10 @@ class SubscriptionService:
         subscription = await self._get_subscription_by_location(location_id)
         if not subscription:
             raise ValueError(f"No subscription found for location {location_id}")
-        
+
         if not subscription.get("cancel_at_period_end"):
             raise ValueError("Subscription is not scheduled for cancellation")
-        
+
         # Reactivate in Stripe
         if subscription.get("stripe_subscription_id"):
             try:
@@ -285,93 +286,90 @@ class SubscriptionService:
             except PaymentFailedError as e:
                 logger.error(f"Failed to reactivate subscription in Stripe: {e}")
                 raise
-        
+
         # Update local record
         subscription["cancel_at_period_end"] = False
         subscription["updated_at"] = datetime.now(timezone.utc)
         await self._save_subscription(subscription)
-        
+
         logger.info(f"Reactivated subscription for location {location_id}")
         return subscription
-    
+
     async def sync_with_stripe(self, location_id: str) -> Dict[str, Any]:
         """
         Synchronize local subscription state with Stripe.
-        
+
         Call this periodically or after receiving webhooks.
         """
         subscription = await self._get_subscription_by_location(location_id)
         if not subscription:
             raise ValueError(f"No subscription found for location {location_id}")
-        
+
         if not subscription.get("stripe_subscription_id"):
             logger.warning(f"No Stripe subscription ID for location {location_id}")
             return subscription
-        
+
         # Fetch latest from Stripe
         try:
-            stripe_sub = await self.stripe.get_subscription(
-                subscription["stripe_subscription_id"]
-            )
+            stripe_sub = await self.stripe.get_subscription(subscription["stripe_subscription_id"])
         except PaymentFailedError:
             logger.warning(f"Could not fetch subscription from Stripe for location {location_id}")
             return subscription
-        
+
         # Update local state
         subscription["status"] = stripe_sub.get("status", subscription["status"])
-        
+
         if stripe_sub.get("current_period_start"):
             subscription["current_period_start"] = datetime.fromtimestamp(
                 stripe_sub["current_period_start"], tz=timezone.utc
             )
-        
+
         if stripe_sub.get("current_period_end"):
             subscription["current_period_end"] = datetime.fromtimestamp(
                 stripe_sub["current_period_end"], tz=timezone.utc
             )
-        
+
         if stripe_sub.get("trial_end"):
-            subscription["trial_end"] = datetime.fromtimestamp(
-                stripe_sub["trial_end"], tz=timezone.utc
-            )
-        
+            subscription["trial_end"] = datetime.fromtimestamp(stripe_sub["trial_end"], tz=timezone.utc)
+
         subscription["cancel_at_period_end"] = stripe_sub.get("cancel_at_period_end", False)
         subscription["updated_at"] = datetime.now(timezone.utc)
-        
+
         await self._save_subscription(subscription)
-        
+
         logger.info(f"Synced subscription for location {location_id}")
         return subscription
-    
+
     async def get_subscription(self, location_id: str) -> Optional[Dict[str, Any]]:
         """Get the active subscription for a location."""
         return await self._get_active_subscription(location_id)
-    
+
     async def get_subscription_details(self, location_id: str) -> Dict[str, Any]:
         """Get detailed subscription info including plan details."""
         subscription = await self.get_subscription(location_id)
-        
+
         if not subscription:
             return {"has_subscription": False}
-        
+
         plan_config = get_plan_config(PlanTier(subscription["tier"]))
-        
+
         usage_allowance = subscription.get("usage_allowance", 100)
         usage_current = subscription.get("usage_current", 0)
-        
+
         if usage_allowance == -1:  # Unlimited
             remaining = -1
             percentage = 0
         else:
             remaining = max(0, usage_allowance - usage_current)
             percentage = (usage_current / usage_allowance * 100) if usage_allowance > 0 else 0
-        
+
         return {
             "has_subscription": True,
             "plan_tier": subscription["tier"],
             "plan_name": plan_config.get("name", subscription["tier"]),
             "status": subscription["status"],
-            "is_active": subscription["status"] in [
+            "is_active": subscription["status"]
+            in [
                 SubscriptionStatus.TRIALING.value,
                 SubscriptionStatus.ACTIVE.value,
             ],
@@ -388,13 +386,13 @@ class SubscriptionService:
             "features": plan_config.get("features", {}),
             "limits": plan_config.get("limits", {}),
         }
-    
+
     async def _get_active_subscription(self, location_id: str) -> Optional[Dict[str, Any]]:
         """Get active subscription for a location."""
         if self.db is None:
             # Return mock for testing
             return None
-        
+
         async with self.db.acquire() as conn:
             row = await conn.fetchrow(
                 """
@@ -404,15 +402,15 @@ class SubscriptionService:
                 ORDER BY created_at DESC
                 LIMIT 1
                 """,
-                location_id
+                location_id,
             )
             return dict(row) if row else None
-    
+
     async def _get_subscription_by_location(self, location_id: str) -> Optional[Dict[str, Any]]:
         """Get any subscription (active or not) for a location."""
         if self.db is None:
             return None
-        
+
         async with self.db.acquire() as conn:
             row = await conn.fetchrow(
                 """
@@ -421,15 +419,15 @@ class SubscriptionService:
                 ORDER BY created_at DESC
                 LIMIT 1
                 """,
-                location_id
+                location_id,
             )
             return dict(row) if row else None
-    
+
     async def _save_subscription(self, subscription: Dict[str, Any]) -> None:
         """Save subscription to database."""
         if self.db is None:
             return
-        
+
         async with self.db.acquire() as conn:
             await conn.execute(
                 """

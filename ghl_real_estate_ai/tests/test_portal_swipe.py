@@ -39,6 +39,7 @@ def temp_interactions_file(tmp_path):
 def mock_ghl_client():
     """Mock GHL client to avoid real API calls in tests."""
     from unittest.mock import AsyncMock, Mock
+
     mock = Mock()
     mock.add_tags = AsyncMock(return_value={"status": "success"})
     return mock

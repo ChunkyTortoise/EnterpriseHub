@@ -295,9 +295,7 @@ class MarketLeverageCalculator:
 
             if comparable_sales:
                 avg_sale_price = sum(sale.get("sale_price", 0) for sale in comparable_sales) / len(comparable_sales)
-                sum(sale.get("price_per_sqft", 0) for sale in comparable_sales) / len(
-                    comparable_sales
-                )
+                sum(sale.get("price_per_sqft", 0) for sale in comparable_sales) / len(comparable_sales)
                 float(property_price) / property_data.get("sqft", 2000)
 
                 # Price positioning analysis

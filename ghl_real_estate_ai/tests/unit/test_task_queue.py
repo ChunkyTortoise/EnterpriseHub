@@ -181,16 +181,20 @@ def test_get_dlq_jobs_returns_failed_entries(fake_redis):
     queue = _make_queue_with_redis(fake_redis)
 
     # Manually push failed jobs into the DLQ key
-    failed_job_1 = json.dumps({
-        "job_id": "failed-1",
-        "task": "process_message",
-        "error": "TimeoutError",
-    })
-    failed_job_2 = json.dumps({
-        "job_id": "failed-2",
-        "task": "send_notification",
-        "error": "ConnectionError",
-    })
+    failed_job_1 = json.dumps(
+        {
+            "job_id": "failed-1",
+            "task": "process_message",
+            "error": "TimeoutError",
+        }
+    )
+    failed_job_2 = json.dumps(
+        {
+            "job_id": "failed-2",
+            "task": "send_notification",
+            "error": "ConnectionError",
+        }
+    )
     fake_redis.rpush(DLQ_KEY, failed_job_1)
     fake_redis.rpush(DLQ_KEY, failed_job_2)
 

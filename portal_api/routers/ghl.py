@@ -25,7 +25,7 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
         500: {
             "model": ApiErrorResponse,
             "description": "GoHighLevel sync failed",
-        }
+        },
     },
 )
 async def sync_ghl(request: Request, services: Services = Depends(get_services)) -> GHLSyncResponse | JSONResponse:
@@ -41,7 +41,9 @@ async def sync_ghl(request: Request, services: Services = Depends(get_services))
 
 
 @router.get("/fields", response_model=GHLFieldsResponse | GHLFieldsUnavailableResponse)
-async def get_ghl_fields(services: Services = Depends(get_services)) -> GHLFieldsResponse | GHLFieldsUnavailableResponse:
+async def get_ghl_fields(
+    services: Services = Depends(get_services),
+) -> GHLFieldsResponse | GHLFieldsUnavailableResponse:
     fields = services.ghl.inspect_custom_fields()
     if not fields:
         return GHLFieldsUnavailableResponse(message="No fields found or API key not configured")

@@ -66,14 +66,12 @@ def mock_cache_service():
 def mock_ghl_client():
     """Mock GHL API client"""
     client = Mock()
-    client.get_contact = AsyncMock(return_value={
-        "success": True,
-        "data": {
-            "id": "contact_abc123",
-            "name": "John Smith",
-            "email": "john@example.com"
+    client.get_contact = AsyncMock(
+        return_value={
+            "success": True,
+            "data": {"id": "contact_abc123", "name": "John Smith", "email": "john@example.com"},
         }
-    })
+    )
     client.update_contact = AsyncMock(return_value={"success": True})
     client.send_message = AsyncMock(return_value={"success": True})
     return client

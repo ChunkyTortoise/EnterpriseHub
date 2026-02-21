@@ -32,14 +32,16 @@ class TestProcessBuyerConversation:
 
             # Mock workflow — workflow.ainvoke returns raw state dict
             bot.workflow = AsyncMock()
-            bot.workflow.ainvoke = AsyncMock(return_value={
-                "response_content": "Let me help you find the perfect home!",
-                "financial_readiness_score": 80.0,
-                "buying_motivation_score": 75.0,
-                "is_qualified": True,
-                "current_journey_stage": "property_search",
-                "current_qualification_step": "property_search",
-            })
+            bot.workflow.ainvoke = AsyncMock(
+                return_value={
+                    "response_content": "Let me help you find the perfect home!",
+                    "financial_readiness_score": 80.0,
+                    "buying_motivation_score": 75.0,
+                    "is_qualified": True,
+                    "current_journey_stage": "property_search",
+                    "current_qualification_step": "property_search",
+                }
+            )
 
             # Mock all services used during post-processing
             bot.event_publisher = AsyncMock()
@@ -50,7 +52,9 @@ class TestProcessBuyerConversation:
             bot.workflow_service = AsyncMock()
             bot.churn_service = AsyncMock()
             bot.churn_service.assess_churn_risk = AsyncMock(
-                return_value=MagicMock(risk_score=0.1, risk_level=MagicMock(value="low"), recommended_action=MagicMock(value="monitor"))
+                return_value=MagicMock(
+                    risk_score=0.1, risk_level=MagicMock(value="low"), recommended_action=MagicMock(value="monitor")
+                )
             )
             bot.performance_tracker = AsyncMock()
             bot.metrics_collector = MagicMock()
@@ -127,14 +131,16 @@ class TestProcessBuyerConversation:
 
     async def test_unqualified_buyer(self, mock_buyer_bot):
         """Test unqualified buyer scenario."""
-        mock_buyer_bot.workflow.ainvoke = AsyncMock(return_value={
-            "response_content": "Let's talk about financing first.",
-            "financial_readiness_score": 30.0,
-            "buying_motivation_score": 40.0,
-            "is_qualified": False,
-            "current_qualification_step": "financing",
-            "current_journey_stage": "qualification",
-        })
+        mock_buyer_bot.workflow.ainvoke = AsyncMock(
+            return_value={
+                "response_content": "Let's talk about financing first.",
+                "financial_readiness_score": 30.0,
+                "buying_motivation_score": 40.0,
+                "is_qualified": False,
+                "current_qualification_step": "financing",
+                "current_journey_stage": "qualification",
+            }
+        )
 
         result = await mock_buyer_bot.process_buyer_conversation(
             conversation_id="buyer_123",
@@ -207,9 +213,7 @@ class TestProcessBuyerConversation:
 
     async def test_workflow_exception_handling(self, mock_buyer_bot):
         """Test graceful handling of workflow exceptions."""
-        mock_buyer_bot.workflow.ainvoke = AsyncMock(
-            side_effect=Exception("Workflow error")
-        )
+        mock_buyer_bot.workflow.ainvoke = AsyncMock(side_effect=Exception("Workflow error"))
 
         result = await mock_buyer_bot.process_buyer_conversation(
             conversation_id="buyer_123",

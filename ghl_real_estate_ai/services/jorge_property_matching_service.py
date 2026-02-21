@@ -371,7 +371,10 @@ class JorgePropertyMatchingService:
             if preferences.min_bathrooms and prop.features.bathrooms < preferences.min_bathrooms - 0.5:
                 continue
             # Neighborhood filter (if specified)
-            if preferences.preferred_neighborhoods and prop.address.neighborhood not in preferences.preferred_neighborhoods:
+            if (
+                preferences.preferred_neighborhoods
+                and prop.address.neighborhood not in preferences.preferred_neighborhoods
+            ):
                 continue
             filtered.append(prop)
 

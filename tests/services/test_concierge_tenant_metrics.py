@@ -31,13 +31,16 @@ MODULE = "ghl_real_estate_ai.services.claude_concierge_orchestrator"
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 def _make_orchestrator(config: ConciergeClientConfig) -> ClaudeConciergeOrchestrator:
-    with patch(f"{MODULE}.get_cache_service"), \
-         patch(f"{MODULE}.AnalyticsService"), \
-         patch(f"{MODULE}.get_ghl_live_data_service"), \
-         patch(f"{MODULE}.MemoryService"), \
-         patch(f"{MODULE}.JorgeMemorySystem"), \
-         patch(f"{MODULE}.JorgeBusinessRules"):
+    with (
+        patch(f"{MODULE}.get_cache_service"),
+        patch(f"{MODULE}.AnalyticsService"),
+        patch(f"{MODULE}.get_ghl_live_data_service"),
+        patch(f"{MODULE}.MemoryService"),
+        patch(f"{MODULE}.JorgeMemorySystem"),
+        patch(f"{MODULE}.JorgeBusinessRules"),
+    ):
         return ClaudeConciergeOrchestrator(client_config=config)
 
 
@@ -83,6 +86,7 @@ def dental_orch(dental_config):
 # _get_tenant_metrics — initialisation
 # ---------------------------------------------------------------------------
 
+
 class TestGetTenantMetrics:
     def test_initialises_fresh_dict_for_new_tenant(self, jorge_orch):
         tm = jorge_orch._get_tenant_metrics("jorge")
@@ -111,6 +115,7 @@ class TestGetTenantMetrics:
 # Tenant isolation — jorge vs dental
 # ---------------------------------------------------------------------------
 
+
 class TestTenantIsolation:
     def test_jorge_increment_does_not_touch_dental(self, jorge_orch):
         jorge_orch._get_tenant_metrics("jorge")["requests_processed"] += 3
@@ -128,6 +133,7 @@ class TestTenantIsolation:
 # ---------------------------------------------------------------------------
 # get_tenant_stats — computed values
 # ---------------------------------------------------------------------------
+
 
 class TestGetTenantStats:
     def test_returns_correct_keys(self, jorge_orch):
@@ -176,6 +182,7 @@ class TestGetTenantStats:
 # get_metrics — tenant_breakdown key
 # ---------------------------------------------------------------------------
 
+
 class TestGetMetricsTenantBreakdown:
     def test_tenant_breakdown_key_exists(self, jorge_orch):
         metrics = jorge_orch.get_metrics()
@@ -207,6 +214,7 @@ class TestGetMetricsTenantBreakdown:
 # ---------------------------------------------------------------------------
 # Integration-style: manual counter bumps simulate generate_contextual_guidance
 # ---------------------------------------------------------------------------
+
 
 class TestMetricsIncrementPaths:
     def test_request_success_increments_tenant(self, jorge_orch):

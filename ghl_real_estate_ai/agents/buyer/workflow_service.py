@@ -24,7 +24,7 @@ class BuyerWorkflowService:
         event_publisher: Optional[EventPublisher] = None,
         buyer_persona_service: Optional[BuyerPersonaService] = None,
         ghl_client: Optional[GHLClient] = None,
-        budget_config: Optional[BuyerBudgetConfig] = None
+        budget_config: Optional[BuyerBudgetConfig] = None,
     ):
         self.event_publisher = event_publisher
         self.buyer_persona_service = buyer_persona_service or BuyerPersonaService()
@@ -111,9 +111,7 @@ class BuyerWorkflowService:
 
             # Sync persona to GHL as tags if confidence is high enough
             if persona_classification.confidence >= 0.6:
-                await self._sync_buyer_persona_to_ghl(
-                    buyer_id, persona_classification
-                )
+                await self._sync_buyer_persona_to_ghl(buyer_id, persona_classification)
 
             logger.info(
                 f"Buyer persona classified for {buyer_id}: "
@@ -136,19 +134,14 @@ class BuyerWorkflowService:
                 "buyer_persona_insights": {},
             }
 
-    async def _sync_buyer_persona_to_ghl(
-        self, buyer_id: str, persona_classification
-    ) -> None:
+    async def _sync_buyer_persona_to_ghl(self, buyer_id: str, persona_classification) -> None:
         """Sync buyer persona to GHL as tags (Phase 1.4)."""
         try:
             persona_tag = f"Buyer-{persona_classification.persona_type.value}"
             confidence_tag = f"Persona-Conf-{int(persona_classification.confidence * 100)}%"
 
             # Add tags to contact in GHL
-            await self.ghl_client.add_tags(
-                contact_id=buyer_id,
-                tags=[persona_tag, confidence_tag]
-            )
+            await self.ghl_client.add_tags(contact_id=buyer_id, tags=[persona_tag, confidence_tag])
 
             logger.info(f"Synced buyer persona tags to GHL for {buyer_id}: {persona_tag}")
         except Exception as e:

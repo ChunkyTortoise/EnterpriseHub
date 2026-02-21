@@ -1,11 +1,13 @@
 """Tests for web scraping MCP server."""
 
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
 from mcp_toolkit.servers.web_scraping import server as ws_server
-from mcp_toolkit.servers.web_scraping.scraper import WebScraper, ScrapedPage
 from mcp_toolkit.servers.web_scraping.extractor import MockExtractorLLM
+from mcp_toolkit.servers.web_scraping.scraper import ScrapedPage, WebScraper
 
 
 @pytest.fixture
@@ -41,16 +43,12 @@ def configured_server(mock_scraper):
 
 class TestScrapeUrlTool:
     async def test_scrape_returns_content(self, configured_server):
-        result = await configured_server.call_tool(
-            "scrape_url", {"url": "https://example.com"}
-        )
+        result = await configured_server.call_tool("scrape_url", {"url": "https://example.com"})
         assert "Test Page" in result
         assert "Content" in result
 
     async def test_scrape_includes_url(self, configured_server):
-        result = await configured_server.call_tool(
-            "scrape_url", {"url": "https://example.com"}
-        )
+        result = await configured_server.call_tool("scrape_url", {"url": "https://example.com"})
         assert "example.com" in result
 
     async def test_scrape_error_handling(self, mock_scraper):

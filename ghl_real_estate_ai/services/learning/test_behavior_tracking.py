@@ -1,7 +1,4 @@
 import pytest
-
-@pytest.mark.integration
-#!/usr/bin/env python3
 """
 Test Behavioral Learning Engine - Tracking System
 
@@ -21,6 +18,7 @@ sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(services_dir))
 
 
+@pytest.mark.integration
 async def test_behavior_tracking():
     """Test core behavior tracking functionality"""
     print("🧠 Testing Behavioral Learning Engine - Tracking System\n")

@@ -24,7 +24,11 @@ async def main() -> None:
 
     result = await ExecutionEngine().execute(
         dag,
-        input=AgentInput(messages=[{"role": "user", "content": "Patient has severe tooth pain, needs earliest slot"}]),
+        input=AgentInput(
+            messages=[
+                {"role": "user", "content": "Patient has severe tooth pain, needs earliest slot"}
+            ]
+        ),
     )
     print(result.outputs["reminders"].content)
 

@@ -160,6 +160,7 @@ class TestPerformance:
     def test_health_check_response_time(self, client):
         """Health check should respond quickly."""
         import time
+
         start = time.time()
         response = client.get("/api/v2/health/health/")
         elapsed = time.time() - start
@@ -170,6 +171,7 @@ class TestPerformance:
     def test_root_response_time(self, client):
         """Root endpoint should respond quickly."""
         import time
+
         start = time.time()
         response = client.get("/")
         elapsed = time.time() - start

@@ -301,9 +301,7 @@ class ClientJourneyMappingService:
             await self._apply_personalization(client_id, location_id, health_metrics, personalization)
 
             # 6. Generate Optimization Recommendations
-            await self._generate_optimization_recommendations(
-                client_id, location_id, health_metrics, journey_data
-            )
+            await self._generate_optimization_recommendations(client_id, location_id, health_metrics, journey_data)
 
             processing_time = (time.perf_counter() - start_time) * 1000
 

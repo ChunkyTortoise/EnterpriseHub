@@ -43,9 +43,7 @@ class PropertyFeatures:
                 self.lot_size / 20000,  # Normalize sqft
                 self.garage_spaces / 3,
                 float(self.has_pool),
-                {"single_family": 1.0, "condo": 0.5, "townhouse": 0.75}.get(
-                    self.property_type, 0.5
-                ),
+                {"single_family": 1.0, "condo": 0.5, "townhouse": 0.75}.get(self.property_type, 0.5),
             ],
             dtype=np.float64,
         )
@@ -141,11 +139,7 @@ class HybridPropertyRecommender:
 
         # Get properties to score
         seen = set(self._interactions.get(contact_id, {}).keys())
-        candidates = {
-            pid: p
-            for pid, p in self._properties.items()
-            if not (exclude_seen and pid in seen)
-        }
+        candidates = {pid: p for pid, p in self._properties.items() if not (exclude_seen and pid in seen)}
 
         if not candidates:
             return []
@@ -282,9 +276,7 @@ class HybridPropertyRecommender:
 
         return scores
 
-    def _find_similar_users(
-        self, contact_id: str, top_k: int = 5
-    ) -> List[Tuple[str, float]]:
+    def _find_similar_users(self, contact_id: str, top_k: int = 5) -> List[Tuple[str, float]]:
         """Find users with similar interaction patterns."""
         my_interactions = self._interactions.get(contact_id, {})
         if not my_interactions:
@@ -320,9 +312,7 @@ class HybridPropertyRecommender:
         return float(np.dot(a, b) / (norm_a * norm_b))
 
     @staticmethod
-    def _apply_preference_bonus(
-        sim: float, prop: PropertyFeatures, pref: BuyerPreference
-    ) -> float:
+    def _apply_preference_bonus(sim: float, prop: PropertyFeatures, pref: BuyerPreference) -> float:
         """Apply preference-based bonus/penalty to similarity score."""
         min_p, max_p = pref.price_range
         if max_p < float("inf") and prop.price > max_p * 1.1:
@@ -350,10 +340,7 @@ class HybridPropertyRecommender:
         if not parts:
             parts.append("may be of interest")
 
-        return (
-            f"{prop.bedrooms}BR/{prop.bathrooms}BA in {prop.zip_code or 'area'} — "
-            + ", ".join(parts)
-        )
+        return f"{prop.bedrooms}BR/{prop.bathrooms}BA in {prop.zip_code or 'area'} — " + ", ".join(parts)
 
     @property
     def property_count(self) -> int:

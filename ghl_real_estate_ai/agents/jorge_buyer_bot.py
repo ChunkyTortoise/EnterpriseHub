@@ -90,6 +90,7 @@ from ghl_real_estate_ai.services.sentiment_analysis_service import (
 # Phase 3 Loop 3: Handoff context propagation
 try:
     from ghl_real_estate_ai.services.jorge.jorge_handoff_service import EnrichedHandoffContext
+
     HANDOFF_CONTEXT_AVAILABLE = True
 except ImportError:
     HANDOFF_CONTEXT_AVAILABLE = False
@@ -182,14 +183,14 @@ class JorgeBuyerBot(BaseBotWorkflow):
         self.buyer_persona_service = BuyerPersonaService()
         # Phase 1.5: Sentiment Analysis
         self.sentiment_service = SentimentAnalysisService(
-            anthropic_api_key=os.getenv('ANTHROPIC_API_KEY'),
-            gemini_api_key=os.getenv('GEMINI_API_KEY'),
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            gemini_api_key=os.getenv("GEMINI_API_KEY"),
         )
         # Phase 1.6 - 1.8 Services Initialization
         self.lead_scoring_integration = LeadScoringIntegration()
         self.workflow_service = GHLWorkflowService()
         self.churn_service = ChurnDetectionService(sentiment_service=self.sentiment_service)
-        logger.info('Buyer Bot: Phase 1.5-1.8 services (Sentiment, Scoring, Workflow, Churn) initialized')
+        logger.info("Buyer Bot: Phase 1.5-1.8 services (Sentiment, Scoring, Workflow, Churn) initialized")
 
         # Performance tracking for intelligence enhancements
         self.workflow_stats = {
@@ -207,27 +208,19 @@ class JorgeBuyerBot(BaseBotWorkflow):
         self._property_service = PropertyService(
             property_matcher=self.property_matcher,
             event_publisher=self.event_publisher,
-            budget_config=self.budget_config
+            budget_config=self.budget_config,
         )
         self._response_generator = ResponseGenerator(
-            claude=self.claude,
-            sentiment_service=self.sentiment_service,
-            ab_testing=self.ab_testing
+            claude=self.claude, sentiment_service=self.sentiment_service, ab_testing=self.ab_testing
         )
         self._handoff_manager = HandoffManager()
-        self._escalation_manager = EscalationManager(
-            ghl_client=self.ghl_client,
-            event_publisher=self.event_publisher
-        )
-        self._state_manager = StateManager(
-            budget_config=self.budget_config,
-            handoff_manager=self._handoff_manager
-        )
+        self._escalation_manager = EscalationManager(ghl_client=self.ghl_client, event_publisher=self.event_publisher)
+        self._state_manager = StateManager(budget_config=self.budget_config, handoff_manager=self._handoff_manager)
         self._workflow_service = BuyerWorkflowService(
             event_publisher=self.event_publisher,
             buyer_persona_service=self.buyer_persona_service,
             ghl_client=self.ghl_client,
-            budget_config=self.budget_config
+            budget_config=self.budget_config,
         )
 
         self.workflow = self._build_graph()
@@ -297,9 +290,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Route to next action based on buyer qualification using budget_config."""
         return self._state_manager.route_buyer_action(state)
 
-    def _route_after_matching(
-        self, state: BuyerBotState
-    ) -> Literal["handle_objections", "respond", "schedule", "end"]:
+    def _route_after_matching(self, state: BuyerBotState) -> Literal["handle_objections", "respond", "schedule", "end"]:
         """Route after property matching — check for objections first."""
         return self._state_manager.route_after_matching(state)
 
@@ -343,16 +334,16 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     "financial_readiness": profile.financial_readiness,
                     "urgency_score": profile.urgency_score,
                     "conversation_history": conversation_history,
-                    "buyer_persona": state.get("buyer_persona")
+                    "buyer_persona": state.get("buyer_persona"),
                 }
-                
+
                 scoring_result = await self.lead_scoring_integration.calculate_and_store_composite_score(
-                    state=scoring_state,
-                    contact_id=buyer_id,
-                    use_ml_ensemble=self.ml_analytics is not None
+                    state=scoring_state, contact_id=buyer_id, use_ml_ensemble=self.ml_analytics is not None
                 )
                 composite_score_data = scoring_result.get("composite_score_data", {})
-                logger.info(f"Composite score calculated for buyer {buyer_id}: {composite_score_data.get('total_score', 0)}")
+                logger.info(
+                    f"Composite score calculated for buyer {buyer_id}: {composite_score_data.get('total_score', 0)}"
+                )
             except Exception as e:
                 logger.error(f"Failed to calculate composite score for buyer: {e}")
 
@@ -412,8 +403,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
     async def assess_financial_readiness(self, state: BuyerBotState) -> Dict:
         """Assess buyer's financial preparedness using budget_config thresholds."""
         return await self._financial_assessor.assess_financial_readiness(
-            state,
-            skip_qualification=state.get("skip_qualification", False)
+            state, skip_qualification=state.get("skip_qualification", False)
         )
 
     async def calculate_affordability(self, state: BuyerBotState) -> Dict:
@@ -491,7 +481,9 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Extract budget range from conversation history."""
         return await extract_budget_range(conversation_history, self.budget_config)
 
-    async def _extract_property_preferences(self, conversation_history: List[ConversationMessage]) -> Optional[Dict[str, Any]]:
+    async def _extract_property_preferences(
+        self, conversation_history: List[ConversationMessage]
+    ) -> Optional[Dict[str, Any]]:
         """Extract property preferences from conversation history."""
         return await extract_property_preferences(conversation_history)
 
@@ -508,9 +500,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
         return self._handoff_manager.has_valid_handoff_context(handoff_context)
 
     def _populate_state_from_context(
-        self,
-        handoff_context: "EnrichedHandoffContext",
-        initial_state: Dict[str, Any]
+        self, handoff_context: "EnrichedHandoffContext", initial_state: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Populate buyer state from handoff context to skip re-qualification."""
         return self._handoff_manager.populate_state_from_context(handoff_context, initial_state)
@@ -637,20 +627,23 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 buyer_email=buyer_email,
                 metadata=metadata,
                 tone_variant=_tone_variant,
-                handoff_context=handoff_context
+                handoff_context=handoff_context,
             )
 
             # Task #29: Restore additional state from memory
             if saved_state:
                 # Restore qualification context
-                initial_state.update({
-                    "budget_range": saved_state.get("budget_range") or initial_state.get("budget_range"),
-                    "property_preferences": saved_state.get("property_preferences") or initial_state.get("property_preferences"),
-                    "urgency_level": saved_state.get("urgency_level", "unknown"),
-                    "financing_status": saved_state.get("financing_status", "unknown"),
-                    "buyer_persona": saved_state.get("buyer_persona"),
-                    "objection_history": saved_state.get("objection_history", []),
-                })
+                initial_state.update(
+                    {
+                        "budget_range": saved_state.get("budget_range") or initial_state.get("budget_range"),
+                        "property_preferences": saved_state.get("property_preferences")
+                        or initial_state.get("property_preferences"),
+                        "urgency_level": saved_state.get("urgency_level", "unknown"),
+                        "financing_status": saved_state.get("financing_status", "unknown"),
+                        "buyer_persona": saved_state.get("buyer_persona"),
+                        "objection_history": saved_state.get("objection_history", []),
+                    }
+                )
 
             result = await self.workflow.ainvoke(initial_state)
 
@@ -666,14 +659,25 @@ class JorgeBuyerBot(BaseBotWorkflow):
             handoff_signals = {}
             if self.enable_handoff:
                 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
                 handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
 
             result["handoff_signals"] = handoff_signals
 
+            # Delivery safety guard: ensure buyer SMS content is never empty
+            # even when a low-intent route exits before response generation.
+            if not str(result.get("response_content", "")).strip():
+                logger.warning(
+                    "Empty buyer response_content for %s after workflow; applying fallback response",
+                    conversation_id,
+                )
+                result["response_content"] = (
+                    "Thanks for sharing. What area in Rancho Cucamonga are you most interested in?"
+                )
+
             # SMS length guard
             response_truncation = self._state_manager.truncate_response_if_needed(
-                result.get("response_content", ""),
-                self.SMS_MAX_LENGTH
+                result.get("response_content", ""), self.SMS_MAX_LENGTH
             )
             result.update(response_truncation)
 
@@ -730,9 +734,9 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 scores = {
                     "frs": result.get("financial_readiness_score", 0.0),
                     "pcs": result.get("buying_motivation_score", 0.0),
-                    "composite": result.get("composite_score", {}).get("total_score", 0.0)
+                    "composite": result.get("composite_score", {}).get("total_score", 0.0),
                 }
-                
+
                 # Get sentiment result if available
                 sentiment_val = None
                 if result.get("sentiment_result"):
@@ -745,10 +749,10 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     persona=result.get("buyer_persona"),
                     sentiment=sentiment_val,
                     escalation=result.get("sentiment_escalation") is not None,
-                    appointment_booked=result.get("current_qualification_step") == "appointment"
+                    appointment_booked=result.get("current_qualification_step") == "appointment",
                 )
                 logger.info(f"Applied GHL workflow tags for buyer {conversation_id}")
-                
+
             except Exception as e:
                 logger.warning(f"Failed to execute GHL workflow operations for buyer: {e}")
 
@@ -760,12 +764,12 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 churn_assessment = await self.churn_service.assess_churn_risk(
                     contact_id=conversation_id,
                     conversation_history=initial_state.get("conversation_history", []),
-                    last_activity=last_activity
+                    last_activity=last_activity,
                 )
                 result["churn_assessment"] = {
                     "risk_score": churn_assessment.risk_score,
                     "risk_level": churn_assessment.risk_level.value,
-                    "recommended_action": churn_assessment.recommended_action.value
+                    "recommended_action": churn_assessment.recommended_action.value,
                 }
                 logger.info(f"Churn risk assessed for buyer {conversation_id}: {churn_assessment.risk_level}")
             except Exception as e:
@@ -919,9 +923,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Classify buyer persona based on conversation analysis (Phase 1.4)."""
         return await self._workflow_service.classify_buyer_persona(state)
 
-    async def _sync_buyer_persona_to_ghl(
-        self, buyer_id: str, persona_classification
-    ) -> None:
+    async def _sync_buyer_persona_to_ghl(self, buyer_id: str, persona_classification) -> None:
         """Sync buyer persona to GHL as tags (Phase 1.4)."""
         await self._workflow_service._sync_buyer_persona_to_ghl(buyer_id, persona_classification)
 
@@ -943,7 +945,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
         try:
             orchestrator = get_claude_orchestrator()
-            
+
             # Prepare context for the brief
             context = {
                 "lead_id": buyer_id,
@@ -952,21 +954,21 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 "scores": {
                     "composite": composite_score,
                     "financial": state.get("financial_readiness_score"),
-                    "urgency": state.get("urgency_score")
+                    "urgency": state.get("urgency_score"),
                 },
                 "preferences": state.get("property_preferences"),
-                "conversation_history": state.get("conversation_history", [])[-10:]  # Last 10 turns
+                "conversation_history": state.get("conversation_history", [])[-10:],  # Last 10 turns
             }
 
             # Import here to avoid circular dependency
             from ghl_real_estate_ai.services.claude_orchestrator import ClaudeRequest, ClaudeTaskType
-            
+
             # Generate brief via Orchestrator
             brief_response = await orchestrator.process_request(
                 ClaudeRequest(
                     task_type=ClaudeTaskType.EXECUTIVE_BRIEFING,
                     context=context,
-                    prompt=f"Generate a one-page executive brief for Jorge regarding buyer {buyer_id}. Highlight key needs and recommended next steps."
+                    prompt=f"Generate a one-page executive brief for Jorge regarding buyer {buyer_id}. Highlight key needs and recommended next steps.",
                 )
             )
 
@@ -974,8 +976,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
             # Sync brief to GHL as a note
             await self.ghl_client.add_contact_note(
-                contact_id=buyer_id,
-                body=f"--- EXECUTIVE BRIEF ---\n{brief_content}"
+                contact_id=buyer_id, body=f"--- EXECUTIVE BRIEF ---\n{brief_content}"
             )
 
             logger.info(f"Executive brief generated and synced for buyer {buyer_id}")
@@ -983,7 +984,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             return {
                 "executive_brief": brief_content,
                 "executive_brief_generated": True,
-                "current_qualification_step": "handoff_ready"
+                "current_qualification_step": "handoff_ready",
             }
 
         except Exception as e:

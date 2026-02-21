@@ -67,7 +67,7 @@ class LeadScoringIntegration:
             except Exception as e:
                 logger.warning(f"Failed to load ensemble service: {e}. Using rule-based scoring only.")
                 self.enable_ml_ensemble = False
-    
+
     async def calculate_and_store_composite_score(
         self,
         state: Dict[str, Any],
@@ -90,20 +90,20 @@ class LeadScoringIntegration:
             # Extract component scores from state
             frs_score = state.get("frs_score", 0.0)
             pcs_score = state.get("pcs_score", 0.0)
-            
+
             # Get or calculate sentiment score
             sentiment_score = await self._get_sentiment_score(state)
-            
+
             # Calculate engagement score
             engagement_score = self._calculate_engagement_score(state)
-            
+
             # Calculate data completeness
             data_completeness = self._calculate_data_completeness(state)
-            
+
             # Calculate conversation depth
             conversation_history = state.get("conversation_history", [])
             conversation_depth = min(100.0, len(conversation_history) * 10.0)
-            
+
             # Calculate composite score
             composite_score = await self.scoring_service.calculate_composite_score(
                 frs_score=frs_score,
@@ -113,7 +113,7 @@ class LeadScoringIntegration:
                 data_completeness=data_completeness,
                 conversation_depth=conversation_depth,
             )
-            
+
             # Update state with composite score information
             state["composite_score"] = composite_score.total_score
             state["composite_classification"] = composite_score.classification.value
@@ -146,7 +146,7 @@ class LeadScoringIntegration:
             )
 
             return state
-            
+
         except Exception as e:
             logger.error(f"Error calculating composite score for {contact_id}: {e}")
             # Set default values on error
@@ -156,47 +156,45 @@ class LeadScoringIntegration:
             state["composite_confidence_interval"] = (0.0, 0.0)
             state["composite_component_scores"] = {}
             return state
-    
+
     async def _get_sentiment_score(self, state: Dict[str, Any]) -> float:
         """
         Get or calculate sentiment score from state.
-        
+
         Args:
             state: Bot state dictionary
-        
+
         Returns:
             Normalized sentiment score (0-100)
         """
         # Check if sentiment score is already in state
         if "sentiment_score" in state:
             return state["sentiment_score"]
-        
+
         # Check if conversation sentiment is available
         conversation_sentiment = state.get("conversation_sentiment")
         if conversation_sentiment and isinstance(conversation_sentiment, ConversationSentiment):
             return self._normalize_sentiment(conversation_sentiment.overall_sentiment)
-        
+
         # Calculate sentiment from conversation history
         conversation_history = state.get("conversation_history", [])
         if conversation_history:
             try:
-                sentiment_result = await self.sentiment_service.analyze_conversation(
-                    conversation_history
-                )
+                sentiment_result = await self.sentiment_service.analyze_conversation(conversation_history)
                 return self._normalize_sentiment(sentiment_result.overall_sentiment)
             except Exception as e:
                 logger.warning(f"Error analyzing sentiment: {e}")
-        
+
         # Default to neutral (50)
         return 50.0
-    
+
     def _normalize_sentiment(self, sentiment: SentimentType) -> float:
         """
         Normalize sentiment type to score (0-100).
-        
+
         Args:
             sentiment: Sentiment type
-        
+
         Returns:
             Normalized score (0-100)
         """
@@ -210,51 +208,45 @@ class LeadScoringIntegration:
             SentimentType.CONFUSED: 35.0,
         }
         return sentiment_mapping.get(sentiment, 50.0)
-    
+
     def _calculate_engagement_score(self, state: Dict[str, Any]) -> float:
         """
         Calculate engagement score from state.
-        
+
         Args:
             state: Bot state dictionary
-        
+
         Returns:
             Engagement score (0-100)
         """
         conversation_history = state.get("conversation_history", [])
-        
+
         if not conversation_history:
             return 0.0
-        
+
         # Calculate based on message patterns
         message_count = len(conversation_history)
-        
+
         # Base score from message count (max 50 points)
         message_score = min(50.0, message_count * 5.0)
-        
+
         # Additional score from message length (max 30 points)
-        total_length = sum(
-            len(msg.get("content", "")) 
-            for msg in conversation_history
-        )
+        total_length = sum(len(msg.get("content", "")) for msg in conversation_history)
         length_score = min(30.0, total_length / 100.0)
-        
+
         # Additional score from questions (max 20 points)
-        question_count = sum(
-            1 for msg in conversation_history
-            if "?" in msg.get("content", "")
-        )
+        question_count = sum(1 for msg in conversation_history if "?" in msg.get("content", ""))
         question_score = min(20.0, question_count * 5.0)
-        
+
         return message_score + length_score + question_score
-    
+
     def _calculate_data_completeness(self, state: Dict[str, Any]) -> float:
         """
         Calculate data completeness percentage from state.
-        
+
         Args:
             state: Bot state dictionary
-        
+
         Returns:
             Data completeness percentage (0-100)
         """
@@ -266,15 +258,13 @@ class LeadScoringIntegration:
             "timeline",
             "preferences",
         ]
-        
+
         populated_fields = sum(
-            1 for field in required_fields
-            if state.get(field) is not None
-            and state.get(field) != ""
+            1 for field in required_fields if state.get(field) is not None and state.get(field) != ""
         )
-        
+
         return (populated_fields / len(required_fields)) * 100.0
-    
+
     async def sync_composite_score_to_ghl(
         self,
         contact_id: str,
@@ -283,25 +273,22 @@ class LeadScoringIntegration:
     ) -> bool:
         """
         Sync composite score to GHL custom field.
-        
+
         Args:
             contact_id: Contact ID
             composite_score: Composite score object
             ghl_client: GHL client instance
-        
+
         Returns:
             True if sync was successful, False otherwise
         """
         try:
             # Map classification to GHL tag
             classification_tag = f"Composite-{composite_score.classification.value.capitalize()}"
-            
+
             # Add tags to contact
-            await ghl_client.add_contact_tags(
-                contact_id=contact_id,
-                tags=[classification_tag]
-            )
-            
+            await ghl_client.add_contact_tags(contact_id=contact_id, tags=[classification_tag])
+
             # Update custom field with composite score
             await ghl_client.update_contact(
                 contact_id=contact_id,
@@ -309,23 +296,23 @@ class LeadScoringIntegration:
                     "composite_score": composite_score.total_score,
                     "composite_classification": composite_score.classification.value,
                     "composite_confidence": composite_score.confidence_level,
-                }
+                },
             )
-            
+
             logger.info(f"Synced composite score to GHL for {contact_id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error syncing composite score to GHL for {contact_id}: {e}")
             return False
-    
+
     def get_classification_priority(self, classification: str) -> int:
         """
         Get priority level for lead classification.
-        
+
         Args:
             classification: Lead classification string
-        
+
         Returns:
             Priority level (higher = more priority)
         """
@@ -337,7 +324,7 @@ class LeadScoringIntegration:
             "unqualified": 1,
         }
         return priority_mapping.get(classification, 0)
-    
+
     async def _get_ml_ensemble_prediction(
         self,
         state: Dict[str, Any],

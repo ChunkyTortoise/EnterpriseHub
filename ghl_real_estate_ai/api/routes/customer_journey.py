@@ -917,9 +917,17 @@ async def update_step(
             if s.get("id") == step_id:
                 step = s
                 # Apply allowed updates
-                for field in ("name", "description", "agentId", "agentName",
-                              "estimatedDuration", "handoffType", "requirements",
-                              "completionCriteria", "metadata"):
+                for field in (
+                    "name",
+                    "description",
+                    "agentId",
+                    "agentName",
+                    "estimatedDuration",
+                    "handoffType",
+                    "requirements",
+                    "completionCriteria",
+                    "metadata",
+                ):
                     if field in updates:
                         s[field] = updates[field]
                 break

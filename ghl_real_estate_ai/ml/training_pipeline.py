@@ -1,4 +1,5 @@
 """Full ML training pipeline for lead scoring."""
+
 import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
@@ -137,9 +138,7 @@ class TrainingPipeline:
 
         metrics = {
             "accuracy": float(accuracy_score(y, predictions_arr)),
-            "precision": float(
-                precision_score(y, predictions_arr, zero_division=0)
-            ),
+            "precision": float(precision_score(y, predictions_arr, zero_division=0)),
             "recall": float(recall_score(y, predictions_arr, zero_division=0)),
             "f1": float(f1_score(y, predictions_arr, zero_division=0)),
         }
@@ -161,12 +160,8 @@ class TrainingPipeline:
         try:
             from sklearn.ensemble import GradientBoostingClassifier
 
-            model = GradientBoostingClassifier(
-                n_estimators=50, max_depth=3, random_state=self._random_state
-            )
-            scores = cross_val_score(
-                model, X, y, cv=min(cv, len(y) // 2), scoring="roc_auc"
-            )
+            model = GradientBoostingClassifier(n_estimators=50, max_depth=3, random_state=self._random_state)
+            scores = cross_val_score(model, X, y, cv=min(cv, len(y) // 2), scoring="roc_auc")
             return [float(s) for s in scores]
         except Exception:
             return []

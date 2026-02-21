@@ -16,7 +16,9 @@ try:
     # Sidebar filters
     st.sidebar.header("Filters")
     period = st.sidebar.selectbox("Time Period", ["1d", "7d", "30d", "90d"], index=1)
-    bot_type = st.sidebar.multiselect("Bot Type", ["lead", "buyer", "seller"], default=["lead", "buyer", "seller"])
+    bot_type = st.sidebar.multiselect(
+        "Bot Type", ["lead", "buyer", "seller"], default=["lead", "buyer", "seller"]
+    )
 
     # Main metrics row
     col1, col2, col3, col4 = st.columns(4)

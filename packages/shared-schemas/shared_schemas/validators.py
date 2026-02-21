@@ -11,7 +11,12 @@ _DEFAULT_LIMITS: dict[str, dict[str, int | float]] = {
     "FREE": {"max_users": 1, "max_queries_per_day": 100, "max_storage_gb": 1.0, "max_api_keys": 1},
     "STARTER": {"max_users": 5, "max_queries_per_day": 1_000, "max_storage_gb": 10.0, "max_api_keys": 3},
     "PRO": {"max_users": 25, "max_queries_per_day": 10_000, "max_storage_gb": 100.0, "max_api_keys": 10},
-    "ENTERPRISE": {"max_users": 999_999, "max_queries_per_day": 999_999, "max_storage_gb": 999_999.0, "max_api_keys": 999_999},
+    "ENTERPRISE": {
+        "max_users": 999_999,
+        "max_queries_per_day": 999_999,
+        "max_storage_gb": 999_999.0,
+        "max_api_keys": 999_999,
+    },
 }
 
 

@@ -21,6 +21,7 @@ class AgentStatus(StrEnum):
         COMPLETED: Agent has successfully finished execution.
         FAILED: Agent execution encountered an error.
     """
+
     IDLE = "idle"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -36,6 +37,7 @@ class MessageRole(StrEnum):
         ASSISTANT: Response from an AI assistant/agent.
         TOOL: Output from a tool execution.
     """
+
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -51,6 +53,7 @@ class Priority(int, Enum):
         HIGH: Important tasks requiring prompt attention.
         CRITICAL: Urgent tasks that must be processed immediately.
     """
+
     LOW = 1
     NORMAL = 5
     HIGH = 8
@@ -67,6 +70,7 @@ class Message(BaseModel):
         tool_call_id: Optional ID linking to a tool call.
         metadata: Additional metadata attached to the message.
     """
+
     role: MessageRole
     content: str
     name: str | None = None
@@ -82,6 +86,7 @@ class ToolCall(BaseModel):
         name: Name of the tool to invoke.
         arguments: Arguments to pass to the tool (as JSON-serializable dict).
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     name: str
     arguments: dict[str, Any] = Field(default_factory=dict)
@@ -96,6 +101,7 @@ class ToolResult(BaseModel):
         is_error: Whether the tool execution resulted in an error.
         metadata: Additional metadata about the execution.
     """
+
     tool_call_id: str
     content: str
     is_error: bool = False
@@ -113,6 +119,7 @@ class ExecutionContext(BaseModel):
         timeout_seconds: Maximum execution time allowed.
         metadata: Arbitrary context data for custom use cases.
     """
+
     session_id: str = Field(default_factory=lambda: str(uuid4()))
     parent_agent_id: str | None = None
     trace_id: str | None = None
@@ -135,6 +142,7 @@ class AgentConfig(BaseModel):
         max_iterations: Maximum reasoning iterations allowed.
         timeout_seconds: Maximum execution time per request.
     """
+
     name: str
     description: str = ""
     model: str = "gpt-4"

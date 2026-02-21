@@ -51,6 +51,7 @@ class MockAgent(BaseAgent):
     async def execute(self, input: AgentInput) -> AgentOutput:
         """Execute with configurable delay and failure behavior."""
         import time
+
         self.call_count += 1
         self.call_times.append(time.monotonic())
 
@@ -279,6 +280,7 @@ class TestExecutionEngine:
         engine = ExecutionEngine()
 
         import time
+
         start = time.monotonic()
         result = await engine.execute(parallel_dag)
         elapsed = time.monotonic() - start
@@ -315,6 +317,7 @@ class TestExecutionEngine:
         engine = ExecutionEngine()
 
         import time
+
         start = time.monotonic()
         result = await engine.execute(diamond_dag)
         elapsed = time.monotonic() - start
@@ -378,7 +381,10 @@ class TestExecutionEngine:
         result = await engine.execute(dag)
 
         assert result.status["slow"] == AgentStatus.FAILED
-        assert "timeout" in result.errors["slow"].lower() or "timed out" in result.errors["slow"].lower()
+        assert (
+            "timeout" in result.errors["slow"].lower()
+            or "timed out" in result.errors["slow"].lower()
+        )
 
     @pytest.mark.asyncio
     async def test_fail_fast_mode(self):
@@ -464,6 +470,7 @@ class TestExecutionEngine:
         engine = ExecutionEngine(config=config)
 
         import time
+
         start = time.monotonic()
         result = await engine.execute(dag)
         elapsed = time.monotonic() - start
@@ -642,6 +649,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_hook_exception_does_not_fail_execution(self, single_node_dag):
         """Test that hook exceptions don't fail the execution."""
+
         def failing_hook(node_id, agent, input):
             raise Exception("Hook failed!")
 
@@ -667,6 +675,7 @@ class TestEdgeCases:
         engine = ExecutionEngine(config=config)
 
         import time
+
         start = time.monotonic()
         await engine.execute(dag)
         elapsed = time.monotonic() - start

@@ -42,7 +42,9 @@ class BuyerBotAdapter:
             "To get started, what area are you looking in, and what's your budget range?"
         )
 
-    async def process_message(self, user_text: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def process_message(
+        self, user_text: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Process a buyer message. In production, delegates to JorgeBuyerBot."""
         return {
             "response": "",

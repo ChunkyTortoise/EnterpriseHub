@@ -1,7 +1,8 @@
 """Tests for auth schemas."""
 
-import pytest
 from uuid import uuid4
+
+import pytest
 from pydantic import ValidationError
 
 from shared_schemas.auth import APIKeySchema, JWTClaims, JWTPayload, Permission

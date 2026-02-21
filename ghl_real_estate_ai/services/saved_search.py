@@ -44,9 +44,7 @@ class SavedSearchService:
     def __init__(self) -> None:
         self._searches: Dict[str, SavedSearch] = {}
 
-    async def create_search(
-        self, buyer_id: str, criteria: SearchCriteria
-    ) -> SavedSearch:
+    async def create_search(self, buyer_id: str, criteria: SearchCriteria) -> SavedSearch:
         """Create a new saved search for a buyer."""
         search_id = f"search-{uuid.uuid4().hex[:8]}"
         search = SavedSearch(
@@ -58,9 +56,7 @@ class SavedSearchService:
         logger.info("Saved search %s created for buyer %s", search_id, buyer_id)
         return search
 
-    async def check_new_matches(
-        self, search_id: str, available_listings: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def check_new_matches(self, search_id: str, available_listings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Check for new listings matching a saved search.
 
         Returns only listings not previously notified about.
@@ -81,9 +77,7 @@ class SavedSearchService:
         search.last_checked = datetime.now()
         return matches
 
-    async def notify_buyer(
-        self, search: SavedSearch, new_matches: List[Dict[str, Any]]
-    ) -> List[str]:
+    async def notify_buyer(self, search: SavedSearch, new_matches: List[Dict[str, Any]]) -> List[str]:
         """Generate notification messages for new matches."""
         messages: List[str] = []
         for match in new_matches:
@@ -105,15 +99,9 @@ class SavedSearchService:
 
     async def get_active_searches(self, buyer_id: str) -> List[SavedSearch]:
         """Get all active searches for a buyer."""
-        return [
-            s
-            for s in self._searches.values()
-            if s.buyer_id == buyer_id and s.active
-        ]
+        return [s for s in self._searches.values() if s.buyer_id == buyer_id and s.active]
 
-    def _matches_criteria(
-        self, listing: Dict[str, Any], criteria: SearchCriteria
-    ) -> bool:
+    def _matches_criteria(self, listing: Dict[str, Any], criteria: SearchCriteria) -> bool:
         """Check if a listing matches search criteria."""
         price = listing.get("price", 0)
         if criteria.budget_max and price > criteria.budget_max:
@@ -131,9 +119,7 @@ class SavedSearchService:
 
         if criteria.neighborhoods:
             area = listing.get("neighborhood", "").lower()
-            if area and not any(
-                n.lower() in area for n in criteria.neighborhoods
-            ):
+            if area and not any(n.lower() in area for n in criteria.neighborhoods):
                 return False
 
         if criteria.max_dom is not None:
@@ -154,10 +140,7 @@ class SavedSearchService:
         price_str = f"${price / 1000:.0f}K" if price >= 1000 else f"${price}"
         area_str = f" in {area}" if area else ""
 
-        msg = (
-            f"New listing! {address} - {price_str}, "
-            f"{beds}bd/{baths}ba{area_str}. Reply INFO for details."
-        )
+        msg = f"New listing! {address} - {price_str}, {beds}bd/{baths}ba{area_str}. Reply INFO for details."
 
         if len(msg) > self.SMS_MAX_LENGTH:
             msg = msg[: self.SMS_MAX_LENGTH - 3] + "..."

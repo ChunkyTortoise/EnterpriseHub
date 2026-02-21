@@ -24,7 +24,9 @@ async def main() -> None:
 
     result = await ExecutionEngine().execute(
         dag,
-        input=AgentInput(messages=[{"role": "user", "content": "Need weekly lawn care quote, start this week"}]),
+        input=AgentInput(
+            messages=[{"role": "user", "content": "Need weekly lawn care quote, start this week"}]
+        ),
     )
     print(result.outputs["followup"].content)
 

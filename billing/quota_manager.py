@@ -4,6 +4,7 @@ Quota manager and usage tracker for billing enforcement in EnterpriseHub.
 Provides quota checking, usage recording, and enforcement
 at multiple layers of the application.
 """
+
 from __future__ import annotations
 
 import logging
@@ -18,131 +19,130 @@ logger = logging.getLogger(__name__)
 class QuotaManager:
     """
     Manages quota checking and enforcement for locations/tenants.
-    
+
     Provides methods to check if locations have quota available
     and to increment usage counters.
     """
-    
+
     def __init__(self, db_connection=None) -> None:
         """
         Initialize quota manager.
-        
+
         Args:
             db_connection: Database connection pool or session factory
         """
         self.db = db_connection
-    
+
     async def check_lead_quota(self, location_id: str) -> tuple[bool, Optional[str]]:
         """
         Check if a location has lead quota available.
-        
+
         Args:
             location_id: Location ID
-            
+
         Returns:
             Tuple of (has_quota, error_message)
             - has_quota: True if quota is available, False otherwise
             - error_message: Reason if quota not available, None otherwise
         """
         subscription = await self._get_active_subscription(location_id)
-        
+
         if not subscription:
             return False, "No active subscription found"
-        
+
         status = subscription.get("status")
         if status not in [SubscriptionStatus.TRIALING.value, SubscriptionStatus.ACTIVE.value]:
             return False, f"Subscription is {status}"
-        
+
         usage_allowance = subscription.get("usage_allowance", 100)
         usage_current = subscription.get("usage_current", 0)
-        
+
         # Unlimited quota
         if usage_allowance == -1:
             return True, None
-        
+
         if usage_current >= usage_allowance:
-            return False, f"Lead quota exceeded ({usage_allowance} leads per period, {usage_allowance - usage_current} remaining)"
-        
+            return (
+                False,
+                f"Lead quota exceeded ({usage_allowance} leads per period, {usage_allowance - usage_current} remaining)",
+            )
+
         return True, None
-    
+
     async def check_query_quota(self, location_id: str) -> tuple[bool, Optional[str]]:
         """
         Check if a location has query quota available.
-        
+
         Args:
             location_id: Location ID
-            
+
         Returns:
             Tuple of (has_quota, error_message)
         """
         subscription = await self._get_active_subscription(location_id)
-        
+
         if not subscription:
             return False, "No active subscription found"
-        
+
         status = subscription.get("status")
         if status not in [SubscriptionStatus.TRIALING.value, SubscriptionStatus.ACTIVE.value]:
             return False, f"Subscription is {status}"
-        
+
         # Get plan config for query quota
         tier = PlanTier(subscription["tier"])
         plan_config = get_plan_config(tier)
         query_quota = plan_config.get("query_quota", 100)
-        
+
         # Unlimited quota
         if query_quota == -1:
             return True, None
-        
+
         # Get current query usage
         query_usage = await self._get_query_usage(location_id)
-        
+
         if query_usage >= query_quota:
             return False, f"Query quota exceeded ({query_quota} queries per period)"
-        
+
         return True, None
-    
-    async def check_feature_access(
-        self,
-        location_id: str,
-        feature: str
-    ) -> tuple[bool, Optional[str]]:
+
+    async def check_feature_access(self, location_id: str, feature: str) -> tuple[bool, Optional[str]]:
         """
         Check if a location has access to a specific feature.
-        
+
         Args:
             location_id: Location ID
             feature: Feature name (e.g., "buyer_bot", "cma_reports", "white_label")
-            
+
         Returns:
             Tuple of (has_access, error_message)
         """
         subscription = await self._get_active_subscription(location_id)
-        
+
         if not subscription:
             return False, "No active subscription found"
-        
+
         status = subscription.get("status")
         if status not in [SubscriptionStatus.TRIALING.value, SubscriptionStatus.ACTIVE.value]:
             return False, f"Subscription is {status}"
-        
+
         # Check plan config for feature
         tier = PlanTier(subscription["tier"])
         plan_config = get_plan_config(tier)
-        
+
         if plan_config.get("features", {}).get(feature, False):
             return True, None
-        
+
         return False, f"Feature '{feature}' not available on your plan"
-    
+
     async def get_usage_summary(self, location_id: str) -> Dict[str, Any]:
         """
         Get a summary of current usage and quota for a location.
-        
+
         Returns:
             Dict with quota info, usage stats, and remaining capacity
         """
         subscription = await self._get_active_subscription(location_id)
-        
+
         if not subscription:
             return {
                 "has_subscription": False,
@@ -151,22 +151,23 @@ class QuotaManager:
                 "remaining": 0,
                 "percentage_used": 0,
             }
-        
+
         usage_allowance = subscription.get("usage_allowance", 100)
         usage_current = subscription.get("usage_current", 0)
-        
+
         if usage_allowance == -1:  # Unlimited
             remaining = -1
             percentage = 0
         else:
             remaining = max(0, usage_allowance - usage_current)
             percentage = (usage_current / usage_allowance * 100) if usage_allowance > 0 else 0
-        
+
         return {
             "has_subscription": True,
             "plan_tier": subscription["tier"],
             "status": subscription["status"],
-            "is_active": subscription["status"] in [
+            "is_active": subscription["status"]
+            in [
                 SubscriptionStatus.TRIALING.value,
                 SubscriptionStatus.ACTIVE.value,
             ],
@@ -177,12 +178,12 @@ class QuotaManager:
             "period_start": subscription.get("current_period_start"),
             "period_end": subscription.get("current_period_end"),
         }
-    
+
     async def _get_active_subscription(self, location_id: str) -> Optional[Dict[str, Any]]:
         """Get active subscription for a location."""
         if self.db is None:
             return None
-        
+
         async with self.db.acquire() as conn:
             row = await conn.fetchrow(
                 """
@@ -192,15 +193,15 @@ class QuotaManager:
                 ORDER BY created_at DESC
                 LIMIT 1
                 """,
-                location_id
+                location_id,
             )
             return dict(row) if row else None
-    
+
     async def _get_query_usage(self, location_id: str) -> int:
         """Get current query usage for a location in this billing period."""
         if self.db is None:
             return 0
-        
+
         async with self.db.acquire() as conn:
             result = await conn.fetchval(
                 """
@@ -211,7 +212,7 @@ class QuotaManager:
                 AND ur.resource_type = 'query'
                 AND ur.timestamp >= s.current_period_start
                 """,
-                location_id
+                location_id,
             )
             return result or 0
 
@@ -219,19 +220,19 @@ class QuotaManager:
 class UsageTracker:
     """
     Tracks usage of billable resources for locations/tenants.
-    
+
     Records detailed usage events and updates subscription counters.
     """
-    
+
     def __init__(self, db_connection=None) -> None:
         """
         Initialize usage tracker.
-        
+
         Args:
             db_connection: Database connection pool or session factory
         """
         self.db = db_connection
-    
+
     async def record_usage(
         self,
         location_id: str,
@@ -243,7 +244,7 @@ class UsageTracker:
     ) -> Dict[str, Any]:
         """
         Record usage of a billable resource.
-        
+
         Args:
             location_id: Location ID
             resource_type: Type of resource used
@@ -251,15 +252,15 @@ class UsageTracker:
             lead_id: Optional lead ID for context
             contact_id: Optional contact ID for context
             metadata: Optional additional metadata
-            
+
         Returns:
             Created usage record
         """
         subscription = await self._get_active_subscription(location_id)
-        
+
         if self.db is None:
             return {"id": "mock", "location_id": location_id, "resource_type": resource_type.value}
-        
+
         async with self.db.acquire() as conn:
             # Create usage record
             record = await conn.fetchrow(
@@ -282,7 +283,7 @@ class UsageTracker:
                 quantity,
                 metadata or {},
             )
-            
+
             # Update subscription usage counters for leads
             if resource_type == ResourceType.LEAD and record:
                 await conn.execute(
@@ -295,13 +296,11 @@ class UsageTracker:
                     record["subscription_id"],
                     quantity,
                 )
-            
-            logger.debug(
-                f"Recorded usage: {resource_type.value} x{quantity} for location {location_id}"
-            )
-            
+
+            logger.debug(f"Recorded usage: {resource_type.value} x{quantity} for location {location_id}")
+
             return dict(record) if record else {}
-    
+
     async def record_lead_processed(
         self,
         location_id: str,
@@ -311,7 +310,7 @@ class UsageTracker:
     ) -> Dict[str, Any]:
         """
         Convenience method to record lead processing.
-        
+
         Args:
             location_id: Location ID
             lead_id: Lead ID
@@ -326,7 +325,7 @@ class UsageTracker:
             contact_id=contact_id,
             metadata={"qualified": was_qualified},
         )
-    
+
     async def record_query(
         self,
         location_id: str,
@@ -335,7 +334,7 @@ class UsageTracker:
     ) -> Dict[str, Any]:
         """
         Convenience method to record a query.
-        
+
         Args:
             location_id: Location ID
             query_type: Type of query (e.g., "property_search", "market_analysis")
@@ -347,7 +346,7 @@ class UsageTracker:
             quantity=1,
             metadata={"query_type": query_type, "result_count": result_count},
         )
-    
+
     async def record_api_call(
         self,
         location_id: str,
@@ -356,7 +355,7 @@ class UsageTracker:
     ) -> Dict[str, Any]:
         """
         Convenience method to record API call.
-        
+
         Args:
             location_id: Location ID
             endpoint: API endpoint path
@@ -368,7 +367,7 @@ class UsageTracker:
             quantity=1,
             metadata={"endpoint": endpoint, "method": method},
         )
-    
+
     async def record_sms_sent(
         self,
         location_id: str,
@@ -378,7 +377,7 @@ class UsageTracker:
         """Convenience method to record SMS sent."""
         # Count SMS segments (160 chars per segment)
         segments = (message_length + 159) // 160
-        
+
         return await self.record_usage(
             location_id=location_id,
             resource_type=ResourceType.SMS,
@@ -386,7 +385,7 @@ class UsageTracker:
             contact_id=contact_id,
             metadata={"message_length": message_length, "segments": segments},
         )
-    
+
     async def record_email_sent(
         self,
         location_id: str,
@@ -401,7 +400,7 @@ class UsageTracker:
             contact_id=contact_id,
             metadata={"email_type": email_type},
         )
-    
+
     async def record_report_generated(
         self,
         location_id: str,
@@ -416,7 +415,7 @@ class UsageTracker:
             contact_id=contact_id,
             metadata={"report_type": report_type},
         )
-    
+
     async def get_usage_report(
         self,
         location_id: str,
@@ -426,7 +425,7 @@ class UsageTracker:
     ) -> Dict[str, Any]:
         """
         Generate a usage report for a location over a date range.
-        
+
         Returns:
             Dict with usage statistics and breakdown by resource type
         """
@@ -438,7 +437,7 @@ class UsageTracker:
                 "total_records": 0,
                 "by_resource_type": {},
             }
-        
+
         async with self.db.acquire() as conn:
             # Build query
             if resource_type:
@@ -473,14 +472,14 @@ class UsageTracker:
                     start_date,
                     end_date,
                 )
-            
+
             # Aggregate by resource type
             by_type: Dict[str, int] = {}
-            
+
             for row in rows:
                 rt = row["resource_type"]
                 by_type[rt] = by_type.get(rt, 0) + row["quantity"]
-            
+
             return {
                 "location_id": location_id,
                 "start_date": start_date,
@@ -488,7 +487,7 @@ class UsageTracker:
                 "total_records": len(rows),
                 "by_resource_type": by_type,
             }
-    
+
     async def get_usage_by_day(
         self,
         location_id: str,
@@ -497,16 +496,16 @@ class UsageTracker:
     ) -> list[Dict[str, Any]]:
         """
         Get daily usage breakdown for the last N days.
-        
+
         Returns:
             List of daily usage stats
         """
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days)
-        
+
         if self.db is None:
             return []
-        
+
         async with self.db.acquire() as conn:
             if resource_type:
                 rows = await conn.fetch(
@@ -538,7 +537,7 @@ class UsageTracker:
                     location_id,
                     start_date,
                 )
-            
+
             return [
                 {
                     "date": str(row["date"]),
@@ -546,19 +545,19 @@ class UsageTracker:
                 }
                 for row in rows
             ]
-    
+
     async def reset_quotas(self) -> int:
         """
         Reset lead usage counters for all subscriptions at period start.
-        
+
         This should be called by a scheduled job at the start of each billing period.
-        
+
         Returns:
             Number of subscriptions reset
         """
         if self.db is None:
             return 0
-        
+
         async with self.db.acquire() as conn:
             result = await conn.execute(
                 """
@@ -569,16 +568,16 @@ class UsageTracker:
                 AND current_period_start <= NOW()
                 """
             )
-            
+
             count = int(result.split()[-1]) if result else 0
             logger.info(f"Reset quotas for {count} subscriptions")
             return count
-    
+
     async def _get_active_subscription(self, location_id: str) -> Optional[Dict[str, Any]]:
         """Get active subscription for a location."""
         if self.db is None:
             return None
-        
+
         async with self.db.acquire() as conn:
             row = await conn.fetchrow(
                 """
@@ -588,7 +587,7 @@ class UsageTracker:
                 ORDER BY created_at DESC
                 LIMIT 1
                 """,
-                location_id
+                location_id,
             )
             return dict(row) if row else None
 

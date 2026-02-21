@@ -42,9 +42,7 @@ def _get_win_probability_stats() -> Dict[str, Any]:
         predictor = WinProbabilityPredictor()
         return {
             "ml_available": predictor._ml_available,
-            "model_type": "Logistic Regression (sklearn)"
-            if predictor._ml_available
-            else "Rule-based fallback",
+            "model_type": "Logistic Regression (sklearn)" if predictor._ml_available else "Rule-based fallback",
         }
     except Exception:
         return {"ml_available": False, "model_type": "Unknown"}
@@ -143,19 +141,9 @@ def render_strategy_dashboard():
 
     perf_col1, perf_col2, perf_col3 = st.columns(3)
 
-    response_p95 = (
-        jorge_metrics.get("response_time", {}).get("p95_ms", 0)
-        if jorge_metrics
-        else 0
-    )
-    success_rate = (
-        jorge_metrics.get("requests", {}).get("success_rate", 0)
-        if jorge_metrics
-        else 0
-    )
-    health = (
-        jorge_metrics.get("health_status", "unknown") if jorge_metrics else "unknown"
-    )
+    response_p95 = jorge_metrics.get("response_time", {}).get("p95_ms", 0) if jorge_metrics else 0
+    success_rate = jorge_metrics.get("requests", {}).get("success_rate", 0) if jorge_metrics else 0
+    health = jorge_metrics.get("health_status", "unknown") if jorge_metrics else "unknown"
 
     perf_col1.metric("P95 Response Time", f"{response_p95:.0f}ms", delta="Target: <42ms")
     perf_col2.metric("Success Rate", f"{success_rate:.1%}" if success_rate else "N/A")

@@ -25,6 +25,7 @@ class ToolMeta(BaseModel):
         parameters_schema: JSON Schema for the tool's parameters.
         callable: The actual function to execute.
     """
+
     name: str
     description: str
     parameters_schema: dict[str, Any]
@@ -43,6 +44,7 @@ class ToolConfig(BaseModel):
         max_retries: Maximum number of retry attempts on failure.
         requires_auth: Whether the tool requires authentication.
     """
+
     name: str
     description: str = ""
     timeout: float = 30.0
@@ -58,6 +60,7 @@ class ToolSchema(BaseModel):
         properties: Schema for each parameter.
         required: List of required parameter names.
     """
+
     type: str = "object"
     properties: dict[str, Any] = Field(default_factory=dict)
     required: list[str] = Field(default_factory=list)
@@ -454,6 +457,7 @@ def tool(
             return f"Results for: {query}"
         ```
     """
+
     def decorator(func: Callable) -> FunctionTool:
         return FunctionTool(func, name=name, description=description)
 

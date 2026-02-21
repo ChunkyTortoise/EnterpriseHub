@@ -68,11 +68,11 @@ OBJECTION_PATTERNS: Dict[str, List[str]] = {
 
 # Rebuttal strategies mapped to objection types
 REBUTTAL_STRATEGY: Dict[str, str] = {
-    "not_interested": "polite_exit",      # opt-out, tag DND, stop sequence
-    "already_agent": "value_add",         # offer market report, keep warm
-    "timing": "nurture_pause",            # move to NURTURE_PAUSE step
-    "price": "education",                 # send market data email
-    "info_request": "qualify",            # respond, advance sequence
+    "not_interested": "polite_exit",  # opt-out, tag DND, stop sequence
+    "already_agent": "value_add",  # offer market report, keep warm
+    "timing": "nurture_pause",  # move to NURTURE_PAUSE step
+    "price": "education",  # send market data email
+    "info_request": "qualify",  # respond, advance sequence
 }
 
 # Types that require opting the contact out of all further outreach
@@ -83,11 +83,11 @@ _OPT_OUT_TYPES = {"not_interested"}
 class ObjectionResult:
     """Result of objection handling."""
 
-    objection_type: Optional[str]       # classified type, or None if no match
-    strategy: str                       # "polite_exit" | "value_add" | "nurture_pause" | etc.
-    rebuttal_message: Optional[str]     # message to send (None for opt-out)
+    objection_type: Optional[str]  # classified type, or None if no match
+    strategy: str  # "polite_exit" | "value_add" | "nurture_pause" | etc.
+    rebuttal_message: Optional[str]  # message to send (None for opt-out)
     should_opt_out: bool
-    should_pause: bool                  # True for timing objections → NURTURE_PAUSE
+    should_pause: bool  # True for timing objections → NURTURE_PAUSE
 
 
 class ObjectionHandler:
@@ -113,10 +113,7 @@ class ObjectionHandler:
         for objection_type, patterns in OBJECTION_PATTERNS.items():
             for pattern in patterns:
                 if pattern in message_lower:
-                    logger.info(
-                        f"[SDR] Objection classified: {objection_type} "
-                        f"(matched '{pattern}')"
-                    )
+                    logger.info(f"[SDR] Objection classified: {objection_type} (matched '{pattern}')")
                     return objection_type
         return None
 
@@ -148,8 +145,7 @@ class ObjectionHandler:
         rebuttal = _STATIC_REBUTTALS.get(objection_type) if not opt_out else None
 
         logger.info(
-            f"[SDR] ObjectionHandler contact={contact_id} "
-            f"type={objection_type} strategy={strategy} opt_out={opt_out}"
+            f"[SDR] ObjectionHandler contact={contact_id} type={objection_type} strategy={strategy} opt_out={opt_out}"
         )
         return ObjectionResult(
             objection_type=objection_type,
@@ -166,10 +162,7 @@ _STATIC_REBUTTALS: Dict[str, str] = {
         "Totally understand — I just wanted to offer a free market analysis for your "
         "area regardless. No strings attached. Would that be helpful?"
     ),
-    "timing": (
-        "No worries at all! I'll check back in a few months. "
-        "In the meantime, feel free to reach out anytime."
-    ),
+    "timing": ("No worries at all! I'll check back in a few months. In the meantime, feel free to reach out anytime."),
     "price": (
         "Completely fair. The market has been intense. "
         "I can send over a current market report so you have the data when you're ready — "

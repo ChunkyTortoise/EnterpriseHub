@@ -1,9 +1,11 @@
 """Tests for CRM GoHighLevel MCP server."""
 
 import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
-from mcp_toolkit.servers.crm_ghl.server import mcp as crm_mcp, configure, MockGHLClient
-from mcp_toolkit.servers.crm_ghl.field_mapper import GHLFieldMapper, GHLField
+from mcp_toolkit.servers.crm_ghl.field_mapper import GHLField, GHLFieldMapper
+from mcp_toolkit.servers.crm_ghl.server import MockGHLClient, configure
+from mcp_toolkit.servers.crm_ghl.server import mcp as crm_mcp
 
 
 @pytest.fixture
@@ -18,31 +20,32 @@ class TestSearchContacts:
         assert "No contacts found" in result
 
     async def test_search_finds_created_contact(self, client):
-        await client.call_tool("create_contact", {
-            "first_name": "Alice", "last_name": "Smith", "email": "alice@test.com"
-        })
+        await client.call_tool(
+            "create_contact",
+            {"first_name": "Alice", "last_name": "Smith", "email": "alice@test.com"},
+        )
         result = await client.call_tool("search_contacts", {"query": "alice"})
         assert "Alice" in result
 
 
 class TestCreateContact:
     async def test_create_basic_contact(self, client):
-        result = await client.call_tool("create_contact", {
-            "first_name": "John", "last_name": "Doe"
-        })
+        result = await client.call_tool(
+            "create_contact", {"first_name": "John", "last_name": "Doe"}
+        )
         assert "Contact created" in result
         assert "John Doe" in result
 
     async def test_create_with_tags(self, client):
-        result = await client.call_tool("create_contact", {
-            "first_name": "Jane", "last_name": "Doe", "tags": "Hot-Lead, Buyer"
-        })
+        result = await client.call_tool(
+            "create_contact", {"first_name": "Jane", "last_name": "Doe", "tags": "Hot-Lead, Buyer"}
+        )
         assert "Contact created" in result
 
     async def test_create_returns_id(self, client):
-        result = await client.call_tool("create_contact", {
-            "first_name": "Bob", "last_name": "Builder"
-        })
+        result = await client.call_tool(
+            "create_contact", {"first_name": "Bob", "last_name": "Builder"}
+        )
         assert "contact_" in result
 
 
@@ -60,9 +63,9 @@ class TestPipelineSummary:
 
 class TestCreateOpportunity:
     async def test_create_opportunity(self, client):
-        result = await client.call_tool("create_opportunity", {
-            "contact_id": "contact_1", "name": "Big Deal", "value": 50000
-        })
+        result = await client.call_tool(
+            "create_opportunity", {"contact_id": "contact_1", "name": "Big Deal", "value": 50000}
+        )
         assert "Opportunity created" in result
         assert "Big Deal" in result
         assert "50,000" in result
@@ -73,7 +76,7 @@ class TestFieldMapper:
         mapper = GHLFieldMapper()
         mapper.register_field(
             GHLField(id="cf_1", name="Lead Source", field_key="lead_source"),
-            aliases=["source", "how they found us"]
+            aliases=["source", "how they found us"],
         )
         field = mapper.resolve("lead source")
         assert field is not None
@@ -82,8 +85,7 @@ class TestFieldMapper:
     def test_resolve_alias(self):
         mapper = GHLFieldMapper()
         mapper.register_field(
-            GHLField(id="cf_1", name="Lead Source", field_key="lead_source"),
-            aliases=["source"]
+            GHLField(id="cf_1", name="Lead Source", field_key="lead_source"), aliases=["source"]
         )
         field = mapper.resolve("source")
         assert field is not None

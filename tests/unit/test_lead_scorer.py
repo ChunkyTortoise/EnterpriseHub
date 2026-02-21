@@ -22,9 +22,7 @@ class TestLeadScorerInit:
         """Thresholds are loaded from settings."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -37,9 +35,7 @@ class TestLeadScorerInit:
         """Cache service is initialized."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -55,9 +51,7 @@ class TestCacheKeyGeneration:
         """Same input produces same cache key."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -73,9 +67,7 @@ class TestCacheKeyGeneration:
         """Different data produces different cache keys."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -90,9 +82,7 @@ class TestCacheKeyGeneration:
         """Key order doesn't affect cache key (sorted keys)."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -107,9 +97,7 @@ class TestCacheKeyGeneration:
         """Prefix is included in cache key."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -128,9 +116,7 @@ class TestBuyerLeadScoring:
         """Create a LeadScorer with mocked cache."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -259,9 +245,7 @@ class TestSellerLeadScoring:
         """Create a LeadScorer with mocked cache."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -322,9 +306,7 @@ class TestLeadClassification:
         """Create a LeadScorer with mocked cache."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -363,9 +345,7 @@ class TestCacheIntegration:
         """Create a LeadScorer with mocked cache."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -426,9 +406,7 @@ class TestSellerScoreMethod:
         """Create a LeadScorer with mocked cache."""
         from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 
-        with patch(
-            "ghl_real_estate_ai.services.lead_scorer.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.lead_scorer.settings") as mock_settings:
             mock_settings.hot_lead_threshold = 3
             mock_settings.warm_lead_threshold = 2
 
@@ -451,9 +429,7 @@ class TestSellerScoreMethod:
 
     def test_seller_score_counts_property_address(self, scorer):
         """Property address counts as a question."""
-        result = scorer.calculate_seller_score(
-            {"property_address": "123 Main St, Rancho Cucamonga"}
-        )
+        result = scorer.calculate_seller_score({"property_address": "123 Main St, Rancho Cucamonga"})
 
         assert result["questions_answered"] >= 1
 
@@ -477,8 +453,6 @@ class TestSellerScoreMethod:
 
     def test_seller_score_counts_home_condition(self, scorer):
         """Home condition counts as a question."""
-        result = scorer.calculate_seller_score(
-            {"home_condition": "good", "upgrades": "new roof 2023"}
-        )
+        result = scorer.calculate_seller_score({"home_condition": "good", "upgrades": "new roof 2023"})
 
         assert result["questions_answered"] >= 1

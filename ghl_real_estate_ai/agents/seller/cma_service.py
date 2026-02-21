@@ -18,11 +18,7 @@ logger = get_logger(__name__)
 class CMAService:
     """Service for CMA generation and property valuation."""
 
-    def __init__(
-        self,
-        cma_generator: Optional[CMAGenerator] = None,
-        claude: Optional[ClaudeAssistant] = None
-    ):
+    def __init__(self, cma_generator: Optional[CMAGenerator] = None, claude: Optional[ClaudeAssistant] = None):
         self.cma_generator = cma_generator or CMAGenerator()
         self.claude = claude or ClaudeAssistant()
 
@@ -34,20 +30,20 @@ class CMAService:
 
         try:
             zestimate = state.get("zestimate", 0.0)
-            report = await self.cma_generator.generate_report(
-                property_address, zestimate or 0.0
-            )
+            report = await self.cma_generator.generate_report(property_address, zestimate or 0.0)
 
             comparable_properties = []
             for comp in report.comparables:
-                comparable_properties.append({
-                    "address": comp.address,
-                    "sale_price": comp.sale_price,
-                    "sqft": comp.sqft,
-                    "beds": comp.beds,
-                    "baths": comp.baths,
-                    "price_per_sqft": comp.price_per_sqft,
-                })
+                comparable_properties.append(
+                    {
+                        "address": comp.address,
+                        "sale_price": comp.sale_price,
+                        "sqft": comp.sqft,
+                        "beds": comp.beds,
+                        "baths": comp.baths,
+                        "price_per_sqft": comp.price_per_sqft,
+                    }
+                )
 
             market_data = {
                 "market_name": report.market_context.market_name,
@@ -57,10 +53,7 @@ class CMAService:
                 "narrative": report.market_narrative,
             }
 
-            logger.info(
-                f"CMA generated for {property_address}: "
-                f"estimated value ${report.estimated_value:,.0f}"
-            )
+            logger.info(f"CMA generated for {property_address}: estimated value ${report.estimated_value:,.0f}")
 
             # Confidence routing + disclaimer injection
             confidence = report.confidence_score
