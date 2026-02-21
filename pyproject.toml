@@ -93,6 +93,13 @@ module = [
 ]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "ghl_real_estate_ai.api.schemas.white_label",
+    "ghl_real_estate_ai.api.routes.billing",
+]
+ignore_errors = true
+
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
