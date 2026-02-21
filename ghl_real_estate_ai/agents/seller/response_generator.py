@@ -5,6 +5,7 @@ Handles generation of Jorge's conversational responses using Claude,
 with support for sentiment analysis, persona adaptation, and objection handling.
 """
 
+import asyncio
 from typing import Any, Dict, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -70,6 +71,44 @@ class ResponseGenerator:
         self.sentiment_service = sentiment_service or SentimentAnalysisService()
         self.ab_testing = ab_testing or ABTestingService()
         self.calendar_service = calendar_service
+
+    @staticmethod
+    def _extract_text_from_llm_response(response: Any) -> str:
+        """Normalize different Claude response shapes into plain text."""
+        if response is None:
+            return ""
+        if isinstance(response, str):
+            return response
+        if isinstance(response, dict):
+            content = response.get("content")
+            if isinstance(content, str):
+                return content
+            if isinstance(content, dict):
+                nested = content.get("text") or content.get("content")
+                if isinstance(nested, str):
+                    return nested
+            for key in ("analysis", "response", "text", "message"):
+                value = response.get(key)
+                if isinstance(value, str):
+                    return value
+            return ""
+        content_attr = getattr(response, "content", None)
+        if isinstance(content_attr, str):
+            return content_attr
+        return str(response)
+
+    async def _call_claude(self, prompt: str) -> Any:
+        """Call Claude while supporting legacy and current client interfaces."""
+        if hasattr(self.claude, "analyze_with_context"):
+            result = self.claude.analyze_with_context(prompt)
+        elif hasattr(self.claude, "generate_response"):
+            result = self.claude.generate_response(prompt)
+        else:
+            raise AttributeError("Claude client has no supported response method")
+
+        if asyncio.iscoroutine(result):
+            return await result
+        return result
 
     async def generate_jorge_response(
         self,
@@ -275,15 +314,11 @@ class ResponseGenerator:
             "No headers, no markdown, no analysis. Just the conversational text."
         )
 
-        content = await self.claude.generate_response(prompt)
+        content = self._extract_text_from_llm_response(await self._call_claude(prompt))
         if not content:
-            content = (
-                state.get("objection_response_text")  # Fallback to objection response
-                or random.choice([
-                    "What questions do you have about the selling process? Happy to walk you through it.",
-                    "What would be most helpful for me to look into for you right now?",
-                    "Anything specific about your home or the market you're curious about?",
-                ])
+            content = state.get("objection_response_text") or (
+                "Happy to help with any questions about your property. "
+                "What would be most useful to know?"
             )
 
         # Calendar-focused mode: append real calendar slots for HOT sellers
