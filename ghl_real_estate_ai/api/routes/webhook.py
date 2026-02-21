@@ -328,10 +328,46 @@ async def handle_ghl_webhook(
     if hasattr(mls_client, "dependency"):
         mls_client = _get_mls_client()
 
+    # Log raw payload summary for debugging (first 500 chars, no PII in production)
+    try:
+        raw_body = await request.body()
+        logger.debug(
+            f"GHL webhook raw payload (first 500 chars): {raw_body[:500]}",
+            extra={"endpoint": "/api/ghl/webhook"},
+        )
+    except Exception:
+        pass
+
     contact_id = event.contact_id
     location_id = event.location_id
     user_message = event.message.body
-    tags = event.contact.tags or []
+    tags = (event.contact.tags if event.contact else []) or []
+
+    # If tags are absent (GHL sent native flat format without contact tags),
+    # fetch the contact's actual tags from the GHL API so activation checks work.
+    if not tags and contact_id:
+        try:
+            contact_data = await ghl_client_default.get_contact(contact_id)
+            tags = contact_data.get("tags", [])
+            # Also backfill the contact object so downstream code has a name, phone, etc.
+            if event.contact and not event.contact.first_name:
+                event.contact.first_name = contact_data.get("firstName", "")
+                event.contact.last_name = contact_data.get("lastName", "")
+                event.contact.phone = contact_data.get("phone", "")
+                event.contact.email = contact_data.get("email", "")
+                event.contact.tags = tags
+            logger.info(
+                f"Fetched {len(tags)} tag(s) from GHL API for contact {contact_id} "
+                f"(not included in webhook payload)"
+            )
+        except Exception as _tag_fetch_err:
+            logger.warning(
+                f"Could not fetch tags for contact {contact_id} from GHL API: {_tag_fetch_err}. "
+                "Proceeding with empty tags — GHL workflow filter guarantees activation tag is present."
+            )
+            # Trust the GHL workflow filter: webhook only fires for tagged contacts.
+            # Infer 'Needs Qualifying' as the safe default so the seller/lead bot fires.
+            tags = ["Needs Qualifying"]
 
     # INPUT LENGTH GUARD: Cap inbound messages to prevent token abuse
     MAX_INBOUND_LENGTH = 2_000  # No legitimate SMS/chat exceeds this
