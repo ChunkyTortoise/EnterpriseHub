@@ -41,14 +41,16 @@ class BuyerWorkflowService:
             days_since_start = state.get("days_since_start", 0)
 
             # Use budget_config for action TYPE (what to do)
-            next_action, _ = self.budget_config.get_next_action(qualification_score)
+            next_action, follow_up_hours = self.budget_config.get_next_action(qualification_score)
 
-            # Use spec day-based schedule for TIMING (when to do it)
-            next_day = self._get_next_buyer_followup_day(days_since_start)
-            if next_day is not None:
-                follow_up_hours = (next_day - days_since_start) * 24
-            else:
-                follow_up_hours = JorgeSellerConfig.BUYER_LONGTERM_INTERVAL * 24
+            # Keep legacy day-based cadence for long-running low-intent nurture only.
+            # Qualified leads should honor score-based follow-up urgency from budget config.
+            if qualification_score < self.budget_config.QUALIFICATION_WARM_THRESHOLD:
+                next_day = self._get_next_buyer_followup_day(days_since_start)
+                if next_day is not None:
+                    follow_up_hours = (next_day - days_since_start) * 24
+                else:
+                    follow_up_hours = JorgeSellerConfig.BUYER_LONGTERM_INTERVAL * 24
 
             await self._schedule_follow_up(state.get("buyer_id", "unknown"), next_action, follow_up_hours)
 
