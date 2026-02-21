@@ -18,6 +18,7 @@ import random
 import re
 from datetime import datetime
 from functools import lru_cache
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -177,6 +178,58 @@ async def safe_apply_actions(ghl_client, contact_id: str, actions: list):
             await ghl_client.add_tags(contact_id, ["Delivery-Failed"])
         except Exception as tag_error:
             logger.error(f"Failed to add Delivery-Failed tag for {contact_id}: {tag_error}")
+
+
+def _normalize_tags(raw_tags: list[str] | None) -> set[str]:
+    """Normalize tags for case-insensitive matching with whitespace safety."""
+    normalized: set[str] = set()
+    for tag in raw_tags or []:
+        if tag is None:
+            continue
+        value = str(tag).strip().lower()
+        if value:
+            normalized.add(value)
+    return normalized
+
+
+def _tag_present(tag: str | None, tags_lower: set[str]) -> bool:
+    """Return True when a single tag exists in normalized tag set."""
+    if not tag:
+        return False
+    return tag.strip().lower() in tags_lower
+
+
+def _compute_mode_flags(
+    tags_lower: set[str],
+    *,
+    should_deactivate: bool,
+    seller_mode_enabled: bool,
+    buyer_mode_enabled: bool,
+    lead_mode_enabled: bool,
+    buyer_activation_tag: str,
+    lead_activation_tag: str,
+) -> dict[str, bool]:
+    """Compute bot mode flags in one place to keep routing deterministic."""
+    return {
+        "seller": (
+            ("needs qualifying" in tags_lower or "seller-lead" in tags_lower)
+            and seller_mode_enabled
+            and not should_deactivate
+        ),
+        "buyer": _tag_present(buyer_activation_tag, tags_lower) and buyer_mode_enabled and not should_deactivate,
+        "lead": _tag_present(lead_activation_tag, tags_lower) and lead_mode_enabled and not should_deactivate,
+    }
+
+
+def _select_primary_mode(mode_flags: dict[str, bool]) -> str | None:
+    """Deterministic mode priority: seller > buyer > lead."""
+    if mode_flags.get("seller"):
+        return "seller"
+    if mode_flags.get("buyer"):
+        return "buyer"
+    if mode_flags.get("lead"):
+        return "lead"
+    return None
 
 
 def _format_slot_options(options: list[dict]) -> str:
@@ -369,9 +422,8 @@ async def handle_ghl_webhook(
             # Infer 'Needs Qualifying' as the safe default so the seller/lead bot fires.
             tags = ["Needs Qualifying"]
 
-    # Normalize tags to lowercase set for case-insensitive comparisons throughout this request.
-    # GHL may deliver tags as "needs qualifying" (lowercase) regardless of how they were created.
-    tags_lower = {t.lower() for t in tags}
+    # Normalize tags for case-insensitive comparisons throughout this request.
+    tags_lower = _normalize_tags(tags)
 
     # INPUT LENGTH GUARD: Cap inbound messages to prevent token abuse
     MAX_INBOUND_LENGTH = 2_000  # No legitimate SMS/chat exceeds this
@@ -417,14 +469,17 @@ async def handle_ghl_webhook(
     activation_tags = settings.activation_tags  # e.g., ["Needs Qualifying", "Hit List"]
     deactivation_tags = settings.deactivation_tags  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
 
-    should_activate = any(tag.lower() in tags_lower for tag in activation_tags)
+    should_activate = any(_tag_present(tag, tags_lower) for tag in activation_tags)
+    # Seller-mode tags also count as activation when seller mode is enabled.
+    if not should_activate and jorge_settings.JORGE_SELLER_MODE:
+        should_activate = "needs qualifying" in tags_lower or "seller-lead" in tags_lower
     # Buyer-mode tag also counts as activation when buyer mode is enabled
     if not should_activate and jorge_settings.JORGE_BUYER_MODE:
-        should_activate = jorge_settings.BUYER_ACTIVATION_TAG.lower() in tags_lower
+        should_activate = _tag_present(jorge_settings.BUYER_ACTIVATION_TAG, tags_lower)
     # Lead-mode tag also counts as activation when lead mode is enabled
     if not should_activate and jorge_settings.JORGE_LEAD_MODE:
-        should_activate = jorge_settings.LEAD_ACTIVATION_TAG.lower() in tags_lower
-    should_deactivate = any(tag.lower() in tags_lower for tag in deactivation_tags)
+        should_activate = _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower)
+    should_deactivate = any(_tag_present(tag, tags_lower) for tag in deactivation_tags)
 
     if not should_activate:
         logger.info(f"AI not triggered for contact {contact_id} - activation tag not present")
@@ -455,6 +510,38 @@ async def handle_ghl_webhook(
             message="AI deactivated (deactivation tag present)",
             actions=[],
         )
+
+    mode_flags = _compute_mode_flags(
+        tags_lower,
+        should_deactivate=should_deactivate,
+        seller_mode_enabled=jorge_settings.JORGE_SELLER_MODE,
+        buyer_mode_enabled=jorge_settings.JORGE_BUYER_MODE,
+        lead_mode_enabled=jorge_settings.JORGE_LEAD_MODE,
+        buyer_activation_tag=jorge_settings.BUYER_ACTIVATION_TAG,
+        lead_activation_tag=jorge_settings.LEAD_ACTIVATION_TAG,
+    )
+    jorge_seller_mode = mode_flags["seller"]
+    jorge_buyer_mode = mode_flags["buyer"]
+    jorge_lead_mode = mode_flags["lead"]
+    primary_mode = _select_primary_mode(mode_flags)
+
+    logger.info(
+        "Webhook routing precheck",
+        extra={
+            "contact_id": contact_id,
+            "location_id": location_id,
+            "tags_raw": tags,
+            "tags_lower": sorted(tags_lower),
+            "activation_tags": activation_tags,
+            "deactivation_tags": deactivation_tags,
+            "should_activate": should_activate,
+            "should_deactivate": should_deactivate,
+            "jorge_seller_mode": jorge_seller_mode,
+            "jorge_buyer_mode": jorge_buyer_mode,
+            "jorge_lead_mode": jorge_lead_mode,
+            "primary_mode": primary_mode,
+        },
+    )
 
     # Opt-out detection (Jorge spec: "end automation immediately")
     OPT_OUT_PHRASES = [
@@ -654,11 +741,10 @@ async def handle_ghl_webhook(
         except Exception as e:
             logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
 
-    # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
-    jorge_seller_mode = ("needs qualifying" in tags_lower or "seller-lead" in tags_lower) and jorge_settings.JORGE_SELLER_MODE and not should_deactivate
-
+    # Step -0.5: Seller has strict priority for needs-qualifying flow.
     if jorge_seller_mode:
         logger.info(f"Jorge seller mode activated for contact {contact_id}")
+        current_ghl_client = ghl_client_default
         try:
             # Route to Jorge's seller engine
             from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
@@ -667,7 +753,6 @@ async def handle_ghl_webhook(
             tenant_config = await tenant_service.get_tenant_config(location_id)
 
             # Initialize GHL client
-            current_ghl_client = ghl_client_default
             if tenant_config and tenant_config.get("ghl_api_key"):
                 current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
@@ -840,17 +925,24 @@ async def handle_ghl_webhook(
 
         except Exception as e:
             logger.error(f"Jorge seller mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
-            # Fall-through to next bot mode allowed for robustness
-            # Tag contact with Bot-Fallback-Active for monitoring
-            try:
-                background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["Bot-Fallback-Active"])
-            except Exception as tag_error:
-                logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
+            # Do not fall through to other bot modes when seller preconditions are met.
+            seller_rescue_msg = (
+                "Hey! I'm Jorge's AI assistant. What's got you considering selling, and where would you move?"
+            )
+            background_tasks.add_task(
+                safe_send_message,
+                current_ghl_client,
+                contact_id,
+                seller_rescue_msg,
+                event.message.type,
+            )
+            return GHLWebhookResponse(
+                success=True,
+                message=seller_rescue_msg,
+                actions=[],
+            )
 
     # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
-    jorge_buyer_mode = (
-        jorge_settings.BUYER_ACTIVATION_TAG.lower() in tags_lower and jorge_settings.JORGE_BUYER_MODE and not should_deactivate
-    )
 
     if jorge_buyer_mode:
         logger.info(f"Jorge buyer mode activated for contact {contact_id}")
@@ -1050,9 +1142,6 @@ async def handle_ghl_webhook(
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
 
     # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
-    jorge_lead_mode = (
-        jorge_settings.LEAD_ACTIVATION_TAG.lower() in tags_lower and jorge_settings.JORGE_LEAD_MODE and not should_deactivate
-    )
 
     if jorge_lead_mode:
         if jorge_seller_mode and "needs qualifying" in tags_lower:
@@ -1556,6 +1645,57 @@ async def health_check():
         "service": "ghl-real-estate-ai",
         "version": settings.version,
         "environment": settings.environment,
+    }
+
+
+@router.post("/debug/tags")
+async def debug_tags(request: Request) -> dict[str, Any]:
+    """
+    Temporary debug endpoint to inspect webhook tag parsing and routing decisions.
+
+    Remove after production diagnosis is complete.
+    """
+    data = await request.json()
+    event = GHLWebhookEvent(**data)
+    tags = (event.contact.tags if event.contact else []) or []
+    tags_lower = _normalize_tags(tags)
+
+    activation_tags = settings.activation_tags
+    deactivation_tags = settings.deactivation_tags
+    should_activate = any(_tag_present(tag, tags_lower) for tag in activation_tags)
+    if not should_activate and jorge_settings.JORGE_SELLER_MODE:
+        should_activate = "needs qualifying" in tags_lower or "seller-lead" in tags_lower
+    if not should_activate and jorge_settings.JORGE_BUYER_MODE:
+        should_activate = _tag_present(jorge_settings.BUYER_ACTIVATION_TAG, tags_lower)
+    if not should_activate and jorge_settings.JORGE_LEAD_MODE:
+        should_activate = _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower)
+    should_deactivate = any(_tag_present(tag, tags_lower) for tag in deactivation_tags)
+
+    mode_flags = _compute_mode_flags(
+        tags_lower,
+        should_deactivate=should_deactivate,
+        seller_mode_enabled=jorge_settings.JORGE_SELLER_MODE,
+        buyer_mode_enabled=jorge_settings.JORGE_BUYER_MODE,
+        lead_mode_enabled=jorge_settings.JORGE_LEAD_MODE,
+        buyer_activation_tag=jorge_settings.BUYER_ACTIVATION_TAG,
+        lead_activation_tag=jorge_settings.LEAD_ACTIVATION_TAG,
+    )
+
+    return {
+        "contact_tags_raw": event.contact.tags if event.contact else None,
+        "tags": tags,
+        "tags_lower": sorted(tags_lower),
+        "activation_tags": activation_tags,
+        "deactivation_tags": deactivation_tags,
+        "should_activate": should_activate,
+        "should_deactivate": should_deactivate,
+        "JORGE_SELLER_MODE": jorge_settings.JORGE_SELLER_MODE,
+        "JORGE_BUYER_MODE": jorge_settings.JORGE_BUYER_MODE,
+        "JORGE_LEAD_MODE": jorge_settings.JORGE_LEAD_MODE,
+        "BUYER_ACTIVATION_TAG": jorge_settings.BUYER_ACTIVATION_TAG,
+        "LEAD_ACTIVATION_TAG": jorge_settings.LEAD_ACTIVATION_TAG,
+        "mode_flags": mode_flags,
+        "primary_mode": _select_primary_mode(mode_flags),
     }
 
 
