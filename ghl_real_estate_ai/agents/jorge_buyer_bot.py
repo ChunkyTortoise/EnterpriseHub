@@ -521,14 +521,15 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     async def process_buyer_conversation(
         self,
-        conversation_id: str,
-        user_message: str,
+        conversation_id: Optional[str] = None,
+        user_message: Optional[str] = None,
         buyer_name: Optional[str] = None,
         conversation_history: Optional[List[ConversationMessage]] = None,
         buyer_phone: Optional[str] = None,
         buyer_email: Optional[str] = None,
         metadata: Optional[BotMetadata] = None,
         handoff_context: Optional["EnrichedHandoffContext"] = None,
+        buyer_id: Optional[str] = None,
     ) -> BuyerBotResponse:
         """
         Main entry point for processing buyer conversations.
@@ -551,6 +552,17 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 - financial_readiness: Financial readiness score
                 - handoff_signals: Signals for cross-bot handoff
         """
+        # Backward compatibility: legacy callers pass buyer_id instead of conversation_id.
+        if not conversation_id and buyer_id:
+            conversation_id = buyer_id
+
+        # Backward compatibility: derive current user message from history when omitted.
+        if not user_message and conversation_history:
+            for msg in reversed(conversation_history):
+                if msg.get("role") == "user" and str(msg.get("content", "")).strip():
+                    user_message = str(msg.get("content", ""))
+                    break
+
         # Input validation
         if not conversation_id or not str(conversation_id).strip():
             raise ValueError("conversation_id must be a non-empty string")
