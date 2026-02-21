@@ -44,6 +44,14 @@ spacy==3.7.2
 pytz==2023.4
 en-core-web-sm>=3.7.0,<3.8.0
 
+# Bot state graphs
+# langgraph==0.0.55 used pydantic v1 compat, crashing on Python 3.12
+# (TypeError: ForwardRef._evaluate() missing 'recursive_guard').
+# >=0.1.16 uses langsmith>=0.1.0 which uses pydantic v2 natively.
+langgraph>=0.1.16,<0.3.0
+langsmith>=0.1.0,<2.0
+langchain-core>=0.1.0,<1.0
+
 # Real-time Features & WebSocket Support
 redis==5.0.1
 websockets==12.0
