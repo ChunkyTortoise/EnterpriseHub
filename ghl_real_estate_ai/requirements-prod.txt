@@ -27,7 +27,11 @@ alembic==1.13.1
 redis==5.0.1
 
 # Bot state graphs (all 3 Jorge bots)
-langgraph==0.0.55
+# 0.0.55 pulled in langsmith 0.0.x which uses pydantic v1 compat, crashing on Python 3.12
+# (TypeError: ForwardRef._evaluate() missing 'recursive_guard').
+# langgraph>=0.1.0 depends on langsmith>=0.1.0 which uses pydantic v2 natively.
+langgraph>=0.1.16,<0.3.0
+langsmith>=0.1.0
 
 # WebSocket / Socket.IO (real-time)
 python-socketio==5.11.0
