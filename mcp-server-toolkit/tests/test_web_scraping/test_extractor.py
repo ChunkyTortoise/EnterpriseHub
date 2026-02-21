@@ -1,6 +1,7 @@
 """Tests for data extraction module."""
 
 import pytest
+
 from mcp_toolkit.servers.web_scraping.extractor import (
     DataExtractor,
     MockExtractorLLM,

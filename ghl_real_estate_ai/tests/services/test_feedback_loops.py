@@ -25,11 +25,13 @@ from ghl_real_estate_ai.services.jorge.feedback_loops import (
 def mock_handoff_service():
     svc = MagicMock()
     svc.MIN_LEARNING_SAMPLES = 10
-    svc.get_learned_adjustments = MagicMock(return_value={
-        "adjustment": -0.05,
-        "success_rate": 0.85,
-        "sample_size": 20,
-    })
+    svc.get_learned_adjustments = MagicMock(
+        return_value={
+            "adjustment": -0.05,
+            "success_rate": 0.85,
+            "sample_size": 20,
+        }
+    )
     return svc
 
 
@@ -54,20 +56,22 @@ def mock_alerting():
 @pytest.fixture
 def mock_perf_tracker():
     tracker = AsyncMock()
-    tracker.get_bot_stats = AsyncMock(return_value={
-        "p50": 200.0,
-        "p95": 800.0,
-        "p99": 1200.0,
-        "mean": 300.0,
-        "min": 50.0,
-        "max": 1500.0,
-        "count": 100,
-        "success_count": 95,
-        "error_count": 5,
-        "cache_hit_count": 60,
-        "cache_hit_rate": 0.6,
-        "success_rate": 0.95,
-    })
+    tracker.get_bot_stats = AsyncMock(
+        return_value={
+            "p50": 200.0,
+            "p95": 800.0,
+            "p99": 1200.0,
+            "mean": 300.0,
+            "min": 50.0,
+            "max": 1500.0,
+            "count": 100,
+            "success_count": 95,
+            "error_count": 5,
+            "cache_hit_count": 60,
+            "cache_hit_rate": 0.6,
+            "success_rate": 0.95,
+        }
+    )
     return tracker
 
 
@@ -101,7 +105,9 @@ class TestLoop1ThresholdAdjustment:
     @pytest.mark.asyncio
     async def test_marks_effective_when_sufficient_samples(self, manager, mock_handoff_service):
         mock_handoff_service.get_learned_adjustments.return_value = {
-            "adjustment": -0.05, "success_rate": 0.85, "sample_size": 20,
+            "adjustment": -0.05,
+            "success_rate": 0.85,
+            "sample_size": 20,
         }
         result = await manager.run_threshold_adjustment_loop()
 
@@ -111,7 +117,9 @@ class TestLoop1ThresholdAdjustment:
     @pytest.mark.asyncio
     async def test_marks_not_effective_when_insufficient_samples(self, manager, mock_handoff_service):
         mock_handoff_service.get_learned_adjustments.return_value = {
-            "adjustment": 0.0, "success_rate": 0.0, "sample_size": 5,
+            "adjustment": 0.0,
+            "success_rate": 0.0,
+            "sample_size": 5,
         }
         result = await manager.run_threshold_adjustment_loop()
 
@@ -323,10 +331,18 @@ class TestLoop5RoutingWeights:
     async def test_healthy_bot_weight_recovers(self, manager, mock_perf_tracker):
         # Healthy stats: P95 well under SLA, high success rate
         mock_perf_tracker.get_bot_stats.return_value = {
-            "p50": 200.0, "p95": 800.0, "p99": 1200.0,
-            "mean": 300.0, "min": 50.0, "max": 1500.0,
-            "count": 100, "success_count": 98, "error_count": 2,
-            "cache_hit_count": 60, "cache_hit_rate": 0.6, "success_rate": 0.98,
+            "p50": 200.0,
+            "p95": 800.0,
+            "p99": 1200.0,
+            "mean": 300.0,
+            "min": 50.0,
+            "max": 1500.0,
+            "count": 100,
+            "success_count": 98,
+            "error_count": 2,
+            "cache_hit_count": 60,
+            "cache_hit_rate": 0.6,
+            "success_rate": 0.98,
         }
 
         # Set initial weight below max
@@ -341,10 +357,18 @@ class TestLoop5RoutingWeights:
     async def test_sla_breach_reduces_weight(self, manager, mock_perf_tracker):
         # SLA breach: P95 > 1500ms (lead_bot process target)
         mock_perf_tracker.get_bot_stats.return_value = {
-            "p50": 800.0, "p95": 2200.0, "p99": 3000.0,
-            "mean": 1000.0, "min": 200.0, "max": 3500.0,
-            "count": 100, "success_count": 90, "error_count": 10,
-            "cache_hit_count": 30, "cache_hit_rate": 0.3, "success_rate": 0.90,
+            "p50": 800.0,
+            "p95": 2200.0,
+            "p99": 3000.0,
+            "mean": 1000.0,
+            "min": 200.0,
+            "max": 3500.0,
+            "count": 100,
+            "success_count": 90,
+            "error_count": 10,
+            "cache_hit_count": 30,
+            "cache_hit_rate": 0.3,
+            "success_rate": 0.90,
         }
 
         result = await manager.run_routing_weight_loop()
@@ -357,10 +381,18 @@ class TestLoop5RoutingWeights:
     @pytest.mark.asyncio
     async def test_weight_clamped_to_min(self, manager, mock_perf_tracker):
         mock_perf_tracker.get_bot_stats.return_value = {
-            "p50": 800.0, "p95": 2200.0, "p99": 3000.0,
-            "mean": 1000.0, "min": 200.0, "max": 3500.0,
-            "count": 100, "success_count": 90, "error_count": 10,
-            "cache_hit_count": 30, "cache_hit_rate": 0.3, "success_rate": 0.90,
+            "p50": 800.0,
+            "p95": 2200.0,
+            "p99": 3000.0,
+            "mean": 1000.0,
+            "min": 200.0,
+            "max": 3500.0,
+            "count": 100,
+            "success_count": 90,
+            "error_count": 10,
+            "cache_hit_count": 30,
+            "cache_hit_rate": 0.3,
+            "success_rate": 0.90,
         }
 
         # Set weight already at min
@@ -373,10 +405,18 @@ class TestLoop5RoutingWeights:
     @pytest.mark.asyncio
     async def test_weight_clamped_to_max(self, manager, mock_perf_tracker):
         mock_perf_tracker.get_bot_stats.return_value = {
-            "p50": 200.0, "p95": 800.0, "p99": 1200.0,
-            "mean": 300.0, "min": 50.0, "max": 1500.0,
-            "count": 100, "success_count": 98, "error_count": 2,
-            "cache_hit_count": 60, "cache_hit_rate": 0.6, "success_rate": 0.98,
+            "p50": 200.0,
+            "p95": 800.0,
+            "p99": 1200.0,
+            "mean": 300.0,
+            "min": 50.0,
+            "max": 1500.0,
+            "count": 100,
+            "success_count": 98,
+            "error_count": 2,
+            "cache_hit_count": 60,
+            "cache_hit_rate": 0.6,
+            "success_rate": 0.98,
         }
 
         # Weight already at max
@@ -388,10 +428,18 @@ class TestLoop5RoutingWeights:
     @pytest.mark.asyncio
     async def test_no_data_no_adjustment(self, manager, mock_perf_tracker):
         mock_perf_tracker.get_bot_stats.return_value = {
-            "p50": 0.0, "p95": 0.0, "p99": 0.0,
-            "mean": 0.0, "min": 0.0, "max": 0.0,
-            "count": 0, "success_count": 0, "error_count": 0,
-            "cache_hit_count": 0, "cache_hit_rate": 0.0, "success_rate": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "mean": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "count": 0,
+            "success_count": 0,
+            "error_count": 0,
+            "cache_hit_count": 0,
+            "cache_hit_rate": 0.0,
+            "success_rate": 0.0,
         }
 
         result = await manager.run_routing_weight_loop()
@@ -407,10 +455,18 @@ class TestLoop5RoutingWeights:
     async def test_low_success_rate_reduces_weight(self, manager, mock_perf_tracker):
         # Success rate < 90% even if P95 is within SLA
         mock_perf_tracker.get_bot_stats.return_value = {
-            "p50": 200.0, "p95": 800.0, "p99": 1200.0,
-            "mean": 300.0, "min": 50.0, "max": 1500.0,
-            "count": 100, "success_count": 80, "error_count": 20,
-            "cache_hit_count": 60, "cache_hit_rate": 0.6, "success_rate": 0.80,
+            "p50": 200.0,
+            "p95": 800.0,
+            "p99": 1200.0,
+            "mean": 300.0,
+            "min": 50.0,
+            "max": 1500.0,
+            "count": 100,
+            "success_count": 80,
+            "error_count": 20,
+            "cache_hit_count": 60,
+            "cache_hit_rate": 0.6,
+            "success_rate": 0.80,
         }
 
         result = await manager.run_routing_weight_loop()

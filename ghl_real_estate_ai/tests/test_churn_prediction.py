@@ -892,7 +892,11 @@ class TestChurnSystemIntegration:
         # Mock memory service responses
         integration_service.memory_service.get_lead_context.return_value = {
             "name": "Integration Test Lead",
-            "preferences": {"budget_range": "$400K-$500K", "locations": ["Rancho Cucamonga"], "property_types": ["Condo"]},
+            "preferences": {
+                "budget_range": "$400K-$500K",
+                "locations": ["Rancho Cucamonga"],
+                "property_types": ["Condo"],
+            },
         }
 
         integration_service.memory_service.get_conversation_history.return_value = [

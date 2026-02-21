@@ -141,6 +141,7 @@ class NationalMarketIntelligence:
         self.cache = get_cache_service()
         # Lazy import to avoid pulling sklearn/joblib at module load time in prod
         from ..services.claude_assistant import ClaudeAssistant  # noqa: PLC0415
+
         self.claude_assistant = ClaudeAssistant()
         self.national_registry = get_national_market_registry()
 

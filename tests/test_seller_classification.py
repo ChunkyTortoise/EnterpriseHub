@@ -132,9 +132,7 @@ class TestSellerClassification:
         """Test that detection is case-insensitive."""
         analyzer = get_seller_psychology_analyzer()
 
-        conversation_history = [
-            {"role": "user", "content": "I NEED TO SELL QUICKLY DUE TO FORECLOSURE AND DIVORCE."}
-        ]
+        conversation_history = [{"role": "user", "content": "I NEED TO SELL QUICKLY DUE TO FORECLOSURE AND DIVORCE."}]
 
         result = await analyzer.classify_seller_type(conversation_history)
 

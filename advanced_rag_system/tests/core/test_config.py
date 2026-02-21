@@ -8,8 +8,6 @@ from src.core.config import Settings, get_settings
 
 
 @pytest.mark.integration
-
-
 class TestSettings:
     """Test cases for Settings."""
 

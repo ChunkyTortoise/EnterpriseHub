@@ -25,9 +25,11 @@ except ModuleNotFoundError:
 # ROI Calculator Data & Logic
 # =============================================================================
 
+
 @dataclass
 class PricingTier:
     """Service pricing tier definition"""
+
     name: str
     price: int
     description: str
@@ -97,13 +99,13 @@ def calculate_roi(
 ) -> Dict[str, Any]:
     """
     Calculate ROI metrics for implementing Jorge Bot.
-    
+
     Args:
         monthly_leads: Number of leads per month
         avg_deal_value: Average value of a closed deal
         current_response_time: Current average response time in minutes
         conversion_rate: Current lead-to-deal conversion rate
-    
+
     Returns:
         Dictionary with calculated ROI metrics
     """
@@ -111,24 +113,24 @@ def calculate_roi(
     BOT_RESPONSE_TIME = 2  # minutes
     BOT_CONVERSION_LIFT = 0.20  # 20% improvement
     IMPLEMENTATION_COST = 5000  # Lite tier
-    
+
     # Current metrics
     leads_responded_current = monthly_leads * (1 - (current_response_time / 60))
     current_deals = leads_responded_current * conversion_rate
     current_revenue = current_deals * avg_deal_value
-    
+
     # With Jorge Bot
     leads_responded_bot = monthly_leads * (1 - (BOT_RESPONSE_TIME / 60))
     new_conversion_rate = conversion_rate * (1 + BOT_CONVERSION_LIFT)
     bot_deals = leads_responded_bot * new_conversion_rate
     bot_revenue = bot_deals * avg_deal_value
-    
+
     # ROI calculations
     additional_revenue = bot_revenue - current_revenue
     annual_additional_revenue = additional_revenue * 12
     roi_percentage = ((annual_additional_revenue - IMPLEMENTATION_COST) / IMPLEMENTATION_COST) * 100
     payback_months = IMPLEMENTATION_COST / additional_revenue if additional_revenue > 0 else 0
-    
+
     return {
         "current_revenue": current_revenue,
         "projected_revenue": bot_revenue,
@@ -142,7 +144,8 @@ def calculate_roi(
 
 def render_roi_calculator() -> None:
     """Render the simplified ROI calculator for clients."""
-    st.markdown("""
+    st.markdown(
+        """
     <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
                 padding: 2rem; border-radius: 16px; margin: 2rem 0;">
         <h2 style="color: white; margin-bottom: 1.5rem; text-align: center;">
@@ -152,11 +155,13 @@ def render_roi_calculator() -> None:
             See how much revenue you're leaving on the table with slow response times
         </p>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # Input columns
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         monthly_leads = st.number_input(
             "Monthly Leads",
@@ -166,7 +171,7 @@ def render_roi_calculator() -> None:
             step=50,
             help="How many leads do you get per month?",
         )
-    
+
     with col2:
         avg_deal_value = st.number_input(
             "Avg Deal Value ($)",
@@ -176,7 +181,7 @@ def render_roi_calculator() -> None:
             step=10000,
             help="Average commission per closed deal",
         )
-    
+
     with col3:
         current_response_time = st.number_input(
             "Current Response Time (min)",
@@ -186,7 +191,7 @@ def render_roi_calculator() -> None:
             step=5,
             help="How long does it typically take to respond?",
         )
-    
+
     conversion_rate = st.slider(
         "Current Conversion Rate",
         min_value=0.01,
@@ -196,7 +201,7 @@ def render_roi_calculator() -> None:
         format="%.0f%%",
         help="What percentage of leads become clients?",
     )
-    
+
     # Calculate ROI
     metrics = calculate_roi(
         monthly_leads=monthly_leads,
@@ -204,41 +209,43 @@ def render_roi_calculator() -> None:
         current_response_time=current_response_time,
         conversion_rate=conversion_rate,
     )
-    
+
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     # Display results
     result_col1, result_col2, result_col3, result_col4 = st.columns(4)
-    
+
     with result_col1:
         st.metric(
             label="Annual Revenue Increase",
             value=f"${metrics['annual_revenue']:,.0f}",
             delta="Projected",
         )
-    
+
     with result_col2:
         st.metric(
             label="Monthly Revenue Lift",
             value=f"${metrics['additional_revenue']:,.0f}",
         )
-    
+
     with result_col3:
         st.metric(
             label="ROI",
             value=f"{metrics['roi_percentage']:,.0f}%",
             delta="First year",
         )
-    
+
     with result_col4:
         st.metric(
             label="Payback Period",
             value=f"{metrics['payback_months']:.1f} months",
-            delta="Jorge Bot Lite" if metrics['payback_months'] <= 3 else None,
+            delta="Jorge Bot Lite" if metrics["payback_months"] <= 3 else None,
         )
-    
+
     # Context note
-    st.info(f"📊 Based on industry data: Jorge Bot typically improves conversion by 20% and response time from {current_response_time} min to 2 min.")
+    st.info(
+        f"📊 Based on industry data: Jorge Bot typically improves conversion by 20% and response time from {current_response_time} min to 2 min."
+    )
 
 
 # =============================================================================
@@ -267,7 +274,8 @@ DEMO_RESPONSES = {
 
 def render_bot_demo() -> None:
     """Render an interactive bot demo section."""
-    st.markdown("""
+    st.markdown(
+        """
     <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
                 padding: 2rem; border-radius: 16px; margin: 2rem 0;">
         <h2 style="color: white; margin-bottom: 1rem; text-align: center;">
@@ -277,8 +285,10 @@ def render_bot_demo() -> None:
             Select a bot type and send a message to see how it qualifies leads
         </p>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # Bot selection
     bot_options = ["Lead Bot", "Buyer Bot", "Seller Bot"]
     selected_bot = st.radio(
@@ -287,21 +297,21 @@ def render_bot_demo() -> None:
         horizontal=True,
         help="Each bot specializes in different lead types",
     )
-    
+
     # Demo questions based on bot type
     demo_questions = {
         "Lead Bot": ["I'm looking to buy a home", "I want to sell my house", "Hello!"],
         "Buyer Bot": ["I'm pre-approved for $500K", "What's my budget?", "I need a 3BR"],
         "Seller Bot": ["What's my home worth?", "How do I list?", "When to sell?"],
     }
-    
+
     # Chat container
     chat_container = st.container()
-    
+
     with chat_container:
         # Display demo messages
         st.markdown("#### 💬 Sample Conversation")
-        
+
         # Sample conversation based on bot
         sample_conv = [
             ("visitor", "Hi, I'm interested in buying a home"),
@@ -309,34 +319,40 @@ def render_bot_demo() -> None:
             ("visitor", "Around $500K"),
             (selected_bot, "Perfect. Are you pre-approved yet, or would you like help with that?"),
         ]
-        
+
         for role, message in sample_conv:
             if role == selected_bot:
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="background: rgba(99, 102, 241, 0.2); 
                             padding: 1rem; border-radius: 12px; 
                             margin: 0.5rem 0; border-left: 4px solid #6366F1;">
                     <strong style="color: #6366F1;">🤖 {selected_bot}:</strong><br>
                     <span style="color: #e2e8f0;">{message}</span>
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
             else:
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="background: rgba(255, 255, 255, 0.05); 
                             padding: 1rem; border-radius: 12px; 
                             margin: 0.5rem 0; border-left: 4px solid #10B981;">
                     <strong style="color: #10B981;">👤 You:</strong><br>
                     <span style="color: #e2e8f0;">{message}</span>
                 </div>
-                """, unsafe_allow_html=True)
-        
+                """,
+                    unsafe_allow_html=True,
+                )
+
         # Quick try buttons
         st.markdown("##### Quick Demo Questions:")
         cols = st.columns(3)
         for i, question in enumerate(demo_questions[selected_bot]):
             with cols[i]:
                 st.button(question, key=f"demo_{selected_bot}_{i}", disabled=True)
-        
+
         st.caption("🔒 Demo mode - Try these phrases to see bot responses")
 
 
@@ -344,17 +360,18 @@ def render_bot_demo() -> None:
 # Main Portfolio Landing Page
 # =============================================================================
 
+
 def render_portfolio_landing() -> None:
     """
     Main entry point for the portfolio landing page.
-    
+
     This is designed for non-technical clients who want to see:
     1. Business impact (ROI)
     2. Live bot demo
     3. Pricing tiers
     4. Call to action
     """
-    
+
     # Page config
     if st:
         st.set_page_config(
@@ -362,9 +379,10 @@ def render_portfolio_landing() -> None:
             page_icon="🏠",
             layout="wide",
         )
-    
+
     # Custom CSS
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     .main-header {
         background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
@@ -443,12 +461,15 @@ def render_portfolio_landing() -> None:
         width: 100%;
     }
     </style>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # =====================================================================
     # Hero Section
     # =====================================================================
-    st.markdown("""
+    st.markdown(
+        """
     <div class="main-header">
         <h1>🤖 Jorge Bot</h1>
         <h2 style="color: #6366F1; font-size: 2rem; margin-bottom: 1rem;">
@@ -459,99 +480,120 @@ def render_portfolio_landing() -> None:
             integrates with your CRM, and delivers ready-to-close clients to your team.
         </p>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # =====================================================================
     # Key Benefits (Business Impact First)
     # =====================================================================
     st.markdown("## 📈 Business Impact")
-    
+
     benefit_col1, benefit_col2, benefit_col3, benefit_col4 = st.columns(4)
-    
+
     with benefit_col1:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚡</div>
             <div style="font-size: 2rem; font-weight: 800; color: #10B981;">95%</div>
             <div style="color: #64748b;">Faster Response</div>
         </div>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     with benefit_col2:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💰</div>
             <div style="font-size: 2rem; font-weight: 800; color: #10B981;">89%</div>
             <div style="color: #64748b;">Cost Reduction</div>
         </div>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     with benefit_col3:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📈</div>
             <div style="font-size: 2rem; font-weight: 800; color: #10B981;">133%</div>
             <div style="color: #64748b;">Conversion Increase</div>
         </div>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     with benefit_col4:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎯</div>
             <div style="font-size: 2rem; font-weight: 800; color: #10B981;">92%</div>
             <div style="color: #64748b;">Lead Score Accuracy</div>
         </div>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     st.markdown("---")
-    
+
     # =====================================================================
     # ROI Calculator
     # =====================================================================
     render_roi_calculator()
-    
+
     st.markdown("---")
-    
+
     # =====================================================================
     # Bot Demo
     # =====================================================================
     render_bot_demo()
-    
+
     st.markdown("---")
-    
+
     # =====================================================================
     # Pricing Section
     # =====================================================================
     st.markdown("## 💼 Investment Options")
-    
+
     pricing_cols = st.columns(4)
-    
+
     for i, tier in enumerate(PRICING_TIERS):
         with pricing_cols[i]:
             popular_class = "popular" if tier.popular else ""
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="pricing-card {popular_class}">
                 <div class="price-label">{tier.name}</div>
                 <div class="price-tag">${tier.price:,}</div>
                 <div style="color: #64748b; margin-bottom: 1rem;">{tier.description}</div>
                 <ul class="feature-list">
-            """, unsafe_allow_html=True)
-            
+            """,
+                unsafe_allow_html=True,
+            )
+
             for feature in tier.features:
                 st.markdown(f"<li>✅ {feature}</li>", unsafe_allow_html=True)
-            
-            st.markdown("""
+
+            st.markdown(
+                """
                 </ul>
             </div>
-            """, unsafe_allow_html=True)
-    
+            """,
+                unsafe_allow_html=True,
+            )
+
     st.markdown("---")
-    
+
     # =====================================================================
     # Call to Action
     # =====================================================================
-    st.markdown("""
+    st.markdown(
+        """
     <div style="background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); 
                 padding: 3rem; border-radius: 20px; text-align: center; margin: 2rem 0;">
         <h2 style="color: white; margin-bottom: 1rem;">Ready to Stop Losing Leads?</h2>
@@ -564,20 +606,25 @@ def render_portfolio_landing() -> None:
             📅 Book Your Free Strategy Call
         </a>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # =====================================================================
     # Footer
     # =====================================================================
     st.markdown("---")
-    st.markdown("""
+    st.markdown(
+        """
     <div style="text-align: center; padding: 2rem; color: #64748b;">
         <p>🏠 Jorge Bot by EnterpriseHub | Real Estate AI Solutions</p>
         <p style="font-size: 0.9rem;">
             Serving Rancho Cucamonga & Southern California
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 # =============================================================================

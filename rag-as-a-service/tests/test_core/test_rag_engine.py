@@ -1,16 +1,17 @@
 """Tests for RAG engine orchestration pipeline."""
 
-import pytest
 from unittest.mock import AsyncMock
 
+import pytest
+
+from rag_service.core.embedding_service import EmbeddingService
+from rag_service.core.query_expander import ExpandedQuery, QueryExpander
 from rag_service.core.rag_engine import (
     RAGEngine,
     RAGResponse,
     SourceReference,
 )
-from rag_service.core.embedding_service import EmbeddingService
-from rag_service.core.retriever import Retriever, RetrievedChunk
-from rag_service.core.query_expander import QueryExpander, ExpandedQuery
+from rag_service.core.retriever import RetrievedChunk, Retriever
 
 
 @pytest.fixture
@@ -58,9 +59,7 @@ def rag_engine(mock_embedding_service, mock_retriever, mock_query_expander, mock
 class TestRAGEngine:
     """Test RAG engine pipeline orchestration."""
 
-    async def test_basic_query_without_expansion(
-        self, rag_engine, mock_retriever, mock_llm_client
-    ):
+    async def test_basic_query_without_expansion(self, rag_engine, mock_retriever, mock_llm_client):
         """Test basic RAG query without expansion."""
         # Arrange
         chunks = [
@@ -234,9 +233,7 @@ class TestRAGEngine:
         assert "couldn't find any relevant information" in result.answer
         assert len(result.sources) == 0
 
-    async def test_collection_filter(
-        self, rag_engine, mock_retriever, mock_embedding_service
-    ):
+    async def test_collection_filter(self, rag_engine, mock_retriever, mock_embedding_service):
         """Test querying with collection filter."""
         # Arrange
         collection_id = "col123"

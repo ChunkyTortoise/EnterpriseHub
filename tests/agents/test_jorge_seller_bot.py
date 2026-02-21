@@ -526,7 +526,10 @@ class TestGenerateJorgeResponse:
 
         result = await bot.generate_jorge_response(seller_state_warm)
         # Should fall back to the hardcoded default (friendly tone)
-        assert result["response_content"] == "Happy to help with any questions about your property. What would be most useful to know?"
+        assert (
+            result["response_content"]
+            == "Happy to help with any questions about your property. What would be most useful to know?"
+        )
 
 
 # =========================================================================
@@ -943,9 +946,7 @@ class TestSellerBotCMAAndMarket:
             mock_seller_intent.return_value = mock_seller_intent_instance
 
             mock_claude_instance = MagicMock()
-            mock_claude_instance.analyze_with_context = AsyncMock(
-                return_value={"content": "Test response"}
-            )
+            mock_claude_instance.analyze_with_context = AsyncMock(return_value={"content": "Test response"})
             mock_claude.return_value = mock_claude_instance
 
             mock_events_instance = MagicMock()
@@ -1080,9 +1081,7 @@ class TestSellerBotCMAAndMarket:
     @pytest.mark.asyncio
     async def test_generate_cma_handles_error(self, mock_seller_deps):
         """Test CMA gracefully handles generation errors."""
-        mock_seller_deps["cma"].generate_report = AsyncMock(
-            side_effect=Exception("CMA service unavailable")
-        )
+        mock_seller_deps["cma"].generate_report = AsyncMock(side_effect=Exception("CMA service unavailable"))
         bot = JorgeSellerBot(config=JorgeFeatureConfig(enable_bot_intelligence=False))
         state = self._make_seller_state()
         result = await bot.generate_cma(state)

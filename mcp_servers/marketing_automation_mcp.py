@@ -38,6 +38,7 @@ mcp = FastMCP("MarketingAutomation")
 # Data Models
 # =============================================================================
 
+
 class CampaignStatus(str, Enum):
     DRAFT = "draft"
     SCHEDULED = "scheduled"
@@ -67,6 +68,7 @@ class LeadStatus(str, Enum):
 @dataclass
 class EmailCampaign:
     """Email campaign definition"""
+
     campaign_id: str
     name: str
     subject: str
@@ -90,6 +92,7 @@ class EmailCampaign:
 @dataclass
 class CampaignMetrics:
     """Campaign performance metrics"""
+
     campaign_id: str
     campaign_name: str
     sent_count: int
@@ -108,6 +111,7 @@ class CampaignMetrics:
 @dataclass
 class LeadNurtureSequence:
     """Lead nurturing sequence"""
+
     sequence_id: str
     name: str
     description: str
@@ -122,6 +126,7 @@ class LeadNurtureSequence:
 @dataclass
 class ContactRecord:
     """Contact/lead information"""
+
     contact_id: str
     email: str
     first_name: str
@@ -140,6 +145,7 @@ class ContactRecord:
 @dataclass
 class AutomationWorkflow:
     """Marketing automation workflow"""
+
     workflow_id: str
     name: str
     description: str
@@ -154,28 +160,23 @@ class AutomationWorkflow:
 # Email Client (HubSpot/Mailchimp/SendGrid - Mock implementation)
 # =============================================================================
 
+
 class EmailClient:
     """Client for email marketing platforms"""
-    
+
     def __init__(self):
         self.hubspot_key = os.getenv("HUBSPOT_API_KEY", "")
         self.mailchimp_key = os.getenv("MAILCHIMP_API_KEY", "")
         self.mailchimp_server = os.getenv("MAILCHIMP_SERVER_PREFIX", "us1")
         self.sendgrid_key = os.getenv("SENDGRID_API_KEY", "")
-    
+
     async def create_campaign(
-        self,
-        name: str,
-        subject: str,
-        body_html: str,
-        from_name: str,
-        from_email: str,
-        recipient_list: List[str]
+        self, name: str, subject: str, body_html: str, from_name: str, from_email: str, recipient_list: List[str]
     ) -> EmailCampaign:
         """Create an email campaign"""
         # Mock - would use HubSpot/Mailchimp API
         campaign_id = f"CMP{self._generate_id()}"
-        
+
         return EmailCampaign(
             campaign_id=campaign_id,
             name=name,
@@ -194,17 +195,13 @@ class EmailClient:
             open_count=0,
             click_count=0,
             bounce_count=0,
-            unsubscribe_count=0
+            unsubscribe_count=0,
         )
-    
+
     async def send_campaign(self, campaign_id: str) -> Dict[str, Any]:
         """Send or schedule a campaign"""
-        return {
-            "campaign_id": campaign_id,
-            "status": "scheduled",
-            "scheduled_at": datetime.now().isoformat()
-        }
-    
+        return {"campaign_id": campaign_id, "status": "scheduled", "scheduled_at": datetime.now().isoformat()}
+
     async def get_campaign_metrics(self, campaign_id: str) -> CampaignMetrics:
         """Get campaign performance metrics"""
         return CampaignMetrics(
@@ -220,25 +217,22 @@ class EmailClient:
             revenue_generated=15000.0,
             roas=4.5,
             period_start="2026-01-01",
-            period_end="2026-01-31"
+            period_end="2026-01-31",
         )
-    
-    async def get_all_campaigns(
-        self,
-        status: Optional[CampaignStatus] = None,
-        limit: int = 20
-    ) -> List[EmailCampaign]:
+
+    async def get_all_campaigns(self, status: Optional[CampaignStatus] = None, limit: int = 20) -> List[EmailCampaign]:
         """Get all campaigns"""
         # Mock - would fetch from API
         return []
-    
+
     def _html_to_text(self, html: str) -> str:
         """Convert HTML to plain text"""
         import re
-        text = re.sub(r'<[^>]+>', '', html)
-        text = re.sub(r'\s+', ' ', text)
+
+        text = re.sub(r"<[^>]+>", "", html)
+        text = re.sub(r"\s+", " ", text)
         return text.strip()
-    
+
     def _generate_id(self) -> str:
         return secrets.token_hex(8)
 
@@ -247,23 +241,24 @@ class EmailClient:
 # CRM Client for Contacts
 # =============================================================================
 
+
 class CRMClient:
     """Client for CRM/contact management"""
-    
+
     def __init__(self):
         self.hubspot_key = os.getenv("HUBSPOT_API_KEY", "")
-    
+
     async def create_contact(
         self,
         email: str,
         first_name: str,
         last_name: str,
         phone: Optional[str] = None,
-        properties: Optional[Dict[str, Any]] = None
+        properties: Optional[Dict[str, Any]] = None,
     ) -> ContactRecord:
         """Create a new contact"""
         contact_id = f"CNT{self._generate_id()}"
-        
+
         return ContactRecord(
             contact_id=contact_id,
             email=email,
@@ -277,9 +272,9 @@ class CRMClient:
             properties=properties or {},
             created_at=datetime.now().isoformat(),
             last_updated=datetime.now().isoformat(),
-            last_contacted=None
+            last_contacted=None,
         )
-    
+
     async def get_contact(self, contact_id: str) -> Optional[ContactRecord]:
         """Get contact by ID"""
         return ContactRecord(
@@ -295,44 +290,36 @@ class CRMClient:
             properties={"budget": 500000, "preferred_areas": ["Rancho Cucamonga"]},
             created_at="2026-01-15T10:00:00Z",
             last_updated="2026-02-10T14:30:00Z",
-            last_contacted="2026-02-12T09:00:00Z"
+            last_contacted="2026-02-12T09:00:00Z",
         )
-    
-    async def update_contact(
-        self,
-        contact_id: str,
-        properties: Dict[str, Any]
-    ) -> ContactRecord:
+
+    async def update_contact(self, contact_id: str, properties: Dict[str, Any]) -> ContactRecord:
         """Update contact properties"""
         contact = await self.get_contact(contact_id)
         if contact:
             contact.properties.update(properties)
             contact.last_updated = datetime.now().isoformat()
         return contact
-    
+
     async def search_contacts(
         self,
         query: Optional[str] = None,
         status: Optional[LeadStatus] = None,
         tags: Optional[List[str]] = None,
-        limit: int = 20
+        limit: int = 20,
     ) -> List[ContactRecord]:
         """Search contacts"""
         return []
-    
-    async def add_contact_to_sequence(
-        self,
-        contact_id: str,
-        sequence_id: str
-    ) -> Dict[str, Any]:
+
+    async def add_contact_to_sequence(self, contact_id: str, sequence_id: str) -> Dict[str, Any]:
         """Add contact to a nurture sequence"""
         return {
             "contact_id": contact_id,
             "sequence_id": sequence_id,
             "enrolled_at": datetime.now().isoformat(),
-            "status": "active"
+            "status": "active",
         }
-    
+
     def _generate_id(self) -> str:
         return secrets.token_hex(8)
 
@@ -341,12 +328,13 @@ class CRMClient:
 # Analytics Client
 # =============================================================================
 
+
 class AnalyticsClient:
     """Client for marketing analytics"""
-    
+
     def __init__(self):
         pass
-    
+
     async def get_dashboard_summary(self, date_range: str = "30d") -> Dict[str, Any]:
         """Get analytics dashboard summary"""
         return {
@@ -360,15 +348,15 @@ class AnalyticsClient:
             "top_performing_campaigns": [
                 {"name": "February Newsletter", "open_rate": 0.45},
                 {"name": "New Listing Alert", "open_rate": 0.42},
-                {"name": "Market Update", "open_rate": 0.38}
+                {"name": "Market Update", "open_rate": 0.38},
             ],
             "channel_breakdown": {
                 "email": {"sent": 12000, "conversions": 100},
                 "sms": {"sent": 2000, "conversions": 15},
-                "social": {"sent": 1000, "conversions": 10}
-            }
+                "social": {"sent": 1000, "conversions": 10},
+            },
         }
-    
+
     async def get_lead_source_metrics(self) -> List[Dict[str, Any]]:
         """Get lead source performance metrics"""
         return [
@@ -376,20 +364,22 @@ class AnalyticsClient:
             {"source": "Google Ads", "leads": 80, "conversion_rate": 0.08, "revenue": 24000},
             {"source": "Facebook", "leads": 60, "conversion_rate": 0.10, "revenue": 18000},
             {"source": "Referral", "leads": 40, "conversion_rate": 0.25, "revenue": 35000},
-            {"source": "Zillow", "leads": 100, "conversion_rate": 0.15, "revenue": 52000}
+            {"source": "Zillow", "leads": 100, "conversion_rate": 0.15, "revenue": 52000},
         ]
-    
+
     async def get_conversion_timeline(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get conversion metrics over time"""
         data = []
         for i in range(days):
             date = datetime.now() - timedelta(days=days - i)
-            data.append({
-                "date": date.strftime("%Y-%m-%d"),
-                "conversions": 3 + (i % 7),
-                "revenue": 2000 + (i * 100),
-                "leads": 10 + (i % 5)
-            })
+            data.append(
+                {
+                    "date": date.strftime("%Y-%m-%d"),
+                    "conversions": 3 + (i % 7),
+                    "revenue": 2000 + (i * 100),
+                    "leads": 10 + (i % 5),
+                }
+            )
         return data
 
 
@@ -404,12 +394,13 @@ analytics_client = AnalyticsClient()
 
 def _sanitize_html(html: str) -> str:
     """Strip script tags from HTML to prevent XSS."""
-    return re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    return re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
 
 
 # =============================================================================
 # MCP Tools - Campaign Management
 # =============================================================================
+
 
 @mcp.tool()
 async def create_email_campaign(
@@ -419,11 +410,11 @@ async def create_email_campaign(
     from_name: str,
     from_email: str,
     recipient_list: List[str],
-    preheader: Optional[str] = None
+    preheader: Optional[str] = None,
 ) -> str:
     """
     Create a new email campaign.
-    
+
     Args:
         name: Campaign name
         subject: Email subject line
@@ -432,7 +423,7 @@ async def create_email_campaign(
         from_email: Sender email address
         recipient_list: List of recipient email addresses
         preheader: Email preheader text
-    
+
     Returns:
         JSON string containing campaign details
     """
@@ -444,14 +435,14 @@ async def create_email_campaign(
             body_html=body_html,
             from_name=from_name,
             from_email=from_email,
-            recipient_list=recipient_list
+            recipient_list=recipient_list,
         )
-        
+
         if preheader:
             campaign.preheader = preheader
-        
+
         return json.dumps(asdict(campaign), indent=2, default=str)
-    
+
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -459,15 +450,15 @@ async def create_email_campaign(
 @mcp.tool()
 async def schedule_campaign(
     campaign_id: str,
-    scheduled_at: str  # ISO format
+    scheduled_at: str,  # ISO format
 ) -> str:
     """
     Schedule a campaign for sending.
-    
+
     Args:
         campaign_id: The campaign ID
         scheduled_at: When to send (ISO 8601 format)
-    
+
     Returns:
         JSON string confirming the scheduling
     """
@@ -483,10 +474,10 @@ async def schedule_campaign(
 async def send_campaign_now(campaign_id: str) -> str:
     """
     Send a campaign immediately.
-    
+
     Args:
         campaign_id: The campaign ID
-    
+
     Returns:
         JSON string confirming the send
     """
@@ -503,10 +494,10 @@ async def send_campaign_now(campaign_id: str) -> str:
 async def get_campaign_details(campaign_id: str) -> str:
     """
     Get detailed information about a campaign.
-    
+
     Args:
         campaign_id: The campaign ID
-    
+
     Returns:
         JSON string containing campaign details
     """
@@ -515,7 +506,7 @@ async def get_campaign_details(campaign_id: str) -> str:
         for campaign in campaigns:
             if campaign.campaign_id == campaign_id:
                 return json.dumps(asdict(campaign), indent=2, default=str)
-        
+
         return json.dumps({"error": "Campaign not found", "campaign_id": campaign_id})
     except Exception as e:
         return json.dumps({"error": str(e), "campaign_id": campaign_id})
@@ -525,10 +516,10 @@ async def get_campaign_details(campaign_id: str) -> str:
 async def get_campaign_performance(campaign_id: str) -> str:
     """
     Get performance metrics for a campaign.
-    
+
     Args:
         campaign_id: The campaign ID
-    
+
     Returns:
         JSON string containing performance metrics
     """
@@ -540,17 +531,14 @@ async def get_campaign_performance(campaign_id: str) -> str:
 
 
 @mcp.tool()
-async def list_campaigns(
-    status: Optional[str] = None,
-    limit: int = 20
-) -> str:
+async def list_campaigns(status: Optional[str] = None, limit: int = 20) -> str:
     """
     List all email campaigns with optional filtering.
-    
+
     Args:
         status: Filter by status (draft, scheduled, sent, etc.)
         limit: Maximum number of campaigns to return
-    
+
     Returns:
         JSON string containing campaign list
     """
@@ -558,11 +546,7 @@ async def list_campaigns(
         status_enum = CampaignStatus(status) if status else None
         campaigns = await email_client.get_all_campaigns(status=status_enum, limit=limit)
         result = [asdict(c) for c in campaigns]
-        return json.dumps({
-            "campaigns": result,
-            "count": len(result),
-            "filter_status": status
-        }, indent=2, default=str)
+        return json.dumps({"campaigns": result, "count": len(result), "filter_status": status}, indent=2, default=str)
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -571,34 +555,31 @@ async def list_campaigns(
 # MCP Tools - Contact Management
 # =============================================================================
 
+
 @mcp.tool()
 async def create_contact(
     email: str,
     first_name: str,
     last_name: str,
     phone: Optional[str] = None,
-    properties: Optional[Dict[str, Any]] = None
+    properties: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Create a new contact in the CRM.
-    
+
     Args:
         email: Contact email address
         first_name: First name
         last_name: Last name
         phone: Phone number
         properties: Additional properties
-    
+
     Returns:
         JSON string containing contact details
     """
     try:
         contact = await crm_client.create_contact(
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone,
-            properties=properties
+            email=email, first_name=first_name, last_name=last_name, phone=phone, properties=properties
         )
         return json.dumps(asdict(contact), indent=2, default=str)
     except Exception as e:
@@ -609,10 +590,10 @@ async def create_contact(
 async def get_contact(contact_id: str) -> str:
     """
     Get contact details.
-    
+
     Args:
         contact_id: The contact ID
-    
+
     Returns:
         JSON string containing contact details
     """
@@ -626,17 +607,14 @@ async def get_contact(contact_id: str) -> str:
 
 
 @mcp.tool()
-async def update_contact_properties(
-    contact_id: str,
-    properties: Dict[str, Any]
-) -> str:
+async def update_contact_properties(contact_id: str, properties: Dict[str, Any]) -> str:
     """
     Update contact properties.
-    
+
     Args:
         contact_id: The contact ID
         properties: Properties to update
-    
+
     Returns:
         JSON string containing updated contact
     """
@@ -649,36 +627,25 @@ async def update_contact_properties(
 
 @mcp.tool()
 async def search_contacts(
-    query: Optional[str] = None,
-    status: Optional[str] = None,
-    tags: Optional[List[str]] = None,
-    limit: int = 20
+    query: Optional[str] = None, status: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 20
 ) -> str:
     """
     Search for contacts with filters.
-    
+
     Args:
         query: Search query
         status: Filter by lead status
         tags: Filter by tags
         limit: Maximum results
-    
+
     Returns:
         JSON string containing matching contacts
     """
     try:
         status_enum = LeadStatus(status) if status else None
-        contacts = await crm_client.search_contacts(
-            query=query,
-            status=status_enum,
-            tags=tags,
-            limit=limit
-        )
+        contacts = await crm_client.search_contacts(query=query, status=status_enum, tags=tags, limit=limit)
         result = [asdict(c) for c in contacts]
-        return json.dumps({
-            "contacts": result,
-            "count": len(result)
-        }, indent=2, default=str)
+        return json.dumps({"contacts": result, "count": len(result)}, indent=2, default=str)
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -687,18 +654,16 @@ async def search_contacts(
 # MCP Tools - Lead Nurturing
 # =============================================================================
 
+
 @mcp.tool()
-async def enroll_in_sequence(
-    contact_id: str,
-    sequence_name: str
-) -> str:
+async def enroll_in_sequence(contact_id: str, sequence_name: str) -> str:
     """
     Enroll a contact in a lead nurturing sequence.
-    
+
     Args:
         contact_id: The contact ID
         sequence_name: Name of the sequence
-    
+
     Returns:
         JSON string confirming enrollment
     """
@@ -710,19 +675,18 @@ async def enroll_in_sequence(
             "follow_up": "SEQ_FOLLOW_UP",
             "reactivation": "SEQ_REACT",
             "post_showing": "SEQ_POST_SHOWING",
-            "closing": "SEQ_CLOSING"
+            "closing": "SEQ_CLOSING",
         }
-        
+
         sequence_id = sequences.get(sequence_name.lower().replace(" ", "_"))
         if not sequence_id:
-            return json.dumps({
-                "error": f"Unknown sequence: {sequence_name}",
-                "available_sequences": list(sequences.keys())
-            })
-        
+            return json.dumps(
+                {"error": f"Unknown sequence: {sequence_name}", "available_sequences": list(sequences.keys())}
+            )
+
         result = await crm_client.add_contact_to_sequence(contact_id, sequence_id)
         return json.dumps(result, indent=2, default=str)
-    
+
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -731,7 +695,7 @@ async def enroll_in_sequence(
 async def get_available_sequences() -> str:
     """
     Get list of available lead nurturing sequences.
-    
+
     Returns:
         JSON string containing sequence definitions
     """
@@ -743,9 +707,9 @@ async def get_available_sequences() -> str:
             "steps": [
                 {"day": 0, "action": "send_email", "template": "welcome"},
                 {"day": 2, "action": "send_email", "template": "introductions"},
-                {"day": 5, "action": "check_in", "template": "questions"}
+                {"day": 5, "action": "check_in", "template": "questions"},
             ],
-            "is_active": True
+            "is_active": True,
         },
         {
             "id": "SEQ_NEW_LEAD",
@@ -755,9 +719,9 @@ async def get_available_sequences() -> str:
                 {"day": 0, "action": "send_email", "template": "thank_you"},
                 {"day": 1, "action": "send_sms", "template": "quick_followup"},
                 {"day": 3, "action": "send_email", "template": "market_info"},
-                {"day": 7, "action": "task", "template": "call_schedule"}
+                {"day": 7, "action": "task", "template": "call_schedule"},
             ],
-            "is_active": True
+            "is_active": True,
         },
         {
             "id": "SEQ_POST_SHOWING",
@@ -766,12 +730,12 @@ async def get_available_sequences() -> str:
             "steps": [
                 {"day": 0, "action": "send_email", "template": "thank_you_showing"},
                 {"day": 1, "action": "send_email", "template": "property_details"},
-                {"day": 3, "action": "check_in", "template": "feedback"}
+                {"day": 3, "action": "check_in", "template": "feedback"},
             ],
-            "is_active": True
-        }
+            "is_active": True,
+        },
     ]
-    
+
     return json.dumps({"sequences": sequences}, indent=2, default=str)
 
 
@@ -779,14 +743,15 @@ async def get_available_sequences() -> str:
 # MCP Tools - Analytics & Reporting
 # =============================================================================
 
+
 @mcp.tool()
 async def get_analytics_dashboard(date_range: str = "30d") -> str:
     """
     Get marketing analytics dashboard summary.
-    
+
     Args:
         date_range: Time period (7d, 30d, 90d, 1y)
-    
+
     Returns:
         JSON string containing dashboard metrics
     """
@@ -801,17 +766,21 @@ async def get_analytics_dashboard(date_range: str = "30d") -> str:
 async def get_lead_source_performance() -> str:
     """
     Get performance metrics by lead source.
-    
+
     Returns:
         JSON string containing source breakdown
     """
     try:
         metrics = await analytics_client.get_lead_source_metrics()
-        return json.dumps({
-            "sources": metrics,
-            "total_leads": sum(m["leads"] for m in metrics),
-            "total_revenue": sum(m["revenue"] for m in metrics)
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "sources": metrics,
+                "total_leads": sum(m["leads"] for m in metrics),
+                "total_revenue": sum(m["revenue"] for m in metrics),
+            },
+            indent=2,
+            default=str,
+        )
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -820,21 +789,25 @@ async def get_lead_source_performance() -> str:
 async def get_conversion_timeline(days: int = 30) -> str:
     """
     Get conversion data over time.
-    
+
     Args:
         days: Number of days to look back
-    
+
     Returns:
         JSON string containing timeline data
     """
     try:
         timeline = await analytics_client.get_conversion_timeline(days)
-        return json.dumps({
-            "timeline": timeline,
-            "period_days": days,
-            "total_conversions": sum(d["conversions"] for d in timeline),
-            "total_revenue": sum(d["revenue"] for d in timeline)
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "timeline": timeline,
+                "period_days": days,
+                "total_conversions": sum(d["conversions"] for d in timeline),
+                "total_revenue": sum(d["revenue"] for d in timeline),
+            },
+            indent=2,
+            default=str,
+        )
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -843,79 +816,83 @@ async def get_conversion_timeline(days: int = 30) -> str:
 # MCP Tools - Templates
 # =============================================================================
 
+
 @mcp.tool()
-async def create_campaign_template(
-    template_name: str,
-    subject: str,
-    body_html: str,
-    category: str = "general"
-) -> str:
+async def create_campaign_template(template_name: str, subject: str, body_html: str, category: str = "general") -> str:
     """
     Save a campaign template for reuse.
-    
+
     Args:
         template_name: Name for the template
         subject: Default subject line
         body_html: HTML body
         category: Template category
-    
+
     Returns:
         JSON string confirming template creation
     """
     body_html = _sanitize_html(body_html)
     template_id = "TPL" + secrets.token_hex(8)
-    
-    return json.dumps({
-        "template_id": template_id,
-        "template_name": template_name,
-        "subject": subject,
-        "category": category,
-        "created_at": datetime.now().isoformat()
-    })
+
+    return json.dumps(
+        {
+            "template_id": template_id,
+            "template_name": template_name,
+            "subject": subject,
+            "category": category,
+            "created_at": datetime.now().isoformat(),
+        }
+    )
 
 
 # =============================================================================
 # MCP Resources
 # =============================================================================
 
+
 @mcp.resource("marketing://campaign-types")
 async def get_campaign_types() -> str:
     """Get available campaign types"""
-    return json.dumps({
-        "campaign_types": [
-            {"value": ct.value, "description": desc}
-            for ct, desc in [
-                (CampaignType.EMAIL, "Email marketing campaign"),
-                (CampaignType.SMS, "SMS text message campaign"),
-                (CampaignType.SOCIAL, "Social media campaign"),
-                (CampaignType.MULTI_CHANNEL, "Multi-channel campaign")
+    return json.dumps(
+        {
+            "campaign_types": [
+                {"value": ct.value, "description": desc}
+                for ct, desc in [
+                    (CampaignType.EMAIL, "Email marketing campaign"),
+                    (CampaignType.SMS, "SMS text message campaign"),
+                    (CampaignType.SOCIAL, "Social media campaign"),
+                    (CampaignType.MULTI_CHANNEL, "Multi-channel campaign"),
+                ]
             ]
-        ]
-    })
+        }
+    )
 
 
 @mcp.resource("marketing://lead-statuses")
 async def get_lead_statuses() -> str:
     """Get available lead statuses"""
-    return json.dumps({
-        "lead_statuses": [
-            {"value": ls.value, "description": desc}
-            for ls, desc in [
-                (LeadStatus.NEW, "New lead - not yet contacted"),
-                (LeadStatus.CONTACTED, "Initial contact made"),
-                (LeadStatus.QUALIFIED, "Lead has been qualified"),
-                (LeadStatus.PROPOSITION, "Proposal or offer made"),
-                (LeadStatus.NEGOTIATION, "In negotiation phase"),
-                (LeadStatus.CLOSED_WON, "Successfully closed"),
-                (LeadStatus.CLOSED_LOST, "Lost lead")
+    return json.dumps(
+        {
+            "lead_statuses": [
+                {"value": ls.value, "description": desc}
+                for ls, desc in [
+                    (LeadStatus.NEW, "New lead - not yet contacted"),
+                    (LeadStatus.CONTACTED, "Initial contact made"),
+                    (LeadStatus.QUALIFIED, "Lead has been qualified"),
+                    (LeadStatus.PROPOSITION, "Proposal or offer made"),
+                    (LeadStatus.NEGOTIATION, "In negotiation phase"),
+                    (LeadStatus.CLOSED_WON, "Successfully closed"),
+                    (LeadStatus.CLOSED_LOST, "Lost lead"),
+                ]
             ]
-        ]
-    })
+        }
+    )
 
 
 # =============================================================================
 # MCP Prompts
 # =============================================================================
+
 
 @mcp.prompt()
 def generate_campaign_report() -> str:
@@ -961,13 +938,14 @@ def generate_lead_engagement_strategy() -> str:
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         import asyncio
-        
+
         async def test():
             result = await get_analytics_dashboard("30d")
             print(result)
-        
+
         asyncio.run(test())
     else:
         mcp.run()

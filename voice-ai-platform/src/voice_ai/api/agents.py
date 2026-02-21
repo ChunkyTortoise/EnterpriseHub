@@ -80,9 +80,7 @@ async def list_agents(request: Request) -> list[dict[str, Any]]:
 
 
 @router.put("/{agent_id}", response_model=AgentPersonaResponse)
-async def update_agent(
-    agent_id: str, body: AgentPersonaUpdate, request: Request
-) -> dict[str, Any]:
+async def update_agent(agent_id: str, body: AgentPersonaUpdate, request: Request) -> dict[str, Any]:
     """Update an agent persona."""
     raise HTTPException(status_code=404, detail="Agent not found")
 

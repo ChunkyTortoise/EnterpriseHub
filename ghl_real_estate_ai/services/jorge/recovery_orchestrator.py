@@ -149,14 +149,10 @@ class RecoveryOrchestrator:
                     )
 
             except Exception as exc:
-                logger.error(
-                    f"Failed to attempt recovery for {contact.contact_id}: {exc}"
-                )
+                logger.error(f"Failed to attempt recovery for {contact.contact_id}: {exc}")
                 summary["failed"] += 1
 
-        logger.info(
-            f"Recovery orchestration complete: {summary['successful']}/{summary['total_attempted']} successful"
-        )
+        logger.info(f"Recovery orchestration complete: {summary['successful']}/{summary['total_attempted']} successful")
         return summary
 
     async def _attempt_recovery(self, contact: AbandonedContact) -> bool:
@@ -181,18 +177,14 @@ class RecoveryOrchestrator:
                 channel=contact.contact_metadata.get("preferred_channel", "sms"),
             )
 
-            logger.info(
-                f"Recovery message sent to {contact.contact_id} (stage: {contact.current_stage.value})"
-            )
+            logger.info(f"Recovery message sent to {contact.contact_id} (stage: {contact.current_stage.value})")
             return True
 
         except Exception as exc:
             logger.error(f"Recovery attempt failed for {contact.contact_id}: {exc}")
             return False
 
-    async def _generate_recovery_message(
-        self, contact: AbandonedContact
-    ) -> Optional[str]:
+    async def _generate_recovery_message(self, contact: AbandonedContact) -> Optional[str]:
         """Generate personalized recovery message with market trigger.
 
         Strategy:
@@ -217,9 +209,7 @@ class RecoveryOrchestrator:
 
         # Extract personalization variables
         name = contact.contact_metadata.get("name", "there")
-        interest_area = contact.contact_metadata.get(
-            "interest_area", "Rancho Cucamonga"
-        )
+        interest_area = contact.contact_metadata.get("interest_area", "Rancho Cucamonga")
 
         # Format market trigger text
         if market_trigger:
@@ -243,9 +233,7 @@ class RecoveryOrchestrator:
             logger.error(f"Template formatting error: {e}")
             return None
 
-    async def _get_relevant_market_trigger(
-        self, contact: AbandonedContact
-    ) -> Optional[MarketTrigger]:
+    async def _get_relevant_market_trigger(self, contact: AbandonedContact) -> Optional[MarketTrigger]:
         """Find a relevant market trigger for contact based on preferences.
 
         Checks contact's watchlist and generates appropriate trigger.

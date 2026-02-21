@@ -68,9 +68,7 @@ def buyer_preferences():
 class TestPropertyComparator:
     """Tests for PropertyComparator."""
 
-    def test_compare_ranks_by_fit_score(
-        self, comparator, sample_properties, buyer_preferences
-    ):
+    def test_compare_ranks_by_fit_score(self, comparator, sample_properties, buyer_preferences):
         """Higher fit properties should be ranked first."""
         matrix = comparator.compare(sample_properties, buyer_preferences)
 
@@ -82,9 +80,7 @@ class TestPropertyComparator:
         for s in scores:
             assert 0.0 <= s <= 100.0
 
-    def test_best_overall_selected_correctly(
-        self, comparator, sample_properties, buyer_preferences
-    ):
+    def test_best_overall_selected_correctly(self, comparator, sample_properties, buyer_preferences):
         """best_overall should be the property with the highest fit_score."""
         matrix = comparator.compare(sample_properties, buyer_preferences)
 
@@ -94,9 +90,7 @@ class TestPropertyComparator:
         for prop in matrix.properties[1:]:
             assert matrix.best_overall.fit_score >= prop.fit_score
 
-    def test_best_value_lowest_price_per_sqft(
-        self, comparator, sample_properties, buyer_preferences
-    ):
+    def test_best_value_lowest_price_per_sqft(self, comparator, sample_properties, buyer_preferences):
         """best_value should have the lowest price-per-sqft ratio."""
         matrix = comparator.compare(sample_properties, buyer_preferences)
 
@@ -118,9 +112,7 @@ class TestPropertyComparator:
         assert matrix.best_value.property_data["address"] == expected_best["address"]
         assert expected_best["address"] == "456 Elm Dr"
 
-    def test_closest_to_budget_calculation(
-        self, comparator, sample_properties, buyer_preferences
-    ):
+    def test_closest_to_budget_calculation(self, comparator, sample_properties, buyer_preferences):
         """closest_to_budget should be under but nearest to budget_max."""
         matrix = comparator.compare(sample_properties, buyer_preferences)
 
@@ -135,9 +127,7 @@ class TestPropertyComparator:
         # All properties are under 600K, so the closest should be 599K (123 Oak St)
         assert matrix.closest_to_budget.property_data["address"] == "123 Oak St"
 
-    def test_pros_cons_generated(
-        self, comparator, buyer_preferences
-    ):
+    def test_pros_cons_generated(self, comparator, buyer_preferences):
         """Under-budget property should have pros; over-budget should have cons."""
         under_budget_prop = {
             "address": "100 Under Rd",
@@ -158,19 +148,11 @@ class TestPropertyComparator:
             "features": [],
         }
 
-        matrix = comparator.compare(
-            [under_budget_prop, over_budget_prop], buyer_preferences
-        )
+        matrix = comparator.compare([under_budget_prop, over_budget_prop], buyer_preferences)
 
         # Find each property in ranked list
-        under_ranked = next(
-            p for p in matrix.properties
-            if p.property_data["address"] == "100 Under Rd"
-        )
-        over_ranked = next(
-            p for p in matrix.properties
-            if p.property_data["address"] == "200 Over Ave"
-        )
+        under_ranked = next(p for p in matrix.properties if p.property_data["address"] == "100 Under Rd")
+        over_ranked = next(p for p in matrix.properties if p.property_data["address"] == "200 Over Ave")
 
         # Under-budget property should have pros
         assert len(under_ranked.pros) > 0
@@ -184,9 +166,7 @@ class TestPropertyComparator:
         assert any("Fewer bedrooms" in con for con in over_ranked.cons)
         assert any("Older construction" in con for con in over_ranked.cons)
 
-    def test_sms_summary_under_320_chars(
-        self, comparator, sample_properties, buyer_preferences
-    ):
+    def test_sms_summary_under_320_chars(self, comparator, sample_properties, buyer_preferences):
         """SMS summary must be under 320 characters."""
         matrix = comparator.compare(sample_properties, buyer_preferences)
         summary = comparator.generate_summary(matrix)

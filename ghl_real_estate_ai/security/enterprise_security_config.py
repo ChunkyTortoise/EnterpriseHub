@@ -95,7 +95,11 @@ class CORSConfig:
 
     # Production allowed origins (strict)
     allowed_origins: List[str] = field(
-        default_factory=lambda: ["https://app.gohighlevel.com", "https://*.gohighlevel.com", "https://your-ontario_mills.com"]
+        default_factory=lambda: [
+            "https://app.gohighlevel.com",
+            "https://*.gohighlevel.com",
+            "https://your-ontario_mills.com",
+        ]
     )
 
     # Development additional origins

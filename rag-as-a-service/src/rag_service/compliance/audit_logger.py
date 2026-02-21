@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AuditEntry:
     """Single audit log entry."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     tenant_id: str = ""
     user_id: str | None = None
@@ -21,9 +22,7 @@ class AuditEntry:
     resource_id: str | None = None
     metadata: dict = field(default_factory=dict)
     ip_address: str | None = None
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class AuditLogger:

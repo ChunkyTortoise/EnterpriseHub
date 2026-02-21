@@ -490,8 +490,7 @@ class DatabaseShardingService:
             return
 
         logger.info(
-            f"Migrating data for location {location_id} "
-            f"from shard {current_shard_id} to shard {target_shard_id}"
+            f"Migrating data for location {location_id} from shard {current_shard_id} to shard {target_shard_id}"
         )
 
         tables = ["leads", "contacts", "deals", "conversations", "lead_touchpoints"]
@@ -519,11 +518,10 @@ class DatabaseShardingService:
                     async with target_pool.acquire() as tgt_conn:
                         for row in rows:
                             cols = list(row.keys())
-                            placeholders = ", ".join(f"${i+1}" for i in range(len(cols)))
+                            placeholders = ", ".join(f"${i + 1}" for i in range(len(cols)))
                             col_names = ", ".join(cols)
                             await tgt_conn.execute(
-                                f"INSERT INTO {table} ({col_names}) VALUES ({placeholders}) "
-                                f"ON CONFLICT DO NOTHING",
+                                f"INSERT INTO {table} ({col_names}) VALUES ({placeholders}) ON CONFLICT DO NOTHING",
                                 *[row[c] for c in cols],
                             )
                     migrated_count += len(rows)

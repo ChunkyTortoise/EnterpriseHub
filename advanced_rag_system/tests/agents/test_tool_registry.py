@@ -14,8 +14,6 @@ from src.agents.tool_registry import (
 
 
 @pytest.mark.unit
-
-
 class TestToolResult:
     """Tests for ToolResult model."""
 

@@ -41,9 +41,7 @@ class ComparisonMatrix:
 class PropertyComparator:
     """Compares properties against buyer preferences and generates rankings."""
 
-    def compare(
-        self, properties: List[Dict], buyer_preferences: Dict
-    ) -> ComparisonMatrix:
+    def compare(self, properties: List[Dict], buyer_preferences: Dict) -> ComparisonMatrix:
         """Compare properties and generate a ranked comparison matrix."""
         if not properties:
             return ComparisonMatrix()
@@ -56,9 +54,7 @@ class PropertyComparator:
             score = self._calculate_fit_score(prop, buyer_preferences)
             pros = self._identify_pros(prop, buyer_preferences)
             cons = self._identify_cons(prop, buyer_preferences)
-            price_vs = self._price_vs_budget(
-                prop.get("price", 0), budget_min, budget_max
-            )
+            price_vs = self._price_vs_budget(prop.get("price", 0), budget_min, budget_max)
 
             ranked.append(
                 RankedProperty(
@@ -78,15 +74,11 @@ class PropertyComparator:
         if ranked:
             matrix.best_overall = ranked[0]
             matrix.best_value = self._find_best_value(ranked)
-            matrix.closest_to_budget = self._find_closest_to_budget(
-                ranked, budget_max
-            )
+            matrix.closest_to_budget = self._find_closest_to_budget(ranked, budget_max)
 
         return matrix
 
-    def rank_by_fit(
-        self, properties: List[Dict], preferences: Dict
-    ) -> List[RankedProperty]:
+    def rank_by_fit(self, properties: List[Dict], preferences: Dict) -> List[RankedProperty]:
         """Rank properties by fit score."""
         matrix = self.compare(properties, preferences)
         return matrix.properties
@@ -206,9 +198,7 @@ class PropertyComparator:
 
         return cons
 
-    def _price_vs_budget(
-        self, price: float, budget_min: float, budget_max: float
-    ) -> str:
+    def _price_vs_budget(self, price: float, budget_min: float, budget_max: float) -> str:
         """Classify price relative to budget."""
         if budget_max <= 0 or price <= 0:
             return "unknown"
@@ -234,18 +224,12 @@ class PropertyComparator:
                     best = r
         return best
 
-    def _find_closest_to_budget(
-        self, ranked: List[RankedProperty], budget_max: float
-    ) -> RankedProperty:
+    def _find_closest_to_budget(self, ranked: List[RankedProperty], budget_max: float) -> RankedProperty:
         """Find property closest to (but not exceeding) budget."""
         if budget_max <= 0:
             return ranked[0]
 
-        under_budget = [
-            r
-            for r in ranked
-            if r.property_data.get("price", 0) <= budget_max
-        ]
+        under_budget = [r for r in ranked if r.property_data.get("price", 0) <= budget_max]
         if not under_budget:
             return ranked[-1]  # Least over budget
 

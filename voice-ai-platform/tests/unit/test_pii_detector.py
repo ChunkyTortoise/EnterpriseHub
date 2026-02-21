@@ -60,7 +60,7 @@ class TestPIIDetection:
         email_results = [r for r in results if r.entity_type == "EMAIL_ADDRESS"]
         assert len(email_results) == 1
         r = email_results[0]
-        assert text[r.start:r.end] == "test@example.com"
+        assert text[r.start : r.end] == "test@example.com"
 
 
 class TestPIIRedaction:

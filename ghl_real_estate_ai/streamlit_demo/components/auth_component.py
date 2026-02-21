@@ -133,6 +133,7 @@ def require_permission(user: User, resource: str, action: str) -> bool:
         return True
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"Permission check failed for {resource}:{action}: {e}")
         return False
 

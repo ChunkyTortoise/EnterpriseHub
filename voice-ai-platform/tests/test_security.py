@@ -51,7 +51,9 @@ class TestCORSLockdown:
 
     @pytest.mark.asyncio
     async def test_cors_respects_env_var(self):
-        with patch.dict(os.environ, {"ALLOWED_ORIGINS": "https://app.example.com,https://admin.example.com"}):
+        with patch.dict(
+            os.environ, {"ALLOWED_ORIGINS": "https://app.example.com,https://admin.example.com"}
+        ):
             app = create_app()
             transport = ASGITransport(app=app, raise_app_exceptions=False)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -62,7 +64,9 @@ class TestCORSLockdown:
                         "Access-Control-Request-Method": "GET",
                     },
                 )
-                assert response.headers.get("access-control-allow-origin") == "https://app.example.com"
+                assert (
+                    response.headers.get("access-control-allow-origin") == "https://app.example.com"
+                )
 
 
 class TestAPIKeyAuth:

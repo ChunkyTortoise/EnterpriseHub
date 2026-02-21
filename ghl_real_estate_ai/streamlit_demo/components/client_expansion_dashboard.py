@@ -7,7 +7,6 @@ framework. Provides real-time insights, opportunity prioritization, action
 tracking, and revenue forecasting for scaling $130K → $400K MRR.
 """
 
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go

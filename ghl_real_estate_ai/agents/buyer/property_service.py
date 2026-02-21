@@ -22,7 +22,7 @@ class PropertyService:
         self,
         property_matcher: Optional[PropertyMatcher] = None,
         event_publisher: Optional[EventPublisher] = None,
-        budget_config: Optional[BuyerBudgetConfig] = None
+        budget_config: Optional[BuyerBudgetConfig] = None,
     ):
         self.property_matcher = property_matcher or PropertyMatcher()
         self.event_publisher = event_publisher
@@ -79,13 +79,9 @@ class PropertyService:
                         budget=budget_max, beds=beds, neighborhood=neighborhood, limit=5
                     )
             elif inspect.iscoroutinefunction(self.property_matcher.find_matches):
-                matches = await self.property_matcher.find_matches(
-                    preferences=preferences, limit=5
-                )
+                matches = await self.property_matcher.find_matches(preferences=preferences, limit=5)
             else:
-                matches = self.property_matcher.find_matches(
-                    preferences=preferences, limit=5
-                )
+                matches = self.property_matcher.find_matches(preferences=preferences, limit=5)
 
             # Emit property match event
             if self.event_publisher:

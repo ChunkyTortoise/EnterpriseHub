@@ -89,6 +89,7 @@ def process_document(file, file_hash: str) -> Dict:
         file.seek(0)
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).error(f"Error reading file content: {e}")
         content = file.read()
     file_type = file.type

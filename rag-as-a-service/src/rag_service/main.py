@@ -8,6 +8,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
+from rag_service.api.auth import router as auth_router
+from rag_service.api.billing import router as billing_router
+from rag_service.api.collections import router as collections_router
+from rag_service.api.documents import router as documents_router
+from rag_service.api.queries import router as queries_router
+from rag_service.api.teams import router as teams_router
+from rag_service.api.tenants import router as tenants_router
+from rag_service.api.webhooks import router as webhooks_router
 from rag_service.billing.quota_service import QuotaEnforcementMiddleware
 from rag_service.billing.usage_tracker import UsageTracker
 from rag_service.config import get_settings
@@ -18,14 +26,6 @@ from rag_service.middleware.security import APIKeyMiddleware
 from rag_service.middleware.security_headers import SecurityHeadersMiddleware
 from rag_service.multi_tenant.isolation import TenantMiddleware
 from rag_service.multi_tenant.tenant_router import TenantRouter
-from rag_service.api.documents import router as documents_router
-from rag_service.api.queries import router as queries_router
-from rag_service.api.collections import router as collections_router
-from rag_service.api.tenants import router as tenants_router
-from rag_service.api.auth import router as auth_router
-from rag_service.api.billing import router as billing_router
-from rag_service.api.teams import router as teams_router
-from rag_service.api.webhooks import router as webhooks_router
 
 setup_logging()
 logger = get_logger(__name__)

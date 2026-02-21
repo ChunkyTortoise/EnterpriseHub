@@ -522,17 +522,13 @@ class OfflineSyncService:
                     "status": "open",
                     "monetaryValue": operation.data.get("price", 0),
                     "customFields": {
-                        k: v for k, v in operation.data.items()
-                        if k not in ("contact_id", "address", "price")
+                        k: v for k, v in operation.data.items() if k not in ("contact_id", "address", "price")
                     },
                 }
                 result = await ghl_service.client.create_opportunity(payload)
                 return result is not None
             elif operation.operation_type == SyncOperationType.UPDATE:
-                update_fields = {
-                    k: v for k, v in operation.data.items()
-                    if k not in ("contact_id",)
-                }
+                update_fields = {k: v for k, v in operation.data.items() if k not in ("contact_id",)}
                 result = await ghl_service.client.update_opportunity(operation.entity_id, update_fields)
                 return result is not None
             elif operation.operation_type == SyncOperationType.DELETE:
@@ -593,23 +589,17 @@ class OfflineSyncService:
         merged_data.update(resolution_data)
         return merged_data
 
-    async def _apply_resolution_to_server(
-        self, conflict: SyncConflict, resolved_data: Dict[str, Any]
-    ) -> bool:
+    async def _apply_resolution_to_server(self, conflict: SyncConflict, resolved_data: Dict[str, Any]) -> bool:
         """ROADMAP-057: Apply resolved conflict data back to GHL entity."""
         try:
             ghl_service = GHLService()
             if conflict.entity_type == "lead":
-                result = await ghl_service.client.update_contact(
-                    conflict.entity_id, resolved_data
-                )
+                result = await ghl_service.client.update_contact(conflict.entity_id, resolved_data)
                 if result:
                     logger.info(f"Applied conflict resolution to GHL lead {conflict.entity_id}")
                     return True
             elif conflict.entity_type == "property":
-                result = await ghl_service.client.update_opportunity(
-                    conflict.entity_id, resolved_data
-                )
+                result = await ghl_service.client.update_opportunity(conflict.entity_id, resolved_data)
                 if result:
                     logger.info(f"Applied conflict resolution to GHL property {conflict.entity_id}")
                     return True
@@ -658,17 +648,17 @@ class OfflineSyncService:
                     updated_at = contact.get("dateUpdated") or contact.get("updatedAt")
                     if updated_at:
                         try:
-                            contact_updated = datetime.fromisoformat(
-                                updated_at.replace("Z", "").split("+")[0]
-                            )
+                            contact_updated = datetime.fromisoformat(updated_at.replace("Z", "").split("+")[0])
                             if contact_updated > since_ts:
-                                updates.append({
-                                    "entity_type": "lead",
-                                    "entity_id": contact.get("id"),
-                                    "action": "updated",
-                                    "data": contact,
-                                    "server_timestamp": updated_at,
-                                })
+                                updates.append(
+                                    {
+                                        "entity_type": "lead",
+                                        "entity_id": contact.get("id"),
+                                        "action": "updated",
+                                        "data": contact,
+                                        "server_timestamp": updated_at,
+                                    }
+                                )
                         except (ValueError, TypeError):
                             pass
             except Exception as api_err:
@@ -715,19 +705,25 @@ class OfflineSyncService:
             return {"created": [], "updated": [], "deleted": []}
 
     async def log_entity_change(
-        self, location_id: str, entity_type: str, entity_id: str,
-        action: str, data: Dict[str, Any],
+        self,
+        location_id: str,
+        entity_type: str,
+        entity_id: str,
+        action: str,
+        data: Dict[str, Any],
     ) -> None:
         """ROADMAP-055: Record an entity change to the audit log for delta sync."""
         try:
             audit_key = f"audit_log:{location_id}:{entity_type}"
             audit_entries = await self.cache.get(audit_key) or []
-            audit_entries.append({
-                "entity_id": entity_id,
-                "action": action,
-                "data": data,
-                "timestamp": datetime.utcnow().isoformat(),
-            })
+            audit_entries.append(
+                {
+                    "entity_id": entity_id,
+                    "action": action,
+                    "data": data,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
             audit_entries = audit_entries[-1000:]
             await self.cache.set(audit_key, audit_entries, ttl=86400 * 30)
         except Exception as e:
@@ -754,11 +750,13 @@ class OfflineSyncService:
             try:
                 errors_key = "sync_errors"
                 errors = await self.cache.get(errors_key) or []
-                errors.append({
-                    "entity_id": entity_id,
-                    "error": f"checksum_computation_failed: {str(e)}",
-                    "timestamp": datetime.utcnow().isoformat(),
-                })
+                errors.append(
+                    {
+                        "entity_id": entity_id,
+                        "error": f"checksum_computation_failed: {str(e)}",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
                 await self.cache.set(errors_key, errors[-500:], ttl=86400 * 7)
             except Exception:
                 pass

@@ -181,7 +181,9 @@ class ClaudeAssistant:
         market_id: Optional[str] = None,
         churn_reason: Optional[ChurnReason] = None,
     ) -> Dict[str, Any]:
-        return await self._retention.generate_market_aware_retention_script(lead_data, risk_data, market_id, churn_reason)
+        return await self._retention.generate_market_aware_retention_script(
+            lead_data, risk_data, market_id, churn_reason
+        )
 
     def _get_recovery_template(self, clv_tier, churn_reason):
         return self._retention._get_recovery_template(clv_tier, churn_reason)
@@ -199,7 +201,9 @@ class ClaudeAssistant:
         lead_preferences: Dict[str, Any],
         conversation_history: Optional[List[Dict]] = None,
     ) -> str:
-        return await self._semantic_match.explain_match_with_claude(property_data, lead_preferences, conversation_history)
+        return await self._semantic_match.explain_match_with_claude(
+            property_data, lead_preferences, conversation_history
+        )
 
     def _generate_semantic_key(self, property_data: Dict[str, Any], lead_preferences: Dict[str, Any]) -> str:
         return self._semantic_match._generate_semantic_key(property_data, lead_preferences)

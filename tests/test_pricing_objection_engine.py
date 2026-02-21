@@ -281,9 +281,7 @@ class TestHighestConfidenceWins:
     def test_picks_higher_confidence(self, engine):
         """When a message matches multiple types, highest confidence wins."""
         # "zestimate" is 0.9 for ANCHORING; "renovated" is 0.7 for IMPROVEMENT
-        result = engine.detect_objection(
-            "The Zestimate is higher and we renovated the place"
-        )
+        result = engine.detect_objection("The Zestimate is higher and we renovated the place")
         assert result.detected is True
         assert result.objection_type == ObjectionType.ANCHORING
         assert result.confidence == 0.9
@@ -343,9 +341,5 @@ class TestAllTemplatesNonEmpty:
         """Every objection type at every graduation level produces non-empty response text."""
         for level in ResponseGraduation:
             template = RESPONSE_TEMPLATES.get(objection_type, {}).get(level, "")
-            assert template, (
-                f"Missing template for {objection_type.value} at {level.value}"
-            )
-            assert len(template) > 10, (
-                f"Template too short for {objection_type.value} at {level.value}"
-            )
+            assert template, f"Missing template for {objection_type.value} at {level.value}"
+            assert len(template) > 10, f"Template too short for {objection_type.value} at {level.value}"

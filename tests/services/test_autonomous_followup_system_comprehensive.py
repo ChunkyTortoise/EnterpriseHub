@@ -81,7 +81,11 @@ class TestBehavioralTriggerEngine:
         return {
             "property_searches": [
                 {"timestamp": datetime.now().isoformat(), "location": "Rancho Cucamonga", "type": "condo"},
-                {"timestamp": (datetime.now() - timedelta(hours=2)).isoformat(), "location": "Rancho Cucamonga", "type": "house"},
+                {
+                    "timestamp": (datetime.now() - timedelta(hours=2)).isoformat(),
+                    "location": "Rancho Cucamonga",
+                    "type": "house",
+                },
             ],
             "pricing_tool_uses": [
                 {"timestamp": datetime.now().isoformat(), "property_id": "123", "estimated_value": 450000}

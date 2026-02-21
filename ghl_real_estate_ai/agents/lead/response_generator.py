@@ -1,6 +1,7 @@
 """
 Response Generator for constructing lead bot messages.
 """
+
 from typing import Any, Dict, List, Optional
 
 from ghl_real_estate_ai.agents.lead.constants import MILESTONE_MESSAGES
@@ -221,9 +222,7 @@ class ResponseGenerator:
         """Construct showing coordination message."""
         urgency_msg = ""
         if inventory_days is not None and inventory_days < 15:
-            urgency_msg = (
-                f" This market is moving fast ({inventory_days} days avg), so we should see it soon."
-            )
+            urgency_msg = f" This market is moving fast ({inventory_days} days avg), so we should see it soon."
 
         return f"Great choice! I'm coordinating with the listing agent for {address}.{urgency_msg} Does tomorrow afternoon work for a tour?"
 

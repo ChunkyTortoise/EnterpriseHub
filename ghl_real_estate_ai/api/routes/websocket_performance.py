@@ -457,7 +457,7 @@ def _calculate_connection_duration(connected_at: str) -> str:
             return f"{int(minutes)}m {int(seconds)}s"
         else:
             return f"{int(seconds)}s"
-    except ValueError: # Changed bare except to specific ValueError
+    except ValueError:  # Changed bare except to specific ValueError
         return "unknown"
 
 

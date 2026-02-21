@@ -73,6 +73,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
         st.sidebar.info(f"SRV FILE: {inspect.getfile(EnhancedLeadIntelligence)}")
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).debug(f"EnhancedLeadIntelligence service not found: {e}")
         st.sidebar.warning("SRV NOT FOUND")
     st.header("🧠 Lead Intelligence Hub")
@@ -225,6 +226,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     st.session_state[analysis_cache_key] = analysis_result
                 except Exception as e:
                     import logging
+
                     logging.getLogger(__name__).error(f"Analysis failed for {selected_lead_name}: {str(e)}")
                     st.error(f"Analysis failed: {str(e)}")
     if selected_lead_name != "-- Select a Lead --":
@@ -431,6 +433,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                         conversation_engine.render_intelligence_panel([], lead_context)
                     except Exception as e:
                         import logging
+
                         logging.getLogger(__name__).error(f"Basic intelligence panel render error: {e}")
                         st.info(
                             "💡 **Enhanced Intelligence Offline**: Basic conversation analysis temporarily unavailable"
@@ -690,6 +693,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                     health_score = pred_result.get("conversion_probability", health_score)
             except Exception as e:
                 import logging
+
                 logging.getLogger(__name__).error(f"Lead intelligence sidebar toggle error: {e}")
                 pass
             lead_data_enhanced = {
@@ -1176,6 +1180,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                         st.markdown("</div>", unsafe_allow_html=True)
             except (ImportError, Exception) as e:
                 import logging
+
                 logging.getLogger(__name__).debug(f"Smart Segmentation module unavailable: {e}")
                 st.info(f"Smart Segmentation module unavailable")
     with tab8:
@@ -1694,5 +1699,6 @@ def _render_lead_roi_sidebar():
             )
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).error(f"Error rendering lead ROI sidebar: {e}")
         pass

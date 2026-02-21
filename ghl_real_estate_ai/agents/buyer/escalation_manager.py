@@ -20,20 +20,11 @@ logger = get_logger(__name__)
 class EscalationManager:
     """Handles human escalation and compliance violations."""
 
-    def __init__(
-        self,
-        ghl_client: Optional[GHLClient] = None,
-        event_publisher: Optional[EventPublisher] = None
-    ):
+    def __init__(self, ghl_client: Optional[GHLClient] = None, event_publisher: Optional[EventPublisher] = None):
         self.ghl_client = ghl_client or GHLClient()
         self.event_publisher = event_publisher
 
-    async def escalate_to_human_review(
-        self,
-        buyer_id: str,
-        reason: str,
-        context: Dict
-    ) -> Dict:
+    async def escalate_to_human_review(self, buyer_id: str, reason: str, context: Dict) -> Dict:
         """
         Escalate buyer conversation to human agent review.
 
@@ -179,9 +170,7 @@ class EscalationManager:
 
         # 6. Determine final status
         ghl_actions_succeeded = (
-            escalation_result["tag_added"] or 
-            escalation_result["note_added"] or 
-            escalation_result["workflow_triggered"]
+            escalation_result["tag_added"] or escalation_result["note_added"] or escalation_result["workflow_triggered"]
         )
         if ghl_actions_succeeded:
             escalation_result["status"] = "escalated"
@@ -200,12 +189,7 @@ class EscalationManager:
 
         return escalation_result
 
-    async def escalate_compliance_violation(
-        self,
-        buyer_id: str,
-        violation_type: str,
-        evidence: Dict
-    ) -> Dict:
+    async def escalate_compliance_violation(self, buyer_id: str, violation_type: str, evidence: Dict) -> Dict:
         """
         Handle compliance violation detection and escalation.
 

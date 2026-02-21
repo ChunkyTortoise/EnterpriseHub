@@ -169,7 +169,7 @@ class ClaudeConciergeOrchestrator:
         # These empty dicts are kept only as an in-process fallback when Redis
         # is unavailable so that existing callers don't break.
         self.context_cache: Dict = {}
-        self.session_contexts: Dict = {}   # fallback only — use _get_session_history()
+        self.session_contexts: Dict = {}  # fallback only — use _get_session_history()
         self.generated_suggestions: Dict = {}  # fallback only — use store_suggestion()
 
         # Performance metrics
@@ -358,9 +358,7 @@ class ClaudeConciergeOrchestrator:
                     "jorge_preferences": jorge_preferences,
                     "concierge_mode": mode.value,
                     "intelligence_scope": scope.value,
-                    "session_history": await self._get_session_history(
-                        resolved_tenant, context.session_id
-                    ),
+                    "session_history": await self._get_session_history(resolved_tenant, context.session_id),
                 },
                 prompt=intelligence_prompt,
                 max_tokens=4000,
@@ -390,9 +388,7 @@ class ClaudeConciergeOrchestrator:
             await self._track_concierge_analytics(context, mode, scope, structured_response)
 
             # Update session context for continuity
-            await self._update_session_context(
-                resolved_tenant, context.session_id, context, structured_response
-            )
+            await self._update_session_context(resolved_tenant, context.session_id, context, structured_response)
 
             self.metrics["requests_processed"] += 1
             self.metrics["total_response_time_ms"] += structured_response.response_time_ms
@@ -727,7 +723,11 @@ class ClaudeConciergeOrchestrator:
 
         request = ClaudeRequest(
             task_type=ClaudeTaskType.INTERVENTION_STRATEGY,
-            context={"platform_context": asdict(context), "client_profile": client_profile, "presentation_context": presentation_context},
+            context={
+                "platform_context": asdict(context),
+                "client_profile": client_profile,
+                "presentation_context": presentation_context,
+            },
             prompt=presentation_prompt,
             max_tokens=3000,
         )
@@ -796,10 +796,7 @@ class ClaudeConciergeOrchestrator:
             "cache_hit_rate": round(cache_rate, 3),
             "active_sessions": len(self.session_contexts),  # in-process fallback count
             "learning_events": self.metrics["learning_events"],
-            "tenant_breakdown": {
-                tid: self.get_tenant_stats(tid)
-                for tid in self._tenant_metrics
-            },
+            "tenant_breakdown": {tid: self.get_tenant_stats(tid) for tid in self._tenant_metrics},
         }
 
     # ========================================================================
@@ -1874,6 +1871,7 @@ class JorgeBusinessRules:
     def get_workflow_id(self, bot_type: str) -> Optional[str]:
         """Map bot type to GHL workflow ID from environment variables."""
         import os
+
         workflow_map = {
             "hot_seller": os.getenv("HOT_SELLER_WORKFLOW_ID"),
             "warm_seller": os.getenv("WARM_SELLER_WORKFLOW_ID"),

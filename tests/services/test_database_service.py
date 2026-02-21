@@ -319,7 +319,10 @@ class TestCommunicationLogging:
             "status": "sent",
             "campaign_id": "campaign_456",
             "template_id": "template_789",
-            "metadata": {"subject": "North Rancho Cucamonga Properties Available", "template_name": "property_followup"},
+            "metadata": {
+                "subject": "North Rancho Cucamonga Properties Available",
+                "template_name": "property_followup",
+            },
         }
 
         result = await db_service_real.log_communication(comm_data)

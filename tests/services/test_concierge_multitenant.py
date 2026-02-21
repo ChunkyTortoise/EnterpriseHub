@@ -35,6 +35,7 @@ from ghl_real_estate_ai.services.claude_concierge_orchestrator import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def dental_config() -> ConciergeClientConfig:
     return ConciergeClientConfig(
@@ -77,6 +78,7 @@ def jorge_config() -> ConciergeClientConfig:
 # 3.1 Config-Driven Knowledge Engine
 # ---------------------------------------------------------------------------
 
+
 class TestConfigDrivenKnowledgeEngine:
     def test_from_config_populates_features(self, dental_config):
         engine = PlatformKnowledgeEngine(client_config=dental_config)
@@ -115,14 +117,17 @@ class TestConfigDrivenKnowledgeEngine:
 # 3.2 Domain-Agnostic System Prompt
 # ---------------------------------------------------------------------------
 
+
 class TestDomainAgnosticSystemPrompt:
     def _make_orchestrator(self, config: ConciergeClientConfig) -> ClaudeConciergeOrchestrator:
-        with patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"):
+        with (
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"),
+        ):
             orch = ClaudeConciergeOrchestrator(client_config=config)
         return orch
 
@@ -163,18 +168,23 @@ class TestDomainAgnosticSystemPrompt:
 # 3.3 Multi-Tenant Session Management — Redis Key Isolation
 # ---------------------------------------------------------------------------
 
+
 class TestMultiTenantSessionIsolation:
     def _make_orchestrator_with_mock_cache(self, config: ConciergeClientConfig):
         mock_cache = AsyncMock()
         mock_cache.get = AsyncMock(return_value=None)
         mock_cache.set = AsyncMock()
 
-        with patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service", return_value=mock_cache), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"):
+        with (
+            patch(
+                "ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service", return_value=mock_cache
+            ),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"),
+        ):
             orch = ClaudeConciergeOrchestrator(client_config=config)
             orch.cache = mock_cache
         return orch, mock_cache
@@ -266,10 +276,13 @@ class TestMultiTenantSessionIsolation:
 # 3.4 Pluggable Agent Registry
 # ---------------------------------------------------------------------------
 
+
 class TestPluggableAgentRegistry:
     def _make_coordinator(self) -> MultiAgentCoordinator:
         engine = PlatformKnowledgeEngine()
-        with patch("ghl_real_estate_ai.agents.claude_concierge_agent.get_enhanced_bot_orchestrator", return_value=MagicMock()):
+        with patch(
+            "ghl_real_estate_ai.agents.claude_concierge_agent.get_enhanced_bot_orchestrator", return_value=MagicMock()
+        ):
             return MultiAgentCoordinator(knowledge_engine=engine)
 
     def test_coordinator_has_built_in_registry(self):
@@ -343,6 +356,7 @@ class TestPluggableAgentRegistry:
 # ---------------------------------------------------------------------------
 # 3.5 Config Package — YAML Files Present and Parseable
 # ---------------------------------------------------------------------------
+
 
 class TestClientConfigPackage:
     _project_root = Path(__file__).parent.parent.parent
@@ -420,19 +434,23 @@ class TestClientConfigPackage:
 # Loose-end fixes: tenant-scoped cache key, tenant_id threading
 # ---------------------------------------------------------------------------
 
+
 class TestTenantScopedCacheKey:
     def _make_orchestrator(self, config: ConciergeClientConfig) -> ClaudeConciergeOrchestrator:
-        with patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"), \
-             patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"):
+        with (
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeMemorySystem"),
+            patch("ghl_real_estate_ai.services.claude_concierge_orchestrator.JorgeBusinessRules"),
+        ):
             orch = ClaudeConciergeOrchestrator(client_config=config)
         return orch
 
     def test_cache_key_includes_tenant_id(self, jorge_config):
         from ghl_real_estate_ai.services.claude_concierge_orchestrator import IntelligenceScope, PlatformContext
+
         orch = self._make_orchestrator(jorge_config)
         ctx = PlatformContext(current_page="leads", user_role="agent", bot_statuses={})
         key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "jorge")
@@ -441,14 +459,18 @@ class TestTenantScopedCacheKey:
 
     def test_cache_keys_differ_by_tenant(self, jorge_config):
         from ghl_real_estate_ai.services.claude_concierge_orchestrator import IntelligenceScope, PlatformContext
+
         orch = self._make_orchestrator(jorge_config)
         ctx = PlatformContext(current_page="leads", user_role="agent", bot_statuses={})
         jorge_key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "jorge")
-        dental_key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "dental")
+        dental_key = orch._generate_context_cache_key(
+            ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW, "dental"
+        )
         assert jorge_key != dental_key
 
     def test_cache_key_defaults_to_config_tenant(self, dental_config):
         from ghl_real_estate_ai.services.claude_concierge_orchestrator import IntelligenceScope, PlatformContext
+
         orch = self._make_orchestrator(dental_config)
         ctx = PlatformContext(current_page="leads", user_role="agent", bot_statuses={})
         key = orch._generate_context_cache_key(ctx, ConciergeMode.PROACTIVE, IntelligenceScope.WORKFLOW)

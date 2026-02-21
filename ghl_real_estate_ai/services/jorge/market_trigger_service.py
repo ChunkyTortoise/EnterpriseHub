@@ -42,9 +42,7 @@ class MarketTrigger:
     title: str
     message: str
     data: Dict[str, Any] = field(default_factory=dict)
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     expires_at: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -70,9 +68,7 @@ class ContactWatchlist:
     min_beds: Optional[int] = None
     property_types: List[str] = field(default_factory=list)
     preferred_areas: List[str] = field(default_factory=list)
-    last_active: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    last_active: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # Message templates
@@ -147,9 +143,7 @@ class MarketTriggerService:
             if watchlist.preferred_areas and area not in watchlist.preferred_areas:
                 continue
 
-            priority = (
-                TriggerPriority.HIGH if drop_percent >= 10 else TriggerPriority.MEDIUM
-            )
+            priority = TriggerPriority.HIGH if drop_percent >= 10 else TriggerPriority.MEDIUM
 
             try:
                 message = TRIGGER_TEMPLATES[TriggerType.PRICE_DROP].format(
@@ -196,11 +190,7 @@ class MarketTriggerService:
             # Rough monthly payment impact: ~$60/mo per 0.25% on $500K
             payment_change = (rate_delta / 0.25) * 60 * (budget / 500000)
 
-            priority = (
-                TriggerPriority.HIGH
-                if abs(rate_delta) >= 0.5
-                else TriggerPriority.MEDIUM
-            )
+            priority = TriggerPriority.HIGH if abs(rate_delta) >= 0.5 else TriggerPriority.MEDIUM
 
             try:
                 message = TRIGGER_TEMPLATES[TriggerType.RATE_CHANGE].format(
@@ -238,15 +228,10 @@ class MarketTriggerService:
         """Generate triggers for neighborhood sales."""
         triggers = []
 
-        comparison = (
-            "above" if price_per_sqft > area_avg_per_sqft else "below"
-        )
+        comparison = "above" if price_per_sqft > area_avg_per_sqft else "below"
 
         for contact_id, watchlist in self._watchlists.items():
-            if (
-                watchlist.preferred_areas
-                and neighborhood not in watchlist.preferred_areas
-            ):
+            if watchlist.preferred_areas and neighborhood not in watchlist.preferred_areas:
                 continue
 
             try:

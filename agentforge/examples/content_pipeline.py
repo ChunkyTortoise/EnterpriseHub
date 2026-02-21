@@ -6,6 +6,7 @@ No API keys required — fully self-contained.
 Run:
     python examples/content_pipeline.py
 """
+
 import asyncio
 from dataclasses import dataclass, field
 
@@ -20,9 +21,18 @@ class AgentResult:
 
 
 MOCK_RESEARCH = {
-    "ai": {"trends": ["LLM agents", "MCP protocol", "zero-dep frameworks"], "stats": "Market growing 35% YoY"},
-    "saas": {"trends": ["usage-based pricing", "PLG", "AI copilots"], "stats": "Average ARR growth 28%"},
-    "default": {"trends": ["digital transformation", "automation", "data-driven decisions"], "stats": "Adoption up 40%"},
+    "ai": {
+        "trends": ["LLM agents", "MCP protocol", "zero-dep frameworks"],
+        "stats": "Market growing 35% YoY",
+    },
+    "saas": {
+        "trends": ["usage-based pricing", "PLG", "AI copilots"],
+        "stats": "Average ARR growth 28%",
+    },
+    "default": {
+        "trends": ["digital transformation", "automation", "data-driven decisions"],
+        "stats": "Adoption up 40%",
+    },
 }
 
 
@@ -31,7 +41,9 @@ async def research_agent(topic: str) -> AgentResult:
     await asyncio.sleep(0.08)
     key = next((k for k in MOCK_RESEARCH if k in topic.lower()), "default")
     data = MOCK_RESEARCH[key]
-    output = f"Research on '{topic}':\n- Trends: {', '.join(data['trends'])}\n- Market: {data['stats']}"
+    output = (
+        f"Research on '{topic}':\n- Trends: {', '.join(data['trends'])}\n- Market: {data['stats']}"
+    )
     return AgentResult(agent="ResearchAgent", output=output, tokens_used=95, latency_ms=84)
 
 
@@ -47,19 +59,21 @@ async def draft_agent(research: str, topic: str) -> AgentResult:
     for line in research.split("\n"):
         if line.startswith("- "):
             lines.append(line)
-    lines.extend([
-        "",
-        "## Analysis",
-        "",
-        f"The {topic} landscape is evolving rapidly. Organizations that adapt early",
-        "will capture disproportionate value in the coming years.",
-        "",
-        "## Takeaways",
-        "",
-        "1. Start small with proven frameworks",
-        "2. Measure ROI from day one",
-        "3. Invest in team enablement",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Analysis",
+            "",
+            f"The {topic} landscape is evolving rapidly. Organizations that adapt early",
+            "will capture disproportionate value in the coming years.",
+            "",
+            "## Takeaways",
+            "",
+            "1. Start small with proven frameworks",
+            "2. Measure ROI from day one",
+            "3. Invest in team enablement",
+        ]
+    )
     return AgentResult(agent="DraftAgent", output="\n".join(lines), tokens_used=210, latency_ms=156)
 
 
@@ -88,7 +102,9 @@ async def seo_agent(draft: str, topic: str) -> AgentResult:
     else:
         suggestions.append(f"Expand content (currently {word_count} words, target 300+)")
 
-    output = f"SEO Score: {score}/100\nWord count: {word_count}\nKeyword occurrences: {keyword_count}"
+    output = (
+        f"SEO Score: {score}/100\nWord count: {word_count}\nKeyword occurrences: {keyword_count}"
+    )
     if suggestions:
         output += "\nSuggestions:\n" + "\n".join(f"  - {s}" for s in suggestions)
     else:

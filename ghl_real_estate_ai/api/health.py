@@ -84,9 +84,7 @@ class HealthChecker:
 
             # Initialize database connection pool from env
             db_url = os.getenv("DATABASE_URL", "postgresql://localhost:5432/ghl_real_estate")
-            self.db_pool = await asyncpg.create_pool(
-                db_url, min_size=1, max_size=3, command_timeout=5.0
-            )
+            self.db_pool = await asyncpg.create_pool(db_url, min_size=1, max_size=3, command_timeout=5.0)
 
             logger.info("Health checker initialized successfully")
 

@@ -65,6 +65,7 @@ class Registry:
             class MyAgent(BaseAgent):
                 ...
         """
+
         def decorator(cls: type[BaseAgent]) -> type[BaseAgent]:
             agent_name = name or cls.__name__
             self._agents[agent_name] = cls
@@ -95,6 +96,7 @@ class Registry:
             def search_tool(query: str) -> str:
                 ...
         """
+
         def decorator(f: Callable) -> Callable:
             tool_name = name or f.__name__
             self._tools[tool_name] = f

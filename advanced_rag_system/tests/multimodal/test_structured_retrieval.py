@@ -26,8 +26,6 @@ from src.multimodal.structured_retriever import (
 
 
 @pytest.mark.integration
-
-
 class TestStructuredQuery:
     """Tests for StructuredQuery dataclass."""
 

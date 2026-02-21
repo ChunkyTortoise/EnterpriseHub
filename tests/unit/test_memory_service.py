@@ -54,9 +54,7 @@ class TestMemoryServiceSingleton:
 
         MemoryService._instances = {}
 
-        with patch(
-            "ghl_real_estate_ai.services.memory_service.settings"
-        ) as mock_settings:
+        with patch("ghl_real_estate_ai.services.memory_service.settings") as mock_settings:
             mock_settings.environment = "production"
             mock_settings.redis_url = "redis://localhost:6379"
 
@@ -121,9 +119,7 @@ class TestMemoryStorageOperations:
         """Context can be saved and retrieved."""
         contact_id = "test-contact-001"
         context = {
-            "conversation_history": [
-                {"role": "user", "content": "I'm looking for a 3BR home"}
-            ],
+            "conversation_history": [{"role": "user", "content": "I'm looking for a 3BR home"}],
             "extracted_preferences": {"bedrooms": 3},
         }
 
@@ -145,14 +141,10 @@ class TestMemoryStorageOperations:
         contact_id = "test-contact-002"
 
         # Save initial context
-        await memory_service.save_context(
-            contact_id, {"extracted_preferences": {"bedrooms": 3}}
-        )
+        await memory_service.save_context(contact_id, {"extracted_preferences": {"bedrooms": 3}})
 
         # Update context
-        await memory_service.save_context(
-            contact_id, {"extracted_preferences": {"bedrooms": 4, "bathrooms": 2}}
-        )
+        await memory_service.save_context(contact_id, {"extracted_preferences": {"bedrooms": 4, "bathrooms": 2}})
 
         retrieved = await memory_service.get_context(contact_id)
         assert retrieved["extracted_preferences"]["bedrooms"] == 4
@@ -221,20 +213,14 @@ class TestFileStorageOperations:
         assert retrieved["extracted_preferences"]["location"] == "Rancho Cucamonga"
 
     @pytest.mark.asyncio
-    async def test_multitenant_location_isolation(
-        self, file_memory_service, temp_memory_dir
-    ):
+    async def test_multitenant_location_isolation(self, file_memory_service, temp_memory_dir):
         """Different locations have isolated storage."""
         contact_id = "shared-contact"
         location1 = "location-001"
         location2 = "location-002"
 
-        await file_memory_service.save_context(
-            contact_id, {"location": "data1"}, location_id=location1
-        )
-        await file_memory_service.save_context(
-            contact_id, {"location": "data2"}, location_id=location2
-        )
+        await file_memory_service.save_context(contact_id, {"location": "data1"}, location_id=location1)
+        await file_memory_service.save_context(contact_id, {"location": "data2"}, location_id=location2)
 
         result1 = await file_memory_service.get_context(contact_id, location_id=location1)
         result2 = await file_memory_service.get_context(contact_id, location_id=location2)
@@ -279,9 +265,7 @@ class TestBatchOperations:
         """Batch result includes None for missing contacts."""
         await memory_service.save_context("existing", {"data": "test"})
 
-        result = await memory_service.get_context_batch(
-            ["existing", "nonexistent-1", "nonexistent-2"]
-        )
+        result = await memory_service.get_context_batch(["existing", "nonexistent-1", "nonexistent-2"])
 
         assert result["existing"] is not None
         assert result["nonexistent-1"] is None

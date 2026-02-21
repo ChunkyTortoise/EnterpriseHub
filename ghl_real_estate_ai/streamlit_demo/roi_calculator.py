@@ -4,6 +4,7 @@ Shows the business value of AI-powered lead qualification.
 
 Usage: Import render_roi_calculator() into main Streamlit app.
 """
+
 import streamlit as st
 
 
@@ -39,12 +40,17 @@ def render_roi_calculator():
 
     with col2:
         st.subheader("Projected Results")
-        st.metric("Monthly Revenue Recovered", f"${monthly_revenue_recovered:,.0f}",
-                  delta=f"+{extra_conversions:.1f} conversions/mo")
-        st.metric("Time Saved Monthly", f"{total_time_saved_hours:.0f} hours",
-                  delta=f"{response_time_min - AI_RESPONSE_TIME_MIN} min faster per lead")
-        st.metric("ROI Multiple", f"{roi_multiple:.1f}x",
-                  delta=f"${net_gain:,.0f} net gain/month")
+        st.metric(
+            "Monthly Revenue Recovered",
+            f"${monthly_revenue_recovered:,.0f}",
+            delta=f"+{extra_conversions:.1f} conversions/mo",
+        )
+        st.metric(
+            "Time Saved Monthly",
+            f"{total_time_saved_hours:.0f} hours",
+            delta=f"{response_time_min - AI_RESPONSE_TIME_MIN} min faster per lead",
+        )
+        st.metric("ROI Multiple", f"{roi_multiple:.1f}x", delta=f"${net_gain:,.0f} net gain/month")
         st.metric("Payback Period", f"{min(payback_days, 999):.0f} days" if payback_days < 999 else "< 1 day")
 
     with st.expander("Calculation Assumptions"):
@@ -52,9 +58,9 @@ def render_roi_calculator():
         | Assumption | Value | Source |
         |-----------|-------|--------|
         | AI response time | {AI_RESPONSE_TIME_MIN} minutes | System benchmark |
-        | Conversion rate improvement | {(CONVERSION_IMPROVEMENT-1)*100:.0f}% | A/B test results (133% uplift) |
+        | Conversion rate improvement | {(CONVERSION_IMPROVEMENT - 1) * 100:.0f}% | A/B test results (133% uplift) |
         | Average deal commission | ${AVG_DEAL_COMMISSION:,} | Rancho Cucamonga market average |
-        | Response time improvement | {((response_time_min - AI_RESPONSE_TIME_MIN)/response_time_min*100):.0f}% | {response_time_min} min → {AI_RESPONSE_TIME_MIN} min |
+        | Response time improvement | {((response_time_min - AI_RESPONSE_TIME_MIN) / response_time_min * 100):.0f}% | {response_time_min} min → {AI_RESPONSE_TIME_MIN} min |
         """)
 
 

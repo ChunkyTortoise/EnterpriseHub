@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 class ConversationTurnDict(TypedDict, total=False):
     """TypedDict for conversation turn in persona input."""
+
     role: str
     content: str
     timestamp: Optional[str]
@@ -22,6 +23,7 @@ class ConversationTurnDict(TypedDict, total=False):
 
 class LeadDataDict(TypedDict, total=False):
     """TypedDict for lead data in persona input."""
+
     lead_id: str
     email: Optional[str]
     phone: Optional[str]
@@ -49,9 +51,7 @@ class BuyerPersonaDB(BaseModel):
     persona_type: BuyerPersonaType = Field(..., description="Classified buyer persona")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score 0.0-1.0")
     detected_signals: List[str] = Field(default_factory=list, description="Detected keyword signals")
-    behavioral_signals: Dict[str, float] = Field(
-        default_factory=dict, description="Behavioral signal scores"
-    )
+    behavioral_signals: Dict[str, float] = Field(default_factory=dict, description="Behavioral signal scores")
     conversation_turns: int = Field(default=0, description="Number of conversation turns analyzed")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

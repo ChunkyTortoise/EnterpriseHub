@@ -32,6 +32,7 @@ class MessageEnvelope(BaseModel):
         timestamp: When the envelope was created.
         metadata: Additional routing metadata.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     sender: str
     receiver: str | None = None  # None = broadcast
@@ -179,7 +180,7 @@ class MessageBus:
         """
         self._message_history.append(message)
         if len(self._message_history) > self._max_history:
-            self._message_history = self._message_history[-self._max_history:]
+            self._message_history = self._message_history[-self._max_history :]
 
     def get_history(self, agent: str | None = None, limit: int = 100) -> list[MessageEnvelope]:
         """Get message history, optionally filtered by agent.
@@ -193,8 +194,7 @@ class MessageBus:
         """
         if agent:
             messages = [
-                m for m in self._message_history
-                if m.sender == agent or m.receiver == agent
+                m for m in self._message_history if m.sender == agent or m.receiver == agent
             ]
         else:
             messages = self._message_history

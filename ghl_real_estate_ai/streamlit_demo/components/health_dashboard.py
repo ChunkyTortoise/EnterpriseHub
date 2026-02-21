@@ -639,6 +639,7 @@ class HealthDashboard:
                         loop.close()
                     except Exception as e:
                         import logging
+
                         logging.getLogger(__name__).error(f"Error getting bot performance stats: {e}")
                         stats_1h = {}
                         stats_24h = {}
@@ -669,6 +670,7 @@ class HealthDashboard:
                 )
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"Error rendering health checks: {e}")
             return _generate_demo_endpoints()
 

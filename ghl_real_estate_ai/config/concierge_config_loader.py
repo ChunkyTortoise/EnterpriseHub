@@ -41,11 +41,11 @@ class ConciergeClientConfig:
     """Per-tenant Concierge configuration — drives prompts, knowledge engine, and agent routing."""
 
     tenant_id: str
-    domain: str                           # e.g. "real_estate", "dental", "legal"
-    client_name: str                      # Used in system prompts
-    business_model: str                   # Revenue model description → {business_model} template var
-    market_context: str                   # Geographic/market description → {market_context} var
-    client_style: str                     # Communication preferences → {client_style} var
+    domain: str  # e.g. "real_estate", "dental", "legal"
+    client_name: str  # Used in system prompts
+    business_model: str  # Revenue model description → {business_model} template var
+    market_context: str  # Geographic/market description → {market_context} var
+    client_style: str  # Communication preferences → {client_style} var
     available_agents: List[AgentDef] = field(default_factory=list)
     platform_features: Dict[str, List[str]] = field(default_factory=dict)
     compliance_requirements: List[str] = field(default_factory=list)

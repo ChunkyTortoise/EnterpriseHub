@@ -1,24 +1,30 @@
 """Tests for Email MCP server."""
 
 import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
-from mcp_toolkit.servers.email.server import mcp as email_mcp, configure, MockEmailClient
-from mcp_toolkit.servers.email.template_engine import TemplateEngine, EmailTemplate
+from mcp_toolkit.servers.email.server import MockEmailClient, configure
+from mcp_toolkit.servers.email.server import mcp as email_mcp
+from mcp_toolkit.servers.email.template_engine import EmailTemplate, TemplateEngine
 
 
 @pytest.fixture
 def template_engine():
     engine = TemplateEngine()
-    engine.register(EmailTemplate(
-        name="welcome",
-        subject="Welcome {{name}}!",
-        body="Hello {{name}}, thanks for joining {{company}}.",
-    ))
-    engine.register(EmailTemplate(
-        name="invoice",
-        subject="Invoice #{{invoice_id}}",
-        body="Dear {{name}}, your invoice for ${{amount}} is attached.",
-    ))
+    engine.register(
+        EmailTemplate(
+            name="welcome",
+            subject="Welcome {{name}}!",
+            body="Hello {{name}}, thanks for joining {{company}}.",
+        )
+    )
+    engine.register(
+        EmailTemplate(
+            name="invoice",
+            subject="Invoice #{{invoice_id}}",
+            body="Dear {{name}}, your invoice for ${{amount}} is attached.",
+        )
+    )
     return engine
 
 
@@ -30,16 +36,17 @@ def client(template_engine):
 
 class TestSendEmail:
     async def test_send_basic_email(self, client):
-        result = await client.call_tool("send_email", {
-            "to": "user@test.com", "subject": "Hello", "body": "Hi there"
-        })
+        result = await client.call_tool(
+            "send_email", {"to": "user@test.com", "subject": "Hello", "body": "Hi there"}
+        )
         assert "Email sent" in result
         assert "user@test.com" in result
 
     async def test_send_with_cc(self, client):
-        result = await client.call_tool("send_email", {
-            "to": "a@test.com", "subject": "Test", "body": "Body", "cc": "b@test.com"
-        })
+        result = await client.call_tool(
+            "send_email",
+            {"to": "a@test.com", "subject": "Test", "body": "Body", "cc": "b@test.com"},
+        )
         assert "Email sent" in result
 
 
@@ -59,36 +66,40 @@ class TestSearchEmails:
 
 class TestDraftFromTemplate:
     async def test_draft_welcome(self, client):
-        result = await client.call_tool("draft_from_template", {
-            "template_name": "welcome",
-            "to": "user@test.com",
-            "variables": '{"name": "Alice", "company": "Acme"}'
-        })
+        result = await client.call_tool(
+            "draft_from_template",
+            {
+                "template_name": "welcome",
+                "to": "user@test.com",
+                "variables": '{"name": "Alice", "company": "Acme"}',
+            },
+        )
         assert "Alice" in result
         assert "Acme" in result
 
     async def test_draft_missing_variable(self, client):
-        result = await client.call_tool("draft_from_template", {
-            "template_name": "welcome",
-            "to": "user@test.com",
-            "variables": '{"name": "Alice"}'
-        })
+        result = await client.call_tool(
+            "draft_from_template",
+            {"template_name": "welcome", "to": "user@test.com", "variables": '{"name": "Alice"}'},
+        )
         assert "Missing" in result
         assert "company" in result
 
     async def test_draft_unknown_template(self, client):
-        result = await client.call_tool("draft_from_template", {
-            "template_name": "nonexistent",
-            "to": "user@test.com",
-        })
+        result = await client.call_tool(
+            "draft_from_template",
+            {
+                "template_name": "nonexistent",
+                "to": "user@test.com",
+            },
+        )
         assert "not found" in result
 
     async def test_draft_invalid_json(self, client):
-        result = await client.call_tool("draft_from_template", {
-            "template_name": "welcome",
-            "to": "user@test.com",
-            "variables": "invalid json{"
-        })
+        result = await client.call_tool(
+            "draft_from_template",
+            {"template_name": "welcome", "to": "user@test.com", "variables": "invalid json{"},
+        )
         assert "Invalid JSON" in result
 
 

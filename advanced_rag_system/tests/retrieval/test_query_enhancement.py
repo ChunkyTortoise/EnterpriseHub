@@ -6,7 +6,6 @@ This module tests the query enhancement system including:
 - Query classification for routing
 """
 
-
 import pytest
 from src.retrieval.query.classifier import (
     ClassificationResult,
@@ -19,8 +18,6 @@ from src.retrieval.query.hyde import HyDEConfig, HyDEGenerator, MockLLMProvider
 
 
 @pytest.mark.integration
-
-
 class TestQueryExpansion:
     """Test suite for QueryExpander."""
 

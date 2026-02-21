@@ -1,4 +1,5 @@
 """Test suite that runs the APS Simulator as a pytest test."""
+
 import sys
 from pathlib import Path
 

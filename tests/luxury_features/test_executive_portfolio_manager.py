@@ -178,7 +178,12 @@ class TestPortfolioAnalysis:
                 zip_code=zip_code,
             )
             for i, (neighborhood, zip_code) in enumerate(
-                [("Alta Loma", "91746"), ("North Rancho", "91733"), ("Victoria Gardens", "91704"), ("Etiwanda", "91751")]
+                [
+                    ("Alta Loma", "91746"),
+                    ("North Rancho", "91733"),
+                    ("Victoria Gardens", "91704"),
+                    ("Etiwanda", "91751"),
+                ]
             )
         ]
 

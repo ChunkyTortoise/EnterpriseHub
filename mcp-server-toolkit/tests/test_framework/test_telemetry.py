@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-
 import pytest
 
-from mcp_toolkit.framework.telemetry import TelemetryProvider, SpanRecord
+from mcp_toolkit.framework.telemetry import SpanRecord, TelemetryProvider
 
 
 class TestSpanRecord:

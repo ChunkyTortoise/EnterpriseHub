@@ -238,6 +238,7 @@ class TestOtelTracingE2E:
 
         # Mock perf_counter to simulate 15ms elapsed (no wall-clock delay)
         call_count = [0]
+
         def mock_perf_counter():
             call_count[0] += 1
             return call_count[0] * 0.015  # 15ms per call

@@ -48,17 +48,15 @@ class TestCircularPrevention:
     def test_circular_prevention_same_source_target_within_30min(self, handoff_service):
         """Same source->target within 30 minutes should be blocked."""
         contact_id = "circular_test_001"
-        
+
         # Record a handoff 10 minutes ago
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": time.time() - 600}  # 10 min ago
         ]
-        
+
         # Try to handoff again - should be blocked
-        is_blocked, reason = JorgeHandoffService._check_circular_prevention(
-            contact_id, "lead", "buyer"
-        )
-        
+        is_blocked, reason = JorgeHandoffService._check_circular_prevention(contact_id, "lead", "buyer")
+
         assert is_blocked is True
         assert "lead->buyer" in reason
         assert "30-min" in reason
@@ -66,50 +64,44 @@ class TestCircularPrevention:
     def test_circular_prevention_allows_after_30min(self, handoff_service):
         """Same source->target after 30 minutes should be allowed."""
         contact_id = "circular_test_002"
-        
+
         # Record a handoff 31 minutes ago (past the window)
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": time.time() - 1900}  # ~32 min ago
         ]
-        
+
         # Try to handoff again - should be allowed
-        is_blocked, reason = JorgeHandoffService._check_circular_prevention(
-            contact_id, "lead", "buyer"
-        )
-        
+        is_blocked, reason = JorgeHandoffService._check_circular_prevention(contact_id, "lead", "buyer")
+
         assert is_blocked is False
 
     def test_circular_prevention_different_source_target_allowed(self, handoff_service):
         """Different source->target routes should be allowed."""
         contact_id = "circular_test_003"
-        
+
         # Record lead->buyer handoff
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": time.time() - 600}
         ]
-        
+
         # Try lead->seller - should be allowed (different target)
-        is_blocked, reason = JorgeHandoffService._check_circular_prevention(
-            contact_id, "lead", "seller"
-        )
-        
+        is_blocked, reason = JorgeHandoffService._check_circular_prevention(contact_id, "lead", "seller")
+
         assert is_blocked is False
 
     def test_circular_chain_detection(self, handoff_service):
         """Circular chain patterns should be detected (Lead->Buyer->Lead)."""
         contact_id = "circular_test_004"
-        
+
         # Record a chain: lead->buyer (10 min ago), buyer->seller (5 min ago)
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": time.time() - 600},
             {"from": "buyer", "to": "seller", "timestamp": time.time() - 300},
         ]
-        
+
         # Try to handoff back to lead - would create cycle: lead->buyer->seller->lead
-        is_blocked, reason = JorgeHandoffService._check_circular_prevention(
-            contact_id, "seller", "lead"
-        )
-        
+        is_blocked, reason = JorgeHandoffService._check_circular_prevention(contact_id, "seller", "lead")
+
         # This should detect the chain would create a cycle
         assert is_blocked is True
         assert "cycle" in reason.lower() or "chain" in reason.lower()
@@ -117,11 +109,9 @@ class TestCircularPrevention:
     def test_no_history_allows_handoff(self, handoff_service):
         """Contacts with no handoff history should be allowed to handoff."""
         contact_id = "new_contact_001"
-        
-        is_blocked, reason = JorgeHandoffService._check_circular_prevention(
-            contact_id, "lead", "buyer"
-        )
-        
+
+        is_blocked, reason = JorgeHandoffService._check_circular_prevention(contact_id, "lead", "buyer")
+
         assert is_blocked is False
 
 
@@ -136,7 +126,7 @@ class TestRateLimiting:
     def test_rate_limit_hourly_limit_blocked(self, handoff_service):
         """Should block when hourly limit (3/hr) exceeded."""
         contact_id = "rate_test_001"
-        
+
         # Record 3 handoffs in the last hour
         now = time.time()
         JorgeHandoffService._handoff_history[contact_id] = [
@@ -144,9 +134,9 @@ class TestRateLimiting:
             {"from": "buyer", "to": "seller", "timestamp": now - 1200},
             {"from": "seller", "to": "lead", "timestamp": now - 1800},
         ]
-        
+
         result = JorgeHandoffService._check_rate_limit(contact_id)
-        
+
         assert result is not None
         assert "hour" in result.lower()
         assert "3" in result
@@ -154,31 +144,30 @@ class TestRateLimiting:
     def test_rate_limit_hourly_allowed_below_limit(self, handoff_service):
         """Should allow when hourly limit not reached."""
         contact_id = "rate_test_002"
-        
+
         # Record only 2 handoffs in the last hour
         now = time.time()
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": now - 600},
             {"from": "buyer", "to": "seller", "timestamp": now - 1200},
         ]
-        
+
         result = JorgeHandoffService._check_rate_limit(contact_id)
-        
+
         assert result is None
 
     def test_rate_limit_daily_limit_blocked(self, handoff_service):
         """Should block when daily limit (10/day) exceeded."""
         contact_id = "rate_test_003"
-        
+
         # Record 10 handoffs in the last 24 hours
         now = time.time()
         JorgeHandoffService._handoff_history[contact_id] = [
-            {"from": "lead", "to": "buyer", "timestamp": now - (i * 7000)}
-            for i in range(10)
+            {"from": "lead", "to": "buyer", "timestamp": now - (i * 7000)} for i in range(10)
         ]
-        
+
         result = JorgeHandoffService._check_rate_limit(contact_id)
-        
+
         assert result is not None
         assert "24 hour" in result.lower() or "day" in result.lower()
 
@@ -192,10 +181,7 @@ class TestRateLimiting:
             {"from": "lead", "to": "buyer", "timestamp": now - 600},
             {"from": "buyer", "to": "seller", "timestamp": now - 1200},
         ]
-        old = [
-            {"from": "lead", "to": "seller", "timestamp": now - 100000}
-            for _ in range(10)
-        ]
+        old = [{"from": "lead", "to": "seller", "timestamp": now - 100000} for _ in range(10)]
         JorgeHandoffService._handoff_history[contact_id] = recent + old
 
         result = JorgeHandoffService._check_rate_limit(contact_id)
@@ -214,43 +200,43 @@ class TestConflictResolution:
     def test_lock_acquired_success(self, handoff_service):
         """Lock should be acquired when no active lock exists."""
         contact_id = "lock_test_001"
-        
+
         result = JorgeHandoffService._acquire_handoff_lock(contact_id)
-        
+
         assert result is True
         assert contact_id in JorgeHandoffService._active_handoffs
 
     def test_lock_blocked_when_active(self, handoff_service):
         """Lock should be blocked when another handoff is in progress."""
         contact_id = "lock_test_002"
-        
+
         # First acquire lock
         JorgeHandoffService._acquire_handoff_lock(contact_id)
-        
+
         # Second attempt should fail
         result = JorgeHandoffService._acquire_handoff_lock(contact_id)
-        
+
         assert result is False
 
     def test_lock_released(self, handoff_service):
         """Lock should be released after handoff completes."""
         contact_id = "lock_test_003"
-        
+
         JorgeHandoffService._acquire_handoff_lock(contact_id)
         JorgeHandoffService._release_handoff_lock(contact_id)
-        
+
         assert contact_id not in JorgeHandoffService._active_handoffs
 
     def test_lock_timeout_allows_retry(self, handoff_service):
         """After lock timeout (30s), new handoff should be allowed."""
         contact_id = "lock_test_004"
-        
+
         # Set lock to expire (more than 30 seconds ago)
         JorgeHandoffService._active_handoffs[contact_id] = time.time() - 35
-        
+
         # Should be able to acquire lock now
         result = JorgeHandoffService._acquire_handoff_lock(contact_id)
-        
+
         assert result is True
 
 
@@ -265,7 +251,7 @@ class TestPatternLearning:
     def test_learned_adjustments_default(self, handoff_service):
         """Should return default adjustment when no history exists."""
         adjustments = handoff_service.get_learned_adjustments("lead", "buyer")
-        
+
         assert adjustments["adjustment"] == 0.0
         assert adjustments["success_rate"] == 0.0
         assert adjustments["sample_size"] == 0
@@ -275,7 +261,7 @@ class TestPatternLearning:
         # Record successful handoffs
         JorgeHandoffService._record_handoff("learn_001", "lead", "buyer")
         JorgeHandoffService._record_handoff("learn_001", "lead", "buyer")
-        
+
         # Record outcomes
         for _ in range(8):
             handoff_service.record_handoff_outcome(
@@ -291,9 +277,9 @@ class TestPatternLearning:
                 target_bot="buyer",
                 outcome="failed",
             )
-        
+
         adjustments = handoff_service.get_learned_adjustments("lead", "buyer")
-        
+
         # 80% success rate should give positive adjustment
         assert adjustments["success_rate"] > 0.5
         assert adjustments["sample_size"] == 10
@@ -402,25 +388,25 @@ class TestEvaluateHandoffComprehensive:
     async def test_evaluate_handoff_circular_blocked(self, handoff_service):
         """evaluate_handoff should return None when circular pattern detected."""
         contact_id = "eval_circular_001"
-        
+
         # Recent same-direction handoff
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": time.time() - 600}
         ]
-        
+
         intent_signals = {
             "buyer_intent_score": 0.9,
             "seller_intent_score": 0.1,
             "detected_intent_phrases": ["want to buy"],
         }
-        
+
         decision = await handoff_service.evaluate_handoff(
             current_bot="lead",
             contact_id=contact_id,
             conversation_history=[],
             intent_signals=intent_signals,
         )
-        
+
         # Circular prevention blocks within evaluate_handoff
         assert decision is None
 
@@ -458,40 +444,40 @@ class TestEvaluateHandoffComprehensive:
     async def test_evaluate_handoff_no_self_handoff(self, handoff_service):
         """Should not handoff to the same bot."""
         contact_id = f"eval_self_{int(time.time())}"
-        
+
         intent_signals = {
             "buyer_intent_score": 0.0,
             "seller_intent_score": 0.0,
             "detected_intent_phrases": [],
         }
-        
+
         decision = await handoff_service.evaluate_handoff(
             current_bot="lead",
             contact_id=contact_id,
             conversation_history=[],
             intent_signals=intent_signals,
         )
-        
+
         assert decision is None
 
     @pytest.mark.asyncio
     async def test_evaluate_handoff_buyer_seller_tie(self, handoff_service):
         """When scores are equal, should not handoff."""
         contact_id = f"eval_tie_{int(time.time())}"
-        
+
         intent_signals = {
             "buyer_intent_score": 0.5,
             "seller_intent_score": 0.5,
             "detected_intent_phrases": [],
         }
-        
+
         decision = await handoff_service.evaluate_handoff(
             current_bot="lead",
             contact_id=contact_id,
             conversation_history=[],
             intent_signals=intent_signals,
         )
-        
+
         assert decision is None
 
 
@@ -506,35 +492,35 @@ class TestAnalyticsAndRecording:
     def test_record_handoff(self, handoff_service):
         """Handoff should be recorded in history."""
         contact_id = "record_001"
-        
+
         JorgeHandoffService._record_handoff(contact_id, "lead", "buyer")
-        
+
         assert contact_id in JorgeHandoffService._handoff_history
         assert len(JorgeHandoffService._handoff_history[contact_id]) == 1
 
     def test_cleanup_removes_old_entries(self, handoff_service):
         """Old entries (>24h) should be cleaned up."""
         contact_id = "cleanup_001"
-        
+
         now = time.time()
         JorgeHandoffService._handoff_history[contact_id] = [
             {"from": "lead", "to": "buyer", "timestamp": now - 100000},  # Old
-            {"from": "buyer", "to": "seller", "timestamp": now - 600},   # Recent
+            {"from": "buyer", "to": "seller", "timestamp": now - 600},  # Recent
         ]
-        
+
         JorgeHandoffService._cleanup_old_entries()
-        
+
         assert len(JorgeHandoffService._handoff_history[contact_id]) == 1
 
     def test_analytics_incremented(self, handoff_service):
         """Analytics should track handoff counts."""
         initial = JorgeHandoffService._analytics["total_handoffs"]
-        
+
         JorgeHandoffService._record_analytics(
             route="lead->buyer",
             start_time=time.time(),
             success=True,
         )
-        
+
         assert JorgeHandoffService._analytics["total_handoffs"] == initial + 1
         assert JorgeHandoffService._analytics["successful_handoffs"] == 1

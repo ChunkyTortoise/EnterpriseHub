@@ -1,116 +1,118 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import TinderCard from 'react-tinder-card';
+import { CheckCircle2, Heart, Loader2, RefreshCw, X } from 'lucide-react';
+import axios from 'axios';
 import PropertyCard from './PropertyCard';
 import FeedbackModal from './FeedbackModal';
-import { Heart, X, RotateCcw, Zap } from 'lucide-react';
-import axios from 'axios';
+import '../../styles/lyrio-theme.css';
+import '../../styles/portal-animations.css';
 
-/**
- * SwipeDeck Component
- * 
- * The "Engine" that connects UI to Python backend.
- * Handles swipe gestures, feedback collection, and high-intent alerts.
- * 
- * Features:
- * - Tinder-style card stack with gesture controls
- * - Manual like/pass buttons for desktop users
- * - High-intent detection with visual feedback
- * - Tracks time spent on each card
- * - Integrates with backend /api/portal/swipe endpoint
- */
-const SwipeDeck = ({ 
-  properties, 
-  leadId, 
+const SwipeDeck = ({
+  properties = [],
+  leadId,
   locationId,
-  apiBaseUrl = '/api', 
+  contactId,
+  apiBaseUrl = '/api',
   onComplete,
-  onError 
+  onError,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(properties.length - 1);
-  const [lastDirection, setLastDirection] = useState();
+  const [deck, setDeck] = useState(Array.isArray(properties) ? properties : []);
+  const [currentIndex, setCurrentIndex] = useState((Array.isArray(properties) ? properties.length : 0) - 1);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [currentPassProperty, setCurrentPassProperty] = useState(null);
   const [highIntentAlert, setHighIntentAlert] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  
-  // Track time spent on card
+  const [loading, setLoading] = useState(false);
+  const [loadingError, setLoadingError] = useState(null);
+
   const cardStartTime = useRef(Date.now());
-  const childRefs = useRef(properties.map(() => React.createRef()));
+  const childRefs = useRef([]);
+
+  const resolvedContactId = contactId || leadId;
+  const total = deck.length;
+  const reviewed = Math.max(total - (currentIndex + 1), 0);
 
   useEffect(() => {
-    // Reset timer when card changes
     cardStartTime.current = Date.now();
   }, [currentIndex]);
 
-  // Calculate time spent on current card
-  const getTimeOnCard = () => {
-    return (Date.now() - cardStartTime.current) / 1000; // seconds
-  };
-
-  // Handle the physical swipe gesture
-  const onSwipe = (direction, propertyId) => {
-    console.log(`Swiped ${direction} on property ${propertyId}`);
-    setLastDirection(direction);
-    
-    const property = properties.find(p => p.id === propertyId);
-    const timeOnCard = getTimeOnCard();
-    
-    if (direction === 'left') {
-      // LEFT = PASS - Collect feedback first
-      setCurrentPassProperty({ ...property, timeOnCard });
-      setShowFeedbackModal(true);
-    } else if (direction === 'right') {
-      // RIGHT = LIKE - Immediate submission
-      handleInteraction(property, 'like', null, timeOnCard);
-      setLikeCount(prev => prev + 1);
+  useEffect(() => {
+    if (Array.isArray(properties) && properties.length > 0) {
+      setDeck(properties);
+      setCurrentIndex(properties.length - 1);
     }
-  };
+  }, [properties]);
 
-  // Handle card leaving screen
-  const onCardLeftScreen = (propertyId) => {
-    console.log(`Property ${propertyId} left the screen`);
-    setCurrentIndex(prevIndex => prevIndex - 1);
-  };
+  useEffect(() => {
+    const shouldFetch = (!Array.isArray(properties) || properties.length === 0) && resolvedContactId;
+    if (!shouldFetch) {
+      return;
+    }
 
-  // Submit interaction to backend
+    const fetchDeck = async () => {
+      setLoading(true);
+      setLoadingError(null);
+      try {
+        const response = await axios.get(`${apiBaseUrl}/portal/deck`, {
+          params: {
+            contact_id: resolvedContactId,
+            lead_id: leadId,
+            location_id: locationId,
+          },
+        });
+
+        const incoming = response.data.deck || response.data.properties || [];
+        setDeck(incoming);
+        setCurrentIndex(incoming.length - 1);
+      } catch (error) {
+        setLoadingError('Could not load your property matches.');
+        if (onError) {
+          onError(error);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeck();
+  }, [apiBaseUrl, contactId, leadId, locationId, onError, properties, resolvedContactId]);
+
+  useEffect(() => {
+    childRefs.current = deck.map((_, index) => childRefs.current[index] || React.createRef());
+  }, [deck]);
+
+  useEffect(() => {
+    if (currentIndex < 0 && total > 0 && onComplete) {
+      onComplete();
+    }
+  }, [currentIndex, onComplete, total]);
+
+  const getTimeOnCard = () => (Date.now() - cardStartTime.current) / 1000;
+
   const handleInteraction = async (property, action, feedbackCategory = null, timeOnCard = null) => {
-    if (isProcessing) return;
-    
+    if (isProcessing || !property) {
+      return;
+    }
+
     setIsProcessing(true);
-    
+
     try {
       const payload = {
-        lead_id: leadId,
+        lead_id: leadId || resolvedContactId,
+        contact_id: resolvedContactId,
         property_id: property.id || property.property_id,
-        action: action, // 'like' or 'pass'
+        action,
         location_id: locationId,
         time_on_card: timeOnCard || getTimeOnCard(),
-        feedback: feedbackCategory ? { category: feedbackCategory } : null
+        feedback: feedbackCategory ? { category: feedbackCategory } : null,
       };
 
-      console.log('Submitting swipe:', payload);
-
-      // Call Python Backend
       const response = await axios.post(`${apiBaseUrl}/portal/swipe`, payload);
-
-      console.log('Swipe response:', response.data);
-
-      // Check for High Intent Flag from Backend
       if (response.data.trigger_sms || response.data.high_intent) {
         setHighIntentAlert(true);
-        
-        // Auto-hide alert after 5 seconds
-        setTimeout(() => setHighIntentAlert(false), 5000);
+        setTimeout(() => setHighIntentAlert(false), 4200);
       }
-
-      // If preferences were adjusted, log it
-      if (response.data.adjustments && response.data.adjustments.length > 0) {
-        console.log('Preferences adjusted:', response.data.adjustments);
-      }
-
     } catch (error) {
-      console.error("Failed to log swipe:", error);
       if (onError) {
         onError(error);
       }
@@ -119,144 +121,183 @@ const SwipeDeck = ({
     }
   };
 
-  // Handle feedback modal submission
+  const onSwipe = (direction, propertyId) => {
+    const property = deck.find((item) => (item.id || item.property_id) === propertyId);
+    const timeOnCard = getTimeOnCard();
+
+    if (direction === 'left') {
+      setCurrentPassProperty({ ...property, timeOnCard });
+      setShowFeedbackModal(true);
+      return;
+    }
+
+    if (direction === 'right') {
+      handleInteraction(property, 'like', null, timeOnCard);
+    }
+  };
+
+  const onCardLeftScreen = () => {
+    setCurrentIndex((prevIndex) => prevIndex - 1);
+  };
+
   const onFeedbackSubmit = (feedbackCategory) => {
     if (currentPassProperty) {
-      handleInteraction(
-        currentPassProperty, 
-        'pass', 
-        feedbackCategory,
-        currentPassProperty.timeOnCard
-      );
+      handleInteraction(currentPassProperty, 'pass', feedbackCategory, currentPassProperty.timeOnCard);
     }
     setShowFeedbackModal(false);
     setCurrentPassProperty(null);
   };
 
-  // Manual swipe (for desktop users or accessibility)
   const swipe = async (dir) => {
-    if (currentIndex >= 0 && currentIndex < properties.length) {
+    if (currentIndex >= 0 && currentIndex < deck.length && childRefs.current[currentIndex]?.current) {
       await childRefs.current[currentIndex].current.swipe(dir);
     }
   };
 
-  // Check if all cards are swiped
-  useEffect(() => {
-    if (currentIndex < 0 && onComplete) {
-      onComplete();
+  const stateCard = useMemo(() => {
+    if (loading) {
+      return {
+        title: 'Curating your personalized deck',
+        body: 'Analyzing preferences and market fit in real time.',
+        action: null,
+        icon: <Loader2 className="animate-spin" size={18} />,
+      };
     }
-  }, [currentIndex, onComplete]);
+
+    if (loadingError) {
+      return {
+        title: 'Deck unavailable',
+        body: loadingError,
+        action: (
+          <button
+            onClick={() => window.location.reload()}
+            className="lyrio-focus rounded-xl px-4 py-2 text-sm font-semibold border lyrio-border-default"
+          >
+            <RefreshCw size={14} className="inline mr-2" />Retry
+          </button>
+        ),
+        icon: <X size={18} />,
+      };
+    }
+
+    return null;
+  }, [loading, loadingError]);
+
+  if (stateCard) {
+    return (
+      <section className="lyrio-portal-shell flex justify-center px-4 py-8">
+        <div className="lyrio-card-shell max-w-md w-full rounded-2xl border p-5 animate-fade-in-soft">
+          <div className="lyrio-text-primary flex items-center gap-2 mb-2">
+            {stateCard.icon}
+            <h3 className="lyrio-heading text-lg m-0">{stateCard.title}</h3>
+          </div>
+          <p className="lyrio-text-muted text-sm m-0">{stateCard.body}</p>
+          {stateCard.action ? <div className="mt-4">{stateCard.action}</div> : null}
+        </div>
+      </section>
+    );
+  }
 
   const canSwipe = currentIndex >= 0;
 
   return (
-    <div className="relative w-full max-w-md mx-auto h-[700px] sm:h-[750px] flex flex-col justify-center items-center">
-      
-      {/* High Intent Alert Banner */}
-      {highIntentAlert && (
-        <div className="absolute top-4 left-4 right-4 z-50 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl animate-bounce flex items-center gap-3">
-          <Zap size={24} className="text-yellow-300" />
-          <div>
-            <p className="font-bold text-lg">High Interest Detected! 🔥</p>
-            <p className="text-sm text-green-100">We've notified your agent - expect a call soon!</p>
+    <section className="lyrio-portal-shell lyrio-shell-elevated w-full max-w-xl mx-auto rounded-[30px] border px-4 sm:px-6 py-6">
+      {highIntentAlert ? (
+        <div className="lyrio-high-intent mb-4 rounded-2xl px-4 py-3 animate-fade-in-soft" role="status" aria-live="polite">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 size={18} className="lyrio-text-success" />
+            <div>
+              <p className="m-0 text-sm font-semibold">High intent detected</p>
+              <p className="lyrio-text-muted m-0 text-xs">Your agent has been notified to follow up quickly.</p>
+            </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Card Stack Container */}
-      <div className="card-container w-full h-[600px] sm:h-[650px] relative mb-6">
-        {properties.map((property, index) => (
+      <header className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="lyrio-heading text-xl sm:text-2xl m-0">Your Daily Matches</h2>
+          <p className="lyrio-text-muted m-0 text-sm">
+            {reviewed} reviewed • {Math.max(total - reviewed, 0)} remaining
+          </p>
+        </div>
+        <span className="lyrio-chip">{Math.max(currentIndex + 1, 0)} / {total}</span>
+      </header>
+
+      <div className="card-container w-full h-[620px] sm:h-[660px] relative">
+        {deck.map((property, index) => (
           <TinderCard
             ref={childRefs.current[index]}
-            className="absolute inset-0 p-4"
-            key={property.id || index}
+            className="absolute inset-0"
+            key={property.id || property.property_id || index}
             onSwipe={(dir) => onSwipe(dir, property.id || property.property_id)}
-            onCardLeftScreen={() => onCardLeftScreen(property.id || property.property_id)}
+            onCardLeftScreen={onCardLeftScreen}
             preventSwipe={['up', 'down']}
             swipeRequirementType="position"
-            swipeThreshold={100}
+            swipeThreshold={96}
           >
-            <PropertyCard property={property} />
+            <PropertyCard property={property} index={index + 1} total={total} />
           </TinderCard>
         ))}
 
-        {/* Empty State */}
-        {!canSwipe && (
-          <div className="absolute inset-0 flex items-center justify-center p-8">
+        {!canSwipe ? (
+          <div className="lyrio-empty-state absolute inset-0 rounded-3xl border flex items-center justify-center p-6">
             <div className="text-center">
-              <div className="text-6xl mb-4">🎉</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                All done!
-              </h3>
-              <p className="text-gray-600 mb-4">
-                You've reviewed all available properties.
+              <h3 className="lyrio-heading text-2xl m-0">You are all caught up</h3>
+              <p className="lyrio-text-muted mt-2 mb-4 text-sm">
+                Fresh listings will appear automatically as the market updates.
               </p>
               <button
+                className="lyrio-focus rounded-xl px-4 py-2 text-sm font-semibold border lyrio-border-default"
                 onClick={() => window.location.reload()}
-                className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-colors"
               >
-                Show me more properties
+                <RefreshCw size={14} className="inline mr-2" />Check for updates
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {/* Action Buttons (Desktop/Accessibility) */}
-      {canSwipe && (
-        <div className="flex gap-6 items-center justify-center">
-          {/* Pass Button */}
-          <button
-            onClick={() => swipe('left')}
-            disabled={isProcessing}
-            className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-red-50 hover:scale-110 transition-all active:scale-95 disabled:opacity-50"
-            aria-label="Pass on this property"
-          >
-            <X size={28} className="text-red-500" />
-          </button>
+      {canSwipe ? (
+        <div className="lyrio-deck-toolbar mt-4 rounded-2xl border px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              onClick={() => swipe('left')}
+              disabled={isProcessing}
+              className="lyrio-action-btn lyrio-pass-btn portal-action-btn lyrio-focus rounded-full border inline-flex items-center justify-center"
+              aria-label="Pass on this property"
+            >
+              <X size={24} />
+            </button>
 
-          {/* Property Counter */}
-          <div className="px-4 py-2 bg-gray-100 rounded-full">
-            <span className="text-sm font-semibold text-gray-600">
-              {currentIndex + 1} / {properties.length}
-            </span>
+            <p className="lyrio-text-muted m-0 text-xs sm:text-sm font-semibold">
+              Swipe or tap actions below
+            </p>
+
+            <button
+              onClick={() => swipe('right')}
+              disabled={isProcessing}
+              className="lyrio-action-btn lyrio-like-btn portal-action-btn lyrio-focus rounded-full inline-flex items-center justify-center"
+              aria-label="Like this property"
+            >
+              <Heart size={24} />
+            </button>
           </div>
-
-          {/* Like Button */}
-          <button
-            onClick={() => swipe('right')}
-            disabled={isProcessing}
-            className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-green-50 hover:scale-110 transition-all active:scale-95 disabled:opacity-50"
-            aria-label="Like this property"
-          >
-            <Heart size={28} className="text-green-500" />
-          </button>
         </div>
-      )}
+      ) : null}
 
-      {/* Swipe Instructions (First time users) */}
-      {canSwipe && currentIndex === properties.length - 1 && (
-        <div className="absolute bottom-24 left-0 right-0 text-center pointer-events-none">
-          <p className="text-sm text-gray-500 animate-pulse">
-            Swipe left to pass • Swipe right to like
-          </p>
-        </div>
-      )}
-
-      {/* Feedback Modal */}
-      <FeedbackModal 
-        isOpen={showFeedbackModal} 
+      <FeedbackModal
+        isOpen={showFeedbackModal}
         onClose={() => {
-          // If they close without feedback, submit pass without reason
           if (currentPassProperty) {
             handleInteraction(currentPassProperty, 'pass', null, currentPassProperty.timeOnCard);
           }
           setShowFeedbackModal(false);
           setCurrentPassProperty(null);
         }}
-        onSubmit={onFeedbackSubmit} 
+        onSubmit={onFeedbackSubmit}
       />
-    </div>
+    </section>
   );
 };
 

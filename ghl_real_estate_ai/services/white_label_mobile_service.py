@@ -519,11 +519,7 @@ class WhiteLabelMobileService:
         platform_configs = {}
         for platform in config.platforms:
             key = platform.value if platform != AppPlatform.BOTH else None
-            platforms = (
-                [AppPlatform.IOS, AppPlatform.ANDROID]
-                if platform == AppPlatform.BOTH
-                else [platform]
-            )
+            platforms = [AppPlatform.IOS, AppPlatform.ANDROID] if platform == AppPlatform.BOTH else [platform]
             for p in platforms:
                 platform_configs[p.value] = {
                     "bundle_id": f"com.{config.agency_id}.{config.branding.app_name.lower().replace(' ', '')}",

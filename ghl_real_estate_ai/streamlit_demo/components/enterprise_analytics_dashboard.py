@@ -236,6 +236,7 @@ def load_real_time_metrics():
         return run_async(engines["revenue_attribution"].get_real_time_metrics())
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).error(f"Error loading real-time metrics: {e}")
         return {}
     finally:

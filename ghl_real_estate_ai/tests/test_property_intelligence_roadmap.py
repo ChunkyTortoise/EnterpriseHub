@@ -275,9 +275,7 @@ class TestPropertyComparison:
             analysis = generate_mock_property_analysis(req)
             await _save_analysis(analysis, mock_cache)
 
-        result = await _compare_properties_from_cache(
-            [f"prop-{i}" for i in range(7)], mock_cache
-        )
+        result = await _compare_properties_from_cache([f"prop-{i}" for i in range(7)], mock_cache)
         assert len(result["properties"]) == 5
 
     @pytest.mark.asyncio

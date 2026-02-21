@@ -171,9 +171,7 @@ class TestConversationRepairProcessor:
         resp = _resp()
         result = await stage.process(resp, ctx)
         assert "team member" in result.message
-        assert any(
-            a.get("tag") == "Human-Escalation-Needed" for a in result.actions
-        )
+        assert any(a.get("tag") == "Human-Escalation-Needed" for a in result.actions)
 
     @pytest.mark.asyncio
     async def test_multiple_choice_formatting(self):

@@ -6,7 +6,6 @@ and validation failures.
 """
 
 
-
 class CycleDetectedError(Exception):
     """Exception raised when a cycle is detected in the DAG.
 
@@ -154,6 +153,7 @@ class AgentForgeError(Exception):
     All custom exceptions in AgentForge should inherit from this class
     to allow for catch-all exception handling.
     """
+
     pass
 
 

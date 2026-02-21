@@ -138,6 +138,7 @@ class ObsidianThemeService:
 
 class Colors:
     """Quick access to color tokens"""
+
     PRIMARY = ObsidianThemeService.TOKENS["colors"]["brand"]["primary"]
     SECONDARY = ObsidianThemeService.TOKENS["colors"]["brand"]["secondary"]
     BACKGROUND_DEEP = ObsidianThemeService.TOKENS["colors"]["background"]["deep"]
@@ -152,6 +153,7 @@ class Colors:
 
 class Typography:
     """Quick access to typography tokens"""
+
     HEADING_FAMILY = ObsidianThemeService.TOKENS["typography"]["family"]["heading"]
     BODY_FAMILY = ObsidianThemeService.TOKENS["typography"]["family"]["body"]
     MONO_FAMILY = ObsidianThemeService.TOKENS["typography"]["family"]["mono"]
@@ -161,6 +163,7 @@ class Typography:
 
 class Spacing:
     """Quick access to spacing tokens"""
+
     XS = ObsidianThemeService.TOKENS["spacing"]["xs"]
     SM = ObsidianThemeService.TOKENS["spacing"]["sm"]
     MD = ObsidianThemeService.TOKENS["spacing"]["md"]

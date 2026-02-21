@@ -65,8 +65,7 @@ class TestCORSLockdown:
                     },
                 )
                 assert (
-                    response.headers.get("access-control-allow-origin")
-                    == "https://app.example.com"
+                    response.headers.get("access-control-allow-origin") == "https://app.example.com"
                 )
 
 

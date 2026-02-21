@@ -10,9 +10,9 @@ from mcp_toolkit.servers.database_query.schema_inspector import (
     SchemaInspector,
 )
 from mcp_toolkit.servers.database_query.sql_generator import (
+    DefaultLLMProvider,
     LLMProvider,
     SQLGenerator,
-    DefaultLLMProvider,
 )
 
 mcp = EnhancedMCP("database-query")

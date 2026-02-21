@@ -16,6 +16,7 @@ pytestmark = pytest.mark.asyncio
 
 # ===== ROADMAP-045: Suggestion Dismissal with ML Feedback =====
 
+
 class TestSuggestionDismissalFeedback:
     """Test the ML feedback loop for suggestion dismissals."""
 
@@ -71,6 +72,7 @@ class TestSuggestionDismissalFeedback:
 
 # ===== ROADMAP-046: Golden Lead Redis Filtering =====
 
+
 class TestGoldenLeadFiltering:
     """Test golden lead filtering logic (decoupled from actual Redis)."""
 
@@ -88,7 +90,9 @@ class TestGoldenLeadFiltering:
     def test_probability_range_filter(self):
         """Probability range filter works correctly."""
         leads = [
-            {"probability": 0.9}, {"probability": 0.5}, {"probability": 0.1},
+            {"probability": 0.9},
+            {"probability": 0.5},
+            {"probability": 0.1},
         ]
         min_p, max_p = 0.4, 0.95
         filtered = [l for l in leads if min_p <= l["probability"] <= max_p]
@@ -97,7 +101,9 @@ class TestGoldenLeadFiltering:
     def test_jorge_score_filter(self):
         """Minimum Jorge score filter."""
         leads = [
-            {"jorge_score": 7}, {"jorge_score": 4}, {"jorge_score": 2},
+            {"jorge_score": 7},
+            {"jorge_score": 4},
+            {"jorge_score": 2},
         ]
         min_score = 5
         filtered = [l for l in leads if l["jorge_score"] >= min_score]
@@ -107,8 +113,8 @@ class TestGoldenLeadFiltering:
         """Hours-since-analysis filter excludes stale results."""
         now = datetime.now(timezone.utc)
         leads = [
-            {"timestamp": now - timedelta(hours=2)},    # fresh
-            {"timestamp": now - timedelta(hours=30)},   # stale
+            {"timestamp": now - timedelta(hours=2)},  # fresh
+            {"timestamp": now - timedelta(hours=30)},  # stale
         ]
         cutoff = now - timedelta(hours=24)
         filtered = [l for l in leads if l["timestamp"] >= cutoff]
@@ -117,7 +123,9 @@ class TestGoldenLeadFiltering:
     def test_composite_score_sorting(self):
         """Results are sorted by overall score descending."""
         leads = [
-            {"score": 70}, {"score": 95}, {"score": 80},
+            {"score": 70},
+            {"score": 95},
+            {"score": 80},
         ]
         sorted_leads = sorted(leads, key=lambda r: r["score"], reverse=True)
         assert sorted_leads[0]["score"] == 95
@@ -131,6 +139,7 @@ class TestGoldenLeadFiltering:
 
 
 # ===== ROADMAP-047: AI Recommendation SSE Streaming =====
+
 
 class TestRecommendationPromptBuilder:
     """Test prompt construction for Claude recommendations."""
@@ -213,7 +222,7 @@ class TestFallbackRecommendations:
         events.append(f"data: {json.dumps({'type': 'start', 'lead_id': lead_id, 'market_id': market_id})}\n\n")
         chunk_size = 80
         for i in range(0, len(fallback_text), chunk_size):
-            chunk = fallback_text[i:i + chunk_size]
+            chunk = fallback_text[i : i + chunk_size]
             events.append(f"data: {json.dumps({'type': 'content', 'text': chunk})}\n\n")
         events.append(f"data: {json.dumps({'type': 'done', 'lead_id': lead_id})}\n\n")
 

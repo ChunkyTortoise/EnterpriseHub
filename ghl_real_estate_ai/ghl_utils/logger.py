@@ -43,7 +43,8 @@ def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:
 
             # Structured Format including Correlation ID
             formatter = logging.Formatter(
-                "%(asctime)s | %(levelname)-8s | [%(correlation_id)s] | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+                "%(asctime)s | %(levelname)-8s | [%(correlation_id)s] | %(name)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
             handler.setFormatter(formatter)
 

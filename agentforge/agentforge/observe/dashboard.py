@@ -26,6 +26,7 @@ class DashboardConfig(BaseModel):
         show_agents: Whether to show per-agent breakdown.
         width: Width of the dashboard in characters.
     """
+
     refresh_rate: float = Field(default=1.0, ge=0.1, description="Refresh rate in seconds")
     show_tokens: bool = True
     show_costs: bool = True
@@ -95,18 +96,20 @@ class Dashboard:
             tokens: Total tokens used.
             error: Error message if failed.
         """
-        self._executions.append({
-            "timestamp": time.time(),
-            "agent_id": agent_id,
-            "status": status,
-            "duration_ms": duration_ms,
-            "tokens": tokens,
-            "error": error,
-        })
+        self._executions.append(
+            {
+                "timestamp": time.time(),
+                "agent_id": agent_id,
+                "status": status,
+                "duration_ms": duration_ms,
+                "tokens": tokens,
+                "error": error,
+            }
+        )
 
         # Trim history
         if len(self._executions) > self.max_history:
-            self._executions = self._executions[-self.max_history:]
+            self._executions = self._executions[-self.max_history :]
 
         # Update agent status
         self._agent_status[agent_id] = status
@@ -166,9 +169,7 @@ class Dashboard:
         recent = self._executions[-5:] if self._executions else []
         if recent:
             for exec_record in reversed(recent):
-                timestamp = datetime.fromtimestamp(
-                    exec_record["timestamp"]
-                ).strftime("%H:%M:%S")
+                timestamp = datetime.fromtimestamp(exec_record["timestamp"]).strftime("%H:%M:%S")
                 agent = exec_record["agent_id"][:15]
                 status = exec_record["status"][:10]
                 duration = f"{exec_record.get('duration_ms', 0):.1f}ms"
@@ -202,16 +203,10 @@ class Dashboard:
         success = sum(1 for e in self._executions if e["status"] == "completed")
         failed = sum(1 for e in self._executions if e["status"] == "failed")
 
-        durations = [
-            e["duration_ms"] for e in self._executions
-            if e.get("duration_ms") is not None
-        ]
+        durations = [e["duration_ms"] for e in self._executions if e.get("duration_ms") is not None]
         avg_duration = sum(durations) / len(durations) if durations else 0
 
-        tokens = sum(
-            e.get("tokens", 0) for e in self._executions
-            if e.get("tokens") is not None
-        )
+        tokens = sum(e.get("tokens", 0) for e in self._executions if e.get("tokens") is not None)
 
         return {
             "total": total,

@@ -12,9 +12,10 @@ depends_on = None
 
 def upgrade():
     """Create all tables."""
-    from alembic import op
     import sqlalchemy as sa
-    from sqlalchemy.dialects.postgresql import UUID, JSON, ARRAY
+    from sqlalchemy.dialects.postgresql import ARRAY, JSON, UUID
+
+    from alembic import op
 
     # Agent events
     op.create_table(
@@ -189,9 +190,19 @@ def upgrade():
 
 def downgrade():
     from alembic import op
+
     for table in [
-        "alert_history", "alert_rules", "schedules", "extraction_results",
-        "job_runs", "pipeline_jobs", "experiment_results", "experiments",
-        "prompt_versions", "prompts", "metric_snapshots", "agent_events",
+        "alert_history",
+        "alert_rules",
+        "schedules",
+        "extraction_results",
+        "job_runs",
+        "pipeline_jobs",
+        "experiment_results",
+        "experiments",
+        "prompt_versions",
+        "prompts",
+        "metric_snapshots",
+        "agent_events",
     ]:
         op.drop_table(table)

@@ -183,8 +183,7 @@ def export_run_logs(
 ) -> Path:
     """Export runs into a structured run log envelope."""
     normalized = [
-        run if isinstance(run, RunLogEntry) else RunLogEntry.model_validate(run)
-        for run in runs
+        run if isinstance(run, RunLogEntry) else RunLogEntry.model_validate(run) for run in runs
     ]
     envelope = RunLogEnvelope(schema_version=schema_version, runs=normalized)
     output_path = Path(path)
@@ -279,8 +278,7 @@ def _daily_errors_report_data(runs: Sequence[RunLogEntry]) -> dict[str, Any]:
                 "cost_day_over_day_percent": (
                     round(_percent_delta_value(previous.avg_cost_usd, latest.avg_cost_usd), 2)
                     if previous
-                    and _percent_delta_value(previous.avg_cost_usd, latest.avg_cost_usd)
-                    is not None
+                    and _percent_delta_value(previous.avg_cost_usd, latest.avg_cost_usd) is not None
                     else None
                 ),
             }
@@ -321,13 +319,15 @@ def generate_daily_errors_markdown(runs: Sequence[RunLogEntry]) -> str:
             f"{day_row['error_rate_percent']:.2f}% |"
         )
 
-    lines.extend([
-        "",
-        "## Per-Workflow Latency/Cost Trend Summary",
-        "",
-        "| Workflow | Latest Day | Error Rate | Avg Latency (ms) | Latency DoD | Avg Cost (USD) | Cost DoD |",
-        "|---|---|---:|---:|---:|---:|---:|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Per-Workflow Latency/Cost Trend Summary",
+            "",
+            "| Workflow | Latest Day | Error Rate | Avg Latency (ms) | Latency DoD | Avg Cost (USD) | Cost DoD |",
+            "|---|---|---:|---:|---:|---:|---:|",
+        ]
+    )
 
     for workflow_row in data["workflow_summary"]:
         latency_delta = (
@@ -376,8 +376,7 @@ def _trends_report_data(runs: Sequence[RunLogEntry]) -> dict[str, Any]:
                 "latest_avg_latency_ms": round(latest.avg_latency_ms, 2),
                 "latency_delta_percent": (
                     round(_percent_delta_value(first.avg_latency_ms, latest.avg_latency_ms), 2)
-                    if _percent_delta_value(first.avg_latency_ms, latest.avg_latency_ms)
-                    is not None
+                    if _percent_delta_value(first.avg_latency_ms, latest.avg_latency_ms) is not None
                     else None
                 ),
                 "first_avg_cost_usd": round(first.avg_cost_usd, 4),

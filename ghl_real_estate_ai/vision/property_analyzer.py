@@ -175,9 +175,7 @@ class PropertyVisionAnalyzer:
             # Perform parallel analysis tasks
             vision_analysis, market_context = await asyncio.gather(
                 self._perform_vision_analysis(base64_image, location, property_address, additional_context),
-                self._get_market_context(location, property_address)
-                if location or property_address
-                else _noop_dict(),
+                self._get_market_context(location, property_address) if location or property_address else _noop_dict(),
             )
 
             # Process and structure the analysis

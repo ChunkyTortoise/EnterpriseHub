@@ -9,8 +9,7 @@ from typing import Any, Protocol
 class DatabaseConnection(Protocol):
     """Protocol for database connections."""
 
-    async def fetch(self, query: str) -> list[dict[str, Any]]:
-        ...
+    async def fetch(self, query: str) -> list[dict[str, Any]]: ...
 
 
 @dataclass

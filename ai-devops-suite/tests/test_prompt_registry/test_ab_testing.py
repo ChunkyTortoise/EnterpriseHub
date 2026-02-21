@@ -164,11 +164,13 @@ class TestABTestingService:
 
     def test_list_experiments(self, ab_service):
         exp1 = ExperimentConfig(
-            experiment_id="exp-1", prompt_id="p1",
+            experiment_id="exp-1",
+            prompt_id="p1",
             variants=[Variant(name="a", version_id=1, traffic_percentage=1.0)],
         )
         exp2 = ExperimentConfig(
-            experiment_id="exp-2", prompt_id="p2",
+            experiment_id="exp-2",
+            prompt_id="p2",
             variants=[Variant(name="b", version_id=2, traffic_percentage=1.0)],
         )
         ab_service.create_experiment(exp1)

@@ -111,76 +111,91 @@ class ResponseGenerator:
         return result
 
     async def generate_jorge_response(
-        self,
-        state: JorgeSellerState,
-        tone_variant: Optional[str] = None
+        self, state: JorgeSellerState, tone_variant: Optional[str] = None
     ) -> Dict[str, Any]:
         """Generate the actual response content using Jorge's specific persona."""
         # Update bot status
         await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="generate_response"
+            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="generate_response"
         )
 
         # Persona-aware stall responses (rotate to avoid repetition)
         import random
+
         seller_persona = state.get("seller_persona", {})
         persona_type = seller_persona.get("persona_type", "Traditional")
         is_investor = persona_type.lower() in ("investor", "arbitrage")
 
         friendly_responses = {
-            "thinking": random.choice([
-                "Totally get it, big decision. What's the main thing on your mind? Happy to pull numbers if that helps.",
-                "No pressure at all. What info would help you feel more confident?",
-                "Take your time. Is there something specific I can look into for you?",
-            ]) if not is_investor else random.choice([
-                "Makes sense to weigh the numbers. Want me to run a quick comp analysis so you can see the ROI picture?",
-                "Smart to think it through. I can pull recent sale data for your area if that helps the decision.",
-            ]),
-            "get_back": random.choice([
-                "No rush! Has anything changed with your timeline? I can send fresh comps if useful.",
-                "Sounds good. When you're ready, I'm here. Anything new on your end?",
-                "All good. Want me to keep an eye on the market for you in the meantime?",
-            ]),
-            "zestimate": random.choice([
-                "Zillow can't walk through your house! Want to see what neighbors actually sold for recently?",
-                "Online estimates miss a lot. I can show you what similar homes near you actually closed at.",
-                "Those online numbers are a starting point. The real picture comes from actual closed sales nearby.",
-            ]),
-            "agent": random.choice([
-                "Great you have someone! Happy to share comps from your area, could be useful for your agent too.",
-                "Good to hear. If you ever want a second set of eyes on the numbers, I'm happy to help.",
-            ]),
-            "price": random.choice([
-                "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing.",
-                "The right price makes all the difference. I can show you what's actually selling in your area.",
-                "Happy to dig into the numbers with you. What range are you thinking?",
-            ]),
-            "timeline": random.choice([
-                "Makes sense. What's driving your timeline, a move, the market, or something else?",
-                "Got it. Is there a specific date you're working toward?",
-                "Timelines are flexible. What would the ideal scenario look like for you?",
-            ]),
-            "just_looking": random.choice([
-                "Hey, I appreciate that. Most people start that way. Quick question — if a serious buyer showed up with cash and wanted to close fast, would that be worth exploring?",
-                "Totally fair! That said, would it help to know what your home could go for in today's market? No strings attached.",
-                "No pressure at all. A lot of folks just want a number to keep in their back pocket. Want me to pull some comps from your area?",
-            ]) if not is_investor else random.choice([
-                "Smart to keep options open. If I could show you the ROI on selling now vs. holding, would that be useful?",
-                "Totally get it. Want me to run the numbers on what your equity position looks like right now?",
-            ]),
+            "thinking": random.choice(
+                [
+                    "Totally get it, big decision. What's the main thing on your mind? Happy to pull numbers if that helps.",
+                    "No pressure at all. What info would help you feel more confident?",
+                    "Take your time. Is there something specific I can look into for you?",
+                ]
+            )
+            if not is_investor
+            else random.choice(
+                [
+                    "Makes sense to weigh the numbers. Want me to run a quick comp analysis so you can see the ROI picture?",
+                    "Smart to think it through. I can pull recent sale data for your area if that helps the decision.",
+                ]
+            ),
+            "get_back": random.choice(
+                [
+                    "No rush! Has anything changed with your timeline? I can send fresh comps if useful.",
+                    "Sounds good. When you're ready, I'm here. Anything new on your end?",
+                    "All good. Want me to keep an eye on the market for you in the meantime?",
+                ]
+            ),
+            "zestimate": random.choice(
+                [
+                    "Zillow can't walk through your house! Want to see what neighbors actually sold for recently?",
+                    "Online estimates miss a lot. I can show you what similar homes near you actually closed at.",
+                    "Those online numbers are a starting point. The real picture comes from actual closed sales nearby.",
+                ]
+            ),
+            "agent": random.choice(
+                [
+                    "Great you have someone! Happy to share comps from your area, could be useful for your agent too.",
+                    "Good to hear. If you ever want a second set of eyes on the numbers, I'm happy to help.",
+                ]
+            ),
+            "price": random.choice(
+                [
+                    "Pricing is tricky. Want me to pull recent sales nearby? Real data beats guessing.",
+                    "The right price makes all the difference. I can show you what's actually selling in your area.",
+                    "Happy to dig into the numbers with you. What range are you thinking?",
+                ]
+            ),
+            "timeline": random.choice(
+                [
+                    "Makes sense. What's driving your timeline, a move, the market, or something else?",
+                    "Got it. Is there a specific date you're working toward?",
+                    "Timelines are flexible. What would the ideal scenario look like for you?",
+                ]
+            ),
+            "just_looking": random.choice(
+                [
+                    "Hey, I appreciate that. Most people start that way. Quick question — if a serious buyer showed up with cash and wanted to close fast, would that be worth exploring?",
+                    "Totally fair! That said, would it help to know what your home could go for in today's market? No strings attached.",
+                    "No pressure at all. A lot of folks just want a number to keep in their back pocket. Want me to pull some comps from your area?",
+                ]
+            )
+            if not is_investor
+            else random.choice(
+                [
+                    "Smart to keep options open. If I could show you the ROI on selling now vs. holding, would that be useful?",
+                    "Totally get it. Want me to run the numbers on what your equity position looks like right now?",
+                ]
+            ),
         }
 
         # Get tone variant if not provided
         if not tone_variant:
             seller_id = state.get("lead_id", "unknown")
             try:
-                tone_variant = await self.ab_testing.get_variant(
-                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                    seller_id
-                )
+                tone_variant = await self.ab_testing.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, seller_id)
             except (KeyError, ValueError):
                 tone_variant = "empathetic"
 
@@ -188,8 +203,12 @@ class ResponseGenerator:
         sentiment_context = ""
         try:
             last_user_msg = next(
-                (msg.get("content", "") for msg in reversed(state.get("conversation_history", [])) if msg.get("role") == "user"),
-                ""
+                (
+                    msg.get("content", "")
+                    for msg in reversed(state.get("conversation_history", []))
+                    if msg.get("role") == "user"
+                ),
+                "",
             )
             if last_user_msg:
                 sentiment_result = await self.sentiment_service.analyze_message(last_user_msg)
@@ -198,8 +217,8 @@ class ResponseGenerator:
                 sentiment_context = f"""
         SENTIMENT ANALYSIS (Phase 1.5):
         - Detected Sentiment: {sentiment_result.sentiment.value.upper()} (Confidence: {sentiment_result.confidence:.2f})
-        - Suggested Tone: {tone_adjustment.get('tone', 'professional')}
-        - Pacing: {tone_adjustment.get('pace', 'normal')}
+        - Suggested Tone: {tone_adjustment.get("tone", "professional")}
+        - Pacing: {tone_adjustment.get("pace", "normal")}
         """
                 # Check for escalation
                 if sentiment_result.escalation_required.value != "none":
@@ -266,7 +285,7 @@ class ResponseGenerator:
         MARKET DATA CONTEXT (use naturally in response when relevant):
         - Estimated property value: ${estimated_value:,.0f}
         - Average days on market: {dom_average}
-        - Market trend: {market_trend.replace('_', ' ')}
+        - Market trend: {market_trend.replace("_", " ")}
         - Comparable properties analyzed: {comp_count}
         """
 
@@ -288,8 +307,7 @@ class ResponseGenerator:
         # QBQ: Frame value in terms of seller's deep motivation
         if state.get("deep_motivation"):
             prompt += (
-                f"\nSELLER DEEP MOTIVATION: {state['deep_motivation']}"
-                f"\nAlways frame value in terms of this motivation."
+                f"\nSELLER DEEP MOTIVATION: {state['deep_motivation']}\nAlways frame value in terms of this motivation."
             )
 
         # Phase 2.2: Use objection response if available
@@ -317,8 +335,7 @@ class ResponseGenerator:
         content = self._extract_text_from_llm_response(await self._call_claude(prompt))
         if not content:
             content = state.get("objection_response_text") or (
-                "Happy to help with any questions about your property. "
-                "What would be most useful to know?"
+                "Happy to help with any questions about your property. What would be most useful to know?"
             )
 
         # Calendar-focused mode: append real calendar slots for HOT sellers
@@ -360,19 +377,13 @@ class ResponseGenerator:
 
         # Mark bot as active (waiting for response)
         await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="active",
-            current_step="awaiting_response"
+            bot_type="jorge-seller", contact_id=state["lead_id"], status="active", current_step="awaiting_response"
         )
 
         return {"response_content": content}
 
     async def generate_adaptive_response(
-        self,
-        state: JorgeSellerState,
-        next_question: str,
-        tone_variant: Optional[str] = None
+        self, state: JorgeSellerState, next_question: str, tone_variant: Optional[str] = None
     ) -> Dict[str, Any]:
         """Generate response using adaptive question selection."""
         await self.event_publisher.publish_bot_status_update(
@@ -386,10 +397,7 @@ class ResponseGenerator:
         if not tone_variant:
             seller_id = state.get("lead_id", "unknown")
             try:
-                tone_variant = await self.ab_testing.get_variant(
-                    ABTestingService.RESPONSE_TONE_EXPERIMENT,
-                    seller_id
-                )
+                tone_variant = await self.ab_testing.get_variant(ABTestingService.RESPONSE_TONE_EXPERIMENT, seller_id)
             except (KeyError, ValueError):
                 tone_variant = "empathetic"
 
@@ -421,17 +429,10 @@ class ResponseGenerator:
             except Exception as e:
                 logger.warning(f"Calendar slot offering failed for {state['lead_id']}: {e}")
 
-        return {
-            "response_content": content,
-            "adaptive_question_used": next_question,
-            "adaptation_applied": True
-        }
+        return {"response_content": content, "adaptive_question_used": next_question, "adaptation_applied": True}
 
     async def _enhance_prompt_with_intelligence(
-        self,
-        base_prompt: str,
-        intelligence_context: Any,
-        state: JorgeSellerState
+        self, base_prompt: str, intelligence_context: Any, state: JorgeSellerState
     ) -> str:
         """Enhance Claude prompt with intelligence context for better responses."""
         try:

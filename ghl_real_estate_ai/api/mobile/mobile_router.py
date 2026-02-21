@@ -343,7 +343,8 @@ async def get_mobile_property_details(
 
                 # Use Claude assistant for insights
                 insights = await claude_assistant.generate_market_aware_retention_script(
-                    lead_data={"lead_name": "Property Viewer", "property_interest": property_id}, market_id="rancho_cucamonga"
+                    lead_data={"lead_name": "Property Viewer", "property_interest": property_id},
+                    market_id="rancho_cucamonga",
                 )
 
                 property_details.ai_insights = insights.get(
@@ -508,7 +509,11 @@ async def get_mobile_lead_details(
             preferred_areas=["Downtown", "South Rancho Cucamonga", "Hill Country"],
             must_have_features=["Home Office", "Updated Kitchen", "Pool"],
             conversion_probability=85,
-            recommended_properties=["prop_rancho_cucamonga_001", "prop_rancho_cucamonga_015", "prop_rancho_cucamonga_032"],
+            recommended_properties=[
+                "prop_rancho_cucamonga_001",
+                "prop_rancho_cucamonga_015",
+                "prop_rancho_cucamonga_032",
+            ],
             recent_activities=[
                 {
                     "type": "property_view",

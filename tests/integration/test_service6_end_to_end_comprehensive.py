@@ -313,7 +313,11 @@ class TestService6EndToEndWorkflows:
                     {
                         "content_type": "premium_properties",
                         "delivery_channel": "email",
-                        "personalization_factors": {"budget": 850000, "timeline": "immediate", "location": "Rancho Cucamonga"},
+                        "personalization_factors": {
+                            "budget": 850000,
+                            "timeline": "immediate",
+                            "location": "Rancho Cucamonga",
+                        },
                     },
                 )
             )

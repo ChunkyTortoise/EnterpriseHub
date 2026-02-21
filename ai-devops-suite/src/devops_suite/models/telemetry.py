@@ -43,9 +43,7 @@ class AgentEvent(Base):
     error_message = Column(Text, nullable=True)
     metadata_ = Column("metadata", JSON, nullable=True)
 
-    __table_args__ = (
-        Index("ix_agent_events_tenant_ts", "tenant_id", "timestamp"),
-    )
+    __table_args__ = (Index("ix_agent_events_tenant_ts", "tenant_id", "timestamp"),)
 
 
 class MetricSnapshot(Base):

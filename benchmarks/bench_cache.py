@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 # hashing) runs alongside to exercise the code path and is timed with
 # perf_counter_ns(). The reported latency is the modeled value.
 
+
 def _lognormal_ms(rng: random.Random, median_ms: float, sigma: float) -> float:
     """Sample from a log-normal distribution with given median and spread."""
     mu = math.log(median_ms)
@@ -49,9 +50,7 @@ def _model_l3(rng: random.Random) -> float:
 # Real computation for code-path validation
 # ---------------------------------------------------------------------------
 
-_L1_CACHE: dict[int, str] = {
-    i: hashlib.sha256(str(i).encode()).hexdigest() for i in range(100)
-}
+_L1_CACHE: dict[int, str] = {i: hashlib.sha256(str(i).encode()).hexdigest() for i in range(100)}
 
 
 def _compute_l1(rng: random.Random) -> None:
@@ -78,14 +77,15 @@ def _compute_l3(rng: random.Random) -> None:
 # ---------------------------------------------------------------------------
 _TIER_CONFIG = [
     ("L1", 0.60, _model_l1, _compute_l1),
-    ("L2", 0.80, _model_l2, _compute_l2),    # cumulative
-    ("L3", 0.88, _model_l3, _compute_l3),    # cumulative (88% hit rate)
+    ("L2", 0.80, _model_l2, _compute_l2),  # cumulative
+    ("L3", 0.88, _model_l3, _compute_l3),  # cumulative (88% hit rate)
 ]
 
 
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class TierResult:
@@ -148,6 +148,7 @@ def _percentile(data: list[float], pct: int) -> float:
 # ---------------------------------------------------------------------------
 # Main benchmark
 # ---------------------------------------------------------------------------
+
 
 def run_cache_benchmark(iterations: int = 10_000, seed: int = 42) -> CacheBenchmarkResult:
     rng = random.Random(seed)
@@ -248,14 +249,16 @@ def print_results(result: CacheBenchmarkResult) -> None:
         tgt = tier_targets[name]
         key = f"{name}_p99_ms"
         status = "PASS" if targets_met[key] else "FAIL"
-        print(fmt.format(
-            name,
-            f"{t.p50:.2f}ms",
-            f"{t.p95:.2f}ms",
-            f"{t.p99:.2f}ms",
-            str(t.hits),
-            f"<{tgt}ms P99 [{status}]",
-        ))
+        print(
+            fmt.format(
+                name,
+                f"{t.p50:.2f}ms",
+                f"{t.p95:.2f}ms",
+                f"{t.p99:.2f}ms",
+                str(t.hits),
+                f"<{tgt}ms P99 [{status}]",
+            )
+        )
     print()
     print(f"  Overall  P50={result.p50:.2f}ms  P95={result.p95:.2f}ms  P99={result.p99:.2f}ms")
     hr_status = "PASS" if targets_met["hit_rate"] else "FAIL"
@@ -270,8 +273,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="3-tier cache benchmark")
-    parser.add_argument("--iterations", type=int, default=10_000,
-                        help="Number of cache operations (default: 10000)")
+    parser.add_argument("--iterations", type=int, default=10_000, help="Number of cache operations (default: 10000)")
     args = parser.parse_args()
 
     result = run_cache_benchmark(iterations=args.iterations)

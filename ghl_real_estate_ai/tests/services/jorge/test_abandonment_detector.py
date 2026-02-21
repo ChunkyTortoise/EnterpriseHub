@@ -75,30 +75,22 @@ class TestRecoveryEligibility:
 
     def test_should_attempt_recovery_never_attempted(self, detector):
         """Test recovery eligible when never attempted."""
-        assert detector._should_attempt_recovery(
-            AbandonmentStage.DAY_3, None
-        ) is True
+        assert detector._should_attempt_recovery(AbandonmentStage.DAY_3, None) is True
 
     def test_should_attempt_recovery_stage_advancement(self, detector):
         """Test recovery eligible when stage advances."""
         # Last recovered at 3d, now at 7d
-        assert detector._should_attempt_recovery(
-            AbandonmentStage.DAY_7, AbandonmentStage.DAY_3
-        ) is True
+        assert detector._should_attempt_recovery(AbandonmentStage.DAY_7, AbandonmentStage.DAY_3) is True
 
     def test_should_not_attempt_recovery_same_stage(self, detector):
         """Test recovery not eligible at same stage."""
         # Last recovered at 7d, still at 7d
-        assert detector._should_attempt_recovery(
-            AbandonmentStage.DAY_7, AbandonmentStage.DAY_7
-        ) is False
+        assert detector._should_attempt_recovery(AbandonmentStage.DAY_7, AbandonmentStage.DAY_7) is False
 
     def test_should_not_attempt_recovery_earlier_stage(self, detector):
         """Test recovery not eligible at earlier stage (edge case)."""
         # Last recovered at 14d, somehow at 7d (shouldn't happen but test logic)
-        assert detector._should_attempt_recovery(
-            AbandonmentStage.DAY_7, AbandonmentStage.DAY_14
-        ) is False
+        assert detector._should_attempt_recovery(AbandonmentStage.DAY_7, AbandonmentStage.DAY_14) is False
 
 
 @pytest.mark.asyncio
@@ -117,9 +109,7 @@ class TestAbandonmentDetection:
         contacts = await detector.detect_abandoned_contacts("loc123")
         assert contacts == []
 
-    async def test_detect_abandoned_contacts_empty_result(
-        self, detector, mock_db_pool
-    ):
+    async def test_detect_abandoned_contacts_empty_result(self, detector, mock_db_pool):
         """Test detection with no abandoned contacts."""
         mock_db_pool.fetch.return_value = []
 
@@ -127,9 +117,7 @@ class TestAbandonmentDetection:
         assert contacts == []
         mock_db_pool.fetch.assert_called_once()
 
-    async def test_detect_abandoned_contacts_with_results(
-        self, detector, mock_db_pool
-    ):
+    async def test_detect_abandoned_contacts_with_results(self, detector, mock_db_pool):
         """Test detection with abandoned contacts."""
         current_time = time.time()
         last_contact = current_time - (5 * 24 * 3600)  # 5 days ago

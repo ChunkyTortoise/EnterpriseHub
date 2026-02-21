@@ -20,6 +20,7 @@ class SessionMemoryConfig(BaseModel):
         sliding_window: Whether to automatically trim old messages.
         session_id: Optional identifier for this session.
     """
+
     max_messages: int = 100
     sliding_window: bool = True
     session_id: str | None = None
@@ -74,7 +75,7 @@ class SessionMemory(MemoryProvider):
         """
         self._messages.append(message)
         if self.config.sliding_window and len(self._messages) > self.config.max_messages:
-            self._messages = self._messages[-self.config.max_messages:]
+            self._messages = self._messages[-self.config.max_messages :]
 
     async def add_messages(self, messages: list[Message]) -> None:
         """Add multiple messages to the conversation.
@@ -200,10 +201,7 @@ class SessionMemory(MemoryProvider):
         Returns:
             List of dicts with 'role' and 'content' keys.
         """
-        return [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in self._messages
-        ]
+        return [{"role": msg.role.value, "content": msg.content} for msg in self._messages]
 
     def to_anthropic_messages(self) -> list[dict]:
         """Convert to Anthropic message format.
@@ -270,9 +268,7 @@ class SessionMemory(MemoryProvider):
         config = SessionMemoryConfig(**snapshot.get("config", {}))
         memory = cls(config)
         memory._messages = [Message(**msg) for msg in snapshot.get("messages", [])]
-        memory._metadata = {
-            k: MemoryEntry(**v) for k, v in snapshot.get("metadata", {}).items()
-        }
+        memory._metadata = {k: MemoryEntry(**v) for k, v in snapshot.get("metadata", {}).items()}
         return memory
 
     def __len__(self) -> int:

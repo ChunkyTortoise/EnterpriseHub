@@ -12,6 +12,7 @@ from ghl_real_estate_ai.models.seller_bot_state import JorgeSellerState
 
 try:
     from ghl_real_estate_ai.ghl_utils.config import settings
+
     SETTINGS_AVAILABLE = True
 except ImportError:
     SETTINGS_AVAILABLE = False
@@ -52,15 +53,21 @@ class AdaptiveQuestionEngine:
         """
         # Determine which question set to use based on mode
         if questions_config:
-            if simple_mode and hasattr(questions_config, 'questions_simple') and questions_config.questions_simple:
+            if simple_mode and hasattr(questions_config, "questions_simple") and questions_config.questions_simple:
                 # Simple mode: 4 questions from config
-                self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions_simple]
-            elif not simple_mode and hasattr(questions_config, 'questions_full') and questions_config.questions_full:
+                self.jorge_core_questions = [
+                    q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions_simple
+                ]
+            elif not simple_mode and hasattr(questions_config, "questions_full") and questions_config.questions_full:
                 # Full mode: 10 questions from config
-                self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions_full]
-            elif hasattr(questions_config, 'questions') and questions_config.questions:
+                self.jorge_core_questions = [
+                    q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions_full
+                ]
+            elif hasattr(questions_config, "questions") and questions_config.questions:
                 # Fallback to default questions
-                self.jorge_core_questions = [q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions]
+                self.jorge_core_questions = [
+                    q.get("text", q) if isinstance(q, dict) else q for q in questions_config.questions
+                ]
             else:
                 # No config questions found, use hardcoded fallback based on mode
                 self.jorge_core_questions = self._get_hardcoded_questions(simple_mode)
@@ -71,7 +78,7 @@ class AdaptiveQuestionEngine:
         self.simple_mode = simple_mode
 
         # Friendly questions for high-intent leads (config-first, hardcoded fallback)
-        if questions_config and hasattr(questions_config, 'accelerators') and questions_config.accelerators:
+        if questions_config and hasattr(questions_config, "accelerators") and questions_config.accelerators:
             self.high_intent_accelerators = questions_config.accelerators
         else:
             self.high_intent_accelerators = [
@@ -97,7 +104,9 @@ class AdaptiveQuestionEngine:
             ],
         }
 
-        logger.info(f"AdaptiveQuestionEngine initialized: {'simple' if simple_mode else 'full'} mode ({len(self.jorge_core_questions)} questions)")
+        logger.info(
+            f"AdaptiveQuestionEngine initialized: {'simple' if simple_mode else 'full'} mode ({len(self.jorge_core_questions)} questions)"
+        )
 
     def _get_hardcoded_questions(self, simple_mode: bool) -> list[str]:
         """Get hardcoded question set based on mode.
@@ -134,7 +143,7 @@ class AdaptiveQuestionEngine:
         current_scores = state.get("intent_profile")
 
         # Fast-track high-intent leads (PCS > 70)
-        if current_scores and hasattr(current_scores, 'pcs') and current_scores.pcs.total_score > 70:
+        if current_scores and hasattr(current_scores, "pcs") and current_scores.pcs.total_score > 70:
             return await self._fast_track_to_calendar(state)
 
         # Handle specific concerns with supportive questions
@@ -152,7 +161,7 @@ class AdaptiveQuestionEngine:
         """Direct high-intent leads to calendar scheduling"""
         base_msg = random.choice(self.high_intent_accelerators)
 
-        if SETTINGS_AVAILABLE and settings and hasattr(settings, 'ghl_calendar_id') and settings.ghl_calendar_id:
+        if SETTINGS_AVAILABLE and settings and hasattr(settings, "ghl_calendar_id") and settings.ghl_calendar_id:
             calendar_link = f"https://link.ghl.com/widget/booking/{settings.ghl_calendar_id}"
             return f"{base_msg} You can pick a time that works best for you right here: {calendar_link}"
 
@@ -168,7 +177,7 @@ class AdaptiveQuestionEngine:
         # Analyze what's missing from qualification
         scores = state.get("intent_profile")
 
-        if scores and hasattr(scores, 'frs'):
+        if scores and hasattr(scores, "frs"):
             if scores.frs.timeline.score < 50:
                 return "I'd love to better understand your timeline. What would work best for your situation?"
             elif scores.frs.price.score < 50:

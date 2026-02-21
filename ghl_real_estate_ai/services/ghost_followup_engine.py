@@ -91,7 +91,9 @@ class GhostFollowUpEngine:
         - IF FRS < 40: 'No rush' frame
         """
         if state.frs_score > 60:
-            frame = "We have qualified buyers interested in your market right now. Want me to share the latest activity?"
+            frame = (
+                "We have qualified buyers interested in your market right now. Want me to share the latest activity?"
+            )
         elif state.frs_score >= 40:
             frame = "Just wanted to share some new market data for your neighborhood. Still exploring?"
         else:

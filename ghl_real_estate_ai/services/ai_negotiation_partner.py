@@ -467,8 +467,7 @@ class AINegotiationPartner:
                 buyer_data = {
                     "lead_id": request.lead_id,
                     "pre_approved": True,
-                    "cash_offer": request.buyer_preferences
-                    and request.buyer_preferences.get("cash_offer", False),
+                    "cash_offer": request.buyer_preferences and request.buyer_preferences.get("cash_offer", False),
                     "flexible_timeline": True,
                 }
             else:
@@ -489,8 +488,7 @@ class AINegotiationPartner:
             buyer_data = {
                 "lead_id": request.lead_id,
                 "pre_approved": True,
-                "cash_offer": request.buyer_preferences
-                and request.buyer_preferences.get("cash_offer", False),
+                "cash_offer": request.buyer_preferences and request.buyer_preferences.get("cash_offer", False),
             }
 
         listing_history = self._extract_listing_history(property_data)
@@ -539,15 +537,15 @@ class AINegotiationPartner:
 and generate a counter-offer strategy using chain-of-thought reasoning.
 
 CURRENT OFFER:
-- Offer Price: ${offer.get('price', 0):,.0f}
-- List Price: ${offer.get('list_price', 0):,.0f}
-- Terms: {offer.get('terms', 'Standard')}
-- Contingencies: {offer.get('contingencies', 'Inspection, Financing')}
-- Cash Offer: {offer.get('cash_offer', False)}
-- Close Timeline: {offer.get('close_days', 30)} days
+- Offer Price: ${offer.get("price", 0):,.0f}
+- List Price: ${offer.get("list_price", 0):,.0f}
+- Terms: {offer.get("terms", "Standard")}
+- Contingencies: {offer.get("contingencies", "Inspection, Financing")}
+- Cash Offer: {offer.get("cash_offer", False)}
+- Close Timeline: {offer.get("close_days", 30)} days
 
 COMPARABLE SALES:
-{comps_summary or 'No comparable sales provided'}
+{comps_summary or "No comparable sales provided"}
 
 INSTRUCTIONS:
 Think step-by-step:

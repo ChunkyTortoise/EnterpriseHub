@@ -57,13 +57,14 @@ async def test_collect_stats_handles_missing_redis(digest_service):
         create=True,
     ) as mock_tq_import:
         # Force the task_queue import inside collect_daily_stats to raise
-        with patch.dict("sys.modules", {
-            "ghl_real_estate_ai.services.task_queue": MagicMock(
-                task_queue=MagicMock(
-                    get_dlq_jobs=MagicMock(side_effect=ConnectionError("Redis down"))
-                )
-            ),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "ghl_real_estate_ai.services.task_queue": MagicMock(
+                    task_queue=MagicMock(get_dlq_jobs=MagicMock(side_effect=ConnectionError("Redis down")))
+                ),
+            },
+        ):
             stats = await digest_service.collect_daily_stats(date(2026, 2, 20))
 
     # Should not raise and should record the error
@@ -95,9 +96,11 @@ async def test_send_digest_success(digest_service):
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch.object(digest_service, "collect_daily_stats", new_callable=AsyncMock) as mock_collect, \
-         patch.object(digest_service, "build_html_email", new_callable=AsyncMock) as mock_build, \
-         patch("ghl_real_estate_ai.services.sendgrid_client.SendGridClient", return_value=mock_client):
+    with (
+        patch.object(digest_service, "collect_daily_stats", new_callable=AsyncMock) as mock_collect,
+        patch.object(digest_service, "build_html_email", new_callable=AsyncMock) as mock_build,
+        patch("ghl_real_estate_ai.services.sendgrid_client.SendGridClient", return_value=mock_client),
+    ):
         mock_collect.return_value = DigestStats(date=target)
         mock_build.return_value = "<html>test</html>"
 
@@ -121,9 +124,11 @@ async def test_send_digest_sendgrid_failure_returns_false(digest_service):
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch.object(digest_service, "collect_daily_stats", new_callable=AsyncMock) as mock_collect, \
-         patch.object(digest_service, "build_html_email", new_callable=AsyncMock) as mock_build, \
-         patch("ghl_real_estate_ai.services.sendgrid_client.SendGridClient", return_value=mock_client):
+    with (
+        patch.object(digest_service, "collect_daily_stats", new_callable=AsyncMock) as mock_collect,
+        patch.object(digest_service, "build_html_email", new_callable=AsyncMock) as mock_build,
+        patch("ghl_real_estate_ai.services.sendgrid_client.SendGridClient", return_value=mock_client),
+    ):
         mock_collect.return_value = DigestStats(date=target)
         mock_build.return_value = "<html>test</html>"
 
@@ -138,9 +143,7 @@ async def test_schedule_registers_cron_job(digest_service):
     """schedule_daily_digest must call scheduler.add_job with hour=7, minute=0."""
     mock_scheduler = MagicMock()
 
-    await digest_service.schedule_daily_digest(
-        mock_scheduler, "jorge@example.com"
-    )
+    await digest_service.schedule_daily_digest(mock_scheduler, "jorge@example.com")
 
     mock_scheduler.add_job.assert_called_once()
     call_kwargs = mock_scheduler.add_job.call_args.kwargs

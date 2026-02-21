@@ -21,6 +21,7 @@ def test_location_id():
     """Provide a test location ID."""
     return "test_location_campaigns"
 
+
 @pytest.fixture
 def campaign_tracker(test_location_id):
     """Create a campaign tracker instance for testing."""
@@ -30,6 +31,7 @@ def campaign_tracker(test_location_id):
     campaigns_dir = Path(__file__).parent.parent / "data" / "campaigns" / test_location_id
     if campaigns_dir.exists():
         shutil.rmtree(campaigns_dir)
+
 
 class _AdvancingDatetime(datetime):
     """datetime subclass where now() auto-advances for unique campaign IDs."""
@@ -55,6 +57,7 @@ def _mock_campaign_datetime():
     _AdvancingDatetime.reset()
     with patch("ghl_real_estate_ai.services.campaign_analytics.datetime", _AdvancingDatetime):
         yield
+
 
 class TestCampaignCreation:
     """Test campaign creation and management."""
@@ -104,6 +107,7 @@ class TestCampaignCreation:
         assert perf["conversions"] == 0
         assert perf["roi"] == 0.0
         assert perf["cost_per_lead"] == 0.0
+
 
 class TestMetricsUpdates:
     """Test updating campaign metrics."""
@@ -179,6 +183,7 @@ class TestMetricsUpdates:
         campaign = campaign_tracker.campaigns["active"][campaign_id]
         assert campaign["performance"]["leads_generated"] == 80  # 50 + 30
 
+
 class TestFunnelAnalysis:
     """Test conversion funnel tracking."""
 
@@ -236,6 +241,7 @@ class TestFunnelAnalysis:
         efficiency = performance["funnel_metrics"]["overall_efficiency"]
 
         assert efficiency == 5.0  # 50/1000 * 100
+
 
 class TestCampaignPerformance:
     """Test campaign performance reporting."""
@@ -306,6 +312,7 @@ class TestCampaignPerformance:
         # ROI: 4.0/2.0 = 200%
         assert targets["roi_vs_target"]["achievement_rate"] == 200.0
 
+
 class TestCampaignComparison:
     """Test comparing multiple campaigns."""
 
@@ -373,6 +380,7 @@ class TestCampaignComparison:
         if campaigns_dir.exists():
             shutil.rmtree(campaigns_dir)
 
+
 class TestChannelAnalytics:
     """Test channel-level analytics."""
 
@@ -411,6 +419,7 @@ class TestChannelAnalytics:
         # Cleanup
         if campaigns_dir.exists():
             shutil.rmtree(campaigns_dir)
+
 
 class TestCampaignLifecycle:
     """Test campaign lifecycle management."""
@@ -457,6 +466,7 @@ class TestCampaignLifecycle:
         if campaigns_dir.exists():
             shutil.rmtree(campaigns_dir)
 
+
 class TestDataPersistence:
     """Test that campaign data persists correctly."""
 
@@ -480,6 +490,7 @@ class TestDataPersistence:
         campaigns_dir = Path(__file__).parent.parent / "data" / "campaigns" / test_location_id
         if campaigns_dir.exists():
             shutil.rmtree(campaigns_dir)
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

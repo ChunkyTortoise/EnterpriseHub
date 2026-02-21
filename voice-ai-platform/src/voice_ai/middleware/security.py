@@ -16,13 +16,15 @@ from starlette.middleware.base import BaseHTTPMiddleware
 logger = logging.getLogger(__name__)
 
 # Paths excluded from API key authentication
-EXCLUDED_PATHS = frozenset({
-    "/health",
-    "/ready",
-    "/docs",
-    "/openapi.json",
-    "/redoc",
-})
+EXCLUDED_PATHS = frozenset(
+    {
+        "/health",
+        "/ready",
+        "/docs",
+        "/openapi.json",
+        "/redoc",
+    }
+)
 
 
 def _get_valid_keys() -> set[str]:

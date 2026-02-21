@@ -434,11 +434,7 @@ class TranscriptAnalyzer:
 
         for transcript in self.transcripts:
             if transcript["outcome"] == "closed":
-                [
-                    msg["message"]
-                    for msg in transcript["messages"]
-                    if msg["speaker"] == "bot" and "?" in msg["message"]
-                ]
+                [msg["message"] for msg in transcript["messages"] if msg["speaker"] == "bot" and "?" in msg["message"]]
 
                 # Extract question types from metadata
                 for msg in transcript["messages"]:

@@ -97,11 +97,13 @@ def security():
 @pytest.mark.jorge
 def test_webhook_valid_hmac_signature_accepted(security):
     """Valid HMAC-SHA256 signature should be accepted."""
-    body = json.dumps({
-        "contact_id": "contact-123",
-        "location_id": "loc-456",
-        "message": "I want to buy a house",
-    }).encode()
+    body = json.dumps(
+        {
+            "contact_id": "contact-123",
+            "location_id": "loc-456",
+            "message": "I want to buy a house",
+        }
+    ).encode()
     signature = _compute_hmac_signature(TEST_WEBHOOK_SECRET, body)
     request = _make_mock_request(headers={"X-GHL-Signature": signature})
 
@@ -113,10 +115,12 @@ def test_webhook_valid_hmac_signature_accepted(security):
 @pytest.mark.jorge
 def test_webhook_invalid_signature_rejected(security):
     """Wrong HMAC signature should return False (invalid)."""
-    body = json.dumps({
-        "contact_id": "contact-123",
-        "message": "Hello",
-    }).encode()
+    body = json.dumps(
+        {
+            "contact_id": "contact-123",
+            "message": "Hello",
+        }
+    ).encode()
     request = _make_mock_request(headers={"X-GHL-Signature": "definitely-not-valid"})
 
     result = security._verify_ghl_signature(request, body)
@@ -140,10 +144,12 @@ def test_webhook_missing_signature_raises_401(security):
 def test_webhook_static_secret_accepted(security):
     """GHL Custom Webhook actions send the raw secret as the signature.
     This should be accepted as valid (fallback path)."""
-    body = json.dumps({
-        "contact_id": "contact-123",
-        "message": "Hello from custom webhook action",
-    }).encode()
+    body = json.dumps(
+        {
+            "contact_id": "contact-123",
+            "message": "Hello from custom webhook action",
+        }
+    ).encode()
     # Send the raw secret as the signature (GHL Custom Webhook behavior)
     request = _make_mock_request(headers={"X-GHL-Signature": TEST_WEBHOOK_SECRET})
 
@@ -161,11 +167,13 @@ def test_webhook_static_secret_accepted(security):
 @pytest.mark.jorge
 def test_tag_webhook_valid_signature_accepted(security):
     """Valid signature on tag-webhook payload should be accepted."""
-    body = json.dumps({
-        "contact_id": "contact-789",
-        "location_id": "loc-456",
-        "tag": "Needs Qualifying",
-    }).encode()
+    body = json.dumps(
+        {
+            "contact_id": "contact-789",
+            "location_id": "loc-456",
+            "tag": "Needs Qualifying",
+        }
+    ).encode()
     signature = _compute_hmac_signature(TEST_WEBHOOK_SECRET, body)
     request = _make_mock_request(headers={"X-GHL-Signature": signature})
     request.url.path = "/api/ghl/tag-webhook"
@@ -178,10 +186,12 @@ def test_tag_webhook_valid_signature_accepted(security):
 @pytest.mark.jorge
 def test_tag_webhook_invalid_signature_rejected(security):
     """Invalid signature on tag-webhook should return False."""
-    body = json.dumps({
-        "contact_id": "contact-789",
-        "tag": "Needs Qualifying",
-    }).encode()
+    body = json.dumps(
+        {
+            "contact_id": "contact-789",
+            "tag": "Needs Qualifying",
+        }
+    ).encode()
     request = _make_mock_request(headers={"X-GHL-Signature": "bad-signature"})
     request.url.path = "/api/ghl/tag-webhook"
 

@@ -853,7 +853,9 @@ class RealTimeValueDashboard:
 
 
 def render_real_time_value_dashboard(
-    agent_id: str = "jorge_sales_rancho_cucamonga", client_id: Optional[str] = None, transaction_id: Optional[str] = None
+    agent_id: str = "jorge_sales_rancho_cucamonga",
+    client_id: Optional[str] = None,
+    transaction_id: Optional[str] = None,
 ) -> None:
     """
     Render the real-time value dashboard

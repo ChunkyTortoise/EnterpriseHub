@@ -40,6 +40,7 @@ from agentforge.tools.registry import ToolRegistry
 @dataclass
 class MockMCPTool:
     """Mock MCP tool for testing."""
+
     name: str
     description: str
     inputSchema: dict[str, Any]  # noqa: N815
@@ -48,18 +49,21 @@ class MockMCPTool:
 @dataclass
 class MockToolListResponse:
     """Mock response from list_tools."""
+
     tools: list[MockMCPTool]
 
 
 @dataclass
 class MockContentItem:
     """Mock content item in tool result."""
+
     text: str
 
 
 @dataclass
 class MockToolResult:
     """Mock result from call_tool."""
+
     content: list[MockContentItem]
 
 
@@ -84,9 +88,7 @@ def mock_mcp_tool():
 def mock_session(mock_mcp_tool):
     """Create a mock MCP client session."""
     session = AsyncMock()
-    session.list_tools = AsyncMock(
-        return_value=MockToolListResponse(tools=[mock_mcp_tool])
-    )
+    session.list_tools = AsyncMock(return_value=MockToolListResponse(tools=[mock_mcp_tool]))
     session.call_tool = AsyncMock(
         return_value=MockToolResult(content=[MockContentItem(text="result")])
     )
@@ -422,7 +424,9 @@ class TestMCPToolRegistry:
         registry = MCPToolRegistry()
 
         # Mock the adapter's discover_tools
-        with patch.object(MCPToolAdapter, 'discover_tools', new_callable=AsyncMock) as mock_discover:
+        with patch.object(
+            MCPToolAdapter, "discover_tools", new_callable=AsyncMock
+        ) as mock_discover:
             mock_discover.return_value = [
                 MCPTool(
                     name=mock_mcp_tool.name,
@@ -443,7 +447,9 @@ class TestMCPToolRegistry:
         """Test registering tools with a prefix."""
         registry = MCPToolRegistry()
 
-        with patch.object(MCPToolAdapter, 'discover_tools', new_callable=AsyncMock) as mock_discover:
+        with patch.object(
+            MCPToolAdapter, "discover_tools", new_callable=AsyncMock
+        ) as mock_discover:
             mock_discover.return_value = [
                 MCPTool(
                     name=mock_mcp_tool.name,
@@ -488,7 +494,9 @@ class TestMCPToolRegistry:
         registry = MCPToolRegistry()
 
         tool = MagicMock()
-        tool.to_openai_tool = MagicMock(return_value={"type": "function", "function": {"name": "test"}})
+        tool.to_openai_tool = MagicMock(
+            return_value={"type": "function", "function": {"name": "test"}}
+        )
         tool.name = "test_tool"
         registry.register(tool)
 
@@ -551,18 +559,20 @@ class TestConvenienceFunctions:
     async def test_discover_mcp_tools(self, mock_mcp_tool):
         """Test discover_mcp_tools function."""
         # Mock the entire MCPToolAdapter to avoid actual connection
-        with patch('agentforge.tools.mcp.MCPToolAdapter') as mock_adapter_class:
+        with patch("agentforge.tools.mcp.MCPToolAdapter") as mock_adapter_class:
             mock_adapter = AsyncMock()
             mock_adapter.__aenter__ = AsyncMock(return_value=mock_adapter)
             mock_adapter.__aexit__ = AsyncMock(return_value=None)
-            mock_adapter.discover_tools = AsyncMock(return_value=[
-                MCPTool(
-                    name=mock_mcp_tool.name,
-                    description=mock_mcp_tool.description,
-                    parameters_schema=mock_mcp_tool.inputSchema,
-                    adapter=mock_adapter,
-                )
-            ])
+            mock_adapter.discover_tools = AsyncMock(
+                return_value=[
+                    MCPTool(
+                        name=mock_mcp_tool.name,
+                        description=mock_mcp_tool.description,
+                        parameters_schema=mock_mcp_tool.inputSchema,
+                        adapter=mock_adapter,
+                    )
+                ]
+            )
             mock_adapter_class.return_value = mock_adapter
 
             tools = await discover_mcp_tools(command="python3", args=["-m", "server"])
@@ -575,7 +585,9 @@ class TestConvenienceFunctions:
         """Test register_mcp_tools function."""
         registry = ToolRegistry()
 
-        with patch.object(MCPToolAdapter, 'discover_tools', new_callable=AsyncMock) as mock_discover:
+        with patch.object(
+            MCPToolAdapter, "discover_tools", new_callable=AsyncMock
+        ) as mock_discover:
             mock_discover.return_value = [
                 MCPTool(
                     name=mock_mcp_tool.name,
@@ -585,11 +597,7 @@ class TestConvenienceFunctions:
                 )
             ]
 
-            tools = await register_mcp_tools(
-                registry=registry,
-                command="python",
-                prefix="mcp"
-            )
+            tools = await register_mcp_tools(registry=registry, command="python", prefix="mcp")
 
             assert len(tools) == 1
             assert tools[0].name == "mcp_test_tool"
@@ -659,8 +667,8 @@ class TestImportErrorHandling:
         adapter = MCPToolAdapter(stdio_config)
 
         with (
-            patch.dict('sys.modules', {'mcp': None, 'mcp.client.stdio': None}),
-            patch('builtins.__import__', side_effect=ImportError("No module named 'mcp'")),
+            patch.dict("sys.modules", {"mcp": None, "mcp.client.stdio": None}),
+            patch("builtins.__import__", side_effect=ImportError("No module named 'mcp'")),
             pytest.raises(ImportError) as exc_info,
         ):
             await adapter._connect_stdio()
@@ -673,8 +681,8 @@ class TestImportErrorHandling:
         adapter = MCPToolAdapter(http_config)
 
         with (
-            patch.dict('sys.modules', {'mcp': None, 'mcp.client.streamable_http': None}),
-            patch('builtins.__import__', side_effect=ImportError("No module named 'mcp'")),
+            patch.dict("sys.modules", {"mcp": None, "mcp.client.streamable_http": None}),
+            patch("builtins.__import__", side_effect=ImportError("No module named 'mcp'")),
             pytest.raises(ImportError) as exc_info,
         ):
             await adapter._connect_http()
@@ -712,9 +720,7 @@ class TestMultipleTools:
         ]
 
         mock_session = AsyncMock()
-        mock_session.list_tools = AsyncMock(
-            return_value=MockToolListResponse(tools=tools_list)
-        )
+        mock_session.list_tools = AsyncMock(return_value=MockToolListResponse(tools=tools_list))
         mock_session.initialize = AsyncMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
@@ -1062,8 +1068,8 @@ class TestMCPServerExporter:
         exporter.register_agent(mock_agent())
 
         with (
-            patch.dict('sys.modules', {'mcp': None, 'mcp.server.fastmcp': None}),
-            patch('builtins.__import__', side_effect=ImportError("No module named 'mcp'")),
+            patch.dict("sys.modules", {"mcp": None, "mcp.server.fastmcp": None}),
+            patch("builtins.__import__", side_effect=ImportError("No module named 'mcp'")),
             pytest.raises(ImportError) as exc_info,
         ):
             exporter._create_mcp_server()
@@ -1144,7 +1150,7 @@ class TestServerExporterConvenienceFunctions:
 
     def test_run_mcp_server_creates_and_runs(self, mock_agent):
         """Test run_mcp_server creates exporter and calls run_stdio."""
-        with patch('agentforge.tools.mcp.MCPServerExporter') as mock_exporter_class:
+        with patch("agentforge.tools.mcp.MCPServerExporter") as mock_exporter_class:
             mock_exporter = MagicMock()
             mock_exporter_class.return_value = mock_exporter
 

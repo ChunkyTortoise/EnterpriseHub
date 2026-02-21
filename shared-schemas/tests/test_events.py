@@ -1,7 +1,7 @@
 """Tests for domain events."""
 
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
 from shared_schemas.events import (
     BillingEvent,
@@ -35,9 +35,7 @@ class TestTenantCreated:
         assert e.tenant_name == "Acme Corp"
 
     def test_serialization(self):
-        e = TenantCreated(
-            tenant_id="t1", tenant_name="Test", tier="free", email="t@t.com"
-        )
+        e = TenantCreated(tenant_id="t1", tenant_name="Test", tier="free", email="t@t.com")
         d = e.model_dump()
         assert d["event_type"] == "TenantCreated"
         assert d["tenant_name"] == "Test"

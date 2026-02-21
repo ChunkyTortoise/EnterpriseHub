@@ -36,11 +36,7 @@ def valid_handoff_context():
         property_address="123 Main St, Rancho Cucamonga, CA",
         cma_summary={"estimated_value": 550000, "confidence": 0.85},
         conversation_summary="Qualified lead from Lead Bot. Pre-approved, ready to buy.",
-        key_insights={
-            "pre_approval_status": "approved",
-            "timeline": "immediate",
-            "property_type": "single_family"
-        },
+        key_insights={"pre_approval_status": "approved", "timeline": "immediate", "property_type": "single_family"},
         urgency_level="urgent",
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
@@ -99,9 +95,7 @@ def test_buyer_bot_has_valid_handoff_context_with_none(buyer_bot):
 
 def test_buyer_bot_has_valid_handoff_context_without_data(buyer_bot):
     """Test that buyer bot rejects context without meaningful data."""
-    empty_context = EnrichedHandoffContext(
-        timestamp=datetime.now(timezone.utc).isoformat()
-    )
+    empty_context = EnrichedHandoffContext(timestamp=datetime.now(timezone.utc).isoformat())
     assert buyer_bot._has_valid_handoff_context(empty_context) is False
 
 
@@ -259,24 +253,21 @@ async def test_retrieve_handoff_context_success(handoff_service, valid_handoff_c
     contact_id = "test_contact_123"
 
     # Create mock contact with handoff context
-    context_json = json.dumps({
-        "source_qualification_score": 85.0,
-        "source_temperature": "hot",
-        "budget_range": {"min": 400000, "max": 600000},
-        "property_address": None,
-        "cma_summary": None,
-        "conversation_summary": "Test summary",
-        "key_insights": {"test": "insight"},
-        "urgency_level": "urgent",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    context_json = json.dumps(
+        {
+            "source_qualification_score": 85.0,
+            "source_temperature": "hot",
+            "budget_range": {"min": 400000, "max": 600000},
+            "property_address": None,
+            "cma_summary": None,
+            "conversation_summary": "Test summary",
+            "key_insights": {"test": "insight"},
+            "urgency_level": "urgent",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
 
-    mock_contact = {
-        "id": contact_id,
-        "customFields": [
-            {"id": "handoff_context", "value": context_json}
-        ]
-    }
+    mock_contact = {"id": contact_id, "customFields": [{"id": "handoff_context", "value": context_json}]}
 
     # Mock GHL client
     mock_ghl_client = AsyncMock()
@@ -298,24 +289,21 @@ async def test_retrieve_handoff_context_stale(handoff_service):
 
     # Create mock contact with stale context (>24h)
     old_timestamp = (datetime.now(timezone.utc) - timedelta(hours=25)).isoformat()
-    context_json = json.dumps({
-        "source_qualification_score": 85.0,
-        "source_temperature": "hot",
-        "budget_range": {"min": 400000, "max": 600000},
-        "property_address": None,
-        "cma_summary": None,
-        "conversation_summary": "Test summary",
-        "key_insights": {},
-        "urgency_level": "urgent",
-        "timestamp": old_timestamp,
-    })
+    context_json = json.dumps(
+        {
+            "source_qualification_score": 85.0,
+            "source_temperature": "hot",
+            "budget_range": {"min": 400000, "max": 600000},
+            "property_address": None,
+            "cma_summary": None,
+            "conversation_summary": "Test summary",
+            "key_insights": {},
+            "urgency_level": "urgent",
+            "timestamp": old_timestamp,
+        }
+    )
 
-    mock_contact = {
-        "id": contact_id,
-        "customFields": [
-            {"id": "handoff_context", "value": context_json}
-        ]
-    }
+    mock_contact = {"id": contact_id, "customFields": [{"id": "handoff_context", "value": context_json}]}
 
     # Mock GHL client
     mock_ghl_client = AsyncMock()
@@ -332,10 +320,7 @@ async def test_retrieve_handoff_context_not_found(handoff_service):
     """Test retrieval when no handoff context exists."""
     contact_id = "test_contact_123"
 
-    mock_contact = {
-        "id": contact_id,
-        "customFields": []
-    }
+    mock_contact = {"id": contact_id, "customFields": []}
 
     # Mock GHL client
     mock_ghl_client = AsyncMock()
@@ -356,10 +341,7 @@ async def test_retrieve_handoff_context_not_found(handoff_service):
 @patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ClaudeAssistant")
 @patch("ghl_real_estate_ai.agents.jorge_buyer_bot.PropertyMatcher")
 async def test_buyer_bot_skips_qualification_with_context(
-    mock_property_matcher,
-    mock_claude,
-    buyer_bot,
-    valid_handoff_context
+    mock_property_matcher, mock_claude, buyer_bot, valid_handoff_context
 ):
     """Test that buyer bot skips re-qualification when valid handoff context provided."""
     # Mock dependencies
@@ -368,16 +350,14 @@ async def test_buyer_bot_skips_qualification_with_context(
     mock_claude.return_value = mock_claude_instance
 
     mock_matcher_instance = MagicMock()
-    mock_matcher_instance.find_buyer_matches = AsyncMock(return_value=[
-        {"address": "789 Test St", "price": 500000}
-    ])
+    mock_matcher_instance.find_buyer_matches = AsyncMock(return_value=[{"address": "789 Test St", "price": 500000}])
     mock_property_matcher.return_value = mock_matcher_instance
 
     # Process with handoff context
     result = await buyer_bot.process_buyer_conversation(
         conversation_id="test_123",
         user_message="I'm ready to see some properties",
-        handoff_context=valid_handoff_context
+        handoff_context=valid_handoff_context,
     )
 
     # Verify context was used
@@ -405,7 +385,7 @@ async def test_handoff_service_stores_context_on_execute(handoff_service):
             budget_range={"min": 400000, "max": 600000},
             conversation_summary="Qualified lead",
             timestamp=datetime.now(timezone.utc).isoformat(),
-        )
+        ),
     )
 
     contact_id = "test_contact_123"
@@ -417,9 +397,7 @@ async def test_handoff_service_stores_context_on_execute(handoff_service):
 
     # Execute handoff
     actions = await handoff_service.execute_handoff(
-        decision=decision,
-        contact_id=contact_id,
-        location_id="test_location"
+        decision=decision, contact_id=contact_id, location_id="test_location"
     )
 
     # Verify context was stored

@@ -17,11 +17,9 @@ _template_engine = TemplateEngine()
 class EmailClient(Protocol):
     """Protocol for email sending/receiving."""
 
-    async def send(self, to: str, subject: str, body: str, cc: str, bcc: str) -> dict:
-        ...
+    async def send(self, to: str, subject: str, body: str, cc: str, bcc: str) -> dict: ...
 
-    async def search(self, query: str, folder: str, limit: int) -> list[dict]:
-        ...
+    async def search(self, query: str, folder: str, limit: int) -> list[dict]: ...
 
 
 @dataclass
@@ -42,14 +40,28 @@ class MockEmailClient:
     def __init__(self) -> None:
         self._sent: list[MockEmailMessage] = []
         self._inbox: list[MockEmailMessage] = [
-            MockEmailMessage(id="msg_1", to="user@test.com", subject="Welcome", body="Welcome aboard!", sender="admin@test.com"),
-            MockEmailMessage(id="msg_2", to="user@test.com", subject="Invoice #123", body="Your invoice is attached.", sender="billing@test.com"),
+            MockEmailMessage(
+                id="msg_1",
+                to="user@test.com",
+                subject="Welcome",
+                body="Welcome aboard!",
+                sender="admin@test.com",
+            ),
+            MockEmailMessage(
+                id="msg_2",
+                to="user@test.com",
+                subject="Invoice #123",
+                body="Your invoice is attached.",
+                sender="billing@test.com",
+            ),
         ]
         self._counter = 0
 
     async def send(self, to: str, subject: str, body: str, cc: str = "", bcc: str = "") -> dict:
         self._counter += 1
-        msg = MockEmailMessage(id=f"sent_{self._counter}", to=to, subject=subject, body=body, cc=cc, bcc=bcc)
+        msg = MockEmailMessage(
+            id=f"sent_{self._counter}", to=to, subject=subject, body=body, cc=cc, bcc=bcc
+        )
         self._sent.append(msg)
         return {"id": msg.id, "status": "sent"}
 
@@ -58,14 +70,23 @@ class MockEmailClient:
         q = query.lower()
         for msg in self._inbox:
             if q in msg.subject.lower() or q in msg.body.lower() or q in msg.sender.lower():
-                results.append({"id": msg.id, "subject": msg.subject, "from": msg.sender, "preview": msg.body[:100]})
+                results.append(
+                    {
+                        "id": msg.id,
+                        "subject": msg.subject,
+                        "from": msg.sender,
+                        "preview": msg.body[:100],
+                    }
+                )
         return results[:limit]
 
 
 _client: EmailClient = MockEmailClient()
 
 
-def configure(client: EmailClient | None = None, template_engine: TemplateEngine | None = None) -> None:
+def configure(
+    client: EmailClient | None = None, template_engine: TemplateEngine | None = None
+) -> None:
     global _client, _template_engine
     if client:
         _client = client

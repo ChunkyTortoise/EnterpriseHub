@@ -320,7 +320,7 @@ def render_certification_card(cert: Dict[str, Any], status: str = "completed") -
         <div class="progress-bar">
             <div class="progress-fill" style="width: {progress}%"></div>
         </div>
-        <p style="margin-top: 0.3rem; font-size: 0.9rem; opacity: 0.9;">{progress}% Complete • Expected: {cert['expected_completion']}</p>
+        <p style="margin-top: 0.3rem; font-size: 0.9rem; opacity: 0.9;">{progress}% Complete • Expected: {cert["expected_completion"]}</p>
         """
 
     completion_info = (
@@ -330,14 +330,14 @@ def render_certification_card(cert: Dict[str, Any], status: str = "completed") -
     card_html = f"""
     <div class="cert-card {card_class}">
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-            <h3 style="margin: 0; color: white; flex: 1;">{status_emoji} {cert['name']}</h3>
-            <span class="hours-badge">{cert['hours']} hours</span>
+            <h3 style="margin: 0; color: white; flex: 1;">{status_emoji} {cert["name"]}</h3>
+            <span class="hours-badge">{cert["hours"]} hours</span>
         </div>
         <div style="margin: 0.8rem 0;">
-            <span class="provider-badge">{cert['provider']}</span>
-            <span class="provider-badge">{cert['courses']} courses</span>
+            <span class="provider-badge">{cert["provider"]}</span>
+            <span class="provider-badge">{cert["courses"]} courses</span>
         </div>
-        <p style="margin: 0.8rem 0; opacity: 0.95;">{cert['description']}</p>
+        <p style="margin: 0.8rem 0; opacity: 0.95;">{cert["description"]}</p>
         <div style="margin-top: 0.8rem;">
             {topics_html}
         </div>
@@ -397,20 +397,12 @@ def main():
     st.sidebar.header("🔍 Filters")
 
     # Provider filter
-    all_providers = sorted(
-        set([cert["provider"] for cert in COMPLETED_CERTIFICATIONS + IN_PROGRESS_CERTIFICATIONS])
-    )
+    all_providers = sorted(set([cert["provider"] for cert in COMPLETED_CERTIFICATIONS + IN_PROGRESS_CERTIFICATIONS]))
     selected_providers = st.sidebar.multiselect("Filter by Provider", all_providers, default=all_providers)
 
     # Topic filter
     all_topics = sorted(
-        set(
-            [
-                topic
-                for cert in COMPLETED_CERTIFICATIONS + IN_PROGRESS_CERTIFICATIONS
-                for topic in cert["topics"]
-            ]
-        )
+        set([topic for cert in COMPLETED_CERTIFICATIONS + IN_PROGRESS_CERTIFICATIONS for topic in cert["topics"]])
     )
     selected_topics = st.sidebar.multiselect("Filter by Topic", all_topics)
 
@@ -519,9 +511,7 @@ def main():
         progress_df = pd.DataFrame(
             [
                 {
-                    "Certification": cert["name"][:40] + "..."
-                    if len(cert["name"]) > 40
-                    else cert["name"],
+                    "Certification": cert["name"][:40] + "..." if len(cert["name"]) > 40 else cert["name"],
                     "Progress": cert["progress"],
                     "Hours": cert["hours"],
                     "Expected": cert["expected_completion"],
@@ -552,11 +542,7 @@ def main():
             completed = len([c for c in COMPLETED_CERTIFICATIONS if c["provider"] == provider])
             in_prog = len([c for c in IN_PROGRESS_CERTIFICATIONS if c["provider"] == provider])
             total_hours = sum(
-                [
-                    c["hours"]
-                    for c in COMPLETED_CERTIFICATIONS + IN_PROGRESS_CERTIFICATIONS
-                    if c["provider"] == provider
-                ]
+                [c["hours"] for c in COMPLETED_CERTIFICATIONS + IN_PROGRESS_CERTIFICATIONS if c["provider"] == provider]
             )
             provider_stats.append(
                 {
@@ -585,9 +571,7 @@ def main():
 
         with col1:
             st.subheader("Topic Coverage")
-            topic_df = pd.DataFrame(
-                [{"Topic": topic, "Programs": count} for topic, count in topic_counts.items()]
-            )
+            topic_df = pd.DataFrame([{"Topic": topic, "Programs": count} for topic, count in topic_counts.items()])
             topic_df = topic_df.sort_values("Programs", ascending=False)
 
             fig = px.bar(
@@ -657,9 +641,7 @@ def main():
                         progress = cert["progress"]
                         hours = cert["hours"]
                         st.progress(progress / 100)
-                        st.markdown(
-                            f"**{cert_name}**  \n{progress}% complete • {hours} hours • {cert['provider']}"
-                        )
+                        st.markdown(f"**{cert_name}**  \n{progress}% complete • {hours} hours • {cert['provider']}")
 
         st.divider()
 

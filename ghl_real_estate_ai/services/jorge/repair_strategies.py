@@ -39,10 +39,7 @@ REPAIR_LADDER: List[RepairStrategy] = [
     RepairStrategy(
         repair_type=RepairType.CLARIFICATION,
         trigger=RepairTrigger.LOW_CONFIDENCE,
-        message_template=(
-            "I want to make sure I understand correctly. "
-            "Could you tell me more about {topic}?"
-        ),
+        message_template=("I want to make sure I understand correctly. Could you tell me more about {topic}?"),
         escalation_level=0,
     ),
     RepairStrategy(
@@ -54,9 +51,7 @@ REPAIR_LADDER: List[RepairStrategy] = [
     RepairStrategy(
         repair_type=RepairType.CLARIFICATION,
         trigger=RepairTrigger.CONTRADICTION,
-        message_template=(
-            "I may have misunderstood. Could you clarify what you meant about {topic}?"
-        ),
+        message_template=("I may have misunderstood. Could you clarify what you meant about {topic}?"),
         escalation_level=0,
     ),
     RepairStrategy(
@@ -75,32 +70,21 @@ REPAIR_LADDER: List[RepairStrategy] = [
         repair_type=RepairType.HUMAN_ESCALATION,
         trigger=RepairTrigger.NO_PROGRESS,
         message_template=(
-            "I'd love to connect you with a team member who can help. "
-            "Would you like me to arrange that?"
+            "I'd love to connect you with a team member who can help. Would you like me to arrange that?"
         ),
         escalation_level=2,
     ),
 ]
 
 
-def get_repair_strategy(
-    trigger: RepairTrigger, escalation_level: int = 0
-) -> RepairStrategy:
+def get_repair_strategy(trigger: RepairTrigger, escalation_level: int = 0) -> RepairStrategy:
     """Get the appropriate repair strategy for a trigger and escalation level.
 
     Finds the first strategy matching the trigger whose escalation_level
     is >= the requested level.  Falls back to human escalation.
     """
-    candidates = [
-        s
-        for s in REPAIR_LADDER
-        if s.trigger == trigger and s.escalation_level >= escalation_level
-    ]
+    candidates = [s for s in REPAIR_LADDER if s.trigger == trigger and s.escalation_level >= escalation_level]
     if not candidates:
         # Fallback: escalate to human
-        candidates = [
-            s
-            for s in REPAIR_LADDER
-            if s.repair_type == RepairType.HUMAN_ESCALATION
-        ]
+        candidates = [s for s in REPAIR_LADDER if s.repair_type == RepairType.HUMAN_ESCALATION]
     return candidates[0] if candidates else REPAIR_LADDER[-1]

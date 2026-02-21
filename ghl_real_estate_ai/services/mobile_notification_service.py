@@ -492,10 +492,7 @@ class MobileNotificationService:
                 if remaining_ids != scheduled_ids:
                     await self.cache.set(location_key, remaining_ids, ttl=86400)
 
-            logger.info(
-                f"Scheduled notification sweep: {processed} scanned, "
-                f"{sent} sent, {failed} failed"
-            )
+            logger.info(f"Scheduled notification sweep: {processed} scanned, {sent} sent, {failed} failed")
 
         except Exception as e:
             logger.error(f"Scheduled notification processing failed: {e}")
@@ -569,7 +566,7 @@ class MobileNotificationService:
         local_hour = local_now.hour
 
         quiet_start = 21  # 9 PM
-        quiet_end = 8     # 8 AM
+        quiet_end = 8  # 8 AM
 
         if local_hour >= quiet_start or local_hour < quiet_end:
             return False
@@ -612,9 +609,9 @@ class MobileNotificationService:
                             },
                             "data": {k: str(v) for k, v in (payload.data or {}).items()},
                             "android": {
-                                "priority": "high" if payload.priority in (
-                                    NotificationPriority.HIGH, NotificationPriority.URGENT
-                                ) else "normal",
+                                "priority": "high"
+                                if payload.priority in (NotificationPriority.HIGH, NotificationPriority.URGENT)
+                                else "normal",
                             },
                         }
                     }
@@ -639,7 +636,10 @@ class MobileNotificationService:
 
         except Exception as e:
             logger.error(f"FCM sending failed: {e}")
-            return {"success_count": success_count, "failure_count": failure_count + len(android_devices) - success_count}
+            return {
+                "success_count": success_count,
+                "failure_count": failure_count + len(android_devices) - success_count,
+            }
 
     async def _get_fcm_access_token(self, service_account_json: str) -> Optional[str]:
         """Get OAuth2 access token for FCM v1 API from service account credentials."""
@@ -647,7 +647,9 @@ class MobileNotificationService:
             from google.auth.transport.requests import Request
             from google.oauth2 import service_account
 
-            sa_info = json.loads(service_account_json) if isinstance(service_account_json, str) else service_account_json
+            sa_info = (
+                json.loads(service_account_json) if isinstance(service_account_json, str) else service_account_json
+            )
             credentials = service_account.Credentials.from_service_account_info(
                 sa_info,
                 scopes=["https://www.googleapis.com/auth/firebase.messaging"],
@@ -710,9 +712,7 @@ class MobileNotificationService:
             if payload.data:
                 apns_payload["custom_data"] = payload.data
 
-            priority = "10" if payload.priority in (
-                NotificationPriority.HIGH, NotificationPriority.URGENT
-            ) else "5"
+            priority = "10" if payload.priority in (NotificationPriority.HIGH, NotificationPriority.URGENT) else "5"
 
             async with httpx.AsyncClient(http2=True, timeout=10.0) as client:
                 for device in ios_devices:

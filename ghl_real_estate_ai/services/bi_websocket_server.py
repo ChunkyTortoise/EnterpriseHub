@@ -692,7 +692,7 @@ class BIWebSocketManager:
             "total": total,
             "connected": connected,
             "status": status,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def get_metrics(self) -> Dict[str, Any]:

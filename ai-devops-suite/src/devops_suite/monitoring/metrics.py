@@ -33,13 +33,23 @@ class MetricsAggregator:
         self.window_seconds = window_seconds
         self._points: dict[str, list[MetricPoint]] = {}
 
-    def record(self, metric_name: str, value: float, timestamp: datetime | None = None,
-               agent_id: str | None = None, model: str | None = None) -> None:
+    def record(
+        self,
+        metric_name: str,
+        value: float,
+        timestamp: datetime | None = None,
+        agent_id: str | None = None,
+        model: str | None = None,
+    ) -> None:
         if metric_name not in self._points:
             self._points[metric_name] = []
         self._points[metric_name].append(
-            MetricPoint(value=value, timestamp=timestamp or datetime.utcnow(),
-                        agent_id=agent_id, model=model)
+            MetricPoint(
+                value=value,
+                timestamp=timestamp or datetime.utcnow(),
+                agent_id=agent_id,
+                model=model,
+            )
         )
 
     def _prune(self, metric_name: str, now: datetime | None = None) -> list[MetricPoint]:
@@ -49,7 +59,9 @@ class MetricsAggregator:
         self._points[metric_name] = points
         return points
 
-    def compute_percentiles(self, metric_name: str, now: datetime | None = None) -> PercentileResult | None:
+    def compute_percentiles(
+        self, metric_name: str, now: datetime | None = None
+    ) -> PercentileResult | None:
         points = self._prune(metric_name, now)
         if not points:
             return None
@@ -64,7 +76,9 @@ class MetricsAggregator:
             max=values[-1],
         )
 
-    def compute_by_agent(self, metric_name: str, now: datetime | None = None) -> dict[str, PercentileResult]:
+    def compute_by_agent(
+        self, metric_name: str, now: datetime | None = None
+    ) -> dict[str, PercentileResult]:
         points = self._prune(metric_name, now)
         by_agent: dict[str, list[float]] = {}
         for p in points:
@@ -84,7 +98,9 @@ class MetricsAggregator:
             )
         return result
 
-    def compute_by_model(self, metric_name: str, now: datetime | None = None) -> dict[str, PercentileResult]:
+    def compute_by_model(
+        self, metric_name: str, now: datetime | None = None
+    ) -> dict[str, PercentileResult]:
         points = self._prune(metric_name, now)
         by_model: dict[str, list[float]] = {}
         for p in points:

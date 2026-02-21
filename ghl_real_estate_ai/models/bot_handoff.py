@@ -30,6 +30,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 class PropertyMatchSummary(TypedDict, total=False):
     """TypedDict for property match summary in handoff context."""
+
     property_id: str
     address: str
     price: float
@@ -39,6 +40,7 @@ class PropertyMatchSummary(TypedDict, total=False):
 
 class ObjectionSummary(TypedDict, total=False):
     """TypedDict for objection summary in handoff context."""
+
     objection_type: str
     description: str
     resolved: bool
@@ -47,6 +49,7 @@ class ObjectionSummary(TypedDict, total=False):
 
 class ResponseRecommendationSummary(TypedDict, total=False):
     """TypedDict for response recommendation summary."""
+
     recommendation_type: str
     suggested_response: str
     context: str
@@ -54,6 +57,7 @@ class ResponseRecommendationSummary(TypedDict, total=False):
 
 class QualificationScoreDetail(TypedDict, total=False):
     """TypedDict for qualification score details."""
+
     category: str
     score: float
     max_score: float
@@ -62,6 +66,7 @@ class QualificationScoreDetail(TypedDict, total=False):
 
 class ReadinessIndicatorDetail(TypedDict, total=False):
     """TypedDict for readiness indicator details."""
+
     indicator: str
     value: bool
     confidence: float

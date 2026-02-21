@@ -38,11 +38,7 @@ def setup_observability(
     Returns:
         True if OTel was successfully configured, False otherwise.
     """
-    _enabled = (
-        enabled
-        if enabled is not None
-        else os.getenv("OTEL_ENABLED", "false").lower() == "true"
-    )
+    _enabled = enabled if enabled is not None else os.getenv("OTEL_ENABLED", "false").lower() == "true"
     if not _enabled:
         logger.info("OpenTelemetry disabled (OTEL_ENABLED != true)")
         return False
@@ -60,9 +56,7 @@ def setup_observability(
             ConsoleSpanExporter,
         )
     except ImportError:
-        logger.warning(
-            "OpenTelemetry SDK not installed -- skipping configuration"
-        )
+        logger.warning("OpenTelemetry SDK not installed -- skipping configuration")
         return False
 
     # Create resource with service metadata
@@ -133,9 +127,7 @@ def _create_exporter(exporter_type: str, endpoint: str):
                     OTLPSpanExporter as HTTPExporter,
                 )
 
-                http_endpoint = (
-                    endpoint.replace(":4317", ":4318") + "/v1/traces"
-                )
+                http_endpoint = endpoint.replace(":4317", ":4318") + "/v1/traces"
                 return HTTPExporter(endpoint=http_endpoint)
             except ImportError:
                 logger.warning("No OTLP exporter available")
@@ -208,7 +200,7 @@ def get_current_trace_id() -> str:
 
         span = trace.get_current_span()
         if span and span.get_span_context().is_valid:
-            return format(span.get_span_context().trace_id, '032x')
+            return format(span.get_span_context().trace_id, "032x")
         return ""
     except ImportError:
         return ""

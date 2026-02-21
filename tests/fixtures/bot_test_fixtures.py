@@ -238,7 +238,10 @@ def conversation_history_seller_hot_lead() -> List[Dict[str, str]]:
     Jorge's confrontational methodology in action.
     """
     return [
-        {"role": "user", "content": "Hi, I need to sell my house in Rancho Cucamonga ASAP. Got a job transfer to Seattle."},
+        {
+            "role": "user",
+            "content": "Hi, I need to sell my house in Rancho Cucamonga ASAP. Got a job transfer to Seattle.",
+        },
         {
             "role": "assistant",
             "content": "I appreciate the urgency. Job transfer is a legitimate reason. "

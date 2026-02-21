@@ -46,10 +46,9 @@ class TestWhiteLabelMobileService:
             WhiteLabelMobileService,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"
-        ), patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.BillingService"
+        with (
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"),
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.BillingService"),
         ):
             service = WhiteLabelMobileService()
             branding = self._make_branding(
@@ -65,10 +64,9 @@ class TestWhiteLabelMobileService:
             WhiteLabelMobileService,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"
-        ), patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.BillingService"
+        with (
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"),
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.BillingService"),
         ):
             service = WhiteLabelMobileService()
             branding = self._make_branding(primary_color="not-a-color")
@@ -81,10 +79,9 @@ class TestWhiteLabelMobileService:
             WhiteLabelMobileService,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"
-        ), patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.BillingService"
+        with (
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"),
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.BillingService"),
         ):
             service = WhiteLabelMobileService()
             branding = self._make_branding(app_name="")
@@ -97,10 +94,9 @@ class TestWhiteLabelMobileService:
             WhiteLabelMobileService,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"
-        ), patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.BillingService"
+        with (
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service"),
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.BillingService"),
         ):
             service = WhiteLabelMobileService()
             branding = self._make_branding(support_email="not-an-email")
@@ -121,11 +117,12 @@ class TestWhiteLabelMobileService:
         mock_cache = MagicMock()
         mock_cache.set = AsyncMock()
 
-        with patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service",
-            return_value=mock_cache,
-        ), patch(
-            "ghl_real_estate_ai.services.white_label_mobile_service.BillingService"
+        with (
+            patch(
+                "ghl_real_estate_ai.services.white_label_mobile_service.get_cache_service",
+                return_value=mock_cache,
+            ),
+            patch("ghl_real_estate_ai.services.white_label_mobile_service.BillingService"),
         ):
             service = WhiteLabelMobileService()
             config = WhiteLabelConfig(
@@ -188,18 +185,12 @@ class TestShardRouter:
         from ghl_real_estate_ai.services.database_sharding import ShardRouter
 
         router = ShardRouter(num_shards=4)
-        original_mapping = {
-            f"key_{i}": router.get_shard(f"key_{i}") for i in range(100)
-        }
+        original_mapping = {f"key_{i}": router.get_shard(f"key_{i}") for i in range(100)}
 
         router.add_shard(4)
 
         # Most keys should stay on original shards (consistent hashing property)
-        remapped = sum(
-            1
-            for k, v in original_mapping.items()
-            if router.get_shard(k) != v
-        )
+        remapped = sum(1 for k, v in original_mapping.items() if router.get_shard(k) != v)
         # At most ~20% of keys should be remapped
         assert remapped < 30, f"Too many keys remapped: {remapped}/100"
 
@@ -229,9 +220,7 @@ class TestWinProbabilityPredictor:
             WinProbabilityPredictor,
         )
 
-        with patch(
-            "ghl_real_estate_ai.services.win_probability_predictor.get_cache_service"
-        ):
+        with patch("ghl_real_estate_ai.services.win_probability_predictor.get_cache_service"):
             predictor = WinProbabilityPredictor()
             assert not predictor._ml_available
 
@@ -269,9 +258,7 @@ class TestWinProbabilityPredictor:
             row["won"] = row["offer_to_list_ratio"] > 0.5
             data.append(row)
 
-        with patch(
-            "ghl_real_estate_ai.services.win_probability_predictor.MODEL_PATH"
-        ) as mock_path:
+        with patch("ghl_real_estate_ai.services.win_probability_predictor.MODEL_PATH") as mock_path:
             mock_path.exists.return_value = False
             mock_path.parent.mkdir = MagicMock()
             result = WinProbabilityPredictor.train_model(data)
@@ -405,9 +392,7 @@ class TestTimingOptimizerAgent:
             "active_hours": [9, 10, 11, 14, 15],
         }
 
-        result = await agent._predict_optimal_send_time(
-            "lead_1", activity_data, None
-        )
+        result = await agent._predict_optimal_send_time("lead_1", activity_data, None)
 
         # Should be a datetime in the future
         assert isinstance(result, datetime)

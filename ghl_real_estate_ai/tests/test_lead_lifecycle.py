@@ -33,7 +33,6 @@ def lifecycle_tracker(test_location_id):
         shutil.rmtree(lifecycle_dir)
 
 
-
 class _AdvancingDatetime(datetime):
     """datetime subclass where now() auto-advances by a configurable step."""
 
@@ -162,7 +161,6 @@ class TestStageTransitions:
         journey_id = lifecycle_tracker.start_journey(
             contact_id="contact_trans1", contact_name="Eve Foster", source="website"
         )
-
 
         lifecycle_tracker.transition_stage(journey_id, "contacted", "First response sent", lead_score=35)
 

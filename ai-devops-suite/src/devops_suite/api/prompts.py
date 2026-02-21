@@ -45,9 +45,7 @@ async def create_prompt(prompt: PromptCreate) -> PromptOut:
     out = PromptOut(name=prompt.name, description=prompt.description)
     _prompts[out.id] = {
         "info": out,
-        "versions": [
-            PromptVersionOut(version=1, content=prompt.content, tags=prompt.tags)
-        ],
+        "versions": [PromptVersionOut(version=1, content=prompt.content, tags=prompt.tags)],
     }
     return out
 

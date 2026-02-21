@@ -25,6 +25,7 @@ try:
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+
     OPENTELEMETRY_AVAILABLE = True
 except ImportError:
     OPENTELEMETRY_AVAILABLE = False
@@ -45,6 +46,7 @@ class TracerConfig(BaseModel):
         export_otlp: Whether to export traces via OTLP.
         otlp_endpoint: OTLP endpoint URL (e.g., "http://localhost:4317").
     """
+
     service_name: str = "agentforge"
     service_version: str = "0.2.0"
     export_console: bool = True
@@ -54,6 +56,7 @@ class TracerConfig(BaseModel):
 
 class TracerNotAvailableError(Exception):
     """Raised when OpenTelemetry is not installed."""
+
     pass
 
 
@@ -96,21 +99,22 @@ class AgentTracer:
 
     def _setup_tracer(self) -> None:
         """Set up OpenTelemetry tracer with configured exporters."""
-        resource = Resource.create({
-            "service.name": self.config.service_name,
-            "service.version": self.config.service_version,
-        })
+        resource = Resource.create(
+            {
+                "service.name": self.config.service_name,
+                "service.version": self.config.service_version,
+            }
+        )
         provider = TracerProvider(resource=resource)
 
         if self.config.export_console:
-            provider.add_span_processor(
-                SimpleSpanProcessor(ConsoleSpanExporter())
-            )
+            provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
 
         if self.config.export_otlp and self.config.otlp_endpoint:
             # OTLP exporter (optional)
             try:
                 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
                 provider.add_span_processor(
                     SimpleSpanProcessor(OTLPSpanExporter(endpoint=self.config.otlp_endpoint))
                 )
@@ -147,7 +151,7 @@ class AgentTracer:
             attributes={
                 "agentforge.agent.name": agent_name,
                 "agentforge.type": "agent",
-            }
+            },
         ) as span:
             yield span
 
@@ -175,7 +179,7 @@ class AgentTracer:
                 "agentforge.tool.name": tool_name,
                 "agentforge.agent.name": agent_name,
                 "agentforge.type": "tool",
-            }
+            },
         ) as span:
             yield span
 
@@ -204,7 +208,7 @@ class AgentTracer:
                 "gen_ai.model": model,
                 "gen_ai.provider": provider,
                 "agentforge.type": "llm",
-            }
+            },
         ) as span:
             yield span
 
@@ -232,16 +236,12 @@ class AgentTracer:
                 "agentforge.dag.name": dag_name,
                 "agentforge.dag.node_count": node_count,
                 "agentforge.type": "dag",
-            }
+            },
         ) as span:
             yield span
 
     def record_llm_usage(
-        self,
-        span,
-        prompt_tokens: int,
-        completion_tokens: int,
-        cost: float = 0.0
+        self, span, prompt_tokens: int, completion_tokens: int, cost: float = 0.0
     ) -> None:
         """Record LLM token usage on a span.
 
@@ -253,11 +253,13 @@ class AgentTracer:
         """
         if span is None:
             return
-        span.set_attributes({
-            "gen_ai.usage.prompt_tokens": prompt_tokens,
-            "gen_ai.usage.completion_tokens": completion_tokens,
-            "agentforge.cost.usd": cost,
-        })
+        span.set_attributes(
+            {
+                "gen_ai.usage.prompt_tokens": prompt_tokens,
+                "gen_ai.usage.completion_tokens": completion_tokens,
+                "agentforge.cost.usd": cost,
+            }
+        )
 
     def record_error(self, span, error: Exception) -> None:
         """Record an error on a span.
@@ -288,6 +290,7 @@ class AgentTracer:
                 return {"status": "qualified"}
             ```
         """
+
         def decorator(func: Callable) -> Callable:
             trace_name = name or func.__name__
 

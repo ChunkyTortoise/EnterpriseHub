@@ -44,8 +44,7 @@ def mock_claude():
     claude = AsyncMock()
     claude.process_request = AsyncMock(
         return_value=MagicMock(
-            content="<primary_guidance>Test guidance</primary_guidance>"
-            "<urgency_level>low</urgency_level>"
+            content="<primary_guidance>Test guidance</primary_guidance><urgency_level>low</urgency_level>"
         )
     )
     return claude
@@ -82,35 +81,42 @@ def mock_analytics():
 def mock_ghl_live_data():
     """Mock GHL live data service."""
     ghl = MagicMock()
-    ghl.generate_omnipresent_context = AsyncMock(return_value={
-        "active_leads": [],
-        "bot_statuses": {},
-        "user_activity": [],
-        "business_metrics": {},
-        "active_properties": [],
-        "market_conditions": {},
-        "priority_actions": [],
-        "pending_notifications": [],
-        "jorge_preferences": {},
-    })
+    ghl.generate_omnipresent_context = AsyncMock(
+        return_value={
+            "active_leads": [],
+            "bot_statuses": {},
+            "user_activity": [],
+            "business_metrics": {},
+            "active_properties": [],
+            "market_conditions": {},
+            "priority_actions": [],
+            "pending_notifications": [],
+            "jorge_preferences": {},
+        }
+    )
     return ghl
 
 
 @pytest.fixture
 def orchestrator(mock_claude, mock_cache, mock_memory, mock_analytics, mock_ghl_live_data):
     """Create ClaudeConciergeOrchestrator with all dependencies mocked."""
-    with patch(
-        "ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service",
-        return_value=mock_cache,
-    ), patch(
-        "ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService",
-        return_value=mock_memory,
-    ), patch(
-        "ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService",
-        return_value=mock_analytics,
-    ), patch(
-        "ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service",
-        return_value=mock_ghl_live_data,
+    with (
+        patch(
+            "ghl_real_estate_ai.services.claude_concierge_orchestrator.get_cache_service",
+            return_value=mock_cache,
+        ),
+        patch(
+            "ghl_real_estate_ai.services.claude_concierge_orchestrator.MemoryService",
+            return_value=mock_memory,
+        ),
+        patch(
+            "ghl_real_estate_ai.services.claude_concierge_orchestrator.AnalyticsService",
+            return_value=mock_analytics,
+        ),
+        patch(
+            "ghl_real_estate_ai.services.claude_concierge_orchestrator.get_ghl_live_data_service",
+            return_value=mock_ghl_live_data,
+        ),
     ):
         orch = ClaudeConciergeOrchestrator(claude_orchestrator=mock_claude)
         return orch
@@ -231,20 +237,24 @@ class TestJorgePreferenceEngine:
     async def test_jorge_preference_engine_update_returns_true(self, mock_cache):
         """update_preferences returns True on success."""
         engine = JorgePreferenceEngine(mock_cache)
-        result = await engine.update_preferences({
-            "pattern_type": "test_pattern",
-            "confidence": 0.8,
-        })
+        result = await engine.update_preferences(
+            {
+                "pattern_type": "test_pattern",
+                "confidence": 0.8,
+            }
+        )
         assert result is True
 
     @pytest.mark.asyncio
     async def test_jorge_preference_engine_stores_pattern(self, mock_cache):
         """After update, cache.set was called with the aggregate key."""
         engine = JorgePreferenceEngine(mock_cache)
-        await engine.update_preferences({
-            "pattern_type": "test_pattern",
-            "confidence": 0.8,
-        })
+        await engine.update_preferences(
+            {
+                "pattern_type": "test_pattern",
+                "confidence": 0.8,
+            }
+        )
         mock_cache.set.assert_called_once()
         call_args = mock_cache.set.call_args
         assert call_args[0][0] == "jorge_preferences:aggregate"

@@ -513,7 +513,7 @@ def test_vapi_tool_endpoints_accept_stringified_arguments() -> None:
             "toolCall": {
                 "id": "tool-string-1",
                 "function": {
-                    "arguments": "{\"date\":\"2026-02-15\"}",
+                    "arguments": '{"date":"2026-02-15"}',
                 },
             }
         },
@@ -532,9 +532,7 @@ def test_vapi_tool_endpoints_accept_stringified_arguments() -> None:
                 "id": "tool-string-2",
                 "function": {
                     "arguments": (
-                        "{\"contact_id\":\"lead_001\","
-                        "\"slot_time\":\"2026-02-15T10:00:00\","
-                        "\"property_address\":\"123 Palm Ave\"}"
+                        '{"contact_id":"lead_001","slot_time":"2026-02-15T10:00:00","property_address":"123 Palm Ave"}'
                     ),
                 },
             }

@@ -67,10 +67,7 @@ class TestValidateGhlConfig:
 
         assert result["valid"] is False
         # At least workflow critical vars are still missing
-        assert any(
-            var.endswith("_WORKFLOW_ID")
-            for var in result["summary"]["critical_missing"]
-        )
+        assert any(var.endswith("_WORKFLOW_ID") for var in result["summary"]["critical_missing"])
 
     def test_whitespace_only_counts_as_missing(self):
         """Whitespace-only values should be treated as missing."""
@@ -113,11 +110,7 @@ class TestValidateGhlConfig:
             result = validate_ghl_config()
 
         summary = result["summary"]
-        total_items = (
-            len(result["fields"])
-            + len(result["workflows"])
-            + len(result["calendars"])
-        )
+        total_items = len(result["fields"]) + len(result["workflows"]) + len(result["calendars"])
         assert summary["total"] == total_items
         assert summary["set_count"] + summary["missing_count"] == total_items
 

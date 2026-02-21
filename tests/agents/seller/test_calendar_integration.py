@@ -40,9 +40,7 @@ def mock_ghl_client():
             {"start": "2026-02-17T09:00:00Z", "end": "2026-02-17T09:30:00Z"},
         ]
     )
-    client.create_appointment = AsyncMock(
-        return_value={"id": "appt_123", "status": "confirmed"}
-    )
+    client.create_appointment = AsyncMock(return_value={"id": "appt_123", "status": "confirmed"})
     return client
 
 
@@ -60,6 +58,7 @@ def calendar_service_no_cal_id(mock_ghl_client):
     with patch.dict("os.environ", {}, clear=True):
         # Ensure JORGE_CALENDAR_ID is not set
         import os
+
         orig = os.environ.pop("JORGE_CALENDAR_ID", None)
         service = CalendarBookingService(mock_ghl_client)
         if orig is not None:
@@ -81,9 +80,7 @@ def mock_event_publisher():
 def mock_claude():
     """Mock Claude assistant."""
     claude = AsyncMock()
-    claude.analyze_with_context = AsyncMock(
-        return_value={"content": "That's great news! Let me help you get started."}
-    )
+    claude.analyze_with_context = AsyncMock(return_value={"content": "That's great news! Let me help you get started."})
     return claude
 
 
@@ -111,7 +108,9 @@ def mock_ab_testing():
 
 
 @pytest.fixture
-def response_generator_with_calendar(mock_claude, mock_event_publisher, mock_sentiment_service, mock_ab_testing, calendar_service):
+def response_generator_with_calendar(
+    mock_claude, mock_event_publisher, mock_sentiment_service, mock_ab_testing, calendar_service
+):
     """ResponseGenerator with CalendarBookingService injected."""
     return ResponseGenerator(
         claude=mock_claude,
@@ -271,7 +270,9 @@ class TestResponseGeneratorCalendar:
         assert result["response_content"]
 
     @pytest.mark.asyncio
-    async def test_fallback_when_no_calendar_id(self, mock_claude, mock_event_publisher, mock_sentiment_service, mock_ab_testing, calendar_service_no_cal_id):
+    async def test_fallback_when_no_calendar_id(
+        self, mock_claude, mock_event_publisher, mock_sentiment_service, mock_ab_testing, calendar_service_no_cal_id
+    ):
         """Should use fallback message when no calendar ID configured."""
         gen = ResponseGenerator(
             claude=mock_claude,
@@ -288,7 +289,9 @@ class TestResponseGeneratorCalendar:
         assert FALLBACK_MESSAGE in content
 
     @pytest.mark.asyncio
-    async def test_fallback_when_no_slots_available(self, mock_claude, mock_event_publisher, mock_sentiment_service, mock_ab_testing, mock_ghl_client):
+    async def test_fallback_when_no_slots_available(
+        self, mock_claude, mock_event_publisher, mock_sentiment_service, mock_ab_testing, mock_ghl_client
+    ):
         """Should use fallback when GHL returns no free slots."""
         mock_ghl_client.get_free_slots = AsyncMock(return_value=[])
         with patch.dict("os.environ", {"JORGE_CALENDAR_ID": "cal_test_123"}):
@@ -379,6 +382,7 @@ class TestSlotSelectionDetection:
     def _detect(self, message: str):
         """Import and call the static method."""
         from ghl_real_estate_ai.agents.jorge_seller_bot import JorgeSellerBot
+
         return JorgeSellerBot._detect_slot_selection(message)
 
     def test_plain_number(self):

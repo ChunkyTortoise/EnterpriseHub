@@ -2,6 +2,7 @@
 Insurance lead qualification demo — BANT scoring simulation.
 Run: python examples/insurance_flow.py
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -9,6 +9,7 @@ Features:
 - Competitive intelligence gathering
 - Training material generation
 """
+
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -61,7 +62,7 @@ class NotebookLMService:
         """Ensure the NotebookLM client is initialized."""
         if self.client is not None:
             return True
-            
+
         try:
             # We use from_storage for simplicity in this integration
             client = await NotebookLMClient.from_storage()
@@ -79,9 +80,7 @@ class NotebookLMService:
     # ========== Notebook Management ==========
 
     async def create_market_research_notebook(
-        self,
-        market_name: str = "Rancho Cucamonga",
-        include_sources: Optional[List[str]] = None
+        self, market_name: str = "Rancho Cucamonga", include_sources: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Create a dedicated market research notebook.
@@ -108,10 +107,7 @@ class NotebookLMService:
         if include_sources:
             for url in include_sources:
                 try:
-                    await self.client.sources.add_url(
-                        notebook_id=notebook.id,
-                        url=url
-                    )
+                    await self.client.sources.add_url(notebook_id=notebook.id, url=url)
                 except Exception as e:
                     logger.warning(f"Failed to add source {url}: {e}")
 
@@ -120,13 +116,11 @@ class NotebookLMService:
             "title": notebook.title,
             "description": notebook.description,
             "created_at": str(notebook.created_at),
-            "sources_added": len(include_sources) if include_sources else 0
+            "sources_added": len(include_sources) if include_sources else 0,
         }
 
     async def create_property_intelligence_notebook(
-        self,
-        property_address: str,
-        mls_id: Optional[str] = None
+        self, property_address: str, mls_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Create a notebook for tracking intelligence on a specific property.
@@ -156,13 +150,13 @@ class NotebookLMService:
             "notebook_id": notebook.id,
             "title": notebook.title,
             "property_address": property_address,
-            "mls_id": mls_id
+            "mls_id": mls_id,
         }
 
     async def create_client_insights_notebook(
         self,
         client_name: str,
-        client_type: str = "buyer"  # buyer, seller, investor
+        client_type: str = "buyer",  # buyer, seller, investor
     ) -> Dict[str, Any]:
         """
         Create a notebook for tracking client preferences and insights.
@@ -189,16 +183,13 @@ class NotebookLMService:
             "notebook_id": notebook.id,
             "title": notebook.title,
             "client_name": client_name,
-            "client_type": client_type
+            "client_type": client_type,
         }
 
     # ========== Source Management ==========
 
     async def add_conversation_transcript(
-        self,
-        notebook_id: str,
-        transcript: str,
-        metadata: Optional[Dict[str, Any]] = None
+        self, notebook_id: str, transcript: str, metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Add a conversation transcript as a source.
@@ -229,23 +220,12 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        source = await self.client.sources.add_text(
-            notebook_id=notebook_id,
-            text=formatted_content,
-            title=title
-        )
+        source = await self.client.sources.add_text(notebook_id=notebook_id, text=formatted_content, title=title)
 
-        return {
-            "source_id": source.id,
-            "title": title,
-            "type": "transcript"
-        }
+        return {"source_id": source.id, "title": title, "type": "transcript"}
 
     async def add_market_report(
-        self,
-        notebook_id: str,
-        report_url: str,
-        report_title: Optional[str] = None
+        self, notebook_id: str, report_url: str, report_title: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Add a market report URL as a source.
@@ -261,22 +241,11 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        source = await self.client.sources.add_url(
-            notebook_id=notebook_id,
-            url=report_url
-        )
+        source = await self.client.sources.add_url(notebook_id=notebook_id, url=report_url)
 
-        return {
-            "source_id": source.id,
-            "url": report_url,
-            "type": "market_report"
-        }
+        return {"source_id": source.id, "url": report_url, "type": "market_report"}
 
-    async def add_property_listing_data(
-        self,
-        notebook_id: str,
-        listing_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def add_property_listing_data(self, notebook_id: str, listing_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Add property listing data as a structured source.
 
@@ -312,25 +281,14 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        source = await self.client.sources.add_text(
-            notebook_id=notebook_id,
-            text=content,
-            title=title
-        )
+        source = await self.client.sources.add_text(notebook_id=notebook_id, text=content, title=title)
 
-        return {
-            "source_id": source.id,
-            "title": title,
-            "type": "property_listing"
-        }
+        return {"source_id": source.id, "title": title, "type": "property_listing"}
 
     # ========== Query & Research ==========
 
     async def research_question(
-        self,
-        notebook_id: str,
-        question: str,
-        include_citations: bool = True
+        self, notebook_id: str, question: str, include_citations: bool = True
     ) -> Dict[str, Any]:
         """
         Research a question using notebook sources.
@@ -346,22 +304,17 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        result = await self.client.chat.ask(
-            notebook_id=notebook_id,
-            query=question
-        )
+        result = await self.client.chat.ask(notebook_id=notebook_id, query=question)
 
         return {
             "question": question,
             "answer": result.answer,
             "citations": [str(c) for c in result.references] if include_citations else [],
-            "notebook_id": notebook_id
+            "notebook_id": notebook_id,
         }
 
     async def generate_market_insights(
-        self,
-        notebook_id: str,
-        focus_areas: Optional[List[str]] = None
+        self, notebook_id: str, focus_areas: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Generate comprehensive market insights from notebook sources.
@@ -386,22 +339,17 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        result = await self.client.chat.ask(
-            notebook_id=notebook_id,
-            query=query
-        )
+        result = await self.client.chat.ask(notebook_id=notebook_id, query=query)
 
         return {
             "insights": result.answer,
             "sources": [str(c) for c in result.references],
             "focus_areas": focus_areas or ["general market analysis"],
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
     async def analyze_client_preferences(
-        self,
-        notebook_id: str,
-        analysis_type: str = "comprehensive"
+        self, notebook_id: str, analysis_type: str = "comprehensive"
     ) -> Dict[str, Any]:
         """
         Analyze client preferences from conversation transcripts and interactions.
@@ -430,15 +378,12 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        result = await self.client.chat.ask(
-            notebook_id=notebook_id,
-            query=query
-        )
+        result = await self.client.chat.ask(notebook_id=notebook_id, query=query)
 
         return {
             "analysis": result.answer,
             "analysis_type": analysis_type,
-            "sources": [str(c) for c in result.references]
+            "sources": [str(c) for c in result.references],
         }
 
     # ========== Content Generation ==========
@@ -447,7 +392,7 @@ class NotebookLMService:
         self,
         notebook_id: str,
         topic: str,
-        format: str = "study_guide"  # study_guide, quiz, flashcards
+        format: str = "study_guide",  # study_guide, quiz, flashcards
     ) -> Dict[str, Any]:
         """
         Generate training materials from notebook content.
@@ -463,22 +408,11 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        guide = await self.client.artifacts.get_guide(
-            notebook_id=notebook_id
-        )
+        guide = await self.client.artifacts.get_guide(notebook_id=notebook_id)
 
-        return {
-            "topic": topic,
-            "format": format,
-            "content": str(guide),
-            "notebook_id": notebook_id
-        }
+        return {"topic": topic, "format": format, "content": str(guide), "notebook_id": notebook_id}
 
-    async def generate_audio_briefing(
-        self,
-        notebook_id: str,
-        duration_minutes: int = 10
-    ) -> Dict[str, Any]:
+    async def generate_audio_briefing(self, notebook_id: str, duration_minutes: int = 10) -> Dict[str, Any]:
         """
         Generate an AI audio briefing (podcast-style) from notebook content.
 
@@ -492,23 +426,17 @@ class NotebookLMService:
         if not await self._ensure_client():
             raise RuntimeError("NotebookLM client not initialized")
 
-        audio = await self.client.artifacts.generate_audio_overview(
-            notebook_id=notebook_id
-        )
+        audio = await self.client.artifacts.generate_audio_overview(notebook_id=notebook_id)
 
         return {
-            "audio_task_id": getattr(audio, 'task_id', 'unknown'),
+            "audio_task_id": getattr(audio, "task_id", "unknown"),
             "notebook_id": notebook_id,
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
     # ========== List & Discovery ==========
 
-    async def list_notebooks(
-        self,
-        category: Optional[str] = None,
-        limit: int = 50
-    ) -> List[Dict[str, Any]]:
+    async def list_notebooks(self, category: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
         """
         List available notebooks with optional category filter.
 
@@ -529,14 +457,11 @@ class NotebookLMService:
             category_keywords = {
                 "market_research": ["market", "research", "analysis"],
                 "property_intelligence": ["property", "listing", "intelligence"],
-                "client_insights": ["client", "insights", "buyer", "seller"]
+                "client_insights": ["client", "insights", "buyer", "seller"],
             }
             keywords = category_keywords.get(category, [])
             if keywords:
-                notebooks = [
-                    nb for nb in notebooks
-                    if any(kw.lower() in nb.title.lower() for kw in keywords)
-                ]
+                notebooks = [nb for nb in notebooks if any(kw.lower() in nb.title.lower() for kw in keywords)]
 
         return [
             {
@@ -544,13 +469,14 @@ class NotebookLMService:
                 "title": nb.title,
                 "description": nb.description,
                 "source_count": nb.source_count,
-                "created_at": str(nb.created_at)
+                "created_at": str(nb.created_at),
             }
             for nb in notebooks
         ]
 
 
 # ========== Factory Functions ==========
+
 
 def create_notebooklm_service(config: Optional[Dict[str, Any]] = None) -> NotebookLMService:
     """

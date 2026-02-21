@@ -191,9 +191,7 @@ def render_handoff_card_preview(handoff_service=None) -> None:
     )
 
     # Tabs for different views
-    tab_preview, tab_generate, tab_recent = st.tabs(
-        ["Card Preview", "Generate Card", "Recent Handoffs"]
-    )
+    tab_preview, tab_generate, tab_recent = st.tabs(["Card Preview", "Generate Card", "Recent Handoffs"])
 
     with tab_preview:
         _render_preview_tab()
@@ -215,7 +213,9 @@ def _render_preview_tab() -> None:
     selected_idx = st.selectbox(
         "Select sample handoff:",
         range(len(sample_data)),
-        format_func=lambda idx: f"{sample_data[idx]['contact_name']} ({sample_data[idx]['source_bot']} → {sample_data[idx]['target_bot']})",
+        format_func=lambda idx: (
+            f"{sample_data[idx]['contact_name']} ({sample_data[idx]['source_bot']} → {sample_data[idx]['target_bot']})"
+        ),
         key="preview_sample_select",
     )
 
@@ -226,9 +226,7 @@ def _render_preview_tab() -> None:
     with col1:
         st.metric(
             "Direction",
-            format_handoff_direction(
-                selected_handoff["source_bot"], selected_handoff["target_bot"]
-            ),
+            format_handoff_direction(selected_handoff["source_bot"], selected_handoff["target_bot"]),
         )
     with col2:
         context = selected_handoff["enriched_context"]
@@ -336,9 +334,7 @@ def _render_generate_tab() -> None:
                 "enriched_context": {
                     "source_qualification_score": qual_score,
                     "source_temperature": temperature,
-                    "budget_range": (
-                        {"min": budget_min, "max": budget_max} if include_budget else None
-                    ),
+                    "budget_range": ({"min": budget_min, "max": budget_max} if include_budget else None),
                     "conversation_summary": conversation_summary,
                     "key_insights": {},
                     "urgency_level": urgency,
@@ -402,9 +398,7 @@ def _render_recent_tab(handoff_service: Optional[Any]) -> None:
                 st.caption(handoff["contact_id"])
 
             with col2:
-                direction = format_handoff_direction(
-                    handoff["source_bot"], handoff["target_bot"]
-                )
+                direction = format_handoff_direction(handoff["source_bot"], handoff["target_bot"])
                 st.text(direction)
 
             with col3:

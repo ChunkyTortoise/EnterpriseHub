@@ -27,8 +27,16 @@ KNOWN_FOOTERS = (
 
 # Carrier AI filter trigger words (case-insensitive all-caps versions get flagged)
 SPAM_TRIGGER_WORDS = [
-    "FREE", "WIN", "WINNER", "URGENT", "ACT NOW", "LIMITED TIME",
-    "CONGRATULATIONS", "CLAIM", "GUARANTEED", "NO OBLIGATION",
+    "FREE",
+    "WIN",
+    "WINNER",
+    "URGENT",
+    "ACT NOW",
+    "LIMITED TIME",
+    "CONGRATULATIONS",
+    "CLAIM",
+    "GUARANTEED",
+    "NO OBLIGATION",
 ]
 
 # URL shortener domains that carriers flag

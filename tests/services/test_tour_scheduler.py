@@ -105,10 +105,7 @@ class TestTourScheduler:
     async def test_format_slot_options_numbered(self, scheduler):
         """3 slots produce '1.', '2.', '3.' in formatted output."""
         base = datetime.now().replace(hour=10, minute=0, second=0, microsecond=0)
-        slots = [
-            TimeSlot(start=base + timedelta(days=i), end=base + timedelta(days=i, hours=1))
-            for i in range(1, 4)
-        ]
+        slots = [TimeSlot(start=base + timedelta(days=i), end=base + timedelta(days=i, hours=1)) for i in range(1, 4)]
         formatted = scheduler.format_slot_options(slots)
         assert "1." in formatted
         assert "2." in formatted
@@ -120,12 +117,8 @@ class TestTourScheduler:
         """Cancelled tours are not returned by get_buyer_tours."""
         buyer_id = "buyer_005"
 
-        result1 = await scheduler.book_tour(
-            buyer_id=buyer_id, property_id="prop_a", slot=sample_slot
-        )
-        result2 = await scheduler.book_tour(
-            buyer_id=buyer_id, property_id="prop_b", slot=sample_slot
-        )
+        result1 = await scheduler.book_tour(buyer_id=buyer_id, property_id="prop_a", slot=sample_slot)
+        result2 = await scheduler.book_tour(buyer_id=buyer_id, property_id="prop_b", slot=sample_slot)
 
         # Cancel the first tour
         await scheduler.cancel_tour(result1.booking_id)

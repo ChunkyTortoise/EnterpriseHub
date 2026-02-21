@@ -793,7 +793,12 @@ class TestSearchOperations:
         """Test searching people by company and location"""
         apollo_client._mock_response.json.return_value = {
             "people": [
-                {"id": "search_3", "first_name": "Alice", "organization": {"name": "Tech Corp"}, "city": "Rancho Cucamonga"}
+                {
+                    "id": "search_3",
+                    "first_name": "Alice",
+                    "organization": {"name": "Tech Corp"},
+                    "city": "Rancho Cucamonga",
+                }
             ],
             "pagination": {"total_entries": 1},
         }

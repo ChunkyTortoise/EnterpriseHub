@@ -53,7 +53,12 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                     {"School": "Westlake Elementary", "Rating": "10/10", "Distance": "0.3 mi", "Type": "Public"},
                     {"School": "Hill Country Middle", "Rating": "9/10", "Distance": "0.7 mi", "Type": "Public"},
                     {"School": "Westlake High School", "Rating": "10/10", "Distance": "1.2 mi", "Type": "Public"},
-                    {"School": "Rancho Cucamonga Montessori", "Rating": "8/10", "Distance": "0.5 mi", "Type": "Private"},
+                    {
+                        "School": "Rancho Cucamonga Montessori",
+                        "Rating": "8/10",
+                        "Distance": "0.5 mi",
+                        "Type": "Private",
+                    },
                 ]
                 schools_df = pd.DataFrame(schools_data)
                 st.dataframe(schools_df, use_container_width=True)
@@ -83,7 +88,11 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                         "Barton Creek Mall (2.1 mi)",
                         "Hill Country Galleria (1.5 mi)",
                     ],
-                    "🏥 Healthcare": ["Rancho Cucamonga Regional (2.3 mi)", "Urgent Care Plus (0.7 mi)", "CVS Pharmacy (0.4 mi)"],
+                    "🏥 Healthcare": [
+                        "Rancho Cucamonga Regional (2.3 mi)",
+                        "Urgent Care Plus (0.7 mi)",
+                        "CVS Pharmacy (0.4 mi)",
+                    ],
                     "🎯 Recreation": [
                         "Victoria Gardens Park (3.2 mi)",
                         "Rancho Cucamonga Country Club (1.1 mi)",
@@ -140,7 +149,6 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                     st.markdown("---")
                     st.markdown("#### 🧠 Claude's Social/Cultural Fit Analysis")
                     with st.spinner("Analyzing social alignment..."):
-
                         neighborhood_data = {"name": target_address or "Selected Area"}
                         compatibility = run_async(
                             semantic_matcher.get_neighborhood_compatibility(lead_profile, neighborhood_data)

@@ -284,3 +284,11 @@ REACT_APP_GA_ID=UA-XXXXXXXXX-X
 ---
 
 **🎉 Ready to Launch!** This interface is production-ready. Start with mock data, test the flow, then connect to your backend and property listings.
+
+## 🧩 Style Utilities (Lyrio Tokens)
+
+Portal visual primitives are centralized in `styles/lyrio-theme.css`.
+
+- Use `lyrio-*` utility classes (for example `lyrio-card-shell`, `lyrio-shell-elevated`, `lyrio-text-muted`, `lyrio-action-btn`) instead of inline style objects.
+- Keep all palette/spacing/shadow usage on the existing `--lyr-*` token namespace.
+- New controls should include explicit hover/active/disabled/focus-visible behavior and preserve `44x44` minimum target size.

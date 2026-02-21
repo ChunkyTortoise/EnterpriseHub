@@ -36,7 +36,12 @@ def init_session_state():
     # Initialize Prompt Versioning
     if "prompt_versions" not in st.session_state:
         st.session_state.prompt_versions = [
-            {"version": "v1.0", "tag": "Baseline", "content": "You are a helpful assistant.", "timestamp": "2026-01-01"},
+            {
+                "version": "v1.0",
+                "tag": "Baseline",
+                "content": "You are a helpful assistant.",
+                "timestamp": "2026-01-01",
+            },
             {
                 "version": "v1.1",
                 "tag": "Production",

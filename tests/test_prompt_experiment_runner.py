@@ -60,9 +60,7 @@ class TestPromptExperiment:
         assert len(exp.variants) == 2
 
     def test_default_metric(self):
-        exp = PromptExperiment(
-            name="x", variants=[], traffic_split={}, metric="engagement"
-        )
+        exp = PromptExperiment(name="x", variants=[], traffic_split={}, metric="engagement")
         assert exp.metric == "engagement"
 
 
@@ -115,9 +113,7 @@ class TestCreateExperiment:
 
     def test_custom_traffic_split(self):
         variants = [PromptVariant("a", "a"), PromptVariant("b", "b")]
-        exp = self.runner.create_experiment(
-            "test", variants, traffic_split={"a": 0.7, "b": 0.3}
-        )
+        exp = self.runner.create_experiment("test", variants, traffic_split={"a": 0.7, "b": 0.3})
         assert exp.traffic_split["a"] == 0.7
 
     def test_duplicate_name_raises(self):
@@ -138,16 +134,12 @@ class TestCreateExperiment:
     def test_bad_traffic_split_sum_raises(self):
         variants = [PromptVariant("a", "a"), PromptVariant("b", "b")]
         with pytest.raises(ValueError, match="sum to 1.0"):
-            self.runner.create_experiment(
-                "test", variants, traffic_split={"a": 0.5, "b": 0.3}
-            )
+            self.runner.create_experiment("test", variants, traffic_split={"a": 0.5, "b": 0.3})
 
     def test_bad_traffic_split_keys_raises(self):
         variants = [PromptVariant("a", "a"), PromptVariant("b", "b")]
         with pytest.raises(ValueError, match="must match"):
-            self.runner.create_experiment(
-                "test", variants, traffic_split={"a": 0.5, "c": 0.5}
-            )
+            self.runner.create_experiment("test", variants, traffic_split={"a": 0.5, "c": 0.5})
 
     def test_custom_metric(self):
         variants = [PromptVariant("a", "a"), PromptVariant("b", "b")]

@@ -34,6 +34,7 @@ class AgentInput(BaseModel):
         tool_results: Results from previous tool calls in this session.
         stream: Whether to stream the response incrementally.
     """
+
     messages: list[Message] = Field(default_factory=list)
     context: ExecutionContext = Field(default_factory=ExecutionContext)
     tools: list[str] = Field(default_factory=list)
@@ -56,6 +57,7 @@ class AgentOutput(BaseModel):
         usage: Token usage statistics (prompt_tokens, completion_tokens).
         finish_reason: Reason for completion (stop, tool_calls, length, error).
     """
+
     content: str | None = None
     tool_calls: list[ToolCall] = Field(default_factory=list)
     error: str | None = None

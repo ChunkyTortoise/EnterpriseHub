@@ -128,9 +128,7 @@ class TestSellerIntentDecoder:
         history = [
             {"role": "user", "content": "I want to sell my house"},
         ]
-        profile = await decoder.analyze_seller_with_ghl(
-            "contact_002", history, ghl_contact=mock_contact
-        )
+        profile = await decoder.analyze_seller_with_ghl("contact_002", history, ghl_contact=mock_contact)
         assert isinstance(profile, SellerIntentProfile)
         # GHL boosts should increase urgency and motivation
         base_profile = decoder.analyze_seller("contact_002", history)

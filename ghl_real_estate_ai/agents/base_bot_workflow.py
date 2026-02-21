@@ -81,12 +81,11 @@ class BaseBotWorkflow:
         if enable_ml_analytics:
             try:
                 from ghl_real_estate_ai.services.ml_analytics_engine import get_ml_analytics_engine
+
                 self.ml_analytics = get_ml_analytics_engine(tenant_id)
                 logger.info(f"{self.__class__.__name__}: ML analytics enabled for {tenant_id}")
             except ImportError:
-                logger.warning(
-                    f"{self.__class__.__name__}: ML analytics requested but dependencies not available"
-                )
+                logger.warning(f"{self.__class__.__name__}: ML analytics requested but dependencies not available")
 
         logger.info(f"{self.__class__.__name__}: Initialized with tenant_id={tenant_id}")
 

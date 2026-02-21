@@ -101,9 +101,7 @@ class ScoringWeights:
         if self.weights:
             total = sum(self.weights.values())
             if abs(total - 1.0) > 0.01:
-                raise ValueError(
-                    f"Scoring weights must sum to 1.0, got {total:.3f}"
-                )
+                raise ValueError(f"Scoring weights must sum to 1.0, got {total:.3f}")
 
     def compute(self, scores: dict[str, float]) -> float:
         """Compute weighted overall score from per-dimension scores."""
@@ -236,9 +234,7 @@ class BotPersonalityRegistry:
     _registry: dict[tuple[str, str], type[BotPersonality]] = {}
 
     @classmethod
-    def register(
-        cls, industry: str, bot_type: str = "*"
-    ) -> type[BotPersonality] | Any:
+    def register(cls, industry: str, bot_type: str = "*") -> type[BotPersonality] | Any:
         """Register a personality class, usable as a decorator.
 
         Args:

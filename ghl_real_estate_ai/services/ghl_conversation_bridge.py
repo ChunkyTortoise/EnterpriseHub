@@ -45,12 +45,16 @@ class GHLConversationBridge:
             logger.error(f"Failed to send SMS: {str(e)}")
             return {"success": False, "error": str(e), "contact_id": contact_id}
 
-    async def send_email(self, contact_id: str, subject: str, body: str, from_email: Optional[str] = None) -> Dict[str, Any]:
+    async def send_email(
+        self, contact_id: str, subject: str, body: str, from_email: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Send email via GHL (async)"""
         try:
-            # Note: GHLAPIClient doesn't have a direct send_email in the provided code, 
+            # Note: GHLAPIClient doesn't have a direct send_email in the provided code,
             # but we'll use send_message with type EMAIL if available or keep it consistent
-            result = await self.ghl_client.send_message(contact_id, f"Subject: {subject}\n\n{body}", message_type="Email")
+            result = await self.ghl_client.send_message(
+                contact_id, f"Subject: {subject}\n\n{body}", message_type="Email"
+            )
             logger.info(f"Email sent to contact {contact_id}")
             return {
                 "success": True,
@@ -69,7 +73,7 @@ class GHLConversationBridge:
             if not result.get("success") or not result.get("data", {}).get("conversations"):
                 return []
 
-            # In this implementation, we don't have a direct get_messages, 
+            # In this implementation, we don't have a direct get_messages,
             # but we'll follow the pattern of awaiting the client
             # For now, return what we have or empty list if conversation not found
             return []

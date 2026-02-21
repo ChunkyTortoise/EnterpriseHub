@@ -51,9 +51,7 @@ class TourScheduler:
         self.calendar_id = calendar_id
         self._bookings: Dict[str, Tour] = {}
 
-    async def get_available_slots(
-        self, agent_id: str = "", days_ahead: int = 7, limit: int = 3
-    ) -> List[TimeSlot]:
+    async def get_available_slots(self, agent_id: str = "", days_ahead: int = 7, limit: int = 3) -> List[TimeSlot]:
         """Fetch available time slots from GHL calendar.
 
         Falls back to generated default slots if GHL unavailable.
@@ -71,9 +69,7 @@ class TourScheduler:
         # Fallback: generate sensible default slots
         return self._generate_default_slots(days_ahead, limit)
 
-    async def book_tour(
-        self, buyer_id: str, property_id: str, slot: TimeSlot
-    ) -> BookingResult:
+    async def book_tour(self, buyer_id: str, property_id: str, slot: TimeSlot) -> BookingResult:
         """Book a property tour for a buyer."""
         booking_id = f"tour-{uuid.uuid4().hex[:8]}"
 
@@ -118,11 +114,7 @@ class TourScheduler:
 
     async def get_buyer_tours(self, buyer_id: str) -> List[Tour]:
         """Get all tours for a buyer."""
-        return [
-            t
-            for t in self._bookings.values()
-            if t.buyer_id == buyer_id and t.status != "cancelled"
-        ]
+        return [t for t in self._bookings.values() if t.buyer_id == buyer_id and t.status != "cancelled"]
 
     def format_slot_options(self, slots: List[TimeSlot]) -> str:
         """Format slots as SMS-friendly numbered options."""
@@ -149,9 +141,7 @@ class TourScheduler:
             msg = msg[: self.SMS_MAX_LENGTH - 3] + "..."
         return msg
 
-    def _generate_default_slots(
-        self, days_ahead: int, limit: int
-    ) -> List[TimeSlot]:
+    def _generate_default_slots(self, days_ahead: int, limit: int) -> List[TimeSlot]:
         """Generate default time slots for the next N days."""
         slots = []
         base = datetime.now().replace(hour=10, minute=0, second=0, microsecond=0)
@@ -173,9 +163,7 @@ class TourScheduler:
 
         return slots[:limit]
 
-    async def _fetch_ghl_slots(
-        self, days_ahead: int, limit: int
-    ) -> List[TimeSlot]:
+    async def _fetch_ghl_slots(self, days_ahead: int, limit: int) -> List[TimeSlot]:
         """Fetch available slots from GHL calendar API."""
         # GHL API integration point
         # GET /calendars/{self.calendar_id}/free-slots

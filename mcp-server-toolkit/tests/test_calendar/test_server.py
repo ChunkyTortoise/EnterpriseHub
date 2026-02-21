@@ -1,10 +1,13 @@
 """Tests for Calendar MCP server."""
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from mcp_toolkit.framework.testing import MCPTestClient
-from mcp_toolkit.servers.calendar.server import mcp as cal_mcp, configure, MockCalendarProvider
 from mcp_toolkit.servers.calendar.availability import AvailabilityFinder, TimeSlot
+from mcp_toolkit.servers.calendar.server import MockCalendarProvider, configure
+from mcp_toolkit.servers.calendar.server import mcp as cal_mcp
 
 
 @pytest.fixture
@@ -15,42 +18,57 @@ def client():
 
 class TestCreateEvent:
     async def test_create_basic_event(self, client):
-        result = await client.call_tool("create_event", {
-            "title": "Team Meeting",
-            "start_time": "2026-02-17T10:00:00",
-            "end_time": "2026-02-17T11:00:00",
-        })
+        result = await client.call_tool(
+            "create_event",
+            {
+                "title": "Team Meeting",
+                "start_time": "2026-02-17T10:00:00",
+                "end_time": "2026-02-17T11:00:00",
+            },
+        )
         assert "Event created" in result
         assert "Team Meeting" in result
 
     async def test_create_with_attendees(self, client):
-        result = await client.call_tool("create_event", {
-            "title": "Review",
-            "start_time": "2026-02-17T14:00:00",
-            "end_time": "2026-02-17T15:00:00",
-            "attendees": "alice@test.com, bob@test.com"
-        })
+        result = await client.call_tool(
+            "create_event",
+            {
+                "title": "Review",
+                "start_time": "2026-02-17T14:00:00",
+                "end_time": "2026-02-17T15:00:00",
+                "attendees": "alice@test.com, bob@test.com",
+            },
+        )
         assert "Event created" in result
 
 
 class TestListEvents:
     async def test_list_no_events(self, client):
-        result = await client.call_tool("list_events", {
-            "start_date": "2026-02-17T00:00:00",
-            "end_date": "2026-02-17T23:59:00",
-        })
+        result = await client.call_tool(
+            "list_events",
+            {
+                "start_date": "2026-02-17T00:00:00",
+                "end_date": "2026-02-17T23:59:00",
+            },
+        )
         assert "No events" in result
 
     async def test_list_after_create(self, client):
-        await client.call_tool("create_event", {
-            "title": "Standup",
-            "start_time": "2026-02-17T09:00:00",
-            "end_time": "2026-02-17T09:30:00",
-        })
-        result = await client.call_tool("list_events", {
-            "start_date": "2026-02-17T00:00:00",
-            "end_date": "2026-02-17T23:59:00",
-        })
+        await client.call_tool(
+            "create_event",
+            {
+                "title": "Standup",
+                "start_time": "2026-02-17T09:00:00",
+                "end_time": "2026-02-17T09:30:00",
+            },
+        )
+        result = await client.call_tool(
+            "list_events",
+            {
+                "start_date": "2026-02-17T00:00:00",
+                "end_date": "2026-02-17T23:59:00",
+            },
+        )
         assert "Standup" in result
 
 
@@ -60,11 +78,14 @@ class TestDeleteEvent:
         assert "not found" in result
 
     async def test_delete_existing(self, client):
-        await client.call_tool("create_event", {
-            "title": "Delete Me",
-            "start_time": "2026-02-17T10:00:00",
-            "end_time": "2026-02-17T11:00:00",
-        })
+        await client.call_tool(
+            "create_event",
+            {
+                "title": "Delete Me",
+                "start_time": "2026-02-17T10:00:00",
+                "end_time": "2026-02-17T11:00:00",
+            },
+        )
         result = await client.call_tool("delete_event", {"event_id": "evt_1"})
         assert "deleted" in result
 
@@ -72,11 +93,14 @@ class TestDeleteEvent:
 class TestFindFreeSlots:
     async def test_find_slots_empty_calendar(self, client):
         # Monday Feb 17 2026 is a weekday
-        result = await client.call_tool("find_free_slots", {
-            "start_date": "2026-02-17T00:00:00",
-            "end_date": "2026-02-17T23:59:00",
-            "duration_minutes": 30,
-        })
+        result = await client.call_tool(
+            "find_free_slots",
+            {
+                "start_date": "2026-02-17T00:00:00",
+                "end_date": "2026-02-17T23:59:00",
+                "duration_minutes": 30,
+            },
+        )
         assert "free" in result.lower()
 
 

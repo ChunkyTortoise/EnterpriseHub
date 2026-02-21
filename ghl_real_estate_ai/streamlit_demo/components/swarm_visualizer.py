@@ -59,6 +59,7 @@ def render_agent_debate_log(lead_id: str = None):
         debates = blackboard.read("agent_debates") or []
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).debug(f"Failed to fetch agent debates from blackboard: {str(e)}")
         # Fallback mock data
         debates = [

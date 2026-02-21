@@ -94,7 +94,9 @@ class HandoffManager:
 
         return HandoffDecision(should_handoff=False)
 
-    async def execute_handoff(self, target_bot: str, conversation_history: list[dict[str, str]]) -> str:
+    async def execute_handoff(
+        self, target_bot: str, conversation_history: list[dict[str, str]]
+    ) -> str:
         """Execute a handoff to the target bot.
 
         Returns the new bot's greeting message.
@@ -102,11 +104,13 @@ class HandoffManager:
         old_bot = self.current_bot_type
         self.current_bot_type = target_bot
         self._last_handoff_time = time.monotonic()
-        self._handoff_history.append({
-            "from": old_bot,
-            "to": target_bot,
-            "time": self._last_handoff_time,
-        })
+        self._handoff_history.append(
+            {
+                "from": old_bot,
+                "to": target_bot,
+                "time": self._last_handoff_time,
+            }
+        )
 
         new_adapter = self.get_current_adapter()
 

@@ -42,14 +42,16 @@ class TestProcessSellerMessage:
 
             # Mock workflow — return dict matching what process_seller_message expects
             bot.workflow = AsyncMock()
-            bot.workflow.ainvoke = AsyncMock(return_value={
-                "response_content": "I can help you sell your home!",
-                "next_action": "respond",
-                "current_journey_stage": "qualification",
-                "intent_profile": None,
-                "seller_persona": {},
-                "composite_score": {},
-            })
+            bot.workflow.ainvoke = AsyncMock(
+                return_value={
+                    "response_content": "I can help you sell your home!",
+                    "next_action": "respond",
+                    "current_journey_stage": "qualification",
+                    "intent_profile": None,
+                    "seller_persona": {},
+                    "composite_score": {},
+                }
+            )
 
             # Mock all services used during post-processing
             bot.event_publisher = AsyncMock()
@@ -96,15 +98,17 @@ class TestProcessSellerMessage:
 
     async def test_timeline_extraction(self, mock_seller_bot):
         """Test response includes timeline_urgency from workflow."""
-        mock_seller_bot.workflow.ainvoke = AsyncMock(return_value={
-            "response_content": "60 days is doable!",
-            "timeline_urgency": "60_days",
-            "next_action": "respond",
-            "current_journey_stage": "qualification",
-            "intent_profile": None,
-            "seller_persona": {},
-            "composite_score": {},
-        })
+        mock_seller_bot.workflow.ainvoke = AsyncMock(
+            return_value={
+                "response_content": "60 days is doable!",
+                "timeline_urgency": "60_days",
+                "next_action": "respond",
+                "current_journey_stage": "qualification",
+                "intent_profile": None,
+                "seller_persona": {},
+                "composite_score": {},
+            }
+        )
 
         result = await mock_seller_bot.process_seller_message(
             conversation_id="seller_123",
@@ -199,10 +203,12 @@ class TestProcessSellerMessage:
         """Test successful calendar booking via slot selection."""
         # Enable calendar service with a successful booking
         mock_seller_bot.calendar_service = AsyncMock()
-        mock_seller_bot.calendar_service.book_appointment = AsyncMock(return_value={
-            "success": True,
-            "message": "Appointment confirmed for March 15 at 10am!",
-        })
+        mock_seller_bot.calendar_service.book_appointment = AsyncMock(
+            return_value={
+                "success": True,
+                "message": "Appointment confirmed for March 15 at 10am!",
+            }
+        )
         # Mock the slot detection to trigger calendar flow
         mock_seller_bot._detect_slot_selection = Mock(return_value=0)
 
@@ -284,9 +290,7 @@ class TestProcessSellerMessage:
 
     async def test_workflow_exception_handling(self, mock_seller_bot):
         """Test graceful handling of workflow exceptions."""
-        mock_seller_bot.workflow.ainvoke = AsyncMock(
-            side_effect=Exception("Workflow processing error")
-        )
+        mock_seller_bot.workflow.ainvoke = AsyncMock(side_effect=Exception("Workflow processing error"))
 
         result = await mock_seller_bot.process_seller_message(
             conversation_id="seller_123",
@@ -299,9 +303,7 @@ class TestProcessSellerMessage:
 
     async def test_intent_decoder_failure(self, mock_seller_bot):
         """Test fallback when intent decoder fails."""
-        mock_seller_bot.intent_decoder.analyze_seller = AsyncMock(
-            side_effect=Exception("Intent analysis failed")
-        )
+        mock_seller_bot.intent_decoder.analyze_seller = AsyncMock(side_effect=Exception("Intent analysis failed"))
 
         result = await mock_seller_bot.process_seller_message(
             conversation_id="seller_123",
@@ -314,9 +316,7 @@ class TestProcessSellerMessage:
 
     async def test_cma_generation_failure(self, mock_seller_bot):
         """Test handling of CMA generation failures."""
-        mock_seller_bot.cma_generator.generate_cma = AsyncMock(
-            side_effect=Exception("CMA generation failed")
-        )
+        mock_seller_bot.cma_generator.generate_cma = AsyncMock(side_effect=Exception("CMA generation failed"))
 
         result = await mock_seller_bot.process_seller_message(
             conversation_id="seller_123",
@@ -329,9 +329,7 @@ class TestProcessSellerMessage:
     async def test_calendar_booking_failure(self, mock_seller_bot):
         """Test handling of calendar booking failures."""
         mock_seller_bot.calendar_service = AsyncMock()
-        mock_seller_bot.calendar_service.book_appointment = AsyncMock(
-            side_effect=Exception("Calendar booking failed")
-        )
+        mock_seller_bot.calendar_service.book_appointment = AsyncMock(side_effect=Exception("Calendar booking failed"))
         mock_seller_bot._detect_slot_selection = Mock(return_value=0)
 
         result = await mock_seller_bot.process_seller_message(

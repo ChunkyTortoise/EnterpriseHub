@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 class TopPropertyMatch(TypedDict, total=False):
     """TypedDict for top property match data."""
+
     property_id: str
     address: str
     price: float
@@ -35,6 +36,7 @@ class TopPropertyMatch(TypedDict, total=False):
 
 class ObjectionDetected(TypedDict, total=False):
     """TypedDict for detected objection data."""
+
     objection_type: str
     objection_text: str
     confidence: float
@@ -44,6 +46,7 @@ class ObjectionDetected(TypedDict, total=False):
 
 class CoachingOpportunity(TypedDict, total=False):
     """TypedDict for coaching opportunity data."""
+
     opportunity_type: str
     description: str
     priority: str
@@ -52,6 +55,7 @@ class CoachingOpportunity(TypedDict, total=False):
 
 class ResponseRecommendation(TypedDict, total=False):
     """TypedDict for response recommendation data."""
+
     recommendation_type: str
     message: str
     confidence: float
@@ -60,6 +64,7 @@ class ResponseRecommendation(TypedDict, total=False):
 
 class BudgetRange(TypedDict, total=False):
     """TypedDict for budget range data."""
+
     min: float
     max: float
     currency: str
@@ -68,6 +73,7 @@ class BudgetRange(TypedDict, total=False):
 
 class FeaturePreference(TypedDict, total=False):
     """TypedDict for feature preference data."""
+
     feature_name: str
     importance: float  # 0.0-1.0
     value: Any

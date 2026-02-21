@@ -15,8 +15,6 @@ from src.agents.query_planner import (
 
 
 @pytest.mark.unit
-
-
 class TestIntentAnalysis:
     """Tests for intent analysis functionality."""
 

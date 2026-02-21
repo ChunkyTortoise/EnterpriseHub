@@ -95,9 +95,7 @@ class ConversationRepairProcessor(ResponseProcessorStage):
             self._contact_state[contact_id] = RepairState()
         return self._contact_state[contact_id]
 
-    def _detect_repeated_question(
-        self, user_message: str, state: RepairState
-    ) -> bool:
+    def _detect_repeated_question(self, user_message: str, state: RepairState) -> bool:
         """Check if user_message is similar to a recent question."""
         for prev in state.recent_questions[-_RECENT_WINDOW:]:
             if _word_overlap_ratio(user_message, prev) >= _WORD_OVERLAP_THRESHOLD:
@@ -125,9 +123,7 @@ class ConversationRepairProcessor(ResponseProcessorStage):
         # 1. Repeated question
         if user_msg and self._detect_repeated_question(user_msg, state):
             trigger = RepairTrigger.REPEATED_QUESTION
-            logger.info(
-                "Repeated question detected for %s", context.contact_id
-            )
+            logger.info("Repeated question detected for %s", context.contact_id)
 
         # 2. Low confidence
         elif context.metadata.get("bot_confidence", 1.0) < _CONFIDENCE_THRESHOLD:
@@ -164,13 +160,8 @@ class ConversationRepairProcessor(ResponseProcessorStage):
             )
 
             # Format multiple-choice options as numbered list
-            if (
-                strategy.repair_type == RepairType.MULTIPLE_CHOICE
-                and strategy.options
-            ):
-                options_text = "\n".join(
-                    f"{i}. {opt}" for i, opt in enumerate(strategy.options, 1)
-                )
+            if strategy.repair_type == RepairType.MULTIPLE_CHOICE and strategy.options:
+                options_text = "\n".join(f"{i}. {opt}" for i, opt in enumerate(strategy.options, 1))
                 repair_message = f"{repair_message}\n{options_text}"
 
             response.message = repair_message
@@ -181,9 +172,7 @@ class ConversationRepairProcessor(ResponseProcessorStage):
 
             # Human escalation side-effect
             if strategy.repair_type == RepairType.HUMAN_ESCALATION:
-                response.actions.append(
-                    {"type": "add_tag", "tag": "Human-Escalation-Needed"}
-                )
+                response.actions.append({"type": "add_tag", "tag": "Human-Escalation-Needed"})
 
             state.escalation_level = min(state.escalation_level + 1, 2)
             state.repair_count += 1
@@ -200,9 +189,7 @@ class ConversationRepairProcessor(ResponseProcessorStage):
         if user_msg:
             state.recent_questions.append(user_msg)
             if len(state.recent_questions) > _MAX_RECENT_QUESTIONS:
-                state.recent_questions = state.recent_questions[
-                    -_MAX_RECENT_QUESTIONS:
-                ]
+                state.recent_questions = state.recent_questions[-_MAX_RECENT_QUESTIONS:]
         state.last_bot_response = response.message
 
         return response

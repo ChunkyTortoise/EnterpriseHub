@@ -602,11 +602,13 @@ class EnhancedGHLClient(GHLClient):
                 end = start + timedelta(minutes=30)
                 start_iso = start.strftime("%Y-%m-%dT%H:%M:%SZ")
                 end_iso = end.strftime("%Y-%m-%dT%H:%M:%SZ")
-                mock_slots.append({
-                    "start": start_iso,
-                    "end": end_iso,
-                    "formatted": start.strftime("%A, %B %d at %I:%M %p"),
-                })
+                mock_slots.append(
+                    {
+                        "start": start_iso,
+                        "end": end_iso,
+                        "formatted": start.strftime("%A, %B %d at %I:%M %p"),
+                    }
+                )
             return mock_slots
 
         try:
@@ -639,11 +641,13 @@ class EnhancedGHLClient(GHLClient):
                     pt_hour = (dt.hour - 8) % 24
                     if 9 <= pt_hour < 17:
                         formatted = dt.strftime("%A, %B %d at %I:%M %p")
-                        filtered.append({
-                            "start": start_str,
-                            "end": end_str,
-                            "formatted": formatted,
-                        })
+                        filtered.append(
+                            {
+                                "start": start_str,
+                                "end": end_str,
+                                "formatted": formatted,
+                            }
+                        )
                 except (ValueError, AttributeError):
                     continue
 
@@ -1175,9 +1179,7 @@ class EnhancedGHLClient(GHLClient):
         }
         try:
             response = await self._make_request("GET", "/contacts/search", params=params)
-            return [
-                self._build_ghl_contact(c) for c in response.get("contacts", [])
-            ]
+            return [self._build_ghl_contact(c) for c in response.get("contacts", [])]
         except Exception as exc:
             logger.error(f"get_contacts_by_pipeline_stage stage={stage_id}: {exc}")
             return []
@@ -1203,9 +1205,7 @@ class EnhancedGHLClient(GHLClient):
         }
         try:
             response = await self._make_request("GET", "/contacts/search", params=params)
-            return [
-                self._build_ghl_contact(c) for c in response.get("contacts", [])
-            ]
+            return [self._build_ghl_contact(c) for c in response.get("contacts", [])]
         except Exception as exc:
             logger.error(f"get_contacts_inactive_since: {exc}")
             return []
@@ -1258,14 +1258,10 @@ class EnhancedGHLClient(GHLClient):
                 f"/workflows/{workflow_id}/trigger",
                 data=payload,
             )
-            logger.info(
-                f"[GHL] Workflow triggered workflow={workflow_id} contact={contact_id}"
-            )
+            logger.info(f"[GHL] Workflow triggered workflow={workflow_id} contact={contact_id}")
             return response or {}
         except Exception as exc:
-            logger.error(
-                f"trigger_workflow workflow={workflow_id} contact={contact_id}: {exc}"
-            )
+            logger.error(f"trigger_workflow workflow={workflow_id} contact={contact_id}: {exc}")
             raise
 
 

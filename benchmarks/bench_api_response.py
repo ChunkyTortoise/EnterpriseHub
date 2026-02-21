@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 # Latency model
 # ---------------------------------------------------------------------------
 
+
 def _lognormal_ms(rng: random.Random, median_ms: float, sigma: float) -> float:
     """Sample from a log-normal distribution with given median and spread."""
     mu = math.log(median_ms)
@@ -30,6 +31,7 @@ def _lognormal_ms(rng: random.Random, median_ms: float, sigma: float) -> float:
 # ---------------------------------------------------------------------------
 # Middleware simulations (real computation, modeled latency)
 # ---------------------------------------------------------------------------
+
 
 def _middleware_compute(rng: random.Random, endpoint: str) -> float:
     """Run middleware computation and return modeled latency in ms.
@@ -51,6 +53,7 @@ def _middleware_compute(rng: random.Random, endpoint: str) -> float:
 # ---------------------------------------------------------------------------
 # Endpoint models
 # ---------------------------------------------------------------------------
+
 
 def _endpoint_health(rng: random.Random) -> tuple[dict, float]:
     """GET /health -- minimal DB ping + uptime check.
@@ -122,6 +125,7 @@ _ENDPOINTS = {
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class EndpointResult:
     name: str
@@ -164,6 +168,7 @@ def _percentile(data: list[float], pct: int) -> float:
 # Main benchmark
 # ---------------------------------------------------------------------------
 
+
 def run_api_benchmark(
     iterations: int = 1_000,
     seed: int = 42,
@@ -193,11 +198,9 @@ def run_api_benchmark(
 # Targets
 # ---------------------------------------------------------------------------
 
+
 def check_targets(result: ApiBenchmarkResult) -> dict[str, bool]:
-    return {
-        name: ep.p99 < ep.target_ms
-        for name, ep in result.endpoints.items()
-    }
+    return {name: ep.p99 < ep.target_ms for name, ep in result.endpoints.items()}
 
 
 def print_results(result: ApiBenchmarkResult) -> None:
@@ -214,14 +217,16 @@ def print_results(result: ApiBenchmarkResult) -> None:
     for name in ("/health", "/api/leads/qualify", "/api/contacts/sync"):
         ep = result.endpoints[name]
         status = "PASS" if targets_met[name] else "FAIL"
-        print(fmt.format(
-            name,
-            f"{ep.p50:.2f}ms",
-            f"{ep.p95:.2f}ms",
-            f"{ep.p99:.2f}ms",
-            f"<{ep.target_ms:.0f}ms",
-            f"[{status}]",
-        ))
+        print(
+            fmt.format(
+                name,
+                f"{ep.p50:.2f}ms",
+                f"{ep.p95:.2f}ms",
+                f"{ep.p99:.2f}ms",
+                f"<{ep.target_ms:.0f}ms",
+                f"[{status}]",
+            )
+        )
     print("=" * 72)
 
 
@@ -232,8 +237,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="API response time benchmark")
-    parser.add_argument("--iterations", type=int, default=1_000,
-                        help="Iterations per endpoint (default: 1000)")
+    parser.add_argument("--iterations", type=int, default=1_000, help="Iterations per endpoint (default: 1000)")
     args = parser.parse_args()
 
     result = run_api_benchmark(iterations=args.iterations)

@@ -74,8 +74,7 @@ class TestBuyerPersonaClassification:
         assert result.persona_type == BuyerPersonaType.DOWNSIZER
         assert result.confidence >= 0.6
         assert any(
-            signal in result.detected_signals
-            for signal in ["too much space", "downsize", "maintenance", "empty nest"]
+            signal in result.detected_signals for signal in ["too much space", "downsize", "maintenance", "empty nest"]
         )
 
     @pytest.mark.asyncio
@@ -110,8 +109,7 @@ class TestBuyerPersonaClassification:
         assert result.persona_type == BuyerPersonaType.RELOCATOR
         assert result.confidence >= 0.6
         assert any(
-            signal in result.detected_signals
-            for signal in ["relocating", "new job", "moving to", "different city"]
+            signal in result.detected_signals for signal in ["relocating", "new job", "moving to", "different city"]
         )
 
     @pytest.mark.asyncio
@@ -151,7 +149,10 @@ class TestBuyerPersonaClassification:
         """Test confidence scoring based on signal strength."""
         # Strong signals should yield higher confidence
         strong_conversation = [
-            {"role": "user", "content": "I'm a first-time buyer looking for my first home. Never owned before and excited but nervous about how buying works."},
+            {
+                "role": "user",
+                "content": "I'm a first-time buyer looking for my first home. Never owned before and excited but nervous about how buying works.",
+            },
         ]
 
         weak_conversation = [
@@ -376,12 +377,12 @@ class TestBuyerPersonaLlmJsonRegression:
         llm_client.agenerate = AsyncMock(
             return_value=SimpleNamespace(
                 content=(
-                    '```json\n'
-                    '{\"persona\":\"investor\",\"confidence\":0.86,'
-                    '\"signals\":[\"rental\",\"roi\"],'
-                    '\"behavioral_insights\":{\"urgency\":0.4,\"data_focus\":0.9,\"emotional_engagement\":0.2},'
-                    '\"reasoning\":\"User repeatedly focuses on ROI and rental yield.\"}'
-                    '\n```'
+                    "```json\n"
+                    '{"persona":"investor","confidence":0.86,'
+                    '"signals":["rental","roi"],'
+                    '"behavioral_insights":{"urgency":0.4,"data_focus":0.9,"emotional_engagement":0.2},'
+                    '"reasoning":"User repeatedly focuses on ROI and rental yield."}'
+                    "\n```"
                 )
             )
         )

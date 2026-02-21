@@ -52,7 +52,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 '''
 
-CONFIG_TEMPLATE = '''# AgentForge Configuration
+CONFIG_TEMPLATE = """# AgentForge Configuration
 # Model settings
 default_llm: openai/gpt-4o
 
@@ -62,9 +62,9 @@ timeout: 300
 
 # Memory settings
 session_max_messages: 100
-'''
+"""
 
-README_TEMPLATE = '''# {project_name}
+README_TEMPLATE = """# {project_name}
 
 A multi-agent system built with AgentForge.
 
@@ -95,12 +95,12 @@ A multi-agent system built with AgentForge.
 ## Documentation
 
 See [AgentForge Docs](https://github.com/your-org/agentforge) for more information.
-'''
+"""
 
-REQUIREMENTS_TEMPLATE = '''agentforge>=0.2.0
+REQUIREMENTS_TEMPLATE = """agentforge>=0.2.0
 pytest>=8.0
 pytest-asyncio>=0.23
-'''
+"""
 
 TEST_TEMPLATE = '''"""
 Tests for {project_name}.
@@ -124,8 +124,7 @@ class CLI:
     def _create_parser(self) -> argparse.ArgumentParser:
         """Create the argument parser."""
         parser = argparse.ArgumentParser(
-            prog="agentforge",
-            description="AgentForge - Lightweight multi-agent LLM orchestration"
+            prog="agentforge", description="AgentForge - Lightweight multi-agent LLM orchestration"
         )
         subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -144,7 +143,9 @@ class CLI:
         # run command
         run_parser = subparsers.add_parser("run", help="Run a DAG")
         run_parser.add_argument("--file", "-f", default="main.py", help="File to run")
-        run_parser.add_argument("--monitor", "-m", action="store_true", help="Show monitoring dashboard")
+        run_parser.add_argument(
+            "--monitor", "-m", action="store_true", help="Show monitoring dashboard"
+        )
 
         # version command
         subparsers.add_parser("version", help="Show version")
@@ -184,10 +185,14 @@ class CLI:
         self._write_file(project_path / "main.py", MAIN_TEMPLATE, args.project_name)
         self._write_file(project_path / "config.yaml", CONFIG_TEMPLATE, args.project_name)
         self._write_file(project_path / "README.md", README_TEMPLATE, args.project_name)
-        self._write_file(project_path / "requirements.txt", REQUIREMENTS_TEMPLATE, args.project_name)
+        self._write_file(
+            project_path / "requirements.txt", REQUIREMENTS_TEMPLATE, args.project_name
+        )
 
         if not args.no_tests:
-            self._write_file(project_path / "tests" / "test_agents.py", TEST_TEMPLATE, args.project_name)
+            self._write_file(
+                project_path / "tests" / "test_agents.py", TEST_TEMPLATE, args.project_name
+            )
 
         print(f"Created project '{args.project_name}' at {project_path}")
         print("\nNext steps:")
@@ -282,6 +287,7 @@ def {args.name}(*args, **kwargs) -> str:
         """Show version."""
         try:
             from agentforge import __version__
+
             print(f"AgentForge {__version__}")
         except ImportError:
             print("AgentForge (development)")

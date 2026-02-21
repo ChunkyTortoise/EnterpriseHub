@@ -23,7 +23,8 @@ st.set_page_config(
 )
 
 # ── Obsidian dark theme CSS ──────────────────────────────────────────────────
-st.markdown("""
+st.markdown(
+    """
 <style>
     .stApp { background-color: #0d1117; color: #e6edf3; }
     .main-header {
@@ -63,21 +64,51 @@ st.markdown("""
     }
     div[data-testid="stMetricValue"] { color: #58a6ff; font-size: 2rem; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # ── Mock scoring engine ──────────────────────────────────────────────────────
 
 STRUCTURE_MARKERS = [
-    "1.", "2.", "3.", "-", "*", "##", "###",
-    "step", "first", "second", "third", "finally",
+    "1.",
+    "2.",
+    "3.",
+    "-",
+    "*",
+    "##",
+    "###",
+    "step",
+    "first",
+    "second",
+    "third",
+    "finally",
 ]
 SPECIFICITY_KEYWORDS = [
-    "roi", "metric", "percent", "%", "revenue", "cost",
-    "example", "case study", "data", "result", "specific",
-    "measurable", "increase", "decrease", "improve",
-    "audience", "persona", "format", "constraint",
-    "paragraph", "sentence", "word", "bullet",
+    "roi",
+    "metric",
+    "percent",
+    "%",
+    "revenue",
+    "cost",
+    "example",
+    "case study",
+    "data",
+    "result",
+    "specific",
+    "measurable",
+    "increase",
+    "decrease",
+    "improve",
+    "audience",
+    "persona",
+    "format",
+    "constraint",
+    "paragraph",
+    "sentence",
+    "word",
+    "bullet",
 ]
 
 
@@ -99,16 +130,40 @@ def score_prompt(prompt_text: str) -> dict:
     specificity_score = min(specificity_hits * 1.5, 10.0)
 
     # Audience awareness: mentions of who the output is for
-    audience_terms = ["audience", "reader", "user", "customer", "client",
-                      "beginner", "expert", "technical", "non-technical",
-                      "executive", "developer", "manager", "vp", "ceo"]
+    audience_terms = [
+        "audience",
+        "reader",
+        "user",
+        "customer",
+        "client",
+        "beginner",
+        "expert",
+        "technical",
+        "non-technical",
+        "executive",
+        "developer",
+        "manager",
+        "vp",
+        "ceo",
+    ]
     audience_hits = sum(1 for t in audience_terms if t in text_lower)
     audience_score = min(audience_hits * 3.0, 10.0)
 
     # Constraint score: word/format/length constraints
-    constraint_terms = ["paragraph", "sentence", "word", "bullet",
-                        "json", "markdown", "table", "list",
-                        "maximum", "minimum", "exactly", "no more than"]
+    constraint_terms = [
+        "paragraph",
+        "sentence",
+        "word",
+        "bullet",
+        "json",
+        "markdown",
+        "table",
+        "list",
+        "maximum",
+        "minimum",
+        "exactly",
+        "no more than",
+    ]
     constraint_hits = sum(1 for t in constraint_terms if t in text_lower)
     constraint_score = min(constraint_hits * 2.5, 10.0)
 
@@ -214,10 +269,10 @@ with st.sidebar:
         for i, tip in enumerate(TIPS):
             st.markdown(f'<div class="tip-card">', unsafe_allow_html=True)
             st.markdown(f"**Tip {i + 1}: {tip['title']}**")
-            st.markdown(f'<div class="before-card"><strong>Before:</strong> {tip["before"]}</div>',
-                        unsafe_allow_html=True)
-            st.markdown(f'<div class="after-card"><strong>After:</strong> {tip["after"]}</div>',
-                        unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="before-card"><strong>Before:</strong> {tip["before"]}</div>', unsafe_allow_html=True
+            )
+            st.markdown(f'<div class="after-card"><strong>After:</strong> {tip["after"]}</div>', unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
@@ -271,9 +326,12 @@ if run_btn:
     latency_delta = result_b["latency_ms"] - result_a["latency_ms"]
     token_delta = result_b["token_count"] - result_a["token_count"]
 
-    m1.metric("Quality A", f'{result_a["scores"]["total"]}/10')
-    m2.metric("Quality B", f'{result_b["scores"]["total"]}/10',
-              delta=f"+{quality_delta:.1f}" if quality_delta > 0 else f"{quality_delta:.1f}")
+    m1.metric("Quality A", f"{result_a['scores']['total']}/10")
+    m2.metric(
+        "Quality B",
+        f"{result_b['scores']['total']}/10",
+        delta=f"+{quality_delta:.1f}" if quality_delta > 0 else f"{quality_delta:.1f}",
+    )
     m3.metric("Latency Delta", f"{latency_delta:+d} ms")
     m4.metric("Token Delta", f"{token_delta:+d}")
 
@@ -283,18 +341,22 @@ if run_btn:
     values_b = [result_b["scores"]["total"], result_b["latency_ms"], result_b["token_count"]]
 
     fig = go.Figure()
-    fig.add_trace(go.Bar(
-        name="Prompt A",
-        x=categories,
-        y=values_a,
-        marker_color="#f85149",
-    ))
-    fig.add_trace(go.Bar(
-        name="Prompt B",
-        x=categories,
-        y=values_b,
-        marker_color="#3fb950",
-    ))
+    fig.add_trace(
+        go.Bar(
+            name="Prompt A",
+            x=categories,
+            y=values_a,
+            marker_color="#f85149",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            name="Prompt B",
+            x=categories,
+            y=values_b,
+            marker_color="#3fb950",
+        )
+    )
     fig.update_layout(
         barmode="group",
         template="plotly_dark",
@@ -313,22 +375,26 @@ if run_btn:
     breakdown_b = [result_b["scores"][k] for k in ["length", "structure", "specificity", "audience", "constraints"]]
 
     radar = go.Figure()
-    radar.add_trace(go.Scatterpolar(
-        r=breakdown_a + [breakdown_a[0]],
-        theta=breakdown_cats + [breakdown_cats[0]],
-        fill="toself",
-        name="Prompt A",
-        line_color="#f85149",
-        fillcolor="rgba(248, 81, 73, 0.15)",
-    ))
-    radar.add_trace(go.Scatterpolar(
-        r=breakdown_b + [breakdown_b[0]],
-        theta=breakdown_cats + [breakdown_cats[0]],
-        fill="toself",
-        name="Prompt B",
-        line_color="#3fb950",
-        fillcolor="rgba(63, 185, 80, 0.15)",
-    ))
+    radar.add_trace(
+        go.Scatterpolar(
+            r=breakdown_a + [breakdown_a[0]],
+            theta=breakdown_cats + [breakdown_cats[0]],
+            fill="toself",
+            name="Prompt A",
+            line_color="#f85149",
+            fillcolor="rgba(248, 81, 73, 0.15)",
+        )
+    )
+    radar.add_trace(
+        go.Scatterpolar(
+            r=breakdown_b + [breakdown_b[0]],
+            theta=breakdown_cats + [breakdown_cats[0]],
+            fill="toself",
+            name="Prompt B",
+            line_color="#3fb950",
+            fillcolor="rgba(63, 185, 80, 0.15)",
+        )
+    )
     radar.update_layout(
         polar=dict(
             bgcolor="#161b22",
@@ -349,11 +415,9 @@ if run_btn:
     st.markdown('<p class="section-header">Mock LLM Output</p>', unsafe_allow_html=True)
     out_a, out_b = st.columns(2)
     with out_a:
-        st.markdown(f'<div class="before-card">{result_a["output"]}</div>',
-                    unsafe_allow_html=True)
+        st.markdown(f'<div class="before-card">{result_a["output"]}</div>', unsafe_allow_html=True)
     with out_b:
-        st.markdown(f'<div class="after-card">{result_b["output"]}</div>',
-                    unsafe_allow_html=True)
+        st.markdown(f'<div class="after-card">{result_b["output"]}</div>', unsafe_allow_html=True)
 
 st.divider()
 
@@ -368,10 +432,7 @@ potd_a, potd_b = st.columns(2)
 with potd_a:
     st.markdown("**Before**")
     st.markdown(
-        '<div class="before-card">'
-        '"Write about AI"'
-        '<br><br><strong>Score: 3.2 / 10</strong>'
-        '</div>',
+        '<div class="before-card">"Write about AI"<br><br><strong>Score: 3.2 / 10</strong></div>',
         unsafe_allow_html=True,
     )
 
@@ -380,10 +441,10 @@ with potd_b:
     st.markdown(
         '<div class="after-card">'
         '"Write a 3-paragraph executive summary of how AI is transforming B2B sales, '
-        'including 2 specific ROI metrics and one real-world case study. '
+        "including 2 specific ROI metrics and one real-world case study. "
         'Audience: VP of Sales with no technical background."'
-        '<br><br><strong>Score: 8.7 / 10</strong>'
-        '</div>',
+        "<br><br><strong>Score: 8.7 / 10</strong>"
+        "</div>",
         unsafe_allow_html=True,
     )
 

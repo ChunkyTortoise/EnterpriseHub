@@ -404,11 +404,14 @@ async def send_message(request: ChatRequest, current_user=Depends(get_current_us
         suggestions = []
         for coord_suggestion in guidance.bot_coordination_suggestions:
             suggestion_id = str(uuid.uuid4())
-            await orchestrator.store_suggestion(suggestion_id, {
-                **coord_suggestion,
-                "type": "optimization",
-                "title": coord_suggestion.get("suggestion", "Bot Optimization"),
-            })
+            await orchestrator.store_suggestion(
+                suggestion_id,
+                {
+                    **coord_suggestion,
+                    "type": "optimization",
+                    "title": coord_suggestion.get("suggestion", "Bot Optimization"),
+                },
+            )
 
             suggestions.append(
                 ProactiveSuggestion(
@@ -428,11 +431,14 @@ async def send_message(request: ChatRequest, current_user=Depends(get_current_us
         # Add risk alerts as suggestions too
         for alert in guidance.risk_alerts:
             suggestion_id = str(uuid.uuid4())
-            await orchestrator.store_suggestion(suggestion_id, {
-                **alert,
-                "type": "escalation",
-                "title": alert.get("description", "Risk Alert")[:50],
-            })
+            await orchestrator.store_suggestion(
+                suggestion_id,
+                {
+                    **alert,
+                    "type": "escalation",
+                    "title": alert.get("description", "Risk Alert")[:50],
+                },
+            )
             suggestions.append(
                 ProactiveSuggestion(
                     id=suggestion_id,
@@ -579,11 +585,14 @@ async def get_proactive_suggestions(current_user=Depends(get_current_user_option
         suggestions = []
         for coord_suggestion in guidance.bot_coordination_suggestions:
             suggestion_id = str(uuid.uuid4())
-            await orchestrator.store_suggestion(suggestion_id, {
-                **coord_suggestion,
-                "type": "optimization",
-                "title": coord_suggestion.get("suggestion", "Bot Optimization"),
-            })
+            await orchestrator.store_suggestion(
+                suggestion_id,
+                {
+                    **coord_suggestion,
+                    "type": "optimization",
+                    "title": coord_suggestion.get("suggestion", "Bot Optimization"),
+                },
+            )
             suggestions.append(
                 ProactiveSuggestion(
                     id=suggestion_id,
@@ -602,11 +611,14 @@ async def get_proactive_suggestions(current_user=Depends(get_current_user_option
         # Add risk alerts as urgent suggestions
         for alert in guidance.risk_alerts:
             suggestion_id = str(uuid.uuid4())
-            await orchestrator.store_suggestion(suggestion_id, {
-                **alert,
-                "type": "escalation",
-                "title": alert.get("type", "Risk Alert"),
-            })
+            await orchestrator.store_suggestion(
+                suggestion_id,
+                {
+                    **alert,
+                    "type": "escalation",
+                    "title": alert.get("type", "Risk Alert"),
+                },
+            )
             suggestions.append(
                 ProactiveSuggestion(
                     id=suggestion_id,
@@ -697,13 +709,16 @@ async def dismiss_suggestion(
 
         # ROADMAP-045: Store dismissal in orchestrator's suggestion store
         orchestrator = get_claude_concierge_orchestrator()
-        await orchestrator.store_suggestion(suggestion_id, {
-            "status": "dismissed",
-            "dismiss_reason": reason,
-            "dismiss_category": category,
-            "dismissed_by": user_id,
-            "dismissed_at": datetime.now().isoformat(),
-        })
+        await orchestrator.store_suggestion(
+            suggestion_id,
+            {
+                "status": "dismissed",
+                "dismiss_reason": reason,
+                "dismiss_category": category,
+                "dismissed_by": user_id,
+                "dismissed_at": datetime.now().isoformat(),
+            },
+        )
 
         # Publish suggestion dismissed event
         event_publisher = get_event_publisher()
@@ -854,9 +869,7 @@ async def analyze_customer_journeys(current_user=Depends(get_current_user_option
         logger.info("Analyzing customer journeys via orchestrator")
 
         orchestrator = get_claude_concierge_orchestrator()
-        await orchestrator.generate_live_guidance(
-            current_page="Customer Journeys", mode=ConciergeMode.REACTIVE
-        )
+        await orchestrator.generate_live_guidance(current_page="Customer Journeys", mode=ConciergeMode.REACTIVE)
 
         analysis = {
             "activeJourneys": 0,  # Would need real metrics
@@ -1131,7 +1144,13 @@ async def get_capabilities():
         "concierge_modes": [mode.value for mode in ConciergeMode],
         "intelligence_scopes": [scope.value for scope in IntelligenceScope],
         "supported_bots": ["jorge-seller", "lead-bot", "intent-decoder"],
-        "coaching_types": ["response_optimization", "timing_adjustment", "strategy_pivot", "objection_handling", "temperature_escalation"],
+        "coaching_types": [
+            "response_optimization",
+            "timing_adjustment",
+            "strategy_pivot",
+            "objection_handling",
+            "temperature_escalation",
+        ],
         "urgency_levels": ["low", "medium", "high", "urgent"],
         "device_types": ["desktop", "mobile", "tablet"],
         "connection_qualities": ["excellent", "good", "poor"],

@@ -160,7 +160,9 @@ class NeuralTextEncoder(nn.Module):
         )
 
         # Ontario Mills-specific real estate extractor
-        self.ontario_mills_extractor = nn.Sequential(nn.Linear(bert_dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 64))
+        self.ontario_mills_extractor = nn.Sequential(
+            nn.Linear(bert_dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 64)
+        )
 
     def forward(self, texts: List[str]) -> Dict[str, torch.Tensor]:
         """Extract neural text features."""
@@ -514,7 +516,11 @@ class NeuralFeatureEngineer:
                 extraction_metadata["geospatial"] = geo_metadata
 
             # 6. Extract ontario_mills-specific features
-            ontario_mills_features, ontario_mills_names, ontario_mills_metadata = await self._extract_ontario_mills_features(data, data_type)
+            (
+                ontario_mills_features,
+                ontario_mills_names,
+                ontario_mills_metadata,
+            ) = await self._extract_ontario_mills_features(data, data_type)
             if ontario_mills_features.size > 0:
                 all_features.append(ontario_mills_features)
                 all_names.extend(ontario_mills_names)

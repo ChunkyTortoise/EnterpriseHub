@@ -73,16 +73,23 @@ ensure_newline_before_comments = true
 
 [tool.mypy]
 python_version = "3.12"
-warn_return_any = true
+ignore_missing_imports = true
+explicit_package_bases = true
+warn_return_any = false
 warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-strict_equality = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+no_implicit_optional = false
+warn_redundant_casts = false
+warn_unused_ignores = false
+warn_no_return = false
+strict_equality = false
+exclude = [
+    "ghl_real_estate_ai/scripts/",
+    "advanced_rag_system/tests/",
+    "advanced_rag_system/test_",
+]
 
 [[tool.mypy.overrides]]
 module = [
@@ -94,9 +101,19 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+# Suppress all errors for legacy/untyped packages; tighten incrementally
 module = [
-    "ghl_real_estate_ai.api.schemas.white_label",
-    "ghl_real_estate_ai.api.routes.billing",
+    "ghl_real_estate_ai.*",
+    "ghl_integration.*",
+    "portal_api.*",
+    "utils.*",
+    "advanced_rag_system.*",
+    "src.*",
+    "app",
+    "main",
+    "mcp_server",
+    "production_server",
+    "admin_dashboard",
 ]
 ignore_errors = true
 

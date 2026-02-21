@@ -1,4 +1,3 @@
-
 from fastmcp import FastMCP
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider

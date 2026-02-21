@@ -522,7 +522,6 @@ class AgentCoordinator:
     ) -> float:
         """Calculate agent suitability score for request"""
         try:
-
             # Specialty match (40% weight)
             required_specialties = analysis.get("required_specialties", [])
             specialty_matches = sum(1 for spec in required_specialties if spec in agent.specialties)

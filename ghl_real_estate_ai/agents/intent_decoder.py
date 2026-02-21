@@ -70,7 +70,9 @@ class LeadIntentDecoder:
     Implements FRS (Financial Readiness) and PCS (Psychological Commitment) scoring.
     """
 
-    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None, industry_config: Optional["IndustryConfig"] = None):
+    def __init__(
+        self, ghl_client: Optional[EnhancedGHLClient] = None, industry_config: Optional["IndustryConfig"] = None
+    ):
         self.ghl_client = ghl_client
 
         # Load industry config for config-first marker initialization
@@ -80,72 +82,105 @@ class LeadIntentDecoder:
 
         # Motivation Markers (config-first, hardcoded fallback)
         self.high_intent_motivation = (
-            cfg.intents.motivation.high if cfg and cfg.intents.motivation.high
+            cfg.intents.motivation.high
+            if cfg and cfg.intents.motivation.high
             else ["need to sell fast", "relocating in 30 days", "behind on payments", "divorce", "estate", "probate"]
         )
         self.mixed_intent_motivation = (
-            cfg.intents.motivation.medium if cfg and cfg.intents.motivation.medium
+            cfg.intents.motivation.medium
+            if cfg and cfg.intents.motivation.medium
             else ["thinking about it", "might sell next year", "curious about value"]
         )
         self.low_intent_motivation = (
-            cfg.intents.motivation.low if cfg and cfg.intents.motivation.low
+            cfg.intents.motivation.low
+            if cfg and cfg.intents.motivation.low
             else ["just browsing", "not sure", "what if rates drop"]
         )
 
         # Timeline Markers
         self.high_intent_timeline = (
-            cfg.intents.timeline.high if cfg and cfg.intents.timeline.high
+            cfg.intents.timeline.high
+            if cfg and cfg.intents.timeline.high
             else ["asap", "30 days", "this month", "immediately"]
         )
         self.flexible_timeline = (
-            cfg.intents.timeline.medium if cfg and cfg.intents.timeline.medium
-            else ["soon", "this year", "flexible"]
+            cfg.intents.timeline.medium if cfg and cfg.intents.timeline.medium else ["soon", "this year", "flexible"]
         )
         self.vague_timeline = (
-            cfg.intents.timeline.low if cfg and cfg.intents.timeline.low
+            cfg.intents.timeline.low
+            if cfg and cfg.intents.timeline.low
             else ["eventually", "when the time is right", "maybe later"]
         )
 
         # Condition Markers
         self.realistic_condition = (
-            cfg.intents.condition.high if cfg and cfg.intents.condition.high
+            cfg.intents.condition.high
+            if cfg and cfg.intents.condition.high
             else ["as-is", "needs work", "fixer", "defect", "discount"]
         )
         self.negotiable_condition = (
-            cfg.intents.condition.medium if cfg and cfg.intents.condition.medium
+            cfg.intents.condition.medium
+            if cfg and cfg.intents.condition.medium
             else ["minor fixes", "flexible on condition"]
         )
         self.unrealistic_condition = (
-            cfg.intents.condition.low if cfg and cfg.intents.condition.low
+            cfg.intents.condition.low
+            if cfg and cfg.intents.condition.low
             else ["perfect", "turnkey", "premium pricing"]
         )
 
         # Price Markers
         self.price_aware = (
-            cfg.intents.price.high if cfg and cfg.intents.price.high
+            cfg.intents.price.high
+            if cfg and cfg.intents.price.high
             else ["zestimate", "comps", "comparable", "market value"]
         )
         self.price_flexible = (
-            cfg.intents.price.medium if cfg and cfg.intents.price.medium
+            cfg.intents.price.medium
+            if cfg and cfg.intents.price.medium
             else ["range", "open to expectations", "negotiable"]
         )
 
         # Buyer vs Seller Intent Markers
         self.buyer_markers = (
-            cfg.intents.buyer_patterns if cfg and cfg.intents.buyer_patterns
+            cfg.intents.buyer_patterns
+            if cfg and cfg.intents.buyer_patterns
             else [
-                "looking for", "want to buy", "searching for", "need a home",
-                "bedroom", "3 bed", "4 bed", "bd house", "buying",
-                "pre-approved", "mortgage", "first time buyer", "house hunting",
-                "move in", "looking to purchase", "budget", "under 700k", "under 500k",
+                "looking for",
+                "want to buy",
+                "searching for",
+                "need a home",
+                "bedroom",
+                "3 bed",
+                "4 bed",
+                "bd house",
+                "buying",
+                "pre-approved",
+                "mortgage",
+                "first time buyer",
+                "house hunting",
+                "move in",
+                "looking to purchase",
+                "budget",
+                "under 700k",
+                "under 500k",
             ]
         )
         self.seller_markers = (
-            cfg.intents.seller_patterns if cfg and cfg.intents.seller_patterns
+            cfg.intents.seller_patterns
+            if cfg and cfg.intents.seller_patterns
             else [
-                "want to sell", "selling my", "sell my", "list my", "home value",
-                "what's my home worth", "thinking about selling", "how much is my",
-                "considering selling", "need to sell", "sell the house",
+                "want to sell",
+                "selling my",
+                "sell my",
+                "list my",
+                "home value",
+                "what's my home worth",
+                "thinking about selling",
+                "how much is my",
+                "considering selling",
+                "need to sell",
+                "sell the house",
                 "put my house on the market",
             ]
         )
@@ -261,6 +296,7 @@ class LeadIntentDecoder:
         cfg = self._cfg  # always defined for temperature thresholds below
         try:
             from ghl_real_estate_ai.config.jorge_config_loader import get_config
+
             unified_config = get_config()
             intent_weights = unified_config.lead_bot.scoring.intent_weights
             w_motivation = intent_weights["motivation"]
@@ -511,9 +547,7 @@ class LeadIntentDecoder:
                     boost = field_config["boost"]
                     frs_boost += boost
                     applied_boosts.append(f"field:{field_name}={field_value}({boost:+.0f})")
-                    logger.debug(
-                        f"Custom field boost applied: {field_name}={field_value} → {boost:+.0f} FRS"
-                    )
+                    logger.debug(f"Custom field boost applied: {field_name}={field_value} → {boost:+.0f} FRS")
 
         # --- Lead age factor (days since date_added) ---
         date_added = ghl_data.get("date_added")
@@ -666,6 +700,7 @@ class LeadIntentDecoder:
         # Falls back to hardcoded defaults if config not available
         try:
             from ghl_real_estate_ai.config.jorge_config_loader import get_config
+
             config = get_config()
             pcs_weights = config.lead_bot.scoring.pcs_weights
 
@@ -735,6 +770,7 @@ class LeadIntentDecoder:
         # Check if conversion tracking is enabled
         try:
             from ghl_real_estate_ai.config.jorge_config_loader import get_config
+
             config = get_config()
 
             if not config.shared.analytics.conversion_tracking.enabled:

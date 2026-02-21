@@ -483,7 +483,7 @@ class TestWebhookRoutingComprehensive:
 
             # Fallback message should have been queued via background_tasks.add_task
             add_task_calls = mock_bg_tasks.add_task.call_args_list
-            
+
             # Check if safe_send_message was queued (it's the first arg, and its second arg is our mock client)
             send_message_queued = False
             for args, kwargs in add_task_calls:
@@ -495,7 +495,7 @@ class TestWebhookRoutingComprehensive:
                 if any("reach" in str(arg).lower() for arg in args):
                     send_message_queued = True
                     break
-                    
+
             assert send_message_queued, f"Expected fallback message in background_tasks. Calls: {add_task_calls}"
 
     @pytest.mark.asyncio

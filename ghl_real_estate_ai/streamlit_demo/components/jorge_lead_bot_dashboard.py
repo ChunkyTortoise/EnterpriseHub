@@ -235,6 +235,7 @@ class JorgeAPIClient:
             }
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"Error getting voice analytics: {e}")
             return {
                 "period_days": days,
@@ -287,6 +288,7 @@ class JorgeAPIClient:
             }
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"Error getting scoring analytics: {e}")
             return {
                 "total_leads_scored": 0,

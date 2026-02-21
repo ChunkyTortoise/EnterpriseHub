@@ -1,11 +1,12 @@
 """Tests for query API endpoints."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock
 
-from rag_service.api.queries import router, QueryRequest, QueryResponse
+from rag_service.api.queries import QueryRequest, QueryResponse, router
 from rag_service.core.rag_engine import RAGResponse, SourceReference
 
 
@@ -212,9 +213,7 @@ class TestQueryEndpoint:
         """Test top_k parameter validation."""
         # Arrange
         mock_rag_engine.query = AsyncMock(
-            return_value=RAGResponse(
-                answer="Answer", sources=[], query="test", latency_ms=100
-            )
+            return_value=RAGResponse(answer="Answer", sources=[], query="test", latency_ms=100)
         )
 
         # Act - valid range
@@ -246,9 +245,7 @@ class TestQueryEndpoint:
         """Test that usage is tracked and reported."""
         # Arrange
         mock_rag_engine.query = AsyncMock(
-            return_value=RAGResponse(
-                answer="Answer", sources=[], query="test", latency_ms=100
-            )
+            return_value=RAGResponse(answer="Answer", sources=[], query="test", latency_ms=100)
         )
 
         # Act
@@ -296,9 +293,7 @@ class TestQueryEndpoint:
         app.state.pii_detector = pii_detector
 
         mock_rag_engine.query = AsyncMock(
-            return_value=RAGResponse(
-                answer="Answer", sources=[], query="test", latency_ms=100
-            )
+            return_value=RAGResponse(answer="Answer", sources=[], query="test", latency_ms=100)
         )
 
         # Act
@@ -320,6 +315,7 @@ class TestQueryStreamEndpoint:
 
     def test_stream_query(self, client, mock_rag_engine, mock_usage_tracker):
         """Test streaming RAG query."""
+
         # Arrange
         async def mock_stream(**kwargs):
             yield "This "
@@ -357,10 +353,9 @@ class TestQueryStreamEndpoint:
         # Assert
         assert response.status_code == 429
 
-    def test_stream_usage_tracking(
-        self, client, mock_rag_engine, mock_usage_tracker
-    ):
+    def test_stream_usage_tracking(self, client, mock_rag_engine, mock_usage_tracker):
         """Test that streaming queries are tracked."""
+
         # Arrange
         async def mock_stream(**kwargs):
             yield "response"

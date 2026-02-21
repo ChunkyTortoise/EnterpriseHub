@@ -90,27 +90,58 @@ class ConversationRepairService:
 
     # Real estate keywords for topic detection
     REAL_ESTATE_KEYWORDS = {
-        'property', 'house', 'home', 'sell', 'buy', 'listing', 'price',
-        'bedroom', 'bathroom', 'sqft', 'agent', 'market', 'appraisal',
-        'closing', 'offer', 'mortgage', 'realtor', 'neighborhood',
-        'cma', 'equity', 'refinance', 'inspection', 'escrow', 'title',
-        'zestimate', 'zillow', 'redfin', 'mls', 'commission', 'buyer',
-        'seller', 'rent', 'lease', 'investment', 'flip', 'cash', 'financing'
+        "property",
+        "house",
+        "home",
+        "sell",
+        "buy",
+        "listing",
+        "price",
+        "bedroom",
+        "bathroom",
+        "sqft",
+        "agent",
+        "market",
+        "appraisal",
+        "closing",
+        "offer",
+        "mortgage",
+        "realtor",
+        "neighborhood",
+        "cma",
+        "equity",
+        "refinance",
+        "inspection",
+        "escrow",
+        "title",
+        "zestimate",
+        "zillow",
+        "redfin",
+        "mls",
+        "commission",
+        "buyer",
+        "seller",
+        "rent",
+        "lease",
+        "investment",
+        "flip",
+        "cash",
+        "financing",
     }
 
     # Confusion/misunderstanding signals
     CONFUSION_PATTERNS = [
-        r'\b(what|huh|confused|don\'t understand|not sure|unclear)\b',
-        r'\b(mean|saying|talking about)\?',
-        r'^(what|huh|say that again)\??$',
-        r'\b(explain|clarify|rephrase)\b',
+        r"\b(what|huh|confused|don\'t understand|not sure|unclear)\b",
+        r"\b(mean|saying|talking about)\?",
+        r"^(what|huh|say that again)\??$",
+        r"\b(explain|clarify|rephrase)\b",
     ]
 
     # Negative sentiment patterns
     NEGATIVE_PATTERNS = [
-        r'\b(no|nope|nah|not interested|not now|maybe later)\b',
-        r'\b(busy|later|another time|not ready)\b',
-        r'\b(stop|leave me alone|don\'t contact)\b',
+        r"\b(no|nope|nah|not interested|not now|maybe later)\b",
+        r"\b(busy|later|another time|not ready)\b",
+        r"\b(stop|leave me alone|don\'t contact)\b",
     ]
 
     def __init__(self):
@@ -118,13 +149,12 @@ class ConversationRepairService:
         self.repair_history: Dict[str, List[Dict]] = {}  # contact_id -> repairs
         self.success_metrics: Dict[FailureType, Dict[str, int]] = {
             failure_type: {"attempts": 0, "successes": 0}
-            for failure_type in FailureType if failure_type != FailureType.NONE
+            for failure_type in FailureType
+            if failure_type != FailureType.NONE
         }
 
     def detect_failure(
-        self,
-        conversation_history: List[ConversationMessage],
-        context: Optional[Dict[str, Any]] = None
+        self, conversation_history: List[ConversationMessage], context: Optional[Dict[str, Any]] = None
     ) -> FailureDetection:
         """
         Detect conversation failures from message history.
@@ -153,22 +183,17 @@ class ConversationRepairService:
         # Log detection for monitoring
         if best_detection.failure_type != FailureType.NONE:
             logger.info(
-                f"Detected {best_detection.failure_type.value} failure "
-                f"(confidence: {best_detection.confidence:.2f})",
+                f"Detected {best_detection.failure_type.value} failure (confidence: {best_detection.confidence:.2f})",
                 extra={
                     "failure_type": best_detection.failure_type.value,
                     "confidence": best_detection.confidence,
                     "evidence_count": len(best_detection.evidence),
-                }
+                },
             )
 
         return best_detection
 
-    def suggest_repair(
-        self,
-        failure: FailureDetection,
-        context: Optional[Dict[str, Any]] = None
-    ) -> RepairStrategy:
+    def suggest_repair(self, failure: FailureDetection, context: Optional[Dict[str, Any]] = None) -> RepairStrategy:
         """
         Suggest repair strategy for detected failure.
 
@@ -203,7 +228,7 @@ class ConversationRepairService:
                 extra={
                     "failure_type": failure.failure_type.value,
                     "approach": strategy.approach,
-                }
+                },
             )
             return strategy
 
@@ -225,12 +250,14 @@ class ConversationRepairService:
         if contact_id not in self.repair_history:
             self.repair_history[contact_id] = []
 
-        self.repair_history[contact_id].append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "failure_type": failure_type.value,
-            "approach": strategy.approach,
-            "success": None,  # Updated later via track_repair_outcome
-        })
+        self.repair_history[contact_id].append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "failure_type": failure_type.value,
+                "approach": strategy.approach,
+                "success": None,  # Updated later via track_repair_outcome
+            }
+        )
 
         self.success_metrics[failure_type]["attempts"] += 1
 
@@ -255,10 +282,7 @@ class ConversationRepairService:
         """Get repair success statistics."""
         if failure_type:
             metrics = self.success_metrics[failure_type]
-            success_rate = (
-                metrics["successes"] / metrics["attempts"]
-                if metrics["attempts"] > 0 else 0.0
-            )
+            success_rate = metrics["successes"] / metrics["attempts"] if metrics["attempts"] > 0 else 0.0
             return {
                 "failure_type": failure_type.value,
                 "attempts": metrics["attempts"],
@@ -269,9 +293,7 @@ class ConversationRepairService:
         # Overall stats
         total_attempts = sum(m["attempts"] for m in self.success_metrics.values())
         total_successes = sum(m["successes"] for m in self.success_metrics.values())
-        overall_rate = (
-            total_successes / total_attempts if total_attempts > 0 else 0.0
-        )
+        overall_rate = total_successes / total_attempts if total_attempts > 0 else 0.0
 
         return {
             "overall": {
@@ -279,28 +301,18 @@ class ConversationRepairService:
                 "successes": total_successes,
                 "success_rate": round(overall_rate, 3),
             },
-            "by_type": {
-                ft.value: self.get_repair_stats(ft)
-                for ft in FailureType if ft != FailureType.NONE
-            },
+            "by_type": {ft.value: self.get_repair_stats(ft) for ft in FailureType if ft != FailureType.NONE},
         }
 
     # ── Detection Methods ──────────────────────────────────────────────
 
-    def _detect_dead_end(
-        self,
-        history: List[ConversationMessage],
-        context: Optional[Dict]
-    ) -> FailureDetection:
+    def _detect_dead_end(self, history: List[ConversationMessage], context: Optional[Dict]) -> FailureDetection:
         """Detect dead-end conversations (disengagement)."""
         if len(history) < 2:
             return FailureDetection(FailureType.DEAD_END, 0.0)
 
         # Analyze recent user messages (last 3)
-        user_messages = [
-            msg for msg in history[-6:]
-            if msg.get("role") == "user"
-        ][-3:]
+        user_messages = [msg for msg in history[-6:] if msg.get("role") == "user"][-3:]
 
         if not user_messages:
             return FailureDetection(FailureType.DEAD_END, 0.0)
@@ -348,26 +360,14 @@ class ConversationRepairService:
             severity=confidence,
         )
 
-    def _detect_loop(
-        self,
-        history: List[ConversationMessage],
-        context: Optional[Dict]
-    ) -> FailureDetection:
+    def _detect_loop(self, history: List[ConversationMessage], context: Optional[Dict]) -> FailureDetection:
         """Detect repetitive conversation loops."""
         if len(history) < 4:
             return FailureDetection(FailureType.LOOP, 0.0)
 
         # Extract bot and user messages separately
-        bot_messages = [
-            msg.get("content", "")
-            for msg in history[-8:]
-            if msg.get("role") in ("assistant", "bot")
-        ]
-        user_messages = [
-            msg.get("content", "")
-            for msg in history[-8:]
-            if msg.get("role") == "user"
-        ]
+        bot_messages = [msg.get("content", "") for msg in history[-8:] if msg.get("role") in ("assistant", "bot")]
+        user_messages = [msg.get("content", "") for msg in history[-8:] if msg.get("role") == "user"]
 
         if len(bot_messages) < 2 or len(user_messages) < 2:
             return FailureDetection(FailureType.LOOP, 0.0)
@@ -400,20 +400,13 @@ class ConversationRepairService:
             severity=confidence,
         )
 
-    def _detect_misunderstanding(
-        self,
-        history: List[ConversationMessage],
-        context: Optional[Dict]
-    ) -> FailureDetection:
+    def _detect_misunderstanding(self, history: List[ConversationMessage], context: Optional[Dict]) -> FailureDetection:
         """Detect user confusion or misunderstanding."""
         if len(history) < 2:
             return FailureDetection(FailureType.MISUNDERSTANDING, 0.0)
 
         # Analyze recent user messages
-        user_messages = [
-            msg for msg in history[-6:]
-            if msg.get("role") == "user"
-        ][-3:]
+        user_messages = [msg for msg in history[-6:] if msg.get("role") == "user"][-3:]
 
         if not user_messages:
             return FailureDetection(FailureType.MISUNDERSTANDING, 0.0)
@@ -431,16 +424,13 @@ class ConversationRepairService:
                     break
 
         # Check for question-heavy responses
-        question_count = sum(
-            1 for msg in user_messages
-            if '?' in msg.get("content", "")
-        )
+        question_count = sum(1 for msg in user_messages if "?" in msg.get("content", ""))
         if question_count >= 2:
             evidence.append(f"Multiple questions ({question_count})")
             confidence += 0.2
 
         # Check for clarification requests
-        clarification_words = ['explain', 'mean', 'clarify', 'rephrase', 'what']
+        clarification_words = ["explain", "mean", "clarify", "rephrase", "what"]
         for msg in user_messages:
             content = msg.get("content", "").lower()
             if any(word in content for word in clarification_words):
@@ -449,26 +439,21 @@ class ConversationRepairService:
                 break
 
         return FailureDetection(
-            failure_type=FailureType.MISUNDERSTANDING if confidence >= self.MISUNDERSTANDING_CONFIDENCE_THRESHOLD else FailureType.NONE,
+            failure_type=FailureType.MISUNDERSTANDING
+            if confidence >= self.MISUNDERSTANDING_CONFIDENCE_THRESHOLD
+            else FailureType.NONE,
             confidence=min(confidence, 1.0),
             evidence=evidence,
             severity=confidence,
         )
 
-    def _detect_topic_drift(
-        self,
-        history: List[ConversationMessage],
-        context: Optional[Dict]
-    ) -> FailureDetection:
+    def _detect_topic_drift(self, history: List[ConversationMessage], context: Optional[Dict]) -> FailureDetection:
         """Detect conversation drifting away from real estate."""
         if len(history) < 3:
             return FailureDetection(FailureType.TOPIC_DRIFT, 0.0)
 
         # Analyze recent user messages
-        user_messages = [
-            msg for msg in history[-6:]
-            if msg.get("role") == "user"
-        ][-3:]
+        user_messages = [msg for msg in history[-6:] if msg.get("role") == "user"][-3:]
 
         if not user_messages:
             return FailureDetection(FailureType.TOPIC_DRIFT, 0.0)
@@ -482,7 +467,7 @@ class ConversationRepairService:
 
         for msg in user_messages:
             content = msg.get("content", "").lower()
-            words = set(re.findall(r'\b\w+\b', content))
+            words = set(re.findall(r"\b\w+\b", content))
             total_words += len(words)
             re_words = words & self.REAL_ESTATE_KEYWORDS
             re_word_count += len(re_words)
@@ -502,8 +487,16 @@ class ConversationRepairService:
 
         # Check for off-topic indicators
         off_topic_indicators = [
-            'weather', 'sports', 'politics', 'news', 'recipe',
-            'movie', 'tv show', 'game', 'music', 'restaurant'
+            "weather",
+            "sports",
+            "politics",
+            "news",
+            "recipe",
+            "movie",
+            "tv show",
+            "game",
+            "music",
+            "restaurant",
         ]
 
         for msg in user_messages:
@@ -523,11 +516,7 @@ class ConversationRepairService:
 
     # ── Repair Strategy Methods ────────────────────────────────────────
 
-    def _repair_dead_end(
-        self,
-        failure: FailureDetection,
-        context: Dict[str, Any]
-    ) -> RepairStrategy:
+    def _repair_dead_end(self, failure: FailureDetection, context: Dict[str, Any]) -> RepairStrategy:
         """Generate repair strategy for dead-end conversations."""
         # Extract context
         qualification_score = context.get("financial_readiness_score", 0)
@@ -549,10 +538,7 @@ class ConversationRepairService:
         elif has_budget:
             # Mid-qualified - alternative angle
             approach = "alternative_angle"
-            prompt = (
-                "I want to make sure I'm asking the right questions. "
-                "Let me try a different approach."
-            )
+            prompt = "I want to make sure I'm asking the right questions. Let me try a different approach."
             talking_points = [
                 "What would make this conversation more helpful for you?",
                 "Is there a specific concern I can address?",
@@ -579,16 +565,11 @@ class ConversationRepairService:
             fallback_action="schedule_followup" if qualification_score >= 40 else "mark_nurture",
         )
 
-    def _repair_loop(
-        self,
-        failure: FailureDetection,
-        context: Dict[str, Any]
-    ) -> RepairStrategy:
+    def _repair_loop(self, failure: FailureDetection, context: Dict[str, Any]) -> RepairStrategy:
         """Generate repair strategy for conversation loops."""
         approach = "break_pattern_pivot"
         prompt = (
-            "I realize I might be asking the same things. Let me take a "
-            "different approach that might be more helpful."
+            "I realize I might be asking the same things. Let me take a different approach that might be more helpful."
         )
 
         # Suggest pivoting based on context
@@ -621,17 +602,10 @@ class ConversationRepairService:
             fallback_action="escalate_to_human" if failure.severity > 0.8 else None,
         )
 
-    def _repair_misunderstanding(
-        self,
-        failure: FailureDetection,
-        context: Dict[str, Any]
-    ) -> RepairStrategy:
+    def _repair_misunderstanding(self, failure: FailureDetection, context: Dict[str, Any]) -> RepairStrategy:
         """Generate repair strategy for misunderstandings."""
         approach = "clarify_and_simplify"
-        prompt = (
-            "I apologize if I wasn't clear. Let me explain this better "
-            "in simpler terms."
-        )
+        prompt = "I apologize if I wasn't clear. Let me explain this better in simpler terms."
 
         # Provide examples and analogies
         talking_points = [
@@ -650,11 +624,7 @@ class ConversationRepairService:
             metadata={"use_examples": True, "simplify_language": True},
         )
 
-    def _repair_topic_drift(
-        self,
-        failure: FailureDetection,
-        context: Dict[str, Any]
-    ) -> RepairStrategy:
+    def _repair_topic_drift(self, failure: FailureDetection, context: Dict[str, Any]) -> RepairStrategy:
         """Generate repair strategy for topic drift."""
         approach = "gentle_redirect"
         prompt = (
@@ -688,7 +658,7 @@ class ConversationRepairService:
         # Tokenize messages
         tokenized = []
         for msg in messages:
-            tokens = set(re.findall(r'\b\w+\b', msg.lower()))
+            tokens = set(re.findall(r"\b\w+\b", msg.lower()))
             tokenized.append(tokens)
 
         # Calculate pairwise similarity
@@ -720,10 +690,7 @@ class ConversationRepairService:
             return False
 
         # Hash pairs for efficient comparison
-        hashed_pairs = [
-            hashlib.md5(f"{q}:{a}".encode()).hexdigest()[:8]
-            for q, a in pairs
-        ]
+        hashed_pairs = [hashlib.md5(f"{q}:{a}".encode()).hexdigest()[:8] for q, a in pairs]
 
         # Check for duplicates
         counter = Counter(hashed_pairs)

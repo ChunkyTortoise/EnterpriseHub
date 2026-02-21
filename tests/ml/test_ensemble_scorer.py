@@ -26,6 +26,7 @@ from ghl_real_estate_ai.ml.training_pipeline import TrainingPipeline, TrainingRe
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_synthetic_data(n_samples: int = 200, n_features: int = 12):
     """Create reproducible synthetic classification data."""
     rng = np.random.RandomState(42)
@@ -57,8 +58,8 @@ def _sample_timestamps(n: int):
 # Behavioral Features Tests
 # ---------------------------------------------------------------------------
 
-class TestBehavioralFeatures:
 
+class TestBehavioralFeatures:
     def test_behavioral_features_extraction(self):
         """Extract features from sample messages and verify non-zero values."""
         messages = _sample_messages()
@@ -129,8 +130,8 @@ class TestBehavioralFeatures:
 # Ensemble Scorer Tests
 # ---------------------------------------------------------------------------
 
-class TestEnsembleScorer:
 
+class TestEnsembleScorer:
     def test_ensemble_train_and_score(self):
         """Train on synthetic data, score, verify 0-1 range."""
         X, y = _make_synthetic_data()
@@ -209,8 +210,8 @@ class TestEnsembleScorer:
 # Drift Detector Tests
 # ---------------------------------------------------------------------------
 
-class TestDriftDetector:
 
+class TestDriftDetector:
     def test_drift_detector_no_drift(self):
         """Same distribution should have PSI near 0."""
         rng = np.random.RandomState(42)
@@ -250,8 +251,8 @@ class TestDriftDetector:
 # Training Pipeline Tests
 # ---------------------------------------------------------------------------
 
-class TestTrainingPipeline:
 
+class TestTrainingPipeline:
     def test_training_pipeline_run(self):
         """Full pipeline with synthetic data returns scorer + result."""
         X, y = _make_synthetic_data()
@@ -283,15 +284,14 @@ class TestTrainingPipeline:
 # Edge Case: safe_format_dict placeholder
 # ---------------------------------------------------------------------------
 
-class TestSafeFormatDict:
 
+class TestSafeFormatDict:
     def test_safe_format_dict(self):
         """Missing keys return {key} placeholder via dict.get pattern."""
         template_data = {"name": "Jorge", "role": "agent"}
         # Simulate safe formatting: missing keys stay as placeholder
         template = "Hello {name}, your {role} for {region}"
         result = template.format_map(
-            type("SafeDict", (dict,), {"__missing__": lambda self, k: f"{{{k}}}"})
-            (template_data)
+            type("SafeDict", (dict,), {"__missing__": lambda self, k: f"{{{k}}}"})(template_data)
         )
         assert result == "Hello Jorge, your agent for {region}"

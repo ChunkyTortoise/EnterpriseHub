@@ -104,9 +104,7 @@ def dispatch_hub(
     elif selected_hub == "Executive Command Center":
         _render_executive_command_center(services, mock_data, sparkline_fn)
     elif selected_hub == "Lead Intelligence Hub":
-        render_lead_intelligence_hub(
-            services, mock_data, claude, market_key, selected_market, elite_mode=elite_mode
-        )
+        render_lead_intelligence_hub(services, mock_data, claude, market_key, selected_market, elite_mode=elite_mode)
     elif selected_hub == "Data Arbitrage Hub":
         from ghl_real_estate_ai.streamlit_demo.components.data_arbitrage_dashboard import (
             render_data_arbitrage_dashboard,

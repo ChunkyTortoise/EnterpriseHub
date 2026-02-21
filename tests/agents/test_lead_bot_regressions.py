@@ -70,10 +70,13 @@ async def test_check_handoff_signals_records_event_without_name_error():
     mock_sync_service = MagicMock()
     mock_sync_service.record_lead_event = AsyncMock()
 
-    with patch(
-        "ghl_real_estate_ai.services.jorge.jorge_handoff_service.JorgeHandoffService.extract_intent_signals",
-        return_value={"buyer_intent_score": 0.91, "seller_intent_score": 0.04},
-    ), patch("ghl_real_estate_ai.agents.lead_bot.sync_service", new=mock_sync_service):
+    with (
+        patch(
+            "ghl_real_estate_ai.services.jorge.jorge_handoff_service.JorgeHandoffService.extract_intent_signals",
+            return_value={"buyer_intent_score": 0.91, "seller_intent_score": 0.04},
+        ),
+        patch("ghl_real_estate_ai.agents.lead_bot.sync_service", new=mock_sync_service),
+    ):
         result = await LeadBotWorkflow.check_handoff_signals(
             bot,
             {"lead_id": "lead_123", "user_message": "I am pre-approved and ready to buy now"},

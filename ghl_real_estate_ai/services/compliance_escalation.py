@@ -102,9 +102,7 @@ class ComplianceEscalationService:
 
         return violation
 
-    async def _flag_in_crm(
-        self, contact_id: str, violation: ComplianceViolation
-    ) -> None:
+    async def _flag_in_crm(self, contact_id: str, violation: ComplianceViolation) -> None:
         """Add compliance flag tag in CRM."""
         if self.ghl_client:
             try:
@@ -113,9 +111,7 @@ class ComplianceEscalationService:
             except Exception as e:
                 logger.error("Failed to flag contact in CRM: %s", e)
 
-    async def _notify_compliance_officer(
-        self, violation: ComplianceViolation
-    ) -> None:
+    async def _notify_compliance_officer(self, violation: ComplianceViolation) -> None:
         """Notify compliance officer for critical/high violations."""
         violation.actions_taken.append("compliance_officer_notified")
         logger.critical(
@@ -125,9 +121,7 @@ class ComplianceEscalationService:
             violation.description,
         )
 
-    async def _publish_violation_event(
-        self, violation: ComplianceViolation
-    ) -> None:
+    async def _publish_violation_event(self, violation: ComplianceViolation) -> None:
         """Publish violation event for dashboards."""
         if self.event_publisher:
             try:

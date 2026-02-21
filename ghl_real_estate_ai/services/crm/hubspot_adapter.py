@@ -59,9 +59,7 @@ class HubSpotAdapter(CRMProtocol):
         return props
 
     @staticmethod
-    def _properties_to_contact(
-        hs_id: str, properties: dict[str, Any]
-    ) -> CRMContact:
+    def _properties_to_contact(hs_id: str, properties: dict[str, Any]) -> CRMContact:
         """Map HubSpot properties dict to a CRMContact."""
         return CRMContact(
             id=hs_id,
@@ -93,7 +91,10 @@ class HubSpotAdapter(CRMProtocol):
         """Execute an HTTP request and raise on failure."""
         url = f"{self._base_url}{path}"
         resp = await self._http_client.request(
-            method, url, headers=self._headers(), json=json_body,
+            method,
+            url,
+            headers=self._headers(),
+            json=json_body,
             params=params,
         )
         if resp.status_code == 401:
@@ -111,21 +112,15 @@ class HubSpotAdapter(CRMProtocol):
     async def create_contact(self, contact: CRMContact) -> CRMContact:
         """Create a new contact in HubSpot."""
         payload = {"properties": self._contact_to_properties(contact)}
-        resp = await self._request(
-            "POST", "/crm/v3/objects/contacts", json_body=payload
-        )
+        resp = await self._request("POST", "/crm/v3/objects/contacts", json_body=payload)
         data = resp.json()
-        created = self._properties_to_contact(
-            data["id"], data.get("properties", {})
-        )
+        created = self._properties_to_contact(data["id"], data.get("properties", {}))
         created.tags = list(contact.tags)
         created.metadata = dict(contact.metadata)
         logger.info("Created HubSpot contact %s", created.id)
         return created
 
-    async def update_contact(
-        self, contact_id: str, updates: dict[str, Any]
-    ) -> CRMContact:
+    async def update_contact(self, contact_id: str, updates: dict[str, Any]) -> CRMContact:
         """Update an existing HubSpot contact."""
         # Map any CRMContact-level keys to HubSpot property names
         hs_key_map = {
@@ -147,28 +142,20 @@ class HubSpotAdapter(CRMProtocol):
             json_body=payload,
         )
         data = resp.json()
-        return self._properties_to_contact(
-            data["id"], data.get("properties", {})
-        )
+        return self._properties_to_contact(data["id"], data.get("properties", {}))
 
     async def get_contact(self, contact_id: str) -> CRMContact | None:
         """Retrieve a HubSpot contact by ID."""
         try:
-            resp = await self._request(
-                "GET", f"/crm/v3/objects/contacts/{contact_id}"
-            )
+            resp = await self._request("GET", f"/crm/v3/objects/contacts/{contact_id}")
         except HubSpotError as exc:
             if exc.status_code == 404:
                 return None
             raise
         data = resp.json()
-        return self._properties_to_contact(
-            data["id"], data.get("properties", {})
-        )
+        return self._properties_to_contact(data["id"], data.get("properties", {}))
 
-    async def search_contacts(
-        self, query: str, limit: int = 10
-    ) -> list[CRMContact]:
+    async def search_contacts(self, query: str, limit: int = 10) -> list[CRMContact]:
         """Search HubSpot contacts using the search API."""
         payload = {
             "filterGroups": [
@@ -184,22 +171,14 @@ class HubSpotAdapter(CRMProtocol):
             ],
             "limit": limit,
         }
-        resp = await self._request(
-            "POST", "/crm/v3/objects/contacts/search", json_body=payload
-        )
+        resp = await self._request("POST", "/crm/v3/objects/contacts/search", json_body=payload)
         data = resp.json()
         results: list[CRMContact] = []
         for item in data.get("results", []):
-            results.append(
-                self._properties_to_contact(
-                    item["id"], item.get("properties", {})
-                )
-            )
+            results.append(self._properties_to_contact(item["id"], item.get("properties", {})))
         return results
 
-    async def sync_lead(
-        self, contact: CRMContact, score: int, temperature: str
-    ) -> bool:
+    async def sync_lead(self, contact: CRMContact, score: int, temperature: str) -> bool:
         """Sync lead data: update contact and apply temperature tag."""
         if not contact.id:
             logger.warning("sync_lead called with no contact id")
@@ -233,16 +212,12 @@ class HubSpotAdapter(CRMProtocol):
         Returns True on success, False if not found.
         """
         try:
-            await self._request(
-                "DELETE", f"/crm/v3/objects/contacts/{contact_id}"
-            )
+            await self._request("DELETE", f"/crm/v3/objects/contacts/{contact_id}")
             logger.info("Deleted HubSpot contact %s", contact_id)
             return True
         except HubSpotError as exc:
             if exc.status_code == 404:
-                logger.warning(
-                    "Cannot delete HubSpot contact %s: not found", contact_id
-                )
+                logger.warning("Cannot delete HubSpot contact %s: not found", contact_id)
                 return False
             raise
 
@@ -265,17 +240,11 @@ class HubSpotAdapter(CRMProtocol):
         if after:
             params["after"] = after
 
-        resp = await self._request(
-            "GET", "/crm/v3/objects/contacts", params=params
-        )
+        resp = await self._request("GET", "/crm/v3/objects/contacts", params=params)
         data = resp.json()
         contacts: list[CRMContact] = []
         for item in data.get("results", []):
-            contacts.append(
-                self._properties_to_contact(
-                    item["id"], item.get("properties", {})
-                )
-            )
+            contacts.append(self._properties_to_contact(item["id"], item.get("properties", {})))
         paging = data.get("paging", {})
         next_cursor = paging.get("next", {}).get("after")
         return contacts, next_cursor

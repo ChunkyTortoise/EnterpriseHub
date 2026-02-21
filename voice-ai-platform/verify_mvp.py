@@ -17,6 +17,7 @@ async def verify_imports():
         from voice_ai.pipeline.voice_pipeline import PipelineState, VoicePipeline
         from voice_ai.telephony.call_manager import CallManager
         from voice_ai.telephony.twilio_handler import TwilioHandler
+
         print("  ✓ All imports successful")
         return True
     except ImportError as e:

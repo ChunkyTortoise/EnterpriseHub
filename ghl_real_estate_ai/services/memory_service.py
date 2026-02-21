@@ -241,7 +241,7 @@ class MemoryService:
         if self._should_use_redis(resolved_loc):
             cache_keys = [f"ctx:{resolved_loc}:{cid}" for cid in contact_ids]
             cached_contexts = await self.cache_service.get_many(cache_keys)
-            
+
             for cid in contact_ids:
                 key = f"ctx:{resolved_loc}:{cid}"
                 if key in cached_contexts:
@@ -250,11 +250,13 @@ class MemoryService:
                     if context.get("location_id") == resolved_loc:
                         results[cid] = context
                     else:
-                        logger.error(f"TENANT LEAK PREVENTED (Redis Batch): {cid} leak from {context.get('location_id')}")
+                        logger.error(
+                            f"TENANT LEAK PREVENTED (Redis Batch): {cid} leak from {context.get('location_id')}"
+                        )
 
         # Identify missing IDs that need to be fetched from file system or default
         missing_ids = [cid for cid in contact_ids if cid not in results]
-        
+
         if not missing_ids:
             return results
 
@@ -266,12 +268,12 @@ class MemoryService:
                 if context and context.get("location_id") == resolved_loc:
                     return cid, context
                 return cid, self._get_default_context(cid, resolved_loc)
-            
+
             # File storage fallback
             return cid, await self.get_context(cid, resolved_loc)
 
         missing_results = await asyncio.gather(*[fetch_missing(cid) for cid in missing_ids])
-        
+
         for cid, context in missing_results:
             results[cid] = context
 
@@ -502,15 +504,17 @@ class MemoryService:
 
         try:
             async with aiofiles.open(file_path, "w") as f:
-                await f.write(json.dumps(
-                    {
-                        "content": content,
-                        "stored_at": datetime.utcnow().isoformat(),
-                        "expires_at": (datetime.utcnow() + timedelta(hours=ttl_hours)).isoformat()
-                        if ttl_hours
-                        else None,
-                    },
-                    indent=2,
-                ))
+                await f.write(
+                    json.dumps(
+                        {
+                            "content": content,
+                            "stored_at": datetime.utcnow().isoformat(),
+                            "expires_at": (datetime.utcnow() + timedelta(hours=ttl_hours)).isoformat()
+                            if ttl_hours
+                            else None,
+                        },
+                        indent=2,
+                    )
+                )
         except (IOError, TypeError) as e:
             logger.error(f"Failed to store conversation memory {conversation_id}: {str(e)}")

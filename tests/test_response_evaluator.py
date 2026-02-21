@@ -27,9 +27,7 @@ from ghl_real_estate_ai.services.jorge.response_evaluator import (
 
 class TestResponseScore:
     def test_create_score(self):
-        score = ResponseScore(
-            coherence=0.8, relevance=0.9, completeness=0.7, tone_match=0.6, overall=0.75
-        )
+        score = ResponseScore(coherence=0.8, relevance=0.9, completeness=0.7, tone_match=0.6, overall=0.75)
         assert score.coherence == 0.8
         assert score.relevance == 0.9
         assert score.completeness == 0.7
@@ -37,15 +35,11 @@ class TestResponseScore:
         assert score.overall == 0.75
 
     def test_score_range(self):
-        score = ResponseScore(
-            coherence=0.0, relevance=0.0, completeness=0.0, tone_match=0.0, overall=0.0
-        )
+        score = ResponseScore(coherence=0.0, relevance=0.0, completeness=0.0, tone_match=0.0, overall=0.0)
         assert score.overall == 0.0
 
     def test_perfect_score(self):
-        score = ResponseScore(
-            coherence=1.0, relevance=1.0, completeness=1.0, tone_match=1.0, overall=1.0
-        )
+        score = ResponseScore(coherence=1.0, relevance=1.0, completeness=1.0, tone_match=1.0, overall=1.0)
         assert score.overall == 1.0
 
 
@@ -69,9 +63,7 @@ class TestScoreCoherence:
         assert 0.0 < score < 1.0
 
     def test_single_sentence(self):
-        score = self.evaluator.score_coherence(
-            "The market analysis shows strong growth potential for this area."
-        )
+        score = self.evaluator.score_coherence("The market analysis shows strong growth potential for this area.")
         assert score == 0.7
 
     def test_multi_sentence_with_transitions(self):
@@ -272,21 +264,14 @@ class TestEvaluate:
             "Additionally, the investment opportunity shows strong metrics."
         )
         score = self.evaluator.evaluate(query, response, bot_type="lead")
-        expected = (
-            score.coherence * 0.25
-            + score.relevance * 0.30
-            + score.completeness * 0.25
-            + score.tone_match * 0.20
-        )
+        expected = score.coherence * 0.25 + score.relevance * 0.30 + score.completeness * 0.25 + score.tone_match * 0.20
         assert abs(score.overall - round(expected, 4)) < 0.001
 
     def test_with_key_points(self):
         query = "Property details?"
         response = "The price is $500K and it has 3 bedrooms."
         key_points = ["price", "bedrooms"]
-        score = self.evaluator.evaluate(
-            query, response, bot_type="lead", key_points=key_points
-        )
+        score = self.evaluator.evaluate(query, response, bot_type="lead", key_points=key_points)
         assert score.completeness == 1.0
 
     def test_default_bot_type_is_lead(self):

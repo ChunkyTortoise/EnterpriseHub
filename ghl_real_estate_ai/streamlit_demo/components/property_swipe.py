@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 from ghl_real_estate_ai.services.enhanced_property_matcher import EnhancedPropertyMatcher
@@ -66,6 +65,7 @@ def render_property_swipe(services, lead_name: str = "Client"):
             commentary = run_async(eli.get_swipe_commentary(prop["raw_data"], lead_name))
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).debug(f"Failed to fetch swipe commentary: {str(e)}")
             commentary = f"A stunning find in {prop['neighborhood']}!"
 

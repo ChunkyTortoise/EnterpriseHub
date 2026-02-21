@@ -39,7 +39,9 @@ class LLMProcessor:
 
     def add_turn(self, role: str, content: str, timestamp_ms: float = 0.0) -> None:
         """Add a conversation turn to history."""
-        self._history.append(ConversationTurn(role=role, content=content, timestamp_ms=timestamp_ms))
+        self._history.append(
+            ConversationTurn(role=role, content=content, timestamp_ms=timestamp_ms)
+        )
         # Trim to max history
         if len(self._history) > self.max_history_turns:
             self._history = self._history[-self.max_history_turns :]
@@ -92,23 +94,26 @@ class LLMProcessor:
         messages = [{"role": t.role, "content": t.content} for t in self._history]
         full_response = ""
 
-        async with httpx.AsyncClient() as client, client.stream(
-            "POST",
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": self.api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": self.model,
-                "max_tokens": self.max_tokens,
-                "stream": True,
-                "system": self._system_prompt,
-                "messages": messages,
-            },
-            timeout=30.0,
-        ) as resp:
+        async with (
+            httpx.AsyncClient() as client,
+            client.stream(
+                "POST",
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": self.api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "max_tokens": self.max_tokens,
+                    "stream": True,
+                    "system": self._system_prompt,
+                    "messages": messages,
+                },
+                timeout=30.0,
+            ) as resp,
+        ):
             resp.raise_for_status()
             async for line in resp.aiter_lines():
                 if line.startswith("data: "):

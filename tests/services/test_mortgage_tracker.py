@@ -86,9 +86,7 @@ class TestMortgageTracker:
             lender="SoCal Home Loans",
         )
 
-        mock_ghl.add_tags.assert_awaited_once_with(
-            "buyer_200", ["Pre-Qualification-Sent"]
-        )
+        mock_ghl.add_tags.assert_awaited_once_with("buyer_200", ["Pre-Qualification-Sent"])
 
     def test_lender_recommendation_by_profile(self, tracker):
         """Luxury budget gets different lender than standard budget."""

@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from devops_suite.billing.tier_manager import TierManager, TierLimitExceeded
-from devops_suite.config import Tier, TIER_LIMITS
+from devops_suite.billing.tier_manager import TierLimitExceeded, TierManager
+from devops_suite.config import TIER_LIMITS, Tier
 
 
 @pytest.fixture

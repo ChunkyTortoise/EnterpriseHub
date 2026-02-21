@@ -144,7 +144,9 @@ with st.sidebar:
     selected_market = st.selectbox(
         "Select Market:",
         ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"],
-        index=["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"].index(st.session_state.get("selected_market", "Rancho Cucamonga, CA")),
+        index=["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"].index(
+            st.session_state.get("selected_market", "Rancho Cucamonga, CA")
+        ),
         key="market_selector",
         on_change=update_market,
     )
@@ -1142,9 +1144,7 @@ def render_enhanced_property_search():
                         )
 
                         if use_enhanced_ai and "lifestyle_score" in prop:
-                            st.markdown(
-                                f"<small>Lifestyle: {prop['lifestyle_score']}%</small>", unsafe_allow_html=True
-                            )
+                            st.markdown(f"<small>Lifestyle: {prop['lifestyle_score']}%</small>", unsafe_allow_html=True)
                             st.markdown(f"<small>Commute: {prop['commute_score']}%</small>", unsafe_allow_html=True)
 
                     with col3:
@@ -1154,9 +1154,7 @@ def render_enhanced_property_search():
                         )
 
                         if use_enhanced_ai and "school_rating" in prop:
-                            st.markdown(
-                                f"<small>Schools: {prop['school_rating']}/10</small>", unsafe_allow_html=True
-                            )
+                            st.markdown(f"<small>Schools: {prop['school_rating']}/10</small>", unsafe_allow_html=True)
                             st.markdown(f"<small>{prop['market_timing']}</small>", unsafe_allow_html=True)
 
                     with col4:
@@ -1283,9 +1281,7 @@ def render_proactive_intelligence_hub():
             st.session_state.proactive_intelligence_initialized = False
 
         if not st.session_state.proactive_intelligence_initialized:
-            st.info(
-                "**First time using Proactive Intelligence?** Click 'Start Monitoring' to enable 24/7 AI analysis!"
-            )
+            st.info("**First time using Proactive Intelligence?** Click 'Start Monitoring' to enable 24/7 AI analysis!")
 
     except Exception:
         st.error("Proactive Intelligence interface temporarily unavailable")

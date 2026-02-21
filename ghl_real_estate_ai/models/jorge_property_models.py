@@ -15,6 +15,7 @@ from ghl_real_estate_ai.services.enhanced_smart_lead_scorer import LeadPriority
 
 class PriceHistoryEntry(TypedDict, total=False):
     """TypedDict for property price history entry."""
+
     date: str
     price: float
     event: str  # "listed", "price_change", "pending", "sold", etc.
@@ -23,6 +24,7 @@ class PriceHistoryEntry(TypedDict, total=False):
 
 class LeadData(TypedDict, total=False):
     """TypedDict for lead data in property matching."""
+
     lead_id: str
     name: str
     email: Optional[str]

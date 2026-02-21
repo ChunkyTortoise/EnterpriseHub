@@ -1,4 +1,3 @@
-
 """
 Jorge Seller Bot - Unified Enterprise Implementation
 Combines all research enhancements into production-ready unified implementation.
@@ -79,6 +78,7 @@ from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnal
 # Phase 3 Loop 3: Handoff context propagation
 try:
     from ghl_real_estate_ai.services.jorge.jorge_handoff_service import EnrichedHandoffContext
+
     HANDOFF_CONTEXT_AVAILABLE = True
 except ImportError:
     HANDOFF_CONTEXT_AVAILABLE = False
@@ -86,6 +86,7 @@ except ImportError:
 
 try:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
+
     GHL_CLIENT_AVAILABLE = True
 except ImportError:
     GHL_CLIENT_AVAILABLE = False
@@ -95,15 +96,18 @@ from ghl_real_estate_ai.services.jorge.calendar_booking_service import CalendarB
 # Track 3.1 Predictive Intelligence Integration
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
+
     ML_ANALYTICS_AVAILABLE = True
 except ImportError:
     from ghl_real_estate_ai.stubs.bots_stub import get_ml_analytics_engine
+
     ML_ANALYTICS_AVAILABLE = False
 
 # Phase 3.3 Bot Intelligence Middleware Integration
 try:
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
     from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
+
     BOT_INTELLIGENCE_AVAILABLE = True
 except ImportError as e:
     logger = get_logger(__name__)
@@ -114,6 +118,7 @@ except ImportError as e:
 try:
     from ghl_real_estate_ai.services.progressive_skills_manager import ProgressiveSkillsManager
     from ghl_real_estate_ai.services.token_tracker import get_token_tracker
+
     PROGRESSIVE_SKILLS_AVAILABLE = True
 except ImportError:
     PROGRESSIVE_SKILLS_AVAILABLE = False
@@ -126,12 +131,14 @@ try:
         get_mesh_coordinator,
     )
     from ghl_real_estate_ai.services.mesh_agent_registry import AgentMetrics, AgentStatus, MeshAgent
+
     AGENT_MESH_AVAILABLE = True
 except ImportError:
     AGENT_MESH_AVAILABLE = False
 
 try:
     from ghl_real_estate_ai.services.mcp_client import get_mcp_client
+
     MCP_INTEGRATION_AVAILABLE = True
 except ImportError:
     MCP_INTEGRATION_AVAILABLE = False
@@ -227,8 +234,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             simple_mode = JorgeSellerConfig.JORGE_SIMPLE_MODE
             self.conversation_memory = ConversationMemory()
             self.question_engine = AdaptiveQuestionEngine(
-                questions_config=self.industry_config.questions,
-                simple_mode=simple_mode
+                questions_config=self.industry_config.questions, simple_mode=simple_mode
             )
             mode_name = "simple (4 questions)" if simple_mode else "full (10 questions)"
             logger.info(f"Jorge bot: Adaptive questioning enabled in {mode_name} mode")
@@ -279,10 +285,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 logger.warning(f"Jorge bot: CalendarBookingService unavailable: {e}")
 
         # Core workflow services
-        self.cma_service = CMAService(
-            cma_generator=self.cma_generator,
-            claude=self.claude
-        )
+        self.cma_service = CMAService(cma_generator=self.cma_generator, claude=self.claude)
         self.market_analyzer = MarketAnalyzer(ab_testing=self.ab_testing)
         self.stall_detector = StallDetector(event_publisher=self.event_publisher)
         self.response_generator = ResponseGenerator(
@@ -293,16 +296,14 @@ class JorgeSellerBot(BaseBotWorkflow):
             calendar_service=self.calendar_service,
         )
         self.strategy_selector = StrategySelector(
-            event_publisher=self.event_publisher,
-            ml_analytics=self.ml_analytics,
-            tenant_id=self.tenant_id
+            event_publisher=self.event_publisher, ml_analytics=self.ml_analytics, tenant_id=self.tenant_id
         )
         self.listing_service = ListingService()
         self.followup_service = FollowUpService(event_publisher=self.event_publisher)
         self.handoff_manager = HandoffManager()
         self.executive_service = ExecutiveService(event_publisher=self.event_publisher)
         self.objection_handler = ObjectionHandler(event_publisher=self.event_publisher)
-        
+
         logger.info("Jorge bot: Service layer initialized with decomposed modules")
 
     def _build_unified_graph(self) -> StateGraph:
@@ -492,16 +493,24 @@ class JorgeSellerBot(BaseBotWorkflow):
         # Create base strategy with adaptive mode
         pcs = state.get("psychological_commitment", 0)
         adaptation_count = state.get("adaptation_count", 0)
-        
+
         if pcs > 70:
             strategy = {"current_tone": "DIRECT", "next_action": "fast_track", "adaptive_mode": "calendar_focused"}
         elif state.get("stall_detected"):
-            strategy = {"current_tone": "UNDERSTANDING", "next_action": "respond", "adaptive_mode": "supportive_guidance"}
+            strategy = {
+                "current_tone": "UNDERSTANDING",
+                "next_action": "respond",
+                "adaptive_mode": "supportive_guidance",
+            }
         elif adaptation_count > 2:
             strategy = {"current_tone": "HONEST", "next_action": "respond", "adaptive_mode": "clarity_focused"}
         else:
-            strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond", "adaptive_mode": "standard_qualification"}
-        
+            strategy = {
+                "current_tone": "CONSULTATIVE",
+                "next_action": "respond",
+                "adaptive_mode": "standard_qualification",
+            }
+
         return strategy
 
     async def _generate_jorge_response_node(self, state: JorgeSellerState) -> Dict:
@@ -514,9 +523,9 @@ class JorgeSellerBot(BaseBotWorkflow):
         conversation_id = f"jorge_{state['lead_id']}"
         context = await self.conversation_memory.get_context(conversation_id)
         next_question = await self.question_engine.select_next_question(state, context)
-        
+
         self.workflow_stats["adaptive_question_selections"] += 1
-        
+
         tone_variant = state.get("tone_variant")
         return await self.response_generator.generate_adaptive_response(state, next_question, tone_variant)
 
@@ -576,10 +585,12 @@ class JorgeSellerBot(BaseBotWorkflow):
         """Update conversation memory with new interaction."""
         conversation_id = f"jorge_{state['lead_id']}"
         context = await self.conversation_memory.get_context(conversation_id)
-        
+
         update = {
-            "last_scores": {"frs": state["intent_profile"].frs.total_score if state.get("intent_profile") else 0, 
-                          "pcs": state.get("psychological_commitment", 0)},
+            "last_scores": {
+                "frs": state["intent_profile"].frs.total_score if state.get("intent_profile") else 0,
+                "pcs": state.get("psychological_commitment", 0),
+            },
             "last_interaction_time": datetime.now(timezone.utc),
             "adaptation_count": context.get("adaptation_count", 0) + 1,
             "response_patterns": {
@@ -587,7 +598,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 "question_used": state.get("adaptive_question_used"),
             },
         }
-        
+
         await self.conversation_memory.update_context(conversation_id, update)
         return {"memory_updated": True}
 
@@ -595,9 +606,7 @@ class JorgeSellerBot(BaseBotWorkflow):
     # ROUTING METHODS
     # ================================
 
-    def _route_seller_action(
-        self, state: JorgeSellerState
-    ) -> Literal["respond", "follow_up", "listing_prep", "end"]:
+    def _route_seller_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "listing_prep", "end"]:
         """Determine if we should respond immediately or queue a follow-up."""
         return self.strategy_selector.route_seller_action(state)
 
@@ -607,15 +616,11 @@ class JorgeSellerBot(BaseBotWorkflow):
         """Route to valuation defense, QBQ discovery, or strategy selection after stall."""
         return self.strategy_selector.route_after_stall_detection(state)
 
-    def _route_after_objection(
-        self, state: JorgeSellerState
-    ) -> Literal["objection_response", "continue_normal"]:
+    def _route_after_objection(self, state: JorgeSellerState) -> Literal["objection_response", "continue_normal"]:
         """Route based on objection detection."""
         return self.strategy_selector.route_after_objection(state)
 
-    def _route_adaptive_action(
-        self, state: JorgeSellerState
-    ) -> Literal["respond", "follow_up", "fast_track", "end"]:
+    def _route_adaptive_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "fast_track", "end"]:
         """Enhanced routing with fast-track capability."""
         return self.strategy_selector.route_adaptive_action(state)
 
@@ -623,9 +628,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         self, state: JorgeSellerState
     ) -> Literal["negotiation_discovery", "adaptive_strategy"]:
         """Route to QBQ discovery or adaptive strategy after stall detection."""
-        if (
-            state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"]
-            and not state.get("qbq_attempted")
+        if state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"] and not state.get(
+            "qbq_attempted"
         ):
             return "negotiation_discovery"
         return "adaptive_strategy"
@@ -657,27 +661,11 @@ class JorgeSellerBot(BaseBotWorkflow):
             # Create high-confidence profile for handed-off seller
             frs = FinancialReadinessScore(
                 total_score=70.0,  # High confidence from handoff
-                motivation=MotivationSignals(
-                    score=75,
-                    detected_markers=["handoff_context"],
-                    category="High Intent"
-                ),
-                timeline=TimelineCommitment(
-                    score=70,
-                    target_date=None,
-                    category="High Commitment"
-                ),
-                condition=ConditionRealism(
-                    score=65,
-                    acknowledged_defects=[],
-                    category="Realistic"
-                ),
-                price=PriceResponsiveness(
-                    score=70,
-                    zestimate_mentioned=False,
-                    category="Price-Aware"
-                ),
-                classification="Warm"
+                motivation=MotivationSignals(score=75, detected_markers=["handoff_context"], category="High Intent"),
+                timeline=TimelineCommitment(score=70, target_date=None, category="High Commitment"),
+                condition=ConditionRealism(score=65, acknowledged_defects=[], category="Realistic"),
+                price=PriceResponsiveness(score=70, zestimate_mentioned=False, category="Price-Aware"),
+                classification="Warm",
             )
             pcs = PsychologicalCommitmentScore(
                 total_score=68.0,
@@ -685,14 +673,14 @@ class JorgeSellerBot(BaseBotWorkflow):
                 message_length_score=65,
                 question_depth_score=70,
                 objection_handling_score=65,
-                call_acceptance_score=70
+                call_acceptance_score=70,
             )
             profile = LeadIntentProfile(
                 lead_id=state.get("lead_id", "unknown"),
                 frs=frs,
                 pcs=pcs,
                 lead_type="seller",
-                next_best_action="qualify_seller"
+                next_best_action="qualify_seller",
             )
 
             return {
@@ -725,9 +713,7 @@ class JorgeSellerBot(BaseBotWorkflow):
         )
 
         # Extract property condition from conversation
-        property_condition = self.stall_detector.extract_property_condition(
-            state.get("conversation_history", [])
-        )
+        property_condition = self.stall_detector.extract_property_condition(state.get("conversation_history", []))
 
         # Run seller intent decoder for enhanced analysis
         seller_intent_profile = self.seller_intent_decoder.analyze_seller(
@@ -747,16 +733,16 @@ class JorgeSellerBot(BaseBotWorkflow):
                 "frs_score": profile.frs.total_score,
                 "pcs_score": profile.pcs.total_score,
                 "conversation_history": state["conversation_history"],
-                "seller_persona": seller_classification
+                "seller_persona": seller_classification,
             }
-            
+
             scoring_result = await self.lead_scoring_integration.calculate_and_store_composite_score(
-                state=temp_state,
-                contact_id=state["lead_id"],
-                use_ml_ensemble=self.config.enable_track3_intelligence
+                state=temp_state, contact_id=state["lead_id"], use_ml_ensemble=self.config.enable_track3_intelligence
             )
             composite_score_data = scoring_result.get("composite_score_data", {})
-            logger.info(f"Composite score calculated for {state['lead_id']}: {composite_score_data.get('total_score', 0)}")
+            logger.info(
+                f"Composite score calculated for {state['lead_id']}: {composite_score_data.get('total_score', 0)}"
+            )
         except Exception as e:
             logger.error(f"Failed to calculate composite score: {e}")
 
@@ -1133,10 +1119,12 @@ class JorgeSellerBot(BaseBotWorkflow):
         address_lower = address.lower()
         city = market.get("city", "").lower()
         zip_codes = market.get("zip_codes", [])
-        return any([
-            city and city in address_lower,
-            any(z in address for z in zip_codes),
-        ])
+        return any(
+            [
+                city and city in address_lower,
+                any(z in address for z in zip_codes),
+            ]
+        )
 
     def _is_rancho_cucamonga_property(self, address: Optional[str]) -> bool:
         """Backward-compatible helper for tests and legacy call sites."""
@@ -1210,7 +1198,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             "adaptation_applied": False,
             "memory_updated": False,
         }
-        
+
         jorge_response = await self.response_generator.generate_jorge_response(state)
 
         return {
@@ -1498,6 +1486,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             handoff_signals = {}
             if self.config.jorge_handoff_enabled:
                 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
                 handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
 
             intent_profile = result.get("intent_profile")
@@ -1519,7 +1508,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                     persona=persona_str,
                     sentiment=None,
                     escalation=False,
-                    appointment_booked=False
+                    appointment_booked=False,
                 )
                 logger.info(f"Applied GHL workflow tags for {conversation_id}")
             except Exception as e:
@@ -1530,9 +1519,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             try:
                 last_activity = datetime.now(timezone.utc)
                 churn_assessment = await self.churn_service.assess_churn_risk(
-                    contact_id=conversation_id,
-                    conversation_history=conversation_history,
-                    last_activity=last_activity
+                    contact_id=conversation_id, conversation_history=conversation_history, last_activity=last_activity
                 )
                 logger.info(f"Churn risk assessed for {conversation_id}: {churn_assessment.risk_level}")
             except Exception as e:
@@ -1650,6 +1637,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 updated_tags = cleaned_tags + [persona_tag]
 
                 from ghl_real_estate_ai.models.ghl_webhook_types import GHLContactUpdatePayload
+
                 update_payload = GHLContactUpdatePayload(tags=updated_tags)
                 success = await ghl.update_contact(contact_id, update_payload)
 
@@ -1747,6 +1735,7 @@ class JorgeSellerBot(BaseBotWorkflow):
 
         # Derive offer pathway from extracted qualification fields
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig as _SellerCfg
+
         offer_type = _SellerCfg.classify_offer_type(
             property_condition=qualification_analysis.get("property_condition", ""),
             seller_motivation=qualification_analysis.get("seller_motivation", ""),
@@ -1793,17 +1782,21 @@ class JorgeSellerBot(BaseBotWorkflow):
             actions.append("Apply return lead relationship-building script")
 
         if temperature == "hot" and qualification_score >= 75:
-            actions.extend([
-                "Schedule immediate listing appointment",
-                "Send Jorge's 6% commission structure",
-                "Provide market analysis with value proposition",
-            ])
+            actions.extend(
+                [
+                    "Schedule immediate listing appointment",
+                    "Send Jorge's 6% commission structure",
+                    "Provide market analysis with value proposition",
+                ]
+            )
         elif temperature == "warm" and qualification_score >= 50:
-            actions.extend([
-                "Schedule follow-up call within 48 hours",
-                "Send market statistics and Jorge's track record",
-                "Prepare preliminary home value estimate",
-            ])
+            actions.extend(
+                [
+                    "Schedule follow-up call within 48 hours",
+                    "Send market statistics and Jorge's track record",
+                    "Prepare preliminary home value estimate",
+                ]
+            )
         else:
             actions.extend(["Add to 30-day nurture sequence", "Monitor for re-engagement signals"])
 

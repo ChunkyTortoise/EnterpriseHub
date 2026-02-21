@@ -188,11 +188,13 @@ class TestTokenUsage:
 
     def test_from_dict(self):
         """Test TokenUsage.from_dict class method."""
-        usage = TokenUsage.from_dict({
-            "prompt_tokens": 100,
-            "completion_tokens": 50,
-            "total_tokens": 150,
-        })
+        usage = TokenUsage.from_dict(
+            {
+                "prompt_tokens": 100,
+                "completion_tokens": 50,
+                "total_tokens": 150,
+            }
+        )
 
         assert usage.prompt_tokens == 100
         assert usage.completion_tokens == 50
@@ -271,7 +273,9 @@ class TestMetricsCollector:
         """Test recording token usage."""
         collector = MetricsCollector()
 
-        collector.record_tokens("agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150))
+        collector.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+        )
 
         assert collector.agent_count == 1
         agent_tokens = collector.get_agent_tokens("agent-1")
@@ -283,8 +287,12 @@ class TestMetricsCollector:
         """Test recording tokens for multiple agents."""
         collector = MetricsCollector()
 
-        collector.record_tokens("agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150))
-        collector.record_tokens("agent-2", TokenUsage(prompt_tokens=200, completion_tokens=100, total_tokens=300))
+        collector.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+        )
+        collector.record_tokens(
+            "agent-2", TokenUsage(prompt_tokens=200, completion_tokens=100, total_tokens=300)
+        )
 
         assert collector.agent_count == 2
         total = collector.get_total_tokens()
@@ -295,8 +303,12 @@ class TestMetricsCollector:
         """Test that recording tokens accumulates for same agent."""
         collector = MetricsCollector()
 
-        collector.record_tokens("agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150))
-        collector.record_tokens("agent-1", TokenUsage(prompt_tokens=50, completion_tokens=25, total_tokens=75))
+        collector.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+        )
+        collector.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=50, completion_tokens=25, total_tokens=75)
+        )
 
         agent_tokens = collector.get_agent_tokens("agent-1")
         assert agent_tokens.prompt_tokens == 150
@@ -338,6 +350,7 @@ class TestMetricsCollector:
 
         collector.start_timer("llm_call")
         import time
+
         time.sleep(0.01)  # 10ms
         latency = collector.end_timer("llm_call")
 
@@ -359,7 +372,9 @@ class TestMetricsCollector:
         """Test get_summary method."""
         collector = MetricsCollector()
 
-        collector.record_tokens("agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150))
+        collector.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+        )
         collector.record_cost_simple(0.002, "gpt-4o")
 
         summary = collector.get_summary()
@@ -374,7 +389,9 @@ class TestMetricsCollector:
         """Test clearing metrics."""
         collector = MetricsCollector()
 
-        collector.record_tokens("agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150))
+        collector.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+        )
         collector.record_cost_simple(0.002, "gpt-4o")
 
         collector.clear()
@@ -414,7 +431,9 @@ class TestASCIIDashboard:
         dashboard = ASCIIDashboard()
         metrics = MetricsCollector()
 
-        metrics.record_tokens("agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150))
+        metrics.record_tokens(
+            "agent-1", TokenUsage(prompt_tokens=100, completion_tokens=50, total_tokens=150)
+        )
         metrics.record_cost_simple(0.002, "gpt-4o")
 
         dashboard.attach(metrics)

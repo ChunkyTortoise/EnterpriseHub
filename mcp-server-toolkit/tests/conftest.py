@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from mcp_toolkit.framework.auth import APIKeyAuth, OAuthAuth
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.framework.caching import InMemoryCache, CacheLayer
+from mcp_toolkit.framework.caching import CacheLayer, InMemoryCache
 from mcp_toolkit.framework.rate_limiter import RateLimiter
 from mcp_toolkit.framework.telemetry import TelemetryProvider
-from mcp_toolkit.framework.auth import APIKeyAuth, OAuthAuth
 
 
 @pytest.fixture
@@ -70,10 +70,7 @@ class MockDatabaseConnection:
     async def fetch(self, query: str) -> list[dict]:
         self._queries.append(query)
         if "information_schema.tables" in query:
-            return [
-                {"table_name": name, "table_schema": "public"}
-                for name in self._tables
-            ]
+            return [{"table_name": name, "table_schema": "public"} for name in self._tables]
         if "information_schema.columns" in query:
             for name, info in self._tables.items():
                 if name in query:
@@ -96,10 +93,30 @@ def mock_db():
     db.add_table(
         "users",
         columns=[
-            {"column_name": "id", "data_type": "integer", "is_nullable": "NO", "column_default": None},
-            {"column_name": "name", "data_type": "varchar", "is_nullable": "NO", "column_default": None},
-            {"column_name": "email", "data_type": "varchar", "is_nullable": "NO", "column_default": None},
-            {"column_name": "created_at", "data_type": "timestamp", "is_nullable": "YES", "column_default": "now()"},
+            {
+                "column_name": "id",
+                "data_type": "integer",
+                "is_nullable": "NO",
+                "column_default": None,
+            },
+            {
+                "column_name": "name",
+                "data_type": "varchar",
+                "is_nullable": "NO",
+                "column_default": None,
+            },
+            {
+                "column_name": "email",
+                "data_type": "varchar",
+                "is_nullable": "NO",
+                "column_default": None,
+            },
+            {
+                "column_name": "created_at",
+                "data_type": "timestamp",
+                "is_nullable": "YES",
+                "column_default": "now()",
+            },
         ],
         rows=[
             {"id": 1, "name": "Alice", "email": "alice@test.com", "created_at": "2024-01-01"},
@@ -109,9 +126,24 @@ def mock_db():
     db.add_table(
         "orders",
         columns=[
-            {"column_name": "id", "data_type": "integer", "is_nullable": "NO", "column_default": None},
-            {"column_name": "user_id", "data_type": "integer", "is_nullable": "NO", "column_default": None},
-            {"column_name": "total", "data_type": "numeric", "is_nullable": "NO", "column_default": None},
+            {
+                "column_name": "id",
+                "data_type": "integer",
+                "is_nullable": "NO",
+                "column_default": None,
+            },
+            {
+                "column_name": "user_id",
+                "data_type": "integer",
+                "is_nullable": "NO",
+                "column_default": None,
+            },
+            {
+                "column_name": "total",
+                "data_type": "numeric",
+                "is_nullable": "NO",
+                "column_default": None,
+            },
         ],
         rows=[
             {"id": 1, "user_id": 1, "total": "100.00"},

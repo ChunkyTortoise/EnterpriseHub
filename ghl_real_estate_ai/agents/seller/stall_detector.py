@@ -23,12 +23,20 @@ class StallDetector:
         "zestimate": ["zestimate", "zillow", "online value", "estimate says"],
         "agent": ["agent", "realtor", "broker", "with someone"],
         "just_looking": [
-            "just looking", "just browsing", "exploring options",
-            "kicking tires", "not ready yet", "window shopping", "just curious",
+            "just looking",
+            "just browsing",
+            "exploring options",
+            "kicking tires",
+            "not ready yet",
+            "window shopping",
+            "just curious",
         ],
         "surface_objection": [
-            "price is too low", "not worth it", "my neighbor got more",
-            "zillow says", "neighbor sold for",
+            "price is too low",
+            "not worth it",
+            "my neighbor got more",
+            "zillow says",
+            "neighbor sold for",
         ],
     }
 
@@ -50,10 +58,7 @@ class StallDetector:
         """Detect if the lead is using standard stalling language."""
         # Update bot status
         await self.event_publisher.publish_bot_status_update(
-            bot_type="jorge-seller",
-            contact_id=state["lead_id"],
-            status="processing",
-            current_step="detect_stall"
+            bot_type="jorge-seller", contact_id=state["lead_id"], status="processing", current_step="detect_stall"
         )
 
         last_msg = ""
@@ -75,10 +80,7 @@ class StallDetector:
                 message=f"Stall type detected: {detected_type}",
             )
 
-        return {
-            "stall_detected": detected_type is not None,
-            "detected_stall_type": detected_type
-        }
+        return {"stall_detected": detected_type is not None, "detected_stall_type": detected_type}
 
     def is_surface_objection(self, state: JorgeSellerState) -> bool:
         """Return True when a price/value objection is the likely surface for a deeper need."""
@@ -101,31 +103,42 @@ class StallDetector:
         else:
             return "cold"
 
-    def extract_property_condition(
-        self,
-        conversation_history: List[Dict[str, Any]]
-    ) -> Optional[str]:
+    def extract_property_condition(self, conversation_history: List[Dict[str, Any]]) -> Optional[str]:
         """Extract property condition from conversation keywords."""
         if not conversation_history:
             return None
 
-        text = " ".join(
-            msg.get("content", "").lower()
-            for msg in conversation_history
-            if msg.get("role") == "user"
-        )
+        text = " ".join(msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user")
 
         move_in_ready_markers = [
-            "move-in ready", "move in ready", "turnkey", "just remodeled",
-            "recently renovated", "updated", "great condition", "perfect condition",
+            "move-in ready",
+            "move in ready",
+            "turnkey",
+            "just remodeled",
+            "recently renovated",
+            "updated",
+            "great condition",
+            "perfect condition",
         ]
         needs_work_markers = [
-            "needs work", "needs some work", "needs updating", "dated",
-            "cosmetic", "needs paint", "some updates", "a little work",
+            "needs work",
+            "needs some work",
+            "needs updating",
+            "dated",
+            "cosmetic",
+            "needs paint",
+            "some updates",
+            "a little work",
         ]
         major_repairs_markers = [
-            "major repairs", "fixer", "fixer-upper", "foundation",
-            "roof issues", "structural", "condemned", "tear down",
+            "major repairs",
+            "fixer",
+            "fixer-upper",
+            "foundation",
+            "roof issues",
+            "structural",
+            "condemned",
+            "tear down",
         ]
 
         if any(m in text for m in major_repairs_markers):

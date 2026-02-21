@@ -55,9 +55,7 @@ class TestHandoffServiceWithOutcomePublisher:
         assert handoff_service._outcome_publisher is outcome_publisher
 
     @pytest.mark.asyncio
-    async def test_record_outcome_publishes_to_ghl(
-        self, handoff_service, mock_ghl_client, mock_repository
-    ):
+    async def test_record_outcome_publishes_to_ghl(self, handoff_service, mock_ghl_client, mock_repository):
         """Test that recording outcome publishes to GHL via outcome publisher."""
         handoff_service.record_outcome(
             contact_id="test_contact_1",
@@ -69,6 +67,7 @@ class TestHandoffServiceWithOutcomePublisher:
 
         # Give async tasks time to execute, then flush
         import asyncio
+
         await asyncio.sleep(0.1)
         await handoff_service._outcome_publisher._flush_all_pending()
 
@@ -85,9 +84,7 @@ class TestHandoffServiceWithOutcomePublisher:
         assert fields["handoff_confidence"] == "0.85"
 
     @pytest.mark.asyncio
-    async def test_record_outcome_persists_to_db(
-        self, handoff_service, mock_repository
-    ):
+    async def test_record_outcome_persists_to_db(self, handoff_service, mock_repository):
         """Test that recording outcome persists to database."""
         handoff_service.record_outcome(
             contact_id="test_contact_2",
@@ -99,6 +96,7 @@ class TestHandoffServiceWithOutcomePublisher:
 
         # Give async tasks time to execute
         import asyncio
+
         await asyncio.sleep(0.1)
 
         # Verify DB call was made
@@ -110,9 +108,7 @@ class TestHandoffServiceWithOutcomePublisher:
         assert call_args[1]["outcome"] == "failed"
 
     @pytest.mark.asyncio
-    async def test_classmethod_record_with_publisher(
-        self, mock_ghl_client, outcome_publisher
-    ):
+    async def test_classmethod_record_with_publisher(self, mock_ghl_client, outcome_publisher):
         """Test classmethod record_handoff_outcome with explicit publisher."""
         JorgeHandoffService.record_handoff_outcome(
             contact_id="test_contact_3",
@@ -125,6 +121,7 @@ class TestHandoffServiceWithOutcomePublisher:
 
         # Process pending updates
         import asyncio
+
         await asyncio.sleep(0.1)
         await outcome_publisher._flush_all_pending()
 
@@ -132,9 +129,7 @@ class TestHandoffServiceWithOutcomePublisher:
         mock_ghl_client.add_tags.assert_called()
         assert "Handoff-Seller-to-Buyer-Timeout" in mock_ghl_client.add_tags.call_args[0][1]
 
-    def test_record_outcome_invalid_outcome(
-        self, handoff_service, mock_ghl_client
-    ):
+    def test_record_outcome_invalid_outcome(self, handoff_service, mock_ghl_client):
         """Test recording invalid outcome does not publish."""
         handoff_service.record_outcome(
             contact_id="test_contact_4",
@@ -148,9 +143,7 @@ class TestHandoffServiceWithOutcomePublisher:
         mock_ghl_client.update_custom_fields_batch.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_record_outcome_ghl_failure_fallback(
-        self, handoff_service, mock_ghl_client, mock_repository
-    ):
+    async def test_record_outcome_ghl_failure_fallback(self, handoff_service, mock_ghl_client, mock_repository):
         """Test that DB write still succeeds if GHL publish fails."""
         mock_ghl_client.add_tags.side_effect = Exception("GHL API error")
 
@@ -167,13 +160,12 @@ class TestHandoffServiceWithOutcomePublisher:
 
         # DB write should still succeed
         import asyncio
+
         await asyncio.sleep(0.1)
         mock_repository.save_handoff_outcome.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_multiple_outcomes_batched(
-        self, handoff_service, mock_ghl_client
-    ):
+    async def test_multiple_outcomes_batched(self, handoff_service, mock_ghl_client):
         """Test that multiple outcomes are batched correctly."""
         # Record 5 outcomes
         for i in range(5):
@@ -187,6 +179,7 @@ class TestHandoffServiceWithOutcomePublisher:
 
         # Process batch
         import asyncio
+
         await asyncio.sleep(0.1)
         await handoff_service._outcome_publisher._flush_all_pending()
 
@@ -194,9 +187,7 @@ class TestHandoffServiceWithOutcomePublisher:
         assert mock_ghl_client.add_tags.call_count == 5
         assert mock_ghl_client.update_custom_fields_batch.call_count == 5
 
-    def test_record_outcome_without_metadata(
-        self, handoff_service, mock_ghl_client
-    ):
+    def test_record_outcome_without_metadata(self, handoff_service, mock_ghl_client):
         """Test recording outcome without metadata."""
         handoff_service.record_outcome(
             contact_id="test_contact_6",
@@ -225,9 +216,7 @@ class TestOutcomePublisherLifecycle:
         assert outcome_publisher._is_running is False
 
     @pytest.mark.asyncio
-    async def test_stop_flushes_pending_updates(
-        self, outcome_publisher, mock_ghl_client
-    ):
+    async def test_stop_flushes_pending_updates(self, outcome_publisher, mock_ghl_client):
         """Test that stopping batch processor flushes pending updates."""
         # Queue updates
         for i in range(3):
