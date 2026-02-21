@@ -1648,57 +1648,6 @@ async def health_check():
     }
 
 
-@router.post("/debug/tags")
-async def debug_tags(request: Request) -> dict[str, Any]:
-    """
-    Temporary debug endpoint to inspect webhook tag parsing and routing decisions.
-
-    Remove after production diagnosis is complete.
-    """
-    data = await request.json()
-    event = GHLWebhookEvent(**data)
-    tags = (event.contact.tags if event.contact else []) or []
-    tags_lower = _normalize_tags(tags)
-
-    activation_tags = settings.activation_tags
-    deactivation_tags = settings.deactivation_tags
-    should_activate = any(_tag_present(tag, tags_lower) for tag in activation_tags)
-    if not should_activate and jorge_settings.JORGE_SELLER_MODE:
-        should_activate = "needs qualifying" in tags_lower or "seller-lead" in tags_lower
-    if not should_activate and jorge_settings.JORGE_BUYER_MODE:
-        should_activate = _tag_present(jorge_settings.BUYER_ACTIVATION_TAG, tags_lower)
-    if not should_activate and jorge_settings.JORGE_LEAD_MODE:
-        should_activate = _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower)
-    should_deactivate = any(_tag_present(tag, tags_lower) for tag in deactivation_tags)
-
-    mode_flags = _compute_mode_flags(
-        tags_lower,
-        should_deactivate=should_deactivate,
-        seller_mode_enabled=jorge_settings.JORGE_SELLER_MODE,
-        buyer_mode_enabled=jorge_settings.JORGE_BUYER_MODE,
-        lead_mode_enabled=jorge_settings.JORGE_LEAD_MODE,
-        buyer_activation_tag=jorge_settings.BUYER_ACTIVATION_TAG,
-        lead_activation_tag=jorge_settings.LEAD_ACTIVATION_TAG,
-    )
-
-    return {
-        "contact_tags_raw": event.contact.tags if event.contact else None,
-        "tags": tags,
-        "tags_lower": sorted(tags_lower),
-        "activation_tags": activation_tags,
-        "deactivation_tags": deactivation_tags,
-        "should_activate": should_activate,
-        "should_deactivate": should_deactivate,
-        "JORGE_SELLER_MODE": jorge_settings.JORGE_SELLER_MODE,
-        "JORGE_BUYER_MODE": jorge_settings.JORGE_BUYER_MODE,
-        "JORGE_LEAD_MODE": jorge_settings.JORGE_LEAD_MODE,
-        "BUYER_ACTIVATION_TAG": jorge_settings.BUYER_ACTIVATION_TAG,
-        "LEAD_ACTIVATION_TAG": jorge_settings.LEAD_ACTIVATION_TAG,
-        "mode_flags": mode_flags,
-        "primary_mode": _select_primary_mode(mode_flags),
-    }
-
-
 async def _calculate_lead_pricing(
     contact_id: str, 
     location_id: str, 
