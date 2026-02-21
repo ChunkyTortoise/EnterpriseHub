@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class MessageType(str, Enum):
@@ -54,6 +54,10 @@ class GHLWebhookEvent(BaseModel):
     Incoming webhook event from GoHighLevel.
 
     This is the top-level schema for all inbound messages.
+
+    Supports both GHL's native flat format and our custom nested format:
+    - Native flat: {"contactId": "...", "messageType": "TYPE_SMS", "body": "...", "direction": "inbound"}
+    - Custom nested: {"contactId": "...", "message": {"type": "SMS", "body": "...", "direction": "inbound"}}
     """
 
     type: str  # "InboundMessage", "OutboundMessage", etc.
@@ -63,6 +67,57 @@ class GHLWebhookEvent(BaseModel):
     contact: Optional[GHLContact] = None
 
     model_config = ConfigDict(populate_by_name=True)  # Allow both snake_case and camelCase
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_ghl_native_format(cls, data: Any) -> Any:
+        """
+        Accept GHL's native flat webhook format in addition to our custom nested format.
+
+        GHL's native InboundMessage webhook sends a flat payload:
+          { "contactId": "...", "locationId": "...", "messageType": "TYPE_SMS",
+            "body": "Hello", "direction": "inbound", ... }
+
+        Our custom workflow template sends the nested format:
+          { "contactId": "...", "locationId": "...",
+            "message": {"type": "SMS", "body": "Hello", "direction": "inbound"},
+            "contact": {"contactId": "...", "tags": [...]} }
+
+        This validator converts the flat format to nested so Pydantic validation passes.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        # Convert flat format to nested if the "message" key is absent
+        if "message" not in data:
+            raw_type = str(data.get("messageType", data.get("type", "SMS")))
+            # GHL sends "TYPE_SMS" -> normalise to "SMS"
+            if raw_type.upper().startswith("TYPE_"):
+                raw_type = raw_type[5:]
+            _type_map = {
+                "SMS": "SMS",
+                "EMAIL": "Email",
+                "LIVE_CHAT": "Live_Chat",
+                "CHAT": "Live_Chat",
+                "WHATSAPP": "WhatsApp",
+            }
+            msg_type = _type_map.get(raw_type.upper(), "SMS")
+            data["message"] = {
+                "type": msg_type,
+                "body": data.get("body", ""),
+                "direction": data.get("direction", "inbound"),
+            }
+
+        # Ensure a contact object always exists (even if minimal)
+        # so handler code can safely access event.contact.tags
+        if "contact" not in data or data["contact"] is None:
+            data["contact"] = {
+                "contactId": data.get("contactId", ""),
+                "firstName": data.get("contactName", ""),
+                "tags": [],
+            }
+
+        return data
 
 
 class GHLTagWebhookEvent(BaseModel):
