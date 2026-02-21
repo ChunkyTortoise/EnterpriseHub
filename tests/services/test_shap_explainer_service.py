@@ -1,5 +1,7 @@
 import pytest
 
+shap = pytest.importorskip("shap", reason="shap not installed in CI environment")
+
 pytestmark = pytest.mark.integration
 
 """
