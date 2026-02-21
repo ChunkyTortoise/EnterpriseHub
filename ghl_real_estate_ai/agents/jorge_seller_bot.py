@@ -1138,6 +1138,15 @@ class JorgeSellerBot(BaseBotWorkflow):
             any(z in address for z in zip_codes),
         ])
 
+    def _is_rancho_cucamonga_property(self, address: Optional[str]) -> bool:
+        """Backward-compatible helper for tests and legacy call sites."""
+        if not address:
+            return False
+        address_lower = address.lower()
+        if "rancho cucamonga" in address_lower:
+            return True
+        return self._is_supported_market_property(address)
+
     def _detect_market_neighborhood(self, address: Optional[str]) -> Optional[str]:
         """Extract neighborhood from address using active market config."""
         if not address:
