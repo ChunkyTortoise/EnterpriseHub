@@ -154,7 +154,7 @@ def _get_mls_client() -> MLSClient:
     return mls_client
 
 
-# P3 FIX: Safe wrappers for background tasks to prevent silent delivery failures
+# Safe wrappers for background tasks to prevent silent delivery failures
 async def safe_send_message(ghl_client, contact_id: str, message: str, channel=None):
     """Wrapper for send_message that handles errors and tags contact on failure."""
     try:
@@ -402,13 +402,15 @@ async def handle_ghl_webhook(
     if not tags and contact_id:
         try:
             contact_data = await ghl_client_default.get_contact(contact_id)
-            tags = contact_data.get("tags", [])
+            # GHL v2 API wraps response as {"contact": {...}, "traceId": "..."}
+            contact_obj = (contact_data or {}).get("contact", contact_data or {})
+            tags = contact_obj.get("tags", [])
             # Also backfill the contact object so downstream code has a name, phone, etc.
             if event.contact and not event.contact.first_name:
-                event.contact.first_name = contact_data.get("firstName", "")
-                event.contact.last_name = contact_data.get("lastName", "")
-                event.contact.phone = contact_data.get("phone", "")
-                event.contact.email = contact_data.get("email", "")
+                event.contact.first_name = contact_obj.get("firstName", "")
+                event.contact.last_name = contact_obj.get("lastName", "")
+                event.contact.phone = contact_obj.get("phone", "")
+                event.contact.email = contact_obj.get("email", "")
                 event.contact.tags = tags
             logger.info(
                 f"Fetched {len(tags)} tag(s) from GHL API for contact {contact_id} (not included in webhook payload)"
@@ -878,7 +880,7 @@ async def handle_ghl_webhook(
                 },
             )
 
-            # Send the seller response via GHL API (background task) - P3 FIX: Use safe wrapper
+            # Send the seller response via GHL API (background task)
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -887,7 +889,7 @@ async def handle_ghl_webhook(
                 event.message.type,
             )
 
-            # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
+            # Apply tags and actions via GHL API (background task)
             if actions:
                 background_tasks.add_task(
                     safe_apply_actions,
@@ -1089,7 +1091,7 @@ async def handle_ghl_webhook(
                 },
             )
 
-            # Send the buyer response via GHL API (background task) - P3 FIX: Use safe wrapper
+            # Send the buyer response via GHL API (background task)
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -1098,7 +1100,7 @@ async def handle_ghl_webhook(
                 event.message.type,
             )
 
-            # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
+            # Apply tags and actions via GHL API (background task)
             if actions:
                 background_tasks.add_task(
                     safe_apply_actions,
@@ -1289,7 +1291,7 @@ async def handle_ghl_webhook(
                     },
                 )
 
-                # Send the lead response via GHL API (background task) - P3 FIX: Use safe wrapper
+                # Send the lead response via GHL API (background task)
                 background_tasks.add_task(
                     safe_send_message,
                     current_ghl_client,
@@ -1298,7 +1300,7 @@ async def handle_ghl_webhook(
                     event.message.type,
                 )
 
-                # Apply tags and actions via GHL API (background task) - P3 FIX: Use safe wrapper
+                # Apply tags and actions via GHL API (background task)
                 if actions:
                     background_tasks.add_task(
                         safe_apply_actions,
@@ -1605,7 +1607,8 @@ async def initiate_qualification(
     contact_id = body.contact_id
     location_id = body.location_id
     try:
-        contact = await ghl_client_default.get_contact(contact_id)
+        contact_raw = await ghl_client_default.get_contact(contact_id)
+        contact = (contact_raw or {}).get("contact", contact_raw or {})
         first_name = contact.get("firstName", "there")
         tags = contact.get("tags", [])
 
