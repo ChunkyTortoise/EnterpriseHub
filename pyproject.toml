@@ -126,7 +126,7 @@ line-length = 120
 target-version = "py312"
 exclude = [
     ".agent", "_archive", ".git", ".venv", "build", "dist",
-    ".claude", "auto-claude", "scripts", "mcp-servers",
+    ".claude", "auto-claude", "scripts", "mcp-servers", "node_modules",
     "ghl_real_estate_ai/api/schemas/enterprise.py",
     "ghl_real_estate_ai/api/routes/billing.py",
     "ghl_real_estate_ai/services/ultra_fast_ml_engine.py",

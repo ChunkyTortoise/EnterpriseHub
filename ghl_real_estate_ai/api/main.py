@@ -105,6 +105,7 @@ from ghl_real_estate_ai.api.routes import (
     rc_market_intelligence,
     reports,
     retell_webhook,  # Added Retell Webhook
+    revenue_v2,  # Revenue-critical v2 contracts
     sdr,  # SDR Agent — autonomous outbound prospecting + sequences
     security,  # NEW: Security Monitoring and Management API
     sentiment_analysis,
@@ -756,6 +757,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(sentiment_analysis.router)
     app.include_router(channel_routing.router)
     app.include_router(rc_market_intelligence.router)
+    app.include_router(revenue_v2.router)
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
     app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
