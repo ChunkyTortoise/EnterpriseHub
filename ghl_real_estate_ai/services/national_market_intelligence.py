@@ -30,6 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from ..ghl_utils.logger import get_logger
 from ..markets.national_registry import get_national_market_registry
 from ..services.cache_service import get_cache_service
+
 # Lazy import — ClaudeAssistant pulls in heavy ML deps (sklearn, joblib) not
 # installed in the prod image. Import deferred to __init__ to avoid startup crash.
 

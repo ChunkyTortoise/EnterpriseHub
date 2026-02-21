@@ -16,7 +16,8 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.property_alerts import get_property_alert_system
+from ghl_real_estate_ai.services.property_alerts import AlertCriteria, get_property_alert_system
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import RanchoCucamongaConversationContext
 from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
     PropertyType,
     get_rancho_cucamonga_market_service,
@@ -304,9 +305,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
         market_service = get_rancho_cucamonga_market_service()
 
         # Build lead context
-        from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import Rancho CucamongaConversationContext
-
-        lead_context = Rancho CucamongaConversationContext(
+        lead_context = RanchoCucamongaConversationContext(
             lead_id=request.lead_id,
             employer=request.employer,
             budget_range=tuple(request.budget_range) if request.budget_range else None,
@@ -488,9 +487,7 @@ async def get_market_timing_advice(request: MarketTimingRequest):
         # Enhance with lead context if provided
         if request.lead_context:
             ai_assistant = get_rancho_cucamonga_ai_assistant()
-            from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import Rancho CucamongaConversationContext
-
-            lead_context = Rancho CucamongaConversationContext(
+            lead_context = RanchoCucamongaConversationContext(
                 lead_id=request.lead_context.get("lead_id", "timing_analysis"),
                 employer=request.lead_context.get("employer"),
                 relocation_timeline=request.lead_context.get("timeline"),
@@ -575,8 +572,6 @@ async def setup_property_alerts(lead_id: str, criteria: PropertySearchRequest):
     """Set up automated property alerts for a lead."""
     try:
         alert_system = get_property_alert_system()
-        from ghl_real_estate_ai.services.property_alerts import AlertCriteria
-
         # Convert search request to alert criteria
         alert_criteria = AlertCriteria(
             lead_id=lead_id,
@@ -648,10 +643,8 @@ async def get_ai_conversation_response(
     """Get AI-powered response to lead query with Rancho Cucamonga market intelligence."""
     try:
         ai_assistant = get_rancho_cucamonga_ai_assistant()
-        from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import Rancho CucamongaConversationContext
-
         # Convert dict to context object
-        context = Rancho CucamongaConversationContext(
+        context = RanchoCucamongaConversationContext(
             lead_id=lead_context.get("lead_id", ""),
             employer=lead_context.get("employer"),
             preferred_neighborhoods=lead_context.get("preferred_neighborhoods", []),

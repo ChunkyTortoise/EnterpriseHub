@@ -1,5 +1,9 @@
 """Unit tests for JorgePropertyMatchingService — filtering and scoring logic."""
 
+import pytest
+
+pytest.importorskip("torch", reason="PyTorch not installed in CI environment")
+
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
