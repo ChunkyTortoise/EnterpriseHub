@@ -20,7 +20,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # ROADMAP-074: White Label Mobile Service
 # ---------------------------------------------------------------------------

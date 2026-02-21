@@ -3,9 +3,9 @@ EnterpriseHub Professional Showcase Landing Page
 Professional certifications and services portfolio for client acquisition.
 """
 
+import json
 import sys
 from pathlib import Path
-import json
 from typing import Dict, List, Optional
 
 import streamlit as st

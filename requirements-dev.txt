@@ -79,6 +79,7 @@ jsonschema>=4.20.0
 email-validator>=2.1.0
 dnspython>=2.4.0
 pyproj>=3.6.0
+shapely>=2.0.0
 
 # ==============================================================================
 # Code Quality & Linting

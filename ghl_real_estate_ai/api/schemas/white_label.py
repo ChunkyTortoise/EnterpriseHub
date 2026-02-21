@@ -33,7 +33,7 @@ class AgencyTier(str, Enum):
     ENTERPRISE = "enterprise"
 
 
-class Ontario MillsType(str, Enum):
+class OntarioMillsType(str, Enum):
     """Ontario Mills configuration types."""
 
     AGENCY = "agency"
@@ -261,11 +261,11 @@ class DNSRecordSchema(BaseModel):
     priority: Optional[int] = Field(None, ge=0)
 
 
-class Ontario MillsCreateRequest(BaseModel):
+class OntarioMillsCreateRequest(BaseModel):
     """Request schema for creating a ontario_mills configuration."""
 
     ontario_mills_name: str = Field(..., min_length=4, max_length=255)
-    ontario_mills_type: Ontario MillsType
+    ontario_mills_type: OntarioMillsType
     client_id: Optional[str] = None
 
     # DNS Configuration
@@ -304,14 +304,14 @@ class Ontario MillsCreateRequest(BaseModel):
     @classmethod
     def validate_client_ontario_mills_type(cls, v, info: ValidationInfo):
         if "ontario_mills_type" in info.data:
-            if info.data["ontario_mills_type"] == Ontario MillsType.CLIENT and not v:
+            if info.data["ontario_mills_type"] == OntarioMillsType.CLIENT and not v:
                 raise ValueError("Client ID required for client ontario_mills type")
-            if info.data["ontario_mills_type"] == Ontario MillsType.AGENCY and v:
+            if info.data["ontario_mills_type"] == OntarioMillsType.AGENCY and v:
                 raise ValueError("Client ID should not be provided for agency ontario_mills type")
         return v
 
 
-class Ontario MillsUpdateRequest(BaseModel):
+class OntarioMillsUpdateRequest(BaseModel):
     """Request schema for updating a ontario_mills configuration."""
 
     ssl_enabled: Optional[bool] = None
@@ -323,7 +323,7 @@ class Ontario MillsUpdateRequest(BaseModel):
     configuration_metadata: Optional[Dict[str, Any]] = None
 
 
-class Ontario MillsResponse(BaseModel):
+class OntarioMillsResponse(BaseModel):
     """Response schema for ontario_mills configuration."""
 
     ontario_mills_id: str
@@ -332,7 +332,7 @@ class Ontario MillsResponse(BaseModel):
 
     ontario_mills_name: str
     subontario_mills: Optional[str]
-    ontario_mills_type: Ontario MillsType
+    ontario_mills_type: OntarioMillsType
 
     # DNS Configuration
     dns_provider: Optional[DNSProvider]
@@ -369,7 +369,7 @@ class Ontario MillsResponse(BaseModel):
     updated_at: datetime
 
 
-class Ontario MillsHealthCheckResponse(BaseModel):
+class OntarioMillsHealthCheckResponse(BaseModel):
     """Response schema for ontario_mills health check."""
 
     ontario_mills_name: str

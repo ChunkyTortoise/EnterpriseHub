@@ -43,6 +43,15 @@ jobs:
     - name: Run ruff format check
       run: ruff format --check .
 
+    - name: Parse gate (py_compile)
+      run: python3 scripts/ci/compile_check.py
+
+    - name: No mock in production v2 routes
+      run: python3 scripts/ci/no_mock_in_prod.py
+
+    - name: Revenue ops artifact QA
+      run: python3 scripts/ci/revenue_ops_qa.py
+
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -82,7 +91,7 @@ jobs:
         GHL_API_KEY: test-ghl-key-for-ci-only
         GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
-        pytest -m unit --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=60 -v
+        pytest ghl_real_estate_ai/tests/ -m unit --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=60 -v
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
